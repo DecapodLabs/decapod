@@ -18,19 +18,6 @@
 ### Why “Decapod”?
 A decapod is a ten-legged crustacean (crabs and lobsters). Tough shell, relentless grip, built to survive pressure. That’s the vibe: a small kernel that keeps your swarm grounded while it crawls the real world. 🦀🦞
 
-## Project OS for Machines
-
-Decapod turns “a bunch of agents” into an actual system. Not chat logs. Not vibes. A shared, deterministic workspace where agents can work in parallel without inventing parallel realities. You steer. The swarm executes. The kernel keeps everyone honest.
-
-### Built for Agents, Not Humans
-Decapod optimizes for **agent efficiency** over “UX.” Every interface is a CLI-as-API contract. No dashboards. No chat bubbles. Just machine-readable state, proof surfaces, and deterministic handoffs. Run a coding agent in parallel with OpenClaw and other loopers: while you direct one, the rest can read/write the same Decapod workspace for coordination, todos, caching, and clean handoffs.
-
-### The Ecosystem
-The core stays small on purpose: a minimal kernel for state integrity and orchestration. The blast radius stays tight. The ecosystem stays wild. All functional power lives in the periphery—plugins (connectors, adapters, caches, workflow modules) that let Decapod touch the real world without bloating the kernel. We want contributors shipping periphery plugins as first-class citizens. This is where Decapod becomes inevitable.
-
-### Contributing (Core + Periphery)
-Want maximum impact fast? Build the periphery. New connectors, adapters, caches, proof/eval harnesses, and workflow modules that make agents useful in real environments. Core PRs are welcome too—but periphery plugins are not “extras.” They’re the expansion pack.
-
 ## Get started
 
 ~~~bash
@@ -50,6 +37,19 @@ Running `decapod init` will:
 
 If you have existing backups, open your agent of choice and tell it to: 
 > "Blend the `*.md.bak` files into my `.decapod/constitutions/` overrides."
+
+## Project OS for Machines
+
+Decapod turns “a bunch of agents” into an actual system. Not chat logs. Not vibes. A shared, deterministic workspace where agents can work in parallel without inventing parallel realities. You steer. The swarm executes. The kernel keeps everyone honest.
+
+### Built for Agents, Not Humans
+Decapod optimizes for **agent efficiency** over “UX.” Every interface is a CLI-as-API contract. No dashboards. No chat bubbles. Just machine-readable state, proof surfaces, and deterministic handoffs. Run a coding agent in parallel with OpenClaw and other loopers: while you direct one, the rest can read/write the same Decapod workspace for coordination, todos, caching, and clean handoffs.
+
+### The Ecosystem
+The core stays small on purpose: a minimal kernel for state integrity and orchestration. The blast radius stays tight. The ecosystem stays wild. All functional power lives in the periphery—plugins (connectors, adapters, caches, workflow modules) that let Decapod touch the real world without bloating the kernel. We want contributors shipping periphery plugins as first-class citizens. This is where Decapod becomes inevitable.
+
+### Contributing (Core + Periphery)
+Want maximum impact fast? Build the periphery. New connectors, adapters, caches, proof/eval harnesses, and workflow modules that make agents useful in real environments. Core PRs are welcome too—but periphery plugins are not “extras.” They’re the expansion pack.
 
 ## Hand the wheel to an agent
 
