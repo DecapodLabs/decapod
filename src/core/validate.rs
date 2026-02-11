@@ -92,6 +92,84 @@ fn validate_no_legacy_namespaces(
     Ok(())
 }
 
+fn validate_embedded_self_contained(
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Embedded Self-Contained Gate");
+
+    let constitution_embedded = repo_root.join("constitution").join("embedded");
+    if !constitution_embedded.exists() {
+        // This is a decapod repo, not a project with embedded docs
+        skip(
+            "No constitution/embedded/ directory found (decapod repo)",
+            &mut 0,
+        );
+        return Ok(());
+    }
+
+    let mut files = Vec::new();
+    collect_repo_files(&constitution_embedded, &mut files)?;
+
+    let mut offenders: Vec<PathBuf> = Vec::new();
+
+    for path in files {
+        if path.extension().and_then(|e| e.to_str()) != Some("md") {
+            continue;
+        }
+
+        let content = match fs::read_to_string(&path) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+
+        // Check for .decapod/ references that aren't documenting override behavior
+        if content.contains(".decapod/") {
+            // Allow legitimate override documentation patterns
+            let lines_with_legitimate_refs = content
+                .lines()
+                .filter(|line| {
+                    line.contains(".decapod/")
+                        && (
+                            line.contains("<repo>") ||  // Path documentation like `<repo>/.decapod/project`
+                    line.contains("store:") ||  // Store documentation
+                    line.contains("directory") || // Directory explanations
+                    line.contains("override") || // Override instructions
+                    line.contains("primarily contain") || // Directory descriptions
+                    line.contains("intended as")
+                            // Template descriptions
+                        )
+                })
+                .count();
+
+            // If there are .decapod/ references but none are legitimate documentation, flag it
+            let total_decapod_refs = content.matches(".decapod/").count();
+            if total_decapod_refs > lines_with_legitimate_refs {
+                offenders.push(path);
+            }
+        }
+    }
+
+    if offenders.is_empty() {
+        pass(
+            "Embedded constitution files contain no invalid .decapod/ references",
+            pass_count,
+        );
+    } else {
+        let mut msg =
+            String::from("Embedded constitution files contain invalid .decapod/ references:");
+        for p in offenders.iter().take(8) {
+            msg.push_str(&format!(" {}", p.display()));
+        }
+        if offenders.len() > 8 {
+            msg.push_str(&format!(" ... ({} total)", offenders.len()));
+        }
+        fail(&msg, fail_count);
+    }
+    Ok(())
+}
+
 fn pass(message: &str, pass_count: &mut u32) {
     *pass_count += 1;
     println!("{} {}", "✓".green(), message);
@@ -249,34 +327,34 @@ fn validate_repo_store_dogfood(
 fn validate_repo_map(
     pass_count: &mut u32,
     fail_count: &mut u32,
-    decapod_dir: &Path,
+    _decapod_dir: &Path, // decapod_dir is no longer used for filesystem constitution checks
 ) -> Result<(), error::DecapodError> {
     info("Repo Map");
-    let const_root = decapod_dir.join(".decapod").join("constitution");
 
-    if const_root.is_dir() {
-        pass(
-            "Methodology constitution found at .decapod/constitution/",
-            pass_count,
-        );
+    // We no longer check for a filesystem directory for constitution.
+    // Instead, we verify embedded docs.
+    pass(
+        "Methodology constitution checks will verify embedded docs.",
+        pass_count,
+    );
 
-        let required_specs = [
-            "specs/INTENT.md",
-            "specs/ARCHITECTURE.md",
-            "specs/SYSTEM.md",
-        ];
-        for r in required_specs {
-            if const_root.join(r).is_file() {
-                pass(&format!("Constitution doc {} present", r), pass_count);
-            } else {
-                fail(&format!("Constitution doc {} missing", r), fail_count);
-            }
+    let required_specs = [
+        "specs/INTENT.md",
+        "specs/ARCHITECTURE.md",
+        "specs/SYSTEM.md",
+    ];
+    for r in required_specs {
+        if crate::core::assets::get_doc(&format!("embedded/{}", r)).is_some() {
+            pass(
+                &format!("Constitution doc {} present (embedded)", r),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!("Constitution doc {} missing (embedded)", r),
+                fail_count,
+            );
         }
-    } else {
-        fail(
-            "Methodology constitution missing at .decapod/constitution/",
-            fail_count,
-        );
     }
     Ok(())
 }
@@ -336,14 +414,14 @@ fn validate_docs_templates_bucket(
     Ok(())
 }
 
-fn extract_md_version(path: &Path) -> Option<String> {
-    let content = fs::read_to_string(path).ok()?;
+fn extract_md_version(content: &str) -> Option<String> {
     for line in content.lines() {
         let line = line.trim();
-        if let Some(rest) = line.strip_prefix("**Version:**") {
-            let v = rest.trim();
-            if !v.is_empty() {
-                return Some(v.to_string());
+        if let Some(rest) = line.strip_prefix("- v") {
+            let v_and_rest = rest.trim();
+            if !v_and_rest.is_empty() {
+                // Extract version number, assuming it's the first word before the colon
+                return v_and_rest.split(':').next().map(|s| s.trim().to_string());
             }
         }
     }
@@ -798,12 +876,11 @@ pub fn run_validation(
 ) -> Result<(), error::DecapodError> {
     println!("\n========================================");
     println!("Intent-Driven Methodology - Proof Harness");
-    let intent_path = decapod_dir
-        .join(".decapod")
-        .join("constitution")
-        .join("specs")
-        .join("INTENT.md");
-    let intent_version = extract_md_version(&intent_path).unwrap_or_else(|| "unknown".to_string());
+    // Directly get content from embedded assets
+    let intent_content =
+        crate::core::assets::get_doc("embedded/specs/INTENT.md").unwrap_or_else(|| "".to_string()); // Provide default empty string if not found
+    let intent_version =
+        extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
     println!("Intent Version: {} (from INTENT.md)", intent_version);
     println!("========================================");
     println!();
@@ -824,6 +901,7 @@ pub fn run_validation(
 
     validate_repo_map(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_no_legacy_namespaces(&mut pass_count, &mut fail_count, decapod_dir)?;
+    validate_embedded_self_contained(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_docs_templates_bucket(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_health_purity(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_project_scoped_state(store, &mut pass_count, &mut fail_count, decapod_dir)?;

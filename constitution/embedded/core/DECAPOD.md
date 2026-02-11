@@ -10,7 +10,7 @@ Decapod is a Project OS for Machines. You are an agent operating within a shared
 
 This is the top-level document for how Decapod works. It serves as the primary internal guide for an agent in a Decapod-managed repo.
 
-Agent entrypoints (e.g., from `.decapod/constitution/templates/*`) should generally link here to help route to relevant information.
+Agent entrypoints (e.g., from `embedded/templates/*`) should generally link here to help route to relevant information.
 
 ---
 
@@ -32,7 +32,7 @@ If a specific requirement appears here, it should ideally be a reference to the 
 
 This is a registered claim: (claim: claim.doc.decapod_is_router_only).
 
-Change control for key documents is outlined in: `.decapod/constitution/specs/AMENDMENTS.md`.
+Change control for key documents is outlined in: `embedded/specs/AMENDMENTS.md`.
 
 ---
 
@@ -58,40 +58,40 @@ Decapod documentation is structured into three layers, with each canonical docum
 - **Guides (Operational Advice):** Provides practical operational guidance.
 
 Key definitions:
-- Doc compilation rules: `.decapod/constitution/core/DOC_RULES.md`
-- Store purity model: `.decapod/constitution/core/STORE_MODEL.md`
-- Subsystem registry: `.decapod/constitution/core/PLUGINS.md` (§3.5)
-- Change control (amendments): `.decapod/constitution/specs/AMENDMENTS.md`
-- Claims ledger (recorded promises): `.decapod/constitution/core/CLAIMS.md`
-- Deprecation + migration: `.decapod/constitution/core/DEPRECATION.md`
-- Glossary of terms: `.decapod/constitution/core/GLOSSARY.md`
+- Doc compilation rules: `embedded/core/DOC_RULES.md`
+- Store purity model: `embedded/core/STORE_MODEL.md`
+- Subsystem registry: `embedded/core/PLUGINS.md` (§3.5)
+- Change control (amendments): `embedded/specs/AMENDMENTS.md`
+- Claims ledger (recorded promises): `embedded/core/CLAIMS.md`
+- Deprecation + migration: `embedded/core/DEPRECATION.md`
+- Glossary of terms: `embedded/core/GLOSSARY.md`
 
 ---
 
 ## 3. Navigation by Topic
 
 **Constitution (Guiding Principles):**
-- Authority and proof doctrine: `.decapod/constitution/specs/SYSTEM.md`
-- Methodology contract: `.decapod/constitution/specs/INTENT.md`
-- Change control (amendments): `.decapod/constitution/specs/AMENDMENTS.md`
-- Agent persona/interaction guidelines: `.decapod/constitution/core/SOUL.md`
+- Authority and proof doctrine: `embedded/specs/SYSTEM.md`
+- Methodology contract: `embedded/specs/INTENT.md`
+- Change control (amendments): `embedded/specs/AMENDMENTS.md`
+- Agent persona/interaction guidelines: `embedded/core/SOUL.md`
 
 **Interfaces (Contracts & Plans):**
-- Agent<->Decapod sequencing: `.decapod/constitution/core/CONTROL_PLANE.md`
-- Subsystem registry + truth labels: `.decapod/constitution/core/PLUGINS.md`
-- Store purity model: `.decapod/constitution/core/STORE_MODEL.md`
-- Doc compiler contract: `.decapod/constitution/core/DOC_RULES.md`
-- Claims ledger (promises + proof surfaces): `.decapod/constitution/core/CLAIMS.md`
-- Deprecation + migration contract: `.decapod/constitution/core/DEPRECATION.md`
-- Glossary of loaded terms (normative): `.decapod/constitution/core/GLOSSARY.md`
-- Planned broker interface: `.decapod/constitution/plugins/DB_BROKER.md`
+- Agent<->Decapod sequencing: `embedded/core/CONTROL_PLANE.md`
+- Subsystem registry + truth labels: `embedded/core/PLUGINS.md`
+- Store purity model: `embedded/core/STORE_MODEL.md`
+- Doc compiler contract: `embedded/core/DOC_RULES.md`
+- Claims ledger (promises + proof surfaces): `embedded/core/CLAIMS.md`
+- Deprecation + migration contract: `embedded/core/DEPRECATION.md`
+- Glossary of loaded terms (normative): `embedded/core/GLOSSARY.md`
+- Planned broker interface: `embedded/plugins/DB_BROKER.md`
 
 **Guides (Operational Advice):**
-- Operating loop: `.decapod/constitution/plugins/WORKFLOW.md`
-- Canonical vs derived vs state: `.decapod/constitution/plugins/MANIFEST.md`
-- Known gaps: `.decapod/constitution/plugins/METHODOLOGY_GAPS.md`
-- Agent checklist (docs only): `.decapod/constitution/plugins/TODO_USER.md`
-- Emergency protocol (stop-the-line): `.decapod/constitution/plugins/EMERGENCY_PROTOCOL.md`
+- Operating loop: `embedded/plugins/WORKFLOW.md`
+- Canonical vs derived vs state: `embedded/plugins/MANIFEST.md`
+- Known gaps: `embedded/plugins/METHODOLOGY_GAPS.md`
+- Agent checklist (docs only): `embedded/plugins/TODO_USER.md`
+- Emergency protocol (stop-the-line): `embedded/plugins/EMERGENCY_PROTOCOL.md`
 
 ---
 
@@ -104,7 +104,7 @@ Decapod aims for effective subsystem integration through a uniform interface:
 - Schema/discovery mechanisms.
 - Proof gates (`decapod validate`).
 
-The source of truth for subsystem details is the registry in `.decapod/constitution/core/PLUGINS.md`.
+The source of truth for subsystem details is the registry in `embedded/core/PLUGINS.md`.
 
 If there's uncertainty about store mutation, it's advisable to clarify. Store purity is a consideration for system integrity.
 
@@ -125,23 +125,23 @@ Agents operating in this workspace are encouraged to consider the following:
 
 ## Links
 
-- `.decapod/constitution/plugins/MANIFEST.md`
-- `.decapod/constitution/specs/ARCHITECTURE.md`
-- `.decapod/constitution/specs/AMENDMENTS.md`
-- `.decapod/constitution/specs/INTENT.md`
-- `.decapod/constitution/specs/SYSTEM.md`
-- `.decapod/constitution/core/CONTROL_PLANE.md`
-- `.decapod/constitution/core/DOC_RULES.md`
-- `.decapod/constitution/core/PLUGINS.md`
-- `.decapod/constitution/core/STORE_MODEL.md`
-- `.decapod/constitution/core/SOUL.md`
-- `.decapod/constitution/core/MEMORY.md`
-- `.decapod/constitution/core/KNOWLEDGE.md`
-- `.decapod/constitution/core/CLAIMS.md`
-- `.decapod/constitution/core/DEPRECATION.md`
-- `.decapod/constitution/core/GLOSSARY.md`
-- `.decapod/constitution/plugins/METHODOLOGY_GAPS.md`
-- `.decapod/constitution/plugins/TODO_USER.md`
-- `.decapod/constitution/plugins/WORKFLOW.md`
-- `.decapod/constitution/plugins/DB_BROKER.md`
-- `.decapod/constitution/plugins/EMERGENCY_PROTOCOL.md`
+- `embedded/plugins/MANIFEST.md`
+- `embedded/specs/ARCHITECTURE.md`
+- `embedded/specs/AMENDMENTS.md`
+- `embedded/specs/INTENT.md`
+- `embedded/specs/SYSTEM.md`
+- `embedded/core/CONTROL_PLANE.md`
+- `embedded/core/DOC_RULES.md`
+- `embedded/core/PLUGINS.md`
+- `embedded/core/STORE_MODEL.md`
+- `embedded/core/SOUL.md`
+- `embedded/core/MEMORY.md`
+- `embedded/core/KNOWLEDGE.md`
+- `embedded/core/CLAIMS.md`
+- `embedded/core/DEPRECATION.md`
+- `embedded/core/GLOSSARY.md`
+- `embedded/plugins/METHODOLOGY_GAPS.md`
+- `embedded/plugins/TODO_USER.md`
+- `embedded/plugins/WORKFLOW.md`
+- `embedded/plugins/DB_BROKER.md`
+- `embedded/plugins/EMERGENCY_PROTOCOL.md`

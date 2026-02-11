@@ -80,11 +80,11 @@ No code outside the broker opens SQLite.
 
 ## Links
 
-- `.decapod/constitution/core/CONTROL_PLANE.md`
-- `.decapod/constitution/core/PLUGINS.md`
-- `.decapod/constitution/plugins/METHODOLOGY_GAPS.md`
-- `.decapod/constitution/specs/ARCHITECTURE.md`
-- `.decapod/constitution/specs/INTENT.md`
-- `.decapod/constitution/specs/SYSTEM.md`
+- `embedded/core/CONTROL_PLANE.md`
+- `embedded/core/PLUGINS.md`
+- `embedded/plugins/METHODOLOGY_GAPS.md`
+- `embedded/specs/ARCHITECTURE.md`
+- `embedded/specs/INTENT.md`
+- `embedded/specs/SYSTEM.md`
 
 When we reach step (3) above, `decapod validate --store repo` should fail if any `rusqlite::Connection::open` (or equivalent open path) is used outside the broker module.

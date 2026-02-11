@@ -26,39 +26,39 @@ This glossary is binding: if a term is defined here, other canonical docs MUST u
   - A short statement describing what the document is allowed to define (e.g. routing vs interface vs constitution).
 - Router (routing authority):
   - A document that routes readers to canonical sources.
-  - A router does not create new behavioral requirements (see Delegation Charter in `.decapod/constitution/core/MAESTRO.md`).
+  - A router does not create new behavioral requirements (see Delegation Charter in `embedded/core/MAESTRO.md`).
 - Proof surface:
   - A named, runnable mechanism that can detect drift or validate invariants (e.g. `decapod validate`, schema checks).
 - Claim:
-  - A registered promise/guarantee/invariant with a stable claim-id, tracked in `.decapod/constitution/core/CLAIMS.md`.
+  - A registered promise/guarantee/invariant with a stable claim-id, tracked in `embedded/core/CLAIMS.md`.
 - Enforcement:
   - Whether a claim is checked by a proof surface (`enforced`), partly checked (`partially_enforced`), or only documented (`not_enforced`).
 - Store:
-  - A state root that scopes reads/writes (see `.decapod/constitution/core/STORE_MODEL.md`).
+  - A state root that scopes reads/writes (see `embedded/core/STORE_MODEL.md`).
   - User store: `~/.decapod`
   - Repo store: `<repo>/.decapod/project`
 - Subsystem:
-  - A first-class Decapod surface with a CLI group and schema/proof hooks (see `.decapod/constitution/core/PLUGINS.md`).
+  - A first-class Decapod surface with a CLI group and schema/proof hooks (see `embedded/core/PLUGINS.md`).
 - Plugin-grade:
-  - Meets the thin-waist requirements in `.decapod/constitution/core/PLUGINS.md` (stable CLI group, schema/discovery, store-awareness, proof hooks).
+  - Meets the thin-waist requirements in `embedded/core/PLUGINS.md` (stable CLI group, schema/discovery, store-awareness, proof hooks).
 - Derived (artifact/state):
-  - Computed output that must not be treated as source-of-truth (see `.decapod/constitution/plugins/MANIFEST.md`).
+  - Computed output that must not be treated as source-of-truth (see `embedded/plugins/MANIFEST.md`).
 - Validate:
   - The primary proof surface (`decapod validate`) that checks documented invariants and drift gates.
 - Amendment:
-  - A binding meaning change governed by `.decapod/constitution/specs/AMENDMENTS.md`.
+  - A binding meaning change governed by `embedded/specs/AMENDMENTS.md`.
 - Deprecation:
-  - A non-binding marker on old meaning governed by `.decapod/constitution/core/DEPRECATION.md`, with replacement + sunset.
+  - A non-binding marker on old meaning governed by `embedded/core/DEPRECATION.md`, with replacement + sunset.
 
 ---
 
 ## Links
 
-- `.decapod/constitution/core/MAESTRO.md`
-- `.decapod/constitution/core/DOC_RULES.md`
-- `.decapod/constitution/core/CLAIMS.md`
-- `.decapod/constitution/core/DEPRECATION.md`
-- `.decapod/constitution/core/PLUGINS.md`
-- `.decapod/constitution/core/STORE_MODEL.md`
-- `.decapod/constitution/plugins/MANIFEST.md`
-- `.decapod/constitution/specs/AMENDMENTS.md`
+- `embedded/core/MAESTRO.md`
+- `embedded/core/DOC_RULES.md`
+- `embedded/core/CLAIMS.md`
+- `embedded/core/DEPRECATION.md`
+- `embedded/core/PLUGINS.md`
+- `embedded/core/STORE_MODEL.md`
+- `embedded/plugins/MANIFEST.md`
+- `embedded/specs/AMENDMENTS.md`
