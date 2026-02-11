@@ -59,10 +59,18 @@ jobs:
           $BINARY docs list | grep "embedded/core/DECAPOD.md"
           echo "Guardrail passed - Binary functional."
 
+      - name: Verify Secret Presence
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.CARGO_REGISTRY_TOKEN }}" ]; then
+            echo "❌ ERROR: CARGO_REGISTRY_TOKEN is empty or not found in GitHub Secrets."
+            echo "Please ensure you have added it to Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          echo "✅ Secret is present."
+
       - name: Publish to Crates.io
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --locked --allow-dirty
+        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --locked --allow-dirty
 
       - name: Package Binary
         run: |
