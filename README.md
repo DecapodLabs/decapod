@@ -84,7 +84,10 @@ Running `decapod init` will:
 - Create the `.decapod/` directory structure.
 - Scaffold root agent entrypoints (`AGENTS.md`, `GEMINI.md`, `CLAUDE.md`).
 
-**Safe initialization:** If any root entrypoints already exist, `decapod init` will safely back them up to `<file>.md.bak` before writing new ones.
+**Safe initialization:** If any root entrypoints already exist, `decapod init` will safely back them up to `<file>.md.bak` before writing new ones. 
+
+If you have existing backups, open your agent of choice and tell it to: 
+> "Blend the `*.md.bak` files into my `.decapod/constitutions/` overrides."
 
 ## Hand the wheel to an agent
 
