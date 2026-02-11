@@ -138,9 +138,9 @@ pub const TEMPLATES_DECAPOD_README: &str =
     include_str!("../../constitution/templates/DECAPOD_README.md");
 
 // Root templates (AGENTS.md, CLAUDE.md, GEMINI.md)
-pub const TEMPLATE_AGENTS: &str = include_str!("../../constitution/templates/AGENTS.md");
-pub const TEMPLATE_CLAUDE: &str = include_str!("../../constitution/templates/CLAUDE.md");
-pub const TEMPLATE_GEMINI: &str = include_str!("../../constitution/templates/GEMINI.md");
+pub const TEMPLATE_AGENTS: &str = include_str!("../../AGENTS.md");
+pub const TEMPLATE_CLAUDE: &str = include_str!("../../CLAUDE.md");
+pub const TEMPLATE_GEMINI: &str = include_str!("../../GEMINI.md");
 
 // Functions to access embedded documents (non-template specific)
 pub fn list_docs() -> Vec<String> {

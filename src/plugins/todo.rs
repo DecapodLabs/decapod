@@ -860,7 +860,11 @@ mod tests {
         assert_eq!(task.status, "open");
 
         // 3. Mark done
-        update_status(&root, task_id, "done", "task.done", serde_json::json!({})).unwrap();
+        let store = Store {
+            kind: crate::core::store::StoreKind::Repo,
+            root: root.clone(),
+        };
+        update_status(&store, task_id, "done", "task.done", serde_json::json!({})).unwrap();
         let task = get_task(&root, task_id).unwrap().unwrap();
         assert_eq!(task.status, "done");
 
