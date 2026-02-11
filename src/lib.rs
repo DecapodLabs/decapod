@@ -374,10 +374,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                     let store = match validate_cli.store.as_str() {
                         "user" => {
                             // User store uses a temp directory for blank-slate validation
-                            let tmp_root = std::env::temp_dir().join(format!(
-                                "decapod_validate_user_{}",
-                                ulid::Ulid::new()
-                            ));
+                            let tmp_root = std::env::temp_dir()
+                                .join(format!("decapod_validate_user_{}", ulid::Ulid::new()));
                             std::fs::create_dir_all(&tmp_root)
                                 .map_err(error::DecapodError::IoError)?;
                             Store {
