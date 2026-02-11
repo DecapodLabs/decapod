@@ -12,6 +12,34 @@ This document is embedded within the Decapod binary and serves as an internal re
 
 ---
 
+## 0. What "Proof" Means in Decapod
+
+**Proof = executable check.** There is no new DSL or spec language.
+
+A proof is any command that can fail loudly: tests, linters, formatters, policy checks, `decapod validate`, schema validators, or custom scripts. If it exits non-zero, it fails. That's it.
+
+Decapod's role:
+- Make proofs machine-invocable (agents run them deterministically)
+- Record proof outcomes (append-only event logs)
+- Gate promotion on proof results (no REAL without passing proof)
+
+The canonical proof surface today is `decapod validate`. Future epochs will add configurable proof registries.
+
+---
+
+## 0.1 What Decapod Does NOT Do (Concurrency)
+
+Decapod does not "solve" Git. Merge conflicts remain real.
+
+What Decapod can do:
+- **Reduce collisions by design:** work-unit partitioning, leases/claims (planned), serialized state writes via control plane (planned)
+- **Isolate agent work:** branch/patch flow remains Git-native
+- **Gate merges:** proof surfaces can block promotion until checks pass
+
+Do not claim brokered serialization is implemented. It is SPEC (see §4.1).
+
+---
+
 ## 1. Plugin Integration Guidelines
 
 For a subsystem to be considered "plugin-grade," it generally aims to provide:
@@ -94,23 +122,26 @@ Constraint:
 | context | implemented | REAL | `embedded/plugins/CONTEXT.md` | both | writes | `decapod context audit` | budget gating |
 | heartbeat | implemented | REAL | `embedded/plugins/HEARTBEAT.md` | both | reads | `decapod heartbeat` | status summary |
 | docs | implemented | REAL | `embedded/plugins/DOCS.md` | N/A | reads | `decapod docs list` | embedded assets |
-| db_broker | implemented | REAL | `embedded/plugins/DB_BROKER.md` | both | both | `decapod broker audit` | "no sqlite opens outside broker" |
+| db_broker | planned | SPEC | `embedded/plugins/DB_BROKER.md` | both | both | (not yet enforced) | planned: "no sqlite opens outside broker" |
 
 ---
 
-## 4. Subsystems (Planned, Named)
+## 4. Subsystems (SPEC — Not Yet Implemented)
 
-### 4.1 DB Broker (SQLite Front Door)
+### 4.1 DB Broker (SQLite Front Door) — SPEC
+
+**Status: SPEC.** Design exists; implementation does not. Do not claim this is working.
 
 Goal: serialize writes, coalesce reads, and standardize auditing in multi-agent environments.
 
-V1 scope:
+V1 scope (when implemented):
 
 - serialize writes per database
 - in-flight read de-dupe (join identical reads)
 - small TTL cache for recent read results
 - invalidation on writes
 - audit trail for mutations
+- enforce "no direct SQLite opens" invariant
 
 ---
 
