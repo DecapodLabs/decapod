@@ -165,11 +165,50 @@ pub fn schema() -> serde_json::Value {
         "version": "0.1.0",
         "description": "Manage automated responses",
         "commands": [
-            { "name": "add", "parameters": ["name", "trigger_type", "action_type"] },
-            { "name": "list", "parameters": ["status", "scope", "tags"] },
-            { "name": "get", "parameters": ["id"] },
-            { "name": "update", "parameters": ["id"] },
-            { "name": "delete", "parameters": ["id"] }
+            {
+                "name": "add",
+                "description": "Add a new reflex entry",
+                "parameters": [
+                    {"name": "name", "required": true, "description": "Unique reflex name identifier"},
+                    {"name": "description", "required": false, "description": "Human-readable description of the reflex purpose", "default": ""},
+                    {"name": "trigger_type", "required": true, "description": "Type of trigger (e.g., file_change, command_exit, schedule)"},
+                    {"name": "trigger_config", "required": true, "description": "JSON configuration for trigger conditions", "default": "{}"},
+                    {"name": "action_type", "required": true, "description": "Type of action to perform (e.g., notify, exec, webhook)"},
+                    {"name": "action_config", "required": true, "description": "JSON configuration for the action to execute"},
+                    {"name": "status", "required": false, "description": "Initial reflex status", "default": "active"},
+                    {"name": "tags", "required": false, "description": "Comma-separated tags for categorization", "default": ""}
+                ]
+            },
+            {
+                "name": "list",
+                "description": "List reflex entries",
+                "parameters": [
+                    {"name": "status", "required": false, "description": "Filter by status (active, paused, disabled)"},
+                    {"name": "scope", "required": false, "description": "Filter by scope directory"},
+                    {"name": "tags", "required": false, "description": "Filter by comma-separated tags"}
+                ]
+            },
+            {
+                "name": "get",
+                "description": "Retrieve a reflex entry by ID",
+                "parameters": [
+                    {"name": "id", "required": true, "description": "Reflex entry ID to retrieve"}
+                ]
+            },
+            {
+                "name": "update",
+                "description": "Update an existing reflex entry",
+                "parameters": [
+                    {"name": "id", "required": true, "description": "Reflex entry ID to update"}
+                ]
+            },
+            {
+                "name": "delete",
+                "description": "Delete a reflex entry",
+                "parameters": [
+                    {"name": "id", "required": true, "description": "Reflex entry ID to delete"}
+                ]
+            }
         ],
         "storage": ["reflex.db"]
     })
