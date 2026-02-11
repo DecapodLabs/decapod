@@ -259,12 +259,13 @@ dependencies = [
 
 [[package]]
 name = "decapod"
-version = "0.1.0"
+version = "0.0.3"
 dependencies = [
  "anyhow",
  "chrono",
  "clap",
  "colored",
+ "decapod",
  "regex",
  "rusqlite",
  "rust-embed",
