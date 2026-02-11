@@ -1,0 +1,124 @@
+name: Plugin proposal (new plugin)
+description: Propose a new plugin with strict scope, proof surface, and safety notes.
+title: "[PLUGIN] "
+labels: ["plugin", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is for NEW plugins only.
+        If you can’t define what state it reads/writes and how it’s validated, do not file.
+
+  - type: checkboxes
+    id: triage_signature
+    attributes:
+      label: Triage signature (required)
+      description: If you can’t agree to this, don’t file an issue.
+      options:
+        - label: I confirm this proposal specifies what the plugin reads/writes, its permissions model, and a validation/proof surface (smoke test + failure signals).
+          required: true
+        - label: I understand that incomplete proposals may be closed without further discussion.
+          required: true
+
+  - type: input
+    id: plugin_name
+    attributes:
+      label: Plugin name (required)
+      placeholder: "decapod-plugin-<system>-<purpose>"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Plugin category (required)
+      options:
+        - Connector
+        - Adapter
+        - Cache
+        - Proof / Eval harness
+        - Workflow module
+    validations:
+      required: true
+
+  - type: input
+    id: target_systems
+    attributes:
+      label: Target system(s) (required)
+      description: Be specific: product + API surface.
+      placeholder: "GitHub Issues API v3/v4, Slack Events API, Gmail API..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reads
+    attributes:
+      label: What state it READS (required)
+      description: Exact paths, resources, or external data sources.
+      placeholder: "Reads /todos/*.md and GitHub issue labels..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: writes
+    attributes:
+      label: What state it WRITES (required)
+      description: Exact paths + external side effects.
+      placeholder: "Writes /cache/github/issues.json and creates/updates issues..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: permissions
+    attributes:
+      label: Safety / permissions model (required)
+      description: Auth type, scopes, secret storage, least privilege, and failure behavior.
+      placeholder: |
+        - Auth: PAT/OAuth/App
+        - Scopes:
+        - Secret location:
+        - Least-privilege strategy:
+        - What happens on auth failure:
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Proof surface / validation approach (required)
+      description: How do we know it works and stays working? Include smoke test + failure signals.
+      placeholder: |
+        - Smoke test command:
+        - Deterministic outputs:
+        - How to detect drift:
+        - What logs indicate success/failure:
+    validations:
+      required: true
+
+  - type: textarea
+    id: example_usage
+    attributes:
+      label: Example usage (required)
+      description: Copy/pastable commands and expected effect.
+      placeholder: |
+        decapod plugin install ...
+        decapod run ...
+        Expected: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: mvp
+    attributes:
+      label: Minimal first PR (required)
+      description: Smallest slice you can ship in one PR (ideally <300 LOC net-new).
+    validations:
+      required: true
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope (required)
+      description: Say what this plugin will NOT do.
+    validations:
+      required: true
