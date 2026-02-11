@@ -89,7 +89,7 @@ pub fn schema() -> serde_json::Value {
         "version": "0.1.0",
         "description": "Computed agent autonomy tiers",
         "commands": [
-            { "name": "status", "parameters": ["actor_id"] }
+            { "name": "status", "description": "Show computed agent autonomy status", "parameters": ["id"] }
         ],
         "storage": []
     })
