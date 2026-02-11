@@ -53,6 +53,9 @@
 
 ---
 
+### Why “Decapod”?
+A decapod is a ten-legged crustacean (crabs and lobsters). Tough shell, relentless grip, built to survive pressure. That’s the vibe: a small kernel that keeps your swarm grounded while it crawls the real world. 🦀🦞
+
 ## Project OS for Machines
 
 Decapod turns “a bunch of agents” into an actual system. Not chat logs. Not vibes. A shared, deterministic workspace where agents can work in parallel without inventing parallel realities. You steer. The swarm executes. The kernel keeps everyone honest.
