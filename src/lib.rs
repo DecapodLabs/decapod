@@ -371,6 +371,14 @@ pub fn run() -> Result<(), error::DecapodError> {
                 policy::initialize_policy_db(&setup_store_root)?;
                 archive::initialize_archive_db(&setup_store_root)?;
                 feedback::initialize_feedback_db(&setup_store_root)?;
+
+                // Create repo store sentinel file for validation
+                let sentinel_path = setup_decapod_root.join("DECAPOD_REPO_STORE");
+                std::fs::write(&sentinel_path, "").map_err(error::DecapodError::IoError)?;
+
+                // Create empty todo events file for validation
+                let events_path = setup_store_root.join("todo.events.jsonl");
+                std::fs::write(&events_path, "").map_err(error::DecapodError::IoError)?;
             }
 
             scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
