@@ -16,23 +16,23 @@ This file answers two questions:
 ## 1. Canonical Docs
 
 Primary sources for contract and design:
-- `.decapod/constitution/specs/INTENT.md`
-- `.decapod/constitution/specs/ARCHITECTURE.md`
-- `.decapod/constitution/specs/SYSTEM.md`
+- `embedded/specs/INTENT.md`
+- `embedded/specs/ARCHITECTURE.md`
+- `embedded/specs/SYSTEM.md`
 
 Agent entrypoints (home-linkable templates):
-- `.decapod/constitution/templates/AGENTS.md`
-- `.decapod/constitution/templates/CLAUDE.md`
-- `.decapod/constitution/templates/GEMINI.md`
-- `.decapod/constitution/templates/DEMANDS.md`
+- `embedded/templates/AGENTS.md`
+- `embedded/templates/CLAUDE.md`
+- `embedded/templates/GEMINI.md`
+- `embedded/templates/DEMANDS.md`
 
 System internals (internal, repo-local):
-- `.decapod/constitution/core/` (this directory)
-- `.decapod/constitution/core/DECAPOD.md`
-- `.decapod/constitution/core/DOC_RULES.md`
-- `.decapod/constitution/core/PLUGINS.md`
-- `.decapod/constitution/core/STORE_MODEL.md`
-- `.decapod/constitution/core/CONTROL_PLANE.md`
+- `embedded/core/` (this directory)
+- `embedded/core/DECAPOD.md`
+- `embedded/core/DOC_RULES.md`
+- `embedded/core/PLUGINS.md`
+- `embedded/core/STORE_MODEL.md`
+- `embedded/core/CONTROL_PLANE.md`
 - `docs/REPO_MAP.md`
 - `docs/DOC_MAP.md`
 
@@ -61,17 +61,17 @@ The `.decapod/` directories primarily contain state. They are generally not inte
 
 - `docs/REPO_MAP.md`
 - `docs/DOC_MAP.md`
-- `.decapod/constitution/plugins/MANIFEST.md`
-- `.decapod/constitution/plugins/WORKFLOW.md`
-- `.decapod/constitution/core/CONTROL_PLANE.md`
-- `.decapod/constitution/core/DECAPOD.md`
-- `.decapod/constitution/core/DOC_RULES.md`
-- `.decapod/constitution/core/PLUGINS.md`
-- `.decapod/constitution/core/STORE_MODEL.md`
-- `.decapod/constitution/specs/ARCHITECTURE.md`
-- `.decapod/constitution/specs/INTENT.md`
-- `.decapod/constitution/specs/SYSTEM.md`
-- `.decapod/constitution/templates/AGENTS.md`
-- `.decapod/constitution/templates/CLAUDE.md`
-- `.decapod/constitution/templates/DEMANDS.md`
-- `.decapod/constitution/templates/GEMINI.md`
+- `embedded/plugins/MANIFEST.md`
+- `embedded/plugins/WORKFLOW.md`
+- `embedded/core/CONTROL_PLANE.md`
+- `embedded/core/DECAPOD.md`
+- `embedded/core/DOC_RULES.md`
+- `embedded/core/PLUGINS.md`
+- `embedded/core/STORE_MODEL.md`
+- `embedded/specs/ARCHITECTURE.md`
+- `embedded/specs/INTENT.md`
+- `embedded/specs/SYSTEM.md`
+- `embedded/templates/AGENTS.md`
+- `embedded/templates/CLAUDE.md`
+- `embedded/templates/DEMANDS.md`
+- `embedded/templates/GEMINI.md`

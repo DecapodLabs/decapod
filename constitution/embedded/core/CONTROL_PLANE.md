@@ -10,7 +10,7 @@ This document is about *how* agents should use Decapod as a local control plane:
 
 It is intentionally higher-level than subsystem docs. It exists to prevent "agents poking files and DBs" from becoming the de facto interface.
 
-General methodology lives in `.decapod/constitution/specs/INTENT.md` and `.decapod/constitution/specs/ARCHITECTURE.md`.
+General methodology lives in `embedded/specs/INTENT.md` and `embedded/specs/ARCHITECTURE.md`.
 
 ---
 
@@ -32,7 +32,7 @@ This is how you get determinism, auditability, and eventually policy.
 
 This is the default sequence when operating in a Decapod-managed repo:
 
-1. Read the contract: `.decapod/constitution/specs/INTENT.md`, `.decapod/constitution/specs/ARCHITECTURE.md`, then `.decapod/constitution/specs/SYSTEM.md`.
+1. Read the contract: `embedded/specs/INTENT.md`, `embedded/specs/ARCHITECTURE.md`, then `embedded/specs/SYSTEM.md`.
 2. Discover proof: identify the smallest proof surface that can falsify success (`decapod validate`, tests, etc.).
 3. Use Decapod as the interface: read/write shared state through `decapod ...` commands.
 4. Add a repo TODO for multi-step work before implementation (dogfood mode inside this repo).
@@ -69,7 +69,7 @@ If a subsystem cannot meet these, it is not a control-plane subsystem yet. Treat
 
 Subsystem status is defined only in the subsystem registry:
 
-- `.decapod/constitution/core/PLUGINS.md` (§3.5)
+- `embedded/core/PLUGINS.md` (§3.5)
 
 Other docs must not restate subsystem lists. They must route to the registry.
 
@@ -147,12 +147,12 @@ Validate coverage matrix (starter; expand over time):
 ## Links
 
 - `docs/REPO_MAP.md`
-- `.decapod/constitution/core/SOUL.md`
-- `.decapod/constitution/core/DOC_RULES.md`
-- `.decapod/constitution/core/STORE_MODEL.md`
-- `.decapod/constitution/plugins/MANIFEST.md`
-- `.decapod/constitution/plugins/WORKFLOW.md`
-- `.decapod/constitution/specs/ARCHITECTURE.md`
-- `.decapod/constitution/specs/INTENT.md`
-- `.decapod/constitution/specs/SYSTEM.md`
-- `.decapod/constitution/core/PLUGINS.md`
+- `embedded/core/SOUL.md`
+- `embedded/core/DOC_RULES.md`
+- `embedded/core/STORE_MODEL.md`
+- `embedded/plugins/MANIFEST.md`
+- `embedded/plugins/WORKFLOW.md`
+- `embedded/specs/ARCHITECTURE.md`
+- `embedded/specs/INTENT.md`
+- `embedded/specs/SYSTEM.md`
+- `embedded/core/PLUGINS.md`

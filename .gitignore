@@ -4,6 +4,7 @@
 target/
 dist/
 build/
+dev/
 *.o
 *.so
 *.a

@@ -29,13 +29,13 @@ An amendment is valid only if all of the following are true:
 1. The change is explicit.
    - Update the binding doc text (no "implied" policy).
 2. The change is routed.
-   - Ensure `.decapod/constitution/core/MAESTRO.md` reaches the updated/added canonical docs via `## Links`.
+   - Ensure `embedded/core/MAESTRO.md` reaches the updated/added canonical docs via `## Links`.
 3. The change is recorded.
    - Add an entry to the Amendment Log in this document (§6).
 4. The change is claim-safe.
-   - If the change introduces/updates a guarantee, register/update the claim in `.decapod/constitution/core/CLAIMS.md`.
+   - If the change introduces/updates a guarantee, register/update the claim in `embedded/core/CLAIMS.md`.
 5. The change is deprecation-safe.
-   - If the change replaces or retires binding meaning, follow `.decapod/constitution/core/DEPRECATION.md`.
+   - If the change replaces or retires binding meaning, follow `embedded/core/DEPRECATION.md`.
 6. The change is validated.
    - Run `decapod validate` for the relevant store(s) and record it in the log entry.
 
@@ -46,19 +46,19 @@ An amendment is valid only if all of the following are true:
 When a binding doc change touches these areas, the following co-updates are required:
 
 - Doc graph and canon:
-  - Update `.decapod/constitution/core/MAESTRO.md` routing as needed.
+  - Update `embedded/core/MAESTRO.md` routing as needed.
   - Regenerate `docs/DOC_MAP.md` (derived; do not hand-edit).
 - Doc compiler and authority routing:
-  - If header fields, layers, truth labels, reachability, or decision rights change: update `.decapod/constitution/core/DOC_RULES.md`.
+  - If header fields, layers, truth labels, reachability, or decision rights change: update `embedded/core/DOC_RULES.md`.
 - Subsystems and extensibility:
-  - If a subsystem is added/removed/renamed/status-changed: update `.decapod/constitution/core/PLUGINS.md`.
+  - If a subsystem is added/removed/renamed/status-changed: update `embedded/core/PLUGINS.md`.
   - If shipped CLI surfaces change: ensure `decapod validate` gates cover the drift.
 - Store semantics and safety:
-  - If store selection or purity model changes: update `.decapod/constitution/core/STORE_MODEL.md`.
+  - If store selection or purity model changes: update `embedded/core/STORE_MODEL.md`.
 - Claims and promises:
-  - If a guarantee/invariant changes: update `.decapod/constitution/core/CLAIMS.md`.
+  - If a guarantee/invariant changes: update `embedded/core/CLAIMS.md`.
 - Deprecations and migrations:
-  - If anything is being retired: update `.decapod/constitution/core/DEPRECATION.md`.
+  - If anything is being retired: update `embedded/core/DEPRECATION.md`.
 
 ---
 
@@ -74,7 +74,7 @@ Resolution is not interpretation; resolution is an amendment to eliminate the di
 
 If urgent work must proceed while governance is unclear:
 
-- Follow `.decapod/constitution/plugins/EMERGENCY_PROTOCOL.md`.
+- Follow `embedded/plugins/EMERGENCY_PROTOCOL.md`.
 - Do not mutate stores or ship new requirements based on assumption.
 - Record an amendment entry that flags `EMERGENCY` and describes the risk and follow-up.
 
@@ -94,13 +94,13 @@ Each entry MUST include:
 ### 2026-02-09
 
 - Docs changed:
-  - `.decapod/constitution/specs/AMENDMENTS.md` (introduced)
-  - `.decapod/constitution/core/CLAIMS.md` (introduced)
-  - `.decapod/constitution/core/DEPRECATION.md` (introduced)
-  - `.decapod/constitution/core/GLOSSARY.md` (introduced)
-  - `.decapod/constitution/plugins/EMERGENCY_PROTOCOL.md` (introduced)
-  - `.decapod/constitution/core/MAESTRO.md` (delegation charter + routing)
-  - `.decapod/constitution/core/DOC_RULES.md` (decision rights + truth label constraints)
+  - `embedded/specs/AMENDMENTS.md` (introduced)
+  - `embedded/core/CLAIMS.md` (introduced)
+  - `embedded/core/DEPRECATION.md` (introduced)
+  - `embedded/core/GLOSSARY.md` (introduced)
+  - `embedded/plugins/EMERGENCY_PROTOCOL.md` (introduced)
+  - `embedded/core/MAESTRO.md` (delegation charter + routing)
+  - `embedded/core/DOC_RULES.md` (decision rights + truth label constraints)
 - Summary:
   - Established explicit change control, claims ledger, and deprecation contract as binding governance surfaces.
 - Claims added/changed:
@@ -120,12 +120,12 @@ Each entry MUST include:
 
 ## Links
 
-- `.decapod/constitution/core/MAESTRO.md`
-- `.decapod/constitution/core/DOC_RULES.md`
-- `.decapod/constitution/core/CLAIMS.md`
-- `.decapod/constitution/core/DEPRECATION.md`
-- `.decapod/constitution/plugins/EMERGENCY_PROTOCOL.md`
-- `.decapod/constitution/core/PLUGINS.md`
-- `.decapod/constitution/core/STORE_MODEL.md`
-- `.decapod/constitution/specs/SYSTEM.md`
-- `.decapod/constitution/specs/INTENT.md`
+- `embedded/core/MAESTRO.md`
+- `embedded/core/DOC_RULES.md`
+- `embedded/core/CLAIMS.md`
+- `embedded/core/DEPRECATION.md`
+- `embedded/plugins/EMERGENCY_PROTOCOL.md`
+- `embedded/core/PLUGINS.md`
+- `embedded/core/STORE_MODEL.md`
+- `embedded/specs/SYSTEM.md`
+- `embedded/specs/INTENT.md`
