@@ -39,7 +39,7 @@ The store is part of the request context. A command that mutates state is not we
 
 ## 4. Guarantees (Contract)
 
-All guarantees here are registered in `.decapod/constitution/core/CLAIMS.md`.
+All guarantees here are registered in `embedded/core/CLAIMS.md`.
 
 - blank-slate (claim: claim.store.blank_slate): a fresh user store has no tasks unless the user adds them
 - no auto-seeding (claim: claim.store.no_auto_seeding): repo store content must never appear in the user store automatically
@@ -58,19 +58,19 @@ All guarantees here are registered in `.decapod/constitution/core/CLAIMS.md`.
 
 ## 6. Routing (Where This Is Used)
 
-- Control plane patterns: `.decapod/constitution/core/CONTROL_PLANE.md`
-- Subsystem surfaces: `.decapod/constitution/core/PLUGINS.md`
-- Proof doctrine and authority: `.decapod/constitution/specs/SYSTEM.md`
+- Control plane patterns: `embedded/core/CONTROL_PLANE.md`
+- Subsystem surfaces: `embedded/core/PLUGINS.md`
+- Proof doctrine and authority: `embedded/specs/SYSTEM.md`
 
 ---
 
 ## Links
 
-- `.decapod/constitution/core/CONTROL_PLANE.md`
-- `.decapod/constitution/core/MAESTRO.md`
-- `.decapod/constitution/core/CLAIMS.md`
-- `.decapod/constitution/core/PLUGINS.md`
-- `.decapod/constitution/core/DOC_RULES.md`
-- `.decapod/constitution/specs/AMENDMENTS.md`
-- `.decapod/constitution/specs/SYSTEM.md`
+- `embedded/core/CONTROL_PLANE.md`
+- `embedded/core/MAESTRO.md`
+- `embedded/core/CLAIMS.md`
+- `embedded/core/PLUGINS.md`
+- `embedded/core/DOC_RULES.md`
+- `embedded/specs/AMENDMENTS.md`
+- `embedded/specs/SYSTEM.md`
 - `docs/REPO_MAP.md`

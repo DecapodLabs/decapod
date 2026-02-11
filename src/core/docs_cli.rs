@@ -1,7 +1,6 @@
-use crate::core::assets;
-use crate::core::error;
+use crate::core::{assets, error};
 use clap::Subcommand;
-use std::fs;
+use std::env;
 use std::path::{Path, PathBuf};
 
 #[derive(clap::Args, Debug)]
@@ -23,28 +22,61 @@ pub enum DocsCommand {
     Ingest,
 }
 
-/// Attempts to read a constitution document, prioritizing user overrides.
-/// Checks `<repo-dir>/.decapod/constitution/` first, then falls back to embedded assets.
-fn read_constitution_doc(repo_root: &Path, doc_path: &str) -> Option<String> {
-    let override_path = repo_root
-        .join(".decapod")
-        .join("constitution")
-        .join(doc_path);
+/// Load override blob layer (cached or recompiled as needed)
+fn load_override_blob_layer(
+    repo_root: &Path,
+) -> Result<Option<assets::OverrideBlob>, error::DecapodError> {
+    // Check for developer override location first
+    let override_root = std::env::var("DECAPOD_DEV_OVERRIDE")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| repo_root.to_path_buf());
 
-    if override_path.exists() {
-        if let Ok(content) = fs::read_to_string(&override_path) {
-            return Some(content);
-        }
+    // Only try to load blob if .decapod/constitution exists
+    let constitution_dir = override_root.join(".decapod").join("constitution");
+    if !constitution_dir.exists() {
+        return Ok(None); // No overrides - use embedded only
     }
 
-    // Fallback to embedded asset
-    assets::get_doc(&format!("embedded/{}", doc_path))
+    assets::load_override_blob(&override_root)
+        .map_err(|e| {
+            error::DecapodError::IoError(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("{}", e),
+            ))
+        })
+        .map(Some)
+}
+
+/// Access constitution document: embedded base + optional override layer
+fn get_constitution_with_overrides(repo_root: &Path, relative_path: &str) -> Option<String> {
+    // Get embedded base content from compiled blob (always available)
+    let embedded_content = assets::get_embedded_doc(relative_path);
+
+    if embedded_content.is_none() {
+        return None;
+    }
+
+    // Try to load override layer
+    match load_override_blob_layer(repo_root) {
+        Ok(Some(blob)) => {
+            // Override layer loaded - merge with embedded
+            assets::get_merged_doc(&blob, relative_path).or(embedded_content)
+        }
+        Ok(None) => {
+            // No overrides - use embedded only
+            embedded_content
+        }
+        Err(_) => {
+            // Override loading failed - fall back to embedded
+            embedded_content
+        }
+    }
 }
 
 pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
     match cli.command {
         DocsCommand::List => {
-            let docs = assets::list_docs(); // This currently lists embedded docs
+            let docs = assets::list_docs();
             println!("Embedded Decapod Methodology Docs:");
             for doc in docs {
                 println!("- {}", doc);
@@ -56,7 +88,11 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
             // Determine repo root for dynamic constitution loading
             let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
             let repo_root = find_repo_root(&current_dir)?;
-            match read_constitution_doc(&repo_root, &path) {
+
+            // Convert to relative path for override merging
+            let relative_path = path.strip_prefix("embedded/").unwrap_or(&path);
+
+            match get_constitution_with_overrides(&repo_root, relative_path) {
                 Some(content) => {
                     println!("{}", content);
                     Ok(())
@@ -69,8 +105,15 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
         }
         DocsCommand::Ingest => {
             let docs = assets::list_docs();
+            // Determine repo root for override merging
+            let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
+            let repo_root = find_repo_root(&current_dir)?;
+
             for doc_path in docs {
-                if let Some(content) = assets::get_doc(&doc_path) {
+                // Convert embedded path to relative path for override merging
+                let relative_path = doc_path.strip_prefix("embedded/").unwrap_or(&doc_path);
+
+                if let Some(content) = get_constitution_with_overrides(&repo_root, relative_path) {
                     println!("--- BEGIN {} ---", doc_path);
                     println!("{}", content);
                     println!("--- END {} ---", doc_path);
@@ -84,7 +127,12 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
 /// Helper function to find the .decapod repo root
 /// (This is a simplified version; a real implementation might be more robust)
 fn find_repo_root(start_dir: &Path) -> Result<PathBuf, error::DecapodError> {
-    let mut current_dir = PathBuf::from(start_dir);
+    // Check for developer override first
+    let override_root = std::env::var("DECAPOD_DEV_OVERRIDE")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| start_dir.to_path_buf());
+
+    let mut current_dir = override_root;
     loop {
         if current_dir.join(".decapod").exists() {
             return Ok(current_dir);
@@ -99,13 +147,20 @@ fn find_repo_root(start_dir: &Path) -> Result<PathBuf, error::DecapodError> {
 
 pub fn schema() -> serde_json::Value {
     serde_json::json!({
-        "name": "docs",
-        "version": "0.1.0",
-        "description": "Access embedded Decapod methodology documentation",
-        "commands": [
-            { "name": "list", "description": "List embedded docs" },
-            { "name": "show", "parameters": ["path"] }
-        ],
-        "storage": ["(embedded binary assets)"]
+        "type": "object",
+        "properties": {
+            "list": {
+                "type": "null",
+                "description": "List all embedded Decapod methodology documents"
+            },
+            "show": {
+                "type": "string",
+                "description": "Display a specific embedded document"
+            },
+            "ingest": {
+                "type": "null",
+                "description": "Dump all embedded constitution for agentic ingestion"
+            }
+        }
     })
 }

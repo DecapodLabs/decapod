@@ -3,7 +3,7 @@ use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand};
-use rusqlite::{Result, types::ToSql};
+use rusqlite::{types::ToSql, Result};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::path::{Path, PathBuf};

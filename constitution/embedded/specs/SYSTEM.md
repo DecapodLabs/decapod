@@ -4,7 +4,7 @@
 **Layer:** Constitution
 **Binding:** Yes
 **Scope:** authority hierarchy, proof doctrine, and cross-doc conflict resolution
-**Non-goals:** subsystem inventories or command lists (see `.decapod/constitution/core/PLUGINS.md`)
+**Non-goals:** subsystem inventories or command lists (see `embedded/core/PLUGINS.md`)
 
 This document defines the authority rules for intent-driven repos.
 
@@ -43,15 +43,15 @@ Reverse flow (e.g., changing specs to match code) is forbidden, except during a 
 
 When guidance from different documents conflicts, the most specific, highest-authority document in the current working directory prevails.
 
-1.  `.decapod/constitution/specs/INTENT.md` (Binding Contract)
-2.  `.decapod/constitution/specs/ARCHITECTURE.md` (Compiled from Intent)
+1.  `embedded/specs/INTENT.md` (Binding Contract)
+2.  `embedded/specs/ARCHITECTURE.md` (Compiled from Intent)
 3.  Proof surface (`decapod validate`, `tests/`, and optional `proof.md`)
-4.  `.decapod/constitution/specs/SYSTEM.md` (This document, the foundational methodology)
-5.  `.decapod/constitution/core/MAESTRO.md` (Router/index; not a contract, but the default entrypoint if present)
+4.  `embedded/specs/SYSTEM.md` (This document, the foundational methodology)
+5.  `embedded/core/MAESTRO.md` (Router/index; not a contract, but the default entrypoint if present)
 6.  `docs/templates/AGENTS.md` (Machine-facing entrypoint)
-7.  `.decapod/constitution/plugins/WORKFLOW.md` (Operational guidance, must not override intent)
-8.  `.decapod/constitution/specs/philosophy.md` (Non-binding rationale)
-9.  `.decapod/constitution/specs/context.md` (Non-binding history)
+7.  `embedded/plugins/WORKFLOW.md` (Operational guidance, must not override intent)
+8.  `embedded/specs/philosophy.md` (Non-binding rationale)
+9.  `embedded/specs/context.md` (Non-binding history)
 
 ---
 
@@ -62,9 +62,9 @@ All AI agents operating within this system must adhere to the following behavior
 ### 4.1. Default Agent Behavior
 
 -   **Before Acting:**
-    1.  If present, start at `.decapod/constitution/core/MAESTRO.md` (repo router/index).
-    2.  Read `.decapod/constitution/specs/INTENT.md`.
-    3.  Read `.decapod/constitution/specs/ARCHITECTURE.md`.
+    1.  If present, start at `embedded/core/MAESTRO.md` (repo router/index).
+    2.  Read `embedded/specs/INTENT.md`.
+    3.  Read `embedded/specs/ARCHITECTURE.md`.
     4.  Read the proof surface (`decapod validate`, `tests/`, and optional `proof.md`).
     5.  Then, and only then, read or modify the implementation.
 -   **While Acting:**
@@ -106,7 +106,7 @@ To prevent drift and ensure quality, all projects must adhere to strict structur
 
 1.  The `proof.md` file is not a template (contains no "TODO" or "Not yet" markers).
 2.  The automated proof harness (`decapod validate`, if it exists) runs and exits with code 0.
-3.  The compliance numbers in `proof.md` and `.decapod/constitution/specs/INTENT.md` match exactly.
+3.  The compliance numbers in `proof.md` and `embedded/specs/INTENT.md` match exactly.
 4.  If the intent declares invariants, there is runtime validation code for them.
 
 **Violation of these rules is considered drift.** The process must stop, the proof surface must be updated, and verification must be re-run.
@@ -121,7 +121,7 @@ This system defines clear classifications for projects and a composable system f
 
 Every repository must be classified as one of the following:
 
-1.  **Intent-Driven:** `.decapod/constitution/specs/INTENT.md` is the versioned, authoritative contract. Promotion is gated by proof.
+1.  **Intent-Driven:** `embedded/specs/INTENT.md` is the versioned, authoritative contract. Promotion is gated by proof.
 2.  **Spec-Driven:** Specifications exist, but are not treated as a binding contract.
 3.  **Prototype/Spike:** For exploration. Assumptions and exit criteria must be recorded.
 
@@ -129,7 +129,7 @@ Every repository must be classified as one of the following:
 
 To standardize architectural choices, projects can declare **Capabilities**—named, versioned, composable modules for features like language toolchains, runtimes, or data storage.
 
--   **Declaration:** Capabilities are declared in `.decapod/constitution/specs/INTENT.md` in a dedicated section (e.g., `lang.rust`, `runtime.container`, `data.postgres`).
+-   **Declaration:** Capabilities are declared in `embedded/specs/INTENT.md` in a dedicated section (e.g., `lang.rust`, `runtime.container`, `data.postgres`).
 -   **Anatomy:** Each capability defines its dependencies, conflicts, generated artifacts, and proof obligations.
 -   **No Implicit Defaults:** Agents MUST NOT introduce new capabilities (like Docker or a database) without them being explicitly declared in the intent first.
 
@@ -158,7 +158,7 @@ This system is designed to be teachable. The "Workshop Overlay" turns the intent
 Subsystems exist as interface surfaces (`decapod <subsystem> ...`), but subsystem truth is not defined here.
 
 Canonical subsystem registry (single source of truth):
-- `.decapod/constitution/core/PLUGINS.md` (§3.5)
+- `embedded/core/PLUGINS.md` (§3.5)
 
 ---
 
@@ -176,29 +176,29 @@ Until this is implemented, do not document script-based plugin systems or extern
 
 ## 10. See Also
 
--   `.decapod/constitution/core/SOUL.md`: Defines the agent's core identity and prime directives.
--   `.decapod/constitution/core/MEMORY.md`: Outlines principles and mechanisms for agent's persistent memory.
--   `.decapod/constitution/core/KNOWLEDGE.md`: Defines principles for managing project-specific knowledge.
+-   `embedded/core/SOUL.md`: Defines the agent's core identity and prime directives.
+-   `embedded/core/MEMORY.md`: Outlines principles and mechanisms for agent's persistent memory.
+-   `embedded/core/KNOWLEDGE.md`: Defines principles for managing project-specific knowledge.
 
 For domain-specific guidance, keep it repo-local under `docs/` and reference it from your project `AGENTS.md`.
 
-For operational workflow and TODO governance, see `.decapod/constitution/plugins/WORKFLOW.md`.
+For operational workflow and TODO governance, see `embedded/plugins/WORKFLOW.md`.
 
 ## Links
 
-- `.decapod/constitution/core/CONTROL_PLANE.md`
-- `.decapod/constitution/core/MAESTRO.md`
-- `.decapod/constitution/core/DOC_RULES.md`
-- `.decapod/constitution/core/KNOWLEDGE.md`
-- `.decapod/constitution/core/MEMORY.md`
-- `.decapod/constitution/core/SOUL.md`
-- `.decapod/constitution/plugins/WORKFLOW.md`
-- `.decapod/constitution/core/PLUGINS.md`
-- `.decapod/constitution/specs/ARCHITECTURE.md`
-- `.decapod/constitution/specs/INTENT.md`
-- `.decapod/constitution/specs/SYSTEM.md`
-- `.decapod/constitution/specs/context.md`
-- `.decapod/constitution/specs/philosophy.md`
+- `embedded/core/CONTROL_PLANE.md`
+- `embedded/core/MAESTRO.md`
+- `embedded/core/DOC_RULES.md`
+- `embedded/core/KNOWLEDGE.md`
+- `embedded/core/MEMORY.md`
+- `embedded/core/SOUL.md`
+- `embedded/plugins/WORKFLOW.md`
+- `embedded/core/PLUGINS.md`
+- `embedded/specs/ARCHITECTURE.md`
+- `embedded/specs/INTENT.md`
+- `embedded/specs/SYSTEM.md`
+- `embedded/specs/context.md`
+- `embedded/specs/philosophy.md`
 - `docs/templates/AGENTS.md`
 - `docs/templates/CLAUDE.md`
 - `docs/templates/GEMINI.md`

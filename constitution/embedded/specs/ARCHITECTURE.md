@@ -10,7 +10,7 @@ This file defines how to *do architecture* in an intent-driven codebase: how arc
 
 It is intentionally not a diagram dump and not a project-specific inventory. It is a process and quality contract.
 
-If this file conflicts with `.decapod/constitution/specs/INTENT.md`, intent wins.
+If this file conflicts with `embedded/specs/INTENT.md`, intent wins.
 
 ---
 
@@ -148,6 +148,6 @@ Evidence that architecture is healthy:
 
 ## Links
 
-- `.decapod/constitution/specs/INTENT.md`
-- `.decapod/constitution/specs/SYSTEM.md`
-- `.decapod/constitution/core/SOUL.md`
+- `embedded/specs/INTENT.md`
+- `embedded/specs/SYSTEM.md`
+- `embedded/core/SOUL.md`
