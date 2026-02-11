@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    name: Build - ${{ matrix.platform.os }}
+    name: Build ${{ matrix.platform.os }}
     strategy:
       matrix:
         platform:
@@ -46,7 +46,7 @@ jobs:
           
           # Basic sanity check that binary runs and can show embedded docs
           $BINARY docs list | grep "docs/DECAPOD.md"
-          echo "Guardrail passed: Binary functional."
+          echo "Guardrail passed - Binary functional."
 
       - name: Package
         shell: bash
