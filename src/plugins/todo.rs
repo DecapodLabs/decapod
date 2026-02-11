@@ -91,8 +91,6 @@ enum TodoCommand {
     },
     /// Rebuild the SQLite DB deterministically from the JSONL event log.
     Rebuild,
-    /// Output the JSON schema for this CLI.
-    Schema,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -725,40 +723,6 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
     })
 }
 
-fn print_schema(_root: &Path) -> serde_json::Value {
-    serde_json::json!({
-        "name": "todo",
-        "description": "Manage TODO tasks within the Decapod system.",
-        "commands": [
-            {"name":"add","description":"Add a new task.","parameters":[
-                {"name":"title","type":"string","required":true},
-                {"name":"tags","type":"string","required":false},
-                {"name":"owner","type":"string","required":false},
-                {"name":"due","type":"string","required":false},
-                {"name":"ref","type":"string","required":false},
-                {"name":"dir","type":"string","required":false},
-                {"name":"priority","type":"string","required":false},
-                {"name":"depends_on","type":"string","required":false},
-                {"name":"blocks","type":"string","required":false},
-                {"name":"parent","type":"string","required":false}
-            ]},
-            {"name":"list","description":"List tasks.","parameters":[
-                {"name":"status","type":"string","required":false},
-                {"name":"scope","type":"string","required":false},
-                {"name":"tags","type":"string","required":false},
-                {"name":"title_search","type":"string","required":false},
-                {"name":"dir","type":"string","required":false}
-            ]},
-            {"name":"get","description":"Get a task by ID.","parameters":[{"name":"id","type":"string","required":true}]},
-            {"name":"done","description":"Mark a task done.","parameters":[{"name":"id","type":"string","required":true}]},
-            {"name":"archive","description":"Archive a task.","parameters":[{"name":"id","type":"string","required":true}]},
-            {"name":"comment","description":"Add a comment to a task.","parameters":[{"name":"id","type":"string","required":true},{"name":"comment","type":"string","required":true}]},
-            {"name":"rebuild","description":"Rebuild the DB from JSONL events.","parameters":[]},
-            {"name":"schema","description":"Print this schema.","parameters":[]}
-        ]
-    })
-}
-
 pub fn schema() -> serde_json::Value {
     serde_json::json!({
         "name": "todo",
@@ -822,7 +786,6 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
         }
         TodoCommand::Comment { id, comment } => comment_task(root, id, comment)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,
-        TodoCommand::Schema => print_schema(root),
     };
 
     match cli.format {
