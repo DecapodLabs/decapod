@@ -1,28 +1,42 @@
-# GEMINI.md - Decapod Entrypoint
+# GEMINI.md - Decapod Entrypoint for Gemini
 
-**Canonical:** GEMINI.md
-**Authority:** entrypoint
-**Layer:** Guides
+**Canonical:** GEMINI.md  
+**Authority:** entrypoint  
+**Layer:** Guides  
 **Binding:** No
 
-This repo is Decapod-managed.
+This is a Decapod-managed repository. **You (Gemini) are contractually obligated to use the Decapod toolchain.**
 
-## 1. Decapod Constitution (Embedded)
-The Decapod methodology is built into the `decapod` binary.
-- List available docs: `decapod docs list`
-- Read the constitution: `decapod docs show core/DECAPOD.md`
-- **Ingest for Agentic Memory:** `decapod docs ingest` (dumps all embedded docs)
+## Agent Obligation: Route Through Decapod
 
-## 2. Project Living Docs (Mutable)
-Maintain and follow the project-specific intent and architecture here:
-- `.decapod/constitutions/specs/INTENT.md`
-- `.decapod/constitutions/specs/ARCHITECTURE.md`
+As Gemini operating in this repo, you **must**:
 
-## 3. Tooling
-Use Decapod as the shared interface:
-- `decapod todo ...`
-- `decapod validate`
+1. **Read DECAPOD.md first** — `decapod docs show core/DECAPOD.md`
+2. **Use Decapod CLI only** — never manipulate state directly
+3. **Follow the Navigation Charter** — all methodology routes through DECAPOD.md
+4. **Validate completion** — `decapod validate` must pass
 
-## 4. Overrides
-Review `.decapod/README.md` for guidance on overriding embedded methodology.
-Any time you run and want to trigger `decapod`, review the `.decapod/constitutions/` overrides.
+This entrypoint is non-authoritative. DECAPOD.md defines all contracts and patterns.
+
+## Required Start
+
+```bash
+decapod docs show core/DECAPOD.md     # READ THIS FIRST
+decapod validate                      # Check state
+decapod todo list                     # See work
+```
+
+Then follow the Navigation Charter in DECAPOD.md.
+
+## Your Rules
+
+- Route all methodology through `embedded/core/DECAPOD.md`
+- Use `decapod` commands as your sole interface
+- Pass validation before claiming done
+- This entrypoint defers completely to the constitution
+
+## Links
+
+- `embedded/core/DECAPOD.md` — **Authoritative router. REQUIRED READING.**
+- `embedded/core/CONTROL_PLANE.md` — Sequencing contract
+- `.decapod/constitutions/specs/INTENT.md` — Project intent
