@@ -1,28 +1,48 @@
 # AGENTS.md - Decapod Entrypoint
 
-**Canonical:** AGENTS.md
-**Authority:** entrypoint
-**Layer:** Guides
+**Canonical:** AGENTS.md  
+**Authority:** entrypoint  
+**Layer:** Guides  
 **Binding:** No
 
-This repo is Decapod-managed.
+This is a Decapod-managed repository. **You (the AI agent) are contractually obligated to use the Decapod toolchain.**
 
-## 1. Decapod Constitution (Embedded)
-The Decapod methodology is built into the `decapod` binary.
-- List available docs: `decapod docs list`
-- Read the constitution: `decapod docs show core/DECAPOD.md`
-- **Ingest for Agentic Memory:** `decapod docs ingest` (dumps all embedded docs)
+## Agent Obligation: Route Through Decapod
 
-## 2. Project Living Docs (Mutable)
-Maintain and follow the project-specific intent and architecture here:
-- `.decapod/constitutions/specs/INTENT.md`
-- `.decapod/constitutions/specs/ARCHITECTURE.md`
+As an AI agent operating in this repository, you **must**:
 
-## 3. Tooling
-Use Decapod as the shared interface:
-- `decapod todo ...`
-- `decapod validate`
+1. **Read the constitution first:** `decapod docs show core/DECAPOD.md`
+2. **Never bypass Decapod** to manipulate state directly
+3. **Follow the Navigation Charter** in DECAPOD.md for all methodology
+4. **Validate before claiming completion:** `decapod validate` must pass
 
-## 4. Overrides
-Review `.decapod/README.md` for guidance on overriding embedded methodology.
-Any time you run and want to trigger `decapod`, review the `.decapod/constitutions/` overrides.
+This entrypoint is **non-authoritative**. All contracts, patterns, and behavioral rules live in the embedded constitution accessed via `decapod docs`.
+
+## Immediate Actions (Required)
+
+```bash
+# 1. Read the authoritative router
+decapod docs show core/DECAPOD.md
+
+# 2. Verify current state
+decapod validate
+
+# 3. See active work
+decapod todo list
+
+# 4. Ingest full constitution to memory
+decapod docs ingest
+```
+
+## Your Contract
+
+- **What Decapod is:** Project OS for Machines. Humans steer, agents execute through the CLI.
+- **Your interface:** The `decapod` command—never manipulate files/DBs directly
+- **Project specifics:** Read `.decapod/constitutions/specs/INTENT.md` and `ARCHITECTURE.md`
+
+## Links
+
+- `embedded/core/DECAPOD.md` — **Start here. All routing defers to this document.**
+- `embedded/core/CONTROL_PLANE.md` — Agent sequencing patterns (binding)
+- `embedded/specs/INTENT.md` — Authority and contracts
+- `.decapod/constitutions/specs/INTENT.md` — Project-specific intent
