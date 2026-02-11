@@ -42,6 +42,7 @@ pub const TODO_DB_SCHEMA_TASKS: &str = "
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         completed_at TEXT,
+        closed_at TEXT,
         dir_path TEXT NOT NULL,
         scope TEXT NOT NULL,
         parent_task_id TEXT,

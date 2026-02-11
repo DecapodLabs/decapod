@@ -4,7 +4,7 @@ use crate::core::schemas; // Import the new schemas module
 use crate::core::store::Store;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, Result as SqlResult, types::ToSql};
+use rusqlite::{types::ToSql, Connection, OptionalExtension, Result as SqlResult};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
@@ -33,7 +33,8 @@ pub struct TodoCli {
 pub enum TodoCommand {
     /// Add a new task.
     Add {
-        #[clap(long)]
+        /// The task title (positional argument)
+        #[clap(value_name = "TITLE")]
         title: String,
         #[clap(long, default_value = "")]
         tags: String,
@@ -45,7 +46,7 @@ pub enum TodoCommand {
         r#ref: String,
         #[clap(long)]
         dir: Option<String>,
-        #[clap(long, default_value = "medium")]
+        #[clap(long, default_value = "medium", value_parser = validate_priority)]
         priority: String,
         #[clap(long, default_value = "")]
         depends_on: String,
@@ -105,6 +106,7 @@ pub struct Task {
     pub created_at: String,
     pub updated_at: String,
     pub completed_at: Option<String>,
+    pub closed_at: Option<String>,
     pub dir_path: String,
     pub scope: String,
     pub parent_task_id: Option<String>,
@@ -237,6 +239,17 @@ fn task_prefix_from_scope(scope: &str) -> &'static str {
     }
 }
 
+/// Validate priority value (must be: high, medium, or low)
+fn validate_priority(s: &str) -> Result<String, String> {
+    match s {
+        "high" | "medium" | "low" => Ok(s.to_string()),
+        _ => Err(format!(
+            "Invalid priority: {}. Must be one of: high, medium, low",
+            s
+        )),
+    }
+}
+
 fn append_event(root: &Path, ev: &TodoEvent) -> Result<(), error::DecapodError> {
     let path = events_path(root);
     let mut f = OpenOptions::new()
@@ -302,8 +315,8 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     broker.with_conn(&db_path, "decapod", None, "todo.add", |conn| {
         ensure_schema(conn)?;
         conn.execute(
-            "INSERT INTO tasks(id, title, tags, owner, due, ref, status, created_at, updated_at, completed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6, 'open', ?7, ?8, NULL, ?9, ?10, ?11, ?12, ?13, ?14)",
+            "INSERT INTO tasks(id, title, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks)
+             VALUES(?1, ?2, ?3, ?4, ?5, ?6, 'open', ?7, ?8, NULL, NULL, ?9, ?10, ?11, ?12, ?13, ?14)",
             rusqlite::params![
                 task_id,
                 title,
@@ -454,7 +467,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
 
     broker.with_conn(&db_path, "decapod", None, "todo.get", |conn| {
         ensure_schema(conn)?;
-        let mut stmt = conn.prepare("SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks FROM tasks WHERE id = ?1")?;
+        let mut stmt = conn.prepare("SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks FROM tasks WHERE id = ?1")?;
         let mut rows = stmt.query(rusqlite::params![id])?;
         if let Some(row) = rows.next()? {
             Ok(Some(Task {
@@ -468,12 +481,13 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
                 created_at: row.get(7)?,
                 updated_at: row.get(8)?,
                 completed_at: row.get(9)?,
-                dir_path: row.get(10)?,
-                scope: row.get(11)?,
-                parent_task_id: row.get(12)?,
-                priority: row.get(13)?,
-                depends_on: row.get(14)?,
-                blocks: row.get(15)?,
+                closed_at: row.get(10)?,
+                dir_path: row.get(11)?,
+                scope: row.get(12)?,
+                parent_task_id: row.get(13)?,
+                priority: row.get(14)?,
+                depends_on: row.get(15)?,
+                blocks: row.get(16)?,
             }))
         } else {
             Ok(None)
@@ -495,7 +509,7 @@ pub fn list_tasks(
     broker.with_conn(&db_path, "decapod", None, "todo.list", |conn| {
         ensure_schema(conn)?;
 
-        let mut query = "SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks FROM tasks WHERE 1=1".to_string();
+        let mut query = "SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks FROM tasks WHERE 1=1".to_string();
         let mut params: Vec<Box<dyn ToSql>> = Vec::new();
 
         if let Some(s) = status {
@@ -540,12 +554,13 @@ pub fn list_tasks(
                 created_at: row.get(7)?,
                 updated_at: row.get(8)?,
                 completed_at: row.get(9)?,
-                dir_path: row.get(10)?,
-                scope: row.get(11)?,
-                parent_task_id: row.get(12)?,
-                priority: row.get(13)?,
-                depends_on: row.get(14)?,
-                blocks: row.get(15)?,
+                closed_at: row.get(10)?,
+                dir_path: row.get(11)?,
+                scope: row.get(12)?,
+                parent_task_id: row.get(13)?,
+                priority: row.get(14)?,
+                depends_on: row.get(15)?,
+                blocks: row.get(16)?,
             })
         })?;
 
@@ -694,8 +709,8 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         .to_string();
 
                     conn.execute(
-                        "INSERT OR REPLACE INTO tasks(id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks)
-                         VALUES(?1,?2,?3,?4,?5,?6,'open',?7,?8,NULL,?9,?10,?11,?12,?13,?14)",
+                        "INSERT OR REPLACE INTO tasks(id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks)
+                         VALUES(?1,?2,?3,?4,?5,?6,'open',?7,?8,NULL,NULL,?9,?10,?11,?12,?13,?14)",
                         rusqlite::params![id, title, tags, owner, due, r#ref, ev.ts, ev.ts, dir_path, scope, parent_task_id, priority, depends_on, blocks],
                     )?;
                 }
@@ -709,7 +724,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                 "task.archive" => {
                     let id = ev.task_id.clone().unwrap_or_default();
                     conn.execute(
-                        "UPDATE tasks SET status='archived', updated_at=?1 WHERE id=?2",
+                        "UPDATE tasks SET status='archived', updated_at=?1, closed_at=?1 WHERE id=?2",
                         rusqlite::params![ev.ts, id],
                     )?;
                 }
