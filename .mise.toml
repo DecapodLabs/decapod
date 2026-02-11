@@ -1,0 +1,2 @@
+[hooks]
+pre-commit = "#!/bin/bash\necho 'Running pre-commit checks...'\ncargo fmt --all -- --check || { echo 'Formatting check failed. Run: cargo fmt --all'; exit 1; }\ncargo clippy --all-targets --all-features -- -D warnings || { echo 'Clippy check failed.'; exit 1; }\necho 'Pre-commit checks passed!'\n"
