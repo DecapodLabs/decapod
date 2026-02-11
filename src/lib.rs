@@ -170,9 +170,18 @@ enum WatcherCommand {
 
 #[derive(clap::Args, Debug)]
 struct TrustCli {
-    /// Actor ID to check trust status for
-    #[clap(long, default_value = "decapod")]
-    id: String,
+    #[clap(subcommand)]
+    command: TrustCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum TrustCommand {
+    /// Show computed agent autonomy status
+    Status {
+        /// Actor ID to check trust status for
+        #[clap(long, default_value = "decapod")]
+        id: String,
+    },
 }
 
 #[derive(clap::Args, Debug)]
@@ -584,10 +593,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                     let status = heartbeat::get_status(&project_store)?;
                     println!("{}", serde_json::to_string_pretty(&status).unwrap());
                 }
-                Command::Trust(t_cli) => {
-                    let status = trust::get_trust_status(&project_store, &t_cli.id)?;
-                    println!("{}", serde_json::to_string_pretty(&status).unwrap());
-                }
+                Command::Trust(t_cli) => match t_cli.command {
+                    TrustCommand::Status { id } => {
+                        let status = trust::get_trust_status(&project_store, &id)?;
+                        println!("{}", serde_json::to_string_pretty(&status).unwrap());
+                    }
+                },
                 Command::Archive(arc_cli) => {
                     archive::initialize_archive_db(&store_root)?;
                     match arc_cli.command {
