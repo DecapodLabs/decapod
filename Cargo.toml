@@ -1,6 +1,6 @@
 [package]
 name = "decapod"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2024"
 rust-version = "1.85"
 description = "🦀 Decapod is a Rust-built, repo-native control-plane kernel for AI swarms—safe shared state, enforced truth, and loop-agnostic orchestration."
@@ -16,6 +16,13 @@ exclude = [
     "target/*",
     "constitution_embed/*"
 ]
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "decapod"
+path = "src/main.rs"
 
 [workspace]
 # members = ["crates/*"]
@@ -38,3 +45,17 @@ rust-embed = { version = "8.5", features = ["include-exclude"] }
 
 [dev-dependencies]
 tempfile = "3.10"
+decapod = { path = "." }
+
+[[test]]
+name = "plugins_todo_tests"
+path = "tests/plugins/todo.rs"
+
+[[test]]
+name = "plugins_policy_tests"
+path = "tests/plugins/policy.rs"
+
+
+[[test]]
+name = "core_tests"
+path = "tests/core/core.rs"
