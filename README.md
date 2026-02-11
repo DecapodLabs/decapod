@@ -1,8 +1,5 @@
 <div align="center">
   <img src="assets/decapod-ultra.svg" width="320" alt="Decapod Logo">
-
-  <h1>Decapod</h1>
-
   <p>
     🦀 A Rust-built, repo-native control-plane kernel for AI swarms — safe shared state, enforced truth, loop-agnostic orchestration.
   </p>
