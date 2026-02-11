@@ -1,13 +1,12 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::schemas;
 use crate::core::store::Store;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 use sha2::{Sha256, Digest};
-
-const ARCHIVE_DB_NAME: &str = "archive.db";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ArchiveEntry {
@@ -19,7 +18,7 @@ pub struct ArchiveEntry {
 }
 
 pub fn archive_db_path(root: &Path) -> PathBuf {
-    root.join(ARCHIVE_DB_NAME)
+    root.join(schemas::ARCHIVE_DB_NAME)
 }
 
 pub fn initialize_archive_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -27,16 +26,7 @@ pub fn initialize_archive_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = archive_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "archive.init", |conn| {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS archives (
-                id TEXT PRIMARY KEY,
-                path TEXT NOT NULL,
-                content_hash TEXT NOT NULL,
-                summary_hash TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            )",
-            [],
-        )?;
+        conn.execute(schemas::ARCHIVE_DB_SCHEMA, [])?;
         Ok(())
     })
 }
