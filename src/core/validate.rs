@@ -52,7 +52,7 @@ fn validate_no_legacy_namespaces(
 
     for path in files {
         // Skip obvious binaries.
-        if path.extension().map_or(false, |e| e == "db") {
+        if path.extension().is_some_and(|e| e == "db") {
             continue;
         }
         let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
@@ -208,19 +208,19 @@ fn validate_repo_store_dogfood(
         .lines()
         .filter(|l| l.contains("\"event_type\":\"task.add\""))
         .count();
-    
+
     // Fresh setup has 0 events but is valid.
     pass(
-        &format!("Repo backlog event log present ({} task.add events)", add_count),
+        &format!(
+            "Repo backlog event log present ({} task.add events)",
+            add_count
+        ),
         pass_count,
     );
 
     let db_path = store.root.join("todo.db");
     if !db_path.is_file() {
-        fail(
-            "Repo store missing todo.db",
-            fail_count,
-        );
+        fail("Repo store missing todo.db", fail_count);
         return Ok(());
     }
 
@@ -255,9 +255,16 @@ fn validate_repo_map(
     let const_root = decapod_dir.join(".decapod").join("constitutions");
 
     if const_root.is_dir() {
-        pass("Methodology constitutions found at .decapod/constitutions/", pass_count);
+        pass(
+            "Methodology constitutions found at .decapod/constitutions/",
+            pass_count,
+        );
 
-        let required_specs = ["specs/INTENT.md", "specs/ARCHITECTURE.md", "specs/SYSTEM.md"];
+        let required_specs = [
+            "specs/INTENT.md",
+            "specs/ARCHITECTURE.md",
+            "specs/SYSTEM.md",
+        ];
         for r in required_specs {
             if const_root.join(r).is_file() {
                 pass(&format!("Constitution doc {} present", r), pass_count);
@@ -266,7 +273,10 @@ fn validate_repo_map(
             }
         }
     } else {
-        fail("Methodology constitutions missing at .decapod/constitutions/", fail_count);
+        fail(
+            "Methodology constitutions missing at .decapod/constitutions/",
+            fail_count,
+        );
     }
     Ok(())
 }
@@ -285,7 +295,10 @@ fn validate_docs_templates_bucket(
         if p.is_file() {
             pass(&format!("Root entrypoint {} present", a), pass_count);
         } else {
-            fail(&format!("Root entrypoint {} missing from project root", a), fail_count);
+            fail(
+                &format!("Root entrypoint {} missing from project root", a),
+                fail_count,
+            );
         }
     }
 
@@ -298,15 +311,24 @@ fn validate_docs_templates_bucket(
     // NEGATIVE GATE: Decapod docs MUST NOT be copied into the project
     let forbidden_docs = decapod_dir.join(".decapod").join("docs");
     if forbidden_docs.exists() {
-        fail("Decapod internal docs were copied into .decapod/docs/ (Forbidden)", fail_count);
+        fail(
+            "Decapod internal docs were copied into .decapod/docs/ (Forbidden)",
+            fail_count,
+        );
     } else {
-        pass("Decapod internal docs correctly excluded from project repo", pass_count);
+        pass(
+            "Decapod internal docs correctly excluded from project repo",
+            pass_count,
+        );
     }
 
     // NEGATIVE GATE: projects/<id> MUST NOT exist
     let forbidden_projects = decapod_dir.join(".decapod").join("projects");
     if forbidden_projects.exists() {
-        fail("Legacy .decapod/projects/ directory found (Forbidden)", fail_count);
+        fail(
+            "Legacy .decapod/projects/ directory found (Forbidden)",
+            fail_count,
+        );
     } else {
         pass(".decapod/projects/ correctly absent", pass_count);
     }
@@ -337,13 +359,14 @@ fn validate_health_purity(
     let mut files = Vec::new();
     collect_repo_files(decapod_dir, &mut files)?;
 
-    let forbidden = Regex::new(r"(?i)\(health:\s*(VERIFIED|ASSERTED|STALE|CONTRADICTED)\)").unwrap();
+    let forbidden =
+        Regex::new(r"(?i)\(health:\s*(VERIFIED|ASSERTED|STALE|CONTRADICTED)\)").unwrap();
     let mut offenders = Vec::new();
 
     let generated_path = decapod_dir.join(".decapod").join("generated");
 
     for path in files {
-        if path.extension().map_or(false, |e| e == "md") {
+        if path.extension().is_some_and(|e| e == "md") {
             // Skip files in the generated artifacts directory
             if path.starts_with(&generated_path) {
                 continue;
@@ -357,9 +380,18 @@ fn validate_health_purity(
     }
 
     if offenders.is_empty() {
-        pass("No manual health status values found in authoritative docs", pass_count);
+        pass(
+            "No manual health status values found in authoritative docs",
+            pass_count,
+        );
     } else {
-        fail(&format!("Manual health values found in non-generated files: {:?}", offenders), fail_count);
+        fail(
+            &format!(
+                "Manual health values found in non-generated files: {:?}",
+                offenders
+            ),
+            fail_count,
+        );
     }
     Ok(())
 }
@@ -392,7 +424,13 @@ fn validate_project_scoped_state(
     if offenders.is_empty() {
         pass("All state is correctly scoped within .decapod/", pass_count);
     } else {
-        fail(&format!("Found Decapod state files outside .decapod/: {:?}", offenders), fail_count);
+        fail(
+            &format!(
+                "Found Decapod state files outside .decapod/: {:?}",
+                offenders
+            ),
+            fail_count,
+        );
     }
     Ok(())
 }
@@ -404,7 +442,7 @@ fn validate_schema_determinism(
 ) -> Result<(), error::DecapodError> {
     info("Schema Determinism Gate");
     let exe = std::env::current_exe().map_err(error::DecapodError::IoError)?;
-    
+
     let run_schema = || -> Result<String, error::DecapodError> {
         let out = std::process::Command::new(&exe)
             .arg("schema")
@@ -434,12 +472,15 @@ fn validate_health_cache_integrity(
     info("Health Cache Non-Authoritative Gate");
     let db_path = store.root.join("health.db");
     if !db_path.exists() {
-        skip("health.db not found; skipping health integrity check", pass_count);
+        skip(
+            "health.db not found; skipping health integrity check",
+            pass_count,
+        );
         return Ok(());
     }
 
     let conn = db::db_connect(&db_path.to_string_lossy())?;
-    
+
     // Check if any health_cache entries exist without corresponding proof_events
     let orphaned: i64 = conn.query_row(
         "SELECT COUNT(*) FROM health_cache hc LEFT JOIN proof_events pe ON hc.claim_id = pe.claim_id WHERE pe.event_id IS NULL",
@@ -448,9 +489,18 @@ fn validate_health_cache_integrity(
     ).map_err(error::DecapodError::RusqliteError)?;
 
     if orphaned == 0 {
-        pass("No orphaned health cache entries (integrity pass)", pass_count);
+        pass(
+            "No orphaned health cache entries (integrity pass)",
+            pass_count,
+        );
     } else {
-        warn(&format!("Found {} health cache entries without proof events (might be manual writes)", orphaned), fail_count);
+        warn(
+            &format!(
+                "Found {} health cache entries without proof events (might be manual writes)",
+                orphaned
+            ),
+            fail_count,
+        );
     }
     Ok(())
 }
@@ -488,7 +538,10 @@ fn validate_risk_map_violations(
         if offenders.is_empty() {
             pass("No risk zone violations detected in audit log", pass_count);
         } else {
-            fail(&format!("Detected operations in protected zones: {:?}", offenders), fail_count);
+            fail(
+                &format!("Detected operations in protected zones: {:?}", offenders),
+                fail_count,
+            );
         }
     }
     Ok(())
@@ -513,14 +566,25 @@ fn validate_policy_integrity(
         let content = fs::read_to_string(audit_log)?;
         let mut offenders = Vec::new();
         for line in content.lines() {
-            if line.contains("\"op\":\"policy.approve\"") && line.contains("\"db_id\":\"health.db\"") {
+            if line.contains("\"op\":\"policy.approve\"")
+                && line.contains("\"db_id\":\"health.db\"")
+            {
                 offenders.push(line.to_string());
             }
         }
         if offenders.is_empty() {
-            pass("Approval isolation verified (no direct health mutations)", pass_count);
+            pass(
+                "Approval isolation verified (no direct health mutations)",
+                pass_count,
+            );
         } else {
-            fail(&format!("Policy approval directly mutated health state: {:?}", offenders), fail_count);
+            fail(
+                &format!(
+                    "Policy approval directly mutated health state: {:?}",
+                    offenders
+                ),
+                fail_count,
+            );
         }
     }
 
@@ -535,22 +599,36 @@ fn validate_knowledge_integrity(
     info("Knowledge Integrity Gate");
     let db_path = store.root.join("knowledge.db");
     if !db_path.exists() {
-        skip("knowledge.db not found; skipping knowledge integrity check", pass_count);
+        skip(
+            "knowledge.db not found; skipping knowledge integrity check",
+            pass_count,
+        );
         return Ok(());
     }
 
     let conn = db::db_connect(&db_path.to_string_lossy())?;
-    
-    let missing_provenance: i64 = conn.query_row(
-        "SELECT COUNT(*) FROM knowledge WHERE provenance IS NULL OR provenance = ''",
-        [],
-        |row| row.get(0),
-    ).map_err(error::DecapodError::RusqliteError)?;
+
+    let missing_provenance: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM knowledge WHERE provenance IS NULL OR provenance = ''",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
 
     if missing_provenance == 0 {
-        pass("Knowledge provenance verified (all entries have pointers)", pass_count);
+        pass(
+            "Knowledge provenance verified (all entries have pointers)",
+            pass_count,
+        );
     } else {
-        fail(&format!("Found {} knowledge entries missing mandatory provenance", missing_provenance), fail_count);
+        fail(
+            &format!(
+                "Found {} knowledge entries missing mandatory provenance",
+                missing_provenance
+            ),
+            fail_count,
+        );
     }
 
     let audit_log = store.root.join("broker.events.jsonl");
@@ -558,14 +636,24 @@ fn validate_knowledge_integrity(
         let content = fs::read_to_string(audit_log)?;
         let mut offenders = Vec::new();
         for line in content.lines() {
-            if line.contains("\"op\":\"knowledge.add\"") && line.contains("\"db_id\":\"health.db\"") {
+            if line.contains("\"op\":\"knowledge.add\"") && line.contains("\"db_id\":\"health.db\"")
+            {
                 offenders.push(line.to_string());
             }
         }
         if offenders.is_empty() {
-            pass("No direct health promotion from knowledge detected", pass_count);
+            pass(
+                "No direct health promotion from knowledge detected",
+                pass_count,
+            );
         } else {
-            fail(&format!("Knowledge system directly mutated health state: {:?}", offenders), fail_count);
+            fail(
+                &format!(
+                    "Knowledge system directly mutated health state: {:?}",
+                    offenders
+                ),
+                fail_count,
+            );
         }
     }
 
@@ -600,7 +688,10 @@ fn validate_watcher_audit(
     if audit_log.exists() {
         pass("Watcher audit trail present", pass_count);
     } else {
-        warn("Watcher audit trail missing (run `decapod watcher run`)", pass_count);
+        warn(
+            "Watcher audit trail missing (run `decapod watcher run`)",
+            pass_count,
+        );
     }
     Ok(())
 }
@@ -621,9 +712,18 @@ fn validate_watcher_purity(
             }
         }
         if offenders.is_empty() {
-            pass("Watcher purity verified (read-only checks only)", pass_count);
+            pass(
+                "Watcher purity verified (read-only checks only)",
+                pass_count,
+            );
         } else {
-            fail(&format!("Watcher subsystem attempted brokered mutations: {:?}", offenders), fail_count);
+            fail(
+                &format!(
+                    "Watcher subsystem attempted brokered mutations: {:?}",
+                    offenders
+                ),
+                fail_count,
+            );
         }
     }
     Ok(())
@@ -644,9 +744,15 @@ fn validate_archive_integrity(
     use crate::archive;
     let failures = archive::verify_archives(store)?;
     if failures.is_empty() {
-        pass("All session archives verified (content and hash match)", pass_count);
+        pass(
+            "All session archives verified (content and hash match)",
+            pass_count,
+        );
     } else {
-        fail(&format!("Archive integrity failures detected: {:?}", failures), fail_count);
+        fail(
+            &format!("Archive integrity failures detected: {:?}", failures),
+            fail_count,
+        );
     }
     Ok(())
 }
@@ -662,16 +768,24 @@ fn validate_canon_mutation(
         let content = fs::read_to_string(audit_log)?;
         let mut offenders = Vec::new();
         for line in content.lines() {
-            if line.contains("\"op\":\"write\"") && (line.contains(".md\"") || line.contains(".json\"")) {
-                if !line.contains("\"actor\":\"decapod\"") && !line.contains("\"actor\":\"scaffold\"") {
-                    offenders.push(line.to_string());
-                }
+            if line.contains("\"op\":\"write\"")
+                && (line.contains(".md\"") || line.contains(".json\""))
+                && !line.contains("\"actor\":\"decapod\"")
+                && !line.contains("\"actor\":\"scaffold\"")
+            {
+                offenders.push(line.to_string());
             }
         }
         if offenders.is_empty() {
             pass("No unauthorized canon mutations detected", pass_count);
         } else {
-            warn(&format!("Detected direct mutations to canonical documents: {:?}", offenders), fail_count);
+            warn(
+                &format!(
+                    "Detected direct mutations to canonical documents: {:?}",
+                    offenders
+                ),
+                fail_count,
+            );
         }
     }
     Ok(())
@@ -690,12 +804,9 @@ pub fn run_validation(
         .join("specs")
         .join("INTENT.md");
     let intent_version = extract_md_version(&intent_path).unwrap_or_else(|| "unknown".to_string());
-    println!(
-        "Intent Version: {} (from INTENT.md)",
-        intent_version
-    );
+    println!("Intent Version: {} (from INTENT.md)", intent_version);
     println!("========================================");
-    println!("");
+    println!();
 
     let mut pass_count = 0;
     let mut fail_count = 0;
@@ -734,11 +845,8 @@ pub fn run_validation(
     println!("{} PASS: {}", "✓".green(), pass_count);
     eprintln!("{} FAIL: {}", "✗".red(), fail_count);
     println!("{} WARN: {}", "⚠".yellow(), warn_count);
-    println!(
-        "TOTAL: {}",
-        pass_count + fail_count + warn_count
-    );
-    println!("");
+    println!("TOTAL: {}", pass_count + fail_count + warn_count);
+    println!();
 
     if fail_count > 0 {
         Err(error::DecapodError::ValidationError(format!(

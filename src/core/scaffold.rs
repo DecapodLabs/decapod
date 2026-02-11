@@ -23,20 +23,18 @@ fn write_file(
 ) -> Result<(), error::DecapodError> {
     let dest = opts.target_dir.join(rel_path);
 
-    if dest.exists() {
-        if !opts.force {
-            if opts.dry_run {
-                println!(
-                    "  would-skip: {} (exists; pass --force to overwrite)",
-                    dest.display()
-                );
-                return Ok(());
-            }
-            return Err(error::DecapodError::ValidationError(format!(
-                "Refusing to overwrite existing path without --force: {}",
+    if dest.exists() && !opts.force {
+        if opts.dry_run {
+            println!(
+                "  would-skip: {} (exists; pass --force to overwrite)",
                 dest.display()
-            )));
+            );
+            return Ok(());
         }
+        return Err(error::DecapodError::ValidationError(format!(
+            "Refusing to overwrite existing path without --force: {}",
+            dest.display()
+        )));
     }
 
     if opts.dry_run {
@@ -62,8 +60,7 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     // Ensure main .decapod/constitutions and .decapod/data directories exist
     fs::create_dir_all(opts.target_dir.join(const_docs_rel))
         .map_err(error::DecapodError::IoError)?;
-    fs::create_dir_all(opts.target_dir.join(data_dir_rel))
-        .map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(opts.target_dir.join(data_dir_rel)).map_err(error::DecapodError::IoError)?;
 
     // Root entrypoints from embedded templates (AGENTS.md, CLAUDE.md, GEMINI.md)
     let agents_md = assets::get_template("AGENTS.md").expect("Missing template: AGENTS.md");
@@ -78,7 +75,10 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
 
     // Constitutions for the current project context
     let const_templates = [
-        ("core/CONTROL_PLANE.md", assets::TEMPLATES_CORE_CONTROL_PLANE),
+        (
+            "core/CONTROL_PLANE.md",
+            assets::TEMPLATES_CORE_CONTROL_PLANE,
+        ),
         ("core/DECAPOD.md", assets::TEMPLATES_CORE_DECAPOD),
         ("core/PLUGINS.md", assets::TEMPLATES_CORE_PLUGINS),
         ("core/CLAIMS.md", assets::TEMPLATES_CORE_CLAIMS),
@@ -90,12 +90,13 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
         ("core/MEMORY.md", assets::TEMPLATES_CORE_MEMORY),
         ("core/SOUL.md", assets::TEMPLATES_CORE_SOUL),
         ("core/STORE_MODEL.md", assets::TEMPLATES_CORE_STORE_MODEL),
-
         ("specs/AMENDMENTS.md", assets::TEMPLATES_SPECS_AMENDMENTS),
-        ("specs/ARCHITECTURE.md", assets::TEMPLATES_SPECS_ARCHITECTURE),
+        (
+            "specs/ARCHITECTURE.md",
+            assets::TEMPLATES_SPECS_ARCHITECTURE,
+        ),
         ("specs/INTENT.md", assets::TEMPLATES_SPECS_INTENT),
         ("specs/SYSTEM.md", assets::TEMPLATES_SPECS_SYSTEM),
-
         ("plugins/DB_BROKER.md", assets::TEMPLATES_PLUGINS_DB_BROKER),
         ("plugins/MANIFEST.md", assets::TEMPLATES_PLUGINS_MANIFEST),
         ("plugins/TODO.md", assets::TEMPLATES_PLUGINS_TODO),

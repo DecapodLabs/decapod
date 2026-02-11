@@ -4,9 +4,9 @@ use crate::core::schemas;
 use crate::core::store::Store;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
-use sha2::{Sha256, Digest};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ArchiveEntry {
@@ -50,7 +50,11 @@ pub fn register_archive(
     let summary_hash = hash_text(summary);
     let now = format!("{:?}", std::time::SystemTime::now());
 
-    let rel_path = path.strip_prefix(&store.root).unwrap_or(path).to_string_lossy().to_string();
+    let rel_path = path
+        .strip_prefix(&store.root)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .to_string();
 
     broker.with_conn(&db_path, "decapod", None, "archive.register", |conn| {
         conn.execute(
@@ -66,7 +70,8 @@ pub fn list_archives(store: &Store) -> Result<Vec<ArchiveEntry>, error::DecapodE
     let db_path = archive_db_path(&store.root);
 
     broker.with_conn(&db_path, "decapod", None, "archive.list", |conn| {
-        let mut stmt = conn.prepare("SELECT id, path, content_hash, summary_hash, created_at FROM archives")?;
+        let mut stmt =
+            conn.prepare("SELECT id, path, content_hash, summary_hash, created_at FROM archives")?;
         let rows = stmt.query_map([], |row| {
             Ok(ArchiveEntry {
                 id: row.get(0)?,
@@ -91,7 +96,10 @@ pub fn verify_archives(store: &Store) -> Result<Vec<String>, error::DecapodError
     for entry in archives {
         let full_path = store.root.join(&entry.path);
         if !full_path.exists() {
-            failures.push(format!("Archive {}: File missing at {}", entry.id, entry.path));
+            failures.push(format!(
+                "Archive {}: File missing at {}",
+                entry.id, entry.path
+            ));
             continue;
         }
 
@@ -99,12 +107,15 @@ pub fn verify_archives(store: &Store) -> Result<Vec<String>, error::DecapodError
         if hash_text(&content) != entry.content_hash {
             failures.push(format!("Archive {}: Content hash mismatch", entry.id));
         }
-        
-        // In Epoch 5, summary linkage verification: we check if the archive ID is referenced 
+
+        // In Epoch 5, summary linkage verification: we check if the archive ID is referenced
         // in any project markdown file.
         // Simplified: just confirm the index entry has a non-empty summary_hash recorded.
         if entry.summary_hash.is_empty() {
-            failures.push(format!("Archive {}: Missing summary hash in index", entry.id));
+            failures.push(format!(
+                "Archive {}: Missing summary hash in index",
+                entry.id
+            ));
         }
     }
 

@@ -220,23 +220,24 @@ pub fn run_reflex_cli(store: &Store, cli: ReflexCli) {
             action_type,
             action_config,
             status,
-                            tags,
-                        ),
-                        ReflexCommand::Get { id } => get_reflex(root, id),
-                        ReflexCommand::List {
-                            status,
-                            scope,
-                            tags,
-                            name_search,
-                            dir,
-                        } => list_reflexes(root, status, scope, tags, name_search, dir),
-                        ReflexCommand::Delete { id } => delete_reflex(root, id),
-                    };
+            tags,
+        ),
+        ReflexCommand::Get { id } => get_reflex(root, id),
+        ReflexCommand::List {
+            status,
+            scope,
+            tags,
+            name_search,
+            dir,
+        } => list_reflexes(root, status, scope, tags, name_search, dir),
+        ReflexCommand::Delete { id } => delete_reflex(root, id),
+    };
     if let Err(e) = result {
         eprintln!("Error: {}", e);
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn add_reflex(
     root: &Path,
     name: String,
@@ -259,7 +260,7 @@ fn add_reflex(
 
     let reflex_id = format!("REF_{}", ulid_like());
     let now = now_iso();
-    
+
     let broker = DbBroker::new(root);
     let db_path = reflex_db_path(root);
 
@@ -283,6 +284,7 @@ fn add_reflex(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn update_reflex(
     root: &Path,
     id: String,
@@ -368,7 +370,7 @@ fn get_reflex(root: &Path, id: String) -> Result<(), error::DecapodError> {
 
     broker.with_conn(&db_path, "decapod", None, "reflex.get", |conn| {
         let mut stmt = conn.prepare("SELECT * FROM reflexes WHERE id = ?1")?;
-        let mut rows = stmt.query_map(&[&id], |row| {
+        let mut rows = stmt.query_map([&id], |row| {
             Ok(Reflex {
                 id: row.get(0)?,
                 name: row.get(1)?,
@@ -487,7 +489,7 @@ fn delete_reflex(root: &Path, id: String) -> Result<(), error::DecapodError> {
     let db_path = reflex_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "reflex.delete", |conn| {
-        conn.execute("DELETE FROM reflexes WHERE id = ?1", &[&id])?;
+        conn.execute("DELETE FROM reflexes WHERE id = ?1", [&id])?;
         Ok(())
     })?;
 
@@ -497,4 +499,3 @@ fn delete_reflex(root: &Path, id: String) -> Result<(), error::DecapodError> {
     );
     Ok(())
 }
-

@@ -31,7 +31,14 @@ impl DbBroker {
     }
 
     /// Execute a closure with a serialized connection to the specified DB.
-    pub fn with_conn<F, R>(&self, db_path: &Path, actor: &str, intent_ref: Option<&str>, op_name: &str, f: F) -> Result<R, error::DecapodError>
+    pub fn with_conn<F, R>(
+        &self,
+        db_path: &Path,
+        actor: &str,
+        intent_ref: Option<&str>,
+        op_name: &str,
+        f: F,
+    ) -> Result<R, error::DecapodError>
     where
         F: FnOnce(&Connection) -> Result<R, error::DecapodError>,
     {
@@ -39,9 +46,13 @@ impl DbBroker {
         static DB_LOCK: Mutex<()> = Mutex::new(());
         let _lock = DB_LOCK.lock().unwrap();
 
-        let db_id = db_path.file_name().unwrap_or_default().to_string_lossy().to_string();
+        let db_id = db_path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string();
         let conn = db::db_connect(&db_path.to_string_lossy())?;
-        
+
         let result = f(&conn);
 
         let status = if result.is_ok() { "success" } else { "error" };
@@ -50,7 +61,14 @@ impl DbBroker {
         result
     }
 
-    fn log_event(&self, actor: &str, intent_ref: Option<&str>, op: &str, db_id: &str, status: &str) -> Result<(), error::DecapodError> {
+    fn log_event(
+        &self,
+        actor: &str,
+        intent_ref: Option<&str>,
+        op: &str,
+        db_id: &str,
+        status: &str,
+    ) -> Result<(), error::DecapodError> {
         use std::fs::OpenOptions;
         use std::io::Write;
         use std::time::{SystemTime, UNIX_EPOCH};
@@ -76,8 +94,9 @@ impl DbBroker {
             .append(true)
             .open(&self.audit_log_path)
             .map_err(error::DecapodError::IoError)?;
-        
-        writeln!(f, "{}", serde_json::to_string(&ev).unwrap()).map_err(error::DecapodError::IoError)?;
+
+        writeln!(f, "{}", serde_json::to_string(&ev).unwrap())
+            .map_err(error::DecapodError::IoError)?;
         Ok(())
     }
 }
