@@ -1,0 +1,104 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build - ${{ matrix.platform.os }}
+    strategy:
+      matrix:
+        platform:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: decapod-linux-x86_64.tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            name: decapod-macos-aarch64.tar.gz
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            name: decapod-macos-x86_64.tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: decapod-windows-x86_64.zip
+
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform.target }}
+      
+      - name: Build
+        run: cargo build --release --target ${{ matrix.platform.target }}
+
+      - name: Guardrail Check
+        shell: bash
+        run: |
+          BINARY="target/${{ matrix.platform.target }}/release/decapod"
+          if [ "${{ matrix.platform.os }}" = "windows-latest" ]; then BINARY="${BINARY}.exe"; fi
+          
+          # Basic sanity check that binary runs and can show embedded docs
+          $BINARY docs list | grep "docs/DECAPOD.md"
+          echo "Guardrail passed: Binary functional."
+
+      - name: Package
+        shell: bash
+        run: |
+          mkdir dist
+          cd target/${{ matrix.platform.target }}/release
+          if [ "${{ matrix.platform.os }}" = "windows-latest" ]; then
+            7z a ../../../dist/${{ matrix.platform.name }} decapod.exe
+          else
+            tar czf ../../../dist/${{ matrix.platform.name }} decapod
+          fi
+
+      - name: Generate Checksum
+        shell: bash
+        run: |
+          cd dist
+          if [ "${{ matrix.platform.os }}" = "windows-latest" ]; then
+            certutil -hashfile ${{ matrix.platform.name }} SHA256 | grep -v "hash" | grep -v "CertUtil" | tr -d " \r\n" > ${{ matrix.platform.name }}.sha256
+          else
+            shasum -a 256 ${{ matrix.platform.name }} | cut -d ' ' -f 1 > ${{ matrix.platform.name }}.sha256
+          fi
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.name }}
+          path: dist/
+          retention-days: 1
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Collect Checksums
+        run: |
+          cd artifacts
+          sha256sum * | grep -v ".sha256" > ../checksums.txt || true
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/*
+            checksums.txt
+          generate_release_notes: true
+          draft: false
+          prerelease: false

@@ -1,0 +1,49 @@
+# Decapod - Robust Git Ignore
+
+# --- Build Artifacts ---
+target/
+dist/
+build/
+*.o
+*.so
+*.a
+*.dll
+*.exe
+*.dylib
+
+# --- Rust/Cargo ---
+# Note: We keep Cargo.lock for the binary crate decapod
+# but if we had workspace member crates that were libraries, 
+# we might ignore their local locks.
+# /crates/*/Cargo.lock
+
+# --- IDEs / Editors ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.helix/
+
+# --- Decapod Sidecar (State) ---
+# We never commit local sidecar state or databases
+.decapod/
+AGENTS.md
+GEMINI.md
+CLAUDE.md
+
+# --- Environment & Secrets ---
+.env
+.env.*
+!.env.example
+*.pat
+*.token
+*.key
+
+# --- Temp / Debug ---
+*.log
+*.tmp
+debug/
+out.log
+err.log

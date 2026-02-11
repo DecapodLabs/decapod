@@ -1,0 +1,194 @@
+name: Bug report (actionable only)
+description: Submit only if you can reproduce and provide required logs + environment.
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues without the required fields will be closed automatically.
+        This is not a help desk. Bring a repro, exact environment, and a log snippet.
+
+  - type: checkboxes
+    id: triage_signature
+    attributes:
+      label: Triage signature (required)
+      description: If you can’t agree to this, don’t file an issue.
+      options:
+        - label: I confirm this report is complete and reproducible, includes the required environment details (OS + time + version), and includes a real log snippet showing the failure.
+          required: true
+        - label: I understand that issues missing any required fields, missing logs, or lacking a reproducible path may be closed without further discussion.
+          required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Core
+        - Plugin
+        - Docs
+        - CI / tooling
+    validations:
+      required: true
+
+  - type: input
+    id: plugin_name
+    attributes:
+      label: Plugin name (required if Plugin)
+      description: Exact plugin/module name. If Core, enter "N/A".
+      placeholder: "decapod-plugin-github-issues (or N/A)"
+    validations:
+      required: true
+
+  - type: input
+    id: decapod_version
+    attributes:
+      label: Decapod version / commit (required)
+      description: Tag + commit SHA. If built locally, provide the exact commit SHA.
+      placeholder: "v0.3.1 (commit abcdef1)"
+    validations:
+      required: true
+
+  - type: input
+    id: build_source
+    attributes:
+      label: Install/build method (required)
+      description: How you installed/built Decapod and the plugin.
+      placeholder: "cargo install ... / nix / docker image digest ... / source build"
+    validations:
+      required: true
+
+  - type: input
+    id: timestamp
+    attributes:
+      label: Exact time of failure (required)
+      description: Provide the exact timestamp *with timezone* when the failure occurred.
+      placeholder: "2026-02-10 14:33:21 America/Los_Angeles"
+    validations:
+      required: true
+
+  - type: input
+    id: locale
+    attributes:
+      label: Host OS + kernel (required)
+      description: Must include OS edition + version + kernel.
+      placeholder: "Ubuntu 24.04, kernel 6.8.0-xx | macOS 15.x | Windows 11 23H2 build xxxx"
+    validations:
+      required: true
+
+  - type: input
+    id: arch
+    attributes:
+      label: CPU arch (required)
+      placeholder: "x86_64 / aarch64"
+    validations:
+      required: true
+
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime context (required)
+      description: Where Decapod runs.
+      placeholder: "bare metal / VM / WSL2 / Docker / k8s (include distro + version)"
+    validations:
+      required: true
+
+  - type: input
+    id: rust_version
+    attributes:
+      label: Rust toolchain (required)
+      description: Output of `rustc -V` (and `cargo -V` if relevant).
+      placeholder: "rustc 1.xx.x (....)"
+    validations:
+      required: true
+
+  - type: input
+    id: config_location
+    attributes:
+      label: Config location + redaction note (required)
+      description: Where config is loaded from. Do not paste secrets; say what you redacted.
+      placeholder: ".decapod/config.toml (redacted tokens)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary (required)
+      description: One paragraph: what’s broken and why it matters.
+      placeholder: "When running X, Decapod crashes / produces wrong state / deadlocks..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior (required)
+      placeholder: "Expected Decapod to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior (required)
+      placeholder: "Instead it..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps (required, exact commands)
+      description: Must be copy/pastable. Include inputs/flags. If not reproducible, do not file an issue.
+      placeholder: |
+        1) git clone ...
+        2) cd ...
+        3) export DECAPOD_LOG=debug
+        4) decapod run ...
+        5) observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: minimal_repro
+    attributes:
+      label: Minimal repro repo or snippet (strongly preferred)
+      description: If you can provide a minimal repo or reduced config, do it. If you can’t, say why.
+      placeholder: "Link to minimal repro repo OR paste minimized config snippet (no secrets)."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: logging_confirm
+    attributes:
+      label: Logging requirements (required)
+      options:
+        - label: I ran with debug logging enabled (or equivalent) and the logs below are from that run.
+          required: true
+        - label: I redacted secrets (tokens, keys) but kept enough context to debug.
+          required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: REQUIRED log snippet (must include the failure)
+      description: Paste 30–200 lines around the failure. No screenshots. No “see attachment”.
+      placeholder: |
+        Paste logs here.
+        Include:
+        - startup lines showing version/commit
+        - the failing operation
+        - the error/stack trace
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else (optional)
+      description: Only if it directly accelerates fixing.
+      placeholder: "Perf data, traces, profiler output, etc."
+    validations:
+      required: false

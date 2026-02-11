@@ -1,0 +1,100 @@
+name: Feature request (must be spec-level)
+description: Propose a feature with acceptance criteria and scope. No vibes.
+title: "[FEAT] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        If you can’t define acceptance criteria, this isn’t ready as an issue.
+        Use Discussions for brainstorming.
+
+  - type: checkboxes
+    id: triage_signature
+    attributes:
+      label: Triage signature (required)
+      description: If you can’t agree to this, don’t file an issue.
+      options:
+        - label: I confirm this request includes a concrete problem statement, testable acceptance criteria, and minimal viable scope.
+          required: true
+        - label: I understand that issues missing any required fields or lacking acceptance criteria may be closed without further discussion.
+          required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Core
+        - Plugin
+    validations:
+      required: true
+
+  - type: input
+    id: plugin_name
+    attributes:
+      label: Plugin name (required if Plugin)
+      placeholder: "decapod-plugin-<name> (or N/A)"
+    validations:
+      required: true
+
+  - type: input
+    id: timestamp
+    attributes:
+      label: Date/time you validated the need (required)
+      description: When did you last confirm this gap, and in what timezone?
+      placeholder: "2026-02-10 14:33 America/Los_Angeles"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement (required)
+      description: What pain exists today? Who is impacted? What’s currently impossible or too costly?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution (required)
+      description: Concrete behavior, not implementation fanfic.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria (required, testable)
+      description: Bullet-like statements are fine, but make them measurable and verifiable.
+      placeholder: |
+        - Given X, when Y, then Z.
+        - Must fail loudly if ...
+        - Must not change behavior of ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Minimal viable scope (required)
+      description: The smallest shippable slice that proves the idea without boiling the ocean.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (required)
+      description: Include “do nothing” and “use existing tool”.
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks / blast radius (required)
+      description: Security, compatibility, failure modes, performance, operational complexity.
+    validations:
+      required: true

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/<OWNER>/<REPO>/discussions
+    about: Use Discussions for questions, design exploration, and “is this a good idea?” conversations. Issues are for actionable work only.
