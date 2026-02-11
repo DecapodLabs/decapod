@@ -17,6 +17,13 @@ exclude = [
     "constitution_embed/*"
 ]
 
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "decapod"
+path = "src/main.rs"
+
 [workspace]
 # members = ["crates/*"]
 
@@ -38,3 +45,17 @@ rust-embed = { version = "8.5", features = ["include-exclude"] }
 
 [dev-dependencies]
 tempfile = "3.10"
+decapod = { path = "." }
+
+[[test]]
+name = "plugins_todo_tests"
+path = "tests/plugins/todo.rs"
+
+[[test]]
+name = "plugins_policy_tests"
+path = "tests/plugins/policy.rs"
+
+
+[[test]]
+name = "core_tests"
+path = "tests/core/core.rs"
