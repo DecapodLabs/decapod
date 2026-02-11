@@ -825,5 +825,3 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
 
     Ok(())
 }
-
-
