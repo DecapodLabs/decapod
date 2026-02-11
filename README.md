@@ -36,7 +36,7 @@ Running `decapod init` will:
 **Safe initialization:** If any root entrypoints already exist, `decapod init` will safely back them up to `<file>.md.bak` before writing new ones. 
 
 After initialization, if you have backups, open your agent of choice and tell it to: 
-> "Blend the `*.md.bak` files into my `.decapod/constitutions/` overrides."
+> "Blend the `*.md.bak` files into my `.decapod/constitution/` overrides."
 
 ## Project OS for Machines
 
@@ -69,7 +69,7 @@ your-project/
 └── .decapod/               <-- Decapod control plane state
     ├── README.md           (Internal guide)
     ├── data/               (Persistent state - SQLite DBs & event logs)
-    └── constitutions/      (Methodology overrides & living project intelligence)
+    └── constitution/       (Methodology overrides & living project intelligence)
         ├── specs/
         │   ├── INTENT.md
         │   └── ARCHITECTURE.md
