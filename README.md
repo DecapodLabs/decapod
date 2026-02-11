@@ -1,7 +1,7 @@
 <div align="center">
   <img src="assets/decapod-ultra.svg" width="320" alt="Decapod Logo">
 
-  <h3>A constitutional control plane for AI agent swarms.</h3>
+  <h3>You gave AI commit access.<br>You forgot to give it discipline.</h3>
 
   <p>
     <a href="https://github.com/DecapodLabs/decapod/actions"><img alt="CI" src="https://github.com/DecapodLabs/decapod/actions/workflows/ci.yml/badge.svg"></a>
@@ -11,20 +11,22 @@
 
 ---
 
-## The Problem
+You wouldn't run microservices without coordination. You wouldn't run a database without ACID. But right now, you're running AI agents with write access to production code and *nothing* keeping them honest.
 
-Coding agents forget context, corrupt state, and drift from intent. Decapod fixes that.
+No shared state. No memory. No proof of work. Just vibes.
+
+**Decapod is the missing OS layer.** A local control plane that gives agents persistent state, shared coordination, and a constitution they actually follow.
 
 ---
 
-## Get Started
+## 30 Seconds to Sanity
 
 ```bash
 cargo install decapod
 cd your-repo && decapod init
 ```
 
-Point your agent at `CLAUDE.md`, `GEMINI.md`, or `AGENTS.md` in the project root. The agent reads the constitution, learns the interface, and operates within the discipline.
+Point your agent at `CLAUDE.md` or `AGENTS.md`. It reads the constitution, learns the interface, operates within the discipline. You supervise. The system enforces.
 
 ---
 
@@ -32,54 +34,35 @@ Point your agent at `CLAUDE.md`, `GEMINI.md`, or `AGENTS.md` in the project root
 
 ```
 .decapod/
-├── data/                 # Persistent state (SQLite + event logs)
-└── constitution/         # Behavioral law the agent internalizes
-    └── specs/
-        ├── INTENT.md     # What we're building
-        └── ARCHITECTURE.md
+├── data/           # State that survives sessions
+└── constitution/   # Law the agent internalizes
 ```
 
-- **One interface** — CLI + schema + store-aware state
-- **One authority ladder** — Intent → Spec → Code → Proof → Promotion
-- **One proof gate** — `validate` prevents "sounds right" from becoming "is right"
-
-The constitution is embedded in the binary. Your project can override any doc — drop files in `.decapod/constitution/` and your rules take precedence.
-
----
-
-## What's Real Today
-
-| Subsystem | Status | Purpose |
-|-----------|--------|---------|
-| `todo` | **REAL** | Coordinated task queue with event log |
-| `validate` | **REAL** | Proof gate — enforces store purity |
-| `cron` | **REAL** | Scheduled jobs |
-| `reflex` | **REAL** | Event → action triggers |
-| `docs` | **REAL** | Embedded constitution, project overrides |
-
-**Designed, not yet enforced:** Brokered writes, serialized concurrency, always-on audit. These graduate to REAL when the repo can fail fast on violations.
+**One interface.** CLI + schema + store-aware state.
+**One authority chain.** Intent → Spec → Code → Proof → Promotion.
+**One proof gate.** `validate` — where "sounds right" meets "is right."
 
 ---
 
 ## Why "Decapod"?
 
-Ten-legged crustaceans. Small shell, built for pressure. The kernel stays minimal. Everything else lives in plugins.
+Small shell. Ten legs. Built for pressure.
+
+Kernel stays minimal. Plugins do the rest.
 
 ---
 
 ## Get Involved
 
-**Build the periphery.** Adapters, connectors, proof harnesses. Plugins are first-class.
+**Ship a plugin.** Adapters, connectors, proof harnesses — first-class citizens.
 
-**Improve the constitution.** Find a pattern that stops agent drift? PR it.
+**Harden the constitution.** Found a pattern that stops drift? PR it. You're writing law.
 
 ---
 
 <div align="center">
-  <p>
-    <strong>AI agents will ship code whether we're ready or not.</strong><br>
-    Give them discipline.
-  </p>
-
+  <strong>Agents will ship code whether you're ready or not.</strong><br>
+  <sub>Make them earn it.</sub>
+  <br><br>
   <a href="https://ko-fi.com/decapodlabs"><img height="36" alt="Support on Ko-fi" src="https://storage.ko-fi.com/cdn/kofi5.png?v=3" /></a>
 </div>
