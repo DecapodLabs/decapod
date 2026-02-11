@@ -478,9 +478,17 @@ pub fn run() -> Result<(), error::DecapodError> {
                             }
                         }
                         ContextCommand::Pack { path, summary } => {
-                            let archive_path =
-                                manager.pack_and_archive(&project_store, &path, &summary)?;
-                            println!("Session archived to: {}", archive_path.display());
+                            match manager.pack_and_archive(&project_store, &path, &summary) {
+                                Ok(archive_path) => {
+                                    println!("Session archived to: {}", archive_path.display());
+                                }
+                                Err(error::DecapodError::ContextPackError(msg)) => {
+                                    eprintln!("Context pack failed: {}", msg);
+                                }
+                                Err(e) => {
+                                    eprintln!("Unexpected error during context pack: {}", e);
+                                }
+                            }
                         }
                         ContextCommand::Restore {
                             id,
