@@ -1,6 +1,6 @@
 [package]
 name = "decapod"
-version = "0.0.8"
+version = "0.0.9"
 edition = "2024"
 rust-version = "1.85"
 description = "🦀 Decapod is a Rust-built, repo-native control-plane kernel for AI swarms—safe shared state, enforced truth, and loop-agnostic orchestration."

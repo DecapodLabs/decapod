@@ -21,4 +21,6 @@ pub enum DecapodError {
     NotFound(String),
     #[error("Not implemented: {0}")]
     NotImplemented(String),
+    #[error("Context pack error: {0}")]
+    ContextPackError(String),
 }

@@ -85,18 +85,78 @@ impl ContextManager {
         summary: &str,
     ) -> Result<PathBuf, error::DecapodError> {
         use std::time::{SystemTime, UNIX_EPOCH};
+
+        // Validate inputs before attempting operations
+        if summary.trim().is_empty() {
+            return Err(error::DecapodError::ContextPackError(
+                "Summary cannot be empty".to_string(),
+            ));
+        }
+
+        // Check if session file exists
+        if !session_path.exists() {
+            return Err(error::DecapodError::ContextPackError(format!(
+                "Session file not found: {}",
+                session_path.display()
+            )));
+        }
+
+        // Check if session is already archived
+        match fs::read_to_string(session_path) {
+            Ok(content) => {
+                if content.contains("[Archived session:") {
+                    return Err(error::DecapodError::ContextPackError(format!(
+                        "Session file is already archived: {}",
+                        session_path.display()
+                    )));
+                }
+            }
+            Err(_) => {
+                return Err(error::DecapodError::ContextPackError(format!(
+                    "Cannot read session file: {}",
+                    session_path.display()
+                )));
+            }
+        }
+
         let now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
         let archive_dir = self.root.join("memory/archive");
-        fs::create_dir_all(&archive_dir).map_err(error::DecapodError::IoError)?;
+
+        // Create archive directory with graceful error
+        if let Err(e) = fs::create_dir_all(&archive_dir) {
+            return Err(error::DecapodError::ContextPackError(format!(
+                "Failed to create archive directory '{}': {}",
+                archive_dir.display(),
+                e
+            )));
+        }
 
         let archive_id = format!("arc_{}", now);
         let archive_path = archive_dir.join(format!("{}.md", now));
 
-        let content = fs::read_to_string(session_path).map_err(error::DecapodError::IoError)?;
-        fs::write(&archive_path, &content).map_err(error::DecapodError::IoError)?;
+        // Read session content with context
+        let content = match fs::read_to_string(session_path) {
+            Ok(c) => c,
+            Err(e) => {
+                return Err(error::DecapodError::ContextPackError(format!(
+                    "Failed to read session file '{}': {}",
+                    session_path.display(),
+                    e
+                )));
+            }
+        };
+
+        // Write to archive with context
+        if let Err(e) = fs::write(&archive_path, &content) {
+            return Err(error::DecapodError::ContextPackError(format!(
+                "Failed to write archive file '{}': {}",
+                archive_path.display(),
+                e
+            )));
+        }
 
         // Register in archive index
         archive::initialize_archive_db(&self.root)?;
@@ -113,7 +173,16 @@ Archive ID: {}
             summary,
             archive_id
         );
-        fs::write(session_path, pointer_content).map_err(error::DecapodError::IoError)?;
+
+        if let Err(e) = fs::write(session_path, pointer_content) {
+            // Archive was created but original file update failed
+            return Err(error::DecapodError::ContextPackError(format!(
+                "Archive created at '{}' but failed to update original file '{}': {}. Manual cleanup required.",
+                archive_path.display(),
+                session_path.display(),
+                e
+            )));
+        }
 
         Ok(archive_path)
     }
