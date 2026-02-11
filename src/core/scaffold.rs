@@ -49,7 +49,7 @@ fn write_file(
 }
 
 pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error::DecapodError> {
-    let const_docs_rel = ".decapod/constitutions";
+    let const_docs_rel = ".decapod/constitution";
     let data_dir_rel = ".decapod/data";
 
     println!(
@@ -57,7 +57,7 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
         opts.target_dir.display()
     );
 
-    // Ensure main .decapod/constitutions and .decapod/data directories exist
+    // Ensure main .decapod/constitution and .decapod/data directories exist
     fs::create_dir_all(opts.target_dir.join(const_docs_rel))
         .map_err(error::DecapodError::IoError)?;
     fs::create_dir_all(opts.target_dir.join(data_dir_rel)).map_err(error::DecapodError::IoError)?;
@@ -73,7 +73,7 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     write_file(opts, "GEMINI.md", &gemini_md)?;
     write_file(opts, ".decapod/README.md", &readme_md)?;
 
-    // Constitutions for the current project context
+    // Constitution for the current project context
     let const_templates = [
         (
             "core/CONTROL_PLANE.md",
