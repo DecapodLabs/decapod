@@ -219,6 +219,11 @@ fn scaffold_store_and_docs_cli_behaviors() {
         command: DocsCommand::List,
     })
     .expect("docs list");
+
+    // Change to the scaffolded directory for Show commands (which need find_repo_root)
+    let original_dir = std::env::current_dir().expect("get current dir");
+    std::env::set_current_dir(&store.root).expect("change to scaffolded dir");
+
     docs_cli::run_docs_cli(DocsCli {
         command: DocsCommand::Show {
             path: "core/DECAPOD.md".to_string(),
@@ -231,6 +236,9 @@ fn scaffold_store_and_docs_cli_behaviors() {
         },
     });
     assert!(matches!(missing, Err(DecapodError::NotFound(_))));
+
+    // Restore original directory
+    std::env::set_current_dir(original_dir).expect("restore original dir");
 }
 
 #[test]
