@@ -116,7 +116,7 @@ pub fn load_override_blob(
 
         let final_content = if override_path.exists() {
             if let Ok(override_content) = std::fs::read_to_string(&override_path) {
-                merge_override_content(&embedded_content, &override_content)
+                merge_override_content(embedded_content, &override_content)
             } else {
                 embedded_content.clone()
             }

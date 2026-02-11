@@ -1,6 +1,5 @@
 use crate::core::{assets, error};
 use clap::Subcommand;
-use std::env;
 use std::path::{Path, PathBuf};
 
 #[derive(clap::Args, Debug)]
@@ -38,12 +37,7 @@ fn load_override_blob_layer(
     }
 
     assets::load_override_blob(&override_root)
-        .map_err(|e| {
-            error::DecapodError::IoError(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("{}", e),
-            ))
-        })
+        .map_err(|e| error::DecapodError::IoError(std::io::Error::other(format!("{}", e))))
         .map(Some)
 }
 
@@ -52,9 +46,7 @@ fn get_constitution_with_overrides(repo_root: &Path, relative_path: &str) -> Opt
     // Get embedded base content from compiled blob (always available)
     let embedded_content = assets::get_embedded_doc(relative_path);
 
-    if embedded_content.is_none() {
-        return None;
-    }
+    embedded_content.as_ref()?;
 
     // Try to load override layer
     match load_override_blob_layer(repo_root) {

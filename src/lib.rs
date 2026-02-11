@@ -97,9 +97,7 @@ enum Command {
     /// Manage operator feedback and preference refinement
     Feedback(FeedbackCli),
     /// Run configurable proofs with audit trail
-    Proof(proof::ProofCli),
-    /// Run configurable proofs with audit trail
-    Proof(proof::ProofCli),
+    Proof(ProofCommandCli),
     /// Run an end-to-end usability verification (simulates fresh install)
     Verify,
 }
@@ -213,13 +211,13 @@ enum FeedbackCommand {
 }
 
 #[derive(clap::Args, Debug)]
-struct ProofCommandCli {
+pub struct ProofCommandCli {
     #[clap(subcommand)]
-    command: ProofSubCommand,
+    pub command: ProofSubCommand,
 }
 
 #[derive(Subcommand, Debug)]
-enum ProofSubCommand {
+pub enum ProofSubCommand {
     /// Run all configured proofs
     Run,
     /// Run a specific proof by name
