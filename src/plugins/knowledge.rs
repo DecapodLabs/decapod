@@ -110,8 +110,24 @@ pub fn schema() -> serde_json::Value {
         "version": "0.1.0",
         "description": "Repository context and rationale (minimal)",
         "commands": [
-            { "name": "add", "parameters": ["id", "title", "text", "provenance", "claim_id"] },
-            { "name": "search", "parameters": ["query"] }
+            {
+                "name": "add",
+                "description": "Add a knowledge entry",
+                "parameters": [
+                    {"name": "id", "required": true, "description": "Unique knowledge entry ID (ULID or UUID)"},
+                    {"name": "title", "required": true, "description": "Short, specific title for the entry"},
+                    {"name": "text", "required": true, "description": "Main content/markdown body of the knowledge entry"},
+                    {"name": "provenance", "required": true, "description": "Source reference (file:, url:, cmd:, commit:, or event: format required)"},
+                    {"name": "claim_id", "required": false, "description": "Optional claim ID this knowledge relates to"}
+                ]
+            },
+            {
+                "name": "search",
+                "description": "Search knowledge entries",
+                "parameters": [
+                    {"name": "query", "required": true, "description": "Search query for title, content, or provenance"}
+                ]
+            }
         ],
         "storage": ["knowledge.db"]
     })
