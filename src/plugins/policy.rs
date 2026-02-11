@@ -1,13 +1,12 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
-
-const POLICY_DB_NAME: &str = "policy.db";
 
 #[derive(Parser, Debug)]
 #[clap(name = "policy", about = "Manage policy and risk mapping")]
@@ -135,7 +134,7 @@ pub struct RiskMap {
 }
 
 pub fn policy_db_path(root: &Path) -> PathBuf {
-    root.join(POLICY_DB_NAME)
+    root.join(schemas::POLICY_DB_NAME)
 }
 
 pub fn initialize_policy_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -143,21 +142,8 @@ pub fn initialize_policy_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = policy_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "policy.init", |conn| {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS approvals (
-                approval_id TEXT PRIMARY KEY,
-                action_fingerprint TEXT NOT NULL,
-                actor TEXT NOT NULL,
-                ts TEXT NOT NULL,
-                scope TEXT NOT NULL,
-                expires_at TEXT
-            )",
-            [],
-        )?;
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_approvals_fingerprint ON approvals(action_fingerprint)",
-            [],
-        )?;
+        conn.execute(schemas::POLICY_DB_SCHEMA_APPROVALS, [])?;
+        conn.execute(schemas::POLICY_DB_SCHEMA_INDEX, [])?;
         Ok(())
     })
 }

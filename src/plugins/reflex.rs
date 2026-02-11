@@ -1,5 +1,6 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand};
 use rusqlite::{Result, types::ToSql};
@@ -8,27 +9,8 @@ use std::env;
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
 
-const DB_NAME: &str = "reflex.db";
-const REFLEX_DB_SCHEMA: &str = "
-    CREATE TABLE IF NOT EXISTS reflexes (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        description TEXT DEFAULT '',
-        trigger_type TEXT NOT NULL,
-        trigger_config TEXT DEFAULT '{}',
-        action_type TEXT NOT NULL,
-        action_config TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'active',
-        tags TEXT DEFAULT '',
-        created_at TEXT NOT NULL,
-        updated_at TEXT,
-        dir_path TEXT NOT NULL,
-        scope TEXT NOT NULL
-    )
-";
-
 fn reflex_db_path(root: &Path) -> PathBuf {
-    root.join(DB_NAME)
+    root.join(schemas::REFLEX_DB_NAME)
 }
 
 pub fn initialize_reflex_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -36,7 +18,7 @@ pub fn initialize_reflex_db(root: &Path) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(root);
     let db_path = reflex_db_path(root);
     broker.with_conn(&db_path, "decapod", None, "reflex.init", |conn| {
-        conn.execute(REFLEX_DB_SCHEMA, [])
+        conn.execute(schemas::REFLEX_DB_SCHEMA, [])
             .map_err(error::DecapodError::RusqliteError)?;
         Ok(())
     })?;
@@ -96,31 +78,6 @@ pub struct Reflex {
     pub updated_at: String,
     pub dir_path: String,
     pub scope: String,
-}
-
-#[derive(Serialize, Debug)]
-pub struct Schema {
-    pub name: String,
-    pub description: String,
-    pub commands: Vec<CommandSchema>,
-}
-
-#[derive(Serialize, Debug)]
-pub struct CommandSchema {
-    pub name: String,
-    pub description: String,
-    pub parameters: Vec<ParameterSchema>,
-}
-
-#[derive(Serialize, Debug)]
-pub struct ParameterSchema {
-    pub name: String,
-    #[serde(rename = "type")]
-    pub param_type: String,
-    pub required: bool,
-    pub description: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub enum_values: Option<Vec<String>>,
 }
 
 #[derive(Parser, Debug)]
@@ -200,8 +157,6 @@ pub enum ReflexCommand {
         #[clap(long)]
         id: String,
     },
-    /// Output the JSON schema for this CLI.
-    Schema,
 }
 
 pub fn schema() -> serde_json::Value {
@@ -265,20 +220,18 @@ pub fn run_reflex_cli(store: &Store, cli: ReflexCli) {
             action_type,
             action_config,
             status,
-            tags,
-        ),
-        ReflexCommand::Get { id } => get_reflex(root, id),
-        ReflexCommand::List {
-            status,
-            scope,
-            tags,
-            name_search,
-            dir,
-        } => list_reflexes(root, status, scope, tags, name_search, dir),
-        ReflexCommand::Delete { id } => delete_reflex(root, id),
-        ReflexCommand::Schema => print_schema(),
-    };
-
+                            tags,
+                        ),
+                        ReflexCommand::Get { id } => get_reflex(root, id),
+                        ReflexCommand::List {
+                            status,
+                            scope,
+                            tags,
+                            name_search,
+                            dir,
+                        } => list_reflexes(root, status, scope, tags, name_search, dir),
+                        ReflexCommand::Delete { id } => delete_reflex(root, id),
+                    };
     if let Err(e) = result {
         eprintln!("Error: {}", e);
     }
@@ -545,165 +498,3 @@ fn delete_reflex(root: &Path, id: String) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
-fn print_schema() -> Result<(), error::DecapodError> {
-    let schema = Schema {
-        name: "reflex".to_string(),
-        description: "Manage automated responses (reflexes) within the Decapod system.".to_string(),
-        commands: vec![
-            CommandSchema {
-                name: "add".to_string(),
-                description: "Add a new reflex entry.".to_string(),
-                parameters: vec![
-                    ParameterSchema {
-                        name: "name".to_string(),
-                        param_type: "string".to_string(),
-                        required: true,
-                        description: "Name of the reflex.".to_string(),
-                        enum_values: None,
-                    },
-                    ParameterSchema {
-                        name: "description".to_string(),
-                        param_type: "string".to_string(),
-                        required: false,
-                        description: "Description.".to_string(),
-                        enum_values: None,
-                    },
-                    ParameterSchema {
-                        name: "trigger_type".to_string(),
-                        param_type: "string".to_string(),
-                        required: true,
-                        description: "Type of trigger.".to_string(),
-                        enum_values: None,
-                    },
-                    ParameterSchema {
-                        name: "trigger_config".to_string(),
-                        param_type: "string".to_string(),
-                        required: false,
-                        description: "JSON config for trigger.".to_string(),
-                        enum_values: None,
-                    },
-                    ParameterSchema {
-                        name: "action_type".to_string(),
-                        param_type: "string".to_string(),
-                        required: true,
-                        description: "Type of action.".to_string(),
-                        enum_values: None,
-                    },
-                    ParameterSchema {
-                        name: "action_config".to_string(),
-                        param_type: "string".to_string(),
-                        required: true,
-                        description: "JSON config for action.".to_string(),
-                        enum_values: None,
-                    },
-                    ParameterSchema {
-                        name: "status".to_string(),
-                        param_type: "string".to_string(),
-                        required: false,
-                        description: "Status.".to_string(),
-                        enum_values: Some(vec!["active".to_string(), "inactive".to_string()]),
-                    },
-                    ParameterSchema {
-                        name: "tags".to_string(),
-                        param_type: "string".to_string(),
-                        required: false,
-                        description: "Comma-separated tags.".to_string(),
-                        enum_values: None,
-                    },
-                    ParameterSchema {
-                        name: "dir".to_string(),
-                        param_type: "string".to_string(),
-                        required: false,
-                        description: "Directory path.".to_string(),
-                        enum_values: None,
-                    },
-                ],
-            },
-            CommandSchema {
-                name: "update".to_string(),
-                description: "Update an existing reflex.".to_string(),
-                parameters: vec![
-                    ParameterSchema {
-                        name: "id".to_string(),
-                        param_type: "string".to_string(),
-                        required: true,
-                        description: "ID of reflex.".to_string(),
-                        enum_values: None,
-                    },
-                    ParameterSchema {
-                        name: "name".to_string(),
-                        param_type: "string".to_string(),
-                        required: false,
-                        description: "New name.".to_string(),
-                        enum_values: None,
-                    },
-                ],
-            },
-            CommandSchema {
-                name: "get".to_string(),
-                description: "Retrieve a reflex by ID.".to_string(),
-                parameters: vec![ParameterSchema {
-                    name: "id".to_string(),
-                    param_type: "string".to_string(),
-                    required: true,
-                    description: "ID of reflex.".to_string(),
-                    enum_values: None,
-                }],
-            },
-            CommandSchema {
-                name: "list".to_string(),
-                description: "List reflexes.".to_string(),
-                parameters: vec![
-                    ParameterSchema {
-                        name: "status".to_string(),
-                        param_type: "string".to_string(),
-                        required: false,
-                        description: "Filter by status.".to_string(),
-                        enum_values: Some(vec!["active".to_string(), "inactive".to_string()]),
-                    },
-                    ParameterSchema {
-                        name: "scope".to_string(),
-                        param_type: "string".to_string(),
-                        required: false,
-                        description: "Filter by scope.".to_string(),
-                        enum_values: None,
-                    },
-                    ParameterSchema {
-                        name: "tags".to_string(),
-                        param_type: "string".to_string(),
-                        required: false,
-                        description: "Filter by tags.".to_string(),
-                        enum_values: None,
-                    },
-                    ParameterSchema {
-                        name: "name_search".to_string(),
-                        param_type: "string".to_string(),
-                        required: false,
-                        description: "Search by name.".to_string(),
-                        enum_values: None,
-                    },
-                    ParameterSchema {
-                        name: "dir".to_string(),
-                        param_type: "string".to_string(),
-                        required: false,
-                        description: "Filter by directory.".to_string(),
-                        enum_values: None,
-                    },
-                ],
-            },
-            CommandSchema {
-                name: "delete".to_string(),
-                description: "Delete a reflex.".to_string(),
-                parameters: vec![ParameterSchema {
-                    name: "id".to_string(),
-                    param_type: "string".to_string(),
-                    required: true,
-                    description: "ID of reflex.".to_string(),
-                    enum_values: None,
-                }],
-            },
-        ],
-    };
-    println!("{}", serde_json::to_string_pretty(&schema).map_err(|e| error::DecapodError::ValidationError(e.to_string()))?);
-    Ok(())
-}

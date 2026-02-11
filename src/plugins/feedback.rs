@@ -1,11 +1,10 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::schemas;
 use crate::core::store::Store;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-
-const FEEDBACK_DB_NAME: &str = "feedback.db";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FeedbackEntry {
@@ -17,7 +16,7 @@ pub struct FeedbackEntry {
 }
 
 pub fn feedback_db_path(root: &Path) -> PathBuf {
-    root.join(FEEDBACK_DB_NAME)
+    root.join(schemas::FEEDBACK_DB_NAME)
 }
 
 pub fn initialize_feedback_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -25,16 +24,7 @@ pub fn initialize_feedback_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = feedback_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "feedback.init", |conn| {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS feedback (
-                id TEXT PRIMARY KEY,
-                source TEXT NOT NULL,
-                text TEXT NOT NULL,
-                links TEXT,
-                created_at TEXT NOT NULL
-            )",
-            [],
-        )?;
+        conn.execute(schemas::FEEDBACK_DB_SCHEMA, [])?;
         Ok(())
     })
 }
