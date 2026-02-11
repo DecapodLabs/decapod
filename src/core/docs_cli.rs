@@ -139,6 +139,7 @@ fn find_repo_root(start_dir: &Path) -> Result<PathBuf, error::DecapodError> {
 
 pub fn schema() -> serde_json::Value {
     serde_json::json!({
+        "name": "docs",
         "type": "object",
         "properties": {
             "list": {
