@@ -6,11 +6,11 @@
 **Scope:** bootloader/router for the doc stack and CLI thin waist
 **Non-goals:** restating contracts; defining authority; listing subsystems (route instead)
 
+⚠️ **CRITICAL: THIS IS YOUR OPERATING MANUAL** ⚠️
+
 Decapod is a Project OS for Machines. You are an agent operating within a shared, deterministic environment. Humans steer; you execute.
 
-This is the top-level document for how Decapod works. It serves as the primary internal guide for an agent in a Decapod-managed repo.
-
-Agent entrypoints (e.g., from `embedded/templates/*`) should generally link here to help route to relevant information.
+**FAILURE TO FOLLOW THIS METHODOLOGY WILL RESULT IN UNVERIFIED, UNSAFE WORK.**
 
 ---
 
@@ -20,11 +20,13 @@ This document helps agents navigate the Decapod documentation. Its primary roles
 
 - Route to canonical documents.
 - Prioritize reading order.
-- Indicate which document is canonical for a given topic.
+- Indicate which document is canonical for a topic.
 
-This document does not aim to:
+**THIS IS NOT OPTIONAL GUIDANCE.**
 
-- Define specific behavioral rules, invariants, or interfaces.
+This document does NOT aim to:
+
+- Define specific behavioral rules, invariants, or interfaces (that lives in binding docs).
 - Restate existing contracts or requirements.
 - Override other constitutional documents through indexing.
 
@@ -45,7 +47,9 @@ Decapod is a local-first control plane for coding agents. It helps facilitate mu
 - Auditability through events, proofs, and invariants.
 - A streamlined approach to agent collaboration.
 
-A key guideline: agents should interact with Decapod through its commands, not by directly manipulating internal state if a command exists for it.
+⚠️ **ABSOLUTE REQUIREMENT:** Agents MUST interact with Decapod through its commands, not by directly manipulating internal state if a command exists for it.
+
+**Bypassing the CLI = unverified, unsafe work.**
 
 ---
 
@@ -53,9 +57,11 @@ A key guideline: agents should interact with Decapod through its commands, not b
 
 Decapod documentation is structured into three layers, with each canonical document declaring its layer:
 
-- **Constitution (Guiding Principles):** Outlines fundamental authority and behavioral suggestions.
-- **Interfaces (Contracts & Plans):** Details machine-readable surfaces (CLI, schemas, stores, invariants), some of which may be binding.
-- **Guides (Operational Advice):** Provides practical operational guidance.
+- **Constitution (Guiding Principles):** ⚠️ FUNDAMENTAL AUTHORITY. Defines behavioral doctrine. MUST be followed.
+- **Interfaces (Contracts & Plans):** ⚠️ MACHINE-READABLE SURFACES. Defines invariants, schemas, and proof gates. Binding.
+- **Guides (Operational Advice):** ⚠️ OPERATIONAL GUIDANCE. Non-binding unless explicitly marked.
+
+**VIOLATION OF LAYER AUTHORITY = SYSTEM INVALID.**
 
 Key definitions:
 - Doc compilation rules: `embedded/core/DOC_RULES.md`
@@ -70,13 +76,13 @@ Key definitions:
 
 ## 3. Navigation by Topic
 
-**Constitution (Guiding Principles):**
+**Constitution (Guiding Principles) - ABSOLUTE AUTHORITY:**
 - Authority and proof doctrine: `embedded/specs/SYSTEM.md`
-- Methodology contract: `embedded/specs/INTENT.md`
+- ⚠️ **METHODOLOGY CONTRACT: `embedded/specs/INTENT.md` — READ THIS FIRST. ALWAYS.**
 - Change control (amendments): `embedded/specs/AMENDMENTS.md`
 - Agent persona/interaction guidelines: `embedded/core/SOUL.md`
 
-**Interfaces (Contracts & Plans):**
+**Interfaces (Contracts & Plans) - BINDING SURFACES:**
 - Agent<->Decapod sequencing: `embedded/core/CONTROL_PLANE.md`
 - Subsystem registry + truth labels: `embedded/core/PLUGINS.md`
 - Store purity model: `embedded/core/STORE_MODEL.md`
@@ -86,7 +92,7 @@ Key definitions:
 - Glossary of loaded terms (normative): `embedded/core/GLOSSARY.md`
 - Planned broker interface: `embedded/plugins/DB_BROKER.md`
 
-**Guides (Operational Advice):**
+**Guides (Operational Advice) - REFERENCE ONLY:**
 - Operating loop: `embedded/plugins/WORKFLOW.md`
 - Canonical vs derived vs state: `embedded/plugins/MANIFEST.md`
 - Known gaps: `embedded/plugins/METHODOLOGY_GAPS.md`
@@ -102,24 +108,29 @@ Decapod aims for effective subsystem integration through a uniform interface:
 - Stable JSON envelopes (for agents).
 - Store-aware operation.
 - Schema/discovery mechanisms.
-- Proof gates (`decapod validate`).
+- **Proof gates (`decapod validate`) — MUST PASS BEFORE CLAIMING COMPLETION.**
 
 The source of truth for subsystem details is the registry in `embedded/core/PLUGINS.md`.
 
-If there's uncertainty about store mutation, it's advisable to clarify. Store purity is a consideration for system integrity.
+If there's uncertainty about store mutation, it is advisable to clarify. Store purity is a consideration for system integrity.
 
 ---
 
-## 5. Agent Interaction Guidelines
+## 5. ⚠️ AGENT INTERACTION GUIDELINES (MANDATORY) ⚠️
 
-Agents operating in this workspace are encouraged to consider the following:
+Agents operating in this workspace ARE BOUND BY:
 
-1. **Follow the Ladder**: Review `INTENT.md` -> `ARCHITECTURE.md` -> `SYSTEM.md` before acting.
-2. **Utilize Validate**: Aim for `decapod validate` to pass when making changes.
-3. **Propose Changes**: For canonical documents (core/specs/root README), consider proposing diffs or using `decapod feedback propose`.
-4. **Record Proofs**: For significant changes, documenting a proof event (`decapod proof record`) can be beneficial for health promotion.
-5. **Consider Budgets**: Be mindful of context token usage. `decapod context pack` can help manage history without silent truncation.
-6. **Consult Policy**: For high-risk or irreversible actions, `decapod policy eval` can provide insights, and an `APPROVAL_EVENT` may be sought.
+1. **FOLLOW THE LADDER**: Review `embedded/specs/INTENT.md` → `embedded/specs/ARCHITECTURE.md` → `embedded/specs/SYSTEM.md` BEFORE acting. No exceptions. No shortcuts.
+
+2. **VALIDATE EVERYTHING**: Aim for `decapod validate` to pass when making changes. **Unvalidated work is not done.**
+
+3. **PROPOSE CHANGES**: For canonical documents (core/specs/root README), propose diffs or use `decapod feedback propose`. Do not unilaterally change binding contracts.
+
+4. **RECORD PROOFS**: For significant changes, document a proof event (`decapod proof record`) for health promotion.
+
+5. **MANAGE CONTEXT**: Be mindful of context token usage. `decapod context pack` helps manage history without silent truncation.
+
+6. **CONSULT POLICY**: For high-risk or irreversible actions, `decapod policy eval` provides insights. An `APPROVAL_EVENT` may be sought.
 
 ---
 
