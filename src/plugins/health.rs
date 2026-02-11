@@ -1,5 +1,6 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand};
 use rusqlite::params;
@@ -7,7 +8,21 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
 
-const HEALTH_DB_NAME: &str = "health.db";
+pub fn health_db_path(root: &Path) -> PathBuf {
+    root.join(schemas::HEALTH_DB_NAME)
+}
+
+pub fn initialize_health_db(root: &Path) -> Result<(), error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = health_db_path(root);
+
+    broker.with_conn(&db_path, "decapod", None, "health.init", |conn| {
+        conn.execute(schemas::HEALTH_DB_SCHEMA_CLAIMS, [])?;
+        conn.execute(schemas::HEALTH_DB_SCHEMA_PROOF_EVENTS, [])?;
+        conn.execute(schemas::HEALTH_DB_SCHEMA_HEALTH_CACHE, [])?;
+        Ok(())
+    })
+}
 
 #[derive(Parser, Debug)]
 #[clap(name = "health", about = "Manage the Health Engine")]
@@ -101,51 +116,6 @@ pub struct ProofEvent {
     pub surface: String, // e.g. "cargo test"
     pub result: String,  // "pass" | "fail"
     pub sla_seconds: u64,
-}
-
-pub fn health_db_path(root: &Path) -> PathBuf {
-    root.join(HEALTH_DB_NAME)
-}
-
-pub fn initialize_health_db(root: &Path) -> Result<(), error::DecapodError> {
-    let broker = DbBroker::new(root);
-    let db_path = health_db_path(root);
-
-    broker.with_conn(&db_path, "decapod", None, "health.init", |conn| {
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS claims (
-                id TEXT PRIMARY KEY,
-                subject TEXT NOT NULL,
-                kind TEXT NOT NULL,
-                provenance TEXT,
-                created_at TEXT NOT NULL
-            )",
-            [],
-        )?;
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS proof_events (
-                event_id TEXT PRIMARY KEY,
-                claim_id TEXT NOT NULL,
-                ts TEXT NOT NULL,
-                surface TEXT NOT NULL,
-                result TEXT NOT NULL,
-                sla_seconds INTEGER NOT NULL,
-                FOREIGN KEY(claim_id) REFERENCES claims(id)
-            )",
-            [],
-        )?;
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS health_cache (
-                claim_id TEXT PRIMARY KEY,
-                computed_state TEXT NOT NULL,
-                reason TEXT,
-                updated_at TEXT NOT NULL,
-                FOREIGN KEY(claim_id) REFERENCES claims(id)
-            )",
-            [],
-        )?;
-        Ok(())
-    })
 }
 
 pub fn compute_health(

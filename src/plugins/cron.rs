@@ -87,31 +87,6 @@ pub struct CronJob {
     pub next_run: Option<String>,
 }
 
-#[derive(Serialize, Debug)]
-pub struct Schema {
-    pub name: String,
-    pub description: String,
-    pub commands: Vec<CommandSchema>,
-}
-
-#[derive(Serialize, Debug)]
-pub struct CommandSchema {
-    pub name: String,
-    pub description: String,
-    pub parameters: Vec<ParameterSchema>,
-}
-
-#[derive(Serialize, Debug)]
-pub struct ParameterSchema {
-    pub name: String,
-    #[serde(rename = "type")]
-    pub param_type: String,
-    pub required: bool,
-    pub description: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub enum_values: Option<Vec<String>>,
-}
-
 #[derive(Parser, Debug)]
 #[clap(
     name = "cron",
@@ -185,8 +160,6 @@ pub enum CronCommand {
         #[clap(long)]
         id: String,
     },
-    /// Output the JSON schema for this CLI.
-    Schema,
 }
 
 fn add_cron_job(
@@ -489,70 +462,6 @@ fn update_cron_job(
     })
 }
 
-fn print_schema() -> Result<(), error::DecapodError> {
-    let schema = Schema {
-        name: "cron".to_string(),
-        description: "Manage scheduled cron jobs within the Decapod system.".to_string(),
-        commands: vec![
-            CommandSchema {
-                name: "add".to_string(),
-                description: "Add a new cron job entry.".to_string(),
-                parameters: vec![
-                    ParameterSchema { name: "name".to_string(), param_type: "string".to_string(), required: true, description: "Name of the cron job.".to_string(), enum_values: None },
-                    ParameterSchema { name: "description".to_string(), param_type: "string".to_string(), required: false, description: "Detailed description of the cron job.".to_string(), enum_values: None },
-                    ParameterSchema { name: "schedule".to_string(), param_type: "string".to_string(), required: true, description: "Cron schedule string (e.g., '* * * * *').".to_string(), enum_values: None },
-                    ParameterSchema { name: "command".to_string(), param_type: "string".to_string(), required: true, description: "Shell command to execute.".to_string(), enum_values: None },
-                    ParameterSchema { name: "status".to_string(), param_type: "string".to_string(), required: false, description: "Status of the cron job. Defaults to active.".to_string(), enum_values: Some(vec!["active".to_string(), "inactive".to_string(), "disabled".to_string()]) },
-                    ParameterSchema { name: "tags".to_string(), param_type: "string".to_string(), required: false, description: "Comma-separated tags (e.g., maintenance,reporting).".to_string(), enum_values: None },
-                    ParameterSchema { name: "dir".to_string(), param_type: "string".to_string(), required: false, description: "Absolute path to the directory for this cron job. Defaults to current working directory.".to_string(), enum_values: None },
-                ],
-            },
-            CommandSchema {
-                name: "update".to_string(),
-                description: "Update an existing cron job entry.".to_string(),
-                parameters: vec![
-                    ParameterSchema { name: "id".to_string(), param_type: "string".to_string(), required: true, description: "ID of the cron job to update.".to_string(), enum_values: None },
-                    ParameterSchema { name: "name".to_string(), param_type: "string".to_string(), required: false, description: "New name of the cron job.".to_string(), enum_values: None },
-                    ParameterSchema { name: "description".to_string(), param_type: "string".to_string(), required: false, description: "New detailed description.".to_string(), enum_values: None },
-                    ParameterSchema { name: "schedule".to_string(), param_type: "string".to_string(), required: false, description: "New cron schedule string.".to_string(), enum_values: None },
-                    ParameterSchema { name: "command".to_string(), param_type: "string".to_string(), required: false, description: "New shell command to execute.".to_string(), enum_values: None },
-                    ParameterSchema { name: "status".to_string(), param_type: "string".to_string(), required: false, description: "New status of the cron job.".to_string(), enum_values: Some(vec!["active".to_string(), "inactive".to_string(), "disabled".to_string()]) },
-                    ParameterSchema { name: "tags".to_string(), param_type: "string".to_string(), required: false, description: "New comma-separated tags.".to_string(), enum_values: None },
-                    ParameterSchema { name: "last_run".to_string(), param_type: "string".to_string(), required: false, description: "Timestamp of the last successful execution (ISO format).".to_string(), enum_values: None },
-                    ParameterSchema { name: "next_run".to_string(), param_type: "string".to_string(), required: false, description: "Timestamp of the next scheduled execution (ISO format).".to_string(), enum_values: None },
-                ],
-            },
-            CommandSchema {
-                name: "get".to_string(),
-                description: "Retrieve a cron job entry by ID.".to_string(),
-                parameters: vec![
-                    ParameterSchema { name: "id".to_string(), param_type: "string".to_string(), required: true, description: "ID of the cron job to retrieve.".to_string(), enum_values: None },
-                ],
-            },
-            CommandSchema {
-                name: "list".to_string(),
-                description: "List cron job entries.".to_string(),
-                parameters: vec![
-                    ParameterSchema { name: "status".to_string(), param_type: "string".to_string(), required: false, description: "Filter cron jobs by status.".to_string(), enum_values: Some(vec!["active".to_string(), "inactive".to_string(), "disabled".to_string()]) },
-                    ParameterSchema { name: "scope".to_string(), param_type: "string".to_string(), required: false, description: "Filter cron jobs by scope.".to_string(), enum_values: None },
-                    ParameterSchema { name: "tags".to_string(), param_type: "string".to_string(), required: false, description: "Filter cron jobs by tags (comma-separated).".to_string(), enum_values: None },
-                    ParameterSchema { name: "name_search".to_string(), param_type: "string".to_string(), required: false, description: "Search cron jobs by name (partial match).".to_string(), enum_values: None },
-                    ParameterSchema { name: "dir".to_string(), param_type: "string".to_string(), required: false, description: "Filter cron jobs by directory path. Defaults to current working directory.".to_string(), enum_values: None },
-                ],
-            },
-            CommandSchema {
-                name: "delete".to_string(),
-                description: "Delete a cron job entry.".to_string(),
-                parameters: vec![
-                    ParameterSchema { name: "id".to_string(), param_type: "string".to_string(), required: true, description: "ID of the cron job to delete.".to_string(), enum_values: None },
-                ],
-            },
-        ],
-    };
-    println!("{}", serde_json::to_string_pretty(&schema).map_err(|e| error::DecapodError::ValidationError(e.to_string()))?);
-    Ok(())
-}
-
 pub fn run_cron_cli(store: &Store, cli: CronCli) -> Result<(), error::DecapodError> {
     let root = &store.root;
     let result = match cli.command {
@@ -605,7 +514,6 @@ pub fn run_cron_cli(store: &Store, cli: CronCli) -> Result<(), error::DecapodErr
             last_run,
             next_run,
         ),
-        CronCommand::Schema => print_schema(),
     };
 
     if let Err(e) = result {
