@@ -18,10 +18,10 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Enforcement Gate: Description Check
+      - name: Enforcement Gate Description Check
         run: bash scripts/check_crate_description.sh
 
-      - name: Enforcement Gate: Version Match
+      - name: Enforcement Gate Version Match
         run: |
           VERSION=$(grep '^version =' Cargo.toml | head -n 1 | cut -d '"' -f 2)
           TAG=${{ github.event.release.tag_name }}
