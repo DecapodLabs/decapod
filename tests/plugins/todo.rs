@@ -4,7 +4,6 @@ use decapod::plugins::todo::{
     TodoCommand, add_task, get_task, initialize_todo_db, list_tasks, rebuild_from_events,
     todo_db_path, update_status,
 };
-use serde_json;
 use std::fs;
 use tempfile::tempdir;
 
