@@ -79,7 +79,7 @@ jobs:
       - name: Publish to Crates.io
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish --locked
+        run: cargo publish --locked --allow-dirty
 
       - name: Package Binary
         run: |
