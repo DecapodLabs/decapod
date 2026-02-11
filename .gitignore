@@ -29,8 +29,6 @@ build/
 # --- Decapod Sidecar (State) ---
 # We never commit local sidecar state or databases
 .decapod/
-!.decapod/constitution
-!.decapod/constitution/**
 AGENTS.md
 GEMINI.md
 CLAUDE.md
