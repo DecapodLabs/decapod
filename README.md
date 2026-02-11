@@ -1,47 +1,81 @@
 <div align="center">
-  <svg width="240" height="120" viewBox="0 0 240 120" xmlns="http://www.w3.org/2000/svg">
-    <g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <!-- Central carapace segment -->
-      <path d="M100 30 Q 120 20, 140 30" stroke-width="4" />
-      <!-- Hind legs - set 1 -->
-      <path d="M105 45 L 80 60 L 50 85" />
-      <path d="M135 45 L 160 60 L 190 85" />
-      <!-- Hind legs - set 2 -->
-      <path d="M110 60 L 90 80 L 65 105" />
-      <path d="M130 60 L 150 80 L 175 105" />
-      <!-- Hind legs - set 3 -->
-      <path d="M115 75 L 105 95 L 90 115" />
-      <path d="M125 75 L 135 95 L 150 115" />
+  <svg width="320" height="120" viewBox="0 0 320 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Decapod">
+    <defs>
+      <linearGradient id="dp" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="currentColor" stop-opacity="0.95"/>
+        <stop offset="1" stop-color="currentColor" stop-opacity="0.55"/>
+      </linearGradient>
+      <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="2.5" result="b"/>
+        <feMerge>
+          <feMergeNode in="b"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+
+    <g fill="none" stroke="url(#dp)" stroke-width="3.25" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+      <path d="M118 36 Q160 12 202 36" stroke-width="5"/>
+      <path d="M120 40 Q160 26 200 40" opacity="0.65"/>
+      <path d="M160 40 L160 84" opacity="0.5"/>
+
+      <path d="M132 48 L102 62 L70 88"/>
+      <path d="M140 62 L112 82 L86 108"/>
+      <path d="M150 76 L134 98 L116 114"/>
+
+      <path d="M188 48 L218 62 L250 88"/>
+      <path d="M180 62 L208 82 L234 108"/>
+      <path d="M170 76 L186 98 L204 114"/>
+
+      <path d="M108 58 L92 52" opacity="0.6"/>
+      <path d="M212 58 L228 52" opacity="0.6"/>
     </g>
+
+    <text x="160" y="22" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="12" fill="currentColor" opacity="0.85">
+      DECAPOD
+    </text>
   </svg>
+
+  <h1>Decapod</h1>
+
+  <p>
+    🦀 A Rust-built, repo-native control-plane kernel for AI swarms — safe shared state, enforced truth, loop-agnostic orchestration.
+  </p>
+
+  <p>
+    <a href="https://github.com/DecapodLabs/decapod/actions"><img alt="CI" src="https://github.com/DecapodLabs/decapod/actions/workflows/ci.yml/badge.svg"></a>
+    <a href="https://crates.io/crates/decapod"><img alt="Crates.io" src="https://img.shields.io/crates/v/decapod.svg"></a>
+    <a href="https://ko-fi.com/decapodlabs">
+      <img alt="Ko-fi" height="28" src="https://storage.ko-fi.com/cdn/kofi2.png?v=3">
+    </a>
+  </p>
 </div>
 
-# Decapod
+---
 
-[![CI](https://github.com/DecapodLabs/decapod/actions/workflows/ci.yml/badge.svg)](https://github.com/DecapodLabs/decapod/actions)
-[![Crates.io](https://img.shields.io/crates/v/decapod.svg)](https://crates.io/crates/decapod)
+## Project OS for Machines
 
-**Decapod is a Project OS for Machines.** A Rust-powered, agent-executed communal workspace where AI swarms coordinate without babysitting. Humans steer from the outside; agents execute inside a deterministic, shared environment built for machine consumption—durable state, verifiable proofs, and repeatable handoffs.
+Decapod turns “a bunch of agents” into an actual system. Not chat logs. Not vibes. A shared, deterministic workspace where agents can work in parallel without inventing parallel realities. You steer. The swarm executes. The kernel keeps everyone honest.
 
 ### Built for Agents, Not Humans
-Decapod ignores “user experience” in favor of “agent efficiency.” Every interface is a CLI-as-API contract. There are no dashboards or chat bubbles—only machine-readable state, verifiable proofs, and deterministic handoffs. It’s the communal nervous system that lets parallel loops like OpenClaw and coding agents (Claude, OpenCode, Codex, Gemini) stay aligned by sharing the same project-local memory concurrently, across executions, and across models—so your swarm doesn’t splinter into parallel realities.
+Decapod optimizes for **agent efficiency** over “UX.” Every interface is a CLI-as-API contract. No dashboards. No chat bubbles. Just machine-readable state, proof surfaces, and deterministic handoffs. Run a coding agent in parallel with OpenClaw and other loopers: while you direct one, the rest can read/write the same Decapod workspace for coordination, todos, caching, and clean handoffs.
 
 ### The Ecosystem
-The Decapod core is a minimal kernel designed for state integrity and orchestration. All functional power lives in the periphery: plugins—connectors, adapters, caches, and workflow modules that bridge the kernel to external systems. This separation keeps the core stable while the ecosystem evolves fast, and you can override each component as needed. We actively want contributors shipping first-class periphery plugins—this is where Decapod meets the world.
+The core stays small on purpose: a minimal kernel for state integrity and orchestration. The blast radius stays tight. The ecosystem stays wild. All functional power lives in the periphery—plugins (connectors, adapters, caches, workflow modules) that let Decapod touch the real world without bloating the kernel. We want contributors shipping periphery plugins as first-class citizens. This is where Decapod becomes inevitable.
 
 ### Contributing (Core + Periphery)
-Want maximum impact fast? Build the periphery: connectors, adapters, caches, proof/eval harnesses, and workflow modules that make agents actually useful in real environments. Core PRs are welcome too—but periphery plugins are first-class citizens here, not “extras.”
+Want maximum impact fast? Build the periphery. New connectors, adapters, caches, proof/eval harnesses, and workflow modules that make agents useful in real environments. Core PRs are welcome too—but periphery plugins are not “extras.” They’re the expansion pack.
 
 ## Get started
 
-```bash
+~~~bash
 # 1) Install Decapod (once)
 cargo install decapod
 
 # 2) Initialize in your project repo
 cd your-project-repo
 decapod init
-```
+~~~
 
 Running `decapod init` will:
 - Create the `.decapod/` directory structure.
@@ -59,7 +93,7 @@ Once you’ve run `init`, tell your AI to read `AGENTS.md`, `GEMINI.md`, or `CLA
 
 ## On-disk layout
 
-```text
+~~~text
 your-project/
 ├── AGENTS.md               <-- Rules of engagement
 ├── CLAUDE.md
@@ -73,7 +107,7 @@ your-project/
         │   └── ARCHITECTURE.md
         └── core/
             └── ...
-```
+~~~
 
 ## What it is / What it isn’t
 
@@ -88,8 +122,8 @@ your-project/
 
 Decapod’s methodology is open source and embedded in the engine. When you contribute a better workflow pattern to our `constitution/` directory, you’re helping upgrade the “firmware” for every AI agent using Decapod.
 
-If you’ve found a way to stop an agent from hallucinating context or drifting from intent, [open a PR](https://github.com/DecapodLabs/decapod/compare).
+If you’ve found a way to stop an agent from hallucinating context or drifting from intent, open a PR.
 
 ---
 
-If Decapod helps your swarm stay comfy, [sponsor the work](https://github.com/sponsors/DecapodLabs) or drop a star. Keep the shell clean. 🦀
+If Decapod helps your swarm stay comfy, sponsor the work, drop a star, or fuel the kernel on Ko-fi: https://ko-fi.com/decapodlabs 🦀

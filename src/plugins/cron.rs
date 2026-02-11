@@ -6,8 +6,8 @@ use clap::{Parser, Subcommand};
 use rusqlite::{Result as SqlResult, types::ToSql};
 use serde::{Deserialize, Serialize};
 use std::env;
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::{Path, PathBuf};
 use ulid::Ulid;
 
 fn cron_db_path(root: &Path) -> PathBuf {
@@ -59,11 +59,7 @@ fn scope_from_dir(p: &str) -> String {
             return component_name.to_string();
         }
     }
-    if p == "/" {
-        "root".to_string()
-    } else {
-        "root".to_string()
-    }
+    "root".to_string()
 }
 
 fn ulid_like() -> String {
@@ -162,6 +158,7 @@ pub enum CronCommand {
     },
 }
 
+#[allow(clippy::too_many_arguments)]
 fn add_cron_job(
     root: &Path,
     name: String,
@@ -196,7 +193,7 @@ fn add_cron_job(
 
     let job_id = format!("{}_{}", prefix, ulid_like());
     let now = now_iso();
-    
+
     let broker = DbBroker::new(root);
     let db_path = cron_db_path(root);
 
@@ -321,7 +318,7 @@ fn get_cron_job(root: &Path, id: String) -> Result<(), error::DecapodError> {
 
     broker.with_conn(&db_path, "decapod", None, "cron.get", |conn| {
         let mut stmt = conn.prepare("SELECT id, name, description, schedule, command, status, last_run, next_run, tags, created_at, updated_at, dir_path, scope FROM cron_jobs WHERE id = ?1")?;
-        let mut cron_job_iter = stmt.query_map(&[&id], |row| {
+        let mut cron_job_iter = stmt.query_map([&id], |row| {
             Ok(CronJob {
                 id: row.get(0)?,
                 name: row.get(1)?,
@@ -366,7 +363,7 @@ fn delete_cron_job(root: &Path, id: String) -> Result<(), error::DecapodError> {
     let db_path = cron_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "cron.delete", |conn| {
-        conn.execute("DELETE FROM cron_jobs WHERE id = ?1", &[&id])?;
+        conn.execute("DELETE FROM cron_jobs WHERE id = ?1", [&id])?;
         Ok(())
     })?;
 
@@ -377,6 +374,7 @@ fn delete_cron_job(root: &Path, id: String) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn update_cron_job(
     root: &Path,
     id: String,

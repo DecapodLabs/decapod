@@ -28,12 +28,16 @@ pub fn add_knowledge(
     claim_id: Option<&str>,
 ) -> Result<(), error::DecapodError> {
     use regex::Regex;
-    let prov_re = Regex::new(r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:[A-Z0-9]+)$").unwrap();
-    
+    let prov_re = Regex::new(
+        r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:[A-Z0-9]+)$",
+    )
+    .unwrap();
+
     if !prov_re.is_match(provenance) {
-        return Err(error::DecapodError::ValidationError(
-            format!("Invalid provenance format: '{}'. Must match scheme (file:|url:|cmd:|commit:|event:)", provenance),
-        ));
+        return Err(error::DecapodError::ValidationError(format!(
+            "Invalid provenance format: '{}'. Must match scheme (file:|url:|cmd:|commit:|event:)",
+            provenance
+        )));
     }
 
     let broker = DbBroker::new(&store.root);
@@ -59,7 +63,10 @@ pub fn add_knowledge(
     })
 }
 
-pub fn search_knowledge(store: &Store, query: &str) -> Result<Vec<KnowledgeEntry>, error::DecapodError> {
+pub fn search_knowledge(
+    store: &Store,
+    query: &str,
+) -> Result<Vec<KnowledgeEntry>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = knowledge_db_path(&store.root);
 
@@ -90,7 +97,10 @@ pub fn search_knowledge(store: &Store, query: &str) -> Result<Vec<KnowledgeEntry
 
 fn now_iso() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
     format!("{}Z", secs)
 }
 

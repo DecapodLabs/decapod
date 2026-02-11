@@ -1,8 +1,8 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
-use crate::policy;
 use crate::core::schemas; // Import the new schemas module
-use crate::core::store::{Store, StoreKind};
+use crate::core::store::Store;
+use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
 use rusqlite::{Connection, OptionalExtension, Result as SqlResult, types::ToSql};
 use serde::{Deserialize, Serialize};
@@ -379,7 +379,10 @@ fn update_status(
     let (level, _) = policy::eval_risk(event_type, None, &risk_map);
     // Modified policy::check_approval to accept &Store
     if policy::is_high_risk(level) && !policy::check_approval(store, event_type, None, "global")? {
-        return Err(error::DecapodError::ValidationError(format!("Action '{}' on '{}' is high risk and lacks approval.", event_type, id)));
+        return Err(error::DecapodError::ValidationError(format!(
+            "Action '{}' on '{}' is high risk and lacks approval.",
+            event_type, id
+        )));
     }
 
     let changed = broker.with_conn(&db_path, "decapod", None, event_type, |conn| {
@@ -596,7 +599,7 @@ fn rebuild_from_events(root: &Path) -> Result<serde_json::Value, error::DecapodE
 
 pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error::DecapodError> {
     let broker = DbBroker::new(out_db.parent().unwrap());
-    
+
     broker.with_conn(out_db, "decapod", None, "todo.rebuild_internal", |conn| {
         ensure_schema(conn)?;
 
@@ -857,7 +860,11 @@ mod tests {
         assert_eq!(task.status, "open");
 
         // 3. Mark done
-        update_status(&root, task_id, "done", "task.done", serde_json::json!({})).unwrap();
+        let store = Store {
+            kind: crate::core::store::StoreKind::Repo,
+            root: root.clone(),
+        };
+        update_status(&store, task_id, "done", "task.done", serde_json::json!({})).unwrap();
         let task = get_task(&root, task_id).unwrap().unwrap();
         assert_eq!(task.status, "done");
 

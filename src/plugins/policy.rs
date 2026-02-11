@@ -87,7 +87,10 @@ pub fn run_policy_cli(store: &Store, cli: PolicyCli) -> Result<(), error::Decapo
                             },
                         ],
                     };
-                    std::fs::write(&risk_map_path, serde_json::to_string_pretty(&default_map).unwrap())?;
+                    std::fs::write(
+                        &risk_map_path,
+                        serde_json::to_string_pretty(&default_map).unwrap(),
+                    )?;
                     println!("Risk map initialized at {}", risk_map_path.display());
                 }
                 RiskmapSubcommand::Verify => {
@@ -149,7 +152,7 @@ pub fn initialize_policy_db(root: &Path) -> Result<(), error::DecapodError> {
 }
 
 pub fn derive_fingerprint(command: &str, target_path: Option<&str>, scope: &str) -> String {
-    use sha2::{Sha256, Digest};
+    use sha2::{Digest, Sha256};
     let mut hasher = Sha256::new();
     hasher.update(command);
     hasher.update(target_path.unwrap_or(""));
@@ -157,7 +160,11 @@ pub fn derive_fingerprint(command: &str, target_path: Option<&str>, scope: &str)
     format!("{:x}", hasher.finalize())
 }
 
-pub fn eval_risk(command: &str, target_path: Option<&str>, risk_map: &RiskMap) -> (RiskLevel, Vec<String>) {
+pub fn eval_risk(
+    command: &str,
+    target_path: Option<&str>,
+    risk_map: &RiskMap,
+) -> (RiskLevel, Vec<String>) {
     // Basic heuristic-based risk evaluation for Epoch 2
     let mut level = RiskLevel::LOW;
     let mut requirements = Vec::new();
@@ -173,7 +180,7 @@ pub fn eval_risk(command: &str, target_path: Option<&str>, risk_map: &RiskMap) -
         for zone in &risk_map.zones {
             if path.contains(&zone.path) {
                 if zone.level as u8 > level as u8 {
-                    level = zone.level.clone();
+                    level = zone.level;
                 }
                 for rule in &zone.rules {
                     requirements.push(format!("Zone Rule: {}", rule));
@@ -193,7 +200,13 @@ pub fn is_high_risk(level: RiskLevel) -> bool {
     matches!(level, RiskLevel::HIGH | RiskLevel::CRITICAL)
 }
 
-pub fn approve_action(store: &Store, command: &str, target_path: Option<&str>, actor: &str, scope: &str) -> Result<String, error::DecapodError> {
+pub fn approve_action(
+    store: &Store,
+    command: &str,
+    target_path: Option<&str>,
+    actor: &str,
+    scope: &str,
+) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = policy_db_path(&store.root);
     let approval_id = Ulid::new().to_string();
@@ -211,7 +224,12 @@ pub fn approve_action(store: &Store, command: &str, target_path: Option<&str>, a
     Ok(approval_id)
 }
 
-pub fn check_approval(store: &Store, command: &str, target_path: Option<&str>, scope: &str) -> Result<bool, error::DecapodError> {
+pub fn check_approval(
+    store: &Store,
+    command: &str,
+    target_path: Option<&str>,
+    scope: &str,
+) -> Result<bool, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = policy_db_path(&store.root);
     let fingerprint = derive_fingerprint(command, target_path, scope);
@@ -231,7 +249,9 @@ pub fn list_approvals(store: &Store) -> Result<Vec<Approval>, error::DecapodErro
     let db_path = policy_db_path(&store.root);
 
     broker.with_conn(&db_path, "decapod", None, "policy.list", |conn| {
-        let mut stmt = conn.prepare("SELECT approval_id, action_id, actor, ts, scope, expires_at FROM approvals")?;
+        let mut stmt = conn.prepare(
+            "SELECT approval_id, action_id, actor, ts, scope, expires_at FROM approvals",
+        )?;
         let rows = stmt.query_map([], |row| {
             Ok(Approval {
                 approval_id: row.get(0)?,
@@ -252,7 +272,10 @@ pub fn list_approvals(store: &Store) -> Result<Vec<Approval>, error::DecapodErro
 
 fn now_iso() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
     format!("{}Z", secs)
 }
 
@@ -309,7 +332,7 @@ mod tests {
 
         let cmd = "todo.archive";
         let path = Some("docs/specs/INTENT.md");
-        
+
         // Initially not approved
         assert!(!check_approval(&store, cmd, path, "global").unwrap());
 
@@ -318,7 +341,7 @@ mod tests {
 
         // Now approved
         assert!(check_approval(&store, cmd, path, "global").unwrap());
-        
+
         // Different scope not approved
         assert!(!check_approval(&store, cmd, path, "local").unwrap());
     }

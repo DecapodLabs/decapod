@@ -5,10 +5,6 @@ use rusqlite::Connection;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-fn get_db_path(root: &Path, db_name: &str) -> String {
-    root.join(db_name).to_string_lossy().to_string()
-}
-
 pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
     let conn = Connection::open(db_path)?;
     conn.busy_timeout(std::time::Duration::from_secs(5))

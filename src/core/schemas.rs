@@ -62,10 +62,14 @@ pub const TODO_DB_SCHEMA_TASK_EVENTS: &str = "
     )
 ";
 
-pub const TODO_DB_SCHEMA_INDEX_STATUS: &str = "CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)";
-pub const TODO_DB_SCHEMA_INDEX_SCOPE: &str = "CREATE INDEX IF NOT EXISTS idx_tasks_scope ON tasks(scope)";
-pub const TODO_DB_SCHEMA_INDEX_DIR: &str = "CREATE INDEX IF NOT EXISTS idx_tasks_dir ON tasks(dir_path)";
-pub const TODO_DB_SCHEMA_INDEX_EVENTS_TASK: &str = "CREATE INDEX IF NOT EXISTS idx_events_task ON task_events(task_id)";
+pub const TODO_DB_SCHEMA_INDEX_STATUS: &str =
+    "CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)";
+pub const TODO_DB_SCHEMA_INDEX_SCOPE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_tasks_scope ON tasks(scope)";
+pub const TODO_DB_SCHEMA_INDEX_DIR: &str =
+    "CREATE INDEX IF NOT EXISTS idx_tasks_dir ON tasks(dir_path)";
+pub const TODO_DB_SCHEMA_INDEX_EVENTS_TASK: &str =
+    "CREATE INDEX IF NOT EXISTS idx_events_task ON task_events(task_id)";
 
 // --- Cron ---
 pub const CRON_DB_NAME: &str = "cron.db";
@@ -151,7 +155,8 @@ pub const POLICY_DB_SCHEMA_APPROVALS: &str = "
         expires_at TEXT
     )
 ";
-pub const POLICY_DB_SCHEMA_INDEX: &str = "CREATE INDEX IF NOT EXISTS idx_approvals_fingerprint ON approvals(action_fingerprint)";
+pub const POLICY_DB_SCHEMA_INDEX: &str =
+    "CREATE INDEX IF NOT EXISTS idx_approvals_fingerprint ON approvals(action_fingerprint)";
 
 // --- Archive ---
 pub const ARCHIVE_DB_NAME: &str = "archive.db";
