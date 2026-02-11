@@ -124,7 +124,10 @@ pub fn compute_health(
     now_secs: u64,
 ) -> (HealthState, String) {
     if events.is_empty() {
-        return (HealthState::ASSERTED, "No proof events recorded".to_string());
+        return (
+            HealthState::ASSERTED,
+            "No proof events recorded".to_string(),
+        );
     }
 
     // Sort by timestamp descending
@@ -132,25 +135,43 @@ pub fn compute_health(
     sorted_events.sort_by(|a, b| b.ts.cmp(&a.ts));
 
     let latest = &sorted_events[0];
-    
+
     if latest.result == "fail" {
-        return (HealthState::CONTRADICTED, format!("Latest proof failed at {}", latest.ts));
+        return (
+            HealthState::CONTRADICTED,
+            format!("Latest proof failed at {}", latest.ts),
+        );
     }
 
     let last_pass = sorted_events.iter().find(|e| e.result == "pass");
-    
+
     if let Some(pass) = last_pass {
         let pass_ts: u64 = pass.ts.trim_end_matches('Z').parse().unwrap_or(0);
         if now_secs > pass_ts + pass.sla_seconds {
-            return (HealthState::STALE, format!("Last passing proof ({}) expired SLA", pass.ts));
+            return (
+                HealthState::STALE,
+                format!("Last passing proof ({}) expired SLA", pass.ts),
+            );
         }
-        return (HealthState::VERIFIED, format!("Valid proof recorded at {}", pass.ts));
+        return (
+            HealthState::VERIFIED,
+            format!("Valid proof recorded at {}", pass.ts),
+        );
     }
 
-    (HealthState::ASSERTED, "No passing proof events recorded".to_string())
+    (
+        HealthState::ASSERTED,
+        "No passing proof events recorded".to_string(),
+    )
 }
 
-pub fn add_claim(store: &Store, id: &str, subject: &str, kind: &str, provenance: &str) -> Result<(), error::DecapodError> {
+pub fn add_claim(
+    store: &Store,
+    id: &str,
+    subject: &str,
+    kind: &str,
+    provenance: &str,
+) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = health_db_path(&store.root);
     let now = now_iso();
@@ -164,7 +185,13 @@ pub fn add_claim(store: &Store, id: &str, subject: &str, kind: &str, provenance:
     })
 }
 
-pub fn record_proof(store: &Store, claim_id: &str, surface: &str, result: &str, sla: u64) -> Result<(), error::DecapodError> {
+pub fn record_proof(
+    store: &Store,
+    claim_id: &str,
+    surface: &str,
+    result: &str,
+    sla: u64,
+) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = health_db_path(&store.root);
     let now = now_iso();
@@ -178,12 +205,18 @@ pub fn record_proof(store: &Store, claim_id: &str, surface: &str, result: &str, 
     })
 }
 
-pub fn get_health(store: &Store, claim_id: &str) -> Result<(HealthState, String), error::DecapodError> {
+pub fn get_health(
+    store: &Store,
+    claim_id: &str,
+) -> Result<(HealthState, String), error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = health_db_path(&store.root);
-    
+
     use std::time::{SystemTime, UNIX_EPOCH};
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
 
     broker.with_conn(&db_path, "decapod", None, "health.get", |conn| {
         let claim: Claim = conn.query_row(
@@ -223,12 +256,17 @@ pub fn get_health(store: &Store, claim_id: &str) -> Result<(HealthState, String)
     })
 }
 
-pub fn get_all_health(store: &Store) -> Result<Vec<(String, HealthState, String)>, error::DecapodError> {
+pub fn get_all_health(
+    store: &Store,
+) -> Result<Vec<(String, HealthState, String)>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = health_db_path(&store.root);
-    
+
     use std::time::{SystemTime, UNIX_EPOCH};
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
 
     broker.with_conn(&db_path, "decapod", None, "health.list_all", |conn| {
         let mut stmt = conn.prepare("SELECT id, subject, kind, provenance, created_at FROM claims")?;
@@ -266,7 +304,10 @@ pub fn get_all_health(store: &Store) -> Result<Vec<(String, HealthState, String)
 
 fn now_iso() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
     format!("{}Z", secs)
 }
 

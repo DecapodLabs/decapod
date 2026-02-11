@@ -1,6 +1,6 @@
 use crate::core::error;
-use crate::health;
 use crate::core::store::Store;
+use crate::health;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -21,7 +21,7 @@ pub struct TrustStatus {
 
 pub fn get_trust_status(store: &Store, actor_id: &str) -> Result<TrustStatus, error::DecapodError> {
     health::initialize_health_db(&store.root)?;
-    
+
     // Validate actor_id exists in audit history to prevent spoofing
     let audit_log = store.root.join("broker.events.jsonl");
     let mut known_actors = std::collections::HashSet::new();
@@ -38,7 +38,10 @@ pub fn get_trust_status(store: &Store, actor_id: &str) -> Result<TrustStatus, er
     }
 
     if !known_actors.contains(actor_id) {
-        return Err(error::DecapodError::ValidationError(format!("Actor '{}' has no recorded audit history; trust cannot be computed.", actor_id)));
+        return Err(error::DecapodError::ValidationError(format!(
+            "Actor '{}' has no recorded audit history; trust cannot be computed.",
+            actor_id
+        )));
     }
 
     // In Epoch 4, we compute trust on-the-fly from proof history.
@@ -61,7 +64,10 @@ pub fn get_trust_status(store: &Store, actor_id: &str) -> Result<TrustStatus, er
         reasons.push("Contradicted claims detected; restricted to Tier 1".to_string());
         AutonomyTier::Tier1
     } else if success_count >= 5 {
-        reasons.push(format!("Verified success count ({}) exceeds threshold", success_count));
+        reasons.push(format!(
+            "Verified success count ({}) exceeds threshold",
+            success_count
+        ));
         AutonomyTier::Tier2
     } else {
         reasons.push("Insufficient verified history for Tier 2".to_string());
