@@ -102,7 +102,33 @@ Mermaid is acceptable because it is diffable and repo-native.
 
 ---
 
-## 7. Architecture Quality Signals
+## 7. Test Requirements (Non-Negotiable)
+
+**Every code change must have a corresponding test.** This is not optional.
+
+Rules:
+- New functionality requires new tests that exercise the happy path and at least one failure path.
+- Bug fixes require a regression test that would have caught the bug.
+- Refactors must not reduce test coverage.
+- Tests must be runnable via `cargo test` (or equivalent for non-Rust).
+- Tests must be deterministic (no flaky tests in CI).
+
+What counts as a test:
+- Unit tests for pure logic
+- Integration tests for subsystem boundaries
+- `decapod validate` gates for methodology invariants
+- Schema validation for data contracts
+
+What does NOT count:
+- Manual testing ("I tried it and it works")
+- Comments saying "TODO: add tests"
+- Tests that are skipped or ignored
+
+**Claim:** `claim.test.mandatory` — No code merges without corresponding tests.
+
+---
+
+## 8. Architecture Quality Signals
 
 Evidence that architecture is healthy:
 
@@ -111,11 +137,13 @@ Evidence that architecture is healthy:
 - concurrency model has an explicit serialization point (or explicit proof of safety)
 - failure modes are named and have recovery steps
 - there is a single proof entrypoint that catches drift early
+- **all code paths have test coverage**
 
 ---
 
-## 8. Changelog
+## 9. Changelog
 
+- v0.0.2: Added §7 Test Requirements (mandatory tests for all code changes).
 - v0.0.1: A general architecture practice contract (how to design, document, decide, and prove), aligning with the original intent-driven methodology docs.
 
 ## Links

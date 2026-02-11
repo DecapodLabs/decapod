@@ -46,6 +46,13 @@ struct CleanCli {
     dir: Option<PathBuf>,
 }
 
+#[derive(clap::Args, Debug)]
+struct ValidateCli {
+    /// Store to validate: 'user' (blank-slate semantics) or 'repo' (dogfood backlog).
+    #[clap(long, default_value = "repo")]
+    store: String,
+}
+
 #[derive(Subcommand, Debug)]
 enum Command {
     /// Initialize the Decapod system (user store + project entrypoints)
@@ -53,7 +60,7 @@ enum Command {
     /// Remove all Decapod-related files from the current repository.
     Clean(CleanCli),
     /// Validate the Decapod methodology against the documentation
-    Validate,
+    Validate(ValidateCli),
     /// Access embedded Decapod methodology documentation
     Docs(docs_cli::DocsCli),
     /// Manage cron jobs
@@ -362,9 +369,25 @@ pub fn run() -> Result<(), error::DecapodError> {
             };
 
             match cli.command {
-                Command::Validate => {
-                    let decapod_root = project_root;
-                    validate::run_validation(&project_store, &decapod_root, &decapod_root)?;
+                Command::Validate(validate_cli) => {
+                    let decapod_root = project_root.clone();
+                    let store = match validate_cli.store.as_str() {
+                        "user" => {
+                            // User store uses a temp directory for blank-slate validation
+                            let tmp_root = std::env::temp_dir().join(format!(
+                                "decapod_validate_user_{}",
+                                ulid::Ulid::new()
+                            ));
+                            std::fs::create_dir_all(&tmp_root)
+                                .map_err(error::DecapodError::IoError)?;
+                            Store {
+                                kind: StoreKind::User,
+                                root: tmp_root,
+                            }
+                        }
+                        "repo" | _ => project_store,
+                    };
+                    validate::run_validation(&store, &decapod_root, &decapod_root)?;
                 }
                 Command::Docs(docs_cli) => {
                     docs_cli::run_docs_cli(docs_cli)?;
