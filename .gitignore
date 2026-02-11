@@ -33,6 +33,11 @@ AGENTS.md
 GEMINI.md
 CLAUDE.md
 
+# --- Embedded Templates ---
+!constitution/templates/AGENTS.md
+!constitution/templates/GEMINI.md
+!constitution/templates/CLAUDE.md
+
 # --- Environment & Secrets ---
 .env
 .env.*
