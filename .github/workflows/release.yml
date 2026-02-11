@@ -1,4 +1,4 @@
-name: Release
+name: Release & Publish
 
 on:
   push:
@@ -9,99 +9,71 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build ${{ matrix.platform.os }}
-    strategy:
-      matrix:
-        platform:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            name: decapod-linux-x86_64.tar.gz
-          # - os: macos-latest
-          #   target: aarch64-apple-darwin
-          #   name: decapod-macos-aarch64.tar.gz
-          # - os: macos-latest
-          #   target: x86_64-apple-darwin
-          #   name: decapod-macos-x86_64.tar.gz
-          # - os: windows-latest
-          #   target: x86_64-pc-windows-msvc
-          #   name: decapod-windows-x86_64.zip
-
-    runs-on: ${{ matrix.platform.os }}
+  # 1. Enforcement Gate: Ensure metadata and versioning are perfect before building
+  gate:
+    name: Enforcement Gate
+    runs-on: ubuntu-latest
+    if: github.repository == 'DecapodLabs/decapod'
     steps:
       - uses: actions/checkout@v4
-      
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform.target }}
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
       
-      - name: Build
-        run: cargo build --release --target ${{ matrix.platform.target }}
+      - name: Description Check
+        run: bash scripts/check_crate_description.sh
+
+      - name: Version Match Check
+        run: |
+          VERSION=$(grep '^version =' Cargo.toml | head -n 1 | cut -d '"' -f 2)
+          TAG=${{ github.ref_name }}
+          TAG_CLEAN=${TAG#v}
+          if [ "$VERSION" != "$TAG_CLEAN" ]; then
+            echo "Error: Version mismatch! Cargo.toml=$VERSION vs Tag=$TAG_CLEAN"
+            exit 1
+          fi
+
+  # 2. Build & Publish: Build the binary and push to Crates.io
+  build-and-publish:
+    name: Build & Publish
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      
+      - name: Build Binary
+        run: cargo build --release --target x86_64-unknown-linux-gnu
 
       - name: Guardrail Check
         shell: bash
         run: |
-          BINARY="target/${{ matrix.platform.target }}/release/decapod"
-          if [ "${{ matrix.platform.os }}" = "windows-latest" ]; then BINARY="${BINARY}.exe"; fi
-          
-          # Must init first as docs access requires a project root
+          BINARY="target/x86_64-unknown-linux-gnu/release/decapod"
           $BINARY init
-          
-          # Basic sanity check that binary runs and can show embedded docs
           $BINARY docs list | grep "embedded/core/DECAPOD.md"
           echo "Guardrail passed - Binary functional."
 
-      - name: Package
-        shell: bash
+      - name: Publish to Crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --locked
+
+      - name: Package Binary
         run: |
           mkdir dist
-          cd target/${{ matrix.platform.target }}/release
-          if [ "${{ matrix.platform.os }}" = "windows-latest" ]; then
-            7z a ../../../dist/${{ matrix.platform.name }} decapod.exe
-          else
-            tar czf ../../../dist/${{ matrix.platform.name }} decapod
-          fi
+          cd target/x86_64-unknown-linux-gnu/release
+          tar czf ../../../dist/decapod-linux-x86_64.tar.gz decapod
 
       - name: Generate Checksum
-        shell: bash
         run: |
           cd dist
-          if [ "${{ matrix.platform.os }}" = "windows-latest" ]; then
-            certutil -hashfile ${{ matrix.platform.name }} SHA256 | grep -v "hash" | grep -v "CertUtil" | tr -d " \r\n" > ${{ matrix.platform.name }}.sha256
-          else
-            shasum -a 256 ${{ matrix.platform.name }} | cut -d ' ' -f 1 > ${{ matrix.platform.name }}.sha256
-          fi
+          shasum -a 256 decapod-linux-x86_64.tar.gz | cut -d ' ' -f 1 > decapod-linux-x86_64.tar.gz.sha256
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.platform.name }}
-          path: dist/
-          retention-days: 1
-
-  release:
-    name: Create GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: true
-
-      - name: Collect Checksums
-        run: |
-          cd artifacts
-          sha256sum * | grep -v ".sha256" > ../checksums.txt || true
-
-      - name: Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/*
-            checksums.txt
+            dist/*
           generate_release_notes: true
           draft: false
           prerelease: false
