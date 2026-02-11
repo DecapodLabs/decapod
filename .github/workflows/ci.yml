@@ -34,4 +34,5 @@ jobs:
         uses: Swatinem/rust-cache@v2
       - uses: dtolnay/rust-toolchain@stable
       - name: Run tests
+        # Runs all unit and integration tests, including those in the 'tests/' directory.
         run: cargo test
