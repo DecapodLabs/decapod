@@ -38,6 +38,10 @@ Columns:
 | claim.store.blank_slate | A fresh user store contains no TODOs unless the user adds them. | `.decapod/constitution/core/STORE_MODEL.md` | enforced | `decapod validate --store user` | Protects user-store privacy and blank slate semantics. |
 | claim.store.no_auto_seeding | Repo store content must never appear in the user store automatically. | `.decapod/constitution/core/STORE_MODEL.md` | enforced | `decapod validate --store user` | Prevents cross-store contamination. |
 | claim.store.explicit_store_selection | Mutating commands must be treated as undefined unless store context is explicit; `--store` is preferred and `--root` is dangerous. | `.decapod/constitution/core/STORE_MODEL.md` | partially_enforced | `decapod validate` (store invariants) | CLI behavior may still allow footguns; treated as a red-line constraint. |
+| claim.proof.executable_check | A "proof" is an executable check that can fail loudly (tests, linters, validators, etc). No new DSL. | `.decapod/constitution/core/PLUGINS.md` | enforced | `decapod validate` | Definition is normative; proof registry (Epoch 1) will formalize. |
+| claim.concurrency.no_git_solve | Decapod does not "solve" Git merge conflicts; it reduces collisions via work partitioning and proof gates. | `.decapod/constitution/core/PLUGINS.md` | enforced | N/A (doc-level constraint) | Prevents over-claiming on concurrency. |
+| claim.broker.is_spec | DB Broker (serialized writes, audit) is SPEC, not REAL. Do not claim it is implemented. | `.decapod/constitution/core/PLUGINS.md` | enforced | `decapod validate` (truth label check) | Will graduate to REAL in Epoch 4. |
+| claim.test.mandatory | Every code change must have corresponding tests. No exceptions. | `.decapod/constitution/specs/ARCHITECTURE.md` | enforced | `cargo test` + CI | Tests gate merge; untested code is rejected. |
 
 ---
 
