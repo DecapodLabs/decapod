@@ -42,10 +42,6 @@ fn read_constitution_doc(repo_root: &Path, doc_path: &str) -> Option<String> {
 }
 
 pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
-    // Determine repo root for dynamic constitution loading
-    let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
-    let repo_root = find_repo_root(&current_dir)?;
-
     match cli.command {
         DocsCommand::List => {
             let docs = assets::list_docs(); // This currently lists embedded docs
@@ -56,16 +52,21 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
             // TODO: Also list dynamically loaded docs from .decapod/constitutions/
             Ok(())
         }
-        DocsCommand::Show { path } => match read_constitution_doc(&repo_root, &path) {
-            Some(content) => {
-                println!("{}", content);
-                Ok(())
+        DocsCommand::Show { path } => {
+            // Determine repo root for dynamic constitution loading
+            let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
+            let repo_root = find_repo_root(&current_dir)?;
+            match read_constitution_doc(&repo_root, &path) {
+                Some(content) => {
+                    println!("{}", content);
+                    Ok(())
+                }
+                None => Err(error::DecapodError::NotFound(format!(
+                    "Document not found: {}",
+                    path
+                ))),
             }
-            None => Err(error::DecapodError::NotFound(format!(
-                "Document not found: {}",
-                path
-            ))),
-        },
+        }
         DocsCommand::Ingest => {
             let docs = assets::list_docs();
             for doc_path in docs {
