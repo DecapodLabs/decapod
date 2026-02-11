@@ -35,7 +35,7 @@ Running `decapod init` will:
 
 **Safe initialization:** If any root entrypoints already exist, `decapod init` will safely back them up to `<file>.md.bak` before writing new ones. 
 
-If you have existing backups, open your agent of choice and tell it to: 
+After initialization, if you have backups, open your agent of choice and tell it to: 
 > "Blend the `*.md.bak` files into my `.decapod/constitutions/` overrides."
 
 ## Project OS for Machines
