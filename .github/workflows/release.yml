@@ -44,8 +44,11 @@ jobs:
           BINARY="target/${{ matrix.platform.target }}/release/decapod"
           if [ "${{ matrix.platform.os }}" = "windows-latest" ]; then BINARY="${BINARY}.exe"; fi
           
+          # Must init first as docs access requires a project root
+          $BINARY init
+          
           # Basic sanity check that binary runs and can show embedded docs
-          $BINARY docs list | grep "docs/DECAPOD.md"
+          $BINARY docs list | grep "embedded/core/DECAPOD.md"
           echo "Guardrail passed - Binary functional."
 
       - name: Package
