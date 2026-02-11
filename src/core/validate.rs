@@ -252,9 +252,7 @@ fn validate_repo_map(
     decapod_dir: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Repo Map");
-    let const_root = decapod_dir
-            .join(".decapod")
-            .join("constitution");
+    let const_root = decapod_dir.join(".decapod").join("constitution");
 
     if const_root.is_dir() {
         pass(
