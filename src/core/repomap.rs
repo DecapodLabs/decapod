@@ -112,22 +112,30 @@ pub fn generate_doc_graph(root: &Path) -> DocGraph {
             if r.contains("://") || !r.ends_with(".md") {
                 continue;
             }
-            let direct = if r.starts_with("./") { r[2..].to_string() } else { r };
-            
+            let direct = r.strip_prefix("./").unwrap_or(&r).to_string();
+
             // Resolve relative to src file
             let src_parent = Path::new(src_rel).parent().unwrap_or(Path::new(""));
             let candidate = src_parent.join(&direct);
-            
+
             // Normalize path (very basic)
             let mut normalized = Vec::new();
             for component in candidate.components() {
                 match component {
-                    std::path::Component::ParentDir => { normalized.pop(); }
-                    std::path::Component::Normal(c) => { normalized.push(c); }
+                    std::path::Component::ParentDir => {
+                        normalized.pop();
+                    }
+                    std::path::Component::Normal(c) => {
+                        normalized.push(c);
+                    }
                     _ => {}
                 }
             }
-            let dst_rel = normalized.iter().map(|c| c.to_string_lossy()).collect::<Vec<_>>().join("/");
+            let dst_rel = normalized
+                .iter()
+                .map(|c| c.to_string_lossy())
+                .collect::<Vec<_>>()
+                .join("/");
 
             if existing.contains(&dst_rel) && &dst_rel != src_rel {
                 nodes.insert(src_rel.clone());
@@ -170,7 +178,7 @@ fn collect_md_files(root: &Path, dir: &Path, out: &mut Vec<String>) {
                     continue;
                 }
                 collect_md_files(root, &path, out);
-            } else if path.is_file() && path.extension().map_or(false, |e| e == "md") {
+            } else if path.is_file() && path.extension().is_some_and(|e| e == "md") {
                 if let Ok(rel) = path.strip_prefix(root) {
                     let rel_str = rel.to_string_lossy().to_string();
                     if rel_str != "docs/DOC_MAP.md" {

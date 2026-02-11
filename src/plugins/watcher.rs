@@ -1,7 +1,7 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
-use crate::health;
 use crate::core::store::Store;
+use crate::health;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -66,7 +66,9 @@ pub fn run_watcher(store: &Store) -> Result<WatcherReport, error::DecapodError> 
         // Simple integrity scan: check if all archives in DB exist on disk
         let archive_dir = store.root.join("memory/archive");
         if !archive_dir.exists() {
-            report.missing_archives.push("archive_directory_missing".to_string());
+            report
+                .missing_archives
+                .push("archive_directory_missing".to_string());
         }
     }
 
@@ -94,26 +96,30 @@ fn log_watcher_event(store: &Store, report: &WatcherReport) -> Result<(), error:
         .append(true)
         .open(&path)
         .map_err(error::DecapodError::IoError)?;
-    
+
     let event = serde_json::json!({
         "ts": report.ts,
         "type": "watcher.run",
         "report": report
     });
 
-    writeln!(f, "{}", serde_json::to_string(&event).unwrap()).map_err(error::DecapodError::IoError)?;
-    
+    writeln!(f, "{}", serde_json::to_string(&event).unwrap())
+        .map_err(error::DecapodError::IoError)?;
+
     // Also audit via broker
     let _broker = DbBroker::new(&store.root);
     // Broker doesn't currently support arbitrary log but we can use with_conn on a dummy or just log directly
     // For Epoch 4, we rely on the watcher.events.jsonl as the primary audit trail for this subsystem.
-    
+
     Ok(())
 }
 
 fn now_iso() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
     format!("{}Z", secs)
 }
 

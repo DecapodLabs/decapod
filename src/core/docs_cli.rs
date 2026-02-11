@@ -56,15 +56,16 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
             // TODO: Also list dynamically loaded docs from .decapod/constitutions/
             Ok(())
         }
-        DocsCommand::Show { path } => {
-            match read_constitution_doc(&repo_root, &path) {
-                Some(content) => {
-                    println!("{}", content);
-                    Ok(())
-                },
-                None => Err(error::DecapodError::NotFound(format!("Document not found: {}", path))),
+        DocsCommand::Show { path } => match read_constitution_doc(&repo_root, &path) {
+            Some(content) => {
+                println!("{}", content);
+                Ok(())
             }
-        }
+            None => Err(error::DecapodError::NotFound(format!(
+                "Document not found: {}",
+                path
+            ))),
+        },
         DocsCommand::Ingest => {
             let docs = assets::list_docs();
             for doc_path in docs {

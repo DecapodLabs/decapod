@@ -52,7 +52,7 @@ pub fn add_feedback(
 }
 
 pub fn propose_prefs(store: &Store) -> Result<String, error::DecapodError> {
-    // This generates a proposal text based on feedback. 
+    // This generates a proposal text based on feedback.
     // It MUST NOT edit files directly.
     let broker = DbBroker::new(&store.root);
     let db_path = feedback_db_path(&store.root);
@@ -80,26 +80,42 @@ pub fn propose_prefs(store: &Store) -> Result<String, error::DecapodError> {
     }
 
     let mut proposal = "DECAPOD PREFERENCE PROPOSAL (NON-BINDING)
-".to_string();
-    proposal.push_str("============================
-");
-    proposal.push_str("Evidence cited:
-");
+"
+    .to_string();
+    proposal.push_str(
+        "============================
+",
+    );
+    proposal.push_str(
+        "Evidence cited:
+",
+    );
     for e in &entries {
-        proposal.push_str(&format!("- [{}] {}: {}
-", e.id, e.source, e.text));
+        proposal.push_str(&format!(
+            "- [{}] {}: {}
+",
+            e.id, e.source, e.text
+        ));
     }
-    proposal.push_str("
+    proposal.push_str(
+        "
 PROPOSED DIFF (against SYSTEM.md):
-");
-    proposal.push_str("--- SYSTEM.md
+",
+    );
+    proposal.push_str(
+        "--- SYSTEM.md
 +++ SYSTEM.md
-");
-    proposal.push_str("@@ -10,1 +10,1 @@
-");
-    proposal.push_str("- [Placeholder rule]
+",
+    );
+    proposal.push_str(
+        "@@ -10,1 +10,1 @@
+",
+    );
+    proposal.push_str(
+        "- [Placeholder rule]
 + [New rule derived from feedback]
-");
+",
+    );
 
     Ok(proposal)
 }

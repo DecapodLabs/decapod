@@ -1,7 +1,7 @@
 use crate::core::error;
+use crate::core::store::Store;
 use crate::health;
 use crate::policy;
-use crate::core::store::Store;
 use crate::watcher;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -25,7 +25,7 @@ pub fn get_status(store: &Store) -> Result<HeartbeatStatus, error::DecapodError>
     }
 
     let approvals = policy::list_approvals(store).unwrap_or_default();
-    // In Epoch 4, "pending" isn't explicitly tracked in policy.db yet, 
+    // In Epoch 4, "pending" isn't explicitly tracked in policy.db yet,
     // but we can count total approvals as a proxy or just stub.
     let pending_approvals = approvals.len();
 
@@ -50,7 +50,10 @@ pub fn get_status(store: &Store) -> Result<HeartbeatStatus, error::DecapodError>
 
 fn now_iso() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
     format!("{}Z", secs)
 }
 

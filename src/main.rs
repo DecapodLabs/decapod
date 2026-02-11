@@ -2,7 +2,7 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    assets, db, docs_cli, error, repomap, scaffold,
+    db, docs_cli, error, repomap, scaffold,
     store::{Store, StoreKind},
     validate,
 };
@@ -300,7 +300,10 @@ fn main() -> Result<(), error::DecapodError> {
             // Check if .decapod exists and skip if it does, unless --force
             let setup_decapod_root = target_dir.join(".decapod");
             if setup_decapod_root.exists() && !init_cli.force {
-                println!("'.decapod' directory already exists in {}. Skipping init. Use --force to re-initialize and overwrite.", target_dir.display());
+                println!(
+                    "'.decapod' directory already exists in {}. Skipping init. Use --force to re-initialize and overwrite.",
+                    target_dir.display()
+                );
                 return Ok(());
             }
 
@@ -375,19 +378,17 @@ fn main() -> Result<(), error::DecapodError> {
                 Command::Todo(todo_cli) => {
                     todo::run_todo_cli(&project_store, todo_cli)?;
                 }
-                Command::Broker(broker_cli) => {
-                    match broker_cli.command {
-                        BrokerCommand::Audit => {
-                            let audit_log = store_root.join("broker.events.jsonl");
-                            if audit_log.exists() {
-                                let content = std::fs::read_to_string(audit_log)?;
-                                println!("{}", content);
-                            } else {
-                                println!("No audit log found.");
-                            }
+                Command::Broker(broker_cli) => match broker_cli.command {
+                    BrokerCommand::Audit => {
+                        let audit_log = store_root.join("broker.events.jsonl");
+                        if audit_log.exists() {
+                            let content = std::fs::read_to_string(audit_log)?;
+                            println!("{}", content);
+                        } else {
+                            println!("No audit log found.");
                         }
                     }
-                }
+                },
                 Command::Context(context_cli) => {
                     let manager = context::ContextManager::new(&store_root)?;
                     match context_cli.command {
@@ -404,7 +405,10 @@ fn main() -> Result<(), error::DecapodError> {
                                     }
                                 }
                                 None => {
-                                    println!("Total tokens: {} (Profile '{}' not found)", total, profile);
+                                    println!(
+                                        "Total tokens: {} (Profile '{}' not found)",
+                                        total, profile
+                                    );
                                 }
                             }
                         }
@@ -419,7 +423,10 @@ fn main() -> Result<(), error::DecapodError> {
                             current_files,
                         } => {
                             let content = manager.restore_archive(&id, &profile, &current_files)?;
-                            println!("--- RESTORED CONTENT (Archive: {}) ---\n{}\n--- END RESTORED ---", id, content);
+                            println!(
+                                "--- RESTORED CONTENT (Archive: {}) ---\n{}\n--- END RESTORED ---",
+                                id, content
+                            );
                         }
                     }
                 }
@@ -499,28 +506,24 @@ fn main() -> Result<(), error::DecapodError> {
                         }
                     }
                 }
-                Command::Repo(r_cli) => {
-                    match r_cli.command {
-                        RepoCommand::Map => {
-                            let decapod_root = project_root;
-                            let map = repomap::generate_map(&decapod_root);
-                            println!("{}", serde_json::to_string_pretty(&map).unwrap());
-                        }
-                        RepoCommand::Graph => {
-                            let decapod_root = project_root;
-                            let graph = repomap::generate_doc_graph(&decapod_root);
-                            println!("{}", graph.mermaid);
-                        }
+                Command::Repo(r_cli) => match r_cli.command {
+                    RepoCommand::Map => {
+                        let decapod_root = project_root;
+                        let map = repomap::generate_map(&decapod_root);
+                        println!("{}", serde_json::to_string_pretty(&map).unwrap());
                     }
-                }
-                Command::Watcher(w_cli) => {
-                    match w_cli.command {
-                        WatcherCommand::Run => {
-                            let report = watcher::run_watcher(&project_store)?;
-                            println!("{}", serde_json::to_string_pretty(&report).unwrap());
-                        }
+                    RepoCommand::Graph => {
+                        let decapod_root = project_root;
+                        let graph = repomap::generate_doc_graph(&decapod_root);
+                        println!("{}", graph.mermaid);
                     }
-                }
+                },
+                Command::Watcher(w_cli) => match w_cli.command {
+                    WatcherCommand::Run => {
+                        let report = watcher::run_watcher(&project_store)?;
+                        println!("{}", serde_json::to_string_pretty(&report).unwrap());
+                    }
+                },
                 Command::Heartbeat => {
                     let status = heartbeat::get_status(&project_store)?;
                     println!("{}", serde_json::to_string_pretty(&status).unwrap());
@@ -557,8 +560,12 @@ fn main() -> Result<(), error::DecapodError> {
                             text,
                             links,
                         } => {
-                            let id =
-                                feedback::add_feedback(&project_store, &source, &text, links.as_deref())?;
+                            let id = feedback::add_feedback(
+                                &project_store,
+                                &source,
+                                &text,
+                                links.as_deref(),
+                            )?;
                             println!("Feedback recorded: {}", id);
                         }
                         FeedbackCommand::Propose => {
@@ -589,7 +596,9 @@ fn run_verification() -> Result<(), error::DecapodError> {
         .current_dir(&temp_dir)
         .status()?;
     if !status.success() {
-        return Err(error::DecapodError::ValidationError("git init failed".into()));
+        return Err(error::DecapodError::ValidationError(
+            "git init failed".into(),
+        ));
     }
 
     let exe = std::env::current_exe()?;
@@ -601,7 +610,9 @@ fn run_verification() -> Result<(), error::DecapodError> {
         .current_dir(&temp_dir)
         .status()?;
     if !status.success() {
-        return Err(error::DecapodError::ValidationError("decapod init failed".into()));
+        return Err(error::DecapodError::ValidationError(
+            "decapod init failed".into(),
+        ));
     }
 
     println!("Checking directory structure...");
@@ -610,7 +621,9 @@ fn run_verification() -> Result<(), error::DecapodError> {
         return Err(error::DecapodError::NotFound(".decapod/ missing".into()));
     }
     if !temp_dir.join("AGENTS.md").is_file() {
-        return Err(error::DecapodError::ValidationError("AGENTS.md missing".into()));
+        return Err(error::DecapodError::ValidationError(
+            "AGENTS.md missing".into(),
+        ));
     }
 
     if m_dir.join("projects").exists() {
@@ -644,7 +657,11 @@ fn run_verification() -> Result<(), error::DecapodError> {
 
     println!("Checking state scoping...");
     let data_dir = m_dir.join("data");
-    if !data_dir.is_dir() { return Err(error::DecapodError::NotFound(".decapod/data/ missing".into())); }
+    if !data_dir.is_dir() {
+        return Err(error::DecapodError::NotFound(
+            ".decapod/data/ missing".into(),
+        ));
+    }
     if !data_dir.join("todo.db").is_file() {
         return Err(error::DecapodError::NotFound(
             "todo.db missing from .decapod/data/".into(),
