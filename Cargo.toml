@@ -1,6 +1,6 @@
 [package]
 name = "decapod"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2024"
 rust-version = "1.85"
 description = "🦀 Decapod is a Rust-built, repo-native control-plane kernel for AI swarms—safe shared state, enforced truth, and loop-agnostic orchestration."
@@ -8,7 +8,7 @@ license = "MIT"
 repository = "https://github.com/DecapodLabs/decapod"
 homepage = "https://github.com/DecapodLabs/decapod"
 readme = "README.md"
-keywords = ["ai", "agents", "automation", "workflow", "git"]
+keywords = ["rust", "ai", "kernel", "orchestration", "control-plane", "agents", "ai-agents"]
 categories = ["development-tools", "command-line-utilities"]
 exclude = [
     ".decapod/*",
