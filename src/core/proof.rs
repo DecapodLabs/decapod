@@ -1,10 +1,11 @@
-use crate::core::error::DecapodError;
 use crate::core::store::Store;
+use crate::error::DecapodError;
+use crate::ProofCommandCli;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use ulid::Ulid;
 
 /// A proof definition from proofs.toml
@@ -16,7 +17,7 @@ pub struct ProofDef {
     pub args: Vec<String>,
     #[serde(default)]
     pub description: String,
-    #[serde(default = "default_true")]
+    #[serde(default)]
     pub required: bool,
 }
 
@@ -84,13 +85,13 @@ fn run_single_proof(proof_def: &ProofDef, working_dir: &Path) -> Result<ProofRes
     let passed = exit_code == 0;
 
     // Truncate very long output
-    let output_truncated = stdout.chars().take(1000).collect();
+    let output_truncated: String = stdout.chars().take(1000).collect();
 
     Ok(ProofResult {
         name: proof_def.name.clone(),
         command: proof_def.command.clone(),
         exit_code,
-        duration_ms,
+        duration_ms: duration_ms.try_into().unwrap(),
         passed,
         output: format!("{}\n{}", output_truncated, stderr),
         required: proof_def.required,
@@ -177,7 +178,9 @@ pub fn run_proofs(
 /// Append proof event to store
 fn append_proof_event(store: &Store, event: &ProofEvent) -> Result<(), DecapodError> {
     let events_path = store.root.join("proof.events.jsonl");
-    let event_json = serde_json::to_string(event)?;
+    let event_json = serde_json::to_string(event).map_err(|e| {
+        DecapodError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+    })?;
     let event_line = format!("{}\n", event_json);
 
     std::fs::write(&events_path, event_line).map_err(DecapodError::IoError)?;
@@ -193,42 +196,43 @@ pub struct ProofConfig {
 }
 
 /// Run proof CLI command
-pub fn execute_proof_cli(
-    cli: &super::cli::ProofCommandCli,
-    store_root: &Path,
-) -> Result<(), super::DecapodError> {
-    match cli.command {
-        super::cli::ProofCommand::Run => {
+pub fn execute_proof_cli(cli: &ProofCommandCli, store_root: &Path) -> Result<(), DecapodError> {
+    match &cli.command {
+        crate::ProofSubCommand::Run => {
             let result = run_proofs(
                 &Store {
                     kind: super::store::StoreKind::Repo,
                     root: store_root.to_path_buf(),
                 },
                 store_root,
-                "epoch1",
+                "cli",
             )?;
-            println!(
-                "Proof run completed: {} total, {} passed, {} failed",
-                result.total, result.passed, result.failed
-            );
-            for proof_result in &result.results {
-                if !proof_result.passed && proof_result.required {
-                    return Err(super::error::DecapodError::ValidationError(format!(
-                        "Required proof failed: {} - {}",
-                        proof_result.name, proof_result.output
-                    )));
+            if result.failed == 0 {
+                println!("✅ All required proofs passed for Epoch 1!");
+            } else {
+                for proof_result in &result.results {
+                    if !proof_result.passed {
+                        eprintln!(
+                            "❌ Proof '{}' failed with exit code {}: {}",
+                            proof_result.name, proof_result.exit_code, proof_result.output
+                        );
+                    }
                 }
+                return Err(DecapodError::NotImplemented(
+                    "Proof validation failed".to_string(),
+                ));
             }
             println!("✅ All required proofs passed for Epoch 1!");
+            Ok(())
         }
-        super::cli::ProofCommand::Test { name } => {
+        crate::ProofSubCommand::Test { name } => {
             println!("Running specific proof: {}", name);
             // TODO: Implement single proof test
-            return Err(super::error::DecapodError::NotImplemented(
+            Err(DecapodError::NotImplemented(
                 "Individual proof testing not yet implemented".to_string(),
-            ));
+            ))
         }
-        super::cli::ProofCommand::List => {
+        crate::ProofSubCommand::List => {
             let config = load_proof_config(store_root)?;
             println!("Available proofs:");
             for (i, proof_def) in config.proof.iter().enumerate() {
@@ -239,8 +243,9 @@ pub fn execute_proof_cli(
                     proof_def.description,
                     proof_def.required
                 );
-                println!("     Command: {}", proof_def.command.join(" "));
+                println!("     Command: {}", proof_def.command);
             }
+            Ok(())
         }
     }
 }

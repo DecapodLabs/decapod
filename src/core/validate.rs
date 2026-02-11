@@ -878,7 +878,7 @@ pub fn run_validation(
     println!("Intent-Driven Methodology - Proof Harness");
     // Directly get content from embedded assets
     let intent_content =
-        crate::core::assets::get_doc("embedded/specs/INTENT.md").unwrap_or_else(|| "".to_string()); // Provide default empty string if not found
+        crate::core::assets::get_doc("embedded/specs/INTENT.md").unwrap_or_default(); // Provide default empty string if not found
     let intent_version =
         extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
     println!("Intent Version: {} (from INTENT.md)", intent_version);
