@@ -383,7 +383,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                                 root: tmp_root,
                             }
                         }
-                        "repo" | _ => project_store,
+                        _ => project_store,
                     };
                     validate::run_validation(&store, &decapod_root, &decapod_root)?;
                 }
