@@ -1,40 +1,5 @@
 <div align="center">
-  <svg width="320" height="120" viewBox="0 0 320 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Decapod">
-    <defs>
-      <linearGradient id="dp" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="currentColor" stop-opacity="0.95"/>
-        <stop offset="1" stop-color="currentColor" stop-opacity="0.55"/>
-      </linearGradient>
-      <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
-        <feGaussianBlur stdDeviation="2.5" result="b"/>
-        <feMerge>
-          <feMergeNode in="b"/>
-          <feMergeNode in="SourceGraphic"/>
-        </feMerge>
-      </filter>
-    </defs>
-
-    <g fill="none" stroke="url(#dp)" stroke-width="3.25" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
-      <path d="M118 36 Q160 12 202 36" stroke-width="5"/>
-      <path d="M120 40 Q160 26 200 40" opacity="0.65"/>
-      <path d="M160 40 L160 84" opacity="0.5"/>
-
-      <path d="M132 48 L102 62 L70 88"/>
-      <path d="M140 62 L112 82 L86 108"/>
-      <path d="M150 76 L134 98 L116 114"/>
-
-      <path d="M188 48 L218 62 L250 88"/>
-      <path d="M180 62 L208 82 L234 108"/>
-      <path d="M170 76 L186 98 L204 114"/>
-
-      <path d="M108 58 L92 52" opacity="0.6"/>
-      <path d="M212 58 L228 52" opacity="0.6"/>
-    </g>
-
-    <text x="160" y="22" text-anchor="middle" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial" font-size="12" fill="currentColor" opacity="0.85">
-      DECAPOD
-    </text>
-  </svg>
+  <img src="assets/decapod-ultra.svg" width="320" alt="Decapod Logo">
 
   <h1>Decapod</h1>
 
