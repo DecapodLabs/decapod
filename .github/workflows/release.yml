@@ -16,10 +16,20 @@ jobs:
     if: github.repository == 'DecapodLabs/decapod'
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      
+      - name: Cache jq
+        id: cache-jq
+        uses: actions/cache@v4
+        with:
+          path: /usr/bin/jq
+          key: ${{ runner.os }}-jq
+
       - name: Install jq
+        if: steps.cache-jq.outputs.cache-hit != 'true'
         run: sudo apt-get update && sudo apt-get install -y jq
       
+      - uses: dtolnay/rust-toolchain@stable
+
       - name: Description Check
         run: bash scripts/check_crate_description.sh
 
@@ -41,6 +51,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
       
       - name: Build Binary
         run: cargo build --release --target x86_64-unknown-linux-gnu
