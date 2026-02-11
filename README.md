@@ -126,4 +126,6 @@ If you’ve found a way to stop an agent from hallucinating context or drifting 
 
 ---
 
-If Decapod helps your swarm stay comfy, sponsor the work, drop a star, or fuel the kernel on Ko-fi: https://ko-fi.com/decapodlabs 🦀
+If Decapod helps your swarm stay comfy, sponsor the work, drop a star, or fuel the kernel on Ko-fi 🦀  
+<a href="https://ko-fi.com/decapodlabs"><img height="36" alt="Support DecapodLabs on Ko-fi" src="https://storage.ko-fi.com/cdn/kofi5.png?v=3" /></a>
+
