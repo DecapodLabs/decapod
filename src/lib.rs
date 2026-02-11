@@ -2,7 +2,7 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs_cli, error, repomap, scaffold,
+    db, docs_cli, error, proof, repomap, scaffold,
     store::{Store, StoreKind},
     validate,
 };
@@ -51,6 +51,9 @@ struct ValidateCli {
     /// Store to validate: 'user' (blank-slate semantics) or 'repo' (dogfood backlog).
     #[clap(long, default_value = "repo")]
     store: String,
+    /// Output format: 'text' or 'json'.
+    #[clap(long, default_value = "text")]
+    format: String,
 }
 
 #[derive(Subcommand, Debug)]
@@ -93,6 +96,8 @@ enum Command {
     Archive(ArchiveCli),
     /// Manage operator feedback and preference refinement
     Feedback(FeedbackCli),
+    /// Run configurable proofs with audit trail
+    Proof(ProofCommandCli),
     /// Run an end-to-end usability verification (simulates fresh install)
     Verify,
 }
@@ -203,6 +208,25 @@ enum FeedbackCommand {
     },
     /// Propose preference updates based on feedback
     Propose,
+}
+
+#[derive(clap::Args, Debug)]
+pub struct ProofCommandCli {
+    #[clap(subcommand)]
+    pub command: ProofSubCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum ProofSubCommand {
+    /// Run all configured proofs
+    Run,
+    /// Run a specific proof by name
+    Test {
+        #[clap(long)]
+        name: String,
+    },
+    /// Show proof configuration and results
+    List,
 }
 
 #[derive(clap::Args, Debug)]
@@ -389,6 +413,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
                 Command::Docs(docs_cli) => {
                     docs_cli::run_docs_cli(docs_cli)?;
+                }
+                Command::Proof(proof_cli) => {
+                    proof::execute_proof_cli(&proof_cli, &store_root)?;
                 }
                 Command::Cron(cron_cli) => {
                     cron::run_cron_cli(&project_store, cron_cli)?;

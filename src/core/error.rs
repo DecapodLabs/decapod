@@ -19,4 +19,6 @@ pub enum DecapodError {
     ValidationError(String),
     #[error("Not found: {0}")]
     NotFound(String),
+    #[error("Not implemented: {0}")]
+    NotImplemented(String),
 }

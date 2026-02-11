@@ -14,8 +14,8 @@ When you install Decapod:
 
 Suggested first tasks for a new project:
 
-- Add/confirm `.decapod/constitution/specs/INTENT.md` exists and is accurate.
-- Add/confirm `.decapod/constitution/specs/ARCHITECTURE.md` compiles from intent.
+- Add/confirm `embedded/specs/INTENT.md` exists and is accurate.
+- Add/confirm `embedded/specs/ARCHITECTURE.md` compiles from intent.
 - Define your proof surface (`proof surface (decapod validate, tests, proof.md)` scripts, tests) and promotion gate.
 - Add 1 TODO per intent promise that requires implementation.
 - Add 1 TODO per proof obligation that is missing or deferred.
@@ -26,6 +26,6 @@ Optional workflow conventions (example):
 
 ## Links
 
-- `.decapod/constitution/specs/ARCHITECTURE.md`
-- `.decapod/constitution/specs/INTENT.md`
-- `.decapod/constitution/specs/SYSTEM.md`
+- `embedded/specs/ARCHITECTURE.md`
+- `embedded/specs/INTENT.md`
+- `embedded/specs/SYSTEM.md`

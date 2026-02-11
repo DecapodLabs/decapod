@@ -14,7 +14,7 @@ This document outlines how project knowledge is captured, retrieved, and maintai
 
 The `decapod knowledge` subsystem aims to:
 
--   **Centralize non-contractual context:** Store information that doesn’t primarily belong in `.decapod/constitution/specs/INTENT.md` (contract), `.decapod/constitution/specs/ARCHITECTURE.md` (compiled design), or `proof.md` (verification), but still holds value.
+-   **Centralize non-contractual context:** Store information that doesn’t primarily belong in `embedded/specs/INTENT.md` (contract), `embedded/specs/ARCHITECTURE.md` (compiled design), or `proof.md` (verification), but still holds value.
 -   **Preserve rationale:** Capture reasons behind decisions, not just outcomes.
 -   **Accelerate onboarding:** Help humans and agents understand historical context quickly.
 -   **Reduce rework:** Minimize re-learning and re-investigation.
@@ -39,10 +39,10 @@ If the utility of an entry isn't clear (e.g., "when would someone use this?"), i
 
 Decapod benefits from information residing in its appropriate place.
 
--   **Intent (`.decapod/constitution/specs/INTENT.md`) is a key contract.**
+-   **Intent (`embedded/specs/INTENT.md`) is a key contract.**
     It defines what is being built, its purpose, and success criteria.
 
--   **Specification (`.decapod/constitution/specs/*.md`) details the design.**
+-   **Specification (`embedded/specs/*.md`) details the design.**
     This covers how intent will be satisfied: interfaces, invariants, architectures, data models, workflows. Specs can evolve but should remain coherent and traceable to intent.
 
 -   **Proof (`proof.md`, tests, checks) provides evidence.**
@@ -122,7 +122,7 @@ Each knowledge entry can benefit from:
 **Additional elements (recommended):**
 -   `links` (files, PRs, issues, URLs)
 -   `rel_todos` (array of TODO IDs)
--   `rel_specs` (e.g., `.decapod/constitution/specs/INTENT.md#...`)
+-   `rel_specs` (e.g., `embedded/specs/INTENT.md#...`)
 -   `rel_components` (modules/subsystems)
 -   `confidence` (`high` | `medium` | `low`)
 -   `expires_ts` (optional "this will be stale after X")
@@ -186,7 +186,7 @@ Effective search contributes significantly to knowledge utility.
 -   Knowledge storage exists and its schema is valid for the selected store.
 -   Entries have expected metadata (tags, status, timestamps).
 -   Entries linked to closed TODOs are not left in a contradictory state.
--   **Consistency checks:** It can be beneficial to flag when "contract language" appears in knowledge without a spec link, suggesting it should reference `.decapod/constitution/specs/INTENT.md` or a relevant spec section.
+-   **Consistency checks:** It can be beneficial to flag when "contract language" appears in knowledge without a spec link, suggesting it should reference `embedded/specs/INTENT.md` or a relevant spec section.
 -   Optional: warnings on `stale` entries older than a certain duration.
 
 If documentation indicates a CLI knowledge subsystem exists, the CLI should generally be present. If not, documentation should clarify its "planned" status.
@@ -195,15 +195,15 @@ If documentation indicates a CLI knowledge subsystem exists, the CLI should gene
 
 ## See Also
 
-- `.decapod/constitution/core/MEMORY.md`: How agents store and retrieve persistent information.
-- `.decapod/constitution/core/SOUL.md`: Agent identity and core principles.
-- `.decapod/constitution/specs/SYSTEM.md`: Decapod system definition.
+- `embedded/core/MEMORY.md`: How agents store and retrieve persistent information.
+- `embedded/core/SOUL.md`: Agent identity and core principles.
+- `embedded/specs/SYSTEM.md`: Decapod system definition.
 
 ## Links
 
-- `.decapod/constitution/core/KNOWLEDGE.md`
-- `.decapod/constitution/core/MEMORY.md`
-- `.decapod/constitution/core/SOUL.md`
-- `.decapod/constitution/specs/ARCHITECTURE.md`
-- `.decapod/constitution/specs/INTENT.md`
-- `.decapod/constitution/specs/SYSTEM.md`
+- `embedded/core/KNOWLEDGE.md`
+- `embedded/core/MEMORY.md`
+- `embedded/core/SOUL.md`
+- `embedded/specs/ARCHITECTURE.md`
+- `embedded/specs/INTENT.md`
+- `embedded/specs/SYSTEM.md`

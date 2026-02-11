@@ -3,6 +3,7 @@ pub mod broker;
 pub mod db;
 pub mod docs_cli;
 pub mod error;
+pub mod proof;
 pub mod repomap;
 pub mod scaffold;
 pub mod schemas;

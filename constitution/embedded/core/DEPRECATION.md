@@ -27,8 +27,8 @@ To deprecate a doc, section, rule, or interface:
   - Replacement: link to the replacement canonical doc/section.
   - Sunset: a concrete date (YYYY-MM-DD).
   - Migration: short steps, or a pointer to a migration guide.
-- Record an amendment: `.decapod/constitution/specs/AMENDMENTS.md`.
-- Update `.decapod/constitution/core/CLAIMS.md` if a claim is being retired or replaced.
+- Record an amendment: `embedded/specs/AMENDMENTS.md`.
+- Update `embedded/core/CLAIMS.md` if a claim is being retired or replaced.
 
 ---
 
@@ -51,7 +51,7 @@ During a transition, both old and new text may exist only if:
 - After sunset:
   - Remove deprecated text from binding docs.
   - Remove deprecated interfaces from registries.
-  - Remove or update claims in `.decapod/constitution/core/CLAIMS.md`.
+  - Remove or update claims in `embedded/core/CLAIMS.md`.
 
 ---
 
@@ -67,7 +67,7 @@ For large transitions, maintain a small registry table here:
 
 ## Links
 
-- `.decapod/constitution/core/MAESTRO.md`
-- `.decapod/constitution/core/DOC_RULES.md`
-- `.decapod/constitution/core/CLAIMS.md`
-- `.decapod/constitution/specs/AMENDMENTS.md`
+- `embedded/core/MAESTRO.md`
+- `embedded/core/DOC_RULES.md`
+- `embedded/core/CLAIMS.md`
+- `embedded/specs/AMENDMENTS.md`

@@ -82,7 +82,7 @@ Identifiers that help detect relevant changes:
 If it’s evergreen reference material, it might be better suited for KNOWLEDGE.
 
 ### 4.2 Substituting for Specifications
-If it defines “what the system is,” it likely belongs in `.decapod/constitution/specs/*` and should be traceable.
+If it defines “what the system is,” it likely belongs in `embedded/specs/*` and should be traceable.
 
 ### 4.3 Storing Unduly Private/Sensitive Data
 Memory should minimize sensitive content. If sensitive details are needed for operation, store references to secure locations rather than raw content.
@@ -257,15 +257,15 @@ Optional metrics could include:
 
 ## See Also
 
-- `.decapod/constitution/core/SOUL.md`: Agent identity and core principles.
-- `.decapod/constitution/core/KNOWLEDGE.md`: Durable project context and research base.
-- `.decapod/constitution/specs/SYSTEM.md`: Decapod system definition.
+- `embedded/core/SOUL.md`: Agent identity and core principles.
+- `embedded/core/KNOWLEDGE.md`: Durable project context and research base.
+- `embedded/specs/SYSTEM.md`: Decapod system definition.
 - `proof.md`: Evidence and verification surfaces.
 
 ## Links
 
-- `.decapod/constitution/core/KNOWLEDGE.md`
-- `.decapod/constitution/core/MEMORY.md`
-- `.decapod/constitution/core/SOUL.md`
-- `.decapod/constitution/specs/SYSTEM.md`
+- `embedded/core/KNOWLEDGE.md`
+- `embedded/core/MEMORY.md`
+- `embedded/core/SOUL.md`
+- `embedded/specs/SYSTEM.md`
 

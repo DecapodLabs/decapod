@@ -138,6 +138,6 @@ If present:
 
 ## Links
 
-- `.decapod/constitution/specs/ARCHITECTURE.md`
-- `.decapod/constitution/specs/SYSTEM.md`
-- `.decapod/constitution/core/SOUL.md`
+- `embedded/specs/ARCHITECTURE.md`
+- `embedded/specs/SYSTEM.md`
+- `embedded/core/SOUL.md`
