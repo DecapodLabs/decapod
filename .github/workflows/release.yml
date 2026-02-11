@@ -40,6 +40,7 @@ jobs:
     name: Build & Publish
     needs: gate
     runs-on: ubuntu-latest
+    environment: release
     steps:
       - uses: actions/checkout@v4
       
