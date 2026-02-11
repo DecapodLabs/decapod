@@ -38,6 +38,9 @@ Running `decapod init` will:
 After initialization, if you have backups, open your agent of choice and tell it to: 
 > "Blend the `*.md.bak` files into my `.decapod/constitution/` overrides."
 
+**Project-Specific Overrides:** You can also ask your agent to generate new override files tailored to your project. For example:
+> "Generate `.decapod/constitution/specs/INTENT.md` based on this repository's purpose."
+
 ## Project OS for Machines
 
 Decapod turns “a bunch of agents” into an actual system. Not chat logs. Not vibes. A shared, deterministic workspace where agents can work in parallel without inventing parallel realities. You steer. The swarm executes. The kernel keeps everyone honest.
