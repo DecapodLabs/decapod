@@ -19,16 +19,16 @@ pub enum DocsCommand {
         #[clap(value_parser)]
         path: String,
     },
-    /// Dump all embedded constitutions for agentic ingestion.
+    /// Dump all embedded constitution for agentic ingestion.
     Ingest,
 }
 
 /// Attempts to read a constitution document, prioritizing user overrides.
-/// Checks `<repo-dir>/.decapod/constitutions/` first, then falls back to embedded assets.
+/// Checks `<repo-dir>/.decapod/constitution/` first, then falls back to embedded assets.
 fn read_constitution_doc(repo_root: &Path, doc_path: &str) -> Option<String> {
     let override_path = repo_root
         .join(".decapod")
-        .join("constitutions")
+        .join("constitution")
         .join(doc_path);
 
     if override_path.exists() {

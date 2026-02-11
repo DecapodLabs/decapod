@@ -252,11 +252,11 @@ fn validate_repo_map(
     decapod_dir: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Repo Map");
-    let const_root = decapod_dir.join(".decapod").join("constitutions");
+    let const_root = decapod_dir.join(".decapod").join("constitution");
 
     if const_root.is_dir() {
         pass(
-            "Methodology constitutions found at .decapod/constitutions/",
+            "Methodology constitution found at .decapod/constitution/",
             pass_count,
         );
 
@@ -274,7 +274,7 @@ fn validate_repo_map(
         }
     } else {
         fail(
-            "Methodology constitutions missing at .decapod/constitutions/",
+            "Methodology constitution missing at .decapod/constitution/",
             fail_count,
         );
     }
@@ -800,7 +800,7 @@ pub fn run_validation(
     println!("Intent-Driven Methodology - Proof Harness");
     let intent_path = decapod_dir
         .join(".decapod")
-        .join("constitutions")
+        .join("constitution")
         .join("specs")
         .join("INTENT.md");
     let intent_version = extract_md_version(&intent_path).unwrap_or_else(|| "unknown".to_string());
