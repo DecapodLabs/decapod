@@ -291,4 +291,3 @@ pub fn schema() -> serde_json::Value {
         "storage": ["policy.db", "RISKMAP.json"]
     })
 }
-

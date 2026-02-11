@@ -4,7 +4,7 @@ use decapod::core::db;
 use decapod::core::docs_cli::{self, DocsCli, DocsCommand};
 use decapod::core::error::DecapodError;
 use decapod::core::repomap;
-use decapod::core::scaffold::{scaffold_project_entrypoints, ScaffoldOptions};
+use decapod::core::scaffold::{ScaffoldOptions, scaffold_project_entrypoints};
 use decapod::core::schemas;
 use decapod::core::store::{Store, StoreKind};
 use decapod::core::validate;
@@ -161,10 +161,12 @@ fn repomap_detects_manifests_entrypoints_and_docs() {
     let graph = map.doc_graph.expect("doc graph");
     assert!(graph.nodes.iter().any(|n| n == "docs/a.md"));
     assert!(graph.nodes.iter().any(|n| n == "docs/b.md"));
-    assert!(graph
-        .edges
-        .iter()
-        .any(|(src, dst)| src == "docs/a.md" && dst == "docs/b.md"));
+    assert!(
+        graph
+            .edges
+            .iter()
+            .any(|(src, dst)| src == "docs/a.md" && dst == "docs/b.md")
+    );
 
     let schema = repomap::schema();
     assert_eq!(schema["name"], "repomap");
@@ -191,9 +193,11 @@ fn scaffold_store_and_docs_cli_behaviors() {
     };
     scaffold_project_entrypoints(&live_opts).expect("live scaffold");
     assert!(live_target.join("AGENTS.md").exists());
-    assert!(live_target
-        .join(".decapod/constitution/specs/INTENT.md")
-        .exists());
+    assert!(
+        live_target
+            .join(".decapod/constitution/specs/INTENT.md")
+            .exists()
+    );
 
     let second = scaffold_project_entrypoints(&live_opts);
     assert!(matches!(second, Err(DecapodError::ValidationError(_))));
