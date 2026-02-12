@@ -52,13 +52,13 @@ jobs:
       - name: Format check
         run: cargo fmt --all -- --check
 
-      # STEP 2: Clippy (compiles everything)
+      # STEP 2: Clippy (compiles everything, uses Cargo.lock as-is)
       - name: Clippy
-        run: cargo clippy --all-targets --all-features --locked -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
       # STEP 3: Tests (reuses Clippy artifacts - almost instant)
       - name: Run tests
-        run: cargo test --all-features --locked -- --test-threads=4
+        run: cargo test --all-features -- --test-threads=4
 
   # OPTIONAL: Release build ONLY on master (not on every PR)
   release-build:
