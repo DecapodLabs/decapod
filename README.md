@@ -111,7 +111,7 @@ If you want agents to ship production code, Decapod is the missing layer.
 ## Get Involved
 
 - **Ship a subsystem** — adapters, proof harnesses, connectors
-- **Harden the constitution** — if you found a rule that stops drift, PR it
+- **Harden the constitution** — if you found a rule that stops drift, drop a PR
 - **Break it** — open issues with repros (they become proof gates)
 
 ---
