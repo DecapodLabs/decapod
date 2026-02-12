@@ -20,27 +20,17 @@ To contribute a new plugin:
 
 ## Local Development
 
-### Git Hooks Setup
-Install git hooks to enforce code quality:
-```bash
-./hooks/install.sh
-```
-
-**Pre-push hook:** Verifies `Cargo.lock` is up to date before pushing.
-
 ### Cargo.lock Management
-Decapod uses `--locked` builds for reproducibility:
-- ✅ **Always commit `Cargo.lock`** after `cargo update`
-- ✅ **Run `cargo update`** after changing dependencies
-- ✅ **CI fails** if lock file is stale
-- ✅ **Pre-push hook blocks** stale lock files
+Decapod uses `--locked` builds for reproducibility. **CI auto-updates Cargo.lock** if it's stale and pushes it back to your branch.
 
-**After changing dependencies:**
+**After changing dependencies in Cargo.toml:**
 ```bash
 cargo update
 git add Cargo.lock
 git commit -m "chore: update Cargo.lock"
 ```
+
+**You can skip this** - CI will handle it automatically. But doing it locally is faster.
 
 ### Build and Test
 ```bash

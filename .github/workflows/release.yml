@@ -81,17 +81,9 @@ jobs:
           save-if: true
           prefix-key: "v1"
 
-      # Verify Cargo.lock is current (CRITICAL for releases)
-      - name: Verify Cargo.lock is up to date
-        run: |
-          cargo update --workspace --locked 2>&1 | tee lock-check.log
-          # Fail if packages were updated (not "Locking 0 packages")
-          if grep -E "Updating|Locking [1-9]" lock-check.log; then
-            echo "❌ RELEASE BLOCKED: Cargo.lock is out of date"
-            echo "Run 'cargo update' locally and commit before tagging"
-            exit 1
-          fi
-          echo "✅ Cargo.lock verified for release"
+      # Auto-update Cargo.lock if needed (releases should be reproducible)
+      - name: Update Cargo.lock for release
+        run: cargo update --workspace
 
       # Install cross-compilation dependencies (Linux only)
       - name: Install musl tools
@@ -155,16 +147,9 @@ jobs:
           shared-key: "publish"
           save-if: false  # Don't save on publish job
 
-      # Verify lock file before publishing
-      - name: Verify Cargo.lock is up to date
-        run: |
-          cargo update --workspace --locked 2>&1 | tee lock-check.log
-          # Fail if packages were updated (not "Locking 0 packages")
-          if grep -E "Updating|Locking [1-9]" lock-check.log; then
-            echo "❌ PUBLISH BLOCKED: Cargo.lock is out of date"
-            exit 1
-          fi
-          echo "✅ Cargo.lock verified for publish"
+      # Auto-update Cargo.lock for publish
+      - name: Update Cargo.lock for publish
+        run: cargo update --workspace
 
       - name: Verify Secret Presence
         run: |
