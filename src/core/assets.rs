@@ -4,7 +4,7 @@
 
 use std::path::Path;
 
-/// Macro to embed constitution documents at compile time
+/// Macro to embed constitution documents at compile time as text
 macro_rules! embedded_docs {
     ($($path:expr => $const_name:ident),* $(,)?) => {
         $(
