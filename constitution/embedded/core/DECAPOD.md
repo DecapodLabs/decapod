@@ -93,6 +93,7 @@ Key definitions:
 - Planned broker interface: `embedded/plugins/DB_BROKER.md`
 
 **Guides (Operational Advice) - REFERENCE ONLY:**
+- **TODO Subsystem (PRIMARY):** `embedded/plugins/TODO.md` — **Use this for all work tracking**
 - Operating loop: `embedded/plugins/WORKFLOW.md`
 - Canonical vs derived vs state: `embedded/plugins/MANIFEST.md`
 - Known gaps: `embedded/plugins/METHODOLOGY_GAPS.md`
@@ -136,14 +137,20 @@ All agents operating in this workspace MUST adhere to the following:
 
 ## Links
 
+- `embedded/plugins/TODO.md` — **TODO subsystem (start here for work tracking)**
 - `embedded/plugins/MANIFEST.md`
-- `embedded/specs/ARCHITECTURE.md`
-- `embedded/specs/AMENDMENTS.md`
+- `embedded/plugins/TODO_USER.md`
+- `embedded/plugins/WORKFLOW.md`
+- `embedded/plugins/DB_BROKER.md`
+- `embedded/plugins/METHODOLOGY_GAPS.md`
+- `embedded/plugins/EMERGENCY_PROTOCOL.md`
 - `embedded/specs/INTENT.md`
+- `embedded/specs/ARCHITECTURE.md`
 - `embedded/specs/SYSTEM.md`
+- `embedded/specs/AMENDMENTS.md`
+- `embedded/core/PLUGINS.md`
 - `embedded/core/CONTROL_PLANE.md`
 - `embedded/core/DOC_RULES.md`
-- `embedded/core/PLUGINS.md`
 - `embedded/core/STORE_MODEL.md`
 - `embedded/core/SOUL.md`
 - `embedded/core/MEMORY.md`
@@ -151,8 +158,3 @@ All agents operating in this workspace MUST adhere to the following:
 - `embedded/core/CLAIMS.md`
 - `embedded/core/DEPRECATION.md`
 - `embedded/core/GLOSSARY.md`
-- `embedded/plugins/METHODOLOGY_GAPS.md`
-- `embedded/plugins/TODO_USER.md`
-- `embedded/plugins/WORKFLOW.md`
-- `embedded/plugins/DB_BROKER.md`
-- `embedded/plugins/EMERGENCY_PROTOCOL.md`
