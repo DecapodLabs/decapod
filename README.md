@@ -4,7 +4,7 @@
   <h2>Unlock Agentic Engineering</h2>
 
   <p>
-    The missing layer agents need to coordinate and ship.
+    The missing control plane that makes agent autonomy intelligent.
   </p>
 
   <p>
@@ -45,9 +45,9 @@ That's it. `decapod init` creates (and backs up existing) `CLAUDE.md`, `AGENTS.m
 - Proof requirements before claiming "done"
 
 **What you get:**
-- Integrated declared constitution for all agents to obey
-- Confidence to work with agents
-- Simple constitution overrides
+- Embedded constitution that all agents follow
+- Confidence to merge agent work
+- Simple overrides via OVERRIDE.md
 
 ---
 
@@ -84,8 +84,8 @@ But we're handing agents write access to production repos and hoping "good promp
 
 ```text
 .decapod/
-├── data/           # state that survives sessions
-└── constitution/   # override contracts (authority + workflow + proof doctrine)
+├── data/        # state that survives sessions
+└── OVERRIDE.md  # project-specific constitution overrides (optional)
 ```
 
 **Local-first by design:**
@@ -111,8 +111,9 @@ If you want agents to ship production code, Decapod is the missing layer.
 ## Get Involved
 
 - **Ship a subsystem** — adapters, proof harnesses, connectors
-- **Harden the constitution** — if you found a rule that stops drift, drop a PR
+- **Harden the constitution** — if you found a rule that stops drift, PR it upstream
 - **Break it** — open issues with repros (they become proof gates)
+- **Share overrides** — Found a useful project pattern? Add it to OVERRIDE.md examples
 
 ---
 
