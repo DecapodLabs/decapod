@@ -25,6 +25,28 @@
 
 ---
 
+## Quick Start
+
+```bash
+cargo install decapod
+cd your-project
+decapod init
+```
+
+That's it. `decapod init` creates (and backs up existing) `CLAUDE.md`, `AGENTS.md`, and `GEMINI.md` with methodology your agents follow.
+
+**What agents get:**
+- Persistent memory across sessions
+- Standard interface (no guessing)
+- Proof requirements before claiming "done"
+
+**What you get:**
+- Proofs validate correctness automatically
+- Intent tracking shows what changed and why
+- Confidence to merge agent work
+
+---
+
 ## The Problem
 
 AI lowers the barrier to *writing* code—but shipping code is still hard.
@@ -51,28 +73,6 @@ But we're handing agents write access to production repos and hoping "good promp
 - **One authority chain** — Intent → Spec → Code → Proof → Promote
 - **Proof gates** — "sounds right" can't ship without evidence
 - **Full traceability** — what changed, who changed it, why
-
----
-
-## Quick Start
-
-```bash
-cargo install decapod
-cd your-project
-decapod init
-```
-
-Point your agent at `CLAUDE.md` or `AGENTS.md`. That's it.
-
-**What agents get:**
-- Persistent memory across sessions
-- Standard interface (no guessing)
-- Proof requirements before claiming "done"
-
-**What you get:**
-- Proofs validate correctness automatically
-- Intent tracking shows what changed and why
-- Confidence to merge agent work
 
 ---
 
