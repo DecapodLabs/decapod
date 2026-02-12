@@ -1,3 +1,5 @@
+#![allow(dead_code, unused_variables, clippy::useless_vec)]
+
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use std::fs;
 use std::time::Duration;

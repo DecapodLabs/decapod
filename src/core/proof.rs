@@ -99,19 +99,31 @@ fn run_single_proof(proof_def: &ProofDef, working_dir: &Path) -> Result<ProofRes
 }
 
 /// Load proof config from .decapod/proofs.toml
+/// Accepts either the project root (parent of .decapod) or the store root (.decapod/data)
 pub fn load_proof_config(decapod_dir: &Path) -> Result<ProofConfig, DecapodError> {
+    // Try the project root path first (.decapod/proofs.toml)
     let config_path = decapod_dir.join(".decapod").join("proofs.toml");
 
-    if !config_path.exists() {
-        // No config = no proofs configured (not an error)
-        return Ok(ProofConfig::default());
+    if config_path.exists() {
+        let content = fs::read_to_string(&config_path).map_err(DecapodError::IoError)?;
+        let config: ProofConfig =
+            toml::from_str(&content).map_err(|e| DecapodError::ValidationError(e.to_string()))?;
+        return Ok(config);
     }
 
-    let content = fs::read_to_string(&config_path).map_err(DecapodError::IoError)?;
-    let config: ProofConfig =
-        toml::from_str(&content).map_err(|e| DecapodError::ValidationError(e.to_string()))?;
+    // If that doesn't exist, try the parent directory (for when store_root is passed)
+    if let Some(parent) = decapod_dir.parent() {
+        let config_path = parent.join("proofs.toml");
+        if config_path.exists() {
+            let content = fs::read_to_string(&config_path).map_err(DecapodError::IoError)?;
+            let config: ProofConfig = toml::from_str(&content)
+                .map_err(|e| DecapodError::ValidationError(e.to_string()))?;
+            return Ok(config);
+        }
+    }
 
-    Ok(config)
+    // No config = no proofs configured (not an error)
+    Ok(ProofConfig::default())
 }
 
 /// Run all configured proofs
@@ -177,13 +189,23 @@ pub fn run_proofs(
 
 /// Append proof event to store
 fn append_proof_event(store: &Store, event: &ProofEvent) -> Result<(), DecapodError> {
+    use std::io::Write;
+
     let events_path = store.root.join("proof.events.jsonl");
     let event_json = serde_json::to_string(event).map_err(|e| {
         DecapodError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
     })?;
     let event_line = format!("{}\n", event_json);
 
-    std::fs::write(&events_path, event_line).map_err(DecapodError::IoError)?;
+    // Append to file instead of overwriting
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&events_path)
+        .map_err(DecapodError::IoError)?;
+
+    file.write_all(event_line.as_bytes())
+        .map_err(DecapodError::IoError)?;
 
     Ok(())
 }
