@@ -25,15 +25,18 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
 
-      - name: Build Decapod
-        run: cargo build --release
+      - name: Install Decapod
+        run: cargo install --path .
+
+      - name: Initialize Decapod
+        run: decapod init
 
       - name: Run Watcher
-        run: ./target/release/decapod watcher run
+        run: decapod watcher run
 
       - name: Check Health Status
         run: |
-          STATUS=$(./target/release/decapod heartbeat)
+          STATUS=$(decapod heartbeat)
           echo "$STATUS"
           
           # Check for alerts
@@ -50,11 +53,11 @@ jobs:
 
       - name: Run Proof Validation (on push/PR)
         if: github.event_name == 'push' || github.event_name == 'pull_request'
-        run: ./target/release/decapod proof run
+        run: decapod proof run
 
       - name: Verify Trust Tier
         run: |
-          TRUST=$(./target/release/decapod trust status)
+          TRUST=$(decapod trust status)
           echo "$TRUST"
           
           # Fail if not at least Tier 1
