@@ -98,9 +98,9 @@ But we're handing agents write access to production repos and hoping "good promp
 
 ## Who This Is For
 
-✅ You're building real products with AI agents
-✅ You want CI/CD discipline, not "vibes-based" shipping
-✅ You need multiple agents working without chaos
+✅ You're building real products with AI agents<br>
+✅ You want CI/CD discipline, not "vibes-based" shipping<br>
+✅ You need multiple agents working without chaos<br>
 ✅ You merge to production (not just prototyping)
 
 If you want a one-off script, Decapod is overkill.

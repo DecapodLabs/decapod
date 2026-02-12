@@ -19,10 +19,26 @@ To contribute a new plugin:
 4. **Idempotency:** All plugins must be idempotent. Re-running a plugin against the same state should be safe and predictable.
 
 ## Local Development
+
+### Cargo.lock Management
+Decapod uses `--locked` builds for reproducibility. **CI auto-updates Cargo.lock** if it's stale and pushes it back to your branch.
+
+**After changing dependencies in Cargo.toml:**
 ```bash
-cargo build
-cargo test
-export DECAPOD_LOG=debug
+cargo update
+git add Cargo.lock
+git commit -m "chore: update Cargo.lock"
+```
+
+**You can skip this** - CI will handle it automatically. But doing it locally is faster.
+
+### Build and Test
+```bash
+cargo build --locked
+cargo test --locked
+cargo clippy --all-targets --all-features --locked
+decapod validate  # Must pass 29/29 checks
+export DECAPOD_LOG=debug  # For debugging
 ```
 
 ## PR Expectations
