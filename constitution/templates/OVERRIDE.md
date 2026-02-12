@@ -7,16 +7,25 @@
 
 ---
 
-## 🎯 Quick Start: How to Use This File
+## Summary
 
-1. **Find the section below** that matches what you want to override (Core, Specs, or Plugins)
-2. **Uncomment the HTML comment** (`<!-- ... -->`) under the component you want to customize
-3. **Write your override content** in that section
-4. **Keep it minimal** - only override what's truly project-specific
+This file allows you to override or extend Decapod's embedded constitution for project-specific needs.
 
-### Example: Override TODO Priority Levels
+The embedded constitution (read-only, shipped with Decapod) provides the base methodology. This file lets you customize behavior without forking Decapod. Overrides are applied at runtime when agents read the constitution via `decapod docs show`.
 
-Find the `### plugins/TODO.md` section below, remove the `<!-- -->` comment markers, and add your content:
+**Keep overrides minimal** - only add what's truly specific to your project.
+
+---
+
+## How to Use
+
+1. Find the component section below (Core, Specs, or Plugins)
+2. Scroll to the specific component you want to override (e.g., `### plugins/TODO.md`)
+3. Write your override content under that heading
+4. Use markdown formatting for your overrides
+5. Commit this file to version control
+
+**Example:**
 
 ```markdown
 ### plugins/TODO.md
@@ -33,91 +42,82 @@ For this project, we use a 5-level priority system:
 
 ---
 
-## How Overrides Work
-
-- **Embedded constitution** (read-only, shipped with Decapod) provides the base methodology
-- **This file** allows project-specific customization without forking Decapod
-- Overrides are applied at runtime when agents read the constitution via `decapod docs show`
-- Keep overrides minimal - only add what's specific to YOUR project
-- See available components: `decapod docs list`
-
----
-
-## Component Reference
-
-Available override paths (use these exact headings below):
-
-| Path | What it controls |
-|------|-----------------|
-| `core/DECAPOD.md` | Navigation charter and routing |
-| `core/CONTROL_PLANE.md` | Agent sequencing patterns |
-| `core/STORE_MODEL.md` | Store purity model |
-| `core/PLUGINS.md` | Subsystem registry |
-| `core/DOC_RULES.md` | Documentation compiler rules |
-| `core/CLAIMS.md` | Claims ledger |
-| `core/SOUL.md` | Agent persona guidelines |
-| `specs/INTENT.md` | Authority contracts and methodology intent |
-| `specs/ARCHITECTURE.md` | System boundaries, tradeoffs, decisions |
-| `specs/SYSTEM.md` | Authority and proof doctrine |
-| `specs/AMENDMENTS.md` | Change control process |
-| `plugins/TODO.md` | TODO subsystem behavior |
-| `plugins/WORKFLOW.md` | Operating loop |
-| `plugins/MANIFEST.md` | Canonical vs derived vs state definitions |
-| `plugins/DB_BROKER.md` | Broker interface contract |
-| (and more...) | See `decapod docs list` for full list |
-
----
-
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- ⚠️  CHANGES ARE NOT PERMITTED ABOVE THIS LINE                           -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 
-<!--
-  Write your project-specific overrides below this line.
+## Core Overrides
 
-  Use the exact component path as a heading (###) to override that component.
+### core/DECAPOD.md
 
-  Example:
+### core/CONTROL_PLANE.md
 
-  ### plugins/TODO.md
+### core/STORE_MODEL.md
 
-  ## Priority Levels (Project Override)
+### core/PLUGINS.md
 
-  For this project, we use a 5-level priority system:
-  - **critical**: Production down, blocking release
-  - **high**: Sprint commitment, must complete this iteration
-  - **medium**: Backlog, next sprint candidate
-  - **low**: Nice-to-have, future consideration
-  - **idea**: Exploration, needs refinement before actionable
+### core/DOC_RULES.md
 
-  ---
+### core/CLAIMS.md
 
-  ### specs/ARCHITECTURE.md
+### core/DEMANDS.md
 
-  ## Performance Budget
+### core/DEPRECATION.md
 
-  All API endpoints must respond within 200ms p99 latency.
+### core/GLOSSARY.md
 
-  ## Technology Restrictions
+### core/KNOWLEDGE.md
 
-  - **Prohibited**: ORMs (use raw SQL)
-  - **Required**: SQLite only
--->
+### core/MEMORY.md
+
+### core/SOUL.md
 
 ---
 
-## Guidelines
+## Specs Overrides
 
-1. **Keep it minimal** - Only override what's necessary for your project
-2. **Document why** - Explain the reason for each override
-3. **Version control** - Commit this file to your repo
-4. **Review regularly** - Remove overrides that are no longer needed
-5. **Propose upstream** - If your override would benefit all projects, submit a PR to Decapod
+### specs/INTENT.md
+
+### specs/ARCHITECTURE.md
+
+### specs/SYSTEM.md
+
+### specs/AMENDMENTS.md
 
 ---
 
-## Need Help?
+## Plugin Overrides
 
-- See embedded docs: `decapod docs list`
-- Read a specific doc: `decapod docs show <path>`
-- Validate overrides: `decapod validate`
+### plugins/TODO.md
+
+### plugins/TODO_USER.md
+
+### plugins/WORKFLOW.md
+
+### plugins/MANIFEST.md
+
+### plugins/EMERGENCY_PROTOCOL.md
+
+### plugins/DB_BROKER.md
+
+### plugins/CRON.md
+
+### plugins/REFLEX.md
+
+### plugins/HEALTH.md
+
+### plugins/POLICY.md
+
+### plugins/WATCHER.md
+
+### plugins/KNOWLEDGE.md
+
+### plugins/ARCHIVE.md
+
+### plugins/FEEDBACK.md
+
+### plugins/TRUST.md
+
+### plugins/CONTEXT.md
+
+### plugins/HEARTBEAT.md
