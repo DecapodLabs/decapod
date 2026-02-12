@@ -4,7 +4,11 @@
   <h2>The engineering org for AI agents.</h2>
 
   <p>
-    Product, architecture, project management, development, validation—everything agents need to coordinate and ship. Invoked on-demand, no daemon, no SaaS.
+    Product, architecture, project management, development, validation—the missing layer agents need to coordinate and ship. Invoked on-demand, no daemon, no SaaS.
+  </p>
+
+  <p>
+    <strong>Decapod turns “AI wrote code” into “I can merge this.”</strong>
   </p>
 
   <p>
@@ -70,7 +74,7 @@ But we're handing agents write access to production repos and hoping "good promp
 
 - **Shared state that survives sessions** — work doesn't reset on handoff
 - **One agent-first interface** (CLI + schemas) — agents don't poke internals
-- **One authority chain** — Intent → Spec → Code → Proof → Promote
+- **One authority chain** — Intent → Spec → Code → Proof → Merge
 - **Proof gates** — "sounds right" can't ship without evidence
 - **Full traceability** — what changed, who changed it, why
 
