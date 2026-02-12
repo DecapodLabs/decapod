@@ -88,7 +88,7 @@ jobs:
 
       # Build release binary
       - name: Build release binary
-        run: cargo build --release --locked --target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
 
       # Package binary
       - name: Package binary
@@ -152,7 +152,7 @@ jobs:
           echo "✅ Secret present"
 
       - name: Publish to Crates.io
-        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --locked --allow-dirty
+        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --allow-dirty
 
   # 4. Create GitHub Release with all artifacts
   release:
