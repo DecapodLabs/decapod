@@ -45,9 +45,9 @@ That's it. `decapod init` creates (and backs up existing) `CLAUDE.md`, `AGENTS.m
 - Proof requirements before claiming "done"
 
 **What you get:**
-- Proofs validate correctness automatically
-- Intent tracking shows what changed and why
-- Confidence to merge agent work
+- Integrated declared constitution for all agents to obey
+- Confidence to work with agents
+- Simple constitution overrides
 
 ---
 
@@ -77,41 +77,6 @@ But we're handing agents write access to production repos and hoping "good promp
 - **One authority chain** — Intent → Spec → Code → Proof → Merge
 - **Proof gates** — "sounds right" can't ship without evidence
 - **Full traceability** — what changed, who changed it, why
-
----
-
-## Before / After
-
-**Before Decapod:**
-```
-You: "Add auth"
-AI: *writes code*
-You: "Add logout"
-AI: "What auth?" 🤦
-```
-
-**With Decapod:**
-```
-You: "Add auth"
-AI: *code → intent logged → tests pass*
-You: "Add logout"
-AI: *extends auth system → proves it works*
-You: "Ship it" ✅
-```
-
----
-
-## The One Big Idea: Proofs
-
-**A proof is any runnable check that can falsify a claim.**
-
-Tests? Proof.
-Schema validation? Proof.
-Linter passing? Proof.
-
-**If you can't name the proof, you can't claim it's verified.**
-
-That's the whole trick: **make correctness cheap to verify and expensive to fake.**
 
 ---
 
@@ -146,7 +111,7 @@ If you want agents to ship production code, Decapod is the missing layer.
 ## Get Involved
 
 - **Ship a subsystem** — adapters, proof harnesses, connectors
-- **Harden the constitution** — if you found a rule that stops drift, PR it
+- **Harden the constitution** — if you found a rule that stops drift, drop a PR
 - **Break it** — open issues with repros (they become proof gates)
 
 ---
