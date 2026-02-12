@@ -45,7 +45,7 @@ jobs:
 
       - name: Build and install Decapod
         if: steps.cache-binary.outputs.cache-hit != 'true'
-        run: cargo install --path . --locked
+        run: cargo install --path . --locked --force
 
       # Verify binary works (even from cache)
       - name: Verify installation
