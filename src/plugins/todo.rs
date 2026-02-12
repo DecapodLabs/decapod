@@ -33,9 +33,11 @@ pub struct TodoCli {
 pub enum TodoCommand {
     /// Add a new task.
     Add {
-        /// The task title (positional argument)
+        /// Task title (positional argument)
         #[clap(value_name = "TITLE")]
         title: String,
+        #[clap(long, default_value = "medium", value_parser = validate_priority)]
+        priority: String,
         #[clap(long, default_value = "")]
         tags: String,
         #[clap(long, default_value = "")]
@@ -46,8 +48,6 @@ pub enum TodoCommand {
         r#ref: String,
         #[clap(long)]
         dir: Option<String>,
-        #[clap(long, default_value = "medium", value_parser = validate_priority)]
-        priority: String,
         #[clap(long, default_value = "")]
         depends_on: String,
         #[clap(long, default_value = "")]
@@ -280,12 +280,12 @@ fn insert_event(conn: &Connection, ev: &TodoEvent) -> SqlResult<()> {
 pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, error::DecapodError> {
     let TodoCommand::Add {
         title,
+        priority,
         tags,
         owner,
         due,
         r#ref,
         dir,
-        priority,
         depends_on,
         blocks,
         parent,
