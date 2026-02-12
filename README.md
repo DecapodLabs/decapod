@@ -1,10 +1,10 @@
 <div align="center">
   <img src="assets/decapod-ultra.svg" width="800" alt="Decapod Logo">
 
-  <h2>The engineering org for AI agents.</h2>
+  <h2>Unlock Agentic Engineering</h2>
 
   <p>
-    Product, architecture, project management, development, validation—the missing layer agents need to coordinate and ship. Invoked on-demand, no daemon, no SaaS.
+    The missing layer agents need to coordinate and ship.
   </p>
 
   <p>
@@ -80,12 +80,12 @@ But we're handing agents write access to production repos and hoping "good promp
 
 ---
 
-## Repo Layout
+## Env Layout
 
 ```text
 .decapod/
 ├── data/           # state that survives sessions
-└── constitution/   # the operating contract (authority + workflow + proof doctrine)
+└── constitution/   # override contracts (authority + workflow + proof doctrine)
 ```
 
 **Local-first by design:**
