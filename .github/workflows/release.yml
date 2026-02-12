@@ -81,14 +81,25 @@ jobs:
           save-if: true
           prefix-key: "v1"
 
+      # Verify Cargo.lock is current (CRITICAL for releases)
+      - name: Verify Cargo.lock is up to date
+        run: |
+          cargo update --workspace --locked 2>&1 | tee lock-check.log
+          if grep -q "Updating\|Locking" lock-check.log; then
+            echo "❌ RELEASE BLOCKED: Cargo.lock is out of date"
+            echo "Run 'cargo update' locally and commit before tagging"
+            exit 1
+          fi
+          echo "✅ Cargo.lock verified for release"
+
       # Install cross-compilation dependencies (Linux only)
       - name: Install musl tools
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: sudo apt-get update && sudo apt-get install -y musl-tools
 
-      # Build release binary
+      # Build release binary with --locked for reproducibility
       - name: Build release binary
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }} --locked
 
       # Package binary
       - name: Package binary
@@ -143,6 +154,16 @@ jobs:
           shared-key: "publish"
           save-if: false  # Don't save on publish job
 
+      # Verify lock file before publishing
+      - name: Verify Cargo.lock is up to date
+        run: |
+          cargo update --workspace --locked 2>&1 | tee lock-check.log
+          if grep -q "Updating\|Locking" lock-check.log; then
+            echo "❌ PUBLISH BLOCKED: Cargo.lock is out of date"
+            exit 1
+          fi
+          echo "✅ Cargo.lock verified for publish"
+
       - name: Verify Secret Presence
         run: |
           if [ -z "${{ secrets.CARGO_REGISTRY_TOKEN }}" ]; then
@@ -152,7 +173,7 @@ jobs:
           echo "✅ Secret present"
 
       - name: Publish to Crates.io
-        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --allow-dirty
+        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --allow-dirty --locked
 
   # 4. Create GitHub Release with all artifacts
   release:

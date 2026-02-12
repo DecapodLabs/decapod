@@ -48,17 +48,28 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/master' }}
           cache-all-crates: true
 
+      # STEP 0: Verify Cargo.lock is up to date (REQUIRED)
+      - name: Check Cargo.lock is current
+        run: |
+          cargo update --workspace --locked 2>&1 | tee lock-check.log
+          if grep -q "Updating\|Locking" lock-check.log; then
+            echo "❌ ERROR: Cargo.lock is out of date"
+            echo "Run 'cargo update' locally and commit the changes"
+            exit 1
+          fi
+          echo "✅ Cargo.lock is up to date"
+
       # STEP 1: Format (no compilation)
       - name: Format check
         run: cargo fmt --all -- --check
 
-      # STEP 2: Clippy (compiles everything, uses Cargo.lock as-is)
+      # STEP 2: Clippy (compiles everything with --locked)
       - name: Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features --locked -- -D warnings
 
       # STEP 3: Tests (reuses Clippy artifacts - almost instant)
       - name: Run tests
-        run: cargo test --all-features -- --test-threads=4
+        run: cargo test --all-features --locked -- --test-threads=4
 
   # OPTIONAL: Release build ONLY on master (not on every PR)
   release-build:
