@@ -75,3 +75,8 @@ harness = false
 name = "perf_1_2"
 path = "benches/perf_1_2.rs"
 harness = false
+
+[[bench]]
+name = "perf_1_3"
+path = "benches/perf_1_3.rs"
+harness = false
