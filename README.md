@@ -80,12 +80,12 @@ But we're handing agents write access to production repos and hoping "good promp
 
 ---
 
-## Repo Layout
+## Env Layout
 
 ```text
 .decapod/
 ├── data/           # state that survives sessions
-└── constitution/   # the operating contract (authority + workflow + proof doctrine)
+└── constitution/   # override contracts (authority + workflow + proof doctrine)
 ```
 
 **Local-first by design:**
