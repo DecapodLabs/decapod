@@ -1,8 +1,15 @@
+#![allow(
+    dead_code,
+    unused_variables,
+    clippy::useless_format,
+    clippy::if_same_then_else,
+    clippy::manual_range_contains
+)]
+
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
-use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tempfile::TempDir;
 
