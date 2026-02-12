@@ -1,6 +1,6 @@
 [package]
 name = "decapod"
-version = "0.0.11"
+version = "0.0.12"
 edition = "2024"
 rust-version = "1.85"
 description = "🦀 Decapod is a Rust-built, repo-native control-plane kernel for AI swarms—safe shared state, enforced truth, and loop-agnostic orchestration."
@@ -69,4 +69,9 @@ path = "tests/core/core.rs"
 [[bench]]
 name = "perf_1_1"
 path = "benches/perf_1_1.rs"
+harness = false
+
+[[bench]]
+name = "perf_1_2"
+path = "benches/perf_1_2.rs"
 harness = false
