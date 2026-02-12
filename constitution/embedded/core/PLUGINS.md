@@ -70,7 +70,7 @@ Agents are generally advised not to open SQLite directly, especially as a broker
 ## 3. Subsystems (Current, REAL)
 
 ### 3.1 Task & Schedule (Operational)
-- **todo**: Backlog management with audit trail.
+- **todo** ⭐: Backlog management with audit trail. **See: `embedded/plugins/TODO.md`**
 - **cron**: Scheduled jobs and repo-local automation.
 - **reflex**: Event-driven automated responses.
 
@@ -157,6 +157,7 @@ V1 scope (when implemented):
 
 ## Links
 
+- `embedded/plugins/TODO.md` — **TODO subsystem reference (START HERE)**
 - `embedded/core/DECAPOD.md`
 - `embedded/core/CONTROL_PLANE.md`
 - `embedded/core/DOC_RULES.md`
