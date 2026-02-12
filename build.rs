@@ -35,7 +35,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    eprintln!("Constitution index created: {} documents tracked", doc_count);
+    eprintln!(
+        "Constitution index created: {} documents tracked",
+        doc_count
+    );
 
     Ok(())
 }
