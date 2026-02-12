@@ -197,6 +197,7 @@ pub const TEMPLATES_PLUGINS_HEARTBEAT: &str =
 
 pub const TEMPLATES_DECAPOD_README: &str =
     include_str!("../../constitution/templates/DECAPOD_README.md");
+pub const TEMPLATE_OVERRIDE: &str = include_str!("../../constitution/templates/OVERRIDE.md");
 
 // Root templates (AGENTS.md, CLAUDE.md, GEMINI.md)
 pub const TEMPLATE_AGENTS: &str = include_str!("../../constitution/templates/AGENTS.md");
@@ -240,6 +241,7 @@ pub fn get_template(name: &str) -> Option<String> {
         "plugins/CONTEXT.md" => Some(TEMPLATES_PLUGINS_CONTEXT.to_string()),
         "plugins/HEARTBEAT.md" => Some(TEMPLATES_PLUGINS_HEARTBEAT.to_string()),
         "README.md" => Some(TEMPLATES_DECAPOD_README.to_string()),
+        "OVERRIDE.md" => Some(TEMPLATE_OVERRIDE.to_string()),
         _ => None,
     }
 }

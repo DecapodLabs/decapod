@@ -42,6 +42,6 @@ export DECAPOD_LOG=debug  # For debugging
 ```
 
 ## PR Expectations
-- Small, atomic PRs preferred (<300 LOC).
+- Small, atomic PRs preferred (<500 LOC).
 - Plugins must include a minimal smoke test or proof surface.
 - Core changes require updated unit/integration tests.
