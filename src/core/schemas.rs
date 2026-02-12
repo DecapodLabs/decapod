@@ -1,8 +1,24 @@
-// src/schemas.rs
-// Centralized database schema definitions for Decapod subsystems.
+//! Centralized database schema definitions for all Decapod subsystems.
+//!
+//! This module contains the canonical SQL schemas for every Decapod database.
+//! Schemas are versioned and deterministic - changes require migration events.
+//!
+//! # For AI Agents
+//!
+//! - **Do not modify schemas directly**: Propose changes via `decapod feedback propose`
+//! - **Schemas are binding contracts**: Subsystems depend on these exact structures
+//! - **Schema versioning**: Some subsystems track schema versions in `meta` tables
+//! - **Deterministic replay**: Event-sourced subsystems (TODO, health) rebuild from these schemas
 
 // --- Knowledge ---
+
+/// Knowledge database file name
 pub const KNOWLEDGE_DB_NAME: &str = "knowledge.db";
+
+/// Knowledge database schema SQL
+///
+/// Stores structured knowledge entries with provenance tracking.
+/// Each entry must reference its source (claim, proof, or external pointer).
 pub const KNOWLEDGE_DB_SCHEMA: &str = "
     CREATE TABLE IF NOT EXISTS knowledge (
         id TEXT PRIMARY KEY,
@@ -19,10 +35,23 @@ pub const KNOWLEDGE_DB_SCHEMA: &str = "
 ";
 
 // --- TODO ---
+
+/// TODO database file name
 pub const TODO_DB_NAME: &str = "todo.db";
+
+/// TODO event log file name
+///
+/// Event-sourced append-only log for deterministic rebuild of todo.db
 pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
+
+/// TODO database schema version
+///
+/// Used for migration tracking in the `meta` table
 pub const TODO_SCHEMA_VERSION: u32 = 1;
 
+/// TODO metadata table schema
+///
+/// Stores schema version and other metadata key-value pairs
 pub const TODO_DB_SCHEMA_META: &str = "
     CREATE TABLE IF NOT EXISTS meta (
         key TEXT PRIMARY KEY,
@@ -30,6 +59,9 @@ pub const TODO_DB_SCHEMA_META: &str = "
     )
 ";
 
+/// TODO tasks table schema
+///
+/// Core task tracking table with full lifecycle support (open → in-progress → completed → closed)
 pub const TODO_DB_SCHEMA_TASKS: &str = "
     CREATE TABLE IF NOT EXISTS tasks (
         id TEXT PRIMARY KEY,
