@@ -10,6 +10,10 @@ on:
     branches: [main, master]
   workflow_dispatch: # Allow manual triggering
 
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
 jobs:
   health-check:
     runs-on: ubuntu-latest
@@ -17,16 +21,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      # Try to restore cached binary first (much faster than building)
+      - name: Cache Decapod binary
+        id: cache-binary
+        uses: actions/cache@v4
         with:
-          components: clippy, rustfmt
+          path: ~/.cargo/bin/decapod
+          key: decapod-binary-${{ hashFiles('Cargo.lock', 'Cargo.toml', 'src/**') }}
+          restore-keys: |
+            decapod-binary-
+
+      # Only install Rust and build if cache miss
+      - name: Setup Rust
+        if: steps.cache-binary.outputs.cache-hit != 'true'
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust dependencies
+        if: steps.cache-binary.outputs.cache-hit != 'true'
         uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "health-monitor"
+          cache-targets: true
 
-      - name: Install Decapod
-        run: cargo install --path .
+      - name: Build and install Decapod
+        if: steps.cache-binary.outputs.cache-hit != 'true'
+        run: cargo install --path . --locked
+
+      # Verify binary works (even from cache)
+      - name: Verify installation
+        run: |
+          decapod --version
+          echo "Binary ready: $(which decapod)"
 
       - name: Initialize Decapod
         run: decapod init
@@ -38,12 +63,12 @@ jobs:
         run: |
           STATUS=$(decapod heartbeat)
           echo "$STATUS"
-          
+
           # Check for alerts
           if echo "$STATUS" | grep -q '"watcher_stale": true'; then
             echo "::warning::Watcher is stale - automation may not be running"
           fi
-          
+
           if echo "$STATUS" | grep -q '"alerts": \['; then
             ALERTS=$(echo "$STATUS" | grep -o '"alerts": \[[^]]*\]')
             if [ "$ALERTS" != '"alerts": []' ]; then
@@ -59,7 +84,7 @@ jobs:
         run: |
           TRUST=$(decapod trust status)
           echo "$TRUST"
-          
+
           # Fail if not at least Tier 1
           if ! echo "$TRUST" | grep -q '"tier": "Tier1"\|"tier": "Tier2"\|"tier": "Tier3"'; then
             echo "::error::Trust tier too low. System needs more verified proofs."
@@ -70,9 +95,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: decapod-health-logs
+          name: decapod-health-logs-${{ github.run_number }}
           path: |
             .decapod/data/watcher.events.jsonl
             .decapod/data/proof.events.jsonl
             .decapod/data/health.db
           retention-days: 7
+          compression-level: 9
