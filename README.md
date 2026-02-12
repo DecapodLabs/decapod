@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/decapod-ultra.svg" width="340" alt="Decapod Logo">
+  <img src="assets/decapod-ultra.svg" width="800" alt="Decapod Logo">
 
   <h2>The engineering org for AI agents.</h2>
 
