@@ -194,7 +194,7 @@ jobs:
     name: Release Build Check
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    needs: [commit-lint, lint, test, health]
+    needs: [lint, test, health]  # commit-lint runs in parallel, no dependency needed
     steps:
       - uses: actions/checkout@v4
         with:
