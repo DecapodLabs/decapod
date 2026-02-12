@@ -4,10 +4,28 @@
 **Layer:** Operational
 **Binding:** No
 
-This document defines the todo subsystem.
+**Quick Reference:**
+| Command | Purpose |
+|---------|---------|
+| `decapod todo add "title" --priority high` | Create task |
+| `decapod todo list` | List all tasks |
+| `decapod todo done <id>` | Mark complete |
+| `decapod todo archive <id>` | Archive (REQUIRED) |
+
+**Related:** `embedded/core/PLUGINS.md` (subsystem registry) | `AGENTS.md` (entrypoint)
+
+---
 
 ## CLI Surface
-- `decapod todo ...`
+
+```bash
+decapod todo add "<title>" [--priority high|medium|low] [--tags <tags>] [--owner <owner>]
+decapod todo list [--status open|done|archived] [--scope <scope>] [--tags <tags>]
+decapod todo get --id <id>
+decapod todo done --id <id>
+decapod todo archive --id <id>
+decapod todo schema  # JSON schema for programmatic use
+```
 
 ## Task Lifecycle & Agent Obligations
 
@@ -29,18 +47,22 @@ This ensures proper audit trails and lifecycle tracking. Tasks left in "done" st
 ### Workflow
 
 ```bash
-# 1. Create a task
+# 1. Create a task (from AGENTS.md §)
 decapod todo add "Implement feature X" --priority high
 
 # 2. Do the work...
 # ... implementation ...
 
 # 3. Mark as done (sets completed_at)
-decapod todo done <task-id>
+decapod todo done R_XXXXXXXX
 
 # 4. Archive (sets closed_at) - REQUIRED
-decapod todo archive <task-id>
+decapod todo archive R_XXXXXXXX
 ```
 
 **Rule**: If you mark a task done, you must also archive it unless explicitly instructed otherwise.
+
+---
+
+**See also:** `embedded/core/PLUGINS.md` for subsystem registry and truth labels.
 
