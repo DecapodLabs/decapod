@@ -47,13 +47,14 @@ pub fn get_status(store: &Store) -> Result<HeartbeatStatus, error::DecapodError>
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        let is_stale = last_ts.as_ref().map_or(true, |ts| {
-            ts.trim_end_matches('Z')
+        let is_stale = match &last_ts {
+            None => true,
+            Some(ts) => ts
+                .trim_end_matches('Z')
                 .parse::<u64>()
-                .map_or(true, |last_run_secs| {
-                    now.saturating_sub(last_run_secs) > 600
-                })
-        });
+                .map(|last_run_secs| now.saturating_sub(last_run_secs) > 600)
+                .unwrap_or(true),
+        };
 
         (last_ts, is_stale)
     } else {
