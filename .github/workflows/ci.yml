@@ -6,33 +6,91 @@ on:
   pull_request:
     branches: [ master ]
 
+# Cancel in-progress runs for massive time savings
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0                              # Better caching
+  CARGO_NET_RETRY: 10                               # Reliability
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse       # 3x faster registry fetching
+  RUST_BACKTRACE: 1
+  RUSTFLAGS: "-C link-arg=-fuse-ld=lld -D warnings" # LLD linker for 2-3x faster linking
 
 jobs:
-  check:
-    name: Check & Lint
+  # CONSOLIDATED JOB: Check + Test in one (no redundant compilation)
+  ci:
+    name: CI (All-in-One)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
-      - uses: dtolnay/rust-toolchain@stable
+        with:
+          fetch-depth: 1  # Shallow clone - we don't need history
+
+      # Install LLD linker (2-3x faster than default LD)
+      - name: Install LLD
+        run: sudo apt-get update && sudo apt-get install -y lld
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - name: Format
-        run: cargo fmt --all -- --check
-      - name: Clippy
-        run: cargo clippy -- -D warnings
 
-  test:
-    name: Test
+      # AGGRESSIVE CACHING: All artifacts in one cache
+      - name: Restore Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-consolidated"
+          cache-targets: true
+          # Only save cache on master to avoid cache churn on PRs
+          save-if: ${{ github.ref == 'refs/heads/master' }}
+          cache-all-crates: true
+
+      # STEP 1: Format (no compilation)
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      # STEP 2: Clippy (compiles everything, uses Cargo.lock as-is)
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      # STEP 3: Tests (reuses Clippy artifacts - almost instant)
+      - name: Run tests
+        run: cargo test --all-features -- --test-threads=4
+
+  # OPTIONAL: Release build ONLY on master (not on every PR)
+  release-build:
+    name: Release Build Check
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    needs: ci
     steps:
       - uses: actions/checkout@v4
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
+        with:
+          fetch-depth: 1
+
+      - name: Install LLD
+        run: sudo apt-get install -y lld
+
       - uses: dtolnay/rust-toolchain@stable
-      - name: Run tests
-        # Runs all unit and integration tests, including those in the 'tests/' directory.
-        run: cargo test
+
+      - name: Restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "release"
+          cache-targets: true
+          save-if: true
+
+      - name: Build release
+        run: cargo build --release --locked
+
+      # Cache binary for downstream jobs/workflows
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: decapod-${{ github.sha }}
+          path: target/release/decapod
+          retention-days: 1
+          compression-level: 9

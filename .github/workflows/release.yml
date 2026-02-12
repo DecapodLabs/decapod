@@ -8,23 +8,22 @@ on:
 permissions:
   contents: write
 
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  RUST_BACKTRACE: short
+
 jobs:
-  # 1. Enforcement Gate: Ensure metadata and versioning are perfect before building
+  # 1. Fast validation gate - no compilation needed
   gate:
     name: Enforcement Gate
     runs-on: ubuntu-latest
     if: github.repository == 'DecapodLabs/decapod'
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
 
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: Description Check
-        run: bash scripts/check_crate_description.sh
-
+      # Version check (no Rust needed)
       - name: Version Match Check
         run: |
           VERSION=$(grep '^version =' Cargo.toml | head -n 1 | cut -d '"' -f 2)
@@ -34,61 +33,151 @@ jobs:
             echo "Error: Version mismatch! Cargo.toml=$VERSION vs Tag=$TAG_CLEAN"
             exit 1
           fi
+          echo "Version validated: $VERSION"
 
-  # 2. Build & Publish: Build the binary and push to Crates.io
-  build-and-publish:
-    name: Build & Publish
+      # Only install Rust if description check needs cargo
+      - uses: dtolnay/rust-toolchain@stable
+        if: hashFiles('scripts/check_crate_description.sh') != ''
+
+      - name: Description Check
+        if: hashFiles('scripts/check_crate_description.sh') != ''
+        run: bash scripts/check_crate_description.sh
+
+  # 2. Parallel multi-target builds with aggressive caching
+  build-artifacts:
+    name: Build ${{ matrix.target }}
     needs: gate
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: linux-x86_64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            name: linux-x86_64-musl
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            name: macos-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            name: macos-aarch64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      # Advanced caching per target platform
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "release-${{ matrix.target }}"
+          cache-targets: true
+          save-if: true
+          prefix-key: "v1"
+
+      # Install cross-compilation dependencies (Linux only)
+      - name: Install musl tools
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      # Build release binary
+      - name: Build release binary
+        run: cargo build --release --locked --target ${{ matrix.target }}
+
+      # Package binary
+      - name: Package binary
+        run: |
+          mkdir -p dist
+          cd target/${{ matrix.target }}/release
+          tar czf ../../../dist/decapod-${{ matrix.name }}.tar.gz decapod
+          cd ../../../dist
+          shasum -a 256 decapod-${{ matrix.name }}.tar.gz | cut -d ' ' -f 1 > decapod-${{ matrix.name }}.tar.gz.sha256
+
+      # Upload artifacts for publishing job
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.name }}
+          path: |
+            dist/*
+            target/${{ matrix.target }}/release/decapod
+          retention-days: 1
+
+  # 3. Publish to crates.io (uses Linux x86_64 binary)
+  publish:
+    name: Publish to Crates.io
+    needs: build-artifacts
     runs-on: ubuntu-latest
     environment: release
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
 
-      - uses: dtolnay/rust-toolchain@stable
-      
-      - name: Build Binary
-        run: cargo build --release --target x86_64-unknown-linux-gnu
+      # Download the Linux binary for validation
+      - name: Download Linux binary
+        uses: actions/download-artifact@v4
+        with:
+          name: binary-linux-x86_64
+          path: artifacts
 
       - name: Guardrail Check
-        shell: bash
         run: |
-          BINARY="target/x86_64-unknown-linux-gnu/release/decapod"
+          chmod +x artifacts/target/x86_64-unknown-linux-gnu/release/decapod
+          BINARY="artifacts/target/x86_64-unknown-linux-gnu/release/decapod"
           $BINARY init
           $BINARY docs list | grep "embedded/core/DECAPOD.md"
-          echo "Guardrail passed - Binary functional."
+          echo "✅ Guardrail passed - Binary functional"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      # Use cache for cargo publish (metadata validation)
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "publish"
+          save-if: false  # Don't save on publish job
 
       - name: Verify Secret Presence
-        shell: bash
         run: |
           if [ -z "${{ secrets.CARGO_REGISTRY_TOKEN }}" ]; then
-            echo "❌ ERROR: CARGO_REGISTRY_TOKEN is empty or not found in GitHub Secrets."
-            echo "Please ensure you have added it to Settings -> Secrets and variables -> Actions."
+            echo "❌ ERROR: CARGO_REGISTRY_TOKEN is empty"
             exit 1
           fi
-          echo "✅ Secret is present."
+          echo "✅ Secret present"
 
       - name: Publish to Crates.io
         run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }} --locked --allow-dirty
 
-      - name: Package Binary
-        run: |
-          mkdir dist
-          cd target/x86_64-unknown-linux-gnu/release
-          tar czf ../../../dist/decapod-linux-x86_64.tar.gz decapod
+  # 4. Create GitHub Release with all artifacts
+  release:
+    name: Create GitHub Release
+    needs: [build-artifacts, publish]
+    runs-on: ubuntu-latest
+    steps:
+      # Download all artifacts
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
-      - name: Generate Checksum
+      # Consolidate into single dist directory
+      - name: Prepare release assets
         run: |
-          cd dist
-          shasum -a 256 decapod-linux-x86_64.tar.gz | cut -d ' ' -f 1 > decapod-linux-x86_64.tar.gz.sha256
+          mkdir -p dist
+          find artifacts -name "*.tar.gz*" -exec cp {} dist/ \;
+          ls -lah dist/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist/*
+          files: dist/*
           generate_release_notes: true
           draft: false
           prerelease: false
+          fail_on_unmatched_files: true
