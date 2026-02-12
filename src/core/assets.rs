@@ -2,141 +2,102 @@
 // Contains embedded assets for Decapod, including constitution documents, templates,
 // and project living document templates.
 
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
+use std::path::Path;
 
-/// Embedded constitution blob type (matches build.rs output)
-pub type ConstitutionBlob = std::collections::HashMap<String, String>;
+/// Macro to embed constitution documents at compile time
+macro_rules! embedded_docs {
+    ($($path:expr => $const_name:ident),* $(,)?) => {
+        $(
+            pub const $const_name: &str =
+                include_str!(concat!("../../constitution/embedded/", $path));
+        )*
 
-// Embed pre-compiled constitution blob from build.rs output
-pub const CONSTITUTION_BLOB: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/constitution.blob"));
+        pub fn get_embedded_doc(path: &str) -> Option<String> {
+            let key = path.strip_prefix("embedded/").unwrap_or(path);
+            match key {
+                $( $path => Some($const_name.to_string()), )*
+                _ => None,
+            }
+        }
 
-/// Lazy-loaded constitution blob (deserializes on first access)
-static CONSTITUTION_CACHE: std::sync::OnceLock<ConstitutionBlob> = std::sync::OnceLock::new();
-
-/// Get the embedded constitution blob (deserializes on first call)
-pub fn get_constitution_blob() -> &'static ConstitutionBlob {
-    CONSTITUTION_CACHE.get_or_init(|| {
-        bincode::deserialize::<ConstitutionBlob>(CONSTITUTION_BLOB)
-            .expect("Invalid constitution blob - build may be corrupted")
-    })
-}
-
-/// Fast access to embedded document from blob
-pub fn get_embedded_doc(path: &str) -> Option<String> {
-    let blob = get_constitution_blob();
-
-    // Handle both "embedded/..." and "..." formats
-    let key = if path.starts_with("embedded/") {
-        path.strip_prefix("embedded/").unwrap_or(path).to_string()
-    } else {
-        path.to_string()
+        pub fn list_docs() -> Vec<String> {
+            vec![ $( format!("embedded/{}", $path), )* ]
+        }
     };
-
-    blob.get(&key).cloned()
 }
 
-/// List all embedded document paths (from compiled blob)
-pub fn list_docs() -> Vec<String> {
-    let blob = get_constitution_blob();
-    blob.keys().map(|k| format!("embedded/{}", k)).collect()
+embedded_docs! {
+    "core/CLAIMS.md" => EMBEDDED_CORE_CLAIMS,
+    "core/CONTROL_PLANE.md" => EMBEDDED_CORE_CONTROL_PLANE,
+    "core/DECAPOD.md" => EMBEDDED_CORE_DECAPOD,
+    "core/DEMANDS.md" => EMBEDDED_CORE_DEMANDS,
+    "core/DEPRECATION.md" => EMBEDDED_CORE_DEPRECATION,
+    "core/DOC_RULES.md" => EMBEDDED_CORE_DOC_RULES,
+    "core/GLOSSARY.md" => EMBEDDED_CORE_GLOSSARY,
+    "core/KNOWLEDGE.md" => EMBEDDED_CORE_KNOWLEDGE,
+    "core/MEMORY.md" => EMBEDDED_CORE_MEMORY,
+    "core/PLUGINS.md" => EMBEDDED_CORE_PLUGINS,
+    "core/SOUL.md" => EMBEDDED_CORE_SOUL,
+    "core/STORE_MODEL.md" => EMBEDDED_CORE_STORE_MODEL,
+    "specs/AMENDMENTS.md" => EMBEDDED_SPECS_AMENDMENTS,
+    "specs/ARCHITECTURE.md" => EMBEDDED_SPECS_ARCHITECTURE,
+    "specs/INTENT.md" => EMBEDDED_SPECS_INTENT,
+    "specs/SYSTEM.md" => EMBEDDED_SPECS_SYSTEM,
+    "plugins/ARCHIVE.md" => EMBEDDED_PLUGINS_ARCHIVE,
+    "plugins/CONTEXT.md" => EMBEDDED_PLUGINS_CONTEXT,
+    "plugins/CRON.md" => EMBEDDED_PLUGINS_CRON,
+    "plugins/DB_BROKER.md" => EMBEDDED_PLUGINS_DB_BROKER,
+    "plugins/EMERGENCY_PROTOCOL.md" => EMBEDDED_PLUGINS_EMERGENCY_PROTOCOL,
+    "plugins/FEEDBACK.md" => EMBEDDED_PLUGINS_FEEDBACK,
+    "plugins/HEALTH.md" => EMBEDDED_PLUGINS_HEALTH,
+    "plugins/HEARTBEAT.md" => EMBEDDED_PLUGINS_HEARTBEAT,
+    "plugins/KNOWLEDGE.md" => EMBEDDED_PLUGINS_KNOWLEDGE,
+    "plugins/MANIFEST.md" => EMBEDDED_PLUGINS_MANIFEST,
+    "plugins/POLICY.md" => EMBEDDED_PLUGINS_POLICY,
+    "plugins/REFLEX.md" => EMBEDDED_PLUGINS_REFLEX,
+    "plugins/TODO.md" => EMBEDDED_PLUGINS_TODO,
+    "plugins/TODO_USER.md" => EMBEDDED_PLUGINS_TODO_USER,
+    "plugins/TRUST.md" => EMBEDDED_PLUGINS_TRUST,
+    "plugins/WATCHER.md" => EMBEDDED_PLUGINS_WATCHER,
 }
 
-/// Legacy function - now just forwards to blob-based access
+/// Legacy function - now just forwards to get_embedded_doc
 pub fn get_doc(path: &str) -> Option<String> {
     get_embedded_doc(path)
 }
 
-/// Compute checksum of .decapod/constitution directory for change detection
-pub fn compute_override_checksum(repo_root: &std::path::Path) -> Result<String, std::io::Error> {
-    let constitution_dir = repo_root.join(".decapod").join("constitution");
-    let mut hasher = DefaultHasher::new();
+/// Get only the override document from .decapod/constitution/
+pub fn get_override_doc(repo_root: &Path, relative_path: &str) -> Option<String> {
+    let override_path = repo_root
+        .join(".decapod")
+        .join("constitution")
+        .join(relative_path);
 
-    if !constitution_dir.exists() {
-        return Ok("empty".to_string());
+    if override_path.exists() {
+        std::fs::read_to_string(&override_path).ok()
+    } else {
+        None
     }
-
-    // Hash all .md files recursively
-    fn hash_dir(dir: &std::path::Path, hasher: &mut DefaultHasher) -> Result<(), std::io::Error> {
-        for entry in std::fs::read_dir(dir)? {
-            let entry = entry?;
-            let path = entry.path();
-
-            if path.is_dir() {
-                hash_dir(&path, hasher)?;
-            } else if path.extension().and_then(|s| s.to_str()) == Some("md") {
-                let content = std::fs::read_to_string(&path)?;
-                path.to_string_lossy().hash(hasher);
-                content.hash(hasher);
-            }
-        }
-        Ok(())
-    }
-
-    hash_dir(&constitution_dir, &mut hasher)?;
-    Ok(format!("{:x}", hasher.finish()))
 }
 
-/// Compiled override blob containing merged constitution content
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct OverrideBlob {
-    pub documents: std::collections::HashMap<String, String>,
-}
+/// Get merged document (embedded base + optional project override)
+pub fn get_merged_doc(repo_root: &Path, relative_path: &str) -> Option<String> {
+    // Get embedded base
+    let embedded_content = get_embedded_doc(relative_path)?;
 
-/// Load override blob from cache or recompile if .decapod/constitution changed
-/// This splices override content on top of embedded constitution blob
-pub fn load_override_blob(
-    repo_root: &std::path::Path,
-) -> Result<OverrideBlob, Box<dyn std::error::Error + Send + Sync>> {
-    let current_checksum = compute_override_checksum(repo_root)?;
-    let blob_path = repo_root.join(".decapod").join("constitution.blob");
-    let checksum_path = repo_root.join(".decapod").join("constitution.checksum");
+    // Check for override
+    let override_path = repo_root
+        .join(".decapod")
+        .join("constitution")
+        .join(relative_path);
 
-    // Check cache validity
-    if let Ok(stored_checksum) = std::fs::read_to_string(&checksum_path) {
-        if stored_checksum == current_checksum && blob_path.exists() {
-            // Cache hit - load existing override blob
-            if let Ok(blob_data) = std::fs::read(&blob_path) {
-                if let Ok(blob) = bincode::deserialize::<OverrideBlob>(&blob_data) {
-                    return Ok(blob);
-                }
-            }
+    if override_path.exists() {
+        if let Ok(override_content) = std::fs::read_to_string(&override_path) {
+            return Some(merge_override_content(&embedded_content, &override_content));
         }
     }
 
-    // Cache miss - recompile override layer only (splices on embedded blob)
-    let embedded_blob = get_constitution_blob();
-    let mut spliced_documents = std::collections::HashMap::new();
-
-    for (relative_path, embedded_content) in embedded_blob {
-        let override_path = repo_root
-            .join(".decapod")
-            .join("constitution")
-            .join(relative_path);
-
-        let final_content = if override_path.exists() {
-            if let Ok(override_content) = std::fs::read_to_string(&override_path) {
-                merge_override_content(embedded_content, &override_content)
-            } else {
-                embedded_content.clone()
-            }
-        } else {
-            embedded_content.clone()
-        };
-
-        spliced_documents.insert(relative_path.clone(), final_content);
-    }
-
-    let override_blob = OverrideBlob {
-        documents: spliced_documents,
-    };
-
-    // Cache override blob and checksum
-    std::fs::create_dir_all(blob_path.parent().unwrap())?;
-    std::fs::write(&blob_path, bincode::serialize(&override_blob)?)?;
-    std::fs::write(&checksum_path, current_checksum)?;
-
-    Ok(override_blob)
+    Some(embedded_content)
 }
 
 /// Merge embedded content with override additions
@@ -154,11 +115,6 @@ fn merge_override_content(embedded_content: &str, override_content: &str) -> Str
     };
 
     format!("{}\n\n{}", embedded_main, overrides_section)
-}
-
-/// Fast access to merged document from override blob
-pub fn get_merged_doc(blob: &OverrideBlob, relative_path: &str) -> Option<String> {
-    blob.documents.get(relative_path).cloned()
 }
 
 // Templates for user overrides (embedded for scaffolding)

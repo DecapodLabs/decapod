@@ -8,6 +8,16 @@ pub struct DocsCli {
     pub command: DocsCommand,
 }
 
+#[derive(Debug, Clone, clap::ValueEnum)]
+pub enum DocumentSource {
+    /// Show only the embedded content (from the binary)
+    Embedded,
+    /// Show only the override content (from .decapod/constitution/)
+    Override,
+    /// Show merged content (embedded + override)
+    Merged,
+}
+
 #[derive(Subcommand, Debug)]
 pub enum DocsCommand {
     /// List all embedded Decapod methodology documents.
@@ -16,54 +26,14 @@ pub enum DocsCommand {
     Show {
         #[clap(value_parser)]
         path: String,
+        /// Source to display: embedded (binary), override (.decapod), or merged (default)
+        #[clap(long, short, value_enum, default_value = "merged")]
+        source: DocumentSource,
     },
     /// Dump all embedded constitution for agentic ingestion.
     Ingest,
 }
 
-/// Load override blob layer (cached or recompiled as needed)
-fn load_override_blob_layer(
-    repo_root: &Path,
-) -> Result<Option<assets::OverrideBlob>, error::DecapodError> {
-    // Check for developer override location first
-    let override_root = std::env::var("DECAPOD_DEV_OVERRIDE")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| repo_root.to_path_buf());
-
-    // Only try to load blob if .decapod/constitution exists
-    let constitution_dir = override_root.join(".decapod").join("constitution");
-    if !constitution_dir.exists() {
-        return Ok(None); // No overrides - use embedded only
-    }
-
-    assets::load_override_blob(&override_root)
-        .map_err(|e| error::DecapodError::IoError(std::io::Error::other(format!("{}", e))))
-        .map(Some)
-}
-
-/// Access constitution document: embedded base + optional override layer
-fn get_constitution_with_overrides(repo_root: &Path, relative_path: &str) -> Option<String> {
-    // Get embedded base content from compiled blob (always available)
-    let embedded_content = assets::get_embedded_doc(relative_path);
-
-    embedded_content.as_ref()?;
-
-    // Try to load override layer
-    match load_override_blob_layer(repo_root) {
-        Ok(Some(blob)) => {
-            // Override layer loaded - merge with embedded
-            assets::get_merged_doc(&blob, relative_path).or(embedded_content)
-        }
-        Ok(None) => {
-            // No overrides - use embedded only
-            embedded_content
-        }
-        Err(_) => {
-            // Override loading failed - fall back to embedded
-            embedded_content
-        }
-    }
-}
 
 pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
     match cli.command {
@@ -76,22 +46,37 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
             // TODO: Also list dynamically loaded docs from .decapod/constitutions/
             Ok(())
         }
-        DocsCommand::Show { path } => {
-            // Determine repo root for dynamic constitution loading
-            let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
-            let repo_root = find_repo_root(&current_dir)?;
-
-            // Convert to relative path for override merging
+        DocsCommand::Show { path, source } => {
+            // Convert to relative path
             let relative_path = path.strip_prefix("embedded/").unwrap_or(&path);
 
-            match get_constitution_with_overrides(&repo_root, relative_path) {
+            let content = match source {
+                DocumentSource::Embedded => {
+                    // Show only embedded content from binary
+                    assets::get_embedded_doc(relative_path)
+                }
+                DocumentSource::Override => {
+                    // Show only override content from .decapod/constitution/
+                    let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
+                    let repo_root = find_repo_root(&current_dir)?;
+                    assets::get_override_doc(&repo_root, relative_path)
+                }
+                DocumentSource::Merged => {
+                    // Show merged content (embedded + override)
+                    let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
+                    let repo_root = find_repo_root(&current_dir)?;
+                    assets::get_merged_doc(&repo_root, relative_path)
+                }
+            };
+
+            match content {
                 Some(content) => {
                     println!("{}", content);
                     Ok(())
                 }
                 None => Err(error::DecapodError::NotFound(format!(
-                    "Document not found: {}",
-                    path
+                    "Document not found: {} (source: {:?})",
+                    path, source
                 ))),
             }
         }
@@ -105,7 +90,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
                 // Convert embedded path to relative path for override merging
                 let relative_path = doc_path.strip_prefix("embedded/").unwrap_or(&doc_path);
 
-                if let Some(content) = get_constitution_with_overrides(&repo_root, relative_path) {
+                if let Some(content) = assets::get_merged_doc(&repo_root, relative_path) {
                     println!("--- BEGIN {} ---", doc_path);
                     println!("{}", content);
                     println!("--- END {} ---", doc_path);
