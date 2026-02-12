@@ -193,11 +193,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
     };
     scaffold_project_entrypoints(&live_opts).expect("live scaffold");
     assert!(live_target.join("AGENTS.md").exists());
-    assert!(
-        live_target
-            .join(".decapod/constitution/specs/INTENT.md")
-            .exists()
-    );
+    assert!(live_target.join(".decapod/OVERRIDE.md").exists());
 
     let second = scaffold_project_entrypoints(&live_opts);
     assert!(matches!(second, Err(DecapodError::ValidationError(_))));

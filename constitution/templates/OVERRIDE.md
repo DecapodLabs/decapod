@@ -5,108 +5,18 @@
 **Layer:** Project
 **Binding:** Yes (overrides embedded constitution)
 
-This file allows you to override or extend Decapod's embedded constitution for project-specific needs.
-
-## How Overrides Work
-
-- **Embedded constitution** provides the base methodology (read-only, shipped with Decapod)
-- **This file** allows project-specific customization without forking
-- Overrides are applied at runtime when agents read the constitution
-- Keep overrides minimal - only add what's truly project-specific
-
-## Usage Pattern
-
-```markdown
-### [component-path]
-
-Your override content here...
-```
-
-Component paths follow the embedded structure:
-- `core/DECAPOD.md` - Navigation charter
-- `core/CONTROL_PLANE.md` - Agent sequencing
-- `specs/INTENT.md` - Authority contracts
-- `specs/ARCHITECTURE.md` - System boundaries
-- `plugins/TODO.md` - TODO subsystem
-- etc.
-
 ---
 
-## Core Overrides
+## 🎯 Quick Start: How to Use This File
 
-Override core Decapod components (navigation, control plane, store model, etc.)
-
-### core/DECAPOD.md
-<!-- Override navigation charter or add project-specific routing -->
-
-### core/CONTROL_PLANE.md
-<!-- Override agent sequencing patterns -->
-
-### core/STORE_MODEL.md
-<!-- Override store purity model -->
-
-### core/PLUGINS.md
-<!-- Override subsystem registry -->
-
-### core/DOC_RULES.md
-<!-- Override documentation compiler rules -->
-
-### core/CLAIMS.md
-<!-- Override claims ledger -->
-
-### core/SOUL.md
-<!-- Override agent persona guidelines -->
-
----
-
-## Specs Overrides
-
-Override specification documents (intent, architecture, system contracts, etc.)
-
-### specs/INTENT.md
-<!-- Override authority contracts and methodology intent -->
-
-### specs/ARCHITECTURE.md
-<!-- Override system boundaries, tradeoffs, and architectural decisions -->
-
-### specs/SYSTEM.md
-<!-- Override authority and proof doctrine -->
-
-### specs/AMENDMENTS.md
-<!-- Override change control process -->
-
----
-
-## Plugin Overrides
-
-Override plugin-specific configuration (TODO, health, knowledge, policy, etc.)
-
-### plugins/TODO.md
-<!-- Override TODO subsystem behavior -->
-
-### plugins/WORKFLOW.md
-<!-- Override operating loop -->
-
-### plugins/MANIFEST.md
-<!-- Override canonical vs derived vs state definitions -->
-
-### plugins/METHODOLOGY_GAPS.md
-<!-- Override known gaps documentation -->
-
-### plugins/TODO_USER.md
-<!-- Override agent checklist -->
-
-### plugins/EMERGENCY_PROTOCOL.md
-<!-- Override emergency stop-the-line protocol -->
-
-### plugins/DB_BROKER.md
-<!-- Override broker interface contract -->
-
----
-
-## Examples
+1. **Find the section below** that matches what you want to override (Core, Specs, or Plugins)
+2. **Uncomment the HTML comment** (`<!-- ... -->`) under the component you want to customize
+3. **Write your override content** in that section
+4. **Keep it minimal** - only override what's truly project-specific
 
 ### Example: Override TODO Priority Levels
+
+Find the `### plugins/TODO.md` section below, remove the `<!-- -->` comment markers, and add your content:
 
 ```markdown
 ### plugins/TODO.md
@@ -114,7 +24,6 @@ Override plugin-specific configuration (TODO, health, knowledge, policy, etc.)
 ## Priority Levels (Project Override)
 
 For this project, we use a 5-level priority system:
-
 - **critical**: Production down, blocking release
 - **high**: Sprint commitment, must complete this iteration
 - **medium**: Backlog, next sprint candidate
@@ -122,24 +31,78 @@ For this project, we use a 5-level priority system:
 - **idea**: Exploration, needs refinement before actionable
 ```
 
-### Example: Add Project-Specific Architectural Constraint
+---
 
-```markdown
-### specs/ARCHITECTURE.md
+## How Overrides Work
 
-## Project-Specific Constraints
+- **Embedded constitution** (read-only, shipped with Decapod) provides the base methodology
+- **This file** allows project-specific customization without forking Decapod
+- Overrides are applied at runtime when agents read the constitution via `decapod docs show`
+- Keep overrides minimal - only add what's specific to YOUR project
+- See available components: `decapod docs list`
 
-### Performance Budget
+---
 
-All API endpoints must respond within 200ms p99 latency.
-Any change that impacts this budget requires architectural review.
+## Component Reference
 
-### Technology Restrictions
+Available override paths (use these exact headings below):
 
-- **Prohibited**: ORMs (use raw SQL for event sourcing)
-- **Required**: SQLite only (no PostgreSQL/MySQL)
-- **Preferred**: Rust standard library over external crates
-```
+| Path | What it controls |
+|------|-----------------|
+| `core/DECAPOD.md` | Navigation charter and routing |
+| `core/CONTROL_PLANE.md` | Agent sequencing patterns |
+| `core/STORE_MODEL.md` | Store purity model |
+| `core/PLUGINS.md` | Subsystem registry |
+| `core/DOC_RULES.md` | Documentation compiler rules |
+| `core/CLAIMS.md` | Claims ledger |
+| `core/SOUL.md` | Agent persona guidelines |
+| `specs/INTENT.md` | Authority contracts and methodology intent |
+| `specs/ARCHITECTURE.md` | System boundaries, tradeoffs, decisions |
+| `specs/SYSTEM.md` | Authority and proof doctrine |
+| `specs/AMENDMENTS.md` | Change control process |
+| `plugins/TODO.md` | TODO subsystem behavior |
+| `plugins/WORKFLOW.md` | Operating loop |
+| `plugins/MANIFEST.md` | Canonical vs derived vs state definitions |
+| `plugins/DB_BROKER.md` | Broker interface contract |
+| (and more...) | See `decapod docs list` for full list |
+
+---
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- ⚠️  CHANGES ARE NOT PERMITTED ABOVE THIS LINE                           -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+<!--
+  Write your project-specific overrides below this line.
+
+  Use the exact component path as a heading (###) to override that component.
+
+  Example:
+
+  ### plugins/TODO.md
+
+  ## Priority Levels (Project Override)
+
+  For this project, we use a 5-level priority system:
+  - **critical**: Production down, blocking release
+  - **high**: Sprint commitment, must complete this iteration
+  - **medium**: Backlog, next sprint candidate
+  - **low**: Nice-to-have, future consideration
+  - **idea**: Exploration, needs refinement before actionable
+
+  ---
+
+  ### specs/ARCHITECTURE.md
+
+  ## Performance Budget
+
+  All API endpoints must respond within 200ms p99 latency.
+
+  ## Technology Restrictions
+
+  - **Prohibited**: ORMs (use raw SQL)
+  - **Required**: SQLite only
+-->
 
 ---
 
