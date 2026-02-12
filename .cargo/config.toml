@@ -1,6 +1,51 @@
+# Build configuration for Decapod
+# Optimized for fast compilation in CI and good release binaries
+
+# Use LLD linker for 2-3x faster linking (requires: apt-get install lld)
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[target.aarch64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+# macOS uses system linker (already fast)
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/ld"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/ld"]
+
+# Build settings
+[build]
+# Parallel compilation (default is CPU count)
+jobs = 4
+
+# Network settings for reliability
+[net]
+retry = 10
+git-fetch-with-cli = true
+
+# Use sparse registry protocol (3x faster than git-based)
+[registries.crates-io]
+protocol = "sparse"
+
+# Release profile optimizations
 [profile.release]
 opt-level = 3
-lto = "thin"
-codegen-units = 1
-panic = "abort"
-strip = true
+lto = "thin"          # Thin LTO: good size reduction, faster than "fat"
+codegen-units = 1     # Single codegen unit for better optimization
+panic = "abort"       # Smaller binary, no unwinding
+strip = true          # Strip symbols for smaller binary
+
+# Dev profile: optimize for fast compilation
+[profile.dev]
+opt-level = 0         # No optimization
+debug = true
+incremental = true    # Incremental compilation for dev builds
+
+# Test profile: balance between speed and debuggability
+[profile.test]
+opt-level = 1         # Light optimization
+debug = true
