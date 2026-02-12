@@ -1,3 +1,16 @@
+//! Database broker for serialized state access (The Thin Waist).
+//!
+//! This module provides the core state mutation control plane for Decapod.
+//! All agent interactions with state MUST go through the broker to ensure
+//! serialization, auditability, and deterministic replay.
+//!
+//! # For AI Agents
+//!
+//! - **Never bypass the broker**: Use `decapod` CLI commands, not direct DB access
+//! - **All mutations are audited**: Every broker call logs to `broker.events.jsonl`
+//! - **Serialization guarantee**: In-process mutex ensures no race conditions
+//! - **Intent tracking**: Operations can reference intent IDs for traceability
+
 use crate::core::db;
 use crate::core::error;
 use rusqlite::Connection;
@@ -6,20 +19,39 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use ulid::Ulid;
 
-/// The DB Broker is the "Thin Waist" for state access.
-/// In Phase 1 (Epoch 1), it is an in-process serialized request layer.
+/// Database broker providing serialized access to Decapod state.
+///
+/// The DbBroker is the "Thin Waist" control plane for all state mutations.
+/// In Phase 1 (Epoch 1), it uses an in-process global lock to serialize access.
+/// Future phases may support multi-process coordination.
+///
+/// # Agent Contract
+///
+/// Agents MUST use the broker for ALL state access. Direct database manipulation
+/// bypasses audit trails and violates the control plane contract.
 pub struct DbBroker {
     audit_log_path: PathBuf,
 }
 
+/// Audit event for a brokered database operation.
+///
+/// Every call to `DbBroker::with_conn` generates a `BrokerEvent` that is
+/// appended to `broker.events.jsonl` for full mutation audit trail.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BrokerEvent {
+    /// ISO 8601 timestamp (seconds since epoch + 'Z')
     pub ts: String,
+    /// Unique event identifier (ULID)
     pub event_id: String,
+    /// Actor who initiated the operation (e.g., "cli", "agent", "watcher")
     pub actor: String,
+    /// Optional reference to an intent or session ID
     pub intent_ref: Option<String>,
+    /// Operation name (e.g., "todo.add", "health.record")
     pub op: String,
+    /// Database identifier (file name, e.g., "todo.db")
     pub db_id: String,
+    /// Operation status ("success" or "error")
     pub status: String,
 }
 

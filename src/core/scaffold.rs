@@ -1,11 +1,31 @@
+//! Project scaffolding for Decapod initialization.
+//!
+//! This module handles the creation of Decapod project structure, including:
+//! - Root entrypoints (CLAUDE.md, GEMINI.md, AGENTS.md)
+//! - Constitution directory (.decapod/constitution/)
+//! - Embedded methodology documents
+//!
+//! # For AI Agents
+//!
+//! - **Scaffolding is idempotent**: Safe to run multiple times with `--force`
+//! - **Dry-run mode available**: Use `--dry-run` to preview changes
+//! - **Never scaffold over existing files**: Requires explicit `--force` flag
+//! - **Constitution is embedded**: Templates come from binary, not external files
+
 use crate::core::assets;
 use crate::core::error;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// Scaffolding operation configuration.
+///
+/// Controls how project initialization templates are written to disk.
 pub struct ScaffoldOptions {
+    /// Target directory for scaffold output (usually project root)
     pub target_dir: PathBuf,
+    /// Force overwrite of existing files
     pub force: bool,
+    /// Preview mode - log actions without writing files
     pub dry_run: bool,
 }
 
