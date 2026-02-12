@@ -231,12 +231,14 @@ fn scaffold_store_and_docs_cli_behaviors() {
     docs_cli::run_docs_cli(DocsCli {
         command: DocsCommand::Show {
             path: "core/DECAPOD.md".to_string(),
+            source: docs_cli::DocumentSource::Merged,
         },
     })
     .expect("docs show existing");
     let missing = docs_cli::run_docs_cli(DocsCli {
         command: DocsCommand::Show {
             path: "core/NOPE.md".to_string(),
+            source: docs_cli::DocumentSource::Merged,
         },
     });
     assert!(matches!(missing, Err(DecapodError::NotFound(_))));
