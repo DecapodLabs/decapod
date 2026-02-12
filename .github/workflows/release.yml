@@ -85,7 +85,8 @@ jobs:
       - name: Verify Cargo.lock is up to date
         run: |
           cargo update --workspace --locked 2>&1 | tee lock-check.log
-          if grep -q "Updating\|Locking" lock-check.log; then
+          # Fail if packages were updated (not "Locking 0 packages")
+          if grep -E "Updating|Locking [1-9]" lock-check.log; then
             echo "❌ RELEASE BLOCKED: Cargo.lock is out of date"
             echo "Run 'cargo update' locally and commit before tagging"
             exit 1
@@ -158,7 +159,8 @@ jobs:
       - name: Verify Cargo.lock is up to date
         run: |
           cargo update --workspace --locked 2>&1 | tee lock-check.log
-          if grep -q "Updating\|Locking" lock-check.log; then
+          # Fail if packages were updated (not "Locking 0 packages")
+          if grep -E "Updating|Locking [1-9]" lock-check.log; then
             echo "❌ PUBLISH BLOCKED: Cargo.lock is out of date"
             exit 1
           fi
