@@ -43,6 +43,18 @@ jobs:
           shared-key: "health-monitor"
           cache-targets: true
 
+      # Verify Cargo.lock before building
+      - name: Verify Cargo.lock is up to date
+        if: steps.cache-binary.outputs.cache-hit != 'true'
+        run: |
+          cargo update --workspace --locked 2>&1 | tee lock-check.log
+          if grep -q "Updating\|Locking" lock-check.log; then
+            echo "❌ ERROR: Cargo.lock is out of date"
+            echo "Run 'cargo update' locally and commit the changes"
+            exit 1
+          fi
+          echo "✅ Cargo.lock is up to date"
+
       - name: Build and install Decapod
         if: steps.cache-binary.outputs.cache-hit != 'true'
         run: cargo install --path . --locked --force
