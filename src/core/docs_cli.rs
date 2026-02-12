@@ -1,23 +1,38 @@
+//! Documentation CLI for accessing embedded constitution.
+//!
+//! This module implements the `decapod docs` command family for querying
+//! Decapod's embedded methodology documents.
+//!
+//! # For AI Agents
+//!
+//! - **Use `decapod docs show <path>` to read constitution**: Don't read from filesystem
+//! - **Three source modes**: embedded (binary), override (project), merged (both)
+//! - **List available docs**: `decapod docs list` shows all embedded docs
+//! - **Ingest command**: `decapod docs ingest` dumps full constitution for agent context
+
 use crate::core::{assets, error};
 use clap::Subcommand;
 use std::path::{Path, PathBuf};
 
+/// CLI structure for `decapod docs` command
 #[derive(clap::Args, Debug)]
 pub struct DocsCli {
     #[clap(subcommand)]
     pub command: DocsCommand,
 }
 
+/// Document source selector for viewing constitution docs
 #[derive(Debug, Clone, clap::ValueEnum)]
 pub enum DocumentSource {
     /// Show only the embedded content (from the binary)
     Embedded,
     /// Show only the override content (from .decapod/constitution/)
     Override,
-    /// Show merged content (embedded + override)
+    /// Show merged content (embedded base + project override appended)
     Merged,
 }
 
+/// Subcommands for the `decapod docs` CLI
 #[derive(Subcommand, Debug)]
 pub enum DocsCommand {
     /// List all embedded Decapod methodology documents.
