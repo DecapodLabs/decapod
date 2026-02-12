@@ -4,7 +4,7 @@
   <h2>Unlock Agentic Engineering</h2>
 
   <p>
-    The missing layer agents need to coordinate and ship.
+    The missing control plane that makes agent autonomy intelligent.
   </p>
 
   <p>
