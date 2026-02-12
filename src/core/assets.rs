@@ -1,10 +1,25 @@
-// src/assets.rs
-// Contains embedded assets for Decapod, including constitution documents, templates,
-// and project living document templates.
+//! Embedded constitution and template assets.
+//!
+//! This module provides compile-time embedded access to Decapod's methodology documents.
+//! All constitution files (core, specs, plugins) are baked into the binary for
+//! hermetic deployment - no external files required.
+//!
+//! # For AI Agents
+//!
+//! - **Constitution is embedded in binary**: No need for external doc files
+//! - **Use `decapod docs show <path>`**: Access docs via CLI, not direct file reads
+//! - **Override mechanism**: Projects can override docs in `.decapod/constitution/`
+//! - **Merge semantics**: Overrides append to embedded base (see `get_merged_doc`)
+//! - **Templates for scaffolding**: CLAUDE.md, GEMINI.md, etc. are embedded here
 
 use std::path::Path;
 
-/// Macro to embed constitution documents at compile time as text
+/// Macro to embed constitution documents at compile time as text.
+///
+/// Generates:
+/// - Public constants for each embedded document
+/// - `get_embedded_doc(path)` function for lookup
+/// - `list_docs()` function for discovery
 macro_rules! embedded_docs {
     ($($path:expr => $const_name:ident),* $(,)?) => {
         $(
