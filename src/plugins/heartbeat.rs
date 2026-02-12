@@ -12,9 +12,13 @@ pub struct HeartbeatStatus {
     pub health_summary: std::collections::HashMap<String, usize>, // state -> count
     pub pending_approvals: usize,
     pub watcher_last_run: Option<String>,
+    pub watcher_stale: bool,
+    pub alerts: Vec<String>,
 }
 
 pub fn get_status(store: &Store) -> Result<HeartbeatStatus, error::DecapodError> {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
     health::initialize_health_db(&store.root)?;
     policy::initialize_policy_db(&store.root)?;
     let mut health_summary = std::collections::HashMap::new();
@@ -30,21 +34,60 @@ pub fn get_status(store: &Store) -> Result<HeartbeatStatus, error::DecapodError>
     let pending_approvals = approvals.len();
 
     let watcher_events = watcher::watcher_events_path(&store.root);
-    let last_run = if watcher_events.exists() {
+    let (last_run, watcher_stale) = if watcher_events.exists() {
         let content = fs::read_to_string(watcher_events).unwrap_or_default();
-        content.lines().last().and_then(|l| {
+        let last_line = content.lines().last();
+        let last_ts = last_line.and_then(|l| {
             let v: serde_json::Value = serde_json::from_str(l).ok()?;
             v.get("ts").and_then(|t| t.as_str()).map(|s| s.to_string())
-        })
+        });
+
+        // Check if watcher is stale (> 10 minutes since last run)
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let is_stale = match &last_ts {
+            None => true,
+            Some(ts) => ts
+                .trim_end_matches('Z')
+                .parse::<u64>()
+                .map(|last_run_secs| now.saturating_sub(last_run_secs) > 600)
+                .unwrap_or(true),
+        };
+
+        (last_ts, is_stale)
     } else {
-        None
+        (None, true)
     };
+
+    // Build alerts
+    let mut alerts = Vec::new();
+    if watcher_stale {
+        alerts.push(
+            "Watcher has not run recently (> 10 minutes). Run: decapod watcher run".to_string(),
+        );
+    }
+    if health_summary.get("CONTRADICTED").unwrap_or(&0) > &0 {
+        alerts.push("Some health claims are contradicted. Check: decapod health get".to_string());
+    }
+    if health_summary.get("STALE").unwrap_or(&0) > &0 {
+        alerts.push("Some health claims are stale. Run: decapod proof run".to_string());
+    }
+    if pending_approvals > 0 {
+        alerts.push(format!(
+            "{} pending approvals require review",
+            pending_approvals
+        ));
+    }
 
     Ok(HeartbeatStatus {
         ts: now_iso(),
         health_summary,
         pending_approvals,
         watcher_last_run: last_run,
+        watcher_stale,
+        alerts,
     })
 }
 
