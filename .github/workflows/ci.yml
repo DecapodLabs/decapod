@@ -20,16 +20,41 @@ env:
   RUSTFLAGS: "-C link-arg=-fuse-ld=lld -D warnings" # LLD linker for 2-3x faster linking
 
 jobs:
-  # CONSOLIDATED JOB: Check + Test in one (no redundant compilation)
-  ci:
-    name: CI (All-in-One)
+  # COMMIT LINT: Fast check, runs in parallel with setup
+  commit-lint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check commit messages
+        run: |
+          # Get commits in this PR
+          git log --format=%B origin/${{ github.base_ref }}..HEAD | while read -r msg; do
+            # Skip empty lines
+            [ -z "$msg" ] && continue
+
+            # Block WIP commits
+            if echo "$msg" | grep -qiE "^(wip|fixup|squash)"; then
+              echo "❌ ERROR: WIP commit found: $msg"
+              exit 1
+            fi
+          done
+          echo "✅ Commit messages look good"
+
+  # SETUP: Do expensive work once, then fan out
+  setup:
+    name: Setup & Update Deps
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1  # Shallow clone - we don't need history
+          fetch-depth: 0  # Need full history for push
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Install LLD linker (2-3x faster than default LD)
       - name: Install LLD
         run: sudo apt-get update && sudo apt-get install -y lld
 
@@ -38,34 +63,138 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      # AGGRESSIVE CACHING: All artifacts in one cache
       - name: Restore Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          shared-key: "ci-consolidated"
+          shared-key: "ci-setup"
           cache-targets: true
-          # Only save cache on master to avoid cache churn on PRs
           save-if: ${{ github.ref == 'refs/heads/master' }}
           cache-all-crates: true
 
-      # STEP 1: Format (no compilation)
+      # Auto-update Cargo.lock if stale and push back
+      - name: Update Cargo.lock if needed
+        run: |
+          cargo update --workspace
+          if git diff --quiet Cargo.lock; then
+            echo "✅ Cargo.lock is up to date"
+          else
+            echo "📦 Cargo.lock was updated"
+          fi
+
+      - name: Commit updated Cargo.lock
+        if: "!contains(github.event.head_commit.message, '[skip ci]')"
+        run: |
+          if ! git diff --quiet Cargo.lock; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add Cargo.lock
+            git commit -m "chore: auto-update Cargo.lock [skip ci]"
+            git push
+          fi
+
+  # LINT: Format + Clippy
+  lint:
+    name: Lint (fmt + clippy)
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install LLD
+        run: sudo apt-get update && sudo apt-get install -y lld
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Restore Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-setup"
+          save-if: false
+
       - name: Format check
         run: cargo fmt --all -- --check
 
-      # STEP 2: Clippy (compiles everything, uses Cargo.lock as-is)
       - name: Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features --locked -- -D warnings
 
-      # STEP 3: Tests (reuses Clippy artifacts - almost instant)
+  # TEST: Run all tests
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install LLD
+        run: sudo apt-get update && sudo apt-get install -y lld
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Restore Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-setup"
+          save-if: false
+
       - name: Run tests
-        run: cargo test --all-features -- --test-threads=4
+        run: cargo test --all-features --locked -- --test-threads=4
 
-  # OPTIONAL: Release build ONLY on master (not on every PR)
+  # HEALTH: Decapod validation and health checks
+  health:
+    name: Health Checks
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install LLD
+        run: sudo apt-get update && sudo apt-get install -y lld
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Restore Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-setup"
+          save-if: false
+
+      - name: Build and install decapod
+        run: cargo install --path . --locked
+
+      - name: Initialize Decapod
+        run: decapod init
+
+      - name: Run validation harness
+        run: decapod validate
+
+      - name: Run watcher
+        run: decapod watcher run
+
+      - name: Check heartbeat
+        run: |
+          STATUS=$(decapod heartbeat)
+          echo "$STATUS"
+          if echo "$STATUS" | grep -q '"watcher_stale": true'; then
+            echo "::warning::Watcher is stale"
+          fi
+
+  # RELEASE BUILD: Only on master
   release-build:
     name: Release Build Check
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    needs: ci
+    needs: [lint, test, health]  # commit-lint runs in parallel, no dependency needed
     steps:
       - uses: actions/checkout@v4
         with:
@@ -86,7 +215,6 @@ jobs:
       - name: Build release
         run: cargo build --release --locked
 
-      # Cache binary for downstream jobs/workflows
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
