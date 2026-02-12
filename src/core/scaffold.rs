@@ -87,11 +87,13 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     let claude_md = assets::get_template("CLAUDE.md").expect("Missing template: CLAUDE.md");
     let gemini_md = assets::get_template("GEMINI.md").expect("Missing template: GEMINI.md");
     let readme_md = assets::get_template("README.md").expect("Missing template: README.md");
+    let override_md = assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
 
     write_file(opts, "AGENTS.md", &agents_md)?;
     write_file(opts, "CLAUDE.md", &claude_md)?;
     write_file(opts, "GEMINI.md", &gemini_md)?;
     write_file(opts, ".decapod/README.md", &readme_md)?;
+    write_file(opts, ".decapod/OVERRIDE.md", &override_md)?;
 
     // Constitution for the current project context
     let const_templates = [
