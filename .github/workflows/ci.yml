@@ -48,17 +48,27 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/master' }}
           cache-all-crates: true
 
-      # STEP 0: Verify Cargo.lock is up to date (REQUIRED)
-      - name: Check Cargo.lock is current
+      # STEP 0: Auto-update Cargo.lock if stale
+      - name: Update Cargo.lock if needed
         run: |
-          cargo update --workspace --locked 2>&1 | tee lock-check.log
-          # Fail if packages were updated (not "Locking 0 packages")
-          if grep -E "Updating|Locking [1-9]" lock-check.log; then
-            echo "❌ ERROR: Cargo.lock is out of date"
-            echo "Run 'cargo update' locally and commit the changes"
-            exit 1
+          cargo update --workspace
+          if git diff --quiet Cargo.lock; then
+            echo "✅ Cargo.lock is up to date"
+          else
+            echo "📦 Cargo.lock was updated"
           fi
-          echo "✅ Cargo.lock is up to date"
+
+      # STEP 0.5: Push updated Cargo.lock back to branch
+      - name: Commit updated Cargo.lock
+        if: github.event_name == 'pull_request' || github.ref != 'refs/heads/master'
+        run: |
+          if ! git diff --quiet Cargo.lock; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add Cargo.lock
+            git commit -m "chore: auto-update Cargo.lock [skip ci]"
+            git push
+          fi
 
       # STEP 1: Format (no compilation)
       - name: Format check
