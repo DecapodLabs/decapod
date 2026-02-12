@@ -1,10 +1,10 @@
 <div align="center">
   <img src="assets/decapod-ultra.svg" width="800" alt="Decapod Logo">
 
-  <h2>The engineering org for AI agents.</h2>
+  <h2>Unlock Agentic Engineering</h2>
 
   <p>
-    Product, architecture, project management, development, validation—the missing layer agents need to coordinate and ship. Invoked on-demand, no daemon, no SaaS.
+    The missing layer agents need to coordinate and ship.
   </p>
 
   <p>
