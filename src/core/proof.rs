@@ -1,6 +1,7 @@
 use crate::ProofCommandCli;
 use crate::core::store::Store;
 use crate::error::DecapodError;
+use crate::plugins::health;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
@@ -142,6 +143,10 @@ pub fn run_proofs(
             .as_secs()
     );
 
+    // Initialize health database and sync proof claims
+    health::initialize_health_db(&store.root)?;
+    sync_proof_claims_to_health(store, &config)?;
+
     let mut results = Vec::new();
     let mut passed = 0;
     let mut failed = 0;
@@ -149,7 +154,7 @@ pub fn run_proofs(
     for proof_def in &config.proof {
         let result = run_single_proof(proof_def, decapod_dir)?;
 
-        // Log event
+        // Log event to proof.events.jsonl
         let event = ProofEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
@@ -165,6 +170,16 @@ pub fn run_proofs(
         };
 
         append_proof_event(store, &event)?;
+
+        // Also record to health database for claim tracking
+        let health_result = if result.passed { "pass" } else { "fail" };
+        let _ = health::record_proof(
+            store,
+            &format!("proof.{}", proof_def.name),
+            &format!("{} {}", proof_def.command, proof_def.args.join(" ")),
+            health_result,
+            86400, // 24 hour SLA for proofs
+        );
 
         if result.passed {
             passed += 1;
@@ -185,6 +200,24 @@ pub fn run_proofs(
         all_passed: failed == 0,
         results,
     })
+}
+
+/// Sync proof definitions to health claims
+fn sync_proof_claims_to_health(store: &Store, config: &ProofConfig) -> Result<(), DecapodError> {
+    for proof_def in &config.proof {
+        let claim_id = format!("proof.{}", proof_def.name);
+        let subject = proof_def.name.clone();
+        let kind = if proof_def.required {
+            "REQUIRED"
+        } else {
+            "OPTIONAL"
+        };
+        let provenance = "proofs.toml".to_string();
+
+        // Try to add claim - ignore duplicate errors
+        let _ = health::add_claim(store, &claim_id, &subject, kind, &provenance);
+    }
+    Ok(())
 }
 
 /// Append proof event to store
