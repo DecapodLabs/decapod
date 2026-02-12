@@ -34,7 +34,6 @@ pub enum DocsCommand {
     Ingest,
 }
 
-
 pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
     match cli.command {
         DocsCommand::List => {
@@ -57,13 +56,15 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
                 }
                 DocumentSource::Override => {
                     // Show only override content from .decapod/constitution/
-                    let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
+                    let current_dir =
+                        std::env::current_dir().map_err(error::DecapodError::IoError)?;
                     let repo_root = find_repo_root(&current_dir)?;
                     assets::get_override_doc(&repo_root, relative_path)
                 }
                 DocumentSource::Merged => {
                     // Show merged content (embedded + override)
-                    let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
+                    let current_dir =
+                        std::env::current_dir().map_err(error::DecapodError::IoError)?;
                     let repo_root = find_repo_root(&current_dir)?;
                     assets::get_merged_doc(&repo_root, relative_path)
                 }
