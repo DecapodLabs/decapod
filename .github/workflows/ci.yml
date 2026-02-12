@@ -20,6 +20,31 @@ env:
   RUSTFLAGS: "-C link-arg=-fuse-ld=lld -D warnings" # LLD linker for 2-3x faster linking
 
 jobs:
+  # COMMIT LINT: Fast check, runs in parallel with setup
+  commit-lint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check commit messages
+        run: |
+          # Get commits in this PR
+          git log --format=%B origin/${{ github.base_ref }}..HEAD | while read -r msg; do
+            # Skip empty lines
+            [ -z "$msg" ] && continue
+
+            # Block WIP commits
+            if echo "$msg" | grep -qiE "^(wip|fixup|squash)"; then
+              echo "❌ ERROR: WIP commit found: $msg"
+              exit 1
+            fi
+          done
+          echo "✅ Commit messages look good"
+
   # SETUP: Do expensive work once, then fan out
   setup:
     name: Setup & Update Deps
@@ -169,7 +194,7 @@ jobs:
     name: Release Build Check
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    needs: [lint, test, health]
+    needs: [commit-lint, lint, test, health]
     steps:
       - uses: actions/checkout@v4
         with:
