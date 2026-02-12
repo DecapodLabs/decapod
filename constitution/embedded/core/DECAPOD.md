@@ -1,8 +1,8 @@
 # DECAPOD.md - How Decapod Works (Top-Level Index)
 
-**Authority:** guidance (this file helps agents navigate the system)
+**Authority:** routing (this file routes; it does not override contracts)
 **Layer:** Interfaces
-**Binding:** No
+**Binding:** Yes
 **Scope:** bootloader/router for the doc stack and CLI thin waist
 **Non-goals:** restating contracts; defining authority; listing subsystems (route instead)
 
@@ -116,21 +116,21 @@ If there's uncertainty about store mutation, it is advisable to clarify. Store p
 
 ---
 
-## 5. ⚠️ AGENT INTERACTION GUIDELINES (MANDATORY) ⚠️
+## 5. Agent Entry Contract (Hard Rules)
 
-Agents operating in this workspace ARE BOUND BY:
+All agents operating in this workspace MUST adhere to the following:
 
-1. **FOLLOW THE LADDER**: Review `embedded/specs/INTENT.md` → `embedded/specs/ARCHITECTURE.md` → `embedded/specs/SYSTEM.md` BEFORE acting. No exceptions. No shortcuts.
+1. **Follow the Ladder**: Read `embedded/specs/INTENT.md` → `embedded/specs/ARCHITECTURE.md` → `embedded/specs/SYSTEM.md` before acting. No exceptions.
 
-2. **VALIDATE EVERYTHING**: Aim for `decapod validate` to pass when making changes. **Unvalidated work is not done.**
+2. **Obey Validate**: Never claim a change is correct unless `decapod validate` passes.
 
-3. **PROPOSE CHANGES**: For canonical documents (core/specs/root README), propose diffs or use `decapod feedback propose`. Do not unilaterally change binding contracts.
+3. **Propose, Don't Fiat**: Do not write directly to canonical documents (embedded/core, embedded/specs, root README). Propose diffs or use `decapod feedback propose`.
 
-4. **RECORD PROOFS**: For significant changes, document a proof event (`decapod proof record`) for health promotion.
+4. **Record Proofs**: Every meaningful change needs a proof event (`decapod proof record`). No proof, no health promotion.
 
-5. **MANAGE CONTEXT**: Be mindful of context token usage. `decapod context pack` helps manage history without silent truncation.
+5. **Respect Budgets**: Monitor context token usage via `decapod context audit`. Use `decapod context pack` to archive history instead of silent truncation.
 
-6. **CONSULT POLICY**: For high-risk or irreversible actions, `decapod policy eval` provides insights. An `APPROVAL_EVENT` may be sought.
+6. **Consult Policy**: For high-risk or irreversible actions, use `decapod policy eval` and await an `APPROVAL_EVENT`.
 
 ---
 

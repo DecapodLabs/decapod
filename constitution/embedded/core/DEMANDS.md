@@ -55,4 +55,4 @@ This document allows the human user to explicitly declare demands, preferences, 
 
 ## Links
 
-- `docs/templates/DEMANDS.md`
+- `embedded/templates/DEMANDS.md`

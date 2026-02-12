@@ -62,8 +62,12 @@ The `.decapod/` directories primarily contain state. They are generally not inte
 - `docs/REPO_MAP.md`
 - `docs/DOC_MAP.md`
 - `embedded/plugins/MANIFEST.md`
-- `embedded/plugins/WORKFLOW.md`
+- `embedded/core/DECAPOD.md`
+- `embedded/core/DOC_RULES.md`
+- `embedded/core/PLUGINS.md`
+- `embedded/core/STORE_MODEL.md`
 - `embedded/core/CONTROL_PLANE.md`
+- `embedded/plugins/EMERGENCY_PROTOCOL.md`
 - `embedded/core/DECAPOD.md`
 - `embedded/core/DOC_RULES.md`
 - `embedded/core/PLUGINS.md`
