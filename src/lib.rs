@@ -79,7 +79,7 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs_cli, error, proof, repomap, scaffold,
+    db, docs_cli, error, migration, proof, repomap, scaffold,
     store::{Store, StoreKind},
     validate,
 };
@@ -598,6 +598,11 @@ pub fn run() -> Result<(), error::DecapodError> {
                 force: init_cli.force,
                 dry_run: init_cli.dry_run,
             })?;
+
+            // Write version file for migration tracking
+            if !init_cli.dry_run {
+                migration::write_version(&setup_decapod_root)?;
+            }
         }
         Command::Clean(clean_cli) => {
             clean_project(&clean_cli)?;
@@ -605,8 +610,13 @@ pub fn run() -> Result<(), error::DecapodError> {
         _ => {
             // For other commands, ensure .decapod exists
             let project_root = decapod_root_option?;
-            store_root = project_root.join(".decapod").join("data");
+            let decapod_root_path = project_root.join(".decapod");
+            store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
+
+            // Check for version changes and run migrations if needed
+            migration::check_and_migrate(&decapod_root_path)?;
+
             let project_store = Store {
                 kind: StoreKind::Repo,
                 root: store_root.clone(),
