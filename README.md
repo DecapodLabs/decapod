@@ -152,7 +152,7 @@ You don’t touch `.decapod/data/` directly. Agents use the control surface. Lik
 
 ## Subsystems
 
-Decapod’s control surface is organized into subsystems. **Agents interact with these; you observe outcomes.**
+Decapod’s control surface is organized into subsystems. **Agents interact with these; you communicate your desires to the agent and observe outcomes.**
 
 Status legend:
 - **REAL** = implemented and usable today
