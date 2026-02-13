@@ -69,6 +69,18 @@ From that point on, agents operate inside the governed environment. You observe 
 
 ---
 
+## Security
+
+Decapod is designed with security at the foundation. See [`SECURITY.md`](SECURITY.md) for:
+- Credential architecture and lifecycle management
+- Agent identity and session security
+- Supply chain integrity
+- Incident response philosophy
+
+**TL;DR:** Agents must handle credentials securely—never log, never commit, always rotate. Violations are constitutional breaches.
+
+---
+
 ## How It Works
 
 ### 1) Persistent State (Memory That Survives)
