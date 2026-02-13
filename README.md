@@ -19,7 +19,7 @@
 
 ---
 
-Demo video (click to view/download): **[assets/decapod-demo.mp4](assets/decapod-demo.mp4)**
+Demo video (download, 12MB): **[assets/decapod-demo.mp4](assets/decapod-demo.mp4)**
 
 ---
 
