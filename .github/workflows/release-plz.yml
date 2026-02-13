@@ -49,6 +49,7 @@ jobs:
     name: Release & Publish
     runs-on: ubuntu-latest
     if: github.repository == 'DecapodLabs/decapod'
+    environment: release
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
