@@ -1,6 +1,6 @@
 [package]
 name = "decapod"
-version = "0.1.10"
+version = "0.1.11"
 edition = "2024"
 rust-version = "1.85"
 description = "🦀 Decapod is a Rust-built, repo-native control-plane kernel for AI swarms—safe shared state, enforced truth, and loop-agnostic orchestration."
@@ -56,6 +56,10 @@ path = "tests/plugins/todo.rs"
 [[test]]
 name = "plugins_policy_tests"
 path = "tests/plugins/policy.rs"
+
+[[test]]
+name = "plugins_teammate_tests"
+path = "tests/plugins/teammate.rs"
 
 
 [[test]]
