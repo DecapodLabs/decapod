@@ -161,7 +161,19 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     );
     println!();
     write_file(opts, ".decapod/README.md", &readme_md)?;
-    write_file(opts, ".decapod/OVERRIDE.md", &override_md)?;
+
+    // Preserve existing OVERRIDE.md - it contains project-specific customizations
+    let override_path = opts.target_dir.join(".decapod/OVERRIDE.md");
+    if override_path.exists() {
+        println!(
+            "    {} {} {}",
+            "✓".bright_green(),
+            ".decapod/OVERRIDE.md".bright_white(),
+            "(preserved - project overrides kept)".bright_black()
+        );
+    } else {
+        write_file(opts, ".decapod/OVERRIDE.md", &override_md)?;
+    }
 
     // SUCCESS - System Online
     println!();
