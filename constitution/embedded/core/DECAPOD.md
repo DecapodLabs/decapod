@@ -63,6 +63,36 @@ Decapod documentation is structured into three layers, with each canonical docum
 
 **VIOLATION OF LAYER AUTHORITY = SYSTEM INVALID.**
 
+### 2.1. Project-Level Overrides
+
+**`.decapod/OVERRIDE.md` - Project-Specific Constitution Extensions**
+
+Projects can override or extend the embedded constitution without forking Decapod:
+
+- **Location:** `.decapod/OVERRIDE.md` (created by `decapod init`)
+- **Purpose:** Project-specific customizations that override embedded behavior
+- **Scope:** Component-specific sections (e.g., `### plugins/TODO.md`)
+- **Binding:** Yes - overrides are merged with embedded docs at runtime
+- **Validation:** `decapod docs override` validates and caches checksum
+
+**How to use:**
+1. Edit `.decapod/OVERRIDE.md` after running `decapod init`
+2. Add content under the component path you want to override (e.g., `### plugins/TODO.md`)
+3. Run `decapod docs override` to validate and cache changes
+4. View merged docs via `decapod docs show <path>` (default behavior)
+
+**Example override:**
+```markdown
+### plugins/TODO.md
+
+## Custom Priority Levels
+- critical: Production down
+- high: Sprint commitment
+- medium: Backlog
+```
+
+Overrides are appended to embedded content when agents read docs via `decapod docs show` or `decapod docs ingest`.
+
 Key definitions:
 - Doc compilation rules: `embedded/core/DOC_RULES.md`
 - Store purity model: `embedded/core/STORE_MODEL.md`
