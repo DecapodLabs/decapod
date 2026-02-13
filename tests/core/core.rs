@@ -151,6 +151,8 @@ fn scaffold_store_and_docs_cli_behaviors() {
         target_dir: dry_run_target.clone(),
         force: false,
         dry_run: true,
+        agent_files: vec![],
+        created_backups: false,
     };
     scaffold_project_entrypoints(&dry_run_opts).expect("dry run scaffold");
     assert!(!dry_run_target.join("AGENTS.md").exists());
@@ -160,18 +162,22 @@ fn scaffold_store_and_docs_cli_behaviors() {
         target_dir: live_target.clone(),
         force: false,
         dry_run: false,
+        agent_files: vec![],
+        created_backups: false,
     };
     scaffold_project_entrypoints(&live_opts).expect("live scaffold");
     assert!(live_target.join("AGENTS.md").exists());
     assert!(live_target.join(".decapod/OVERRIDE.md").exists());
 
-    let second = scaffold_project_entrypoints(&live_opts);
-    assert!(matches!(second, Err(DecapodError::ValidationError(_))));
+    // Second run should succeed with checksum verification (files unchanged)
+    scaffold_project_entrypoints(&live_opts).expect("second scaffold succeeds when files match");
 
     let force_opts = ScaffoldOptions {
         target_dir: live_target.clone(),
         force: true,
         dry_run: false,
+        agent_files: vec![],
+        created_backups: false,
     };
     scaffold_project_entrypoints(&force_opts).expect("force scaffold");
 

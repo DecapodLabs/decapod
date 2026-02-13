@@ -79,7 +79,7 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs_cli, error, proof, repomap, scaffold,
+    db, docs_cli, error, migration, proof, repomap, scaffold,
     store::{Store, StoreKind},
     validate,
 };
@@ -510,12 +510,38 @@ pub fn run() -> Result<(), error::DecapodError> {
                 return Ok(());
             }
 
-            // Safely backup root AGENTS.md, CLAUDE.md, GEMINI.md if they exist
+            // Check which agent files exist and track which ones to generate
+            use sha2::{Digest, Sha256};
+            let mut existing_agent_files = vec![];
+            for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md"] {
+                if target_dir.join(file).exists() {
+                    existing_agent_files.push(file);
+                }
+            }
+
+            // Safely backup root AGENTS.md, CLAUDE.md, GEMINI.md if they exist and differ from templates
+            let mut created_backups = false;
             if !init_cli.dry_run {
                 let mut backed_up = false;
-                for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md"] {
+                for file in &existing_agent_files {
                     let path = target_dir.join(file);
-                    if path.exists() {
+
+                    // Get template content for this file
+                    let template_content = core::assets::get_template(file).unwrap_or_default();
+
+                    // Compute template checksum
+                    let mut hasher = Sha256::new();
+                    hasher.update(template_content.as_bytes());
+                    let template_hash = format!("{:x}", hasher.finalize());
+
+                    // Compute existing file checksum
+                    let existing_content = fs::read_to_string(&path).unwrap_or_default();
+                    let mut hasher = Sha256::new();
+                    hasher.update(existing_content.as_bytes());
+                    let existing_hash = format!("{:x}", hasher.finalize());
+
+                    // Only backup if checksums differ
+                    if template_hash != existing_hash {
                         if !backed_up {
                             println!(
                                 "        {}",
@@ -525,6 +551,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             );
                             println!();
                             backed_up = true;
+                            created_backups = true;
                         }
                         let backup_path = target_dir.join(format!("{}.bak", file));
                         fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
@@ -597,7 +624,17 @@ pub fn run() -> Result<(), error::DecapodError> {
                 target_dir,
                 force: init_cli.force,
                 dry_run: init_cli.dry_run,
+                agent_files: existing_agent_files
+                    .into_iter()
+                    .map(|s| s.to_string())
+                    .collect(),
+                created_backups,
             })?;
+
+            // Write version file for migration tracking
+            if !init_cli.dry_run {
+                migration::write_version(&setup_decapod_root)?;
+            }
         }
         Command::Clean(clean_cli) => {
             clean_project(&clean_cli)?;
@@ -605,8 +642,13 @@ pub fn run() -> Result<(), error::DecapodError> {
         _ => {
             // For other commands, ensure .decapod exists
             let project_root = decapod_root_option?;
-            store_root = project_root.join(".decapod").join("data");
+            let decapod_root_path = project_root.join(".decapod");
+            store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
+
+            // Check for version changes and run migrations if needed
+            migration::check_and_migrate(&decapod_root_path)?;
+
             let project_store = Store {
                 kind: StoreKind::Repo,
                 root: store_root.clone(),
