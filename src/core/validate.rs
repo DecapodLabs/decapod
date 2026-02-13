@@ -225,9 +225,9 @@ fn info(message: &str) {
     println!("{} {}", "ℹ".blue(), message);
 }
 
-fn count_tasks_in_db(db_path: &Path) -> Result<u64, error::DecapodError> {
+fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
     let conn = db::db_connect(&db_path.to_string_lossy())?;
-    let count: u64 = conn
+    let count: i64 = conn
         .query_row("SELECT COUNT(*) FROM tasks", [], |row| row.get(0))
         .map_err(error::DecapodError::RusqliteError)?;
     Ok(count)
