@@ -39,6 +39,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         if: hashFiles('scripts/check_crate_description.sh') != ''
 
+      - name: Cache Rust dependencies for gate
+        if: hashFiles('scripts/check_crate_description.sh') != ''
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "gate"
+          save-if: false  # Gate is fast, read-only cache
+
       - name: Description Check
         if: hashFiles('scripts/check_crate_description.sh') != ''
         run: bash scripts/check_crate_description.sh
@@ -79,6 +86,7 @@ jobs:
           shared-key: "release-${{ matrix.target }}"
           cache-targets: true
           save-if: true
+          cache-all-crates: true  # Cache crates.io index and downloaded crates
           prefix-key: "v1"
 
       # Auto-update Cargo.lock if needed (releases should be reproducible)
@@ -140,12 +148,14 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      # Use cache for cargo publish (metadata validation)
+      # Use cache for cargo publish (metadata validation and dependency downloads)
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
           shared-key: "publish"
-          save-if: false  # Don't save on publish job
+          cache-targets: true
+          save-if: true
+          cache-all-crates: true  # Cache crates.io index and downloaded crates
 
       # Auto-update Cargo.lock for publish
       - name: Update Cargo.lock for publish
