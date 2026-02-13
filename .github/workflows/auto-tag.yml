@@ -13,7 +13,7 @@ jobs:
   auto-tag:
     name: Auto Tag on Merge
     runs-on: ubuntu-latest
-    if: github.repository == 'DecapodLabs/decapod'
+    if: github.repository == 'DecapodLabs/decapod' && !contains(github.event.head_commit.message, 'bump version')
     steps:
       - uses: actions/checkout@v4
         with:
