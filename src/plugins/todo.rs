@@ -116,6 +116,7 @@ pub struct Task {
     pub depends_on: String,
     pub blocks: String,
     pub category: String,
+    pub component: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -189,6 +190,11 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     if current_version < 3 {
         let _ = conn.execute("ALTER TABLE tasks ADD COLUMN category TEXT DEFAULT ''", []);
         migrate_task_categories(conn)?;
+    }
+
+    if current_version < 4 {
+        let _ = conn.execute("ALTER TABLE tasks ADD COLUMN component TEXT DEFAULT ''", []);
+        migrate_task_components(conn)?;
     }
 
     conn.execute(
@@ -299,6 +305,62 @@ fn migrate_task_categories(conn: &Connection) -> Result<(), error::DecapodError>
         }
     }
     Ok(())
+}
+
+fn migrate_task_components(conn: &Connection) -> Result<(), error::DecapodError> {
+    let mut stmt = conn
+        .prepare("SELECT id, title, tags FROM tasks WHERE component = '' OR component IS NULL")?;
+    let tasks: Vec<(String, String, String)> = stmt
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    for (id, title, tags) in tasks {
+        if let Some(comp) = infer_component(&title, &tags) {
+            conn.execute(
+                "UPDATE tasks SET component = ?1 WHERE id = ?2",
+                rusqlite::params![comp, id],
+            )?;
+        }
+    }
+    Ok(())
+}
+
+pub fn infer_component(title: &str, tags: &str) -> Option<String> {
+    let text = format!("{} {}", title, tags).to_lowercase();
+
+    let component_keywords = vec![
+        ("main", vec!["main", "binary", "cli", "command"]),
+        ("lib", vec!["library", "lib", "core", "module"]),
+        (
+            "actions",
+            vec!["github action", "workflow", "ci", "pipeline", "caching"],
+        ),
+        (
+            "teammate",
+            vec!["teammate", "preference", "skill", "pattern", "observation"],
+        ),
+        ("todo", vec!["todo", "task", "work tracking"]),
+        ("security", vec!["security", "credential", "key", "auth"]),
+        ("intent", vec!["intent", "methodology", "contract"]),
+        ("architecture", vec!["architecture", "system design"]),
+        ("docs", vec!["docs", "documentation", "readme"]),
+        ("templates", vec!["template", "scaffold", "constitution"]),
+        ("mise", vec!["mise", "tooling", "version manager"]),
+        ("policy", vec!["policy", "risk", "approval"]),
+        ("health", vec!["health", "proof", "validate"]),
+        ("cron", vec!["cron", "schedule", "automation"]),
+        ("reflex", vec!["reflex", "trigger", "hook"]),
+    ];
+
+    for (component, keywords) in component_keywords {
+        for keyword in keywords {
+            if text.contains(keyword) {
+                return Some(component.to_string());
+            }
+        }
+    }
+    None
 }
 
 pub fn infer_category(title: &str, tags: &str) -> Option<String> {
@@ -687,7 +749,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
 
     broker.with_conn(&db_path, "decapod", None, "todo.get", |conn| {
         ensure_schema(conn)?;
-        let mut stmt = conn.prepare("SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category FROM tasks WHERE id = ?1")?;
+        let mut stmt = conn.prepare("SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component FROM tasks WHERE id = ?1")?;
         let mut rows = stmt.query(rusqlite::params![id])?;
         if let Some(row) = rows.next()? {
             Ok(Some(Task {
@@ -709,6 +771,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
                 depends_on: row.get(15)?,
                 blocks: row.get(16)?,
                 category: row.get(17)?,
+                component: row.get(18)?,
             }))
         } else {
             Ok(None)
@@ -730,7 +793,7 @@ pub fn list_tasks(
     broker.with_conn(&db_path, "decapod", None, "todo.list", |conn| {
         ensure_schema(conn)?;
 
-        let mut query = "SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category FROM tasks WHERE 1=1".to_string();
+        let mut query = "SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component FROM tasks WHERE 1=1".to_string();
         let mut params: Vec<Box<dyn ToSql>> = Vec::new();
 
         if let Some(s) = status {
@@ -783,6 +846,7 @@ pub fn list_tasks(
                 depends_on: row.get(15)?,
                 blocks: row.get(16)?,
                 category: row.get(17)?,
+                component: row.get(18)?,
             })
         })?;
 
