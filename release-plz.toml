@@ -1,0 +1,18 @@
+# release-plz configuration
+# https://release-plz.ieni.dev/docs/config
+
+[workspace]
+# Enable changelog generation
+changelog_update = true
+# Changelog path
+changelog_path = "CHANGELOG.md"
+# Git tag format
+git_tag_name = "v{{ version }}"
+# Release PR labels
+pr_labels = ["release"]
+
+# Semantic versioning based on conventional commits:
+# - feat: minor version bump
+# - fix: patch version bump
+# - BREAKING CHANGE: major version bump
+# - chore/docs/style/refactor/perf/test: no version bump
