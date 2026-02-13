@@ -190,6 +190,9 @@ struct HookCli {
     /// Install commit-msg hook for conventional commits
     #[clap(long, default_value = "true")]
     commit_msg: bool,
+    /// Install pre-commit hook (fmt, clippy)
+    #[clap(long)]
+    pre_commit: bool,
     /// Uninstall hooks
     #[clap(long)]
     uninstall: bool,
@@ -720,6 +723,9 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Clean(clean_cli) => {
             clean_project(&clean_cli)?;
         }
+        Command::Check(check_cli) => {
+            run_check(check_cli)?;
+        }
         _ => {
             // For other commands, ensure .decapod exists
             let project_root = decapod_root_option?;
@@ -985,9 +991,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Hook(hook_cli) => {
                     run_hook_install(hook_cli)?;
                 }
-                Command::Check(check_cli) => {
-                    run_check(check_cli)?;
-                }
                 _ => unreachable!(),
             }
         }
@@ -999,22 +1002,6 @@ fn run_hook_install(cli: HookCli) -> Result<(), error::DecapodError> {
     use std::fs;
     use std::io::Write;
 
-    let hook_path = Path::new(".git/hooks/commit-msg");
-
-    if cli.uninstall {
-        if hook_path.exists() {
-            fs::remove_file(hook_path)?;
-            println!("✓ Removed commit-msg hook");
-        } else {
-            println!("No commit-msg hook found");
-        }
-        return Ok(());
-    }
-
-    if !cli.commit_msg {
-        return Ok(());
-    }
-
     let git_dir = Path::new(".git");
     if !git_dir.exists() {
         return Err(error::DecapodError::ValidationError(
@@ -1025,38 +1012,112 @@ fn run_hook_install(cli: HookCli) -> Result<(), error::DecapodError> {
     let hooks_dir = git_dir.join("hooks");
     fs::create_dir_all(&hooks_dir).map_err(error::DecapodError::IoError)?;
 
-    let hook_content = r#"#!/bin/bash
+    if cli.uninstall {
+        let commit_msg_path = hooks_dir.join("commit-msg");
+        let pre_commit_path = hooks_dir.join("pre-commit");
+
+        let mut removed = false;
+        if commit_msg_path.exists() {
+            fs::remove_file(&commit_msg_path)?;
+            println!("✓ Removed commit-msg hook");
+            removed = true;
+        }
+        if pre_commit_path.exists() {
+            fs::remove_file(&pre_commit_path)?;
+            println!("✓ Removed pre-commit hook");
+            removed = true;
+        }
+        if !removed {
+            println!("No hooks found to remove");
+        }
+        return Ok(());
+    }
+
+    // Install commit-msg hook
+    if cli.commit_msg {
+        let hook_content = r#"#!/bin/sh
 # Conventional commit validation hook
 # Installed by Decapod
 
 MSG=$(cat "$1")
 REGEX="^(feat|fix|chore|ci|docs|style|refactor|perf|test)(\(.*\))?!?: .+"
 
-if [[ ! $MSG =~ $REGEX ]]; then
-    echo "❌ Error: Invalid commit message format."
-    echo "   Commit messages must follow the Conventional Commits format."
-    echo "   Example: 'feat: add login functionality'"
-    echo "   Allowed prefixes: feat, fix, chore, ci, docs, style, refactor, perf, test"
+if ! echo "$MSG" | grep -qE "$REGEX"; then
+    echo "Error: Invalid commit message format."
+    echo "  Commit messages must follow the Conventional Commits format."
+    echo "  Example: 'feat: add login functionality'"
+    echo "  Allowed prefixes: feat, fix, chore, ci, docs, style, refactor, perf, test"
     exit 1
 fi
 "#;
 
-    let mut file = fs::File::create(hook_path).map_err(error::DecapodError::IoError)?;
-    file.write_all(hook_content.as_bytes())
-        .map_err(error::DecapodError::IoError)?;
-    drop(file);
+        let hook_path = hooks_dir.join("commit-msg");
+        let mut file = fs::File::create(&hook_path).map_err(error::DecapodError::IoError)?;
+        file.write_all(hook_content.as_bytes())
+            .map_err(error::DecapodError::IoError)?;
+        drop(file);
 
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = fs::metadata(hook_path)
-            .map_err(error::DecapodError::IoError)?
-            .permissions();
-        perms.set_mode(0o755);
-        fs::set_permissions(hook_path, perms).map_err(error::DecapodError::IoError)?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = fs::metadata(&hook_path)
+                .map_err(error::DecapodError::IoError)?
+                .permissions();
+            perms.set_mode(0o755);
+            fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
+        }
+
+        println!("✓ Installed commit-msg hook for conventional commits");
     }
 
-    println!("✓ Installed commit-msg hook for conventional commits");
+    // Install pre-commit hook (pure Rust - runs fmt and clippy)
+    if cli.pre_commit {
+        // Use a simple shell wrapper that calls cargo
+        let hook_content = r#"#!/bin/sh
+# Pre-commit hook - runs cargo fmt and clippy
+# Installed by Decapod
+
+echo "Running pre-commit checks..."
+
+# Run cargo fmt
+if ! cargo fmt --all -- --check 2>/dev/null; then
+    echo "Formatting check failed. Run 'cargo fmt --all' to fix."
+    exit 1
+fi
+
+# Run cargo clippy
+if ! cargo clippy --all-targets --all-features -- -D warnings 2>/dev/null; then
+    echo "Clippy check failed."
+    exit 1
+fi
+
+echo "Pre-commit checks passed!"
+exit 0
+"#;
+
+        let hook_path = hooks_dir.join("pre-commit");
+        let mut file = fs::File::create(&hook_path).map_err(error::DecapodError::IoError)?;
+        file.write_all(hook_content.as_bytes())
+            .map_err(error::DecapodError::IoError)?;
+        drop(file);
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = fs::metadata(&hook_path)
+                .map_err(error::DecapodError::IoError)?
+                .permissions();
+            perms.set_mode(0o755);
+            fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
+        }
+
+        println!("✓ Installed pre-commit hook (fmt + clippy)");
+    }
+
+    if !cli.commit_msg && !cli.pre_commit {
+        println!("No hooks specified. Use --commit-msg and/or --pre-commit");
+    }
+
     Ok(())
 }
 
