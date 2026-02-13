@@ -81,9 +81,18 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
 
     // Header
     println!();
-    println!("{}", "┌─────────────────────────────────────────────┐".cyan());
-    println!("{}", "│  📦 Scaffolding Decapod Project Structure  │".cyan());
-    println!("{}", "└─────────────────────────────────────────────┘".cyan());
+    println!(
+        "{}",
+        "┌─────────────────────────────────────────────┐".cyan()
+    );
+    println!(
+        "{}",
+        "│  📦 Scaffolding Decapod Project Structure  │".cyan()
+    );
+    println!(
+        "{}",
+        "└─────────────────────────────────────────────┘".cyan()
+    );
     println!();
 
     // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
@@ -108,13 +117,19 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
 
     // Footer
     println!();
-    println!("{}", "  ────────────────────────────────────────────".dimmed());
+    println!(
+        "{}",
+        "  ────────────────────────────────────────────".dimmed()
+    );
     println!();
     println!("  {} Project initialized successfully!", "✓".green().bold());
     println!();
     println!("  {} Get started:", "→".cyan().bold());
     println!("    {} Read the methodology", "•".dimmed());
-    println!("      {}", "decapod docs show core/DECAPOD.md".bright_white());
+    println!(
+        "      {}",
+        "decapod docs show core/DECAPOD.md".bright_white()
+    );
     println!();
     println!("    {} Validate your setup", "•".dimmed());
     println!("      {}", "decapod validate".bright_white());
