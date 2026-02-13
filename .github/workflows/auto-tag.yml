@@ -78,6 +78,6 @@ jobs:
       - name: Auto-merge bump PR
         if: steps.bump.outputs.new != ''
         run: |
-          gh pr merge --admin --delete-branch ${{ github.head_ref }}
+          gh pr merge --admin --delete-branch --squash ${{ github.head_ref }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
