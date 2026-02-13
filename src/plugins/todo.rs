@@ -115,6 +115,7 @@ pub struct Task {
     pub priority: String,
     pub depends_on: String,
     pub blocks: String,
+    pub category: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -183,6 +184,11 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         conn.execute(schemas::TODO_DB_SCHEMA_CATEGORIES, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_CATEGORY_NAME, [])?;
         seed_default_categories(conn)?;
+    }
+
+    if current_version < 3 {
+        let _ = conn.execute("ALTER TABLE tasks ADD COLUMN category TEXT DEFAULT ''", []);
+        migrate_task_categories(conn)?;
     }
 
     conn.execute(
@@ -272,6 +278,25 @@ fn seed_default_categories(conn: &Connection) -> Result<(), error::DecapodError>
              VALUES(?1, ?2, ?3, ?4, ?5)",
             rusqlite::params![Ulid::new().to_string(), name, desc, keywords, ts],
         )?;
+    }
+    Ok(())
+}
+
+fn migrate_task_categories(conn: &Connection) -> Result<(), error::DecapodError> {
+    let mut stmt =
+        conn.prepare("SELECT id, title, tags FROM tasks WHERE category = '' OR category IS NULL")?;
+    let tasks: Vec<(String, String, String)> = stmt
+        .query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    for (id, title, tags) in tasks {
+        if let Some(cat) = infer_category(&title, &tags) {
+            conn.execute(
+                "UPDATE tasks SET category = ?1 WHERE id = ?2",
+                rusqlite::params![cat, id],
+            )?;
+        }
     }
     Ok(())
 }
@@ -662,7 +687,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
 
     broker.with_conn(&db_path, "decapod", None, "todo.get", |conn| {
         ensure_schema(conn)?;
-        let mut stmt = conn.prepare("SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks FROM tasks WHERE id = ?1")?;
+        let mut stmt = conn.prepare("SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category FROM tasks WHERE id = ?1")?;
         let mut rows = stmt.query(rusqlite::params![id])?;
         if let Some(row) = rows.next()? {
             Ok(Some(Task {
@@ -683,6 +708,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
                 priority: row.get(14)?,
                 depends_on: row.get(15)?,
                 blocks: row.get(16)?,
+                category: row.get(17)?,
             }))
         } else {
             Ok(None)
@@ -704,7 +730,7 @@ pub fn list_tasks(
     broker.with_conn(&db_path, "decapod", None, "todo.list", |conn| {
         ensure_schema(conn)?;
 
-        let mut query = "SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks FROM tasks WHERE 1=1".to_string();
+        let mut query = "SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category FROM tasks WHERE 1=1".to_string();
         let mut params: Vec<Box<dyn ToSql>> = Vec::new();
 
         if let Some(s) = status {
@@ -756,6 +782,7 @@ pub fn list_tasks(
                 priority: row.get(14)?,
                 depends_on: row.get(15)?,
                 blocks: row.get(16)?,
+                category: row.get(17)?,
             })
         })?;
 
