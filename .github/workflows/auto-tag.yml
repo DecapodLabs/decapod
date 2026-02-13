@@ -45,7 +45,7 @@ jobs:
           echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "Bumping to: $NEW_VERSION"
 
-      - name: Create bump PR
+      - name: Create bump branch with tag
         if: steps.bump.outputs.new != ''
         run: |
           sed -i 's/^version = ".*"/version = "${{ steps.bump.outputs.new }}"/' Cargo.toml
@@ -54,13 +54,5 @@ jobs:
           git add Cargo.toml
           git checkout -b "bump-v${{ steps.bump.outputs.new }}"
           git commit -m "chore: bump version to v${{ steps.bump.outputs.new }}"
-          git push origin "bump-v${{ steps.bump.outputs.new }}"
-
-      - name: Create PR
-        if: steps.bump.outputs.new != ''
-        run: |
           git tag -a "v${{ steps.bump.outputs.new }}" -m "Release v${{ steps.bump.outputs.new }}"
-          gh pr create --base master --head "bump-v${{ steps.bump.outputs.new }}" --title "chore: bump version to v${{ steps.bump.outputs.new }}" --body "Auto-generated version bump"
-          gh pr merge "bump-v${{ steps.bump.outputs.new }}" --admin --squash --delete-branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git push origin "bump-v${{ steps.bump.outputs.new }}" --tags
