@@ -361,8 +361,7 @@ This is a test override for CONTROL_PLANE.md
 - medium
 "#;
 
-    fs::write(root.join(".decapod/OVERRIDE.md"), override_content)
-        .expect("write OVERRIDE.md");
+    fs::write(root.join(".decapod/OVERRIDE.md"), override_content).expect("write OVERRIDE.md");
 
     // Test override extraction for specific components
     let decapod_override = assets::get_override_doc(root, "core/DECAPOD.md");
@@ -371,7 +370,11 @@ This is a test override for CONTROL_PLANE.md
 
     let control_plane_override = assets::get_override_doc(root, "core/CONTROL_PLANE.md");
     assert!(control_plane_override.is_some());
-    assert!(control_plane_override.unwrap().contains("Custom Control Plane"));
+    assert!(
+        control_plane_override
+            .unwrap()
+            .contains("Custom Control Plane")
+    );
 
     let todo_override = assets::get_override_doc(root, "plugins/TODO.md");
     assert!(todo_override.is_some());
@@ -468,8 +471,7 @@ Some content here
 ### core/PLUGINS.md
 "#;
 
-    fs::write(root.join(".decapod/OVERRIDE.md"), override_content)
-        .expect("write OVERRIDE.md");
+    fs::write(root.join(".decapod/OVERRIDE.md"), override_content).expect("write OVERRIDE.md");
 
     // Empty section should return None
     let empty_override = assets::get_override_doc(root, "core/DECAPOD.md");
@@ -514,8 +516,7 @@ This is just an example in the instructions
 This is the ACTUAL override content
 "#;
 
-    fs::write(root.join(".decapod/OVERRIDE.md"), override_content)
-        .expect("write OVERRIDE.md");
+    fs::write(root.join(".decapod/OVERRIDE.md"), override_content).expect("write OVERRIDE.md");
 
     // Should extract the actual override, not the example
     let override_doc = assets::get_override_doc(root, "plugins/TODO.md");
