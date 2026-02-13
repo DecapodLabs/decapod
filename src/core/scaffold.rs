@@ -14,6 +14,7 @@
 
 use crate::core::assets;
 use crate::core::error;
+use crate::core::tui;
 use colored::Colorize;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -32,6 +33,8 @@ pub struct ScaffoldOptions {
     pub agent_files: Vec<String>,
     /// Whether .bak files were created during init
     pub created_backups: bool,
+    /// Force creation of all 3 entrypoint files regardless of existing state
+    pub all: bool,
 }
 
 fn ensure_parent(path: &Path) -> Result<(), error::DecapodError> {
@@ -41,18 +44,23 @@ fn ensure_parent(path: &Path) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
+#[derive(Clone, Copy, Debug)]
+pub enum FileAction {
+    Created,
+    Unchanged,
+    Preserved,
+}
+
 fn write_file(
     opts: &ScaffoldOptions,
     rel_path: &str,
     content: &str,
-) -> Result<(), error::DecapodError> {
-    use colored::Colorize;
+) -> Result<FileAction, error::DecapodError> {
     use sha2::{Digest, Sha256};
 
     let dest = opts.target_dir.join(rel_path);
 
     if dest.exists() {
-        // Check if content matches (by checksum)
         if let Ok(existing_content) = fs::read_to_string(&dest) {
             let mut template_hasher = Sha256::new();
             template_hasher.update(content.as_bytes());
@@ -63,21 +71,13 @@ fn write_file(
             let existing_hash = format!("{:x}", existing_hasher.finalize());
 
             if template_hash == existing_hash {
-                // File already matches template - skip
-                println!(
-                    "    {} {} {}",
-                    "✓".bright_green(),
-                    rel_path.bright_white(),
-                    "(unchanged)".bright_black()
-                );
-                return Ok(());
+                return Ok(FileAction::Unchanged);
             }
         }
 
         if !opts.force {
             if opts.dry_run {
-                println!("    {} {}", "○".bright_black(), rel_path.bright_black());
-                return Ok(());
+                return Ok(FileAction::Unchanged);
             }
             return Err(error::DecapodError::ValidationError(format!(
                 "Refusing to overwrite existing path without --force: {}",
@@ -87,42 +87,23 @@ fn write_file(
     }
 
     if opts.dry_run {
-        println!("    {} {}", "◉".bright_cyan(), rel_path.bright_white());
-        return Ok(());
+        return Ok(FileAction::Created);
     }
 
     ensure_parent(&dest)?;
     fs::write(&dest, content).map_err(error::DecapodError::IoError)?;
 
-    // Fancy checkmark with gradient effect
-    println!("    {} {}", "●".bright_green(), rel_path.bright_white());
-    Ok(())
+    Ok(FileAction::Created)
 }
 
 pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error::DecapodError> {
     let data_dir_rel = ".decapod/data";
 
-    // ALIEN SCAFFOLD PROTOCOL
-    println!();
-    println!(
-        "        {}",
-        "╔═══════════════════════════════════════════╗"
-            .bright_magenta()
-            .bold()
-    );
-    println!(
-        "        {} {} {}",
-        "║".bright_magenta().bold(),
-        "📦 PROJECT STRUCTURE SYNTHESIS 📦     "
-            .bright_white()
-            .bold(),
-        "║".bright_magenta().bold()
-    );
-    println!(
-        "        {}",
-        "╚═══════════════════════════════════════════╝"
-            .bright_magenta()
-            .bold()
+    // Project Structure box
+    tui::render_box(
+        "📦 PROJECT STRUCTURE",
+        "Entrypoint & config generation",
+        tui::BoxStyle::Magenta,
     );
     println!();
 
@@ -130,9 +111,10 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     fs::create_dir_all(opts.target_dir.join(data_dir_rel)).map_err(error::DecapodError::IoError)?;
 
     // Determine which agent files to generate
+    // If --all flag is set, force generate all three regardless of existing state
     // If agent_files is empty, generate all three
     // If agent_files has entries, only generate those
-    let files_to_generate = if opts.agent_files.is_empty() {
+    let files_to_generate = if opts.all || opts.agent_files.is_empty() {
         vec!["AGENTS.md", "CLAUDE.md", "GEMINI.md"]
     } else {
         opts.agent_files.iter().map(|s| s.as_str()).collect()
@@ -144,103 +126,81 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
 
     // AGENT ENTRYPOINTS - Neural Interfaces (only generate specified files)
     if !files_to_generate.is_empty() {
-        println!("          {}", "▼ AGENT ENTRYPOINTS".bright_cyan().bold());
-        println!();
+        tui::print_section("▼ AGENT ENTRYPOINTS");
 
+        let mut results: Vec<(&str, tui::ItemStatus)> = Vec::new();
         for file in files_to_generate {
             let content =
                 assets::get_template(file).unwrap_or_else(|| panic!("Missing template: {}", file));
-            write_file(opts, file, &content)?;
+            let action = write_file(opts, file, &content)?;
+            let status = match action {
+                FileAction::Created => tui::ItemStatus::Created,
+                FileAction::Unchanged => tui::ItemStatus::Unchanged,
+                FileAction::Preserved => tui::ItemStatus::Preserved,
+            };
+            results.push((file, status));
         }
+        tui::print_items_grid(&results, 3);
     }
 
-    println!();
-    println!(
-        "          {}",
-        "▼ CONTROL PLANE CONFIGURATION".bright_cyan().bold()
-    );
-    println!();
-    write_file(opts, ".decapod/README.md", &readme_md)?;
+    tui::print_section("▼ CONTROL PLANE CONFIGURATION");
+
+    let mut config_results: Vec<(&str, tui::ItemStatus)> = Vec::new();
+
+    let readme_action = write_file(opts, ".decapod/README.md", &readme_md)?;
+    let readme_status = match readme_action {
+        FileAction::Created => tui::ItemStatus::Created,
+        FileAction::Unchanged => tui::ItemStatus::Unchanged,
+        FileAction::Preserved => tui::ItemStatus::Preserved,
+    };
+    config_results.push((".decapod/README.md", readme_status));
 
     // Preserve existing OVERRIDE.md - it contains project-specific customizations
     let override_path = opts.target_dir.join(".decapod/OVERRIDE.md");
-    if override_path.exists() {
-        println!(
-            "    {} {} {}",
-            "✓".bright_green(),
-            ".decapod/OVERRIDE.md".bright_white(),
-            "(preserved - project overrides kept)".bright_black()
-        );
+    let override_status = if override_path.exists() {
+        tui::ItemStatus::Preserved
     } else {
-        write_file(opts, ".decapod/OVERRIDE.md", &override_md)?;
-    }
+        let action = write_file(opts, ".decapod/OVERRIDE.md", &override_md)?;
+        match action {
+            FileAction::Created => tui::ItemStatus::Created,
+            FileAction::Unchanged => tui::ItemStatus::Unchanged,
+            FileAction::Preserved => tui::ItemStatus::Preserved,
+        }
+    };
+    config_results.push((".decapod/OVERRIDE.md", override_status));
+    tui::print_items_grid(&config_results, 3);
 
     // SUCCESS - System Online
-    println!();
-    println!(
-        "        {}",
-        "╔═══════════════════════════════════════════╗"
-            .bright_green()
-            .bold()
-    );
-    println!(
-        "        {} {} {}",
-        "║".bright_green().bold(),
-        "✨ CONTROL PLANE OPERATIONAL ✨       "
-            .bright_white()
-            .bold(),
-        "║".bright_green().bold()
-    );
-    println!(
-        "        {}",
-        "╚═══════════════════════════════════════════╝"
-            .bright_green()
-            .bold()
+    tui::render_box(
+        "✨ CONTROL PLANE OPERATIONAL",
+        "Agent workflow infrastructure ready",
+        tui::BoxStyle::Success,
     );
     println!();
+    tui::print_status_line("System ready for agentic workflows", tui::ItemStatus::Pass);
     println!(
-        "          {} System ready for agentic workflows",
-        "▸".bright_green()
-    );
-    println!(
-        "          {} Neural interfaces: {}",
+        "  {} {}",
         "▸".bright_green(),
-        "AGENTS.md | CLAUDE.md | GEMINI.md".bright_cyan()
+        "Neural interfaces: AGENTS.md | CLAUDE.md | GEMINI.md".bright_cyan()
     );
 
     // Show backup instructions if .bak files were created
     if opts.created_backups {
-        println!();
-        println!(
-            "        {}",
-            "╔═══════════════════════════════════════════╗"
-                .bright_yellow()
-                .bold()
-        );
-        println!(
-            "        {} {} {}",
-            "║".bright_yellow().bold(),
-            "⚠  ACTION REQUIRED                    "
-                .bright_white()
-                .bold(),
-            "║".bright_yellow().bold()
-        );
-        println!(
-            "        {}",
-            "╚═══════════════════════════════════════════╝"
-                .bright_yellow()
-                .bold()
+        tui::render_box(
+            "⚠  ACTION REQUIRED",
+            "Backup files need merging",
+            tui::BoxStyle::Warning,
         );
         println!();
-        println!("          {} Tell your agent to:", "▸".bright_yellow());
+        println!("  {} Tell your agent to:", "▸".bright_yellow());
         println!(
-            "            {} Blend your {} file(s) into {}",
+            "    {} Blend your {} file(s) into {}",
             "1.".bright_cyan(),
             "*.bak".bright_white().bold(),
             ".decapod/OVERRIDE.md".bright_cyan()
         );
         println!(
-            "            {} Delete the old {} files",
+            "    {} Delete the old {} files",
             "2.".bright_cyan(),
             "*.bak".bright_white().bold()
         );
