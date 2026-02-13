@@ -35,20 +35,19 @@ jobs:
           fi
           echo "Version validated: $VERSION"
 
-      # Only install Rust if description check needs cargo
+      # Install Rust for description check
       - uses: dtolnay/rust-toolchain@stable
-        if: hashFiles('scripts/check_crate_description.sh') != ''
+        with:
+          components: rustfmt
 
       - name: Cache Rust dependencies for gate
-        if: hashFiles('scripts/check_crate_description.sh') != ''
         uses: Swatinem/rust-cache@v2
         with:
           shared-key: "gate"
           save-if: false  # Gate is fast, read-only cache
 
       - name: Description Check
-        if: hashFiles('scripts/check_crate_description.sh') != ''
-        run: bash scripts/check_crate_description.sh
+        run: cargo run -- check --crate-description
 
   # 2. Parallel multi-target builds with aggressive caching
   build-artifacts:
