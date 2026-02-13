@@ -19,20 +19,7 @@
 
 ---
 
-<div align="center">
-  <video
-    src="assets/decapod-demo.mp4"
-    controls
-    muted
-    playsinline
-    preload="metadata"
-    width="900">
-  </video>
-</div>
-
-<div align="center">
-▶️ **Demo video:** [assets/decapod-demo.mp4](assets/decapod-demo.mp4)
-</div>
+Demo video (click to view/download): **[assets/decapod-demo.mp4](assets/decapod-demo.mp4)**
 
 ---
 
