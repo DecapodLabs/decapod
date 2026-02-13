@@ -58,6 +58,17 @@ From that point on, agents operate inside the governed environment. You observe 
 
 ---
 
+## Who This Is For
+
+✅ You’re shipping production code with AI agents<br>
+✅ You want discipline enforced by the environment<br>
+✅ You want parallel agents without turning the repo into lore<br>
+✅ You merge to `main` (not just demoing prompts)<br>
+✅ You want an AI companion for building premium software<br>
+✅ You want “AI vibes” with guardrails and customizable enforceable workflows<br>
+
+---
+
 ## How It Works
 
 ### 1) Persistent State (Memory That Survives)
@@ -194,17 +205,6 @@ Work is tracked. Agents claim separate items, operate in parallel, and must pass
 ### Scenario 3: Proof-Gated Promotion
 
 An agent thinks it’s done. Proof gates fail. It can’t credibly claim completion until it fixes the failures and re-validates. That’s the difference between autonomy and theater.
-
----
-
-## Who This Is For
-
-✅ You’re shipping production code with AI agents<br>
-✅ You want discipline enforced by the environment<br>
-✅ You want parallel agents without turning the repo into lore<br>
-✅ You merge to `main` (not just demoing prompts)<br>
-✅ You want an AI companion for building premium software<br>
-✅ You want “AI vibes” with guardrails and customizable enforceable workflows<br>
 
 ---
 
