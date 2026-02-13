@@ -409,38 +409,67 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Init(init_cli) => {
             use colored::Colorize;
 
-            // Banner
+            // Clear screen and position cursor for pristine alien output
+            print!("\x1B[2J\x1B[1;1H");
+
+            // 🛸 ALIEN SPACESHIP BANNER 🛸
+            println!();
             println!();
             println!(
                 "{}",
-                "╔═══════════════════════════════════════════════════════╗"
+                "              ▗▄▄▄▄▖  ▗▄▄▄▄▄▄▄▄▄▄▄▄▖  ▗▄▄▄▄▖"
+                    .bright_magenta()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "            ▗▀▀      ▝▀              ▀▘      ▀▀▖"
+                    .bright_magenta()
+                    .bold()
+            );
+            println!(
+                "          {}   {}   {}",
+                "▗▀".bright_magenta().bold(),
+                "🦀 D E C A P O D 🦀".bright_white().bold().underline(),
+                "▀▖".bright_magenta().bold()
+            );
+            println!(
+                "{}",
+                "         ▐                                        ▌"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!(
+                "         {} {} {}",
+                "▐".bright_cyan().bold(),
+                "C O N T R O L   P L A N E".bright_cyan().bold(),
+                "▌".bright_cyan().bold()
+            );
+            println!(
+                "{}",
+                "         ▐                                        ▌"
                     .bright_cyan()
                     .bold()
             );
             println!(
                 "{}",
-                "║                                                       ║"
-                    .bright_cyan()
+                "          ▝▖                                    ▗▘"
+                    .bright_magenta()
                     .bold()
             );
             println!(
                 "{}",
-                "║        🦀  DECAPOD  -  AGENTIC CONTROL PLANE         ║"
-                    .bright_cyan()
+                "            ▝▄▄                              ▄▄▘"
+                    .bright_magenta()
                     .bold()
             );
             println!(
                 "{}",
-                "║                                                       ║"
-                    .bright_cyan()
+                "              ▝▀▀▀▀▖  ▝▀▀▀▀▀▀▀▀▀▀▀▀▘  ▗▀▀▀▀▘"
+                    .bright_magenta()
                     .bold()
             );
-            println!(
-                "{}",
-                "╚═══════════════════════════════════════════════════════╝"
-                    .bright_cyan()
-                    .bold()
-            );
+            println!();
             println!();
 
             let target_dir = match init_cli.dir {
@@ -454,9 +483,28 @@ pub fn run() -> Result<(), error::DecapodError> {
             let setup_decapod_root = target_dir.join(".decapod");
             if setup_decapod_root.exists() && !init_cli.force {
                 println!(
-                    "  {} '.decapod' directory already exists. Use {} to re-initialize.",
-                    "⚠".yellow(),
-                    "--force".bright_white()
+                    "        {}",
+                    "╔══════════════════════════════════════╗".yellow().bold()
+                );
+                println!(
+                    "        {} {} {}",
+                    "║".yellow().bold(),
+                    "⚠  SYSTEM ALREADY INITIALIZED ⚠ ".bright_yellow().bold(),
+                    "║".yellow().bold()
+                );
+                println!(
+                    "        {}",
+                    "╚══════════════════════════════════════╝".yellow().bold()
+                );
+                println!();
+                println!(
+                    "          {} Detected existing control plane",
+                    "▸".bright_yellow()
+                );
+                println!(
+                    "          {} Use {} flag to override",
+                    "▸".bright_yellow(),
+                    "--force".bright_cyan().bold()
                 );
                 println!();
                 return Ok(());
@@ -469,16 +517,24 @@ pub fn run() -> Result<(), error::DecapodError> {
                     let path = target_dir.join(file);
                     if path.exists() {
                         if !backed_up {
-                            println!("{}", "  Preserving Existing Files:".bright_white().bold());
+                            println!(
+                                "        {}",
+                                "▼▼▼ PRESERVATION PROTOCOL ACTIVATED ▼▼▼"
+                                    .bright_yellow()
+                                    .bold()
+                            );
+                            println!();
                             backed_up = true;
                         }
                         let backup_path = target_dir.join(format!("{}.bak", file));
                         fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
                         println!(
-                            "  {} Backed up {} → {}.bak",
-                            "→".dimmed(),
-                            file,
-                            file.strip_suffix(".md").unwrap_or(file)
+                            "          {} {} {} {}",
+                            "◆".bright_cyan(),
+                            file.bright_white().bold(),
+                            "⟿".bright_yellow(),
+                            format!("{}.bak", file.strip_suffix(".md").unwrap_or(file))
+                                .bright_black()
                         );
                     }
                 }
@@ -495,7 +551,28 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // `--dry-run` should not perform any mutations.
             if !init_cli.dry_run {
-                // Initialize all store DBs in the resolved store root
+                // Databases setup section - ALIEN TECH
+                println!(
+                    "        {}",
+                    "╔═══════════════════════════════════════╗"
+                        .bright_cyan()
+                        .bold()
+                );
+                println!(
+                    "        {} {} {}",
+                    "║".bright_cyan().bold(),
+                    "⚡ SUBSYSTEM INITIALIZATION ⚡      ".bright_white().bold(),
+                    "║".bright_cyan().bold()
+                );
+                println!(
+                    "        {}",
+                    "╚═══════════════════════════════════════╝"
+                        .bright_cyan()
+                        .bold()
+                );
+                println!();
+
+                // Initialize all store DBs in the resolved store root (silently)
                 todo::initialize_todo_db(&setup_store_root)?;
                 db::initialize_knowledge_db(&setup_store_root)?;
                 cron::initialize_cron_db(&setup_store_root)?;
@@ -504,6 +581,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                 policy::initialize_policy_db(&setup_store_root)?;
                 archive::initialize_archive_db(&setup_store_root)?;
                 feedback::initialize_feedback_db(&setup_store_root)?;
+
+                println!();
 
                 // Create empty todo events file for validation
                 let events_path = setup_store_root.join("todo.events.jsonl");

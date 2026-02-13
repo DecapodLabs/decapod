@@ -29,7 +29,6 @@
 use crate::core::error;
 use crate::core::store::{Store, StoreKind};
 use crate::{db, todo};
-use colored::*;
 use regex::Regex;
 use serde_json;
 use std::fs;
@@ -202,27 +201,32 @@ fn validate_embedded_self_contained(
 }
 
 fn pass(message: &str, pass_count: &mut u32) {
+    use colored::Colorize;
     *pass_count += 1;
-    println!("{} {}", "✓".green(), message);
+    println!("    {} {}", "●".bright_green(), message.bright_white());
 }
 
 fn fail(message: &str, fail_count: &mut u32) {
+    use colored::Colorize;
     *fail_count += 1;
-    eprintln!("{} {}", "✗".red(), message);
+    eprintln!("    {} {}", "●".bright_red(), message.bright_white());
 }
 
 fn skip(message: &str, skip_count: &mut u32) {
+    use colored::Colorize;
     *skip_count += 1;
-    println!("{} {}", "⊘".yellow(), message);
+    println!("    {} {}", "○".bright_yellow(), message.bright_white());
 }
 
 fn warn(message: &str, warn_count: &mut u32) {
+    use colored::Colorize;
     *warn_count += 1;
-    println!("{} {}", "⚠".yellow(), message);
+    println!("    {} {}", "●".bright_yellow(), message.bright_white());
 }
 
 fn info(message: &str) {
-    println!("{} {}", "ℹ".blue(), message);
+    use colored::Colorize;
+    println!("    {} {}", "ℹ".bright_cyan(), message.bright_black());
 }
 
 fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
@@ -891,15 +895,46 @@ pub fn run_validation(
     decapod_dir: &Path,
     _home_dir: &Path,
 ) -> Result<(), error::DecapodError> {
-    println!("\n========================================");
-    println!("Intent-Driven Methodology - Proof Harness");
+    use colored::Colorize;
+    println!();
+    println!(
+        "      {}",
+        "╔═══════════════════════════════════════════════╗"
+            .bright_magenta()
+            .bold()
+    );
+    println!(
+        "      {} {} {}",
+        "║".bright_magenta().bold(),
+        "⚡ PROOF HARNESS - VALIDATION PROTOCOL ⚡  "
+            .bright_white()
+            .bold(),
+        "║".bright_magenta().bold()
+    );
+    println!(
+        "      {} {} {}",
+        "║".bright_magenta().bold(),
+        "   Intent-Driven Methodology Enforcement  ".bright_cyan(),
+        "║".bright_magenta().bold()
+    );
+    println!(
+        "      {}",
+        "╚═══════════════════════════════════════════════╝"
+            .bright_magenta()
+            .bold()
+    );
+    println!();
+
     // Directly get content from embedded assets
     let intent_content =
-        crate::core::assets::get_doc("embedded/specs/INTENT.md").unwrap_or_default(); // Provide default empty string if not found
+        crate::core::assets::get_doc("embedded/specs/INTENT.md").unwrap_or_default();
     let intent_version =
         extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
-    println!("Intent Version: {} (from INTENT.md)", intent_version);
-    println!("========================================");
+    println!(
+        "  {} Intent Version: {}",
+        "ℹ".bright_cyan(),
+        intent_version.bright_white()
+    );
     println!();
 
     let mut pass_count = 0;
@@ -934,13 +969,58 @@ pub fn run_validation(
     validate_archive_integrity(store, &mut pass_count, &mut fail_count)?;
     validate_canon_mutation(store, &mut pass_count, &mut fail_count)?;
 
-    println!("\n========================================");
-    println!("Results Summary");
-    println!("========================================");
-    println!("{} PASS: {}", "✓".green(), pass_count);
-    eprintln!("{} FAIL: {}", "✗".red(), fail_count);
-    println!("{} WARN: {}", "⚠".yellow(), warn_count);
-    println!("TOTAL: {}", pass_count + fail_count + warn_count);
+    println!();
+    println!(
+        "      {}",
+        "╔═══════════════════════════════════════════════╗"
+            .bright_blue()
+            .bold()
+    );
+    println!(
+        "      {} {} {}",
+        "║".bright_blue().bold(),
+        "📊 VALIDATION RESULTS                     "
+            .bright_white()
+            .bold(),
+        "║".bright_blue().bold()
+    );
+    println!(
+        "      {}",
+        "╚═══════════════════════════════════════════════╝"
+            .bright_blue()
+            .bold()
+    );
+    println!();
+    println!(
+        "        {} {}  {}",
+        "●".bright_green().bold(),
+        "PASS:".bright_white(),
+        pass_count.to_string().bright_green().bold()
+    );
+    if fail_count > 0 {
+        eprintln!(
+            "        {} {}  {}",
+            "●".bright_red().bold(),
+            "FAIL:".bright_white(),
+            fail_count.to_string().bright_red().bold()
+        );
+    }
+    if warn_count > 0 {
+        println!(
+            "        {} {}  {}",
+            "●".bright_yellow().bold(),
+            "WARN:".bright_white(),
+            warn_count.to_string().bright_yellow().bold()
+        );
+    }
+    println!(
+        "        {} {}",
+        "Total:".bright_black(),
+        (pass_count + fail_count + warn_count)
+            .to_string()
+            .bright_white()
+            .bold()
+    );
     println!();
 
     if fail_count > 0 {
