@@ -1,0 +1,56 @@
+name: Auto Tag on Merge
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '**.rs'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+
+permissions:
+  contents: write
+
+jobs:
+  auto-tag:
+    name: Auto Tag on Merge
+    runs-on: ubuntu-latest
+    if: github.repository == 'DecapodLabs/decapod'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current version
+        id: version
+        run: |
+          VERSION=$(grep '^version =' Cargo.toml | head -n 1 | cut -d '"' -f 2)
+          echo "current=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          VERSION="${{ steps.version.outputs.current }}"
+          IFS='.' read -r major minor patch <<< "$VERSION"
+          patch=$((patch + 1))
+          NEW_VERSION="$major.$minor.$patch"
+          # Ensure v0.1.* range
+          NEW_VERSION="0.1.$patch"
+          echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+
+      - name: Update Cargo.toml
+        run: |
+          sed -i 's/^version = ".*"/version = "${{ steps.bump.outputs.new }}"/' Cargo.toml
+          cat Cargo.toml | head -n 5
+
+      - name: Commit and tag
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add Cargo.toml
+          git commit -m "chore: bump version to v${{ steps.bump.outputs.new }}"
+          git tag -a "v${{ steps.bump.outputs.new }}" -m "Release v${{ steps.bump.outputs.new }}"
+          git push origin master --tags
