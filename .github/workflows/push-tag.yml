@@ -6,6 +6,9 @@ on:
       - master
     types:
       - closed
+  push:
+    branches:
+      - master
 
 permissions:
   contents: write
@@ -21,13 +24,8 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get latest tag
+      - name: Push all new tags
         run: |
           git fetch --tags origin master
-          TAG=$(git describe --tags --abbrev=0 origin/master 2>/dev/null || echo "")
-          if [ -n "$TAG" ]; then
-            echo "Found tag: $TAG"
-            git push origin "$TAG"
-          else
-            echo "No tags found"
-          fi
+          # Push all tags that exist locally but not on origin
+          git push origin --tags
