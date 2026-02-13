@@ -257,8 +257,7 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
                 "actor": "migration",
             });
 
-            writeln!(file, "{}", complete_event)
-                .map_err(error::DecapodError::IoError)?;
+            writeln!(file, "{}", complete_event).map_err(error::DecapodError::IoError)?;
         }
     }
 
