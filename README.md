@@ -1,14 +1,10 @@
 <div align="center">
   <img src="assets/decapod-ultra.svg" width="800" alt="Decapod Logo">
 
-  <h2>Unlock Agentic Engineering</h2>
+  <h2>A Governance Runtime for Autonomous Software Agents</h2>
 
   <p>
-    The missing control plane that makes agent autonomy intelligent.
-  </p>
-
-  <p>
-    <strong>Decapod turns “AI wrote code” into “I can merge this.”</strong>
+    <strong>Decapod turns "AI wrote code" into "I can merge this."</strong>
   </p>
 
   <p>
@@ -17,104 +13,224 @@
   </p>
 
   <p>
-    <strong>Built in Rust 🦀 · Local-first · Repo-native · Works with any agent</strong>
+    <strong>Local-first · Repo-native · Built in Rust 🦀</strong>
   </p>
 </div>
 
 ---
 
-<div align="center">
-  <h3>Agents capture TODOs. Track progress. Hand off context. Prove their work. Ship.</h3>
-</div>
+## What This Is
+
+**Decapod is agent infrastructure: a governance runtime for autonomous software agents.**
+
+Like Docker is a runtime for containers, Decapod is a runtime for agents. It gives autonomy a place to live that isn’t your chat window: **persistent state**, **binding methodology**, **proof gates**, and **coordination primitives**—so agent work becomes shippable, not scary.
+
+Agents can write code. But they can’t reliably **ship** because they:
+- forget what they built yesterday (no persistence)
+- treat best practices as vibes (no enforcement)
+- say “done” without evidence (no proof gates)
+- trip over each other in parallel (no coordination)
+
+You set Decapod up once, then agents operate inside the governed environment. **You don’t touch the internals—just like you don’t touch individual neurons.**
+
+### What This Is Not
+
+Decapod is not:
+- a prompt pack
+- an agent framework/library
+- a hosted SaaS “agent platform”
+- a review bot that just comments on PRs
+- a tool you manually operate (it’s agent infrastructure)
+
+Decapod is an environment: **the place agent work becomes enforceable.**
 
 ---
 
-## Quick Start
+## How It Works
 
-```bash
-cargo install decapod
-cd your-project
-decapod init
+### 1) Persistent State (Memory That Survives)
+
+Agents persist work to `.decapod/`: todos, conventions, decisions, proof events—durable state that survives sessions and model switches.
+
+You get continuity without re-explaining. Agents get a real memory substrate instead of fragile chat history.
+
+### 2) Enforced Methodology (Constitution as Code)
+
+Decapod ships an embedded constitution: binding contracts for how agents must operate (intent-first flow, authority chains, proof doctrine, store separation, etc).
+
+Generated entrypoints (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) require agents to:
+- read the constitution before acting
+- use the control surface for state mutation (no internal access)
+- follow Intent → Architecture → Implementation → Proof
+- pass validation gates before claiming “done”
+
+Projects override behavior via `.decapod/OVERRIDE.md` without forking the constitution.
+
+### 3) Proof Gates (Validation Before Promotion)
+
+Promotion isn’t a vibe. It’s a check that can fail.
+
+Agents must satisfy proof gates before completion is credible. If validation fails, the work isn’t done—no matter how confident the summary sounds. Evidence required, not assertions.
+
+### 4) Coordination Primitives (So Parallel Doesn’t Mean Chaos)
+
+Decapod standardizes the surfaces agents use to collaborate:
+- a shared backlog with audit trail
+- shared conventions and preferences
+- shared rationale (decisions, constraints, invariants)
+- a proof ledger (what passed, what failed, when, and why)
+- policy boundaries (trust tiers, risk zones)
+- (planned) safe multi-writer state via a DB broker
+
+Multiple agents can work in parallel without collisions, duplicate effort, or lost context.
+
+---
+
+## The Difference
+
+**Without Decapod:**
+```
+You: “Add OAuth to the login flow”
+Agent: Writes 500 lines across 8 files
+You: Review everything manually
+You: Find broken tests, ignored conventions, missing error paths
+Agent: Forgets context when you ask for fixes
 ```
 
-That's it. `decapod init` creates (and backs up existing) `CLAUDE.md`, `AGENTS.md`, and `GEMINI.md` with methodology your agents follow.
-
-**What agents get:**
-- Persistent memory across sessions
-- Standard interface (no guessing)
-- Proof requirements before claiming "done"
-
-**What you get:**
-- Embedded constitution that all agents follow
-- Confidence to merge agent work
-- Simple overrides via OVERRIDE.md
+**With Decapod:**
+```
+You: “Add OAuth to the login flow”
+Agent: Checks recorded conventions and constraints
+Agent: Produces tracked work, records decisions
+Agent: Runs proof gates, fixes failures, re-validates
+Agent: Marks work done with an auditable trail
+You: Review summary and merge
+```
 
 ---
 
-## The Problem
-
-AI lowers the barrier to *writing* code—but shipping code is still hard.
-
-Every agent session starts from scratch. Context evaporates. You can't trust it to:
-- Remember what it built yesterday
-- Follow your standards without drift
-- Prove the code works before claiming "done"
-- Ship without you checking every line
-
-**Shipping is a system.** Decapod is that system for agentic development.
-
----
-
-## What It Does
-
-You wouldn't run microservices without coordination. You wouldn't run a database without ACID.
-But we're handing agents write access to production repos and hoping "good prompting" substitutes for discipline.
-
-**Decapod turns agent output into an engineering pipeline:**
-
-- **Shared state that survives sessions** — work doesn't reset on handoff
-- **One agent-first interface** (CLI + schemas) — agents don't poke internals
-- **One authority chain** — Intent → Spec → Code → Proof → Merge
-- **Proof gates** — "sounds right" can't ship without evidence
-- **Full traceability** — what changed, who changed it, why
-
----
-
-## Env Layout
+## Architecture
 
 ```text
-.decapod/
-├── data/        # state that survives sessions   (DON'T TOUCH)
-├── generated/   # generated system files         (DON'T TOUCH)
-└── OVERRIDE.md  # user managed override config   (BELONGS TO YOU)
+┌──────────────────────────────────────────┐
+│  Agent Entrypoints (CLAUDE.md, etc)     │  ← Generated by init
+├──────────────────────────────────────────┤
+│  Control Surface (stable interface)     │  ← Agents interact here
+├──────────────────────────────────────────┤
+│  Subsystems (plugin-grade surfaces)     │  ← Domain logic
+├──────────────────────────────────────────┤
+│  Governance Core (validate + doctrine)  │  ← Enforcement layer
+├──────────────────────────────────────────┤
+│  State Layer (SQLite + event logs)      │  ← Persistence + audit
+├──────────────────────────────────────────┤
+│  Embedded Constitution (methodology)    │  ← Contracts, not tips
+└──────────────────────────────────────────┘
+
+Storage: .decapod/
+├── data/         # State (agents write via control surface)
+├── generated/    # Entrypoints + derived files (auto-managed)
+└── OVERRIDE.md   # Your repo's policy/conventions
 ```
 
-**Local-first by design:**
-- No daemon
-- No hosted service
-- No "agent memory SaaS"
-- Just a repo-native file-based control plane
+You don’t touch `.decapod/data/` directly. Agents use the control surface. Like neurons—they’re there, they work, you don’t manipulate them individually.
+
+---
+
+## Subsystems
+
+Decapod’s control surface is organized into subsystems. **Agents interact with these; you observe outcomes.**
+
+Status legend:
+- **REAL** = implemented and usable today
+- **SPEC** = designed/claimed, but not fully shipped yet
+
+| Subsystem | Purpose | Status |
+|----------|---------|--------|
+| **todo** | Work tracking with audit trail | REAL |
+| **validate** | Proof gate before promotion | REAL |
+| **cron** | Scheduled automation | REAL |
+| **reflex** | Rule-driven triggers/actions | REAL |
+| **docs** | Constitution discovery | REAL |
+| **teammate** | User conventions + preferences | SPEC |
+| **knowledge** | Project facts + rationale | SPEC |
+| **health** | Proof ledger + system state | SPEC |
+| **policy** | Risk zones + approvals | SPEC |
+| **trust** | Autonomy tiers based on proof history | SPEC |
+| **context** | Token budget management | SPEC |
+| **archive** | Session history indexing | SPEC |
+| **watcher** | Integrity checks | SPEC |
+| **heartbeat** | One-shot system summary | SPEC |
+| **feedback** | Preference refinement | SPEC |
+| **db_broker** | Multi-agent SQLite safety (write serialization) | SPEC |
+
+If you want the thesis behind these surfaces, the whitepaper is the “why” and “how.”
+
+---
+
+## Real-World Scenarios
+
+### Scenario 1: Preference Memory
+
+You tell an agent once: “Always use my SSH key for commits. Never add yourself as a contributor.”
+
+That preference becomes durable state. Every future agent session can check it. You never explain again.
+
+### Scenario 2: Multi-Agent Feature Work
+
+Work is tracked. Agents claim separate items, operate in parallel, and must pass proof gates before marking work done. No duplicate effort. No coordination bugs. No lost context.
+
+### Scenario 3: Proof-Gated Promotion
+
+An agent thinks it’s done. Proof gates fail. It can’t credibly claim completion until it fixes the failures and re-validates. That’s the difference between autonomy and theater.
 
 ---
 
 ## Who This Is For
 
-✅ You're building real products with AI agents<br>
-✅ You want CI/CD discipline, not "vibes-based" shipping<br>
-✅ You need multiple agents working without chaos<br>
-✅ You merge to production (not just prototyping)
+✅ You’re shipping production code with AI agents  
+✅ You want discipline enforced by the environment  
+✅ You want parallel agents without turning the repo into lore  
+✅ You merge to `main` (not just demoing prompts)
 
-If you want a one-off script, Decapod is overkill.
-If you want agents to ship production code, Decapod is the missing layer.
+❌ You want a one-off script (Decapod is intentionally heavier)  
+❌ You want “AI vibes” instead of enforceable workflow  
 
 ---
 
-## Get Involved
+## Ecosystem Status
 
-- **Ship a subsystem** — adapters, proof harnesses, connectors
-- **Harden the constitution** — if you found a rule that stops drift, PR it upstream
-- **Break it** — open issues with repros (they become proof gates)
-- **Share overrides** — Found a useful project pattern? Add it to OVERRIDE.md examples
+**Real today (foundation):**
+- Local-first repo runtime (initialize once, agents use it)
+- Constitution routing + discovery (agents read, projects override)
+- Proof gates (validation must pass)
+- Core subsystems operational
+
+**In progress:**
+- DB Broker (multi-agent safe writes)
+- Handoff/context passing surfaces
+
+**Planned:**
+- Trust automation (earn autonomy through proof history)
+- Policy DSL (risk zones with approvals)
+- Pattern learning (conventions inferred from repo)
+
+---
+
+## Learn More
+
+📄 **[Read the Whitepaper](WHITEPAPER.md)** — Full thesis on governance runtimes for agents  
+💬 **[Join Discussions](https://github.com/DecapodLabs/decapod/discussions)** — Community + design debates  
+
+---
+
+## Getting Started
+
+```bash
+cargo install decapod
+decapod init
+```
+
+From that point on, agents operate inside the governed environment. You observe outcomes, review summaries, and merge when proofs pass.
 
 ---
 
@@ -124,5 +240,14 @@ If you want agents to ship production code, Decapod is the missing layer.
   <br><br>
   <a href="https://github.com/DecapodLabs/decapod">⭐ Star on GitHub</a> •
   <a href="https://crates.io/crates/decapod">📦 Crates.io</a> •
+  <a href="WHITEPAPER.md">📄 Whitepaper</a> •
   <a href="https://ko-fi.com/decapodlabs">☕ Support</a>
+</div>
+
+---
+
+<div align="center">
+  <sub>
+    Built with Decapod · Proven with Decapod · Shipped with Decapod
+  </sub>
 </div>
