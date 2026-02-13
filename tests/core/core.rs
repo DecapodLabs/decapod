@@ -153,6 +153,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         dry_run: true,
         agent_files: vec![],
         created_backups: false,
+        all: false,
     };
     scaffold_project_entrypoints(&dry_run_opts).expect("dry run scaffold");
     assert!(!dry_run_target.join("AGENTS.md").exists());
@@ -164,6 +165,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         dry_run: false,
         agent_files: vec![],
         created_backups: false,
+        all: false,
     };
     scaffold_project_entrypoints(&live_opts).expect("live scaffold");
     assert!(live_target.join("AGENTS.md").exists());
@@ -178,6 +180,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         dry_run: false,
         agent_files: vec![],
         created_backups: false,
+        all: false,
     };
     scaffold_project_entrypoints(&force_opts).expect("force scaffold");
 
@@ -224,7 +227,7 @@ fn schemas_errors_and_validate_entrypoint_are_exercised() {
     assert_eq!(schemas::KNOWLEDGE_DB_NAME, "knowledge.db");
     assert_eq!(schemas::TODO_DB_NAME, "todo.db");
     assert_eq!(schemas::TODO_EVENTS_NAME, "todo.events.jsonl");
-    assert_eq!(schemas::TODO_SCHEMA_VERSION, 4);
+    assert_eq!(schemas::TODO_SCHEMA_VERSION, 5);
     assert!(!schemas::TODO_DB_SCHEMA_META.trim().is_empty());
     assert!(!schemas::TODO_DB_SCHEMA_TASKS.trim().is_empty());
     assert!(!schemas::TODO_DB_SCHEMA_TASK_EVENTS.trim().is_empty());
