@@ -4,7 +4,7 @@ use crate::core::schemas; // Import the new schemas module
 use crate::core::store::Store;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, Result as SqlResult, types::ToSql};
+use rusqlite::{types::ToSql, Connection, OptionalExtension, Result as SqlResult};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
@@ -92,6 +92,8 @@ pub enum TodoCommand {
     },
     /// Rebuild the SQLite DB deterministically from the JSONL event log.
     Rebuild,
+    /// List available task categories.
+    Categories,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -177,6 +179,12 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_DIR, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_EVENTS_TASK, [])?;
 
+    if current_version < 2 {
+        conn.execute(schemas::TODO_DB_SCHEMA_CATEGORIES, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_CATEGORY_NAME, [])?;
+        seed_default_categories(conn)?;
+    }
+
     conn.execute(
         "INSERT INTO meta(key, value) VALUES('schema_version', ?1)
          ON CONFLICT(key) DO UPDATE SET value=excluded.value",
@@ -184,6 +192,194 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     )?;
 
     Ok(())
+}
+
+fn seed_default_categories(conn: &Connection) -> Result<(), error::DecapodError> {
+    let categories = vec![
+        (
+            "features",
+            "New features and enhancements",
+            "feature,add,implement,create new",
+        ),
+        (
+            "bugs",
+            "Bug fixes and corrections",
+            "fix,bug,issue,error,broken",
+        ),
+        (
+            "docs",
+            "Documentation updates",
+            "docs,documentation,readme,comment",
+        ),
+        (
+            "ci",
+            "CI/CD and automation",
+            "ci,github actions,workflow,pipeline,deploy",
+        ),
+        (
+            "refactor",
+            "Code refactoring",
+            "refactor,restructure,cleanup,improve",
+        ),
+        (
+            "tests",
+            "Test coverage and quality",
+            "test,spec,coverage,unit,integration",
+        ),
+        (
+            "security",
+            "Security improvements",
+            "security,auth,permission,vulnerability",
+        ),
+        (
+            "performance",
+            "Performance optimizations",
+            "perf,performance,speed,optimize",
+        ),
+        (
+            "backend",
+            "Backend development",
+            "backend,server,api,database",
+        ),
+        (
+            "frontend",
+            "Frontend development",
+            "frontend,ui,web,css,jsx",
+        ),
+        ("api", "API design and changes", "api,endpoint,rest,graphql"),
+        (
+            "database",
+            "Database schema and queries",
+            "db,database,schema,migration,sql",
+        ),
+        (
+            "infra",
+            "Infrastructure and DevOps",
+            "infra,docker,kubernetes,cloud",
+        ),
+        (
+            "tooling",
+            "Tooling and developer experience",
+            "tool,cli,devx,script",
+        ),
+        ("ux", "User experience and design", "ux,design,ui,usability"),
+    ];
+
+    let ts = now_iso();
+    for (name, desc, keywords) in categories {
+        conn.execute(
+            "INSERT OR IGNORE INTO categories(id, name, description, keywords, created_at)
+             VALUES(?1, ?2, ?3, ?4, ?5)",
+            rusqlite::params![Ulid::new().to_string(), name, desc, keywords, ts],
+        )?;
+    }
+    Ok(())
+}
+
+pub fn infer_category(title: &str, tags: &str) -> Option<String> {
+    let text = format!("{} {}", title, tags).to_lowercase();
+
+    let category_keywords = vec![
+        (
+            "features",
+            vec!["feature", "add", "implement", "create new", "new"],
+        ),
+        (
+            "bugs",
+            vec!["fix", "bug", "issue", "error", "broken", "repair"],
+        ),
+        (
+            "docs",
+            vec!["docs", "documentation", "readme", "comment", "doc"],
+        ),
+        (
+            "ci",
+            vec![
+                "ci",
+                "github action",
+                "workflow",
+                "pipeline",
+                "deploy",
+                "github",
+            ],
+        ),
+        (
+            "refactor",
+            vec!["refactor", "restructure", "cleanup", "improve", "clean"],
+        ),
+        (
+            "tests",
+            vec!["test", "spec", "coverage", "unit", "integration", "testing"],
+        ),
+        (
+            "security",
+            vec!["security", "auth", "permission", "vulnerability", "secure"],
+        ),
+        (
+            "performance",
+            vec!["perf", "performance", "speed", "optimize", "fast"],
+        ),
+        ("backend", vec!["backend", "server", "database", "db"]),
+        (
+            "frontend",
+            vec!["frontend", "ui", "web", "css", "jsx", "html"],
+        ),
+        ("api", vec!["api", "endpoint", "rest", "graphql"]),
+        (
+            "database",
+            vec!["database", "db", "schema", "migration", "sql"],
+        ),
+        (
+            "infra",
+            vec!["infra", "docker", "kubernetes", "cloud", "aws", "gcp"],
+        ),
+        ("tooling", vec!["tool", "cli", "devx", "script", "utility"]),
+        ("ux", vec!["ux", "design", "usability", "user"]),
+    ];
+
+    for (category, keywords) in category_keywords {
+        for keyword in keywords {
+            if text.contains(keyword) {
+                return Some(category.to_string());
+            }
+        }
+    }
+    None
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Category {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub keywords: String,
+    pub created_at: String,
+}
+
+pub fn list_categories(root: &Path) -> Result<Vec<Category>, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    broker.with_conn(&db_path, "decapod", None, "todo.categories", |conn| {
+        ensure_schema(conn)?;
+        let mut stmt = conn.prepare(
+            "SELECT id, name, description, keywords, created_at FROM categories ORDER BY name",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(Category {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                description: row.get(2)?,
+                keywords: row.get(3)?,
+                created_at: row.get(4)?,
+            })
+        })?;
+        let mut categories = Vec::new();
+        for r in rows {
+            categories.push(r?);
+        }
+        Ok(categories)
+    })
 }
 
 pub fn initialize_todo_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -239,7 +435,6 @@ fn task_prefix_from_scope(scope: &str) -> &'static str {
     }
 }
 
-/// Validate priority value (must be: high, medium, or low)
 fn validate_priority(s: &str) -> Result<String, String> {
     match s {
         "high" | "medium" | "low" => Ok(s.to_string()),
@@ -804,6 +999,10 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
         }
         TodoCommand::Comment { id, comment } => comment_task(root, id, comment)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,
+        TodoCommand::Categories => {
+            let categories = list_categories(root)?;
+            serde_json::json!({ "categories": categories })
+        }
     };
 
     match cli.format {
@@ -829,6 +1028,25 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                     }
                 } else {
                     println!("No tasks found.");
+                }
+            }
+            TodoCommand::Categories => {
+                if let Some(cats) = out.get("categories").and_then(|x| x.as_array()) {
+                    if cats.is_empty() {
+                        println!("No categories defined.");
+                    } else {
+                        println!("Available categories:");
+                        for cat in cats {
+                            let name = cat.get("name").and_then(|x| x.as_str()).unwrap_or("?");
+                            let desc = cat
+                                .get("description")
+                                .and_then(|x| x.as_str())
+                                .unwrap_or("");
+                            let keywords =
+                                cat.get("keywords").and_then(|x| x.as_str()).unwrap_or("");
+                            println!("  {} - {} (keywords: {})", name, desc, keywords);
+                        }
+                    }
                 }
             }
             _ => {
