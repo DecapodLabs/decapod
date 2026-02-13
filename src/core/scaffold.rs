@@ -30,6 +30,8 @@ pub struct ScaffoldOptions {
     pub dry_run: bool,
     /// Which agent entrypoint files to generate (empty = all)
     pub agent_files: Vec<String>,
+    /// Whether .bak files were created during init
+    pub created_backups: bool,
 }
 
 fn ensure_parent(path: &Path) -> Result<(), error::DecapodError> {
@@ -193,6 +195,45 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
         "▸".bright_green(),
         "AGENTS.md | CLAUDE.md | GEMINI.md".bright_cyan()
     );
+
+    // Show backup instructions if .bak files were created
+    if opts.created_backups {
+        println!();
+        println!(
+            "        {}",
+            "╔═══════════════════════════════════════════╗"
+                .bright_yellow()
+                .bold()
+        );
+        println!(
+            "        {} {} {}",
+            "║".bright_yellow().bold(),
+            "⚠  ACTION REQUIRED                    "
+                .bright_white()
+                .bold(),
+            "║".bright_yellow().bold()
+        );
+        println!(
+            "        {}",
+            "╚═══════════════════════════════════════════╝"
+                .bright_yellow()
+                .bold()
+        );
+        println!();
+        println!("          {} Tell your agent to:", "▸".bright_yellow());
+        println!(
+            "            {} Blend your {} file(s) into {}",
+            "1.".bright_cyan(),
+            "*.bak".bright_white().bold(),
+            ".decapod/OVERRIDE.md".bright_cyan()
+        );
+        println!(
+            "            {} Delete the old {} files",
+            "2.".bright_cyan(),
+            "*.bak".bright_white().bold()
+        );
+    }
+
     println!();
     println!();
 
