@@ -409,51 +409,21 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Init(init_cli) => {
             use colored::Colorize;
 
-            // Clear screen for pristine output
+            // Clear screen and position cursor for pristine alien output
             print!("\x1B[2J\x1B[1;1H");
 
-            // Stunning banner with gradient effect
+            // 🛸 ALIEN SPACESHIP BANNER 🛸
             println!();
             println!();
-            println!(
-                "  {}",
-                "╔═══════════════════════════════════════════════════════════╗"
-                    .bright_magenta()
-                    .bold()
-            );
-            println!(
-                "  {}",
-                "║                                                           ║"
-                    .bright_magenta()
-                    .bold()
-            );
-            println!(
-                "  {} {} {} {}",
-                "║".bright_magenta().bold(),
-                "        🦀".to_string(),
-                "DECAPOD".bright_white().bold(),
-                "                                    ║"
-                    .bright_magenta()
-                    .bold()
-            );
-            println!(
-                "  {} {} {}",
-                "║".bright_magenta().bold(),
-                "           Agentic Control Plane".bright_cyan(),
-                "                  ║".bright_magenta().bold()
-            );
-            println!(
-                "  {}",
-                "║                                                           ║"
-                    .bright_magenta()
-                    .bold()
-            );
-            println!(
-                "  {}",
-                "╚═══════════════════════════════════════════════════════════╝"
-                    .bright_magenta()
-                    .bold()
-            );
+            println!("{}", "              ▗▄▄▄▄▖  ▗▄▄▄▄▄▄▄▄▄▄▄▄▖  ▗▄▄▄▄▖".bright_magenta().bold());
+            println!("{}", "            ▗▀▀      ▝▀              ▀▘      ▀▀▖".bright_magenta().bold());
+            println!("{}", "          ▗▀           {}              ▀▖".bright_magenta().bold(), "🦀 D E C A P O D 🦀".bright_white().bold().underline());
+            println!("{}", "         ▐                                        ▌".bright_cyan().bold());
+            println!("{}", "         ▐   {}   ▌".bright_cyan(), "A G E N T I C   C O N T R O L   P L A N E".bright_cyan().bold());
+            println!("{}", "         ▐                                        ▌".bright_cyan().bold());
+            println!("{}", "          ▝▖                                    ▗▘".bright_magenta().bold());
+            println!("{}", "            ▝▄▄                              ▄▄▘".bright_magenta().bold());
+            println!("{}", "              ▝▀▀▀▀▖  ▝▀▀▀▀▀▀▀▀▀▀▀▀▘  ▗▀▀▀▀▘".bright_magenta().bold());
             println!();
             println!();
 
@@ -467,27 +437,12 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Check if .decapod exists and skip if it does, unless --force
             let setup_decapod_root = target_dir.join(".decapod");
             if setup_decapod_root.exists() && !init_cli.force {
-                println!(
-                    "  {}",
-                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".yellow()
-                );
+                println!("        {}", "╔══════════════════════════════════════╗".yellow().bold());
+                println!("        {} {} {}", "║".yellow().bold(), "⚠  SYSTEM ALREADY INITIALIZED ⚠ ".bright_yellow().bold(), "║".yellow().bold());
+                println!("        {}", "╚══════════════════════════════════════╝".yellow().bold());
                 println!();
-                println!(
-                    "  {} {}",
-                    "⚠".yellow().bold(),
-                    "Already Initialized".bright_white().bold()
-                );
-                println!();
-                println!(
-                    "  {} Use {} to re-initialize",
-                    "ℹ".bright_blue(),
-                    "--force".bright_cyan().bold()
-                );
-                println!();
-                println!(
-                    "  {}",
-                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".yellow()
-                );
+                println!("          {} Detected existing control plane", "▸".bright_yellow());
+                println!("          {} Use {} flag to override", "▸".bright_yellow(), "--force".bright_cyan().bold());
                 println!();
                 return Ok(());
             }
@@ -499,26 +454,18 @@ pub fn run() -> Result<(), error::DecapodError> {
                     let path = target_dir.join(file);
                     if path.exists() {
                         if !backed_up {
-                            println!(
-                                "  {}",
-                                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_blue()
-                            );
-                            println!(
-                                "  {} {}",
-                                "▸".bright_cyan().bold(),
-                                "Preserving Existing Files".bright_white().bold()
-                            );
+                            println!("        {}", "▼▼▼ PRESERVATION PROTOCOL ACTIVATED ▼▼▼".bright_yellow().bold());
                             println!();
                             backed_up = true;
                         }
                         let backup_path = target_dir.join(format!("{}.bak", file));
                         fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
                         println!(
-                            "    {} {} {} {}.bak",
-                            "↻".bright_yellow(),
-                            file.bright_white(),
-                            "→".bright_black(),
-                            file.strip_suffix(".md").unwrap_or(file).bright_black()
+                            "          {} {} {} {}",
+                            "◆".bright_cyan(),
+                            file.bright_white().bold(),
+                            "⟿".bright_yellow(),
+                            format!("{}.bak", file.strip_suffix(".md").unwrap_or(file)).bright_black()
                         );
                     }
                 }
