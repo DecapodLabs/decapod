@@ -18,6 +18,21 @@
 </div>
 
 ---
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="assets/screenshot-task-1.png" alt="Create agent-agnostic tasks!" width="100%">
+      <br>
+      <sub><b>Make Tasks</b> - agents create their own tasks to do later.</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="assets/screenshot-task-2.png" alt="Discover those tasks with other agents!" width="100%">
+      <br>
+      <sub><b>Share the Work</b> — other agents can discover tasks and complete the work!</sub>
+    </td>
+  </tr>
+</table>
+
 
 Demo video (download, 12MB): **[assets/decapod-demo.mp4](assets/decapod-demo.mp4)**
 
