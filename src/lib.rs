@@ -482,16 +482,10 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // `--dry-run` should not perform any mutations.
             if !init_cli.dry_run {
-                // Databases setup section
-                println!(
-                    "  {}",
-                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_blue()
-                );
-                println!(
-                    "  {} {}",
-                    "▸".bright_cyan().bold(),
-                    "Initializing Subsystems".bright_white().bold()
-                );
+                // Databases setup section - ALIEN TECH
+                println!("        {}", "╔═══════════════════════════════════════╗".bright_cyan().bold());
+                println!("        {} {} {}", "║".bright_cyan().bold(), "⚡ SUBSYSTEM INITIALIZATION ⚡      ".bright_white().bold(), "║".bright_cyan().bold());
+                println!("        {}", "╚═══════════════════════════════════════╝".bright_cyan().bold());
                 println!();
 
                 // Initialize all store DBs in the resolved store root (silently)
