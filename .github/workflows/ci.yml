@@ -106,7 +106,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Clippy
-        run: cargo clippy --all-targets --all-features --locked -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
   # TEST: Run all tests
   test:
@@ -156,7 +156,7 @@ jobs:
           save-if: false
 
       - name: Build and install decapod
-        run: cargo install --path . --locked
+        run: cargo install --path .
 
       - name: Initialize Decapod
         run: decapod init
@@ -199,7 +199,7 @@ jobs:
           save-if: true
 
       - name: Build release
-        run: cargo build --release --locked
+        run: cargo build --release
 
       - name: Upload binary
         uses: actions/upload-artifact@v4

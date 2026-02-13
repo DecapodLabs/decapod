@@ -60,6 +60,7 @@ jobs:
         if: steps.bump.outputs.new != ''
         run: |
           git tag -a "v${{ steps.bump.outputs.new }}" -m "Release v${{ steps.bump.outputs.new }}"
-          gh pr create --base master --head "bump-v${{ steps.bump.outputs.new }}" --title "chore: bump version to v${{ steps.bump.outputs.new }}" --body "Auto-generated version bump" --autoMerge
+          gh pr create --base master --head "bump-v${{ steps.bump.outputs.new }}" --title "chore: bump version to v${{ steps.bump.outputs.new }}" --body "Auto-generated version bump"
+          gh pr merge "bump-v${{ steps.bump.outputs.new }}" --admin --squash --delete-branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
