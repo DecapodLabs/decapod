@@ -177,8 +177,6 @@ Status legend:
 | **feedback** | Preference refinement | SPEC |
 | **db_broker** | Multi-agent SQLite safety (write serialization) | SPEC |
 
-If you want the thesis behind these surfaces, the whitepaper is the “why” and “how.”
-
 ---
 
 ## Real-World Scenarios
@@ -235,7 +233,6 @@ An agent thinks it’s done. Proof gates fail. It can’t credibly claim complet
   <br><br>
   <a href="https://github.com/DecapodLabs/decapod">⭐ Star on GitHub</a> •
   <a href="https://crates.io/crates/decapod">📦 Crates.io</a> •
-  <a href="WHITEPAPER.md">📄 Whitepaper</a> •
   <a href="https://ko-fi.com/decapodlabs">☕ Support</a>
 </div>
 
