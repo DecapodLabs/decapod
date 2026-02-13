@@ -53,7 +53,7 @@ pub enum HealthCommand {
         #[clap(long)]
         result: String,
         #[clap(long, default_value = "3600")]
-        sla: u64,
+        sla: i64,
     },
     /// Get computed health status for a claim.
     Get {
@@ -115,13 +115,13 @@ pub struct ProofEvent {
     pub ts: String,
     pub surface: String, // e.g. "cargo test"
     pub result: String,  // "pass" | "fail"
-    pub sla_seconds: u64,
+    pub sla_seconds: i64,
 }
 
 pub fn compute_health(
     _claim: &Claim,
     events: &[ProofEvent],
-    now_secs: u64,
+    now_secs: i64,
 ) -> (HealthState, String) {
     if events.is_empty() {
         return (
@@ -146,7 +146,7 @@ pub fn compute_health(
     let last_pass = sorted_events.iter().find(|e| e.result == "pass");
 
     if let Some(pass) = last_pass {
-        let pass_ts: u64 = pass.ts.trim_end_matches('Z').parse().unwrap_or(0);
+        let pass_ts: i64 = pass.ts.trim_end_matches('Z').parse().unwrap_or(0);
         if now_secs > pass_ts + pass.sla_seconds {
             return (
                 HealthState::STALE,
@@ -190,7 +190,7 @@ pub fn record_proof(
     claim_id: &str,
     surface: &str,
     result: &str,
-    sla: u64,
+    sla: i64,
 ) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = health_db_path(&store.root);
@@ -216,7 +216,7 @@ pub fn get_health(
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
-        .as_secs();
+        .as_secs() as i64;
 
     broker.with_conn(&db_path, "decapod", None, "health.get", |conn| {
         let claim: Claim = conn.query_row(
@@ -266,7 +266,7 @@ pub fn get_all_health(
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
-        .as_secs();
+        .as_secs() as i64;
 
     broker.with_conn(&db_path, "decapod", None, "health.list_all", |conn| {
         let mut stmt = conn.prepare("SELECT id, subject, kind, provenance, created_at FROM claims")?;

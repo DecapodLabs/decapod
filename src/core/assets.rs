@@ -143,115 +143,19 @@ fn merge_override_content(embedded_content: &str, override_content: &str) -> Str
     )
 }
 
-// Templates for user overrides (embedded for scaffolding)
-pub const TEMPLATES_CORE_CONTROL_PLANE: &str =
-    include_str!("../../constitution/templates/core/CONTROL_PLANE.md");
-pub const TEMPLATES_CORE_DECAPOD: &str =
-    include_str!("../../constitution/templates/core/DECAPOD.md");
-pub const TEMPLATES_CORE_PLUGINS: &str =
-    include_str!("../../constitution/templates/core/PLUGINS.md");
-pub const TEMPLATES_CORE_CLAIMS: &str = include_str!("../../constitution/templates/core/CLAIMS.md");
-pub const TEMPLATES_CORE_DEMANDS: &str =
-    include_str!("../../constitution/templates/core/DEMANDS.md");
-pub const TEMPLATES_CORE_DEPRECATION: &str =
-    include_str!("../../constitution/templates/core/DEPRECATION.md");
-pub const TEMPLATES_CORE_DOC_RULES: &str =
-    include_str!("../../constitution/templates/core/DOC_RULES.md");
-pub const TEMPLATES_CORE_GLOSSARY: &str =
-    include_str!("../../constitution/templates/core/GLOSSARY.md");
-pub const TEMPLATES_CORE_KNOWLEDGE: &str =
-    include_str!("../../constitution/templates/core/KNOWLEDGE.md");
-pub const TEMPLATES_CORE_MEMORY: &str = include_str!("../../constitution/templates/core/MEMORY.md");
-pub const TEMPLATES_CORE_SOUL: &str = include_str!("../../constitution/templates/core/SOUL.md");
-pub const TEMPLATES_CORE_STORE_MODEL: &str =
-    include_str!("../../constitution/templates/core/STORE_MODEL.md");
-
-pub const TEMPLATES_SPECS_AMENDMENTS: &str =
-    include_str!("../../constitution/templates/specs/AMENDMENTS.md");
-pub const TEMPLATES_SPECS_ARCHITECTURE: &str =
-    include_str!("../../constitution/templates/specs/ARCHITECTURE.md");
-pub const TEMPLATES_SPECS_INTENT: &str =
-    include_str!("../../constitution/templates/specs/INTENT.md");
-pub const TEMPLATES_SPECS_SYSTEM: &str =
-    include_str!("../../constitution/templates/specs/SYSTEM.md");
-
-pub const TEMPLATES_PLUGINS_DB_BROKER: &str =
-    include_str!("../../constitution/templates/plugins/DB_BROKER.md");
-pub const TEMPLATES_PLUGINS_MANIFEST: &str =
-    include_str!("../../constitution/templates/plugins/MANIFEST.md");
-pub const TEMPLATES_PLUGINS_TODO: &str =
-    include_str!("../../constitution/templates/plugins/TODO.md");
-pub const TEMPLATES_PLUGINS_TODO_USER: &str =
-    include_str!("../../constitution/templates/plugins/TODO_USER.md");
-pub const TEMPLATES_PLUGINS_CRON: &str =
-    include_str!("../../constitution/templates/plugins/CRON.md");
-pub const TEMPLATES_PLUGINS_REFLEX: &str =
-    include_str!("../../constitution/templates/plugins/REFLEX.md");
-pub const TEMPLATES_PLUGINS_HEALTH: &str =
-    include_str!("../../constitution/templates/plugins/HEALTH.md");
-pub const TEMPLATES_PLUGINS_POLICY: &str =
-    include_str!("../../constitution/templates/plugins/POLICY.md");
-pub const TEMPLATES_PLUGINS_WATCHER: &str =
-    include_str!("../../constitution/templates/plugins/WATCHER.md");
-pub const TEMPLATES_PLUGINS_KNOWLEDGE: &str =
-    include_str!("../../constitution/templates/plugins/KNOWLEDGE.md");
-pub const TEMPLATES_PLUGINS_ARCHIVE: &str =
-    include_str!("../../constitution/templates/plugins/ARCHIVE.md");
-pub const TEMPLATES_PLUGINS_FEEDBACK: &str =
-    include_str!("../../constitution/templates/plugins/FEEDBACK.md");
-pub const TEMPLATES_PLUGINS_TRUST: &str =
-    include_str!("../../constitution/templates/plugins/TRUST.md");
-pub const TEMPLATES_PLUGINS_CONTEXT: &str =
-    include_str!("../../constitution/templates/plugins/CONTEXT.md");
-pub const TEMPLATES_PLUGINS_HEARTBEAT: &str =
-    include_str!("../../constitution/templates/plugins/HEARTBEAT.md");
-
-pub const TEMPLATES_DECAPOD_README: &str =
-    include_str!("../../constitution/templates/DECAPOD_README.md");
-pub const TEMPLATE_OVERRIDE: &str = include_str!("../../constitution/templates/OVERRIDE.md");
-
-// Root templates (AGENTS.md, CLAUDE.md, GEMINI.md)
-pub const TEMPLATE_AGENTS: &str = include_str!("../../constitution/templates/AGENTS.md");
-pub const TEMPLATE_CLAUDE: &str = include_str!("../../constitution/templates/CLAUDE.md");
-pub const TEMPLATE_GEMINI: &str = include_str!("../../constitution/templates/GEMINI.md");
+// Root templates (AGENTS.md, CLAUDE.md, GEMINI.md) - embedded for scaffolding
+pub const TEMPLATE_AGENTS: &str = include_str!("../../templates/AGENTS.md");
+pub const TEMPLATE_CLAUDE: &str = include_str!("../../templates/CLAUDE.md");
+pub const TEMPLATE_GEMINI: &str = include_str!("../../templates/GEMINI.md");
+pub const TEMPLATE_README: &str = include_str!("../../templates/README.md");
+pub const TEMPLATE_OVERRIDE: &str = include_str!("../../templates/OVERRIDE.md");
 
 pub fn get_template(name: &str) -> Option<String> {
     match name {
         "AGENTS.md" => Some(TEMPLATE_AGENTS.to_string()),
         "CLAUDE.md" => Some(TEMPLATE_CLAUDE.to_string()),
         "GEMINI.md" => Some(TEMPLATE_GEMINI.to_string()),
-        "core/CONTROL_PLANE.md" => Some(TEMPLATES_CORE_CONTROL_PLANE.to_string()),
-        "core/DECAPOD.md" => Some(TEMPLATES_CORE_DECAPOD.to_string()),
-        "core/PLUGINS.md" => Some(TEMPLATES_CORE_PLUGINS.to_string()),
-        "core/CLAIMS.md" => Some(TEMPLATES_CORE_CLAIMS.to_string()),
-        "core/DEMANDS.md" => Some(TEMPLATES_CORE_DEMANDS.to_string()),
-        "core/DEPRECATION.md" => Some(TEMPLATES_CORE_DEPRECATION.to_string()),
-        "core/DOC_RULES.md" => Some(TEMPLATES_CORE_DOC_RULES.to_string()),
-        "core/GLOSSARY.md" => Some(TEMPLATES_CORE_GLOSSARY.to_string()),
-        "core/KNOWLEDGE.md" => Some(TEMPLATES_CORE_KNOWLEDGE.to_string()),
-        "core/MEMORY.md" => Some(TEMPLATES_CORE_MEMORY.to_string()),
-        "core/SOUL.md" => Some(TEMPLATES_CORE_SOUL.to_string()),
-        "core/STORE_MODEL.md" => Some(TEMPLATES_CORE_STORE_MODEL.to_string()),
-        "specs/AMENDMENTS.md" => Some(TEMPLATES_SPECS_AMENDMENTS.to_string()),
-        "specs/ARCHITECTURE.md" => Some(TEMPLATES_SPECS_ARCHITECTURE.to_string()),
-        "specs/INTENT.md" => Some(TEMPLATES_SPECS_INTENT.to_string()),
-        "specs/SYSTEM.md" => Some(TEMPLATES_SPECS_SYSTEM.to_string()),
-        "plugins/DB_BROKER.md" => Some(TEMPLATES_PLUGINS_DB_BROKER.to_string()),
-        "plugins/MANIFEST.md" => Some(TEMPLATES_PLUGINS_MANIFEST.to_string()),
-        "plugins/TODO.md" => Some(TEMPLATES_PLUGINS_TODO.to_string()),
-        "plugins/TODO_USER.md" => Some(TEMPLATES_PLUGINS_TODO_USER.to_string()),
-        "plugins/CRON.md" => Some(TEMPLATES_PLUGINS_CRON.to_string()),
-        "plugins/REFLEX.md" => Some(TEMPLATES_PLUGINS_REFLEX.to_string()),
-        "plugins/HEALTH.md" => Some(TEMPLATES_PLUGINS_HEALTH.to_string()),
-        "plugins/POLICY.md" => Some(TEMPLATES_PLUGINS_POLICY.to_string()),
-        "plugins/WATCHER.md" => Some(TEMPLATES_PLUGINS_WATCHER.to_string()),
-        "plugins/KNOWLEDGE.md" => Some(TEMPLATES_PLUGINS_KNOWLEDGE.to_string()),
-        "plugins/ARCHIVE.md" => Some(TEMPLATES_PLUGINS_ARCHIVE.to_string()),
-        "plugins/FEEDBACK.md" => Some(TEMPLATES_PLUGINS_FEEDBACK.to_string()),
-        "plugins/TRUST.md" => Some(TEMPLATES_PLUGINS_TRUST.to_string()),
-        "plugins/CONTEXT.md" => Some(TEMPLATES_PLUGINS_CONTEXT.to_string()),
-        "plugins/HEARTBEAT.md" => Some(TEMPLATES_PLUGINS_HEARTBEAT.to_string()),
-        "README.md" => Some(TEMPLATES_DECAPOD_README.to_string()),
+        "README.md" => Some(TEMPLATE_README.to_string()),
         "OVERRIDE.md" => Some(TEMPLATE_OVERRIDE.to_string()),
         _ => None,
     }

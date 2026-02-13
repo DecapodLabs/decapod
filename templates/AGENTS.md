@@ -1,40 +1,44 @@
-# GEMINI.md - Decapod Entrypoint for Gemini
+# AGENTS.md - Decapod Entrypoint
 
-**Canonical:** GEMINI.md
+**Canonical:** AGENTS.md
 **Authority:** entrypoint
 **Layer:** Guides
-**Binding:** No
+**Binding:** Yes
 
-This is a Decapod-managed repository. **You (Gemini) are contractually obligated to use the Decapod toolchain FIRST and ALWAYS.**
+This is a Decapod-managed repository. **You (the AI agent) are contractually obligated to use the Decapod toolchain FIRST and ALWAYS.**
 
-## 🚨 CRITICAL: RUN THESE COMMANDS BEFORE ANY WORK
+## 🚨 CRITICAL: AGENT PROTOCOL BEFORE ANY CODE
 
-**STOP.** Before you write a single line of code or answer any question about this codebase, you MUST execute this sequence:
+**STOP.** Before you write a single line of code, you MUST execute this sequence:
 
-### 1. Read the Constitution Router (REQUIRED - RUN THIS NOW)
+### 1. Ingest the Full Constitution (Recommended)
 ```bash
-decapod docs show core/DECAPOD.md
+decapod docs ingest
 ```
 
-### 2. Check System State (REQUIRED - RUN THIS NOW)
+### 2. Read Core Architecture Documents (REQUIRED - RUN THESE NOW)
+```bash
+decapod docs show core/DECAPOD.md      # Navigation charter
+decapod docs show specs/INTENT.md       # Authority contracts
+decapod docs show specs/ARCHITECTURE.md # System boundaries & tradeoffs
+```
+
+### 3. Validate Current State (REQUIRED - RUN THESE NOW)
 ```bash
 decapod validate
-```
-
-### 3. See Active Work (REQUIRED - RUN THIS NOW)
-```bash
 decapod todo list
-```
-
-### 4. Review Project Contracts (REQUIRED - RUN THESE NOW)
-```bash
-decapod docs show specs/INTENT.md
-decapod docs show specs/ARCHITECTURE.md
 ```
 
 **IF YOU SKIP THIS SEQUENCE, YOUR WORK IS INVALID AND UNSAFE.**
 
-This entrypoint is non-authoritative. DECAPOD.md defines all contracts and patterns.
+### 4. ASK CLARIFYING QUESTIONS (Required)
+Before any implementation, you MUST ask the user:
+
+- **Intent Impact:** "What specific promise/invariant must be true when this work is complete?"
+- **Tradeoff Awareness:** "Are there architectural constraints or existing decisions I should consider?"
+- **Proof Surface:** "What's the smallest test/validate that would falsify success?"
+- **Scope Boundaries:** "What's explicitly out of scope for this change?"
+- **Performance/Security:** "Any non-functional requirements I should weigh?"
 
 ## Hard Rules (Non-Negotiable)
 
@@ -42,6 +46,8 @@ This entrypoint is non-authoritative. DECAPOD.md defines all contracts and patte
 2. **NEVER bypass the CLI**: Use `decapod` commands only, never direct DB/file manipulation
 3. **BEFORE claiming completion**: Run `decapod validate` and ensure all 29 checks pass
 4. **ALWAYS route through DECAPOD.md**: All methodology lives in the embedded constitution, not in your assumptions
+5. **Consider architectural tradeoffs**: Review ARCHITECTURE.md for boundaries and constraints
+6. **Document decisions**: Use `decapod proof record` for significant changes
 
 **Violation of these rules = invalid work. No exceptions.**
 
@@ -145,7 +151,7 @@ Per ARCHITECTURE.md, all changes must consider:
 
 To reduce token usage and errors:
 
-1. **Use `decapod docs ingest`** once at start (optional but recommended)
+1. **Use `decapod docs ingest`** once at start
 2. **Reference doc sections** rather than asking to re-read
 3. **Use `decapod context pack`** for history management
 4. **Ask targeted questions** about specific sections
@@ -163,13 +169,12 @@ If you encounter:
 
 See: `decapod docs show plugins/EMERGENCY_PROTOCOL.md`
 
-## Links
+## Links (Route Here First)
 
-- `embedded/core/DECAPOD.md` — **Authoritative router. REQUIRED READING.**
-- `embedded/core/CONTROL_PLANE.md` — Sequencing contract
-- `embedded/specs/SYSTEM.md` — Authority and proof doctrine
-- `embedded/specs/INTENT.md` — Authority contracts
+- `embedded/core/DECAPOD.md` — **Start here. Navigation charter.**
+- `embedded/core/CONTROL_PLANE.md` — Agent sequencing patterns (binding)
+- `embedded/specs/INTENT.md` — Authority and contracts
 - `embedded/specs/ARCHITECTURE.md` — System boundaries and tradeoffs
+- `embedded/specs/SYSTEM.md` — Authority and proof doctrine
 - `embedded/core/PLUGINS.md` — Subsystem registry
 - `embedded/plugins/EMERGENCY_PROTOCOL.md` — Critical procedures
-- `.decapod/constitutions/specs/INTENT.md` — Project intent

@@ -1,11 +1,11 @@
-# CLAUDE.md - Decapod Entrypoint for Claude
+# GEMINI.md - Decapod Entrypoint for Gemini
 
-**Canonical:** CLAUDE.md
+**Canonical:** GEMINI.md
 **Authority:** entrypoint
 **Layer:** Guides
-**Binding:** No
+**Binding:** Yes
 
-This is a Decapod-managed repository. **You (Claude) are contractually obligated to use the Decapod toolchain FIRST and ALWAYS.**
+This is a Decapod-managed repository. **You (Gemini) are contractually obligated to use the Decapod toolchain FIRST and ALWAYS.**
 
 ## 🚨 CRITICAL: RUN THESE COMMANDS BEFORE ANY WORK
 
@@ -34,7 +34,7 @@ decapod docs show specs/ARCHITECTURE.md
 
 **IF YOU SKIP THIS SEQUENCE, YOUR WORK IS INVALID AND UNSAFE.**
 
-This entrypoint does not define methodology. All authority defers to the embedded constitution.
+This entrypoint is non-authoritative. DECAPOD.md defines all contracts and patterns.
 
 ## Hard Rules (Non-Negotiable)
 
@@ -165,11 +165,11 @@ See: `decapod docs show plugins/EMERGENCY_PROTOCOL.md`
 
 ## Links
 
-- `embedded/core/DECAPOD.md` — **Authoritative router. READ THIS FIRST.**
-- `embedded/core/CONTROL_PLANE.md` — Your operational contract (binding)
+- `embedded/core/DECAPOD.md` — **Authoritative router. REQUIRED READING.**
+- `embedded/core/CONTROL_PLANE.md` — Sequencing contract
 - `embedded/specs/SYSTEM.md` — Authority and proof doctrine
 - `embedded/specs/INTENT.md` — Authority contracts
 - `embedded/specs/ARCHITECTURE.md` — System boundaries and tradeoffs
 - `embedded/core/PLUGINS.md` — Subsystem registry
 - `embedded/plugins/EMERGENCY_PROTOCOL.md` — Critical procedures
-- `.decapod/constitutions/specs/INTENT.md` — Project-specific contracts
+- `.decapod/constitutions/specs/INTENT.md` — Project intent

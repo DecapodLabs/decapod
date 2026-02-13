@@ -55,7 +55,8 @@ pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
         Ok(())
     })?;
 
-    println!("Knowledge database initialized at {}", db_path.display());
+    use colored::Colorize;
+    println!("  {} Knowledge database ready", "✓".green());
     Ok(())
 }
 

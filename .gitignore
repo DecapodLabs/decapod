@@ -30,9 +30,9 @@ dev/
 # --- Decapod Sidecar (State) ---
 # We never commit local sidecar state or databases
 .decapod/
-AGENTS.md
-GEMINI.md
-CLAUDE.md
+/AGENTS.md
+/GEMINI.md
+/CLAUDE.md
 
 # --- Environment & Secrets ---
 .env

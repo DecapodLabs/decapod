@@ -407,6 +407,42 @@ pub fn run() -> Result<(), error::DecapodError> {
 
     match cli.command {
         Command::Init(init_cli) => {
+            use colored::Colorize;
+
+            // Banner
+            println!();
+            println!(
+                "{}",
+                "╔═══════════════════════════════════════════════════════╗"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "║                                                       ║"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "║        🦀  DECAPOD  -  AGENTIC CONTROL PLANE         ║"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "║                                                       ║"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "╚═══════════════════════════════════════════════════════╝"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!();
+
             let target_dir = match init_cli.dir {
                 Some(d) => d,
                 None => current_dir.clone(),
@@ -418,25 +454,36 @@ pub fn run() -> Result<(), error::DecapodError> {
             let setup_decapod_root = target_dir.join(".decapod");
             if setup_decapod_root.exists() && !init_cli.force {
                 println!(
-                    "'.decapod' directory already exists in {}. Skipping init. Use --force to re-initialize and overwrite.",
-                    target_dir.display()
+                    "  {} '.decapod' directory already exists. Use {} to re-initialize.",
+                    "⚠".yellow(),
+                    "--force".bright_white()
                 );
+                println!();
                 return Ok(());
             }
 
             // Safely backup root AGENTS.md, CLAUDE.md, GEMINI.md if they exist
             if !init_cli.dry_run {
+                let mut backed_up = false;
                 for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md"] {
                     let path = target_dir.join(file);
                     if path.exists() {
+                        if !backed_up {
+                            println!("{}", "  Preserving Existing Files:".bright_white().bold());
+                            backed_up = true;
+                        }
                         let backup_path = target_dir.join(format!("{}.bak", file));
                         fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
                         println!(
-                            "Backed up existing {} to {}",
-                            path.display(),
-                            backup_path.display()
+                            "  {} Backed up {} → {}.bak",
+                            "→".dimmed(),
+                            file,
+                            file.strip_suffix(".md").unwrap_or(file)
                         );
                     }
+                }
+                if backed_up {
+                    println!();
                 }
             }
 
