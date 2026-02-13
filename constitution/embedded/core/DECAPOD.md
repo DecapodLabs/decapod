@@ -109,6 +109,7 @@ Key definitions:
 **Constitution (Guiding Principles) - ABSOLUTE AUTHORITY:**
 - Authority and proof doctrine: `embedded/specs/SYSTEM.md`
 - ⚠️ **METHODOLOGY CONTRACT: `embedded/specs/INTENT.md` — READ THIS FIRST. ALWAYS.**
+- ⚠️ **SECURITY CONTRACT: `embedded/specs/SECURITY.md` — Security philosophy, credential architecture, threat model. READ BEFORE HANDLING CREDENTIALS.**
 - Change control (amendments): `embedded/specs/AMENDMENTS.md`
 - Agent persona/interaction guidelines: `embedded/core/SOUL.md`
 
@@ -167,6 +168,7 @@ All agents operating in this workspace MUST adhere to the following:
 
 ## Links
 
+- `embedded/specs/SECURITY.md` — **Security contract (credential handling, threat model, incident response)**
 - `embedded/plugins/TODO.md` — **TODO subsystem (start here for work tracking)**
 - `embedded/plugins/MANIFEST.md`
 - `embedded/plugins/TODO_USER.md`
