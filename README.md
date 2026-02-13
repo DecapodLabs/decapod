@@ -34,7 +34,7 @@
 </table>
 
 
-Demo video (download, 12MB): **[assets/decapod-demo.mp4](assets/decapod-demo.mp4)**
+Demo video: **[View on GitHub](https://github.com/DecapodLabs/decapod/raw/master/assets/decapod-demo.mp4)** (12MB)
 
 ---
 
