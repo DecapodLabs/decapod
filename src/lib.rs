@@ -723,6 +723,9 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Clean(clean_cli) => {
             clean_project(&clean_cli)?;
         }
+        Command::Check(check_cli) => {
+            run_check(check_cli)?;
+        }
         _ => {
             // For other commands, ensure .decapod exists
             let project_root = decapod_root_option?;
@@ -987,9 +990,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
                 Command::Hook(hook_cli) => {
                     run_hook_install(hook_cli)?;
-                }
-                Command::Check(check_cli) => {
-                    run_check(check_cli)?;
                 }
                 _ => unreachable!(),
             }
