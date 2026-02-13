@@ -1,21 +1,41 @@
-# Security Policy
+# Security
 
-## Supported Versions
+Decapod takes security seriously. This document provides an overview of our security practices and guidance for agents operating within the Decapod environment.
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+## For Agents
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+**Read the constitutional security contract:** [`constitution/embedded/specs/SECURITY.md`](constitution/embedded/specs/SECURITY.md)
 
-## Reporting a Vulnerability
+This document is binding. All agents must follow the security principles outlined therein, including:
+- Credential handling (never log, never commit, always rotate)
+- Git security (signed commits, verified remotes)
+- CI/CD security (OIDC, short-lived tokens)
+- Supply chain integrity (dependency audit, reproducible builds)
 
-Use this section to tell people how to report a vulnerability.
+## Reporting Security Issues
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+For security vulnerabilities in Decapod itself:
+- **Do not** open a public GitHub issue
+- Contact the maintainers directly
+- Provide detailed reproduction steps
+
+## Security Principles Summary
+
+| Principle | Description |
+|-----------|-------------|
+| **Zero Trust** | Never trust, always verify |
+| **Defense in Depth** | Layered controls, assume breach |
+| **Least Privilege** | Minimum access required |
+| **Fail Secure** | Default deny, error toward safety |
+| **Complete Mediation** | Every access checked |
+
+## Credential Handling
+
+When handling credentials as an agent:
+1. **Never** log credentials to any output
+2. **Never** commit credentials to source control
+3. **Always** use environment variables or secrets management
+4. **Always** rotate credentials between sessions
+5. **Always** revoke credentials when work is complete
+
+Violations of these principles are constitutional breaches requiring immediate remediation.
