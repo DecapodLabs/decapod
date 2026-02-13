@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   auto-tag:
@@ -73,3 +74,10 @@ jobs:
           git commit -m "chore: bump version to v${{ steps.bump.outputs.new }}"
           git tag -a "v${{ steps.bump.outputs.new }}" -m "Release v${{ steps.bump.outputs.new }}"
           git push origin ${{ github.head_ref }} --tags
+
+      - name: Auto-merge bump PR
+        if: steps.bump.outputs.new != ''
+        run: |
+          gh pr merge --admin --delete-branch ${{ github.head_ref }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
