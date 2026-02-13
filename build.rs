@@ -5,7 +5,7 @@ use std::path::Path;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-env-changed=DECAPOD_CONSTITUTION_DIR");
     println!("cargo:rerun-if-changed=constitution/embedded");
-    println!("cargo:rerun-if-changed=constitution/templates");
+    println!("cargo:rerun-if-changed=templates");
     println!("cargo:rerun-if-changed=build.rs");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;

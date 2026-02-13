@@ -14,6 +14,7 @@
 
 use crate::core::assets;
 use crate::core::error;
+use colored::Colorize;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -46,8 +47,10 @@ fn write_file(
     if dest.exists() && !opts.force {
         if opts.dry_run {
             println!(
-                "  would-skip: {} (exists; pass --force to overwrite)",
-                dest.display()
+                "  {} {} {}",
+                "○".dimmed(),
+                "would skip".dimmed(),
+                rel_path.dimmed()
             );
             return Ok(());
         }
@@ -58,23 +61,30 @@ fn write_file(
     }
 
     if opts.dry_run {
-        println!("  would-write: {}", dest.display());
+        println!(
+            "  {} {} {}",
+            "○".cyan(),
+            "would create".cyan(),
+            rel_path.cyan()
+        );
         return Ok(());
     }
 
     ensure_parent(&dest)?;
     fs::write(&dest, content).map_err(error::DecapodError::IoError)?;
-    println!("  wrote: {}", dest.display());
+    println!("  {} {}", "✓".green(), rel_path.bright_white());
     Ok(())
 }
 
 pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error::DecapodError> {
     let data_dir_rel = ".decapod/data";
 
-    println!(
-        "Scaffolding Decapod entrypoints into {}",
-        opts.target_dir.display()
-    );
+    // Header
+    println!();
+    println!("{}", "┌─────────────────────────────────────────────┐".cyan());
+    println!("{}", "│  📦 Scaffolding Decapod Project Structure  │".cyan());
+    println!("{}", "└─────────────────────────────────────────────┘".cyan());
+    println!();
 
     // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
     fs::create_dir_all(opts.target_dir.join(data_dir_rel)).map_err(error::DecapodError::IoError)?;
@@ -86,11 +96,29 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     let readme_md = assets::get_template("README.md").expect("Missing template: README.md");
     let override_md = assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
 
+    println!("{}", "  Agent Entrypoints:".bright_white().bold());
     write_file(opts, "AGENTS.md", &agents_md)?;
     write_file(opts, "CLAUDE.md", &claude_md)?;
     write_file(opts, "GEMINI.md", &gemini_md)?;
+
+    println!();
+    println!("{}", "  Decapod Configuration:".bright_white().bold());
     write_file(opts, ".decapod/README.md", &readme_md)?;
     write_file(opts, ".decapod/OVERRIDE.md", &override_md)?;
+
+    // Footer
+    println!();
+    println!("{}", "  ────────────────────────────────────────────".dimmed());
+    println!();
+    println!("  {} Project initialized successfully!", "✓".green().bold());
+    println!();
+    println!("  {} Get started:", "→".cyan().bold());
+    println!("    {} Read the methodology", "•".dimmed());
+    println!("      {}", "decapod docs show core/DECAPOD.md".bright_white());
+    println!();
+    println!("    {} Validate your setup", "•".dimmed());
+    println!("      {}", "decapod validate".bright_white());
+    println!();
 
     // Constitution is embedded in binary - no scaffolding needed.
     // Users customize via OVERRIDE.md (scaffolded above).
