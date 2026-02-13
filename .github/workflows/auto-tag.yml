@@ -34,17 +34,16 @@ jobs:
         id: bump
         run: |
           VERSION="${{ steps.version.outputs.current }}"
-          # Skip if already tagged (avoid double bump)
-          if git tag | grep -q "v$VERSION"; then
-            echo "Already tagged v$VERSION, skipping"
-            echo "new=" >> $GITHUB_OUTPUT
-            exit 0
-          fi
           IFS='.' read -r major minor patch <<< "$VERSION"
           patch=$((patch + 1))
           NEW_VERSION="$major.$minor.$patch"
-          # Ensure v0.1.* range
           NEW_VERSION="0.1.$patch"
+          # Skip if bumped version already tagged
+          if git tag | grep -q "v$NEW_VERSION"; then
+            echo "Already tagged v$NEW_VERSION, skipping"
+            echo "new=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
           echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "New version: $NEW_VERSION"
 
