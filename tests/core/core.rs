@@ -318,3 +318,209 @@ fn schemas_errors_and_validate_entrypoint_are_exercised() {
     let result = validate::run_validation(&store, repo.path(), repo.path());
     assert!(result.is_err());
 }
+
+#[test]
+fn override_md_extraction_and_merging() {
+    let tmp = tempdir().expect("tempdir");
+    let root = tmp.path();
+
+    // Create .decapod directory
+    fs::create_dir_all(root.join(".decapod")).expect("mkdir .decapod");
+
+    // Create OVERRIDE.md with test overrides
+    let override_content = r#"# OVERRIDE.md - Project-Specific Decapod Overrides
+
+---
+
+<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
+
+## Core Overrides
+
+### core/DECAPOD.md
+
+## Custom Navigation
+
+This is a test override for DECAPOD.md
+
+### core/CONTROL_PLANE.md
+
+## Custom Control Plane
+
+This is a test override for CONTROL_PLANE.md
+
+---
+
+## Plugin Overrides
+
+### plugins/TODO.md
+
+## Custom TODO Priorities
+
+- critical
+- high
+- medium
+"#;
+
+    fs::write(root.join(".decapod/OVERRIDE.md"), override_content)
+        .expect("write OVERRIDE.md");
+
+    // Test override extraction for specific components
+    let decapod_override = assets::get_override_doc(root, "core/DECAPOD.md");
+    assert!(decapod_override.is_some());
+    assert!(decapod_override.unwrap().contains("Custom Navigation"));
+
+    let control_plane_override = assets::get_override_doc(root, "core/CONTROL_PLANE.md");
+    assert!(control_plane_override.is_some());
+    assert!(control_plane_override.unwrap().contains("Custom Control Plane"));
+
+    let todo_override = assets::get_override_doc(root, "plugins/TODO.md");
+    assert!(todo_override.is_some());
+    assert!(todo_override.unwrap().contains("Custom TODO Priorities"));
+
+    // Test that non-existent override returns None
+    let missing_override = assets::get_override_doc(root, "plugins/NONEXISTENT.md");
+    assert!(missing_override.is_none());
+
+    // Test merged document (embedded + override)
+    let merged_todo = assets::get_merged_doc(root, "plugins/TODO.md");
+    assert!(merged_todo.is_some());
+    let merged_content = merged_todo.unwrap();
+    // Should contain both embedded content and override
+    assert!(merged_content.contains("## Project Overrides"));
+    assert!(merged_content.contains("Custom TODO Priorities"));
+}
+
+#[test]
+fn override_md_checksum_caching() {
+    let tmp = tempdir().expect("tempdir");
+    let root = tmp.path();
+
+    // Create .decapod/generated directory
+    fs::create_dir_all(root.join(".decapod/generated")).expect("mkdir generated");
+
+    // Create OVERRIDE.md
+    let override_content_v1 = "# Test OVERRIDE.md v1\n\nContent version 1";
+    fs::write(root.join(".decapod/OVERRIDE.md"), override_content_v1)
+        .expect("write OVERRIDE.md v1");
+
+    // Calculate checksum manually
+    use sha2::{Digest, Sha256};
+    let hash_v1 = Sha256::digest(override_content_v1.as_bytes());
+    let checksum_v1 = format!("{:x}", hash_v1);
+
+    // Cache the checksum
+    fs::write(
+        root.join(".decapod/generated/override.checksum"),
+        &checksum_v1,
+    )
+    .expect("write checksum v1");
+
+    // Read cached checksum
+    let cached = fs::read_to_string(root.join(".decapod/generated/override.checksum"))
+        .expect("read cached checksum");
+    assert_eq!(cached, checksum_v1);
+
+    // Modify OVERRIDE.md
+    let override_content_v2 = "# Test OVERRIDE.md v2\n\nContent version 2 (changed)";
+    fs::write(root.join(".decapod/OVERRIDE.md"), override_content_v2)
+        .expect("write OVERRIDE.md v2");
+
+    // Calculate new checksum
+    let hash_v2 = Sha256::digest(override_content_v2.as_bytes());
+    let checksum_v2 = format!("{:x}", hash_v2);
+
+    // Verify checksums are different
+    assert_ne!(checksum_v1, checksum_v2);
+
+    // Update cache
+    fs::write(
+        root.join(".decapod/generated/override.checksum"),
+        &checksum_v2,
+    )
+    .expect("write checksum v2");
+
+    // Verify cache updated
+    let cached_v2 = fs::read_to_string(root.join(".decapod/generated/override.checksum"))
+        .expect("read cached checksum v2");
+    assert_eq!(cached_v2, checksum_v2);
+}
+
+#[test]
+fn override_md_empty_sections_return_none() {
+    let tmp = tempdir().expect("tempdir");
+    let root = tmp.path();
+
+    fs::create_dir_all(root.join(".decapod")).expect("mkdir .decapod");
+
+    // Create OVERRIDE.md with empty sections
+    let override_content = r#"# OVERRIDE.md
+
+<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
+
+## Core Overrides
+
+### core/DECAPOD.md
+
+### core/CONTROL_PLANE.md
+
+Some content here
+
+### core/PLUGINS.md
+"#;
+
+    fs::write(root.join(".decapod/OVERRIDE.md"), override_content)
+        .expect("write OVERRIDE.md");
+
+    // Empty section should return None
+    let empty_override = assets::get_override_doc(root, "core/DECAPOD.md");
+    assert!(empty_override.is_none());
+
+    // Non-empty section should return Some
+    let non_empty_override = assets::get_override_doc(root, "core/CONTROL_PLANE.md");
+    assert!(non_empty_override.is_some());
+    assert!(non_empty_override.unwrap().contains("Some content here"));
+
+    // Empty section at end should return None
+    let end_empty_override = assets::get_override_doc(root, "core/PLUGINS.md");
+    assert!(end_empty_override.is_none());
+}
+
+#[test]
+fn override_md_ignores_template_examples() {
+    let tmp = tempdir().expect("tempdir");
+    let root = tmp.path();
+
+    fs::create_dir_all(root.join(".decapod")).expect("mkdir .decapod");
+
+    // Create OVERRIDE.md with examples in the header (before the marker)
+    let override_content = r#"# OVERRIDE.md
+
+## How to Use
+
+Example:
+
+```markdown
+### plugins/TODO.md
+
+This is just an example in the instructions
+```
+
+<!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
+
+## Plugin Overrides
+
+### plugins/TODO.md
+
+This is the ACTUAL override content
+"#;
+
+    fs::write(root.join(".decapod/OVERRIDE.md"), override_content)
+        .expect("write OVERRIDE.md");
+
+    // Should extract the actual override, not the example
+    let override_doc = assets::get_override_doc(root, "plugins/TODO.md");
+    assert!(override_doc.is_some());
+    let content = override_doc.unwrap();
+    assert!(content.contains("ACTUAL override content"));
+    assert!(!content.contains("just an example"));
+}

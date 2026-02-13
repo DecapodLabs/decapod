@@ -81,35 +81,53 @@ pub fn get_doc(path: &str) -> Option<String> {
     get_embedded_doc(path)
 }
 
-/// Get only the override document from .decapod/constitution/
+/// Get only the override document from .decapod/OVERRIDE.md for a specific component
 pub fn get_override_doc(repo_root: &Path, relative_path: &str) -> Option<String> {
-    let override_path = repo_root
-        .join(".decapod")
-        .join("constitution")
-        .join(relative_path);
+    let override_path = repo_root.join(".decapod").join("OVERRIDE.md");
 
-    if override_path.exists() {
-        std::fs::read_to_string(&override_path).ok()
-    } else {
+    if !override_path.exists() {
+        return None;
+    }
+
+    let override_content = std::fs::read_to_string(&override_path).ok()?;
+    extract_component_override(&override_content, relative_path)
+}
+
+/// Extract a specific component's override content from OVERRIDE.md
+fn extract_component_override(override_content: &str, component_path: &str) -> Option<String> {
+    // Only look after the "CHANGES ARE NOT PERMITTED ABOVE THIS LINE" marker
+    let override_start = override_content.find("CHANGES ARE NOT PERMITTED ABOVE THIS LINE")?;
+    let searchable_content = &override_content[override_start..];
+
+    // Look for the section heading: ### core/DECAPOD.md (or other path)
+    let section_marker = format!("\n### {}", component_path);
+
+    let start = searchable_content.find(&section_marker)?;
+    let content_start = start + section_marker.len();
+
+    // Find the next ### heading or end of file
+    let content_after = &searchable_content[content_start..];
+    let end = content_after.find("\n### ")
+        .map(|pos| content_start + pos)
+        .unwrap_or(searchable_content.len());
+
+    let extracted = searchable_content[content_start..end].trim();
+
+    if extracted.is_empty() {
         None
+    } else {
+        Some(extracted.to_string())
     }
 }
 
-/// Get merged document (embedded base + optional project override)
+/// Get merged document (embedded base + optional project override from OVERRIDE.md)
 pub fn get_merged_doc(repo_root: &Path, relative_path: &str) -> Option<String> {
     // Get embedded base
     let embedded_content = get_embedded_doc(relative_path)?;
 
-    // Check for override
-    let override_path = repo_root
-        .join(".decapod")
-        .join("constitution")
-        .join(relative_path);
-
-    if override_path.exists() {
-        if let Ok(override_content) = std::fs::read_to_string(&override_path) {
-            return Some(merge_override_content(&embedded_content, &override_content));
-        }
+    // Check for component-specific override in .decapod/OVERRIDE.md
+    if let Some(override_content) = get_override_doc(repo_root, relative_path) {
+        return Some(merge_override_content(&embedded_content, &override_content));
     }
 
     Some(embedded_content)
@@ -117,19 +135,11 @@ pub fn get_merged_doc(repo_root: &Path, relative_path: &str) -> Option<String> {
 
 /// Merge embedded content with override additions
 fn merge_override_content(embedded_content: &str, override_content: &str) -> String {
-    let overrides_section = if let Some(start) = override_content.find("## Overrides") {
-        &override_content[start..]
-    } else {
-        override_content
-    };
-
-    let embedded_main = if let Some(start) = embedded_content.find("---") {
-        embedded_content[start..].trim()
-    } else {
-        embedded_content.trim()
-    };
-
-    format!("{}\n\n{}", embedded_main, overrides_section)
+    format!(
+        "{}\n\n---\n\n## Project Overrides\n\n{}",
+        embedded_content.trim(),
+        override_content.trim()
+    )
 }
 
 // Templates for user overrides (embedded for scaffolding)
