@@ -200,13 +200,19 @@ fn calculate_sha256(path: &Path) -> Result<String, error::DecapodError> {
 
 /// Get cached checksum for OVERRIDE.md
 fn get_cached_checksum(repo_root: &Path) -> Option<String> {
-    let checksum_path = repo_root.join(".decapod").join("generated").join("override.checksum");
+    let checksum_path = repo_root
+        .join(".decapod")
+        .join("generated")
+        .join("override.checksum");
     std::fs::read_to_string(checksum_path).ok()
 }
 
 /// Cache checksum for OVERRIDE.md
 fn cache_checksum(repo_root: &Path, checksum: &str) -> Result<(), error::DecapodError> {
-    let checksum_path = repo_root.join(".decapod").join("generated").join("override.checksum");
+    let checksum_path = repo_root
+        .join(".decapod")
+        .join("generated")
+        .join("override.checksum");
     // Ensure generated directory exists
     if let Some(parent) = checksum_path.parent() {
         std::fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;

@@ -107,7 +107,8 @@ fn extract_component_override(override_content: &str, component_path: &str) -> O
 
     // Find the next ### heading or end of file
     let content_after = &searchable_content[content_start..];
-    let end = content_after.find("\n### ")
+    let end = content_after
+        .find("\n### ")
         .map(|pos| content_start + pos)
         .unwrap_or(searchable_content.len());
 
