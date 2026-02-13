@@ -12,6 +12,15 @@
     <a href="https://crates.io/crates/decapod"><img alt="Crates.io" src="https://img.shields.io/crates/v/decapod.svg"></a>
   </p>
 
+  <video
+    src="assets/decapod-demo.mp4"
+    controls
+    muted
+    playsinline
+    preload="metadata"
+    width="900">
+  </video>
+
   <p>
     <strong>Local-first · Repo-native · Built in Rust 🦀</strong>
   </p>

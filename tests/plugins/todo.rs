@@ -16,6 +16,7 @@ fn test_todo_lifecycle() {
     // 1. Add task
     let add_args = TodoCommand::Add {
         title: "Test task".to_string(),
+        description: "".to_string(),
         tags: "tag1".to_string(),
         owner: "arx".to_string(),
         due: None,
@@ -60,6 +61,7 @@ fn test_todo_rebuild() {
     for i in 0..3 {
         let add_args = TodoCommand::Add {
             title: format!("Task {}", i),
+            description: "".to_string(),
             tags: "".to_string(),
             owner: "".to_string(),
             due: None,
