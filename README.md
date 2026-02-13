@@ -51,6 +51,18 @@ That's it. `decapod init` creates (and backs up existing) `CLAUDE.md`, `AGENTS.m
 
 ---
 
+## Security
+
+Decapod is designed with security at the foundation. See [`SECURITY.md`](SECURITY.md) for:
+- Credential architecture and lifecycle management
+- Agent identity and session security
+- Supply chain integrity
+- Incident response philosophy
+
+**TL;DR:** Agents must handle credentials securely—never log, never commit, always rotate. Violations are constitutional breaches.
+
+---
+
 ## The Problem
 
 AI lowers the barrier to *writing* code—but shipping code is still hard.
