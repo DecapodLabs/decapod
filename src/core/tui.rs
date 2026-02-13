@@ -51,7 +51,7 @@ pub fn terminal_width() -> usize {
 }
 
 fn effective_width() -> usize {
-    terminal_width().max(MIN_BOX_WIDTH).min(MAX_BOX_WIDTH)
+    terminal_width().clamp(MIN_BOX_WIDTH, MAX_BOX_WIDTH)
 }
 
 fn indent() -> usize {

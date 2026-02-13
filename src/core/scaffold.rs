@@ -114,9 +114,7 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     // If --all flag is set, force generate all three regardless of existing state
     // If agent_files is empty, generate all three
     // If agent_files has entries, only generate those
-    let files_to_generate = if opts.all {
-        vec!["AGENTS.md", "CLAUDE.md", "GEMINI.md"]
-    } else if opts.agent_files.is_empty() {
+    let files_to_generate = if opts.all || opts.agent_files.is_empty() {
         vec!["AGENTS.md", "CLAUDE.md", "GEMINI.md"]
     } else {
         opts.agent_files.iter().map(|s| s.as_str()).collect()
