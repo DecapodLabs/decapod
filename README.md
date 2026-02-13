@@ -138,10 +138,12 @@ You: Review summary and merge
 │  Embedded Constitution (methodology)    │  ← Contracts, not tips
 └──────────────────────────────────────────┘
 
-Storage: .decapod/
-├── data/         # State (agents write via control surface)
-├── generated/    # Entrypoints + derived files (auto-managed)
-└── OVERRIDE.md   # Your repo's policy/conventions
+Storage:
+<your-project>/
+└── .decapod/
+    ├── data/         # State (agents write via control surface)
+    ├── generated/    # Entrypoints + derived files (auto-managed)
+    └── OVERRIDE.md   # Your repo's policy/conventions
 ```
 
 You don’t touch `.decapod/data/` directly. Agents use the control surface. Like neurons—they’re there, they work, you don’t manipulate them individually.
