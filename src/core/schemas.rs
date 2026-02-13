@@ -47,7 +47,7 @@ pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
 /// TODO database schema version
 ///
 /// Used for migration tracking in the `meta` table
-pub const TODO_SCHEMA_VERSION: u32 = 2;
+pub const TODO_SCHEMA_VERSION: u32 = 3;
 
 /// TODO metadata table schema
 ///
@@ -80,7 +80,8 @@ pub const TODO_DB_SCHEMA_TASKS: &str = "
         parent_task_id TEXT,
         priority TEXT DEFAULT 'medium',
         depends_on TEXT DEFAULT '',
-        blocks TEXT DEFAULT ''
+        blocks TEXT DEFAULT '',
+        category TEXT DEFAULT ''
     )
 ";
 
