@@ -141,9 +141,9 @@ You: Review summary and merge
 Storage:
 <your-project>/
 └── .decapod/
-    ├── data/         # State (agents write via control surface)
-    ├── generated/    # Entrypoints + derived files (auto-managed)
-    └── OVERRIDE.md   # Your repo's policy/conventions
+    ├── data/         # State (agents write via control surface)     !! DO NOT TOUCH
+    ├── generated/    # Entrypoints + derived files (auto-managed)   !! DO NOT TOUCH
+    └── OVERRIDE.md   # Edit this file to manually override any constitution contract layer. 
 ```
 
 You don’t touch `.decapod/data/` directly. Agents use the control surface. Like neurons—they’re there, they work, you don’t manipulate them individually.
