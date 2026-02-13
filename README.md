@@ -11,7 +11,9 @@
     <a href="https://github.com/DecapodLabs/decapod/actions"><img alt="CI" src="https://github.com/DecapodLabs/decapod/actions/workflows/ci.yml/badge.svg"></a>
     <a href="https://crates.io/crates/decapod"><img alt="Crates.io" src="https://img.shields.io/crates/v/decapod.svg"></a>
   </p>
+</div>
 
+<div align="center">
   <video
     src="assets/decapod-demo.mp4"
     controls
@@ -20,10 +22,16 @@
     preload="metadata"
     width="900">
   </video>
+</div>
+
+<div align="center">
+
+▶️ **Demo video:** [assets/decapod-demo.mp4](assets/decapod-demo.mp4)
 
   <p>
     <strong>Local-first · Repo-native · Built in Rust 🦀</strong>
   </p>
+
 </div>
 
 ---
