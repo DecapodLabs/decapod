@@ -46,12 +46,7 @@ fn write_file(
 
     if dest.exists() && !opts.force {
         if opts.dry_run {
-            println!(
-                "  {} {} {}",
-                "○".dimmed(),
-                "would skip".dimmed(),
-                rel_path.dimmed()
-            );
+            println!("    {} {}", "○".bright_black(), rel_path.bright_black());
             return Ok(());
         }
         return Err(error::DecapodError::ValidationError(format!(
@@ -61,37 +56,42 @@ fn write_file(
     }
 
     if opts.dry_run {
-        println!(
-            "  {} {} {}",
-            "○".cyan(),
-            "would create".cyan(),
-            rel_path.cyan()
-        );
+        println!("    {} {}", "◉".bright_cyan(), rel_path.bright_white());
         return Ok(());
     }
 
     ensure_parent(&dest)?;
     fs::write(&dest, content).map_err(error::DecapodError::IoError)?;
-    println!("  {} {}", "✓".green(), rel_path.bright_white());
+
+    // Fancy checkmark with gradient effect
+    println!("    {} {}", "●".bright_green(), rel_path.bright_white());
     Ok(())
 }
 
 pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error::DecapodError> {
     let data_dir_rel = ".decapod/data";
 
-    // Header
+    // ALIEN SCAFFOLD PROTOCOL
     println!();
     println!(
-        "{}",
-        "┌─────────────────────────────────────────────┐".cyan()
+        "        {}",
+        "╔═══════════════════════════════════════════╗"
+            .bright_magenta()
+            .bold()
     );
     println!(
-        "{}",
-        "│  📦 Scaffolding Decapod Project Structure  │".cyan()
+        "        {} {} {}",
+        "║".bright_magenta().bold(),
+        "📦 PROJECT STRUCTURE SYNTHESIS 📦     "
+            .bright_white()
+            .bold(),
+        "║".bright_magenta().bold()
     );
     println!(
-        "{}",
-        "└─────────────────────────────────────────────┘".cyan()
+        "        {}",
+        "╚═══════════════════════════════════════════╝"
+            .bright_magenta()
+            .bold()
     );
     println!();
 
@@ -105,34 +105,55 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     let readme_md = assets::get_template("README.md").expect("Missing template: README.md");
     let override_md = assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
 
-    println!("{}", "  Agent Entrypoints:".bright_white().bold());
+    // AGENT ENTRYPOINTS - Neural Interfaces
+    println!("          {}", "▼ AGENT ENTRYPOINTS".bright_cyan().bold());
+    println!();
     write_file(opts, "AGENTS.md", &agents_md)?;
     write_file(opts, "CLAUDE.md", &claude_md)?;
     write_file(opts, "GEMINI.md", &gemini_md)?;
 
     println!();
-    println!("{}", "  Decapod Configuration:".bright_white().bold());
+    println!(
+        "          {}",
+        "▼ CONTROL PLANE CONFIGURATION".bright_cyan().bold()
+    );
+    println!();
     write_file(opts, ".decapod/README.md", &readme_md)?;
     write_file(opts, ".decapod/OVERRIDE.md", &override_md)?;
 
-    // Footer
+    // SUCCESS - System Online
     println!();
     println!(
-        "{}",
-        "  ────────────────────────────────────────────".dimmed()
+        "        {}",
+        "╔═══════════════════════════════════════════╗"
+            .bright_green()
+            .bold()
     );
-    println!();
-    println!("  {} Project initialized successfully!", "✓".green().bold());
-    println!();
-    println!("  {} Get started:", "→".cyan().bold());
-    println!("    {} Read the methodology", "•".dimmed());
     println!(
-        "      {}",
-        "decapod docs show core/DECAPOD.md".bright_white()
+        "        {} {} {}",
+        "║".bright_green().bold(),
+        "✨ CONTROL PLANE OPERATIONAL ✨       "
+            .bright_white()
+            .bold(),
+        "║".bright_green().bold()
+    );
+    println!(
+        "        {}",
+        "╚═══════════════════════════════════════════╝"
+            .bright_green()
+            .bold()
     );
     println!();
-    println!("    {} Validate your setup", "•".dimmed());
-    println!("      {}", "decapod validate".bright_white());
+    println!(
+        "          {} System ready for agentic workflows",
+        "▸".bright_green()
+    );
+    println!(
+        "          {} Neural interfaces: {}",
+        "▸".bright_green(),
+        "AGENTS.md | CLAUDE.md | GEMINI.md".bright_cyan()
+    );
+    println!();
     println!();
 
     // Constitution is embedded in binary - no scaffolding needed.
