@@ -389,7 +389,7 @@ fn validate_docs_templates_bucket(
     info("Entrypoint Gate");
 
     // Entrypoints MUST be in the project root
-    let required = ["AGENTS.md", "CLAUDE.md", "GEMINI.md"];
+    let required = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"];
     for a in required {
         let p = decapod_dir.join(a);
         if p.is_file() {
@@ -431,6 +431,61 @@ fn validate_docs_templates_bucket(
         );
     } else {
         pass(".decapod/projects/ correctly absent", pass_count);
+    }
+
+    Ok(())
+}
+
+fn validate_entrypoint_invariants(
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+    decapod_dir: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Four Invariants Gate");
+
+    // Check AGENTS.md for the four invariants
+    let agents_path = decapod_dir.join("AGENTS.md");
+    if !agents_path.is_file() {
+        fail("AGENTS.md missing, cannot check invariants", fail_count);
+        return Ok(());
+    }
+
+    let content = fs::read_to_string(&agents_path).map_err(error::DecapodError::IoError)?;
+
+    // Invariant markers to look for
+    let invariants = [
+        ("core/DECAPOD.md", "Router pointer to core/DECAPOD.md"),
+        ("decapod validate", "Validation gate language"),
+        ("Stop if", "Stop-if-missing behavior"),
+        ("✅", "Four invariants checklist format"),
+    ];
+
+    let mut all_present = true;
+    for (marker, description) in invariants {
+        if content.contains(marker) {
+            pass(&format!("Invariant present: {}", description), pass_count);
+        } else {
+            fail(&format!("Invariant missing: {}", description), fail_count);
+            all_present = false;
+        }
+    }
+
+    // Check that agent-specific files defer to AGENTS.md
+    for agent_file in ["CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"] {
+        let agent_path = decapod_dir.join(agent_file);
+        if agent_path.is_file() {
+            let agent_content = fs::read_to_string(&agent_path).map_err(error::DecapodError::IoError)?;
+            if agent_content.contains("See `AGENTS.md`") || agent_content.contains("AGENTS.md") {
+                pass(&format!("{} defers to AGENTS.md", agent_file), pass_count);
+            } else {
+                fail(&format!("{} does not reference AGENTS.md", agent_file), fail_count);
+                all_present = false;
+            }
+        }
+    }
+
+    if all_present {
+        pass("All entrypoint files follow thin waist architecture", pass_count);
     }
 
     Ok(())
@@ -935,6 +990,7 @@ pub fn run_validation(
     validate_no_legacy_namespaces(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_embedded_self_contained(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_docs_templates_bucket(&mut pass_count, &mut fail_count, decapod_dir)?;
+    validate_entrypoint_invariants(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_health_purity(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_project_scoped_state(store, &mut pass_count, &mut fail_count, decapod_dir)?;
     validate_schema_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
