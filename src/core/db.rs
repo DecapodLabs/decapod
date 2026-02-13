@@ -56,7 +56,11 @@ pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
     })?;
 
     use colored::Colorize;
-    println!("  {} Knowledge database ready", "✓".green());
+    println!(
+        "    {} {}",
+        "●".bright_green(),
+        "Knowledge database".bright_white()
+    );
     Ok(())
 }
 
