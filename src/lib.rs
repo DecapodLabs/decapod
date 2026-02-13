@@ -84,8 +84,8 @@ use core::{
     validate,
 };
 use plugins::{
-    archive, context, cron, feedback, health, heartbeat, knowledge, policy, reflex, todo, trust,
-    watcher,
+    archive, context, cron, feedback, health, heartbeat, knowledge, policy, reflex, teammate, todo,
+    trust, watcher,
 };
 
 use clap::{Parser, Subcommand};
@@ -173,6 +173,8 @@ enum Command {
     Archive(ArchiveCli),
     /// Manage operator feedback and preference refinement
     Feedback(FeedbackCli),
+    /// Manage teammate preferences and remembered behaviors
+    Teammate(teammate::TeammateCli),
     /// Run configurable proofs with audit trail
     Proof(ProofCommandCli),
     /// Run an end-to-end usability verification (simulates fresh install)
@@ -609,6 +611,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     ("policy.db", setup_store_root.join("policy.db")),
                     ("archive.db", setup_store_root.join("archive.db")),
                     ("feedback.db", setup_store_root.join("feedback.db")),
+                    ("teammate.db", setup_store_root.join("teammate.db")),
                 ];
 
                 for (db_name, db_path) in dbs {
@@ -629,6 +632,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             "policy.db" => policy::initialize_policy_db(&setup_store_root)?,
                             "archive.db" => archive::initialize_archive_db(&setup_store_root)?,
                             "feedback.db" => feedback::initialize_feedback_db(&setup_store_root)?,
+                            "teammate.db" => teammate::initialize_teammate_db(&setup_store_root)?,
                             _ => unreachable!(),
                         }
                         println!("    {} {}", "●".bright_green(), db_name.bright_white());
@@ -817,6 +821,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     schemas.insert("trust", trust::schema());
                     schemas.insert("archive", archive::schema());
                     schemas.insert("feedback", feedback::schema());
+                    schemas.insert("teammate", teammate::schema());
                     schemas.insert("docs", docs_cli::schema());
 
                     let output = if let Some(sub) = schema_cli.subsystem {
@@ -946,6 +951,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                             println!("{}", proposal);
                         }
                     }
+                }
+                Command::Teammate(tm_cli) => {
+                    teammate::run_teammate_cli(&project_store, tm_cli)?;
                 }
                 Command::Verify => {
                     run_verification()?;
