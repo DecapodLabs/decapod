@@ -897,38 +897,10 @@ pub fn run_validation(
 ) -> Result<(), error::DecapodError> {
     use colored::Colorize;
     println!();
-    println!(
-        "  {}",
-        "╔═══════════════════════════════════════════════════════════╗"
-            .bright_magenta()
-            .bold()
-    );
-    println!(
-        "  {}",
-        "║                                                           ║"
-            .bright_magenta()
-            .bold()
-    );
-    println!(
-        "  {} {} {}",
-        "║".bright_magenta().bold(),
-        "   Intent-Driven Methodology - Proof Harness   "
-            .bright_white()
-            .bold(),
-        "║".bright_magenta().bold()
-    );
-    println!(
-        "  {}",
-        "║                                                           ║"
-            .bright_magenta()
-            .bold()
-    );
-    println!(
-        "  {}",
-        "╚═══════════════════════════════════════════════════════════╝"
-            .bright_magenta()
-            .bold()
-    );
+    println!("      {}", "╔═══════════════════════════════════════════════╗".bright_magenta().bold());
+    println!("      {} {} {}", "║".bright_magenta().bold(), "⚡ PROOF HARNESS - VALIDATION PROTOCOL ⚡  ".bright_white().bold(), "║".bright_magenta().bold());
+    println!("      {} {} {}", "║".bright_magenta().bold(), "   Intent-Driven Methodology Enforcement  ".bright_cyan(), "║".bright_magenta().bold());
+    println!("      {}", "╚═══════════════════════════════════════════════╝".bright_magenta().bold());
     println!();
 
     // Directly get content from embedded assets
