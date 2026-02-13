@@ -47,7 +47,7 @@ pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
 /// TODO database schema version
 ///
 /// Used for migration tracking in the `meta` table
-pub const TODO_SCHEMA_VERSION: u32 = 1;
+pub const TODO_SCHEMA_VERSION: u32 = 2;
 
 /// TODO metadata table schema
 ///
@@ -103,6 +103,24 @@ pub const TODO_DB_SCHEMA_INDEX_DIR: &str =
     "CREATE INDEX IF NOT EXISTS idx_tasks_dir ON tasks(dir_path)";
 pub const TODO_DB_SCHEMA_INDEX_EVENTS_TASK: &str =
     "CREATE INDEX IF NOT EXISTS idx_events_task ON task_events(task_id)";
+
+/// Task categories table schema
+///
+/// Predefined categories that agents can claim ownership of:
+/// - Software lifecycle: features, bugs, docs, ci, refactor, tests, security, performance
+/// - By subsystem: backend, frontend, api, database, infra, tooling, ux
+pub const TODO_DB_SCHEMA_CATEGORIES: &str = "
+    CREATE TABLE IF NOT EXISTS categories (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        description TEXT DEFAULT '',
+        keywords TEXT DEFAULT '',
+        created_at TEXT NOT NULL
+    )
+";
+
+pub const TODO_DB_SCHEMA_INDEX_CATEGORY_NAME: &str =
+    "CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name)";
 
 // --- Cron ---
 pub const CRON_DB_NAME: &str = "cron.db";

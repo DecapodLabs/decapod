@@ -224,7 +224,7 @@ fn schemas_errors_and_validate_entrypoint_are_exercised() {
     assert_eq!(schemas::KNOWLEDGE_DB_NAME, "knowledge.db");
     assert_eq!(schemas::TODO_DB_NAME, "todo.db");
     assert_eq!(schemas::TODO_EVENTS_NAME, "todo.events.jsonl");
-    assert_eq!(schemas::TODO_SCHEMA_VERSION, 1);
+    assert_eq!(schemas::TODO_SCHEMA_VERSION, 2);
     assert!(!schemas::TODO_DB_SCHEMA_META.trim().is_empty());
     assert!(!schemas::TODO_DB_SCHEMA_TASKS.trim().is_empty());
     assert!(!schemas::TODO_DB_SCHEMA_TASK_EVENTS.trim().is_empty());
