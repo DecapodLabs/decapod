@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master ]
 
+permissions:
+  contents: write
+
 # Cancel in-progress runs for massive time savings
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -78,18 +81,7 @@ jobs:
           if git diff --quiet Cargo.lock; then
             echo "✅ Cargo.lock is up to date"
           else
-            echo "📦 Cargo.lock was updated"
-          fi
-
-      - name: Commit updated Cargo.lock
-        if: "!contains(github.event.head_commit.message, '[skip ci]')"
-        run: |
-          if ! git diff --quiet Cargo.lock; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add Cargo.lock
-            git commit -m "chore: auto-update Cargo.lock [skip ci]"
-            git push
+            echo "📦 Cargo.lock was updated - commit manually before merge"
           fi
 
   # LINT: Format + Clippy
