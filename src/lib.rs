@@ -510,12 +510,37 @@ pub fn run() -> Result<(), error::DecapodError> {
                 return Ok(());
             }
 
-            // Safely backup root AGENTS.md, CLAUDE.md, GEMINI.md if they exist
+            // Check which agent files exist and track which ones to generate
+            use sha2::{Digest, Sha256};
+            let mut existing_agent_files = vec![];
+            for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md"] {
+                if target_dir.join(file).exists() {
+                    existing_agent_files.push(file);
+                }
+            }
+
+            // Safely backup root AGENTS.md, CLAUDE.md, GEMINI.md if they exist and differ from templates
             if !init_cli.dry_run {
                 let mut backed_up = false;
-                for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md"] {
+                for file in &existing_agent_files {
                     let path = target_dir.join(file);
-                    if path.exists() {
+
+                    // Get template content for this file
+                    let template_content = core::assets::get_template(file).unwrap_or_default();
+
+                    // Compute template checksum
+                    let mut hasher = Sha256::new();
+                    hasher.update(template_content.as_bytes());
+                    let template_hash = format!("{:x}", hasher.finalize());
+
+                    // Compute existing file checksum
+                    let existing_content = fs::read_to_string(&path).unwrap_or_default();
+                    let mut hasher = Sha256::new();
+                    hasher.update(existing_content.as_bytes());
+                    let existing_hash = format!("{:x}", hasher.finalize());
+
+                    // Only backup if checksums differ
+                    if template_hash != existing_hash {
                         if !backed_up {
                             println!(
                                 "        {}",
@@ -597,6 +622,10 @@ pub fn run() -> Result<(), error::DecapodError> {
                 target_dir,
                 force: init_cli.force,
                 dry_run: init_cli.dry_run,
+                agent_files: existing_agent_files
+                    .into_iter()
+                    .map(|s| s.to_string())
+                    .collect(),
             })?;
 
             // Write version file for migration tracking
