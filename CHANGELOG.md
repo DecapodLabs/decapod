@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/DecapodLabs/decapod/compare/v0.2.0...v0.2.1) - 2026-02-13
+
+### Added
+
+- deploy all 5 agent entrypoints and enforce 4 invariants
+- rewrite agent entrypoints as engineering organization metaphor
+
+### Fixed
+
+- rewrite agent entrypoints as thin routing shims
+
+### Other
+
+- untrack generated entrypoint files
+- run cargo fmt for consistent formatting
+
 ## [0.2.0](https://github.com/DecapodLabs/decapod/compare/v0.1.18...v0.2.0) - 2026-02-13
 
 ### Added
