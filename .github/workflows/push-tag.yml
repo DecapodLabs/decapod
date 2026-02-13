@@ -1,0 +1,33 @@
+name: Push Tag on Merge
+
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
+
+permissions:
+  contents: write
+
+jobs:
+  push-tag:
+    name: Push Tag on Merge
+    runs-on: ubuntu-latest
+    if: github.repository == 'DecapodLabs/decapod' && github.event.pull_request.merged == true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get latest tag
+        run: |
+          git fetch --tags origin master
+          TAG=$(git describe --tags --abbrev=0 origin/master 2>/dev/null || echo "")
+          if [ -n "$TAG" ]; then
+            echo "Found tag: $TAG"
+            git push origin "$TAG"
+          else
+            echo "No tags found"
+          fi

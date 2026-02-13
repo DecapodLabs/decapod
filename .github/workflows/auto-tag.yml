@@ -1,61 +1,75 @@
-name: Auto Tag on Merge
+name: Auto Tag on PR
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - '**'
+  pull_request:
+    types:
+      - opened
+      - synchronize
 
 permissions:
   contents: write
 
 jobs:
   auto-tag:
-    name: Auto Tag on Merge
+    name: Auto Tag on PR
     runs-on: ubuntu-latest
     if: github.repository == 'DecapodLabs/decapod'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get current version
-        id: version
+      - name: Get PR version
+        id: pr_version
         run: |
           VERSION=$(grep '^version =' Cargo.toml | head -n 1 | cut -d '"' -f 2)
-          echo "current=$VERSION" >> $GITHUB_OUTPUT
-          echo "Current version: $VERSION"
+          echo "pr=$VERSION" >> $GITHUB_OUTPUT
+          echo "PR version: $VERSION"
 
-      - name: Bump patch version
+      - name: Get master version
+        id: master_version
+        run: |
+          git fetch origin master:master
+          MASTER_VERSION=$(git show master:Cargo.toml | grep '^version =' | head -n 1 | cut -d '"' -f 2)
+          echo "master=$MASTER_VERSION" >> $GITHUB_OUTPUT
+          echo "Master version: $MASTER_VERSION"
+
+      - name: Bump and tag
         id: bump
         run: |
-          VERSION="${{ steps.version.outputs.current }}"
-          IFS='.' read -r major minor patch <<< "$VERSION"
+          PR_VER="${{ steps.pr_version.outputs.pr }}"
+          MASTER_VER="${{ steps.master_version.outputs.master }}"
+          
+          # Skip if PR version > master (already bumped)
+          if [ "$(printf '%s\n' "$MASTER_VER" "$PR_VER" | sort -V | head -n1)" = "$PR_VER" ] && [ "$PR_VER" != "$MASTER_VER" ]; then
+            echo "PR version $PR_VER > master $MASTER_VER, skipping"
+            echo "new=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          IFS='.' read -r major minor patch <<< "$PR_VER"
           patch=$((patch + 1))
-          NEW_VERSION="$major.$minor.$patch"
           NEW_VERSION="0.1.$patch"
-          # Skip if bumped version already tagged
+          
+          # Skip if already tagged
           if git tag | grep -q "v$NEW_VERSION"; then
             echo "Already tagged v$NEW_VERSION, skipping"
             echo "new=" >> $GITHUB_OUTPUT
             exit 0
           fi
+          
           echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "New version: $NEW_VERSION"
+          echo "Bumping to: $NEW_VERSION"
 
-      - name: Update Cargo.toml
-        run: |
-          sed -i 's/^version = ".*"/version = "${{ steps.bump.outputs.new }}"/' Cargo.toml
-          cat Cargo.toml | head -n 5
-
-      - name: Commit and tag
+      - name: Update and commit
         if: steps.bump.outputs.new != ''
         run: |
+          sed -i 's/^version = ".*"/version = "${{ steps.bump.outputs.new }}"/' Cargo.toml
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add Cargo.toml
           git commit -m "chore: bump version to v${{ steps.bump.outputs.new }}"
           git tag -a "v${{ steps.bump.outputs.new }}" -m "Release v${{ steps.bump.outputs.new }}"
-          git push origin --tags
+          git push origin ${{ github.head_ref }} --tags
