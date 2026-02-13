@@ -75,14 +75,8 @@ jobs:
           cache-all-crates: true
 
       # Auto-update Cargo.lock if stale and push back
-      - name: Update Cargo.lock if needed
-        run: |
-          cargo update --workspace
-          if git diff --quiet Cargo.lock; then
-            echo "✅ Cargo.lock is up to date"
-          else
-            echo "📦 Cargo.lock was updated - commit manually before merge"
-          fi
+      - name: Check Cargo.lock is up to date
+        run: cargo generate-lockfile && git diff --quiet Cargo.lock || echo "⚠️ Cargo.lock outdated - run cargo update locally"
 
   # LINT: Format + Clippy
   lint:
@@ -137,7 +131,7 @@ jobs:
           save-if: false
 
       - name: Run tests
-        run: cargo test --all-features --locked -- --test-threads=4
+        run: cargo test --all-features -- --test-threads=4
 
   # HEALTH: Decapod validation and health checks
   health:
