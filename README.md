@@ -31,7 +31,7 @@ Agents can write code. But they can’t reliably **ship** because they:
 - say “done” without evidence (no proof gates)
 - trip over each other in parallel (no coordination)
 
-You set Decapod up once, then agents operate inside the governed environment. **You don’t touch the internals—just like you don’t touch individual neurons.**
+You set Decapod up once (`decapod init`), then agents operate inside the governed environment. **You don’t touch the internals—just like you don’t touch individual neurons.**
 
 ### What This Is Not
 
