@@ -1,7 +1,7 @@
+use crate::ProofCommandCli;
 use crate::core::store::Store;
 use crate::error::DecapodError;
 use crate::plugins::health;
-use crate::ProofCommandCli;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
