@@ -106,7 +106,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Clippy
-        run: cargo clippy --all-targets --all-features --locked -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
   # TEST: Run all tests
   test:
