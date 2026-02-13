@@ -599,25 +599,78 @@ pub fn run() -> Result<(), error::DecapodError> {
                 );
                 println!();
 
-                // Initialize all store DBs in the resolved store root (silently)
-                todo::initialize_todo_db(&setup_store_root)?;
-                db::initialize_knowledge_db(&setup_store_root)?;
-                cron::initialize_cron_db(&setup_store_root)?;
-                reflex::initialize_reflex_db(&setup_store_root)?;
-                health::initialize_health_db(&setup_store_root)?;
-                policy::initialize_policy_db(&setup_store_root)?;
-                archive::initialize_archive_db(&setup_store_root)?;
-                feedback::initialize_feedback_db(&setup_store_root)?;
+                // Initialize all store DBs in the resolved store root (preserve existing)
+                let dbs = [
+                    ("todo.db", setup_store_root.join("todo.db")),
+                    ("knowledge.db", setup_store_root.join("knowledge.db")),
+                    ("cron.db", setup_store_root.join("cron.db")),
+                    ("reflex.db", setup_store_root.join("reflex.db")),
+                    ("health.db", setup_store_root.join("health.db")),
+                    ("policy.db", setup_store_root.join("policy.db")),
+                    ("archive.db", setup_store_root.join("archive.db")),
+                    ("feedback.db", setup_store_root.join("feedback.db")),
+                ];
+
+                for (db_name, db_path) in dbs {
+                    if db_path.exists() {
+                        println!(
+                            "    {} {} {}",
+                            "✓".bright_green(),
+                            db_name.bright_white(),
+                            "(preserved - existing data kept)".bright_black()
+                        );
+                    } else {
+                        match db_name {
+                            "todo.db" => todo::initialize_todo_db(&setup_store_root)?,
+                            "knowledge.db" => db::initialize_knowledge_db(&setup_store_root)?,
+                            "cron.db" => cron::initialize_cron_db(&setup_store_root)?,
+                            "reflex.db" => reflex::initialize_reflex_db(&setup_store_root)?,
+                            "health.db" => health::initialize_health_db(&setup_store_root)?,
+                            "policy.db" => policy::initialize_policy_db(&setup_store_root)?,
+                            "archive.db" => archive::initialize_archive_db(&setup_store_root)?,
+                            "feedback.db" => feedback::initialize_feedback_db(&setup_store_root)?,
+                            _ => unreachable!(),
+                        }
+                        println!("    {} {}", "●".bright_green(), db_name.bright_white());
+                    }
+                }
 
                 println!();
 
-                // Create empty todo events file for validation
+                // Create empty todo events file for validation (preserve existing)
                 let events_path = setup_store_root.join("todo.events.jsonl");
-                std::fs::write(&events_path, "").map_err(error::DecapodError::IoError)?;
+                if events_path.exists() {
+                    println!(
+                        "    {} {} {}",
+                        "✓".bright_green(),
+                        "todo.events.jsonl".bright_white(),
+                        "(preserved - event history kept)".bright_black()
+                    );
+                } else {
+                    std::fs::write(&events_path, "").map_err(error::DecapodError::IoError)?;
+                    println!(
+                        "    {} {}",
+                        "●".bright_green(),
+                        "todo.events.jsonl".bright_white()
+                    );
+                }
 
                 // Create generated directory for derived files (checksums, caches, etc.)
                 let generated_dir = setup_decapod_root.join("generated");
-                std::fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
+                if generated_dir.exists() {
+                    println!(
+                        "    {} {} {}",
+                        "✓".bright_green(),
+                        "generated/".bright_white(),
+                        "(preserved - existing files kept)".bright_black()
+                    );
+                } else {
+                    std::fs::create_dir_all(&generated_dir)
+                        .map_err(error::DecapodError::IoError)?;
+                    println!("    {} {}", "●".bright_green(), "generated/".bright_white());
+                }
+
+                println!();
             }
 
             scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
