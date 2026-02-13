@@ -81,7 +81,7 @@ pub mod plugins;
 use core::{
     db, docs_cli, error, migration, proof, repomap, scaffold,
     store::{Store, StoreKind},
-    validate,
+    tui, validate,
 };
 use plugins::{
     archive, context, cron, feedback, health, heartbeat, knowledge, policy, reflex, teammate, todo,
@@ -114,6 +114,18 @@ struct InitCli {
     /// Show what would change without writing files.
     #[clap(long)]
     dry_run: bool,
+    /// Force creation of all 3 entrypoint files (GEMINI.md, AGENTS.md, CLAUDE.md).
+    #[clap(long)]
+    all: bool,
+    /// Create only CLAUDE.md entrypoint file.
+    #[clap(long)]
+    claude: bool,
+    /// Create only GEMINI.md entrypoint file.
+    #[clap(long)]
+    gemini: bool,
+    /// Create only AGENTS.md entrypoint file.
+    #[clap(long)]
+    agents: bool,
 }
 
 #[derive(clap::Args, Debug)]
@@ -441,6 +453,8 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Clear screen and position cursor for pristine alien output
             print!("\x1B[2J\x1B[1;1H");
 
+            let _width = tui::terminal_width();
+
             // 🛸 ALIEN SPACESHIP BANNER 🛸
             println!();
             println!();
@@ -511,27 +525,15 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Check if .decapod exists and skip if it does, unless --force
             let setup_decapod_root = target_dir.join(".decapod");
             if setup_decapod_root.exists() && !init_cli.force {
-                println!(
-                    "        {}",
-                    "╔══════════════════════════════════════╗".yellow().bold()
-                );
-                println!(
-                    "        {} {} {}",
-                    "║".yellow().bold(),
-                    "⚠  SYSTEM ALREADY INITIALIZED ⚠ ".bright_yellow().bold(),
-                    "║".yellow().bold()
-                );
-                println!(
-                    "        {}",
-                    "╚══════════════════════════════════════╝".yellow().bold()
+                tui::render_box(
+                    "⚠  SYSTEM ALREADY INITIALIZED",
+                    "Use --force to override",
+                    tui::BoxStyle::Warning,
                 );
                 println!();
+                println!("  {} Detected existing control plane", "▸".bright_yellow());
                 println!(
-                    "          {} Detected existing control plane",
-                    "▸".bright_yellow()
-                );
-                println!(
-                    "          {} Use {} flag to override",
+                    "  {} Use {} flag to override",
                     "▸".bright_yellow(),
                     "--force".bright_cyan().bold()
                 );
@@ -607,24 +609,11 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // `--dry-run` should not perform any mutations.
             if !init_cli.dry_run {
-                // Databases setup section - ALIEN TECH
-                println!(
-                    "        {}",
-                    "╔═══════════════════════════════════════╗"
-                        .bright_cyan()
-                        .bold()
-                );
-                println!(
-                    "        {} {} {}",
-                    "║".bright_cyan().bold(),
-                    "⚡ SUBSYSTEM INITIALIZATION ⚡      ".bright_white().bold(),
-                    "║".bright_cyan().bold()
-                );
-                println!(
-                    "        {}",
-                    "╚═══════════════════════════════════════╝"
-                        .bright_cyan()
-                        .bold()
+                // Databases setup section - TUI styled box
+                tui::render_box(
+                    "⚡ SUBSYSTEM INITIALIZATION",
+                    "Database & State Management",
+                    tui::BoxStyle::Cyan,
                 );
                 println!();
 
@@ -704,15 +693,34 @@ pub fn run() -> Result<(), error::DecapodError> {
                 println!();
             }
 
+            // Determine which agent files to generate based on flags
+            // Individual flags override existing files list
+            let agent_files_to_generate = if init_cli.claude || init_cli.gemini || init_cli.agents {
+                let mut files = vec![];
+                if init_cli.claude {
+                    files.push("CLAUDE.md".to_string());
+                }
+                if init_cli.gemini {
+                    files.push("GEMINI.md".to_string());
+                }
+                if init_cli.agents {
+                    files.push("AGENTS.md".to_string());
+                }
+                files
+            } else {
+                existing_agent_files
+                    .into_iter()
+                    .map(|s| s.to_string())
+                    .collect()
+            };
+
             scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
                 target_dir,
                 force: init_cli.force,
                 dry_run: init_cli.dry_run,
-                agent_files: existing_agent_files
-                    .into_iter()
-                    .map(|s| s.to_string())
-                    .collect(),
+                agent_files: agent_files_to_generate,
                 created_backups,
+                all: init_cli.all,
             })?;
 
             // Write version file for migration tracking

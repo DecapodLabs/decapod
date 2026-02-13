@@ -28,6 +28,7 @@
 
 use crate::core::error;
 use crate::core::store::{Store, StoreKind};
+use crate::core::tui;
 use crate::{db, todo};
 use regex::Regex;
 use serde_json;
@@ -896,32 +897,11 @@ pub fn run_validation(
     _home_dir: &Path,
 ) -> Result<(), error::DecapodError> {
     use colored::Colorize;
-    println!();
-    println!(
-        "      {}",
-        "╔═══════════════════════════════════════════════╗"
-            .bright_magenta()
-            .bold()
-    );
-    println!(
-        "      {} {} {}",
-        "║".bright_magenta().bold(),
-        "⚡ PROOF HARNESS - VALIDATION PROTOCOL ⚡  "
-            .bright_white()
-            .bold(),
-        "║".bright_magenta().bold()
-    );
-    println!(
-        "      {} {} {}",
-        "║".bright_magenta().bold(),
-        "   Intent-Driven Methodology Enforcement  ".bright_cyan(),
-        "║".bright_magenta().bold()
-    );
-    println!(
-        "      {}",
-        "╚═══════════════════════════════════════════════╝"
-            .bright_magenta()
-            .bold()
+
+    tui::render_box(
+        "⚡ PROOF HARNESS - VALIDATION PROTOCOL",
+        "Intent-Driven Methodology Enforcement",
+        tui::BoxStyle::Magenta,
     );
     println!();
 
@@ -969,59 +949,7 @@ pub fn run_validation(
     validate_archive_integrity(store, &mut pass_count, &mut fail_count)?;
     validate_canon_mutation(store, &mut pass_count, &mut fail_count)?;
 
-    println!();
-    println!(
-        "      {}",
-        "╔═══════════════════════════════════════════════╗"
-            .bright_blue()
-            .bold()
-    );
-    println!(
-        "      {} {} {}",
-        "║".bright_blue().bold(),
-        "📊 VALIDATION RESULTS                     "
-            .bright_white()
-            .bold(),
-        "║".bright_blue().bold()
-    );
-    println!(
-        "      {}",
-        "╚═══════════════════════════════════════════════╝"
-            .bright_blue()
-            .bold()
-    );
-    println!();
-    println!(
-        "        {} {}  {}",
-        "●".bright_green().bold(),
-        "PASS:".bright_white(),
-        pass_count.to_string().bright_green().bold()
-    );
-    if fail_count > 0 {
-        eprintln!(
-            "        {} {}  {}",
-            "●".bright_red().bold(),
-            "FAIL:".bright_white(),
-            fail_count.to_string().bright_red().bold()
-        );
-    }
-    if warn_count > 0 {
-        println!(
-            "        {} {}  {}",
-            "●".bright_yellow().bold(),
-            "WARN:".bright_white(),
-            warn_count.to_string().bright_yellow().bold()
-        );
-    }
-    println!(
-        "        {} {}",
-        "Total:".bright_black(),
-        (pass_count + fail_count + warn_count)
-            .to_string()
-            .bright_white()
-            .bold()
-    );
-    println!();
+    tui::print_summary(pass_count as usize, fail_count as usize);
 
     if fail_count > 0 {
         Err(error::DecapodError::ValidationError(format!(
