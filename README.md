@@ -46,6 +46,17 @@ Decapod is an environment: **the place agent work becomes enforceable.**
 
 ---
 
+## Getting Started
+
+```bash
+cargo install decapod
+decapod init
+```
+
+From that point on, agents operate inside the governed environment. You observe outcomes, review summaries, and merge when proofs pass.
+
+---
+
 ## How It Works
 
 ### 1) Persistent State (Memory That Survives)
@@ -213,24 +224,6 @@ An agent thinks it’s done. Proof gates fail. It can’t credibly claim complet
 - Trust automation (earn autonomy through proof history)
 - Policy DSL (risk zones with approvals)
 - Pattern learning (conventions inferred from repo)
-
----
-
-## Learn More
-
-📄 **[Read the Whitepaper](WHITEPAPER.md)** — Full thesis on governance runtimes for agents  
-💬 **[Join Discussions](https://github.com/DecapodLabs/decapod/discussions)** — Community + design debates  
-
----
-
-## Getting Started
-
-```bash
-cargo install decapod
-decapod init
-```
-
-From that point on, agents operate inside the governed environment. You observe outcomes, review summaries, and merge when proofs pass.
 
 ---
 
