@@ -165,7 +165,7 @@ Status legend:
 | **cron** | Scheduled automation | REAL |
 | **reflex** | Rule-driven triggers/actions | REAL |
 | **docs** | Constitution discovery | REAL |
-| **teammate** | User conventions + preferences | SPEC |
+| **teammate** | User conventions + preferences | REAL |
 | **knowledge** | Project facts + rationale | SPEC |
 | **health** | Proof ledger + system state | SPEC |
 | **policy** | Risk zones + approvals | SPEC |
