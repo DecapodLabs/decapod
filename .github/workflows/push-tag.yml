@@ -1,0 +1,32 @@
+name: Push Tag on Merge
+
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
+
+permissions:
+  contents: write
+
+jobs:
+  push-tag:
+    name: Push Tag on Merge
+    runs-on: ubuntu-latest
+    if: github.repository == 'DecapodLabs/decapod' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'bump-v')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push tags to origin
+        run: |
+          git fetch --tags origin master
+          for tag in $(git tag); do
+            if ! git ls-remote --tags origin "$tag" | grep -q "$tag"; then
+              echo "Pushing tag: $tag"
+              git push origin "$tag"
+            fi
+          done
