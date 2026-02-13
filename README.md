@@ -183,9 +183,9 @@ Status legend:
 
 ### Scenario 1: Preference Memory
 
-You tell an agent once: “Always use my SSH key for commits. Never add yourself as a contributor.”
+You tell an agent once: “Always use vX.X.X (SEMVER) for tagging git commits, and set that value in the Cargo.toml and Cargo.lock before pushing.”
 
-That preference becomes durable state. Every future agent session can check it. You never explain again.
+That preference becomes durable state. Every future agent session in this project can check it and will use it. You never explain again.
 
 ### Scenario 2: Multi-Agent Feature Work
 
