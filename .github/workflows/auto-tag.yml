@@ -5,9 +5,7 @@ on:
     branches:
       - master
     paths:
-      - '**.rs'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
+      - '**'
 
 permissions:
   contents: write
