@@ -13,6 +13,7 @@
 //! - **`broker`**: Serialized state access control plane (The Thin Waist)
 //! - **`db`**: Database connection and initialization utilities
 //! - **`schemas`**: Canonical SQL schemas for all subsystems
+//! - **`migration`**: Automatic version detection and schema migration
 //! - **`proof`**: Executable validation checks with audit trails
 //! - **`validate`**: Intent-driven methodology validation harness
 //! - **`assets`**: Embedded constitution and template documents
@@ -33,6 +34,7 @@ pub mod broker;
 pub mod db;
 pub mod docs_cli;
 pub mod error;
+pub mod migration;
 pub mod proof;
 pub mod repomap;
 pub mod scaffold;
