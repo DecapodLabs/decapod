@@ -71,39 +71,11 @@ fn write_file(
 pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error::DecapodError> {
     let data_dir_rel = ".decapod/data";
 
-    // Sexy scaffold header with gradient colors
+    // ALIEN SCAFFOLD PROTOCOL
     println!();
-    println!(
-        "{}",
-        "  ╭─────────────────────────────────────────────╮"
-            .bright_magenta()
-            .bold()
-    );
-    println!(
-        "{}",
-        "  │                                             │"
-            .bright_magenta()
-            .bold()
-    );
-    println!(
-        "  {} {}  {} {}",
-        "│".bright_magenta().bold(),
-        "📦".to_string(),
-        "Scaffolding Project Structure".bright_white().bold(),
-        "│".bright_magenta().bold()
-    );
-    println!(
-        "{}",
-        "  │                                             │"
-            .bright_magenta()
-            .bold()
-    );
-    println!(
-        "{}",
-        "  ╰─────────────────────────────────────────────╯"
-            .bright_magenta()
-            .bold()
-    );
+    println!("        {}", "╔═══════════════════════════════════════════╗".bright_magenta().bold());
+    println!("        {} {} {}", "║".bright_magenta().bold(), "📦 PROJECT STRUCTURE SYNTHESIS 📦     ".bright_white().bold(), "║".bright_magenta().bold());
+    println!("        {}", "╚═══════════════════════════════════════════╝".bright_magenta().bold());
     println!();
 
     // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
@@ -116,31 +88,15 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     let readme_md = assets::get_template("README.md").expect("Missing template: README.md");
     let override_md = assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
 
-    // Agent Entrypoints section with gradient
-    println!(
-        "  {}",
-        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_blue()
-    );
-    println!(
-        "  {} {}",
-        "▸".bright_cyan().bold(),
-        "Agent Entrypoints".bright_white().bold()
-    );
+    // AGENT ENTRYPOINTS - Neural Interfaces
+    println!("          {}", "▼ AGENT ENTRYPOINTS".bright_cyan().bold());
     println!();
     write_file(opts, "AGENTS.md", &agents_md)?;
     write_file(opts, "CLAUDE.md", &claude_md)?;
     write_file(opts, "GEMINI.md", &gemini_md)?;
 
     println!();
-    println!(
-        "  {}",
-        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_blue()
-    );
-    println!(
-        "  {} {}",
-        "▸".bright_cyan().bold(),
-        "Decapod Configuration".bright_white().bold()
-    );
+    println!("          {}", "▼ CONTROL PLANE CONFIGURATION".bright_cyan().bold());
     println!();
     write_file(opts, ".decapod/README.md", &readme_md)?;
     write_file(opts, ".decapod/OVERRIDE.md", &override_md)?;
