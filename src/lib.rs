@@ -179,6 +179,30 @@ enum Command {
     Proof(ProofCommandCli),
     /// Run an end-to-end usability verification (simulates fresh install)
     Verify,
+    /// Install git hooks for commit message validation
+    Hook(HookCli),
+    /// Run CI checks (crate description, etc.)
+    Check(CheckCli),
+}
+
+#[derive(clap::Args, Debug)]
+struct HookCli {
+    /// Install commit-msg hook for conventional commits
+    #[clap(long, default_value = "true")]
+    commit_msg: bool,
+    /// Uninstall hooks
+    #[clap(long)]
+    uninstall: bool,
+}
+
+#[derive(clap::Args, Debug)]
+struct CheckCli {
+    /// Check crate description matches expected
+    #[clap(long)]
+    crate_description: bool,
+    /// Run all checks
+    #[clap(long)]
+    all: bool,
 }
 
 #[derive(clap::Args, Debug)]
@@ -958,10 +982,112 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Verify => {
                     run_verification()?;
                 }
+                Command::Hook(hook_cli) => {
+                    run_hook_install(hook_cli)?;
+                }
+                Command::Check(check_cli) => {
+                    run_check(check_cli)?;
+                }
                 _ => unreachable!(),
             }
         }
     }
+    Ok(())
+}
+
+fn run_hook_install(cli: HookCli) -> Result<(), error::DecapodError> {
+    use std::fs;
+    use std::io::Write;
+
+    let hook_path = Path::new(".git/hooks/commit-msg");
+
+    if cli.uninstall {
+        if hook_path.exists() {
+            fs::remove_file(hook_path)?;
+            println!("✓ Removed commit-msg hook");
+        } else {
+            println!("No commit-msg hook found");
+        }
+        return Ok(());
+    }
+
+    if !cli.commit_msg {
+        return Ok(());
+    }
+
+    let git_dir = Path::new(".git");
+    if !git_dir.exists() {
+        return Err(error::DecapodError::ValidationError(
+            ".git directory not found. Are you in the root of the project?".into(),
+        ));
+    }
+
+    let hooks_dir = git_dir.join("hooks");
+    fs::create_dir_all(&hooks_dir).map_err(error::DecapodError::IoError)?;
+
+    let hook_content = r#"#!/bin/bash
+# Conventional commit validation hook
+# Installed by Decapod
+
+MSG=$(cat "$1")
+REGEX="^(feat|fix|chore|ci|docs|style|refactor|perf|test)(\(.*\))?!?: .+"
+
+if [[ ! $MSG =~ $REGEX ]]; then
+    echo "❌ Error: Invalid commit message format."
+    echo "   Commit messages must follow the Conventional Commits format."
+    echo "   Example: 'feat: add login functionality'"
+    echo "   Allowed prefixes: feat, fix, chore, ci, docs, style, refactor, perf, test"
+    exit 1
+fi
+"#;
+
+    let mut file = fs::File::create(hook_path).map_err(error::DecapodError::IoError)?;
+    file.write_all(hook_content.as_bytes())
+        .map_err(error::DecapodError::IoError)?;
+    drop(file);
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(hook_path)
+            .map_err(error::DecapodError::IoError)?
+            .permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(hook_path, perms).map_err(error::DecapodError::IoError)?;
+    }
+
+    println!("✓ Installed commit-msg hook for conventional commits");
+    Ok(())
+}
+
+fn run_check(cli: CheckCli) -> Result<(), error::DecapodError> {
+    use std::process::Command;
+
+    if cli.crate_description || cli.all {
+        let expected = "Decapod is a Rust-built governance runtime for AI agents: repo-native state, enforced workflow, proof gates, safe coordination.";
+
+        let output = Command::new("cargo")
+            .args(["metadata", "--no-deps", "--format-version", "1"])
+            .output()
+            .map_err(|e| error::DecapodError::IoError(std::io::Error::other(e)))?;
+
+        let json_str = String::from_utf8_lossy(&output.stdout);
+
+        if json_str.contains(expected) {
+            println!("✓ Crate description matches");
+        } else {
+            println!("✗ Crate description mismatch!");
+            println!("  Expected: {}", expected);
+            return Err(error::DecapodError::ValidationError(
+                "Crate description check failed".into(),
+            ));
+        }
+    }
+
+    if cli.all && !cli.crate_description {
+        println!("Note: --all requires --crate-description");
+    }
+
     Ok(())
 }
 
