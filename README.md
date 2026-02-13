@@ -199,12 +199,12 @@ An agent thinks it’s done. Proof gates fail. It can’t credibly claim complet
 
 ## Who This Is For
 
-✅ You’re shipping production code with AI agents  
-✅ You want discipline enforced by the environment  
-✅ You want parallel agents without turning the repo into lore  
-✅ You merge to `main` (not just demoing prompts)
-✅ You want an AI companion for building and learning Software Engineering  
-✅ You want “AI vibes” with guardrails and customizable enforceable workflows  
+✅ You’re shipping production code with AI agents<br>
+✅ You want discipline enforced by the environment<br>
+✅ You want parallel agents without turning the repo into lore<br>
+✅ You merge to `main` (not just demoing prompts)<br>
+✅ You want an AI companion for building premium software<br>
+✅ You want “AI vibes” with guardrails and customizable enforceable workflows<br>
 
 ---
 
