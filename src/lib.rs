@@ -520,6 +520,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
 
             // Safely backup root AGENTS.md, CLAUDE.md, GEMINI.md if they exist and differ from templates
+            let mut created_backups = false;
             if !init_cli.dry_run {
                 let mut backed_up = false;
                 for file in &existing_agent_files {
@@ -550,6 +551,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             );
                             println!();
                             backed_up = true;
+                            created_backups = true;
                         }
                         let backup_path = target_dir.join(format!("{}.bak", file));
                         fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
@@ -626,6 +628,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     .into_iter()
                     .map(|s| s.to_string())
                     .collect(),
+                created_backups,
             })?;
 
             // Write version file for migration tracking
