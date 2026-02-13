@@ -31,8 +31,10 @@ dev/
 # We never commit local sidecar state or databases
 .decapod/
 /AGENTS.md
-/GEMINI.md
 /CLAUDE.md
+/GEMINI.md
+/CODEX.md
+/OPENCODE.md
 
 # --- Environment & Secrets ---
 .env
