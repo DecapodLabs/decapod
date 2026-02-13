@@ -389,7 +389,13 @@ fn validate_docs_templates_bucket(
     info("Entrypoint Gate");
 
     // Entrypoints MUST be in the project root
-    let required = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"];
+    let required = [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "GEMINI.md",
+        "CODEX.md",
+        "OPENCODE.md",
+    ];
     for a in required {
         let p = decapod_dir.join(a);
         if p.is_file() {
@@ -474,18 +480,25 @@ fn validate_entrypoint_invariants(
     for agent_file in ["CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"] {
         let agent_path = decapod_dir.join(agent_file);
         if agent_path.is_file() {
-            let agent_content = fs::read_to_string(&agent_path).map_err(error::DecapodError::IoError)?;
+            let agent_content =
+                fs::read_to_string(&agent_path).map_err(error::DecapodError::IoError)?;
             if agent_content.contains("See `AGENTS.md`") || agent_content.contains("AGENTS.md") {
                 pass(&format!("{} defers to AGENTS.md", agent_file), pass_count);
             } else {
-                fail(&format!("{} does not reference AGENTS.md", agent_file), fail_count);
+                fail(
+                    &format!("{} does not reference AGENTS.md", agent_file),
+                    fail_count,
+                );
                 all_present = false;
             }
         }
     }
 
     if all_present {
-        pass("All entrypoint files follow thin waist architecture", pass_count);
+        pass(
+            "All entrypoint files follow thin waist architecture",
+            pass_count,
+        );
     }
 
     Ok(())

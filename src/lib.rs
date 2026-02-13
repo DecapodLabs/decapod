@@ -429,7 +429,13 @@ fn clean_project(opts: &CleanCli) -> Result<(), error::DecapodError> {
         fs::remove_dir_all(&decapod_root).map_err(error::DecapodError::IoError)?;
     }
 
-    for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"] {
+    for file in [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "GEMINI.md",
+        "CODEX.md",
+        "OPENCODE.md",
+    ] {
         let path = target_dir.join(file);
         if path.exists() {
             println!("Removing file: {}", path.display());
@@ -544,7 +550,13 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Check which agent files exist and track which ones to generate
             use sha2::{Digest, Sha256};
             let mut existing_agent_files = vec![];
-            for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"] {
+            for file in [
+                "AGENTS.md",
+                "CLAUDE.md",
+                "GEMINI.md",
+                "CODEX.md",
+                "OPENCODE.md",
+            ] {
                 if target_dir.join(file).exists() {
                     existing_agent_files.push(file);
                 }
