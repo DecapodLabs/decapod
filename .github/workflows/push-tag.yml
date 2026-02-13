@@ -1,9 +1,11 @@
 name: Push Tag on Merge
 
 on:
-  push:
+  pull_request:
     branches:
       - master
+    types:
+      - closed
 
 permissions:
   contents: write
@@ -12,7 +14,7 @@ jobs:
   push-tag:
     name: Push Tag on Merge
     runs-on: ubuntu-latest
-    if: github.repository == 'DecapodLabs/decapod'
+    if: github.repository == 'DecapodLabs/decapod' && github.event.pull_request.merged == true
     steps:
       - uses: actions/checkout@v4
         with:
