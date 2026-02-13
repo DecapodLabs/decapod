@@ -121,3 +121,5 @@ For this project, we use a 5-level priority system:
 ### plugins/CONTEXT.md
 
 ### plugins/HEARTBEAT.md
+
+### plugins/TEAMMATE.md
