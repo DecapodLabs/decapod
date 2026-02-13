@@ -73,9 +73,26 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
 
     // ALIEN SCAFFOLD PROTOCOL
     println!();
-    println!("        {}", "╔═══════════════════════════════════════════╗".bright_magenta().bold());
-    println!("        {} {} {}", "║".bright_magenta().bold(), "📦 PROJECT STRUCTURE SYNTHESIS 📦     ".bright_white().bold(), "║".bright_magenta().bold());
-    println!("        {}", "╚═══════════════════════════════════════════╝".bright_magenta().bold());
+    println!(
+        "        {}",
+        "╔═══════════════════════════════════════════╗"
+            .bright_magenta()
+            .bold()
+    );
+    println!(
+        "        {} {} {}",
+        "║".bright_magenta().bold(),
+        "📦 PROJECT STRUCTURE SYNTHESIS 📦     "
+            .bright_white()
+            .bold(),
+        "║".bright_magenta().bold()
+    );
+    println!(
+        "        {}",
+        "╚═══════════════════════════════════════════╝"
+            .bright_magenta()
+            .bold()
+    );
     println!();
 
     // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
@@ -96,19 +113,46 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     write_file(opts, "GEMINI.md", &gemini_md)?;
 
     println!();
-    println!("          {}", "▼ CONTROL PLANE CONFIGURATION".bright_cyan().bold());
+    println!(
+        "          {}",
+        "▼ CONTROL PLANE CONFIGURATION".bright_cyan().bold()
+    );
     println!();
     write_file(opts, ".decapod/README.md", &readme_md)?;
     write_file(opts, ".decapod/OVERRIDE.md", &override_md)?;
 
     // SUCCESS - System Online
     println!();
-    println!("        {}", "╔═══════════════════════════════════════════╗".bright_green().bold());
-    println!("        {} {} {}", "║".bright_green().bold(), "✨ CONTROL PLANE OPERATIONAL ✨       ".bright_white().bold(), "║".bright_green().bold());
-    println!("        {}", "╚═══════════════════════════════════════════╝".bright_green().bold());
+    println!(
+        "        {}",
+        "╔═══════════════════════════════════════════╗"
+            .bright_green()
+            .bold()
+    );
+    println!(
+        "        {} {} {}",
+        "║".bright_green().bold(),
+        "✨ CONTROL PLANE OPERATIONAL ✨       "
+            .bright_white()
+            .bold(),
+        "║".bright_green().bold()
+    );
+    println!(
+        "        {}",
+        "╚═══════════════════════════════════════════╝"
+            .bright_green()
+            .bold()
+    );
     println!();
-    println!("          {} System ready for agentic workflows", "▸".bright_green());
-    println!("          {} Neural interfaces: {}", "▸".bright_green(), "AGENTS.md | CLAUDE.md | GEMINI.md".bright_cyan());
+    println!(
+        "          {} System ready for agentic workflows",
+        "▸".bright_green()
+    );
+    println!(
+        "          {} Neural interfaces: {}",
+        "▸".bright_green(),
+        "AGENTS.md | CLAUDE.md | GEMINI.md".bright_cyan()
+    );
     println!();
     println!();
 

@@ -415,15 +415,62 @@ pub fn run() -> Result<(), error::DecapodError> {
             // 🛸 ALIEN SPACESHIP BANNER 🛸
             println!();
             println!();
-            println!("{}", "              ▗▄▄▄▄▖  ▗▄▄▄▄▄▄▄▄▄▄▄▄▖  ▗▄▄▄▄▖".bright_magenta().bold());
-            println!("{}", "            ▗▀▀      ▝▀              ▀▘      ▀▀▖".bright_magenta().bold());
-            println!("          {}   {}   {}", "▗▀".bright_magenta().bold(), "🦀 D E C A P O D 🦀".bright_white().bold().underline(), "▀▖".bright_magenta().bold());
-            println!("{}", "         ▐                                        ▌".bright_cyan().bold());
-            println!("         {} {} {}", "▐".bright_cyan().bold(), "A G E N T I C   C O N T R O L   P L A N E".bright_cyan().bold(), "▌".bright_cyan().bold());
-            println!("{}", "         ▐                                        ▌".bright_cyan().bold());
-            println!("{}", "          ▝▖                                    ▗▘".bright_magenta().bold());
-            println!("{}", "            ▝▄▄                              ▄▄▘".bright_magenta().bold());
-            println!("{}", "              ▝▀▀▀▀▖  ▝▀▀▀▀▀▀▀▀▀▀▀▀▘  ▗▀▀▀▀▘".bright_magenta().bold());
+            println!(
+                "{}",
+                "              ▗▄▄▄▄▖  ▗▄▄▄▄▄▄▄▄▄▄▄▄▖  ▗▄▄▄▄▖"
+                    .bright_magenta()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "            ▗▀▀      ▝▀              ▀▘      ▀▀▖"
+                    .bright_magenta()
+                    .bold()
+            );
+            println!(
+                "          {}   {}   {}",
+                "▗▀".bright_magenta().bold(),
+                "🦀 D E C A P O D 🦀".bright_white().bold().underline(),
+                "▀▖".bright_magenta().bold()
+            );
+            println!(
+                "{}",
+                "         ▐                                        ▌"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!(
+                "         {} {} {}",
+                "▐".bright_cyan().bold(),
+                "A G E N T I C   C O N T R O L   P L A N E"
+                    .bright_cyan()
+                    .bold(),
+                "▌".bright_cyan().bold()
+            );
+            println!(
+                "{}",
+                "         ▐                                        ▌"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "          ▝▖                                    ▗▘"
+                    .bright_magenta()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "            ▝▄▄                              ▄▄▘"
+                    .bright_magenta()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "              ▝▀▀▀▀▖  ▝▀▀▀▀▀▀▀▀▀▀▀▀▘  ▗▀▀▀▀▘"
+                    .bright_magenta()
+                    .bold()
+            );
             println!();
             println!();
 
@@ -437,12 +484,30 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Check if .decapod exists and skip if it does, unless --force
             let setup_decapod_root = target_dir.join(".decapod");
             if setup_decapod_root.exists() && !init_cli.force {
-                println!("        {}", "╔══════════════════════════════════════╗".yellow().bold());
-                println!("        {} {} {}", "║".yellow().bold(), "⚠  SYSTEM ALREADY INITIALIZED ⚠ ".bright_yellow().bold(), "║".yellow().bold());
-                println!("        {}", "╚══════════════════════════════════════╝".yellow().bold());
+                println!(
+                    "        {}",
+                    "╔══════════════════════════════════════╗".yellow().bold()
+                );
+                println!(
+                    "        {} {} {}",
+                    "║".yellow().bold(),
+                    "⚠  SYSTEM ALREADY INITIALIZED ⚠ ".bright_yellow().bold(),
+                    "║".yellow().bold()
+                );
+                println!(
+                    "        {}",
+                    "╚══════════════════════════════════════╝".yellow().bold()
+                );
                 println!();
-                println!("          {} Detected existing control plane", "▸".bright_yellow());
-                println!("          {} Use {} flag to override", "▸".bright_yellow(), "--force".bright_cyan().bold());
+                println!(
+                    "          {} Detected existing control plane",
+                    "▸".bright_yellow()
+                );
+                println!(
+                    "          {} Use {} flag to override",
+                    "▸".bright_yellow(),
+                    "--force".bright_cyan().bold()
+                );
                 println!();
                 return Ok(());
             }
@@ -454,7 +519,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                     let path = target_dir.join(file);
                     if path.exists() {
                         if !backed_up {
-                            println!("        {}", "▼▼▼ PRESERVATION PROTOCOL ACTIVATED ▼▼▼".bright_yellow().bold());
+                            println!(
+                                "        {}",
+                                "▼▼▼ PRESERVATION PROTOCOL ACTIVATED ▼▼▼"
+                                    .bright_yellow()
+                                    .bold()
+                            );
                             println!();
                             backed_up = true;
                         }
@@ -465,7 +535,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                             "◆".bright_cyan(),
                             file.bright_white().bold(),
                             "⟿".bright_yellow(),
-                            format!("{}.bak", file.strip_suffix(".md").unwrap_or(file)).bright_black()
+                            format!("{}.bak", file.strip_suffix(".md").unwrap_or(file))
+                                .bright_black()
                         );
                     }
                 }
@@ -483,9 +554,24 @@ pub fn run() -> Result<(), error::DecapodError> {
             // `--dry-run` should not perform any mutations.
             if !init_cli.dry_run {
                 // Databases setup section - ALIEN TECH
-                println!("        {}", "╔═══════════════════════════════════════╗".bright_cyan().bold());
-                println!("        {} {} {}", "║".bright_cyan().bold(), "⚡ SUBSYSTEM INITIALIZATION ⚡      ".bright_white().bold(), "║".bright_cyan().bold());
-                println!("        {}", "╚═══════════════════════════════════════╝".bright_cyan().bold());
+                println!(
+                    "        {}",
+                    "╔═══════════════════════════════════════╗"
+                        .bright_cyan()
+                        .bold()
+                );
+                println!(
+                    "        {} {} {}",
+                    "║".bright_cyan().bold(),
+                    "⚡ SUBSYSTEM INITIALIZATION ⚡      ".bright_white().bold(),
+                    "║".bright_cyan().bold()
+                );
+                println!(
+                    "        {}",
+                    "╚═══════════════════════════════════════╝"
+                        .bright_cyan()
+                        .bold()
+                );
                 println!();
 
                 // Initialize all store DBs in the resolved store root (silently)
