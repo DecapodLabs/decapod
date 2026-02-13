@@ -57,6 +57,10 @@ path = "tests/plugins/todo.rs"
 name = "plugins_policy_tests"
 path = "tests/plugins/policy.rs"
 
+[[test]]
+name = "plugins_teammate_tests"
+path = "tests/plugins/teammate.rs"
+
 
 [[test]]
 name = "core_tests"
