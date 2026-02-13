@@ -58,4 +58,4 @@ jobs:
           git add Cargo.toml
           git commit -m "chore: bump version to v${{ steps.bump.outputs.new }}"
           git tag -a "v${{ steps.bump.outputs.new }}" -m "Release v${{ steps.bump.outputs.new }}"
-          git push origin master --tags
+          git push origin --tags
