@@ -11,6 +11,7 @@
 //! - **Schema evolution**: Each migration can modify databases, files, etc.
 
 use crate::core::error;
+use crate::core::tui;
 use colored::Colorize;
 use rusqlite::Connection;
 use std::fs;
@@ -83,26 +84,10 @@ fn run_migrations(decapod_root: &Path, from_version: &str) -> Result<(), error::
         return Ok(());
     }
 
-    println!();
-    println!(
-        "      {}",
-        "╔═══════════════════════════════════════════════╗"
-            .bright_yellow()
-            .bold()
-    );
-    println!(
-        "      {} {} {}",
-        "║".bright_yellow().bold(),
-        "🔄 MIGRATION PROTOCOL INITIATED 🔄        "
-            .bright_white()
-            .bold(),
-        "║".bright_yellow().bold()
-    );
-    println!(
-        "      {}",
-        "╚═══════════════════════════════════════════════╝"
-            .bright_yellow()
-            .bold()
+    tui::render_box(
+        "🔄 MIGRATION PROTOCOL INITIATED",
+        "Schema & data version upgrades",
+        tui::BoxStyle::Warning,
     );
     println!();
 

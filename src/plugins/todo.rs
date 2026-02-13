@@ -4,7 +4,7 @@ use crate::core::schemas; // Import the new schemas module
 use crate::core::store::Store;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, Result as SqlResult, types::ToSql};
+use rusqlite::{types::ToSql, Connection, OptionalExtension, Result as SqlResult};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
@@ -36,6 +36,8 @@ pub enum TodoCommand {
         /// Task title (positional argument)
         #[clap(value_name = "TITLE")]
         title: String,
+        #[clap(long, default_value = "")]
+        description: String,
         #[clap(long, default_value = "medium", value_parser = validate_priority)]
         priority: String,
         #[clap(long, default_value = "")]
@@ -90,6 +92,17 @@ pub enum TodoCommand {
         #[clap(long)]
         comment: String,
     },
+    /// Edit a task's title, description, or owner.
+    Edit {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        title: Option<String>,
+        #[clap(long)]
+        description: Option<String>,
+        #[clap(long)]
+        owner: Option<String>,
+    },
     /// Rebuild the SQLite DB deterministically from the JSONL event log.
     Rebuild,
     /// List available task categories.
@@ -100,6 +113,7 @@ pub enum TodoCommand {
 pub struct Task {
     pub id: String,
     pub title: String,
+    pub description: String,
     pub tags: String,
     pub owner: String,
     pub due: Option<String>,
@@ -195,6 +209,13 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     if current_version < 4 {
         let _ = conn.execute("ALTER TABLE tasks ADD COLUMN component TEXT DEFAULT ''", []);
         migrate_task_components(conn)?;
+    }
+
+    if current_version < 5 {
+        let _ = conn.execute(
+            "ALTER TABLE tasks ADD COLUMN description TEXT DEFAULT ''",
+            [],
+        );
     }
 
     conn.execute(
@@ -562,6 +583,7 @@ fn insert_event(conn: &Connection, ev: &TodoEvent) -> SqlResult<()> {
 pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, error::DecapodError> {
     let TodoCommand::Add {
         title,
+        description,
         priority,
         tags,
         owner,
@@ -597,11 +619,12 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     broker.with_conn(&db_path, "decapod", None, "todo.add", |conn| {
         ensure_schema(conn)?;
         conn.execute(
-            "INSERT INTO tasks(id, title, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6, 'open', ?7, ?8, NULL, NULL, ?9, ?10, ?11, ?12, ?13, ?14)",
+            "INSERT INTO tasks(id, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks)
+             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, 'open', ?8, ?9, NULL, NULL, ?10, ?11, ?12, ?13, ?14, ?15)",
             rusqlite::params![
                 task_id,
                 title,
+                description,
                 tags,
                 owner,
                 due,
@@ -624,6 +647,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             task_id: Some(task_id.clone()),
             payload: serde_json::json!({
                 "title": title,
+                "description": description,
                 "tags": tags,
                 "owner": owner,
                 "due": due,
@@ -743,35 +767,125 @@ fn comment_task(
     }))
 }
 
+fn edit_task(
+    root: &Path,
+    id: &str,
+    title: Option<&str>,
+    description: Option<&str>,
+    owner: Option<&str>,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let ts = now_iso();
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    let changed = broker.with_conn(&db_path, "decapod", None, "todo.edit", |conn| {
+        ensure_schema(conn)?;
+
+        // Build update fields and track what changed
+        let mut updates = vec![];
+        let mut params: Vec<Box<dyn ToSql>> = vec![];
+        let mut changed_fields = vec![];
+
+        if let Some(t) = title {
+            updates.push("title = ?");
+            params.push(Box::new(t.to_string()));
+            changed_fields.push("title");
+        }
+
+        if let Some(d) = description {
+            updates.push("description = ?");
+            params.push(Box::new(d.to_string()));
+            changed_fields.push("description");
+        }
+
+        if let Some(o) = owner {
+            updates.push("owner = ?");
+            params.push(Box::new(o.to_string()));
+            changed_fields.push("owner");
+        }
+
+        if updates.is_empty() {
+            return Ok(0usize);
+        }
+
+        // Always update updated_at
+        let sql = format!(
+            "UPDATE tasks SET {}, updated_at = ? WHERE id = ?",
+            updates.join(", ")
+        );
+        params.push(Box::new(ts.clone()));
+        params.push(Box::new(id.to_string()));
+
+        let changed = conn.execute(
+            &sql,
+            rusqlite::params_from_iter(params.iter().map(|p| p.as_ref())),
+        )?;
+
+        // Create edit event
+        let mut payload = serde_json::Map::new();
+        if let Some(t) = title {
+            payload.insert("title".to_string(), serde_json::json!(t));
+        }
+        if let Some(d) = description {
+            payload.insert("description".to_string(), serde_json::json!(d));
+        }
+        if let Some(o) = owner {
+            payload.insert("owner".to_string(), serde_json::json!(o));
+        }
+
+        let ev = TodoEvent {
+            ts: ts.clone(),
+            event_id: Ulid::new().to_string(),
+            event_type: "task.edit".to_string(),
+            task_id: Some(id.to_string()),
+            payload: serde_json::Value::Object(payload),
+            actor: "decapod".to_string(),
+        };
+        append_event(root, &ev)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+
+        Ok(changed)
+    })?;
+
+    Ok(serde_json::json!({
+        "ts": ts,
+        "cmd": "todo.edit",
+        "status": if changed > 0 { "ok" } else { "not_found" },
+        "root": root.to_string_lossy(),
+        "id": id,
+    }))
+}
+
 pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodError> {
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "todo.get", |conn| {
         ensure_schema(conn)?;
-        let mut stmt = conn.prepare("SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component FROM tasks WHERE id = ?1")?;
+        let mut stmt = conn.prepare("SELECT id,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component FROM tasks WHERE id = ?1")?;
         let mut rows = stmt.query(rusqlite::params![id])?;
         if let Some(row) = rows.next()? {
             Ok(Some(Task {
                 id: row.get(0)?,
                 title: row.get(1)?,
-                tags: row.get(2)?,
-                owner: row.get(3)?,
-                due: row.get(4)?,
-                r#ref: row.get(5)?,
-                status: row.get(6)?,
-                created_at: row.get(7)?,
-                updated_at: row.get(8)?,
-                completed_at: row.get(9)?,
-                closed_at: row.get(10)?,
-                dir_path: row.get(11)?,
-                scope: row.get(12)?,
-                parent_task_id: row.get(13)?,
-                priority: row.get(14)?,
-                depends_on: row.get(15)?,
-                blocks: row.get(16)?,
-                category: row.get(17)?,
-                component: row.get(18)?,
+                description: row.get(2)?,
+                tags: row.get(3)?,
+                owner: row.get(4)?,
+                due: row.get(5)?,
+                r#ref: row.get(6)?,
+                status: row.get(7)?,
+                created_at: row.get(8)?,
+                updated_at: row.get(9)?,
+                completed_at: row.get(10)?,
+                closed_at: row.get(11)?,
+                dir_path: row.get(12)?,
+                scope: row.get(13)?,
+                parent_task_id: row.get(14)?,
+                priority: row.get(15)?,
+                depends_on: row.get(16)?,
+                blocks: row.get(17)?,
+                category: row.get(18)?,
+                component: row.get(19)?,
             }))
         } else {
             Ok(None)
@@ -793,7 +907,7 @@ pub fn list_tasks(
     broker.with_conn(&db_path, "decapod", None, "todo.list", |conn| {
         ensure_schema(conn)?;
 
-        let mut query = "SELECT id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component FROM tasks WHERE 1=1".to_string();
+        let mut query = "SELECT id,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component FROM tasks WHERE 1=1".to_string();
         let mut params: Vec<Box<dyn ToSql>> = Vec::new();
 
         if let Some(s) = status {
@@ -830,23 +944,24 @@ pub fn list_tasks(
             Ok(Task {
                 id: row.get(0)?,
                 title: row.get(1)?,
-                tags: row.get(2)?,
-                owner: row.get(3)?,
-                due: row.get(4)?,
-                r#ref: row.get(5)?,
-                status: row.get(6)?,
-                created_at: row.get(7)?,
-                updated_at: row.get(8)?,
-                completed_at: row.get(9)?,
-                closed_at: row.get(10)?,
-                dir_path: row.get(11)?,
-                scope: row.get(12)?,
-                parent_task_id: row.get(13)?,
-                priority: row.get(14)?,
-                depends_on: row.get(15)?,
-                blocks: row.get(16)?,
-                category: row.get(17)?,
-                component: row.get(18)?,
+                description: row.get(2)?,
+                tags: row.get(3)?,
+                owner: row.get(4)?,
+                due: row.get(5)?,
+                r#ref: row.get(6)?,
+                status: row.get(7)?,
+                created_at: row.get(8)?,
+                updated_at: row.get(9)?,
+                completed_at: row.get(10)?,
+                closed_at: row.get(11)?,
+                dir_path: row.get(12)?,
+                scope: row.get(13)?,
+                parent_task_id: row.get(14)?,
+                priority: row.get(15)?,
+                depends_on: row.get(16)?,
+                blocks: row.get(17)?,
+                category: row.get(18)?,
+                component: row.get(19)?,
             })
         })?;
 
@@ -1089,6 +1204,18 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
             update_status(store, id, "archived", "task.archive", serde_json::json!({}))?
         }
         TodoCommand::Comment { id, comment } => comment_task(root, id, comment)?,
+        TodoCommand::Edit {
+            id,
+            title,
+            description,
+            owner,
+        } => edit_task(
+            root,
+            id,
+            title.as_deref(),
+            description.as_deref(),
+            owner.as_deref(),
+        )?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,
         TodoCommand::Categories => {
             let categories = list_categories(root)?;
