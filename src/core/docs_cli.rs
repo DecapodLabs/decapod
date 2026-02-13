@@ -9,9 +9,11 @@
 //! - **Three source modes**: embedded (binary), override (project), merged (both)
 //! - **List available docs**: `decapod docs list` shows all embedded docs
 //! - **Ingest command**: `decapod docs ingest` dumps full constitution for agent context
+//! - **Override validation**: `decapod docs override` validates and caches OVERRIDE.md checksum
 
 use crate::core::{assets, error};
 use clap::Subcommand;
+use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 
 /// CLI structure for `decapod docs` command
@@ -47,6 +49,12 @@ pub enum DocsCommand {
     },
     /// Dump all embedded constitution for agentic ingestion.
     Ingest,
+    /// Validate and cache OVERRIDE.md checksum.
+    Override {
+        /// Force re-cache even if unchanged
+        #[clap(long, short)]
+        force: bool,
+    },
 }
 
 pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
@@ -114,6 +122,51 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
             }
             Ok(())
         }
+        DocsCommand::Override { force } => {
+            let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
+            let repo_root = find_repo_root(&current_dir)?;
+            let override_path = repo_root.join(".decapod").join("OVERRIDE.md");
+
+            if !override_path.exists() {
+                println!("ℹ No OVERRIDE.md found at {}", override_path.display());
+                println!("  Run `decapod init` to create one.");
+                return Ok(());
+            }
+
+            // Calculate current checksum
+            let current_checksum = calculate_sha256(&override_path)?;
+
+            if force {
+                println!("🔄 Force re-caching OVERRIDE.md checksum...");
+                cache_checksum(&repo_root, &current_checksum)?;
+                println!("✓ Checksum cached: {}", current_checksum);
+                return Ok(());
+            }
+
+            // Check if changed
+            let cached = get_cached_checksum(&repo_root);
+            match cached {
+                Some(cached_checksum) if cached_checksum == current_checksum => {
+                    println!("✓ OVERRIDE.md unchanged");
+                    println!("  Cached checksum: {}", cached_checksum);
+                }
+                Some(cached_checksum) => {
+                    println!("📝 OVERRIDE.md has changed");
+                    println!("  Old checksum: {}", cached_checksum);
+                    println!("  New checksum: {}", current_checksum);
+                    cache_checksum(&repo_root, &current_checksum)?;
+                    println!("✓ Checksum updated");
+                }
+                None => {
+                    println!("📝 First time caching OVERRIDE.md checksum");
+                    println!("  Checksum: {}", current_checksum);
+                    cache_checksum(&repo_root, &current_checksum)?;
+                    println!("✓ Checksum cached");
+                }
+            }
+
+            Ok(())
+        }
     }
 }
 
@@ -138,6 +191,35 @@ fn find_repo_root(start_dir: &Path) -> Result<PathBuf, error::DecapodError> {
     }
 }
 
+/// Calculate SHA256 checksum of a file
+fn calculate_sha256(path: &Path) -> Result<String, error::DecapodError> {
+    let content = std::fs::read(path).map_err(error::DecapodError::IoError)?;
+    let hash = Sha256::digest(&content);
+    Ok(format!("{:x}", hash))
+}
+
+/// Get cached checksum for OVERRIDE.md
+fn get_cached_checksum(repo_root: &Path) -> Option<String> {
+    let checksum_path = repo_root
+        .join(".decapod")
+        .join("generated")
+        .join("override.checksum");
+    std::fs::read_to_string(checksum_path).ok()
+}
+
+/// Cache checksum for OVERRIDE.md
+fn cache_checksum(repo_root: &Path, checksum: &str) -> Result<(), error::DecapodError> {
+    let checksum_path = repo_root
+        .join(".decapod")
+        .join("generated")
+        .join("override.checksum");
+    // Ensure generated directory exists
+    if let Some(parent) = checksum_path.parent() {
+        std::fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    }
+    std::fs::write(checksum_path, checksum).map_err(error::DecapodError::IoError)
+}
+
 pub fn schema() -> serde_json::Value {
     serde_json::json!({
         "name": "docs",
@@ -154,6 +236,16 @@ pub fn schema() -> serde_json::Value {
             "ingest": {
                 "type": "null",
                 "description": "Dump all embedded constitution for agentic ingestion"
+            },
+            "override": {
+                "type": "object",
+                "description": "Validate and cache OVERRIDE.md checksum",
+                "properties": {
+                    "force": {
+                        "type": "boolean",
+                        "description": "Force re-cache even if unchanged"
+                    }
+                }
             }
         }
     })

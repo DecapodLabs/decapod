@@ -69,7 +69,6 @@ fn write_file(
 }
 
 pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error::DecapodError> {
-    let const_docs_rel = ".decapod/constitution";
     let data_dir_rel = ".decapod/data";
 
     println!(
@@ -77,9 +76,7 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
         opts.target_dir.display()
     );
 
-    // Ensure main .decapod/constitution and .decapod/data directories exist
-    fs::create_dir_all(opts.target_dir.join(const_docs_rel))
-        .map_err(error::DecapodError::IoError)?;
+    // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
     fs::create_dir_all(opts.target_dir.join(data_dir_rel)).map_err(error::DecapodError::IoError)?;
 
     // Root entrypoints from embedded templates (AGENTS.md, CLAUDE.md, GEMINI.md)
@@ -95,54 +92,7 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     write_file(opts, ".decapod/README.md", &readme_md)?;
     write_file(opts, ".decapod/OVERRIDE.md", &override_md)?;
 
-    // Constitution for the current project context
-    let const_templates = [
-        (
-            "core/CONTROL_PLANE.md",
-            assets::TEMPLATES_CORE_CONTROL_PLANE,
-        ),
-        ("core/DECAPOD.md", assets::TEMPLATES_CORE_DECAPOD),
-        ("core/PLUGINS.md", assets::TEMPLATES_CORE_PLUGINS),
-        ("core/CLAIMS.md", assets::TEMPLATES_CORE_CLAIMS),
-        ("core/DEMANDS.md", assets::TEMPLATES_CORE_DEMANDS),
-        ("core/DEPRECATION.md", assets::TEMPLATES_CORE_DEPRECATION),
-        ("core/DOC_RULES.md", assets::TEMPLATES_CORE_DOC_RULES),
-        ("core/GLOSSARY.md", assets::TEMPLATES_CORE_GLOSSARY),
-        ("core/KNOWLEDGE.md", assets::TEMPLATES_CORE_KNOWLEDGE),
-        ("core/MEMORY.md", assets::TEMPLATES_CORE_MEMORY),
-        ("core/SOUL.md", assets::TEMPLATES_CORE_SOUL),
-        ("core/STORE_MODEL.md", assets::TEMPLATES_CORE_STORE_MODEL),
-        ("specs/AMENDMENTS.md", assets::TEMPLATES_SPECS_AMENDMENTS),
-        (
-            "specs/ARCHITECTURE.md",
-            assets::TEMPLATES_SPECS_ARCHITECTURE,
-        ),
-        ("specs/INTENT.md", assets::TEMPLATES_SPECS_INTENT),
-        ("specs/SYSTEM.md", assets::TEMPLATES_SPECS_SYSTEM),
-        ("plugins/DB_BROKER.md", assets::TEMPLATES_PLUGINS_DB_BROKER),
-        ("plugins/MANIFEST.md", assets::TEMPLATES_PLUGINS_MANIFEST),
-        ("plugins/TODO.md", assets::TEMPLATES_PLUGINS_TODO),
-        ("plugins/CRON.md", assets::TEMPLATES_PLUGINS_CRON),
-        ("plugins/REFLEX.md", assets::TEMPLATES_PLUGINS_REFLEX),
-        ("plugins/HEALTH.md", assets::TEMPLATES_PLUGINS_HEALTH),
-        ("plugins/POLICY.md", assets::TEMPLATES_PLUGINS_POLICY),
-        ("plugins/WATCHER.md", assets::TEMPLATES_PLUGINS_WATCHER),
-        ("plugins/KNOWLEDGE.md", assets::TEMPLATES_PLUGINS_KNOWLEDGE),
-        ("plugins/ARCHIVE.md", assets::TEMPLATES_PLUGINS_ARCHIVE),
-        ("plugins/FEEDBACK.md", assets::TEMPLATES_PLUGINS_FEEDBACK),
-        ("plugins/TRUST.md", assets::TEMPLATES_PLUGINS_TRUST),
-        ("plugins/CONTEXT.md", assets::TEMPLATES_PLUGINS_CONTEXT),
-        ("plugins/HEARTBEAT.md", assets::TEMPLATES_PLUGINS_HEARTBEAT),
-    ];
-
-    for (name, content) in const_templates {
-        let rel_path = format!("{}/{}", const_docs_rel, name);
-        let dest = opts.target_dir.join(&rel_path);
-        if dest.exists() && !opts.force {
-            println!("  skipping existing constitution doc: {}", rel_path);
-            continue;
-        }
-        write_file(opts, &rel_path, content)?;
-    }
+    // Constitution is embedded in binary - no scaffolding needed.
+    // Users customize via OVERRIDE.md (scaffolded above).
     Ok(())
 }

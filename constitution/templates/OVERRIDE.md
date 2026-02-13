@@ -5,108 +5,27 @@
 **Layer:** Project
 **Binding:** Yes (overrides embedded constitution)
 
+---
+
+## Summary
+
 This file allows you to override or extend Decapod's embedded constitution for project-specific needs.
 
-## How Overrides Work
+The embedded constitution (read-only, shipped with Decapod) provides the base methodology. This file lets you customize behavior without forking Decapod. Overrides are applied at runtime when agents read the constitution via `decapod docs show`.
 
-- **Embedded constitution** provides the base methodology (read-only, shipped with Decapod)
-- **This file** allows project-specific customization without forking
-- Overrides are applied at runtime when agents read the constitution
-- Keep overrides minimal - only add what's truly project-specific
-
-## Usage Pattern
-
-```markdown
-### [component-path]
-
-Your override content here...
-```
-
-Component paths follow the embedded structure:
-- `core/DECAPOD.md` - Navigation charter
-- `core/CONTROL_PLANE.md` - Agent sequencing
-- `specs/INTENT.md` - Authority contracts
-- `specs/ARCHITECTURE.md` - System boundaries
-- `plugins/TODO.md` - TODO subsystem
-- etc.
+**Keep overrides minimal** - only add what's truly specific to your project.
 
 ---
 
-## Core Overrides
+## How to Use
 
-Override core Decapod components (navigation, control plane, store model, etc.)
+1. Find the component section below (Core, Specs, or Plugins)
+2. Scroll to the specific component you want to override (e.g., `### plugins/TODO.md`)
+3. Write your override content under that heading
+4. Use markdown formatting for your overrides
+5. Commit this file to version control
 
-### core/DECAPOD.md
-<!-- Override navigation charter or add project-specific routing -->
-
-### core/CONTROL_PLANE.md
-<!-- Override agent sequencing patterns -->
-
-### core/STORE_MODEL.md
-<!-- Override store purity model -->
-
-### core/PLUGINS.md
-<!-- Override subsystem registry -->
-
-### core/DOC_RULES.md
-<!-- Override documentation compiler rules -->
-
-### core/CLAIMS.md
-<!-- Override claims ledger -->
-
-### core/SOUL.md
-<!-- Override agent persona guidelines -->
-
----
-
-## Specs Overrides
-
-Override specification documents (intent, architecture, system contracts, etc.)
-
-### specs/INTENT.md
-<!-- Override authority contracts and methodology intent -->
-
-### specs/ARCHITECTURE.md
-<!-- Override system boundaries, tradeoffs, and architectural decisions -->
-
-### specs/SYSTEM.md
-<!-- Override authority and proof doctrine -->
-
-### specs/AMENDMENTS.md
-<!-- Override change control process -->
-
----
-
-## Plugin Overrides
-
-Override plugin-specific configuration (TODO, health, knowledge, policy, etc.)
-
-### plugins/TODO.md
-<!-- Override TODO subsystem behavior -->
-
-### plugins/WORKFLOW.md
-<!-- Override operating loop -->
-
-### plugins/MANIFEST.md
-<!-- Override canonical vs derived vs state definitions -->
-
-### plugins/METHODOLOGY_GAPS.md
-<!-- Override known gaps documentation -->
-
-### plugins/TODO_USER.md
-<!-- Override agent checklist -->
-
-### plugins/EMERGENCY_PROTOCOL.md
-<!-- Override emergency stop-the-line protocol -->
-
-### plugins/DB_BROKER.md
-<!-- Override broker interface contract -->
-
----
-
-## Examples
-
-### Example: Override TODO Priority Levels
+**Example:**
 
 ```markdown
 ### plugins/TODO.md
@@ -114,7 +33,6 @@ Override plugin-specific configuration (TODO, health, knowledge, policy, etc.)
 ## Priority Levels (Project Override)
 
 For this project, we use a 5-level priority system:
-
 - **critical**: Production down, blocking release
 - **high**: Sprint commitment, must complete this iteration
 - **medium**: Backlog, next sprint candidate
@@ -122,39 +40,84 @@ For this project, we use a 5-level priority system:
 - **idea**: Exploration, needs refinement before actionable
 ```
 
-### Example: Add Project-Specific Architectural Constraint
+---
 
-```markdown
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- ⚠️  CHANGES ARE NOT PERMITTED ABOVE THIS LINE                           -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+## Core Overrides
+
+### core/DECAPOD.md
+
+### core/CONTROL_PLANE.md
+
+### core/STORE_MODEL.md
+
+### core/PLUGINS.md
+
+### core/DOC_RULES.md
+
+### core/CLAIMS.md
+
+### core/DEMANDS.md
+
+### core/DEPRECATION.md
+
+### core/GLOSSARY.md
+
+### core/KNOWLEDGE.md
+
+### core/MEMORY.md
+
+### core/SOUL.md
+
+---
+
+## Specs Overrides
+
+### specs/INTENT.md
+
 ### specs/ARCHITECTURE.md
 
-## Project-Specific Constraints
+### specs/SYSTEM.md
 
-### Performance Budget
-
-All API endpoints must respond within 200ms p99 latency.
-Any change that impacts this budget requires architectural review.
-
-### Technology Restrictions
-
-- **Prohibited**: ORMs (use raw SQL for event sourcing)
-- **Required**: SQLite only (no PostgreSQL/MySQL)
-- **Preferred**: Rust standard library over external crates
-```
+### specs/AMENDMENTS.md
 
 ---
 
-## Guidelines
+## Plugin Overrides
 
-1. **Keep it minimal** - Only override what's necessary for your project
-2. **Document why** - Explain the reason for each override
-3. **Version control** - Commit this file to your repo
-4. **Review regularly** - Remove overrides that are no longer needed
-5. **Propose upstream** - If your override would benefit all projects, submit a PR to Decapod
+### plugins/TODO.md
 
----
+### plugins/TODO_USER.md
 
-## Need Help?
+### plugins/WORKFLOW.md
 
-- See embedded docs: `decapod docs list`
-- Read a specific doc: `decapod docs show <path>`
-- Validate overrides: `decapod validate`
+### plugins/MANIFEST.md
+
+### plugins/EMERGENCY_PROTOCOL.md
+
+### plugins/DB_BROKER.md
+
+### plugins/CRON.md
+
+### plugins/REFLEX.md
+
+### plugins/HEALTH.md
+
+### plugins/POLICY.md
+
+### plugins/WATCHER.md
+
+### plugins/KNOWLEDGE.md
+
+### plugins/ARCHIVE.md
+
+### plugins/FEEDBACK.md
+
+### plugins/TRUST.md
+
+### plugins/CONTEXT.md
+
+### plugins/HEARTBEAT.md
