@@ -1,7 +1,7 @@
 //! Project scaffolding for Decapod initialization.
 //!
 //! This module handles the creation of Decapod project structure, including:
-//! - Root entrypoints (CLAUDE.md, GEMINI.md, AGENTS.md)
+//! - Root entrypoints (AGENTS.md, CLAUDE.md, GEMINI.md, CODEX.md, OPENCODE.md)
 //! - Constitution directory (.decapod/constitution/)
 //! - Embedded methodology documents
 //!
@@ -33,7 +33,7 @@ pub struct ScaffoldOptions {
     pub agent_files: Vec<String>,
     /// Whether .bak files were created during init
     pub created_backups: bool,
-    /// Force creation of all 3 entrypoint files regardless of existing state
+    /// Force creation of all 5 entrypoint files regardless of existing state
     pub all: bool,
 }
 
@@ -111,11 +111,11 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     fs::create_dir_all(opts.target_dir.join(data_dir_rel)).map_err(error::DecapodError::IoError)?;
 
     // Determine which agent files to generate
-    // If --all flag is set, force generate all three regardless of existing state
-    // If agent_files is empty, generate all three
+    // If --all flag is set, force generate all five regardless of existing state
+    // If agent_files is empty, generate all five
     // If agent_files has entries, only generate those
     let files_to_generate = if opts.all || opts.agent_files.is_empty() {
-        vec!["AGENTS.md", "CLAUDE.md", "GEMINI.md"]
+        vec!["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"]
     } else {
         opts.agent_files.iter().map(|s| s.as_str()).collect()
     };
@@ -181,7 +181,7 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     println!(
         "  {} {}",
         "▸".bright_green(),
-        "Neural interfaces: AGENTS.md | CLAUDE.md | GEMINI.md".bright_cyan()
+        "Neural interfaces: AGENTS.md | CLAUDE.md | GEMINI.md | CODEX.md | OPENCODE.md".bright_cyan()
     );
 
     // Show backup instructions if .bak files were created
