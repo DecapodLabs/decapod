@@ -143,10 +143,12 @@ fn merge_override_content(embedded_content: &str, override_content: &str) -> Str
     )
 }
 
-// Root templates (AGENTS.md, CLAUDE.md, GEMINI.md) - embedded for scaffolding
+// Root templates (agent entrypoints) - embedded for scaffolding
 pub const TEMPLATE_AGENTS: &str = include_str!("../../templates/AGENTS.md");
 pub const TEMPLATE_CLAUDE: &str = include_str!("../../templates/CLAUDE.md");
 pub const TEMPLATE_GEMINI: &str = include_str!("../../templates/GEMINI.md");
+pub const TEMPLATE_CODEX: &str = include_str!("../../templates/CODEX.md");
+pub const TEMPLATE_OPENCODE: &str = include_str!("../../templates/OPENCODE.md");
 pub const TEMPLATE_README: &str = include_str!("../../templates/README.md");
 pub const TEMPLATE_OVERRIDE: &str = include_str!("../../templates/OVERRIDE.md");
 
@@ -155,6 +157,8 @@ pub fn get_template(name: &str) -> Option<String> {
         "AGENTS.md" => Some(TEMPLATE_AGENTS.to_string()),
         "CLAUDE.md" => Some(TEMPLATE_CLAUDE.to_string()),
         "GEMINI.md" => Some(TEMPLATE_GEMINI.to_string()),
+        "CODEX.md" => Some(TEMPLATE_CODEX.to_string()),
+        "OPENCODE.md" => Some(TEMPLATE_OPENCODE.to_string()),
         "README.md" => Some(TEMPLATE_README.to_string()),
         "OVERRIDE.md" => Some(TEMPLATE_OVERRIDE.to_string()),
         _ => None,
