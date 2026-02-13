@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   auto-tag:
@@ -46,16 +47,18 @@ jobs:
           echo "New version: $NEW_VERSION"
 
       - name: Update Cargo.toml
+        if: steps.bump.outputs.new != ''
         run: |
           sed -i 's/^version = ".*"/version = "${{ steps.bump.outputs.new }}"/' Cargo.toml
           cat Cargo.toml | head -n 5
 
-      - name: Commit and tag
+      - name: Create Pull Request
         if: steps.bump.outputs.new != ''
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add Cargo.toml
-          git commit -m "chore: bump version to v${{ steps.bump.outputs.new }}"
-          git tag -a "v${{ steps.bump.outputs.new }}" -m "Release v${{ steps.bump.outputs.new }}"
-          git push origin --tags
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: bump version to v${{ steps.bump.outputs.new }}"
+          title: "chore: bump version to v${{ steps.bump.outputs.new }}"
+          body: "Auto-generated version bump to v${{ steps.bump.outputs.new }}"
+          branch: "bump-v${{ steps.bump.outputs.new }}"
+          delete-branch: true
