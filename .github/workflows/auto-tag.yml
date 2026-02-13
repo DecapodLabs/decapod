@@ -55,4 +55,19 @@ jobs:
           git checkout -b "bump-v${{ steps.bump.outputs.new }}"
           git commit -m "chore: bump version to v${{ steps.bump.outputs.new }}"
           git tag -a "v${{ steps.bump.outputs.new }}" -m "Release v${{ steps.bump.outputs.new }}"
-          git push origin "bump-v${{ steps.bump.outputs.new }}" --tags
+          git push origin "bump-v${{ steps.bump.outputs.new }}"
+
+      - name: Create Pull Request
+        if: steps.bump.outputs.new != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "chore: bump version to v${{ steps.bump.outputs.new }}" \
+            --body "Auto-generated version bump to v${{ steps.bump.outputs.new }}
+
+          This PR will trigger tag creation and release when merged.
+
+          Co-Authored-By: github-actions[bot] <github-actions[bot]@users.noreply.github.com>" \
+            --base master \
+            --head "bump-v${{ steps.bump.outputs.new }}"
