@@ -21,12 +21,29 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push tags to origin
+      - name: Create and push tag
         run: |
-          git fetch --tags origin master
-          for tag in $(git tag); do
-            if ! git ls-remote --tags origin "$tag" | grep -q "$tag"; then
-              echo "Pushing tag: $tag"
-              git push origin "$tag"
-            fi
-          done
+          # Extract version from branch name (bump-v0.1.20 -> v0.1.20)
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          TAG_NAME="${BRANCH_NAME#bump-}"
+
+          echo "Branch: $BRANCH_NAME"
+          echo "Tag to create and push: $TAG_NAME"
+
+          # Get version from Cargo.toml to verify
+          CARGO_VERSION=$(grep '^version =' Cargo.toml | head -n 1 | cut -d '"' -f 2)
+          echo "Cargo.toml version: $CARGO_VERSION"
+
+          # Verify tag matches Cargo.toml version
+          if [ "$TAG_NAME" != "v$CARGO_VERSION" ]; then
+            echo "Error: Tag name ($TAG_NAME) doesn't match Cargo.toml version (v$CARGO_VERSION)"
+            exit 1
+          fi
+
+          # Configure git
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # Create and push the tag
+          git tag -a "$TAG_NAME" -m "Release $TAG_NAME"
+          git push origin "$TAG_NAME"
