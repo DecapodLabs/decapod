@@ -101,24 +101,15 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     write_file(opts, ".decapod/README.md", &readme_md)?;
     write_file(opts, ".decapod/OVERRIDE.md", &override_md)?;
 
-    // Success footer - minimal, for agentic workflows
+    // SUCCESS - System Online
     println!();
-    println!(
-        "  {}",
-        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_blue()
-    );
+    println!("        {}", "╔═══════════════════════════════════════════╗".bright_green().bold());
+    println!("        {} {} {}", "║".bright_green().bold(), "✨ CONTROL PLANE OPERATIONAL ✨       ".bright_white().bold(), "║".bright_green().bold());
+    println!("        {}", "╚═══════════════════════════════════════════╝".bright_green().bold());
     println!();
-    println!(
-        "  {} {}",
-        "✨".to_string(),
-        "Ready for Agentic Workflows".bright_green().bold()
-    );
+    println!("          {} System ready for agentic workflows", "▸".bright_green());
+    println!("          {} Neural interfaces: {}", "▸".bright_green(), "AGENTS.md | CLAUDE.md | GEMINI.md".bright_cyan());
     println!();
-    println!(
-        "  {} {}",
-        "ℹ".bright_cyan(),
-        "Agent entrypoints: AGENTS.md, CLAUDE.md, GEMINI.md".bright_black()
-    );
     println!();
 
     // Constitution is embedded in binary - no scaffolding needed.
