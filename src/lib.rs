@@ -411,11 +411,36 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Banner
             println!();
-            println!("{}", "╔═══════════════════════════════════════════════════════╗".bright_cyan().bold());
-            println!("{}", "║                                                       ║".bright_cyan().bold());
-            println!("{}", "║        🦀  DECAPOD  -  AGENTIC CONTROL PLANE         ║".bright_cyan().bold());
-            println!("{}", "║                                                       ║".bright_cyan().bold());
-            println!("{}", "╚═══════════════════════════════════════════════════════╝".bright_cyan().bold());
+            println!(
+                "{}",
+                "╔═══════════════════════════════════════════════════════╗"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "║                                                       ║"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "║        🦀  DECAPOD  -  AGENTIC CONTROL PLANE         ║"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "║                                                       ║"
+                    .bright_cyan()
+                    .bold()
+            );
+            println!(
+                "{}",
+                "╚═══════════════════════════════════════════════════════╝"
+                    .bright_cyan()
+                    .bold()
+            );
             println!();
 
             let target_dir = match init_cli.dir {
@@ -449,7 +474,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                         }
                         let backup_path = target_dir.join(format!("{}.bak", file));
                         fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
-                        println!("  {} Backed up {} → {}.bak", "→".dimmed(), file, file.strip_suffix(".md").unwrap_or(file));
+                        println!(
+                            "  {} Backed up {} → {}.bak",
+                            "→".dimmed(),
+                            file,
+                            file.strip_suffix(".md").unwrap_or(file)
+                        );
                     }
                 }
                 if backed_up {
