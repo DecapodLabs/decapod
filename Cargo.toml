@@ -14,7 +14,8 @@ exclude = [
     ".decapod/*",
     "dist/*",
     "target/*",
-    "constitution_embed/*"
+    "constitution_embed/*",
+    "assets/*.mp4"
 ]
 
 [lib]
