@@ -84,15 +84,16 @@ But we're handing agents write access to production repos and hoping "good promp
 
 ```text
 .decapod/
-├── data/        # state that survives sessions
-└── OVERRIDE.md  # project-specific constitution overrides (optional)
+├── data/        # state that survives sessions   (DON'T TOUCH)
+├── generated/   # generated system files         (DON'T TOUCH)
+└── OVERRIDE.md  # user managed override config   (BELONGS TO YOU)
 ```
 
 **Local-first by design:**
 - No daemon
 - No hosted service
 - No "agent memory SaaS"
-- Just a repo-native control plane you version, review, and enforce
+- Just a repo-native file-based control plane
 
 ---
 
