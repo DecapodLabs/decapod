@@ -948,44 +948,39 @@ pub fn run_validation(
     validate_canon_mutation(store, &mut pass_count, &mut fail_count)?;
 
     println!();
-    println!(
-        "  {}",
-        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".bright_blue()
-    );
-    println!(
-        "  {} {}",
-        "▸".bright_cyan().bold(),
-        "Results Summary".bright_white().bold()
-    );
+    println!("      {}", "╔═══════════════════════════════════════════════╗".bright_blue().bold());
+    println!("      {} {} {}", "║".bright_blue().bold(), "📊 VALIDATION RESULTS                     ".bright_white().bold(), "║".bright_blue().bold());
+    println!("      {}", "╚═══════════════════════════════════════════════╝".bright_blue().bold());
     println!();
     println!(
-        "    {} {} {}",
-        "●".bright_green(),
+        "        {} {}  {}",
+        "●".bright_green().bold(),
         "PASS:".bright_white(),
         pass_count.to_string().bright_green().bold()
     );
     if fail_count > 0 {
         eprintln!(
-            "    {} {} {}",
-            "●".bright_red(),
+            "        {} {}  {}",
+            "●".bright_red().bold(),
             "FAIL:".bright_white(),
             fail_count.to_string().bright_red().bold()
         );
     }
     if warn_count > 0 {
         println!(
-            "    {} {} {}",
-            "●".bright_yellow(),
+            "        {} {}  {}",
+            "●".bright_yellow().bold(),
             "WARN:".bright_white(),
             warn_count.to_string().bright_yellow().bold()
         );
     }
     println!(
-        "    {} {}",
+        "        {} {}",
         "Total:".bright_black(),
         (pass_count + fail_count + warn_count)
             .to_string()
             .bright_white()
+            .bold()
     );
     println!();
 

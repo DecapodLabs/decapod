@@ -417,9 +417,9 @@ pub fn run() -> Result<(), error::DecapodError> {
             println!();
             println!("{}", "              ▗▄▄▄▄▖  ▗▄▄▄▄▄▄▄▄▄▄▄▄▖  ▗▄▄▄▄▖".bright_magenta().bold());
             println!("{}", "            ▗▀▀      ▝▀              ▀▘      ▀▀▖".bright_magenta().bold());
-            println!("{}", "          ▗▀           {}              ▀▖".bright_magenta().bold(), "🦀 D E C A P O D 🦀".bright_white().bold().underline());
+            println!("          {}   {}   {}", "▗▀".bright_magenta().bold(), "🦀 D E C A P O D 🦀".bright_white().bold().underline(), "▀▖".bright_magenta().bold());
             println!("{}", "         ▐                                        ▌".bright_cyan().bold());
-            println!("{}", "         ▐   {}   ▌".bright_cyan(), "A G E N T I C   C O N T R O L   P L A N E".bright_cyan().bold());
+            println!("         {} {} {}", "▐".bright_cyan().bold(), "A G E N T I C   C O N T R O L   P L A N E".bright_cyan().bold(), "▌".bright_cyan().bold());
             println!("{}", "         ▐                                        ▌".bright_cyan().bold());
             println!("{}", "          ▝▖                                    ▗▘".bright_magenta().bold());
             println!("{}", "            ▝▄▄                              ▄▄▘".bright_magenta().bold());
