@@ -244,7 +244,7 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
             "actor": "migration",
         });
 
-        writeln!(file, "{}", event.to_string()).map_err(error::DecapodError::IoError)?;
+        writeln!(file, "{}", event).map_err(error::DecapodError::IoError)?;
 
         // If task is done, add task.done event
         if status == "done" {
@@ -257,7 +257,7 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
                 "actor": "migration",
             });
 
-            writeln!(file, "{}", complete_event.to_string())
+            writeln!(file, "{}", complete_event)
                 .map_err(error::DecapodError::IoError)?;
         }
     }
