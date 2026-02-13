@@ -1,11 +1,6 @@
 name: Push Tag on Merge
 
 on:
-  pull_request:
-    branches:
-      - master
-    types:
-      - closed
   push:
     branches:
       - master
@@ -17,15 +12,23 @@ jobs:
   push-tag:
     name: Push Tag on Merge
     runs-on: ubuntu-latest
-    if: github.repository == 'DecapodLabs/decapod' && github.event.pull_request.merged == true
+    if: github.repository == 'DecapodLabs/decapod'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push all new tags
+      - name: Get version and push tag
         run: |
-          git fetch --tags origin master
-          # Push all tags that exist locally but not on origin
-          git push origin --tags
+          VERSION=$(grep '^version =' Cargo.toml | head -n 1 | cut -d '"' -f 2)
+          TAG="v$VERSION"
+          
+          # Check if tag exists on origin
+          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "Tag $TAG already exists on origin"
+          else
+            echo "Creating and pushing tag: $TAG"
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "$TAG"
+          fi

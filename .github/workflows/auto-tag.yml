@@ -1,10 +1,9 @@
-name: Auto Tag on PR
+name: Auto Tag on Merge
 
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
+  push:
+    branches:
+      - master
 
 permissions:
   contents: write
@@ -12,45 +11,27 @@ permissions:
 
 jobs:
   auto-tag:
-    name: Auto Tag on PR
+    name: Auto Tag on Merge
     runs-on: ubuntu-latest
     if: github.repository == 'DecapodLabs/decapod'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get PR version
-        id: pr_version
+      - name: Get current version
+        id: version
         run: |
           VERSION=$(grep '^version =' Cargo.toml | head -n 1 | cut -d '"' -f 2)
-          echo "pr=$VERSION" >> $GITHUB_OUTPUT
-          echo "PR version: $VERSION"
+          echo "current=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
 
-      - name: Get master version
-        id: master_version
-        run: |
-          git fetch origin master:master
-          MASTER_VERSION=$(git show master:Cargo.toml | grep '^version =' | head -n 1 | cut -d '"' -f 2)
-          echo "master=$MASTER_VERSION" >> $GITHUB_OUTPUT
-          echo "Master version: $MASTER_VERSION"
-
-      - name: Bump and tag
+      - name: Bump version
         id: bump
         run: |
-          PR_VER="${{ steps.pr_version.outputs.pr }}"
-          MASTER_VER="${{ steps.master_version.outputs.master }}"
-          
-          # Skip if PR version > master (already bumped)
-          if [ "$(printf '%s\n' "$MASTER_VER" "$PR_VER" | sort -V | head -n1)" = "$PR_VER" ] && [ "$PR_VER" != "$MASTER_VER" ]; then
-            echo "PR version $PR_VER > master $MASTER_VER, skipping"
-            echo "new=" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          IFS='.' read -r major minor patch <<< "$PR_VER"
+          VERSION="${{ steps.version.outputs.current }}"
+          IFS='.' read -r major minor patch <<< "$VERSION"
           patch=$((patch + 1))
           NEW_VERSION="0.1.$patch"
           
@@ -64,20 +45,21 @@ jobs:
           echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "Bumping to: $NEW_VERSION"
 
-      - name: Update and commit
+      - name: Create bump PR
         if: steps.bump.outputs.new != ''
         run: |
           sed -i 's/^version = ".*"/version = "${{ steps.bump.outputs.new }}"/' Cargo.toml
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add Cargo.toml
+          git checkout -b "bump-v${{ steps.bump.outputs.new }}"
           git commit -m "chore: bump version to v${{ steps.bump.outputs.new }}"
-          git tag -a "v${{ steps.bump.outputs.new }}" -m "Release v${{ steps.bump.outputs.new }}"
-          git push origin ${{ github.head_ref }} --tags
+          git push origin "bump-v${{ steps.bump.outputs.new }}"
 
-      - name: Auto-merge bump PR
+      - name: Create PR
         if: steps.bump.outputs.new != ''
         run: |
-          gh pr merge --admin --delete-branch --squash ${{ github.head_ref }}
+          git tag -a "v${{ steps.bump.outputs.new }}" -m "Release v${{ steps.bump.outputs.new }}"
+          gh pr create --base master --head "bump-v${{ steps.bump.outputs.new }}" --title "chore: bump version to v${{ steps.bump.outputs.new }}" --body "Auto-generated version bump" --autoMerge
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
