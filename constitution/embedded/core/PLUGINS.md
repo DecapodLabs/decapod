@@ -76,6 +76,7 @@ Agents are generally advised not to open SQLite directly, especially as a broker
 
 ### 3.2 Knowledge & Memory (Intelligence)
 - **knowledge**: Rationale, context, and project-specific facts.
+- **teammate** ⭐: User preference memory for persistent behaviors. **See: `embedded/plugins/TEAMMATE.md`**
 - **context**: Token budget management and MOVE-not-TRIM archival.
 - **archive**: Immutable session history indexing.
 
@@ -116,6 +117,7 @@ Constraint:
 | reflex | implemented | REAL | `embedded/plugins/REFLEX.md` | both | writes | `decapod reflex schema` | brokered sqlite, audit trail |
 | watcher | implemented | REAL | `embedded/plugins/WATCHER.md` | both | reads | `decapod watcher run` | audit trail |
 | knowledge | implemented | REAL | `embedded/plugins/KNOWLEDGE.md` | both | writes | `decapod knowledge search` | provenance check |
+| teammate | implemented | REAL | `embedded/plugins/TEAMMATE.md` | both | writes | `decapod teammate schema` | user preference persistence |
 | archive | implemented | REAL | `embedded/plugins/ARCHIVE.md` | both | writes | `decapod archive verify` | hash matching |
 | feedback | implemented | REAL | `embedded/plugins/FEEDBACK.md` | both | writes | `decapod feedback propose` | non-binding isolation |
 | trust | implemented | REAL | `embedded/plugins/TRUST.md` | both | reads | `decapod trust status` | audit history check |
@@ -158,6 +160,7 @@ V1 scope (when implemented):
 ## Links
 
 - `embedded/plugins/TODO.md` — **TODO subsystem reference (START HERE)**
+- `embedded/plugins/TEAMMATE.md` — **Teammate preference memory reference**
 - `embedded/core/DECAPOD.md`
 - `embedded/core/CONTROL_PLANE.md`
 - `embedded/core/DOC_RULES.md`

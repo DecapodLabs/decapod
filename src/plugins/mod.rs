@@ -7,6 +7,7 @@ pub mod heartbeat;
 pub mod knowledge;
 pub mod policy;
 pub mod reflex;
+pub mod teammate;
 pub mod todo;
 pub mod trust;
 pub mod watcher;
