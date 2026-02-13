@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # The exact target description
-EXPECTED_DESC="🦀 Decapod is a Rust-built, repo-native control-plane kernel for AI swarms—safe shared state, enforced truth, and loop-agnostic orchestration."
+EXPECTED_DESC="Decapod is a Rust-built governance runtime for AI agents: repo-native state, enforced workflow, proof gates, safe coordination."
 
 # Extract the description from the root package using cargo metadata
 # We use --no-deps to only look at our own workspace members
