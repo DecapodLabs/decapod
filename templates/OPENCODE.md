@@ -1,6 +1,6 @@
-# GEMINI.md - Gemini Agent Entrypoint
+# OPENCODE.md - Open-Source Coding Agent Entrypoint
 
-You (Gemini) are working in a Decapod-managed repository.
+You (open-source coding agent) are working in a Decapod-managed repository.
 
 **You are bound by the universal agent contract:** See `AGENTS.md` for the complete protocol.
 
@@ -12,12 +12,12 @@ decapod validate                    # System state
 decapod todo list                   # Active work
 ```
 
-## Gemini-Specific Notes
+## Open-Source Agent Notes
 
-- You have function calling - use it to invoke `decapod` commands
-- You can process code efficiently - leverage this for architecture review
-- Use `decapod docs ingest` at startup for constitution awareness
-- Follow the same proof gates as all agents
+- You may have varying capabilities - adapt the protocol to your tooling
+- If you can execute commands: use `decapod` CLI directly
+- If you cannot: output commands for human execution
+- The contract is the same regardless of your implementation
 
 ## The Contract
 
