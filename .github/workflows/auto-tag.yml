@@ -15,10 +15,17 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'DecapodLabs/decapod' && !contains(github.event.head_commit.message, 'bump version')
     steps:
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.generate-token.outputs.token }}
 
       - name: Get current version
         id: version
@@ -60,7 +67,7 @@ jobs:
       - name: Create Pull Request
         if: steps.bump.outputs.new != ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
           gh pr create \
             --title "chore: bump version to v${{ steps.bump.outputs.new }}" \
