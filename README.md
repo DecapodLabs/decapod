@@ -33,7 +33,7 @@
 
 ```bash
 cargo install decapod
-cd your-project
+cd <your-project>
 decapod init
 ```
 
@@ -47,7 +47,7 @@ That's it. `decapod init` creates (and backs up existing) `CLAUDE.md`, `AGENTS.m
 **What you get:**
 - Embedded constitution that all agents follow
 - Confidence to merge agent work
-- Simple overrides via OVERRIDE.md
+- Simple overrides via `OVERRIDE.md`
 
 ---
 
@@ -104,8 +104,8 @@ But we're handing agents write access to production repos and hoping "good promp
 ✅ You need multiple agents working without chaos<br>
 ✅ You merge to production (not just prototyping)
 
-If you want a one-off script, Decapod is overkill.
-If you want agents to ship production code, Decapod is the missing layer.
+If you want a one-off script, decapod is overkill.<br>
+If you want agents to ship production code, decapod is the missing layer.
 
 ---
 
@@ -114,7 +114,7 @@ If you want agents to ship production code, Decapod is the missing layer.
 - **Ship a subsystem** — adapters, proof harnesses, connectors
 - **Harden the constitution** — if you found a rule that stops drift, PR it upstream
 - **Break it** — open issues with repros (they become proof gates)
-- **Share overrides** — Found a useful project pattern? Add it to OVERRIDE.md examples
+- **Share patterns** — Found a useful project pattern? Add it to the constitution
 
 ---
 
