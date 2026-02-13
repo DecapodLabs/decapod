@@ -50,6 +50,7 @@ Decapod is an environment: **the place agent work becomes enforceable.**
 
 ```bash
 cargo install decapod
+cd <your-project>
 decapod init
 ```
 
@@ -202,9 +203,8 @@ An agent thinks it’s done. Proof gates fail. It can’t credibly claim complet
 ✅ You want discipline enforced by the environment  
 ✅ You want parallel agents without turning the repo into lore  
 ✅ You merge to `main` (not just demoing prompts)
-
-❌ You want a one-off script (Decapod is intentionally heavier)  
-❌ You want “AI vibes” instead of enforceable workflow  
+✅ You want an AI companion for building and learning Software Engineering  
+✅ You want “AI vibes” with guardrails and customizable enforceable workflows  
 
 ---
 
