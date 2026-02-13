@@ -51,6 +51,20 @@ Before any implementation, you MUST ask the user:
 
 **Violation of these rules = invalid work. No exceptions.**
 
+## Project-Specific Overrides (OVERRIDE.md)
+
+This project can customize Decapod's embedded constitution via `.decapod/OVERRIDE.md`:
+
+- **What it is:** Project-specific overrides for embedded constitution components
+- **Where:** `.decapod/OVERRIDE.md` (created during `decapod init`)
+- **How to use:** Edit component sections (e.g., `### plugins/TODO.md`) to override behavior
+- **Validation:** Run `decapod docs override` after making changes
+- **Reading:** `decapod docs show <path>` automatically merges overrides with embedded docs
+
+**Example:** If this project has custom TODO priority levels, they'll be defined under `### plugins/TODO.md` in OVERRIDE.md and will appear when you run `decapod docs show plugins/TODO.md`.
+
+**Always check for project overrides** - the merged view (embedded + overrides) is what you should follow.
+
 ## Common Decapod Commands (USE THESE)
 
 ```bash

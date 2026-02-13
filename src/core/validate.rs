@@ -163,7 +163,10 @@ fn validate_embedded_self_contained(
                             line.contains("<repo>") ||  // Path documentation like `<repo>/.decapod/project`
                     line.contains("store:") ||  // Store documentation
                     line.contains("directory") || // Directory explanations
-                    line.contains("override") || // Override instructions
+                    line.contains("override") || // Override instructions (lowercase)
+                    line.contains("Override") || // Override instructions (capitalized)
+                    line.contains("OVERRIDE.md") || // OVERRIDE.md file references
+                    line.contains("Location:") || // Location descriptions
                     line.contains("primarily contain") || // Directory descriptions
                     line.contains("intended as")
                             // Template descriptions
@@ -286,23 +289,9 @@ fn validate_repo_store_dogfood(
     store: &Store,
     pass_count: &mut u32,
     fail_count: &mut u32,
-    decapod_dir: &Path,
+    _decapod_dir: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Store: repo (dogfood backlog semantics)");
-
-    let sentinel = decapod_dir.join(".decapod").join("DECAPOD_REPO_STORE");
-
-    if sentinel.is_file() {
-        pass(
-            "Repo store sentinel exists (.decapod/DECAPOD_REPO_STORE)",
-            pass_count,
-        );
-    } else {
-        fail(
-            "Repo store sentinel missing (.decapod/DECAPOD_REPO_STORE)",
-            fail_count,
-        );
-    }
 
     let events = store.root.join("todo.events.jsonl");
     if !events.is_file() {
