@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0](https://github.com/DecapodLabs/decapod/compare/v0.3.3...v0.4.0) - 2026-02-14
+
+### Added
+
+- add `decapod qa gatling` command with native Rust test harness
+
+### Other
+
+- Merge pull request #110 from DecapodLabs/ahr/work
+- fix rustfmt formatting in lib.rs
+- add CLI gatling test and full regression audit
+
 ## [0.3.3](https://github.com/DecapodLabs/decapod/compare/v0.3.2...v0.3.3) - 2026-02-14
 
 ### Other
