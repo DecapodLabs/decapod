@@ -84,8 +84,7 @@ use core::{
     tui, validate,
 };
 use plugins::{
-    archive, context, cron, feedback, health, heartbeat, knowledge, policy, reflex, teammate, todo,
-    trust, watcher,
+    archive, context, cron, feedback, health, knowledge, policy, reflex, teammate, todo, watcher,
 };
 
 use clap::{Parser, Subcommand};
@@ -104,7 +103,21 @@ struct Cli {
 }
 
 #[derive(clap::Args, Debug)]
-struct InitCli {
+struct ValidateCli {
+    /// Store to validate: 'user' (blank-slate semantics) or 'repo' (dogfood backlog).
+    #[clap(long, default_value = "repo")]
+    store: String,
+    /// Output format: 'text' or 'json'.
+    #[clap(long, default_value = "text")]
+    format: String,
+}
+
+// ===== Grouped Command Structures =====
+
+#[derive(clap::Args, Debug)]
+struct InitGroupCli {
+    #[clap(subcommand)]
+    command: Option<InitCommand>,
     /// Directory to initialize (defaults to current working directory).
     #[clap(short, long)]
     dir: Option<PathBuf>,
@@ -128,96 +141,139 @@ struct InitCli {
     agents: bool,
 }
 
-#[derive(clap::Args, Debug)]
-struct CleanCli {
-    /// Directory to clean (defaults to current working directory).
-    #[clap(short, long)]
-    dir: Option<PathBuf>,
+#[derive(Subcommand, Debug)]
+enum InitCommand {
+    /// Remove all Decapod-related files from the current repository.
+    Clean {
+        /// Directory to clean (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+    },
 }
 
 #[derive(clap::Args, Debug)]
-struct ValidateCli {
-    /// Store to validate: 'user' (blank-slate semantics) or 'repo' (dogfood backlog).
-    #[clap(long, default_value = "repo")]
-    store: String,
-    /// Output format: 'text' or 'json'.
-    #[clap(long, default_value = "text")]
-    format: String,
+struct SetupCli {
+    #[clap(subcommand)]
+    command: SetupCommand,
 }
 
 #[derive(Subcommand, Debug)]
-enum Command {
-    /// Initialize the Decapod system (user store + project entrypoints)
-    Init(InitCli),
-    /// Remove all Decapod-related files from the current repository.
-    Clean(CleanCli),
-    /// Validate the Decapod methodology against the documentation
-    Validate(ValidateCli),
-    /// Access embedded Decapod methodology documentation
-    Docs(docs_cli::DocsCli),
-    /// Manage cron jobs
-    Cron(cron::CronCli),
-    /// Manage automated responses (reflexes)
-    Reflex(reflex::ReflexCli),
-    /// Manage TODO tasks (repo dogfooding + end-user tasks)
-    Todo(todo::TodoCli),
-    /// Manage brokered state access (The Thin Waist)
-    Broker(BrokerCli),
+enum SetupCommand {
+    /// Install git hooks for commit message validation
+    Hook {
+        /// Install commit-msg hook for conventional commits
+        #[clap(long, default_value = "true")]
+        commit_msg: bool,
+        /// Install pre-commit hook (fmt, clippy)
+        #[clap(long)]
+        pre_commit: bool,
+        /// Uninstall hooks
+        #[clap(long)]
+        uninstall: bool,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+struct GovernCli {
+    #[clap(subcommand)]
+    command: GovernCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum GovernCommand {
+    /// Evaluate risk classification and policy approvals
+    Policy(policy::PolicyCli),
+    /// Manage the Health Engine (claims, proofs, system summary, agent autonomy)
+    Health(health::HealthCli),
+    /// Run configurable proofs with audit trail
+    Proof(ProofCommandCli),
+    /// Execute read-only watchlist checks
+    Watcher(WatcherCli),
+    /// Manage operator feedback and preference refinement
+    Feedback(FeedbackCli),
+}
+
+#[derive(clap::Args, Debug)]
+struct DataCli {
+    #[clap(subcommand)]
+    command: DataCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum DataCommand {
+    /// Manage session archives (MOVE-not-TRIM)
+    Archive(ArchiveCli),
+    /// Manage repository knowledge
+    Knowledge(KnowledgeCli),
     /// Manage agent context budgets and archival
     Context(ContextCli),
     /// Discover schemas for all subsystems
     Schema(SchemaCli),
-    /// Manage the Health Engine (claims and proofs)
-    Health(health::HealthCli),
-    /// Evaluate risk classification and policy approvals
-    Policy(policy::PolicyCli),
-    /// Manage repository knowledge
-    Knowledge(KnowledgeCli),
     /// Output a deterministic repository map
     Repo(RepoCli),
-    /// Execute read-only watchlist checks
-    Watcher(WatcherCli),
-    /// Show computed system health overview
-    Heartbeat,
-    /// Show computed agent autonomy status
-    Trust(TrustCli),
-    /// Manage session archives (MOVE-not-TRIM)
-    Archive(ArchiveCli),
-    /// Manage operator feedback and preference refinement
-    Feedback(FeedbackCli),
+    /// Manage brokered state access (The Thin Waist)
+    Broker(BrokerCli),
     /// Manage teammate preferences and remembered behaviors
     Teammate(teammate::TeammateCli),
-    /// Run configurable proofs with audit trail
-    Proof(ProofCommandCli),
+}
+
+#[derive(clap::Args, Debug)]
+struct AutoCli {
+    #[clap(subcommand)]
+    command: AutoCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum AutoCommand {
+    /// Manage cron jobs
+    Cron(cron::CronCli),
+    /// Manage automated responses (reflexes)
+    Reflex(reflex::ReflexCli),
+}
+
+#[derive(clap::Args, Debug)]
+struct QaCli {
+    #[clap(subcommand)]
+    command: QaCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum QaCommand {
     /// Run an end-to-end usability verification (simulates fresh install)
     Verify,
-    /// Install git hooks for commit message validation
-    Hook(HookCli),
     /// Run CI checks (crate description, etc.)
-    Check(CheckCli),
+    Check {
+        /// Check crate description matches expected
+        #[clap(long)]
+        crate_description: bool,
+        /// Run all checks
+        #[clap(long)]
+        all: bool,
+    },
 }
 
-#[derive(clap::Args, Debug)]
-struct HookCli {
-    /// Install commit-msg hook for conventional commits
-    #[clap(long, default_value = "true")]
-    commit_msg: bool,
-    /// Install pre-commit hook (fmt, clippy)
-    #[clap(long)]
-    pre_commit: bool,
-    /// Uninstall hooks
-    #[clap(long)]
-    uninstall: bool,
-}
+// ===== Main Command Enum =====
 
-#[derive(clap::Args, Debug)]
-struct CheckCli {
-    /// Check crate description matches expected
-    #[clap(long)]
-    crate_description: bool,
-    /// Run all checks
-    #[clap(long)]
-    all: bool,
+#[derive(Subcommand, Debug)]
+enum Command {
+    /// Initialize the Decapod system (user store + project entrypoints)
+    Init(InitGroupCli),
+    /// Configure repository settings (git hooks, etc.)
+    Setup(SetupCli),
+    /// Access embedded Decapod methodology documentation
+    Docs(docs_cli::DocsCli),
+    /// Manage TODO tasks (repo dogfooding + end-user tasks)
+    Todo(todo::TodoCli),
+    /// Validate the Decapod methodology against the documentation
+    Validate(ValidateCli),
+    /// Governance & safety (policy, health, proofs, watcher, feedback)
+    Govern(GovernCli),
+    /// Data management (archive, knowledge, context, schema, repo, broker, teammate)
+    Data(DataCli),
+    /// Automation (cron, reflex)
+    Auto(AutoCli),
+    /// Quality assurance (verify, check)
+    Qa(QaCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -284,22 +340,6 @@ struct WatcherCli {
 enum WatcherCommand {
     /// Run all checks in the watchlist
     Run,
-}
-
-#[derive(clap::Args, Debug)]
-struct TrustCli {
-    #[clap(subcommand)]
-    command: TrustCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum TrustCommand {
-    /// Show computed agent autonomy status
-    Status {
-        /// Actor ID to check trust status for
-        #[clap(long, default_value = "decapod")]
-        id: String,
-    },
 }
 
 #[derive(clap::Args, Debug)]
@@ -416,9 +456,9 @@ fn find_decapod_project_root(start_dir: &Path) -> Result<PathBuf, error::Decapod
     }
 }
 
-fn clean_project(opts: &CleanCli) -> Result<(), error::DecapodError> {
-    let raw_dir = match opts.dir {
-        Some(ref d) => d.clone(),
+fn clean_project(dir: Option<PathBuf>) -> Result<(), error::DecapodError> {
+    let raw_dir = match dir {
+        Some(d) => d,
         None => std::env::current_dir()?,
     };
     let target_dir = std::fs::canonicalize(&raw_dir).map_err(error::DecapodError::IoError)?;
@@ -453,7 +493,18 @@ pub fn run() -> Result<(), error::DecapodError> {
     let store_root: PathBuf;
 
     match cli.command {
-        Command::Init(init_cli) => {
+        Command::Init(init_group) => {
+            // Handle subcommands (clean)
+            if let Some(subcmd) = init_group.command {
+                match subcmd {
+                    InitCommand::Clean { dir } => {
+                        clean_project(dir)?;
+                        return Ok(());
+                    }
+                }
+            }
+
+            // Base init command
             use colored::Colorize;
 
             // Clear screen and position cursor for pristine alien output
@@ -521,7 +572,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             println!();
             println!();
 
-            let target_dir = match init_cli.dir {
+            let target_dir = match init_group.dir {
                 Some(d) => d,
                 None => current_dir.clone(),
             };
@@ -530,7 +581,7 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Check if .decapod exists and skip if it does, unless --force
             let setup_decapod_root = target_dir.join(".decapod");
-            if setup_decapod_root.exists() && !init_cli.force {
+            if setup_decapod_root.exists() && !init_group.force {
                 tui::render_box(
                     "⚠  SYSTEM ALREADY INITIALIZED",
                     "Use --force to override",
@@ -564,7 +615,7 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Safely backup root agent entrypoint files if they exist and differ from templates
             let mut created_backups = false;
-            if !init_cli.dry_run {
+            if !init_group.dry_run {
                 let mut backed_up = false;
                 for file in &existing_agent_files {
                     let path = target_dir.join(file);
@@ -615,12 +666,12 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Create .decapod/data for init
             let setup_store_root = setup_decapod_root.join("data");
-            if !init_cli.dry_run {
+            if !init_group.dry_run {
                 std::fs::create_dir_all(&setup_store_root).map_err(error::DecapodError::IoError)?;
             }
 
             // `--dry-run` should not perform any mutations.
-            if !init_cli.dry_run {
+            if !init_group.dry_run {
                 // Databases setup section - TUI styled box
                 tui::render_box(
                     "⚡ SUBSYSTEM INITIALIZATION",
@@ -707,15 +758,15 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Determine which agent files to generate based on flags
             // Individual flags override existing files list
-            let agent_files_to_generate = if init_cli.claude || init_cli.gemini || init_cli.agents {
+            let agent_files_to_generate = if init_group.claude || init_group.gemini || init_group.agents {
                 let mut files = vec![];
-                if init_cli.claude {
+                if init_group.claude {
                     files.push("CLAUDE.md".to_string());
                 }
-                if init_cli.gemini {
+                if init_group.gemini {
                     files.push("GEMINI.md".to_string());
                 }
-                if init_cli.agents {
+                if init_group.agents {
                     files.push("AGENTS.md".to_string());
                 }
                 files
@@ -728,23 +779,24 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
                 target_dir,
-                force: init_cli.force,
-                dry_run: init_cli.dry_run,
+                force: init_group.force,
+                dry_run: init_group.dry_run,
                 agent_files: agent_files_to_generate,
                 created_backups,
-                all: init_cli.all,
+                all: init_group.all,
             })?;
 
             // Write version file for migration tracking
-            if !init_cli.dry_run {
+            if !init_group.dry_run {
                 migration::write_version(&setup_decapod_root)?;
             }
         }
-        Command::Clean(clean_cli) => {
-            clean_project(&clean_cli)?;
-        }
-        Command::Check(check_cli) => {
-            run_check(check_cli)?;
+        Command::Setup(setup_cli) => {
+            match setup_cli.command {
+                SetupCommand::Hook { commit_msg, pre_commit, uninstall } => {
+                    run_hook_install(commit_msg, pre_commit, uninstall)?;
+                }
+            }
         }
         _ => {
             // For other commands, ensure .decapod exists
@@ -776,240 +828,238 @@ pub fn run() -> Result<(), error::DecapodError> {
                                 root: tmp_root,
                             }
                         }
-                        _ => project_store,
+                        _ => project_store.clone(),
                     };
                     validate::run_validation(&store, &decapod_root, &decapod_root)?;
                 }
                 Command::Docs(docs_cli) => {
                     docs_cli::run_docs_cli(docs_cli)?;
                 }
-                Command::Proof(proof_cli) => {
-                    proof::execute_proof_cli(&proof_cli, &store_root)?;
-                }
-                Command::Cron(cron_cli) => {
-                    cron::run_cron_cli(&project_store, cron_cli)?;
-                }
-                Command::Reflex(reflex_cli) => {
-                    reflex::run_reflex_cli(&project_store, reflex_cli);
-                }
                 Command::Todo(todo_cli) => {
                     todo::run_todo_cli(&project_store, todo_cli)?;
                 }
-                Command::Broker(broker_cli) => match broker_cli.command {
-                    BrokerCommand::Audit => {
-                        let audit_log = store_root.join("broker.events.jsonl");
-                        if audit_log.exists() {
-                            let content = std::fs::read_to_string(audit_log)?;
-                            println!("{}", content);
-                        } else {
-                            println!("No audit log found.");
+                Command::Govern(govern_cli) => {
+                    match govern_cli.command {
+                        GovernCommand::Policy(policy_cli) => {
+                            policy::run_policy_cli(&project_store, policy_cli)?;
+                        }
+                        GovernCommand::Health(health_cli) => {
+                            health::run_health_cli(&project_store, health_cli)?;
+                        }
+                        GovernCommand::Proof(proof_cli) => {
+                            proof::execute_proof_cli(&proof_cli, &store_root)?;
+                        }
+                        GovernCommand::Watcher(watcher_cli) => {
+                            match watcher_cli.command {
+                                WatcherCommand::Run => {
+                                    let report = watcher::run_watcher(&project_store)?;
+                                    println!("{}", serde_json::to_string_pretty(&report).unwrap());
+                                }
+                            }
+                        }
+                        GovernCommand::Feedback(feedback_cli) => {
+                            feedback::initialize_feedback_db(&store_root)?;
+                            match feedback_cli.command {
+                                FeedbackCommand::Add { source, text, links } => {
+                                    let id = feedback::add_feedback(
+                                        &project_store,
+                                        &source,
+                                        &text,
+                                        links.as_deref(),
+                                    )?;
+                                    println!("Feedback recorded: {}", id);
+                                }
+                                FeedbackCommand::Propose => {
+                                    let proposal = feedback::propose_prefs(&project_store)?;
+                                    println!("{}", proposal);
+                                }
+                            }
                         }
                     }
-                },
-                Command::Context(context_cli) => {
-                    let manager = context::ContextManager::new(&store_root)?;
-                    match context_cli.command {
-                        ContextCommand::Audit { profile, files } => {
-                            let total = manager.audit_session(&files)?;
-                            match manager.get_profile(&profile) {
-                                Some(p) => {
-                                    println!(
-                                        "Total tokens for profile '{}': {} / {} (budget)",
-                                        profile, total, p.budget_tokens
-                                    );
-                                    if total > p.budget_tokens {
-                                        println!("⚠ OVER BUDGET");
+                }
+                Command::Data(data_cli) => {
+                    match data_cli.command {
+                        DataCommand::Archive(archive_cli) => {
+                            archive::initialize_archive_db(&store_root)?;
+                            match archive_cli.command {
+                                ArchiveCommand::List => {
+                                    let items = archive::list_archives(&project_store)?;
+                                    println!("{}", serde_json::to_string_pretty(&items).unwrap());
+                                }
+                                ArchiveCommand::Verify => {
+                                    let failures = archive::verify_archives(&project_store)?;
+                                    if failures.is_empty() {
+                                        println!("All archives verified successfully.");
+                                    } else {
+                                        println!("Archive verification failed:");
+                                        for f in failures {
+                                            println!("- {}", f);
+                                        }
                                     }
                                 }
-                                None => {
+                            }
+                        }
+                        DataCommand::Knowledge(knowledge_cli) => {
+                            db::initialize_knowledge_db(&store_root)?;
+                            match knowledge_cli.command {
+                                KnowledgeCommand::Add { id, title, text, provenance, claim_id } => {
+                                    knowledge::add_knowledge(
+                                        &project_store,
+                                        &id,
+                                        &title,
+                                        &text,
+                                        &provenance,
+                                        claim_id.as_deref(),
+                                    )?;
+                                    println!("Knowledge entry added: {}", id);
+                                }
+                                KnowledgeCommand::Search { query } => {
+                                    let results = knowledge::search_knowledge(&project_store, &query)?;
+                                    println!("{}", serde_json::to_string_pretty(&results).unwrap());
+                                }
+                            }
+                        }
+                        DataCommand::Context(context_cli) => {
+                            let manager = context::ContextManager::new(&store_root)?;
+                            match context_cli.command {
+                                ContextCommand::Audit { profile, files } => {
+                                    let total = manager.audit_session(&files)?;
+                                    match manager.get_profile(&profile) {
+                                        Some(p) => {
+                                            println!(
+                                                "Total tokens for profile '{}': {} / {} (budget)",
+                                                profile, total, p.budget_tokens
+                                            );
+                                            if total > p.budget_tokens {
+                                                println!("⚠ OVER BUDGET");
+                                            }
+                                        }
+                                        None => {
+                                            println!(
+                                                "Total tokens: {} (Profile '{}' not found)",
+                                                total, profile
+                                            );
+                                        }
+                                    }
+                                }
+                                ContextCommand::Pack { path, summary } => {
+                                    match manager.pack_and_archive(&project_store, &path, &summary) {
+                                        Ok(archive_path) => {
+                                            println!("Session archived to: {}", archive_path.display());
+                                        }
+                                        Err(error::DecapodError::ContextPackError(msg)) => {
+                                            eprintln!("Context pack failed: {}", msg);
+                                        }
+                                        Err(e) => {
+                                            eprintln!("Unexpected error during context pack: {}", e);
+                                        }
+                                    }
+                                }
+                                ContextCommand::Restore {
+                                    id,
+                                    profile,
+                                    current_files,
+                                } => {
+                                    let content = manager.restore_archive(&id, &profile, &current_files)?;
                                     println!(
-                                        "Total tokens: {} (Profile '{}' not found)",
-                                        total, profile
+                                        "--- RESTORED CONTENT (Archive: {}) ---\n{}\n--- END RESTORED ---",
+                                        id, content
                                     );
                                 }
                             }
                         }
-                        ContextCommand::Pack { path, summary } => {
-                            match manager.pack_and_archive(&project_store, &path, &summary) {
-                                Ok(archive_path) => {
-                                    println!("Session archived to: {}", archive_path.display());
-                                }
-                                Err(error::DecapodError::ContextPackError(msg)) => {
-                                    eprintln!("Context pack failed: {}", msg);
-                                }
-                                Err(e) => {
-                                    eprintln!("Unexpected error during context pack: {}", e);
-                                }
-                            }
-                        }
-                        ContextCommand::Restore {
-                            id,
-                            profile,
-                            current_files,
-                        } => {
-                            let content = manager.restore_archive(&id, &profile, &current_files)?;
-                            println!(
-                                "--- RESTORED CONTENT (Archive: {}) ---\n{}\n--- END RESTORED ---",
-                                id, content
-                            );
-                        }
-                    }
-                }
-                Command::Schema(schema_cli) => {
-                    let mut schemas = std::collections::BTreeMap::new();
-                    schemas.insert("todo", todo::schema());
-                    schemas.insert("cron", cron::schema());
-                    schemas.insert("reflex", reflex::schema());
-                    schemas.insert("health", health::health_schema());
-                    schemas.insert("broker", core::broker::schema());
-                    schemas.insert("context", context::schema());
-                    schemas.insert("policy", policy::schema());
-                    schemas.insert("knowledge", knowledge::schema());
-                    schemas.insert("repomap", repomap::schema());
-                    schemas.insert("watcher", watcher::schema());
-                    schemas.insert("heartbeat", heartbeat::schema());
-                    schemas.insert("trust", trust::schema());
-                    schemas.insert("archive", archive::schema());
-                    schemas.insert("feedback", feedback::schema());
-                    schemas.insert("teammate", teammate::schema());
-                    schemas.insert("docs", docs_cli::schema());
+                        DataCommand::Schema(schema_cli) => {
+                            let mut schemas = std::collections::BTreeMap::new();
+                            schemas.insert("todo", todo::schema());
+                            schemas.insert("cron", cron::schema());
+                            schemas.insert("reflex", reflex::schema());
+                            schemas.insert("health", health::health_schema());
+                            schemas.insert("broker", core::broker::schema());
+                            schemas.insert("context", context::schema());
+                            schemas.insert("policy", policy::schema());
+                            schemas.insert("knowledge", knowledge::schema());
+                            schemas.insert("repomap", repomap::schema());
+                            schemas.insert("watcher", watcher::schema());
+                            schemas.insert("archive", archive::schema());
+                            schemas.insert("feedback", feedback::schema());
+                            schemas.insert("teammate", teammate::schema());
+                            schemas.insert("docs", docs_cli::schema());
 
-                    let output = if let Some(sub) = schema_cli.subsystem {
-                        schemas
-                            .get(sub.as_str())
-                            .cloned()
-                            .unwrap_or(serde_json::json!({ "error": "subsystem not found" }))
-                    } else {
-                        let mut envelope = serde_json::json!({
-                            "schema_version": "1.0.0",
-                            "subsystems": schemas
-                        });
-                        if !schema_cli.deterministic {
-                            envelope.as_object_mut().unwrap().insert(
-                                "generated_at".to_string(),
-                                serde_json::json!(format!("{:?}", std::time::SystemTime::now())),
-                            );
-                        }
-                        envelope
-                    };
-
-                    if schema_cli.format == "json" {
-                        println!("{}", serde_json::to_string_pretty(&output).unwrap());
-                    } else {
-                        println!("Markdown schema format not yet implemented. Defaulting to JSON.");
-                        println!("{}", serde_json::to_string_pretty(&output).unwrap());
-                    }
-                }
-                Command::Health(health_cli) => {
-                    health::run_health_cli(&project_store, health_cli)?;
-                }
-                Command::Policy(policy_cli) => {
-                    policy::run_policy_cli(&project_store, policy_cli)?;
-                }
-                Command::Knowledge(k_cli) => {
-                    db::initialize_knowledge_db(&store_root)?;
-                    match k_cli.command {
-                        KnowledgeCommand::Add {
-                            id,
-                            title,
-                            text,
-                            provenance,
-                            claim_id,
-                        } => {
-                            knowledge::add_knowledge(
-                                &project_store,
-                                &id,
-                                &title,
-                                &text,
-                                &provenance,
-                                claim_id.as_deref(),
-                            )?;
-                            println!("Knowledge entry added: {}", id);
-                        }
-                        KnowledgeCommand::Search { query } => {
-                            let results = knowledge::search_knowledge(&project_store, &query)?;
-                            println!("{}", serde_json::to_string_pretty(&results).unwrap());
-                        }
-                    }
-                }
-                Command::Repo(r_cli) => match r_cli.command {
-                    RepoCommand::Map => {
-                        let decapod_root = project_root;
-                        let map = repomap::generate_map(&decapod_root);
-                        println!("{}", serde_json::to_string_pretty(&map).unwrap());
-                    }
-                    RepoCommand::Graph => {
-                        let decapod_root = project_root;
-                        let graph = repomap::generate_doc_graph(&decapod_root);
-                        println!("{}", graph.mermaid);
-                    }
-                },
-                Command::Watcher(w_cli) => match w_cli.command {
-                    WatcherCommand::Run => {
-                        let report = watcher::run_watcher(&project_store)?;
-                        println!("{}", serde_json::to_string_pretty(&report).unwrap());
-                    }
-                },
-                Command::Heartbeat => {
-                    let status = heartbeat::get_status(&project_store)?;
-                    println!("{}", serde_json::to_string_pretty(&status).unwrap());
-                }
-                Command::Trust(t_cli) => match t_cli.command {
-                    TrustCommand::Status { id } => {
-                        let status = trust::get_trust_status(&project_store, &id)?;
-                        println!("{}", serde_json::to_string_pretty(&status).unwrap());
-                    }
-                },
-                Command::Archive(arc_cli) => {
-                    archive::initialize_archive_db(&store_root)?;
-                    match arc_cli.command {
-                        ArchiveCommand::List => {
-                            let items = archive::list_archives(&project_store)?;
-                            println!("{}", serde_json::to_string_pretty(&items).unwrap());
-                        }
-                        ArchiveCommand::Verify => {
-                            let failures = archive::verify_archives(&project_store)?;
-                            if failures.is_empty() {
-                                println!("All archives verified successfully.");
+                            let output = if let Some(sub) = schema_cli.subsystem {
+                                schemas
+                                    .get(sub.as_str())
+                                    .cloned()
+                                    .unwrap_or(serde_json::json!({ "error": "subsystem not found" }))
                             } else {
-                                println!("Archive verification failed:");
-                                for f in failures {
-                                    println!("- {}", f);
+                                let mut envelope = serde_json::json!({
+                                    "schema_version": "1.0.0",
+                                    "subsystems": schemas
+                                });
+                                if !schema_cli.deterministic {
+                                    envelope.as_object_mut().unwrap().insert(
+                                        "generated_at".to_string(),
+                                        serde_json::json!(format!("{:?}", std::time::SystemTime::now())),
+                                    );
+                                }
+                                envelope
+                            };
+
+                            if schema_cli.format == "json" {
+                                println!("{}", serde_json::to_string_pretty(&output).unwrap());
+                            } else {
+                                println!("Markdown schema format not yet implemented. Defaulting to JSON.");
+                                println!("{}", serde_json::to_string_pretty(&output).unwrap());
+                            }
+                        }
+                        DataCommand::Repo(repo_cli) => {
+                            match repo_cli.command {
+                                RepoCommand::Map => {
+                                    let map = repomap::generate_map(&project_root);
+                                    println!("{}", serde_json::to_string_pretty(&map).unwrap());
+                                }
+                                RepoCommand::Graph => {
+                                    let graph = repomap::generate_doc_graph(&project_root);
+                                    println!("{}", graph.mermaid);
                                 }
                             }
                         }
-                    }
-                }
-                Command::Feedback(f_cli) => {
-                    feedback::initialize_feedback_db(&store_root)?;
-                    match f_cli.command {
-                        FeedbackCommand::Add {
-                            source,
-                            text,
-                            links,
-                        } => {
-                            let id = feedback::add_feedback(
-                                &project_store,
-                                &source,
-                                &text,
-                                links.as_deref(),
-                            )?;
-                            println!("Feedback recorded: {}", id);
+                        DataCommand::Broker(broker_cli) => {
+                            match broker_cli.command {
+                                BrokerCommand::Audit => {
+                                    let audit_log = store_root.join("broker.events.jsonl");
+                                    if audit_log.exists() {
+                                        let content = std::fs::read_to_string(audit_log)?;
+                                        println!("{}", content);
+                                    } else {
+                                        println!("No audit log found.");
+                                    }
+                                }
+                            }
                         }
-                        FeedbackCommand::Propose => {
-                            let proposal = feedback::propose_prefs(&project_store)?;
-                            println!("{}", proposal);
+                        DataCommand::Teammate(teammate_cli) => {
+                            teammate::run_teammate_cli(&project_store, teammate_cli)?;
                         }
                     }
                 }
-                Command::Teammate(tm_cli) => {
-                    teammate::run_teammate_cli(&project_store, tm_cli)?;
+                Command::Auto(auto_cli) => {
+                    match auto_cli.command {
+                        AutoCommand::Cron(cron_cli) => {
+                            cron::run_cron_cli(&project_store, cron_cli)?;
+                        }
+                        AutoCommand::Reflex(reflex_cli) => {
+                            reflex::run_reflex_cli(&project_store, reflex_cli);
+                        }
+                    }
                 }
-                Command::Verify => {
-                    run_verification()?;
-                }
-                Command::Hook(hook_cli) => {
-                    run_hook_install(hook_cli)?;
+                Command::Qa(qa_cli) => {
+                    match qa_cli.command {
+                        QaCommand::Verify => {
+                            run_verification()?;
+                        }
+                        QaCommand::Check { crate_description, all } => {
+                            run_check(crate_description, all)?;
+                        }
+                    }
                 }
                 _ => unreachable!(),
             }
@@ -1018,7 +1068,7 @@ pub fn run() -> Result<(), error::DecapodError> {
     Ok(())
 }
 
-fn run_hook_install(cli: HookCli) -> Result<(), error::DecapodError> {
+fn run_hook_install(commit_msg: bool, pre_commit: bool, uninstall: bool) -> Result<(), error::DecapodError> {
     use std::fs;
     use std::io::Write;
 
@@ -1032,7 +1082,7 @@ fn run_hook_install(cli: HookCli) -> Result<(), error::DecapodError> {
     let hooks_dir = git_dir.join("hooks");
     fs::create_dir_all(&hooks_dir).map_err(error::DecapodError::IoError)?;
 
-    if cli.uninstall {
+    if uninstall {
         let commit_msg_path = hooks_dir.join("commit-msg");
         let pre_commit_path = hooks_dir.join("pre-commit");
 
@@ -1054,7 +1104,7 @@ fn run_hook_install(cli: HookCli) -> Result<(), error::DecapodError> {
     }
 
     // Install commit-msg hook
-    if cli.commit_msg {
+    if commit_msg {
         let hook_content = r#"#!/bin/sh
 # Conventional commit validation hook
 # Installed by Decapod
@@ -1091,7 +1141,7 @@ fi
     }
 
     // Install pre-commit hook (pure Rust - runs fmt and clippy)
-    if cli.pre_commit {
+    if pre_commit {
         // Use a simple shell wrapper that calls cargo
         let hook_content = r#"#!/bin/sh
 # Pre-commit hook - runs cargo fmt and clippy
@@ -1134,20 +1184,18 @@ exit 0
         println!("✓ Installed pre-commit hook (fmt + clippy)");
     }
 
-    if !cli.commit_msg && !cli.pre_commit {
+    if !commit_msg && !pre_commit {
         println!("No hooks specified. Use --commit-msg and/or --pre-commit");
     }
 
     Ok(())
 }
 
-fn run_check(cli: CheckCli) -> Result<(), error::DecapodError> {
-    use std::process::Command;
-
-    if cli.crate_description || cli.all {
+fn run_check(crate_description: bool, all: bool) -> Result<(), error::DecapodError> {
+    if crate_description || all {
         let expected = "Decapod is a Rust-built governance runtime for AI agents: repo-native state, enforced workflow, proof gates, safe coordination.";
 
-        let output = Command::new("cargo")
+        let output = std::process::Command::new("cargo")
             .args(["metadata", "--no-deps", "--format-version", "1"])
             .output()
             .map_err(|e| error::DecapodError::IoError(std::io::Error::other(e)))?;
@@ -1165,7 +1213,7 @@ fn run_check(cli: CheckCli) -> Result<(), error::DecapodError> {
         }
     }
 
-    if cli.all && !cli.crate_description {
+    if all && !crate_description {
         println!("Note: --all requires --crate-description");
     }
 
@@ -1173,12 +1221,11 @@ fn run_check(cli: CheckCli) -> Result<(), error::DecapodError> {
 }
 
 fn run_verification() -> Result<(), error::DecapodError> {
-    use std::process::Command;
     let temp_dir = std::env::temp_dir().join(format!("decapod_verify_{}", ulid::Ulid::new()));
     std::fs::create_dir_all(&temp_dir)?;
     println!("Testing in {}", temp_dir.display());
 
-    let status = Command::new("git")
+    let status = std::process::Command::new("git")
         .arg("init")
         .arg("-q")
         .current_dir(&temp_dir)
@@ -1191,7 +1238,7 @@ fn run_verification() -> Result<(), error::DecapodError> {
 
     let exe = std::env::current_exe()?;
 
-    let status = Command::new(&exe)
+    let status = std::process::Command::new(&exe)
         .arg("init")
         .arg("--dir")
         .arg(".")
@@ -1226,14 +1273,14 @@ fn run_verification() -> Result<(), error::DecapodError> {
     }
 
     println!("Checking embedded docs access...");
-    let out = Command::new(&exe).arg("docs").arg("list").output()?;
+    let out = std::process::Command::new(&exe).arg("docs").arg("list").output()?;
     if !String::from_utf8_lossy(&out.stdout).contains("embedded/core/DECAPOD.md") {
         return Err(error::DecapodError::ValidationError(
             "docs list missing embedded/core/DECAPOD.md".into(),
         ));
     }
     println!("Checking validate...");
-    let status = Command::new(&exe)
+    let status = std::process::Command::new(&exe)
         .arg("validate")
         .current_dir(&temp_dir)
         .status()?;
