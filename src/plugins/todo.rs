@@ -2,6 +2,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas; // Import the new schemas module
 use crate::core::store::Store;
+use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
 use rusqlite::{Connection, OptionalExtension, Result as SqlResult, types::ToSql};
@@ -79,6 +80,12 @@ pub enum TodoCommand {
     Done {
         #[clap(long)]
         id: String,
+        /// Capture verification artifacts and proof baseline while marking done.
+        #[clap(long)]
+        validated: bool,
+        /// File path(s) to hash for drift detection. Defaults to AGENTS.md when --validated is set.
+        #[clap(long = "artifact")]
+        artifact: Vec<String>,
     },
     /// Archive a task (keeps audit trail).
     Archive {
@@ -194,6 +201,8 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_SCOPE, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_DIR, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_EVENTS_TASK, [])?;
+    conn.execute(schemas::TODO_DB_SCHEMA_TASK_VERIFICATION, [])?;
+    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS, [])?;
 
     if current_version < 2 {
         conn.execute(schemas::TODO_DB_SCHEMA_CATEGORIES, [])?;
@@ -216,6 +225,11 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
             "ALTER TABLE tasks ADD COLUMN description TEXT DEFAULT ''",
             [],
         );
+    }
+
+    if current_version < 6 {
+        conn.execute(schemas::TODO_DB_SCHEMA_TASK_VERIFICATION, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS, [])?;
     }
 
     conn.execute(
@@ -578,6 +592,31 @@ fn insert_event(conn: &Connection, ev: &TodoEvent) -> SqlResult<()> {
         ],
     )?;
     Ok(())
+}
+
+pub fn record_task_event(
+    root: &Path,
+    event_type: &str,
+    task_id: Option<&str>,
+    payload: JsonValue,
+) -> Result<(), error::DecapodError> {
+    let ts = now_iso();
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+    broker.with_conn(&db_path, "decapod", None, event_type, |conn| {
+        ensure_schema(conn)?;
+        let ev = TodoEvent {
+            ts: ts.clone(),
+            event_id: Ulid::new().to_string(),
+            event_type: event_type.to_string(),
+            task_id: task_id.map(|s| s.to_string()),
+            payload,
+            actor: "decapod".to_string(),
+        };
+        append_event(root, &ev)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+        Ok(())
+    })
 }
 
 pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, error::DecapodError> {
@@ -1130,6 +1169,65 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     )?;
                 }
                 "task.comment" => {}
+                "task.verify.capture" | "task.verify.result" => {
+                    let id = ev.task_id.clone().ok_or_else(|| {
+                        error::DecapodError::ValidationError(format!(
+                            "{} missing task_id",
+                            ev.event_type
+                        ))
+                    })?;
+                    let proof_plan = ev
+                        .payload
+                        .get("proof_plan")
+                        .cloned()
+                        .unwrap_or_else(|| serde_json::json!([]));
+                    let artifacts = ev
+                        .payload
+                        .get("verification_artifacts")
+                        .cloned()
+                        .unwrap_or(serde_json::Value::Null);
+                    let last_verified_status = ev
+                        .payload
+                        .get("last_verified_status")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("unknown");
+                    let last_verified_notes = ev
+                        .payload
+                        .get("last_verified_notes")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
+                    let verification_policy_days = ev
+                        .payload
+                        .get("verification_policy_days")
+                        .and_then(|v| v.as_i64())
+                        .unwrap_or(90);
+
+                    conn.execute(
+                        "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
+                         VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?4)
+                         ON CONFLICT(todo_id) DO UPDATE SET
+                           proof_plan=excluded.proof_plan,
+                           verification_artifacts=excluded.verification_artifacts,
+                           last_verified_at=excluded.last_verified_at,
+                           last_verified_status=excluded.last_verified_status,
+                           last_verified_notes=excluded.last_verified_notes,
+                           verification_policy_days=excluded.verification_policy_days,
+                           updated_at=excluded.updated_at",
+                        rusqlite::params![
+                            id,
+                            serde_json::to_string(&proof_plan).unwrap(),
+                            if artifacts.is_null() {
+                                None::<String>
+                            } else {
+                                Some(serde_json::to_string(&artifacts).unwrap())
+                            },
+                            ev.ts,
+                            last_verified_status,
+                            last_verified_notes,
+                            verification_policy_days,
+                        ],
+                    )?;
+                }
                 _ => {
                     return Err(error::DecapodError::ValidationError(format!(
                         "Unknown event_type '{}'",
@@ -1151,7 +1249,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "add", "parameters": ["title", "tags", "owner", "due", "ref", "dir", "priority", "depends_on", "blocks", "parent"] },
             { "name": "list", "parameters": ["status", "scope", "tags", "title_search", "dir"] },
             { "name": "get", "parameters": ["id"] },
-            { "name": "done", "parameters": ["id"] },
+            { "name": "done", "parameters": ["id", "validated", "artifact"] },
             { "name": "archive", "parameters": ["id"] },
             { "name": "comment", "parameters": ["id", "comment"] },
             { "name": "rebuild", "parameters": [] }
@@ -1197,8 +1295,22 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                 "item": t,
             })
         }
-        TodoCommand::Done { id } => {
-            update_status(store, id, "done", "task.done", serde_json::json!({}))?
+        TodoCommand::Done {
+            id,
+            validated,
+            artifact,
+        } => {
+            let out = update_status(store, id, "done", "task.done", serde_json::json!({}))?;
+            if *validated && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
+                let repo_root = store
+                    .root
+                    .parent()
+                    .and_then(|p| p.parent())
+                    .map(|p| p.to_path_buf())
+                    .unwrap_or(std::env::current_dir().map_err(error::DecapodError::IoError)?);
+                verify::capture_baseline_for_todo(store, &repo_root, id, artifact.clone())?;
+            }
+            out
         }
         TodoCommand::Archive { id } => {
             update_status(store, id, "archived", "task.archive", serde_json::json!({}))?

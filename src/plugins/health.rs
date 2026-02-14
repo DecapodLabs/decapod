@@ -396,11 +396,14 @@ pub fn get_summary(store: &Store) -> Result<SummaryStatus, error::DecapodError> 
     let mut alerts = Vec::new();
     if watcher_stale {
         alerts.push(
-            "Watcher has not run recently (> 10 minutes). Run: decapod govern watcher run".to_string(),
+            "Watcher has not run recently (> 10 minutes). Run: decapod govern watcher run"
+                .to_string(),
         );
     }
     if health_summary.get("CONTRADICTED").unwrap_or(&0) > &0 {
-        alerts.push("Some health claims are contradicted. Check: decapod govern health get".to_string());
+        alerts.push(
+            "Some health claims are contradicted. Check: decapod govern health get".to_string(),
+        );
     }
     if health_summary.get("STALE").unwrap_or(&0) > &0 {
         alerts.push("Some health claims are stale. Run: decapod govern proof run".to_string());
