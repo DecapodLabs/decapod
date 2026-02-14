@@ -110,6 +110,28 @@ decapod validate
 decapod todo list
 ```
 
+## Self-Update Command
+
+When the binary needs updating (new features, bug fixes, or command structure changes), use:
+
+```bash
+decapod update
+```
+
+**What it does:**
+- Rebuilds the decapod binary from the current directory
+- Runs `cargo install --path . --locked` automatically
+- Installs the new version to `~/.cargo/bin/decapod`
+- Preserves all project state and configuration
+
+**When to use:**
+- After pulling new code from git
+- When commands fail with "unrecognized subcommand" errors
+- When `decapod --help` shows outdated command structure
+- When instructed by the operator
+
+**Rationale:** Agents shouldn't call `cargo` directly - use the Decapod control plane instead. This command provides a safe, auditable way to update the binary.
+
 ## See Also
 
 - `embedded/core/DECAPOD.md` — Router (mandates this protocol in §1.1)
