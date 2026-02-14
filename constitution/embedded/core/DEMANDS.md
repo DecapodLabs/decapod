@@ -55,4 +55,8 @@ This document allows the human user to explicitly declare demands, preferences, 
 
 ## Links
 
-- `templates/AGENTS.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/specs/INTENT.md` - Intent contract
+- `embedded/specs/SYSTEM.md` - System definition
+- `embedded/methodology/SOUL.md` - Agent identity
+- `AGENTS.md` - Agent entrypoint

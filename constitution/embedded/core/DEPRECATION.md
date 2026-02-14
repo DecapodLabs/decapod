@@ -28,7 +28,7 @@ To deprecate a doc, section, rule, or interface:
   - Sunset: a concrete date (YYYY-MM-DD).
   - Migration: short steps, or a pointer to a migration guide.
 - Record an amendment: `embedded/specs/AMENDMENTS.md`.
-- Update `embedded/core/CLAIMS.md` if a claim is being retired or replaced.
+- Update `embedded/interfaces/CLAIMS.md` if a claim is being retired or replaced.
 
 ---
 
@@ -51,7 +51,7 @@ During a transition, both old and new text may exist only if:
 - After sunset:
   - Remove deprecated text from binding docs.
   - Remove deprecated interfaces from registries.
-  - Remove or update claims in `embedded/core/CLAIMS.md`.
+  - Remove or update claims in `embedded/interfaces/CLAIMS.md`.
 
 ---
 
@@ -67,7 +67,8 @@ For large transitions, maintain a small registry table here:
 
 ## Links
 
-- `embedded/core/DECAPOD.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/core/CLAIMS.md`
-- `embedded/specs/AMENDMENTS.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/interfaces/DOC_RULES.md` - Doc compilation rules
+- `embedded/interfaces/CLAIMS.md` - Promises ledger
+- `embedded/specs/AMENDMENTS.md` - Change control
+- `embedded/core/GAPS.md` - Gap analysis methodology

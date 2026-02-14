@@ -39,7 +39,7 @@ The store is part of the request context. A command that mutates state is not we
 
 ## 4. Guarantees (Contract)
 
-All guarantees here are registered in `embedded/core/CLAIMS.md`.
+All guarantees here are registered in `embedded/interfaces/CLAIMS.md`.
 
 - blank-slate (claim: claim.store.blank_slate): a fresh user store has no tasks unless the user adds them
 - no auto-seeding (claim: claim.store.no_auto_seeding): repo store content must never appear in the user store automatically
@@ -58,7 +58,7 @@ All guarantees here are registered in `embedded/core/CLAIMS.md`.
 
 ## 6. Routing (Where This Is Used)
 
-- Control plane patterns: `embedded/core/CONTROL_PLANE.md`
+- Control plane patterns: `embedded/interfaces/CONTROL_PLANE.md`
 - Subsystem surfaces: `embedded/core/PLUGINS.md`
 - Proof doctrine and authority: `embedded/specs/SYSTEM.md`
 
@@ -66,11 +66,11 @@ All guarantees here are registered in `embedded/core/CLAIMS.md`.
 
 ## Links
 
-- `embedded/core/CONTROL_PLANE.md`
-- `embedded/core/DECAPOD.md`
-- `embedded/core/CLAIMS.md`
-- `embedded/core/PLUGINS.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/specs/AMENDMENTS.md`
-- `embedded/specs/SYSTEM.md`
-- `docs/REPO_MAP.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/core/INTERFACES.md` - Interface contracts index
+- `embedded/interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `embedded/interfaces/CLAIMS.md` - Promises ledger
+- `embedded/interfaces/DOC_RULES.md` - Doc compilation rules
+- `embedded/core/PLUGINS.md` - Subsystem registry
+- `embedded/specs/SYSTEM.md` - System definition
+- `embedded/specs/AMENDMENTS.md` - Change control

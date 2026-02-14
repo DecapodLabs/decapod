@@ -122,13 +122,15 @@ Projects can override or extend the embedded constitution without forking Decapo
 Overrides are appended to embedded content when agents read docs via `decapod docs show` or `decapod docs ingest`.
 
 Key definitions:
-- Doc compilation rules: `embedded/core/DOC_RULES.md`
-- Store purity model: `embedded/core/STORE_MODEL.md`
+- Doc compilation rules: `embedded/interfaces/DOC_RULES.md`
+- Store purity model: `embedded/interfaces/STORE_MODEL.md`
 - Subsystem registry: `embedded/core/PLUGINS.md` (§3.5)
+- Interface contracts index: `embedded/core/INTERFACES.md`
+- Methodology guides index: `embedded/core/METHODOLOGY.md`
 - Change control (amendments): `embedded/specs/AMENDMENTS.md`
-- Claims ledger (recorded promises): `embedded/core/CLAIMS.md`
+- Claims ledger (recorded promises): `embedded/interfaces/CLAIMS.md`
 - Deprecation + migration: `embedded/core/DEPRECATION.md`
-- Glossary of terms: `embedded/core/GLOSSARY.md`
+- Glossary of terms: `embedded/interfaces/GLOSSARY.md`
 
 ---
 
@@ -140,19 +142,27 @@ Key definitions:
 - ⚠️ **SECURITY CONTRACT: `embedded/specs/SECURITY.md` — Security philosophy, credential architecture, threat model. READ BEFORE HANDLING CREDENTIALS.**
 - ⚠️ **GIT CONTRACT: `embedded/specs/GIT.md` — Git etiquette, branching strategy, commit conventions, push policies. BINDING FOR ALL GIT OPERATIONS.**
 - Change control (amendments): `embedded/specs/AMENDMENTS.md`
-- Agent persona/interaction guidelines: `embedded/core/SOUL.md`
+- Agent persona/interaction guidelines: `embedded/methodology/SOUL.md`
 
 **Interfaces (Contracts & Plans) - BINDING SURFACES:**
-- Agent<->Decapod sequencing: `embedded/core/CONTROL_PLANE.md`
+- **Interface contracts index: `embedded/core/INTERFACES.md` — START HERE for all interface contracts**
+- Agent<->Decapod sequencing: `embedded/interfaces/CONTROL_PLANE.md`
 - Subsystem registry + truth labels: `embedded/core/PLUGINS.md`
-- Store purity model: `embedded/core/STORE_MODEL.md`
-- Doc compiler contract: `embedded/core/DOC_RULES.md`
-- Claims ledger (promises + proof surfaces): `embedded/core/CLAIMS.md`
+- Store purity model: `embedded/interfaces/STORE_MODEL.md`
+- Doc compiler contract: `embedded/interfaces/DOC_RULES.md`
+- Claims ledger (promises + proof surfaces): `embedded/interfaces/CLAIMS.md`
 - Deprecation + migration contract: `embedded/core/DEPRECATION.md`
-- Glossary of loaded terms (normative): `embedded/core/GLOSSARY.md`
+- Glossary of loaded terms (normative): `embedded/interfaces/GLOSSARY.md`
 - Planned broker interface: `embedded/plugins/DB_BROKER.md`
 
-**Guides (Operational Advice) - REFERENCE ONLY:**
+**Methodology (How-To Guides) - REFERENCE ONLY:**
+- **Methodology guides index: `embedded/core/METHODOLOGY.md` — START HERE for all methodology**
+- Architecture practice: `embedded/methodology/ARCHITECTURE.md`
+- Agent persona: `embedded/methodology/SOUL.md`
+- Knowledge management: `embedded/methodology/KNOWLEDGE.md`
+- Memory/learning: `embedded/methodology/MEMORY.md`
+
+**Plugins (Operational Subsystems):**
 - **TODO Subsystem (PRIMARY):** `embedded/plugins/TODO.md` — **Use this for all work tracking**
 - Operating loop: `embedded/plugins/TODO.md`
 - Canonical vs derived vs state: `embedded/plugins/MANIFEST.md`
@@ -180,7 +190,7 @@ If there's uncertainty about store mutation, it is advisable to clarify. Store p
 
 All agents operating in this workspace MUST adhere to the following:
 
-1. **Follow the Ladder**: Read `embedded/specs/INTENT.md` → `embedded/specs/ARCHITECTURE.md` → `embedded/specs/SYSTEM.md` before acting. No exceptions.
+1. **Follow the Ladder**: Read `embedded/specs/INTENT.md` → `embedded/methodology/ARCHITECTURE.md` → `embedded/specs/SYSTEM.md` before acting. No exceptions.
 
 2. **Obey Validate**: Never claim a change is correct unless `decapod validate` passes.
 
@@ -204,16 +214,18 @@ All agents operating in this workspace MUST adhere to the following:
 - `embedded/plugins/DB_BROKER.md`
 - `embedded/plugins/EMERGENCY_PROTOCOL.md`
 - `embedded/specs/INTENT.md`
-- `embedded/specs/ARCHITECTURE.md`
 - `embedded/specs/SYSTEM.md`
 - `embedded/specs/AMENDMENTS.md`
 - `embedded/core/PLUGINS.md`
-- `embedded/core/CONTROL_PLANE.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/core/STORE_MODEL.md`
-- `embedded/core/SOUL.md`
-- `embedded/core/MEMORY.md`
-- `embedded/core/KNOWLEDGE.md`
-- `embedded/core/CLAIMS.md`
 - `embedded/core/DEPRECATION.md`
-- `embedded/core/GLOSSARY.md`
+- `embedded/core/INTERFACES.md` — **Interface contracts index**
+- `embedded/interfaces/CONTROL_PLANE.md`
+- `embedded/interfaces/DOC_RULES.md`
+- `embedded/interfaces/STORE_MODEL.md`
+- `embedded/interfaces/CLAIMS.md`
+- `embedded/interfaces/GLOSSARY.md`
+- `embedded/core/METHODOLOGY.md` — **Methodology guides index**
+- `embedded/methodology/ARCHITECTURE.md`
+- `embedded/methodology/SOUL.md`
+- `embedded/methodology/MEMORY.md`
+- `embedded/methodology/KNOWLEDGE.md`

@@ -10,7 +10,7 @@ This document is about *how* agents should use Decapod as a local control plane:
 
 It is intentionally higher-level than subsystem docs. It exists to prevent "agents poking files and DBs" from becoming the de facto interface.
 
-General methodology lives in `embedded/specs/INTENT.md` and `embedded/specs/ARCHITECTURE.md`.
+General methodology lives in `embedded/specs/INTENT.md` and `embedded/methodology/ARCHITECTURE.md`.
 
 ---
 
@@ -32,7 +32,7 @@ This is how you get determinism, auditability, and eventually policy.
 
 This is the default sequence when operating in a Decapod-managed repo:
 
-1. Read the contract: `embedded/specs/INTENT.md`, `embedded/specs/ARCHITECTURE.md`, then `embedded/specs/SYSTEM.md`.
+1. Read the contract: `embedded/specs/INTENT.md`, `embedded/methodology/ARCHITECTURE.md`, then `embedded/specs/SYSTEM.md`.
 2. Discover proof: identify the smallest proof surface that can falsify success (`decapod validate`, tests, etc.).
 3. Use Decapod as the interface: read/write shared state through `decapod ...` commands.
 4. Add a repo TODO for multi-step work before implementation (dogfood mode inside this repo).
@@ -146,13 +146,15 @@ Validate coverage matrix (starter; expand over time):
 
 ## Links
 
-- `docs/REPO_MAP.md`
-- `embedded/core/SOUL.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/core/STORE_MODEL.md`
-- `embedded/plugins/MANIFEST.md`
-- `embedded/plugins/TODO.md`
-- `embedded/specs/ARCHITECTURE.md`
-- `embedded/specs/INTENT.md`
-- `embedded/specs/SYSTEM.md`
-- `embedded/core/PLUGINS.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/core/INTERFACES.md` - Interface contracts index
+- `embedded/interfaces/DOC_RULES.md` - Doc compilation rules
+- `embedded/interfaces/STORE_MODEL.md` - Store semantics
+- `embedded/interfaces/CLAIMS.md` - Promises ledger
+- `embedded/core/PLUGINS.md` - Subsystem registry
+- `embedded/plugins/MANIFEST.md` - Manifest patterns
+- `embedded/plugins/TODO.md` - Work tracking
+- `embedded/methodology/SOUL.md` - Agent identity
+- `embedded/methodology/ARCHITECTURE.md` - Architecture practice
+- `embedded/specs/INTENT.md` - Intent contract
+- `embedded/specs/SYSTEM.md` - System definition
