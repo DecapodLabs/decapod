@@ -130,10 +130,7 @@ fn validate_embedded_self_contained(
     let constitution_dir = repo_root.join("constitution");
     if !constitution_dir.exists() {
         // This is a decapod repo, not a project with embedded docs
-        skip(
-            "No constitution/ directory found (decapod repo)",
-            &mut 0,
-        );
+        skip("No constitution/ directory found (decapod repo)", &mut 0);
         return Ok(());
     }
 
@@ -1084,8 +1081,7 @@ pub fn run_validation(
     println!();
 
     // Directly get content from embedded assets
-    let intent_content =
-        crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
+    let intent_content = crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
     let intent_version =
         extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
     println!(
