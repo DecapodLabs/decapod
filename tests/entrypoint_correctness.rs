@@ -50,8 +50,8 @@ fn test_init_creates_all_entrypoints() {
         );
 
         // Check that file is non-empty
-        let content = fs::read_to_string(&file_path)
-            .unwrap_or_else(|_| panic!("Failed to read {}", file));
+        let content =
+            fs::read_to_string(&file_path).unwrap_or_else(|_| panic!("Failed to read {}", file));
         assert!(!content.is_empty(), "{} should not be empty", file);
     }
 }
@@ -90,8 +90,8 @@ fn test_entrypoints_are_thin() {
     assert!(success, "decapod init should succeed");
 
     // Check AGENTS.md line count (should be ≤ 100)
-    let agents_content = fs::read_to_string(temp_path.join("AGENTS.md"))
-        .expect("Failed to read AGENTS.md");
+    let agents_content =
+        fs::read_to_string(temp_path.join("AGENTS.md")).expect("Failed to read AGENTS.md");
     let agents_lines = agents_content.lines().count();
     assert!(
         agents_lines <= 100,
@@ -101,8 +101,8 @@ fn test_entrypoints_are_thin() {
 
     // Check agent-specific files (should be ≤ 50)
     for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"] {
-        let content =
-            fs::read_to_string(temp_path.join(file)).unwrap_or_else(|_| panic!("Failed to read {}", file));
+        let content = fs::read_to_string(temp_path.join(file))
+            .unwrap_or_else(|_| panic!("Failed to read {}", file));
         let line_count = content.lines().count();
         assert!(
             line_count <= 50,
@@ -132,8 +132,8 @@ fn test_entrypoints_contain_canonical_router() {
     ];
 
     for file in files {
-        let content =
-            fs::read_to_string(temp_path.join(file)).unwrap_or_else(|_| panic!("Failed to read {}", file));
+        let content = fs::read_to_string(temp_path.join(file))
+            .unwrap_or_else(|_| panic!("Failed to read {}", file));
         assert!(
             content.contains("core/DECAPOD.md"),
             "{} should reference canonical router (core/DECAPOD.md)",
@@ -152,15 +152,10 @@ fn test_entrypoints_contain_four_invariants() {
     assert!(success, "decapod init should succeed");
 
     // Check that AGENTS.md contains the 4 invariants
-    let agents_content = fs::read_to_string(temp_path.join("AGENTS.md"))
-        .expect("Failed to read AGENTS.md");
+    let agents_content =
+        fs::read_to_string(temp_path.join("AGENTS.md")).expect("Failed to read AGENTS.md");
 
-    let invariant_markers = [
-        "core/DECAPOD.md",
-        "decapod validate",
-        "Stop if",
-        "✅",
-    ];
+    let invariant_markers = ["core/DECAPOD.md", "decapod validate", "Stop if", "✅"];
 
     for marker in invariant_markers {
         assert!(
@@ -242,8 +237,8 @@ fn test_agent_specific_files_defer_to_agents() {
 
     // Check that agent-specific files reference AGENTS.md
     for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"] {
-        let content =
-            fs::read_to_string(temp_path.join(file)).unwrap_or_else(|_| panic!("Failed to read {}", file));
+        let content = fs::read_to_string(temp_path.join(file))
+            .unwrap_or_else(|_| panic!("Failed to read {}", file));
         assert!(
             content.contains("AGENTS.md"),
             "{} should defer to AGENTS.md",
