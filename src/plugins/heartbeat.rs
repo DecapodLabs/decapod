@@ -87,10 +87,12 @@ pub fn get_status(store: &Store) -> Result<HeartbeatStatus, error::DecapodError>
         );
     }
     if health_summary.get("CONTRADICTED").unwrap_or(&0) > &0 {
-        alerts.push("Some health claims are contradicted. Check: decapod health get".to_string());
+        alerts.push(
+            "Some health claims are contradicted. Check: decapod govern health get".to_string(),
+        );
     }
     if health_summary.get("STALE").unwrap_or(&0) > &0 {
-        alerts.push("Some health claims are stale. Run: decapod proof run".to_string());
+        alerts.push("Some health claims are stale. Run: decapod govern proof run".to_string());
     }
     if pending_approvals > 0 {
         alerts.push(format!(
