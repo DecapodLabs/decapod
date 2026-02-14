@@ -281,7 +281,7 @@
 
 ## Links
 
-- `methodology/ARCHITECTURE.md` - CTO-level architecture doctrine
+- `methodology/ARCHITECTURE.md` - binding architecture doctrine
 - `architecture/SECURITY.md` - Security architecture
 - `architecture/OBSERVABILITY.md` - Monitoring and observability
 - `architecture/CONCURRENCY.md` - Distributed systems patterns

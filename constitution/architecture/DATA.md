@@ -211,7 +211,7 @@ Every data entity has a single owner:
 
 ## Links
 
-- `methodology/ARCHITECTURE.md` - CTO-level architecture doctrine
+- `methodology/ARCHITECTURE.md` - binding architecture doctrine
 - `architecture/CACHING.md` - Caching patterns
 - `architecture/SECURITY.md` - Security architecture
 - `architecture/OBSERVABILITY.md` - Data observability

@@ -144,7 +144,7 @@ When an external service fails repeatedly, stop calling it temporarily. Prevents
 
 ## Links
 
-- `methodology/ARCHITECTURE.md` - CTO-level architecture
+- `methodology/ARCHITECTURE.md` - binding architecture
 - `architecture/ALGORITHMS.md` - Algorithm selection
 - `architecture/CLOUD.md` - Cloud infrastructure patterns
 - `architecture/OBSERVABILITY.md` - Monitoring and debugging
