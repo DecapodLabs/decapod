@@ -196,63 +196,53 @@ You don’t touch `.decapod/data/` directly. Agents use the control surface. Lik
 
 Decapod's control surface is organized into 9 top-level commands with grouped subsystems. **Agents interact with these; you communicate your desires to the agent and observe outcomes.**
 
-Status legend:
-- **REAL** = implemented and usable today
-- **SPEC** = designed/claimed, but not fully shipped yet
-
 ### Core Commands
 
-| Command | Purpose | Status |
-|---------|---------|--------|
-| `decapod init` | Bootstrap project with constitution | REAL |
-| `decapod setup` | Configure git hooks and repository setup | REAL |
-| `decapod docs` | Constitution discovery and access | REAL |
-| `decapod todo` | Work tracking with audit trail | REAL |
-| `decapod validate` | Proof gate before promotion | REAL |
+| Command | Purpose |
+|---------|---------|
+| `decapod init` | Bootstrap project with constitution |
+| `decapod setup` | Configure git hooks and repository setup |
+| `decapod docs` | Constitution discovery and access |
+| `decapod todo` | Work tracking with audit trail and task claiming |
+| `decapod validate` | Proof gate before promotion |
 
 ### Governance (`decapod govern`)
 
-| Subcommand | Purpose | Status |
-|------------|---------|--------|
-| `policy` | Risk classification and approval gates | REAL |
-| `health` | Proof ledger + system state monitoring | REAL |
-| `health summary` | System health overview (replaces heartbeat) | REAL |
-| `health autonomy` | Agent autonomy tiers (replaces trust) | REAL |
-| `proof` | Executable verification and proof gates | REAL |
-| `watcher` | Proactive integrity checks | REAL |
-| `feedback` | User preference refinement | REAL |
+| Subcommand | Purpose |
+|------------|---------|
+| `policy` | Risk classification and approval gates |
+| `health` | Proof ledger + system state monitoring |
+| `health summary` | System health overview |
+| `health autonomy` | Agent autonomy tiers |
+| `proof` | Executable verification and proof gates |
+| `watcher` | Proactive integrity checks |
+| `feedback` | User preference refinement |
 
 ### Data Management (`decapod data`)
 
-| Subcommand | Purpose | Status |
-|------------|---------|--------|
-| `archive` | Session history indexing and verification | REAL |
-| `knowledge` | Project facts and rationale storage | REAL |
-| `context` | Token budget management and archival | REAL |
-| `schema` | Subsystem schema discovery | REAL |
-| `repo` | Repository structure mapping | REAL |
-| `broker` | SQLite audit trail access | REAL |
-| `teammate` | User conventions and preferences | REAL |
+| Subcommand | Purpose |
+|------------|---------|
+| `archive` | Session history indexing and verification |
+| `knowledge` | Project facts and rationale storage |
+| `context` | Token budget management and archival |
+| `schema` | Subsystem schema discovery |
+| `repo` | Repository structure mapping |
+| `broker` | SQLite audit trail access |
+| `teammate` | User conventions and preferences |
 
 ### Automation (`decapod auto`)
 
-| Subcommand | Purpose | Status |
-|------------|---------|--------|
-| `cron` | Scheduled automation jobs | REAL |
-| `reflex` | Event-driven triggers and actions | REAL |
+| Subcommand | Purpose |
+|------------|---------|
+| `cron` | Scheduled automation jobs |
+| `reflex` | Event-driven triggers and actions |
 
 ### Quality Assurance (`decapod qa`)
 
-| Subcommand | Purpose | Status |
-|------------|---------|--------|
-| `verify` | Proof replay and drift detection | REAL |
-| `check` | CI validation checks | REAL |
-
-### Planned Enhancements
-
-| Feature | Purpose | Status |
-|---------|---------|--------|
-| `db_broker` | Multi-agent SQLite safety (write serialization) | SPEC |
+| Subcommand | Purpose |
+|------------|---------|
+| `verify` | Proof replay and drift detection |
+| `check` | CI validation checks |
 
 ---
 
