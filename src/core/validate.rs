@@ -493,7 +493,10 @@ fn validate_entrypoint_invariants(
     const MAX_AGENTS_LINES: usize = 100;
     if line_count <= MAX_AGENTS_LINES {
         pass(
-            &format!("AGENTS.md is thin ({} lines ≤ {})", line_count, MAX_AGENTS_LINES),
+            &format!(
+                "AGENTS.md is thin ({} lines ≤ {})",
+                line_count, MAX_AGENTS_LINES
+            ),
             pass_count,
         );
     } else {
@@ -512,7 +515,10 @@ fn validate_entrypoint_invariants(
     for agent_file in ["CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"] {
         let agent_path = decapod_dir.join(agent_file);
         if !agent_path.is_file() {
-            fail(&format!("{} missing from project root", agent_file), fail_count);
+            fail(
+                &format!("{} missing from project root", agent_file),
+                fail_count,
+            );
             all_present = false;
             continue;
         }
@@ -549,7 +555,10 @@ fn validate_entrypoint_invariants(
         let agent_lines = agent_content.lines().count();
         if agent_lines <= MAX_AGENT_SPECIFIC_LINES {
             pass(
-                &format!("{} is thin ({} lines ≤ {})", agent_file, agent_lines, MAX_AGENT_SPECIFIC_LINES),
+                &format!(
+                    "{} is thin ({} lines ≤ {})",
+                    agent_file, agent_lines, MAX_AGENT_SPECIFIC_LINES
+                ),
                 pass_count,
             );
         } else {
@@ -565,15 +574,18 @@ fn validate_entrypoint_invariants(
 
         // Must not contain duplicated contracts (check for common duplication markers)
         let duplication_markers = [
-            "## Lifecycle States",    // Contract details belong in constitution
-            "## Validation Rules",    // Contract details belong in constitution
-            "### Proof Gates",        // Contract details belong in constitution
-            "## Store Model",         // Contract details belong in constitution
+            "## Lifecycle States", // Contract details belong in constitution
+            "## Validation Rules", // Contract details belong in constitution
+            "### Proof Gates",     // Contract details belong in constitution
+            "## Store Model",      // Contract details belong in constitution
         ];
         for marker in duplication_markers {
             if agent_content.contains(marker) {
                 fail(
-                    &format!("{} contains duplicated contract details ({})", agent_file, marker),
+                    &format!(
+                        "{} contains duplicated contract details ({})",
+                        agent_file, marker
+                    ),
                     fail_count,
                 );
                 all_present = false;
