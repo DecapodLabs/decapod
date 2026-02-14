@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1](https://github.com/DecapodLabs/decapod/compare/v0.6.0...v0.6.1) - 2026-02-14
+
+### Fixed
+
+- clippy redundant closure warning
+
+### Other
+
+- fix import ordering for cargo fmt
+- fix import ordering for CI formatting
+- fix formatting and update release workflow
+- finalizing versioning
+- finalizing versioning
+- finalizing versioning
+
 ## [0.6.0](https://github.com/DecapodLabs/decapod/compare/v0.5.2...v0.6.0) - 2026-02-14
 
 ### Other
