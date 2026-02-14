@@ -47,7 +47,7 @@ pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
 /// TODO database schema version
 ///
 /// Used for migration tracking in the `meta` table
-pub const TODO_SCHEMA_VERSION: u32 = 5;
+pub const TODO_SCHEMA_VERSION: u32 = 6;
 
 /// TODO metadata table schema
 ///
@@ -106,6 +106,25 @@ pub const TODO_DB_SCHEMA_INDEX_DIR: &str =
     "CREATE INDEX IF NOT EXISTS idx_tasks_dir ON tasks(dir_path)";
 pub const TODO_DB_SCHEMA_INDEX_EVENTS_TASK: &str =
     "CREATE INDEX IF NOT EXISTS idx_events_task ON task_events(task_id)";
+
+pub const TODO_DB_SCHEMA_TASK_VERIFICATION: &str = "
+    CREATE TABLE IF NOT EXISTS task_verification (
+        todo_id TEXT PRIMARY KEY,
+        proof_plan TEXT NOT NULL DEFAULT '[]',
+        verification_artifacts TEXT,
+        last_verified_at TEXT,
+        last_verified_status TEXT,
+        last_verified_notes TEXT,
+        verification_policy_days INTEGER NOT NULL DEFAULT 90,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY(todo_id) REFERENCES tasks(id) ON DELETE CASCADE
+    )
+";
+
+pub const TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS: &str = "
+    CREATE INDEX IF NOT EXISTS idx_task_verification_status
+    ON task_verification(last_verified_status)
+";
 
 /// Task categories table schema
 ///
