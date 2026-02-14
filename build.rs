@@ -4,20 +4,25 @@ use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-env-changed=DECAPOD_CONSTITUTION_DIR");
-    println!("cargo:rerun-if-changed=constitution/embedded");
+    println!("cargo:rerun-if-changed=constitution");
     println!("cargo:rerun-if-changed=templates");
     println!("cargo:rerun-if-changed=build.rs");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
 
     // Index all constitution documents and set up watch dependencies
-    let dirs = ["core", "specs", "plugins"];
+    let dirs = [
+        "core",
+        "specs",
+        "plugins",
+        "interfaces",
+        "methodology",
+        "architecture",
+    ];
     let mut doc_count = 0;
 
     for dir_name in &dirs {
-        let dir_path = Path::new(&manifest_dir)
-            .join("constitution/embedded")
-            .join(dir_name);
+        let dir_path = Path::new(&manifest_dir).join("constitution").join(dir_name);
 
         if !dir_path.exists() {
             eprintln!("Warning: Directory {} does not exist", dir_path.display());
