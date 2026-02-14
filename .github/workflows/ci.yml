@@ -167,9 +167,9 @@ jobs:
       - name: Run watcher
         run: decapod govern watcher run
 
-      - name: Check heartbeat
+      - name: Check health summary
         run: |
-          STATUS=$(decapod heartbeat)
+          STATUS=$(decapod govern health summary)
           echo "$STATUS"
           if echo "$STATUS" | grep -q '"watcher_stale": true'; then
             echo "::warning::Watcher is stale"
