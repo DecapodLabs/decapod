@@ -296,6 +296,10 @@ enum Command {
     #[clap(name = "update")]
     Update,
 
+    /// Show version information
+    #[clap(name = "version")]
+    Version,
+
     /// Governance: policy, health, proofs, audits
     #[clap(name = "govern", visible_alias = "g")]
     Govern(GovernCli),
@@ -524,6 +528,11 @@ pub fn run() -> Result<(), error::DecapodError> {
     let store_root: PathBuf;
 
     match cli.command {
+        Command::Version => {
+            // Version command - simple output for scripts/parsing
+            println!("v{}", migration::DECAPOD_VERSION);
+            return Ok(());
+        }
         Command::Init(init_group) => {
             // Handle subcommands (clean)
             if let Some(subcmd) = init_group.command {
@@ -833,6 +842,9 @@ pub fn run() -> Result<(), error::DecapodError> {
             store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
 
+            // Check version compatibility FIRST (before migration updates the version file)
+            check_version_compatibility(&decapod_root_path)?;
+
             // Check for version changes and run migrations if needed
             migration::check_and_migrate(&decapod_root_path)?;
 
@@ -862,6 +874,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
                 Command::Update => {
                     run_self_update(&project_root)?;
+                }
+                Command::Version => {
+                    show_version_info(&project_root)?;
                 }
                 Command::Docs(docs_cli) => {
                     docs_cli::run_docs_cli(docs_cli)?;
@@ -1285,6 +1300,153 @@ fn run_self_update(project_root: &Path) -> Result<(), error::DecapodError> {
     println!();
     println!("✓ Decapod binary updated successfully");
     println!("  Run 'decapod --version' to verify the new version");
+
+    // Update the version file to match the new binary version
+    let decapod_root = project_root.join(".decapod");
+    if decapod_root.exists() {
+        migration::write_version(&decapod_root)?;
+    }
+
+    Ok(())
+}
+
+/// Show version information and compare with repo version
+fn show_version_info(project_root: &Path) -> Result<(), error::DecapodError> {
+    use colored::Colorize;
+
+    let binary_version = migration::DECAPOD_VERSION;
+
+    println!(
+        "{} {}",
+        "Decapod version:".bright_white(),
+        binary_version.bright_green()
+    );
+
+    let decapod_root = project_root.join(".decapod");
+
+    // Check if .decapod directory exists
+    if !decapod_root.exists() {
+        println!(
+            "{} No .decapod directory found in {}",
+            "ℹ".bright_blue(),
+            project_root.display()
+        );
+        println!("  Run 'decapod init' to initialize the project");
+        return Ok(());
+    }
+
+    let version_file = decapod_root.join("generated/decapod.version");
+
+    if version_file.exists() {
+        let repo_version = std::fs::read_to_string(&version_file)
+            .map_err(error::DecapodError::IoError)?
+            .trim()
+            .to_string();
+
+        if repo_version.is_empty() {
+            println!(
+                "{} Repo version file exists but is empty",
+                "⚠".bright_yellow()
+            );
+        } else if repo_version == binary_version {
+            println!("{} Repo version matches binary version", "✓".bright_green());
+        } else {
+            // Compare versions to determine which is newer
+            match compare_versions(binary_version, &repo_version) {
+                std::cmp::Ordering::Less => {
+                    println!(
+                        "{} Repo version ({}) is newer than binary version",
+                        "⚠".bright_yellow(),
+                        repo_version.bright_yellow()
+                    );
+                    println!(
+                        "  Consider running: {} to update the binary",
+                        "decapod update".bright_cyan()
+                    );
+                }
+                std::cmp::Ordering::Greater => {
+                    println!(
+                        "{} Binary version is newer than repo version ({})",
+                        "✓".bright_green(),
+                        repo_version.bright_yellow()
+                    );
+                    println!("  Migration will run on next command to update repo");
+                }
+                _ => {} // Equal case already handled above
+            }
+        }
+    } else {
+        println!(
+            "{} No version file found in .decapod/generated/decapod.version",
+            "ℹ".bright_blue()
+        );
+        println!("  Run 'decapod init' to set up version tracking");
+    }
+
+    Ok(())
+}
+
+/// Compare two version strings (simplified semver comparison)
+fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
+    let parse_version =
+        |v: &str| -> Vec<u32> { v.split('.').filter_map(|s| s.parse::<u32>().ok()).collect() };
+
+    let a_parts = parse_version(a);
+    let b_parts = parse_version(b);
+
+    for (a_part, b_part) in a_parts.iter().zip(b_parts.iter()) {
+        match a_part.cmp(b_part) {
+            std::cmp::Ordering::Equal => continue,
+            other => return other,
+        }
+    }
+
+    a_parts.len().cmp(&b_parts.len())
+}
+
+/// Check if binary version is compatible with repo version and warn if outdated
+fn check_version_compatibility(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    use colored::Colorize;
+
+    let version_file = decapod_root.join("generated/decapod.version");
+
+    if !version_file.exists() {
+        return Ok(()); // No version file yet, nothing to check
+    }
+
+    let repo_version = std::fs::read_to_string(&version_file)
+        .map_err(error::DecapodError::IoError)?
+        .trim()
+        .to_string();
+
+    if repo_version.is_empty() {
+        return Ok(()); // Empty version file, skip check
+    }
+
+    let binary_version = migration::DECAPOD_VERSION;
+
+    // Only warn if binary is OLDER than repo version
+    if compare_versions(binary_version, &repo_version) == std::cmp::Ordering::Less {
+        eprintln!();
+        eprintln!(
+            "{} {} {}",
+            "⚠ WARNING:".bright_yellow().bold(),
+            "Binary version".bright_white(),
+            binary_version.bright_yellow()
+        );
+        eprintln!(
+            "  {} {} {}",
+            "is older than repo version".bright_white(),
+            repo_version.bright_yellow(),
+            "- some features may not work correctly".bright_white()
+        );
+        eprintln!(
+            "  {} {}",
+            "Run:".bright_white(),
+            "decapod update".bright_cyan().bold()
+        );
+        eprintln!();
+    }
 
     Ok(())
 }
