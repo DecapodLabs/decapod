@@ -84,7 +84,8 @@ use core::{
     tui, validate,
 };
 use plugins::{
-    archive, context, cron, feedback, health, knowledge, policy, reflex, teammate, todo, watcher,
+    archive, context, cron, feedback, health, knowledge, policy, reflex, teammate, todo, verify,
+    watcher,
 };
 
 use clap::{Parser, Subcommand};
@@ -250,8 +251,8 @@ struct QaCli {
 
 #[derive(Subcommand, Debug)]
 enum QaCommand {
-    /// End-to-end system verification
-    Verify,
+    /// Verify previously completed work (proof replay + drift checks)
+    Verify(verify::VerifyCli),
 
     /// CI validation checks
     Check {
@@ -787,24 +788,25 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Determine which agent files to generate based on flags
             // Individual flags override existing files list
-            let agent_files_to_generate = if init_group.claude || init_group.gemini || init_group.agents {
-                let mut files = vec![];
-                if init_group.claude {
-                    files.push("CLAUDE.md".to_string());
-                }
-                if init_group.gemini {
-                    files.push("GEMINI.md".to_string());
-                }
-                if init_group.agents {
-                    files.push("AGENTS.md".to_string());
-                }
-                files
-            } else {
-                existing_agent_files
-                    .into_iter()
-                    .map(|s| s.to_string())
-                    .collect()
-            };
+            let agent_files_to_generate =
+                if init_group.claude || init_group.gemini || init_group.agents {
+                    let mut files = vec![];
+                    if init_group.claude {
+                        files.push("CLAUDE.md".to_string());
+                    }
+                    if init_group.gemini {
+                        files.push("GEMINI.md".to_string());
+                    }
+                    if init_group.agents {
+                        files.push("AGENTS.md".to_string());
+                    }
+                    files
+                } else {
+                    existing_agent_files
+                        .into_iter()
+                        .map(|s| s.to_string())
+                        .collect()
+                };
 
             scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
                 target_dir,
@@ -820,13 +822,15 @@ pub fn run() -> Result<(), error::DecapodError> {
                 migration::write_version(&setup_decapod_root)?;
             }
         }
-        Command::Setup(setup_cli) => {
-            match setup_cli.command {
-                SetupCommand::Hook { commit_msg, pre_commit, uninstall } => {
-                    run_hook_install(commit_msg, pre_commit, uninstall)?;
-                }
+        Command::Setup(setup_cli) => match setup_cli.command {
+            SetupCommand::Hook {
+                commit_msg,
+                pre_commit,
+                uninstall,
+            } => {
+                run_hook_install(commit_msg, pre_commit, uninstall)?;
             }
-        }
+        },
         _ => {
             // For other commands, ensure .decapod exists
             let project_root = decapod_root_option?;
@@ -867,229 +871,234 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Todo(todo_cli) => {
                     todo::run_todo_cli(&project_store, todo_cli)?;
                 }
-                Command::Govern(govern_cli) => {
-                    match govern_cli.command {
-                        GovernCommand::Policy(policy_cli) => {
-                            policy::run_policy_cli(&project_store, policy_cli)?;
+                Command::Govern(govern_cli) => match govern_cli.command {
+                    GovernCommand::Policy(policy_cli) => {
+                        policy::run_policy_cli(&project_store, policy_cli)?;
+                    }
+                    GovernCommand::Health(health_cli) => {
+                        health::run_health_cli(&project_store, health_cli)?;
+                    }
+                    GovernCommand::Proof(proof_cli) => {
+                        proof::execute_proof_cli(&proof_cli, &store_root)?;
+                    }
+                    GovernCommand::Watcher(watcher_cli) => match watcher_cli.command {
+                        WatcherCommand::Run => {
+                            let report = watcher::run_watcher(&project_store)?;
+                            println!("{}", serde_json::to_string_pretty(&report).unwrap());
                         }
-                        GovernCommand::Health(health_cli) => {
-                            health::run_health_cli(&project_store, health_cli)?;
-                        }
-                        GovernCommand::Proof(proof_cli) => {
-                            proof::execute_proof_cli(&proof_cli, &store_root)?;
-                        }
-                        GovernCommand::Watcher(watcher_cli) => {
-                            match watcher_cli.command {
-                                WatcherCommand::Run => {
-                                    let report = watcher::run_watcher(&project_store)?;
-                                    println!("{}", serde_json::to_string_pretty(&report).unwrap());
-                                }
+                    },
+                    GovernCommand::Feedback(feedback_cli) => {
+                        feedback::initialize_feedback_db(&store_root)?;
+                        match feedback_cli.command {
+                            FeedbackCommand::Add {
+                                source,
+                                text,
+                                links,
+                            } => {
+                                let id = feedback::add_feedback(
+                                    &project_store,
+                                    &source,
+                                    &text,
+                                    links.as_deref(),
+                                )?;
+                                println!("Feedback recorded: {}", id);
+                            }
+                            FeedbackCommand::Propose => {
+                                let proposal = feedback::propose_prefs(&project_store)?;
+                                println!("{}", proposal);
                             }
                         }
-                        GovernCommand::Feedback(feedback_cli) => {
-                            feedback::initialize_feedback_db(&store_root)?;
-                            match feedback_cli.command {
-                                FeedbackCommand::Add { source, text, links } => {
-                                    let id = feedback::add_feedback(
-                                        &project_store,
-                                        &source,
-                                        &text,
-                                        links.as_deref(),
-                                    )?;
-                                    println!("Feedback recorded: {}", id);
-                                }
-                                FeedbackCommand::Propose => {
-                                    let proposal = feedback::propose_prefs(&project_store)?;
-                                    println!("{}", proposal);
+                    }
+                },
+                Command::Data(data_cli) => match data_cli.command {
+                    DataCommand::Archive(archive_cli) => {
+                        archive::initialize_archive_db(&store_root)?;
+                        match archive_cli.command {
+                            ArchiveCommand::List => {
+                                let items = archive::list_archives(&project_store)?;
+                                println!("{}", serde_json::to_string_pretty(&items).unwrap());
+                            }
+                            ArchiveCommand::Verify => {
+                                let failures = archive::verify_archives(&project_store)?;
+                                if failures.is_empty() {
+                                    println!("All archives verified successfully.");
+                                } else {
+                                    println!("Archive verification failed:");
+                                    for f in failures {
+                                        println!("- {}", f);
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                Command::Data(data_cli) => {
-                    match data_cli.command {
-                        DataCommand::Archive(archive_cli) => {
-                            archive::initialize_archive_db(&store_root)?;
-                            match archive_cli.command {
-                                ArchiveCommand::List => {
-                                    let items = archive::list_archives(&project_store)?;
-                                    println!("{}", serde_json::to_string_pretty(&items).unwrap());
-                                }
-                                ArchiveCommand::Verify => {
-                                    let failures = archive::verify_archives(&project_store)?;
-                                    if failures.is_empty() {
-                                        println!("All archives verified successfully.");
-                                    } else {
-                                        println!("Archive verification failed:");
-                                        for f in failures {
-                                            println!("- {}", f);
+                    DataCommand::Knowledge(knowledge_cli) => {
+                        db::initialize_knowledge_db(&store_root)?;
+                        match knowledge_cli.command {
+                            KnowledgeCommand::Add {
+                                id,
+                                title,
+                                text,
+                                provenance,
+                                claim_id,
+                            } => {
+                                knowledge::add_knowledge(
+                                    &project_store,
+                                    &id,
+                                    &title,
+                                    &text,
+                                    &provenance,
+                                    claim_id.as_deref(),
+                                )?;
+                                println!("Knowledge entry added: {}", id);
+                            }
+                            KnowledgeCommand::Search { query } => {
+                                let results = knowledge::search_knowledge(&project_store, &query)?;
+                                println!("{}", serde_json::to_string_pretty(&results).unwrap());
+                            }
+                        }
+                    }
+                    DataCommand::Context(context_cli) => {
+                        let manager = context::ContextManager::new(&store_root)?;
+                        match context_cli.command {
+                            ContextCommand::Audit { profile, files } => {
+                                let total = manager.audit_session(&files)?;
+                                match manager.get_profile(&profile) {
+                                    Some(p) => {
+                                        println!(
+                                            "Total tokens for profile '{}': {} / {} (budget)",
+                                            profile, total, p.budget_tokens
+                                        );
+                                        if total > p.budget_tokens {
+                                            println!("⚠ OVER BUDGET");
                                         }
+                                    }
+                                    None => {
+                                        println!(
+                                            "Total tokens: {} (Profile '{}' not found)",
+                                            total, profile
+                                        );
                                     }
                                 }
                             }
-                        }
-                        DataCommand::Knowledge(knowledge_cli) => {
-                            db::initialize_knowledge_db(&store_root)?;
-                            match knowledge_cli.command {
-                                KnowledgeCommand::Add { id, title, text, provenance, claim_id } => {
-                                    knowledge::add_knowledge(
-                                        &project_store,
-                                        &id,
-                                        &title,
-                                        &text,
-                                        &provenance,
-                                        claim_id.as_deref(),
-                                    )?;
-                                    println!("Knowledge entry added: {}", id);
-                                }
-                                KnowledgeCommand::Search { query } => {
-                                    let results = knowledge::search_knowledge(&project_store, &query)?;
-                                    println!("{}", serde_json::to_string_pretty(&results).unwrap());
-                                }
-                            }
-                        }
-                        DataCommand::Context(context_cli) => {
-                            let manager = context::ContextManager::new(&store_root)?;
-                            match context_cli.command {
-                                ContextCommand::Audit { profile, files } => {
-                                    let total = manager.audit_session(&files)?;
-                                    match manager.get_profile(&profile) {
-                                        Some(p) => {
-                                            println!(
-                                                "Total tokens for profile '{}': {} / {} (budget)",
-                                                profile, total, p.budget_tokens
-                                            );
-                                            if total > p.budget_tokens {
-                                                println!("⚠ OVER BUDGET");
-                                            }
-                                        }
-                                        None => {
-                                            println!(
-                                                "Total tokens: {} (Profile '{}' not found)",
-                                                total, profile
-                                            );
-                                        }
+                            ContextCommand::Pack { path, summary } => {
+                                match manager.pack_and_archive(&project_store, &path, &summary) {
+                                    Ok(archive_path) => {
+                                        println!("Session archived to: {}", archive_path.display());
+                                    }
+                                    Err(error::DecapodError::ContextPackError(msg)) => {
+                                        eprintln!("Context pack failed: {}", msg);
+                                    }
+                                    Err(e) => {
+                                        eprintln!("Unexpected error during context pack: {}", e);
                                     }
                                 }
-                                ContextCommand::Pack { path, summary } => {
-                                    match manager.pack_and_archive(&project_store, &path, &summary) {
-                                        Ok(archive_path) => {
-                                            println!("Session archived to: {}", archive_path.display());
-                                        }
-                                        Err(error::DecapodError::ContextPackError(msg)) => {
-                                            eprintln!("Context pack failed: {}", msg);
-                                        }
-                                        Err(e) => {
-                                            eprintln!("Unexpected error during context pack: {}", e);
-                                        }
-                                    }
-                                }
-                                ContextCommand::Restore {
-                                    id,
-                                    profile,
-                                    current_files,
-                                } => {
-                                    let content = manager.restore_archive(&id, &profile, &current_files)?;
-                                    println!(
-                                        "--- RESTORED CONTENT (Archive: {}) ---\n{}\n--- END RESTORED ---",
-                                        id, content
-                                    );
-                                }
+                            }
+                            ContextCommand::Restore {
+                                id,
+                                profile,
+                                current_files,
+                            } => {
+                                let content =
+                                    manager.restore_archive(&id, &profile, &current_files)?;
+                                println!(
+                                    "--- RESTORED CONTENT (Archive: {}) ---\n{}\n--- END RESTORED ---",
+                                    id, content
+                                );
                             }
                         }
-                        DataCommand::Schema(schema_cli) => {
-                            let mut schemas = std::collections::BTreeMap::new();
-                            schemas.insert("todo", todo::schema());
-                            schemas.insert("cron", cron::schema());
-                            schemas.insert("reflex", reflex::schema());
-                            schemas.insert("health", health::health_schema());
-                            schemas.insert("broker", core::broker::schema());
-                            schemas.insert("context", context::schema());
-                            schemas.insert("policy", policy::schema());
-                            schemas.insert("knowledge", knowledge::schema());
-                            schemas.insert("repomap", repomap::schema());
-                            schemas.insert("watcher", watcher::schema());
-                            schemas.insert("archive", archive::schema());
-                            schemas.insert("feedback", feedback::schema());
-                            schemas.insert("teammate", teammate::schema());
-                            schemas.insert("docs", docs_cli::schema());
+                    }
+                    DataCommand::Schema(schema_cli) => {
+                        let mut schemas = std::collections::BTreeMap::new();
+                        schemas.insert("todo", todo::schema());
+                        schemas.insert("cron", cron::schema());
+                        schemas.insert("reflex", reflex::schema());
+                        schemas.insert("health", health::health_schema());
+                        schemas.insert("broker", core::broker::schema());
+                        schemas.insert("context", context::schema());
+                        schemas.insert("policy", policy::schema());
+                        schemas.insert("knowledge", knowledge::schema());
+                        schemas.insert("repomap", repomap::schema());
+                        schemas.insert("watcher", watcher::schema());
+                        schemas.insert("archive", archive::schema());
+                        schemas.insert("feedback", feedback::schema());
+                        schemas.insert("teammate", teammate::schema());
+                        schemas.insert("docs", docs_cli::schema());
 
-                            let output = if let Some(sub) = schema_cli.subsystem {
-                                schemas
-                                    .get(sub.as_str())
-                                    .cloned()
-                                    .unwrap_or(serde_json::json!({ "error": "subsystem not found" }))
-                            } else {
-                                let mut envelope = serde_json::json!({
-                                    "schema_version": "1.0.0",
-                                    "subsystems": schemas
-                                });
-                                if !schema_cli.deterministic {
-                                    envelope.as_object_mut().unwrap().insert(
-                                        "generated_at".to_string(),
-                                        serde_json::json!(format!("{:?}", std::time::SystemTime::now())),
-                                    );
-                                }
-                                envelope
-                            };
+                        let output = if let Some(sub) = schema_cli.subsystem {
+                            schemas
+                                .get(sub.as_str())
+                                .cloned()
+                                .unwrap_or(serde_json::json!({ "error": "subsystem not found" }))
+                        } else {
+                            let mut envelope = serde_json::json!({
+                                "schema_version": "1.0.0",
+                                "subsystems": schemas
+                            });
+                            if !schema_cli.deterministic {
+                                envelope.as_object_mut().unwrap().insert(
+                                    "generated_at".to_string(),
+                                    serde_json::json!(format!(
+                                        "{:?}",
+                                        std::time::SystemTime::now()
+                                    )),
+                                );
+                            }
+                            envelope
+                        };
 
-                            if schema_cli.format == "json" {
-                                println!("{}", serde_json::to_string_pretty(&output).unwrap());
+                        if schema_cli.format == "json" {
+                            println!("{}", serde_json::to_string_pretty(&output).unwrap());
+                        } else {
+                            println!(
+                                "Markdown schema format not yet implemented. Defaulting to JSON."
+                            );
+                            println!("{}", serde_json::to_string_pretty(&output).unwrap());
+                        }
+                    }
+                    DataCommand::Repo(repo_cli) => match repo_cli.command {
+                        RepoCommand::Map => {
+                            let map = repomap::generate_map(&project_root);
+                            println!("{}", serde_json::to_string_pretty(&map).unwrap());
+                        }
+                        RepoCommand::Graph => {
+                            let graph = repomap::generate_doc_graph(&project_root);
+                            println!("{}", graph.mermaid);
+                        }
+                    },
+                    DataCommand::Broker(broker_cli) => match broker_cli.command {
+                        BrokerCommand::Audit => {
+                            let audit_log = store_root.join("broker.events.jsonl");
+                            if audit_log.exists() {
+                                let content = std::fs::read_to_string(audit_log)?;
+                                println!("{}", content);
                             } else {
-                                println!("Markdown schema format not yet implemented. Defaulting to JSON.");
-                                println!("{}", serde_json::to_string_pretty(&output).unwrap());
+                                println!("No audit log found.");
                             }
                         }
-                        DataCommand::Repo(repo_cli) => {
-                            match repo_cli.command {
-                                RepoCommand::Map => {
-                                    let map = repomap::generate_map(&project_root);
-                                    println!("{}", serde_json::to_string_pretty(&map).unwrap());
-                                }
-                                RepoCommand::Graph => {
-                                    let graph = repomap::generate_doc_graph(&project_root);
-                                    println!("{}", graph.mermaid);
-                                }
-                            }
-                        }
-                        DataCommand::Broker(broker_cli) => {
-                            match broker_cli.command {
-                                BrokerCommand::Audit => {
-                                    let audit_log = store_root.join("broker.events.jsonl");
-                                    if audit_log.exists() {
-                                        let content = std::fs::read_to_string(audit_log)?;
-                                        println!("{}", content);
-                                    } else {
-                                        println!("No audit log found.");
-                                    }
-                                }
-                            }
-                        }
-                        DataCommand::Teammate(teammate_cli) => {
-                            teammate::run_teammate_cli(&project_store, teammate_cli)?;
-                        }
+                    },
+                    DataCommand::Teammate(teammate_cli) => {
+                        teammate::run_teammate_cli(&project_store, teammate_cli)?;
                     }
-                }
-                Command::Auto(auto_cli) => {
-                    match auto_cli.command {
-                        AutoCommand::Cron(cron_cli) => {
-                            cron::run_cron_cli(&project_store, cron_cli)?;
-                        }
-                        AutoCommand::Reflex(reflex_cli) => {
-                            reflex::run_reflex_cli(&project_store, reflex_cli);
-                        }
+                },
+                Command::Auto(auto_cli) => match auto_cli.command {
+                    AutoCommand::Cron(cron_cli) => {
+                        cron::run_cron_cli(&project_store, cron_cli)?;
                     }
-                }
-                Command::Qa(qa_cli) => {
-                    match qa_cli.command {
-                        QaCommand::Verify => {
-                            run_verification()?;
-                        }
-                        QaCommand::Check { crate_description, all } => {
-                            run_check(crate_description, all)?;
-                        }
+                    AutoCommand::Reflex(reflex_cli) => {
+                        reflex::run_reflex_cli(&project_store, reflex_cli);
                     }
-                }
+                },
+                Command::Qa(qa_cli) => match qa_cli.command {
+                    QaCommand::Verify(verify_cli) => {
+                        verify::run_verify_cli(&project_store, &project_root, verify_cli)?;
+                    }
+                    QaCommand::Check {
+                        crate_description,
+                        all,
+                    } => {
+                        run_check(crate_description, all)?;
+                    }
+                },
                 _ => unreachable!(),
             }
         }
@@ -1097,7 +1106,11 @@ pub fn run() -> Result<(), error::DecapodError> {
     Ok(())
 }
 
-fn run_hook_install(commit_msg: bool, pre_commit: bool, uninstall: bool) -> Result<(), error::DecapodError> {
+fn run_hook_install(
+    commit_msg: bool,
+    pre_commit: bool,
+    uninstall: bool,
+) -> Result<(), error::DecapodError> {
     use std::fs;
     use std::io::Write;
 
@@ -1246,93 +1259,5 @@ fn run_check(crate_description: bool, all: bool) -> Result<(), error::DecapodErr
         println!("Note: --all requires --crate-description");
     }
 
-    Ok(())
-}
-
-fn run_verification() -> Result<(), error::DecapodError> {
-    let temp_dir = std::env::temp_dir().join(format!("decapod_verify_{}", ulid::Ulid::new()));
-    std::fs::create_dir_all(&temp_dir)?;
-    println!("Testing in {}", temp_dir.display());
-
-    let status = std::process::Command::new("git")
-        .arg("init")
-        .arg("-q")
-        .current_dir(&temp_dir)
-        .status()?;
-    if !status.success() {
-        return Err(error::DecapodError::ValidationError(
-            "git init failed".into(),
-        ));
-    }
-
-    let exe = std::env::current_exe()?;
-
-    let status = std::process::Command::new(&exe)
-        .arg("init")
-        .arg("--dir")
-        .arg(".")
-        .current_dir(&temp_dir)
-        .status()?;
-    if !status.success() {
-        return Err(error::DecapodError::ValidationError(
-            "decapod init failed".into(),
-        ));
-    }
-
-    println!("Checking directory structure...");
-    let m_dir = temp_dir.join(".decapod");
-    if !m_dir.is_dir() {
-        return Err(error::DecapodError::NotFound(".decapod/ missing".into()));
-    }
-    if !temp_dir.join("AGENTS.md").is_file() {
-        return Err(error::DecapodError::ValidationError(
-            "AGENTS.md missing".into(),
-        ));
-    }
-
-    if m_dir.join("projects").exists() {
-        return Err(error::DecapodError::ValidationError(
-            "Legacy projects dir found".into(),
-        ));
-    }
-    if m_dir.join("docs").exists() {
-        return Err(error::DecapodError::ValidationError(
-            ".decapod/docs should not exist".into(),
-        ));
-    }
-
-    println!("Checking embedded docs access...");
-    let out = std::process::Command::new(&exe).arg("docs").arg("list").output()?;
-    if !String::from_utf8_lossy(&out.stdout).contains("embedded/core/DECAPOD.md") {
-        return Err(error::DecapodError::ValidationError(
-            "docs list missing embedded/core/DECAPOD.md".into(),
-        ));
-    }
-    println!("Checking validate...");
-    let status = std::process::Command::new(&exe)
-        .arg("validate")
-        .current_dir(&temp_dir)
-        .status()?;
-    if !status.success() {
-        return Err(error::DecapodError::ValidationError(
-            "decapod validate failed".into(),
-        ));
-    }
-
-    println!("Checking state scoping...");
-    let data_dir = m_dir.join("data");
-    if !data_dir.is_dir() {
-        return Err(error::DecapodError::NotFound(
-            ".decapod/data/ missing".into(),
-        ));
-    }
-    if !data_dir.join("todo.db").is_file() {
-        return Err(error::DecapodError::NotFound(
-            "todo.db missing from .decapod/data/".into(),
-        ));
-    }
-
-    println!("SUCCESS: Project adopted and scoped correctly.");
-    std::fs::remove_dir_all(&temp_dir)?;
     Ok(())
 }
