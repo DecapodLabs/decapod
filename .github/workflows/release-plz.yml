@@ -15,6 +15,7 @@ jobs:
     name: Release PR
     runs-on: ubuntu-latest
     if: github.repository == 'DecapodLabs/decapod'
+    environment: release
     concurrency:
       group: release-plz-${{ github.ref }}
       cancel-in-progress: false
