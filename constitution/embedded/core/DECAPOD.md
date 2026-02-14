@@ -154,10 +154,9 @@ Key definitions:
 
 **Guides (Operational Advice) - REFERENCE ONLY:**
 - **TODO Subsystem (PRIMARY):** `embedded/plugins/TODO.md` — **Use this for all work tracking**
-- Operating loop: `embedded/plugins/WORKFLOW.md`
+- Operating loop: `embedded/plugins/TODO.md`
 - Canonical vs derived vs state: `embedded/plugins/MANIFEST.md`
-- Known gaps: `embedded/plugins/METHODOLOGY_GAPS.md`
-- Agent checklist (docs only): `embedded/plugins/TODO_USER.md`
+- Verification and drift checks: `embedded/plugins/VERIFY.md`
 - Emergency protocol (stop-the-line): `embedded/plugins/EMERGENCY_PROTOCOL.md`
 
 ---
@@ -201,10 +200,8 @@ All agents operating in this workspace MUST adhere to the following:
 - `embedded/specs/GIT.md` — **Git etiquette contract (branching, commits, push policies)**
 - `embedded/plugins/TODO.md` — **TODO subsystem (start here for work tracking)**
 - `embedded/plugins/MANIFEST.md`
-- `embedded/plugins/TODO_USER.md`
-- `embedded/plugins/WORKFLOW.md`
+- `embedded/plugins/VERIFY.md`
 - `embedded/plugins/DB_BROKER.md`
-- `embedded/plugins/METHODOLOGY_GAPS.md`
 - `embedded/plugins/EMERGENCY_PROTOCOL.md`
 - `embedded/specs/INTENT.md`
 - `embedded/specs/ARCHITECTURE.md`

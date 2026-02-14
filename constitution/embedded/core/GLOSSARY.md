@@ -26,7 +26,7 @@ This glossary is binding: if a term is defined here, other canonical docs MUST u
   - A short statement describing what the document is allowed to define (e.g. routing vs interface vs constitution).
 - Router (routing authority):
   - A document that routes readers to canonical sources.
-  - A router does not create new behavioral requirements (see Delegation Charter in `embedded/core/MAESTRO.md`).
+  - A router does not create new behavioral requirements (see Delegation Charter in `embedded/core/DECAPOD.md`).
 - Proof surface:
   - A named, runnable mechanism that can detect drift or validate invariants (e.g. `decapod validate`, schema checks).
 - Claim:
@@ -54,7 +54,7 @@ This glossary is binding: if a term is defined here, other canonical docs MUST u
 
 ## Links
 
-- `embedded/core/MAESTRO.md`
+- `embedded/core/DECAPOD.md`
 - `embedded/core/DOC_RULES.md`
 - `embedded/core/CLAIMS.md`
 - `embedded/core/DEPRECATION.md`

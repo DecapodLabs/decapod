@@ -151,7 +151,7 @@ Validate coverage matrix (starter; expand over time):
 - `embedded/core/DOC_RULES.md`
 - `embedded/core/STORE_MODEL.md`
 - `embedded/plugins/MANIFEST.md`
-- `embedded/plugins/WORKFLOW.md`
+- `embedded/plugins/TODO.md`
 - `embedded/specs/ARCHITECTURE.md`
 - `embedded/specs/INTENT.md`
 - `embedded/specs/SYSTEM.md`

@@ -29,7 +29,7 @@ An amendment is valid only if all of the following are true:
 1. The change is explicit.
    - Update the binding doc text (no "implied" policy).
 2. The change is routed.
-   - Ensure `embedded/core/MAESTRO.md` reaches the updated/added canonical docs via `## Links`.
+   - Ensure `embedded/core/DECAPOD.md` reaches the updated/added canonical docs via `## Links`.
 3. The change is recorded.
    - Add an entry to the Amendment Log in this document (§6).
 4. The change is claim-safe.
@@ -46,7 +46,7 @@ An amendment is valid only if all of the following are true:
 When a binding doc change touches these areas, the following co-updates are required:
 
 - Doc graph and canon:
-  - Update `embedded/core/MAESTRO.md` routing as needed.
+  - Update `embedded/core/DECAPOD.md` routing as needed.
   - Regenerate `docs/DOC_MAP.md` (derived; do not hand-edit).
 - Doc compiler and authority routing:
   - If header fields, layers, truth labels, reachability, or decision rights change: update `embedded/core/DOC_RULES.md`.
@@ -99,7 +99,7 @@ Each entry MUST include:
   - `embedded/core/DEPRECATION.md` (introduced)
   - `embedded/core/GLOSSARY.md` (introduced)
   - `embedded/plugins/EMERGENCY_PROTOCOL.md` (introduced)
-  - `embedded/core/MAESTRO.md` (delegation charter + routing)
+  - `embedded/core/DECAPOD.md` (delegation charter + routing)
   - `embedded/core/DOC_RULES.md` (decision rights + truth label constraints)
 - Summary:
   - Established explicit change control, claims ledger, and deprecation contract as binding governance surfaces.
@@ -120,7 +120,7 @@ Each entry MUST include:
 
 ## Links
 
-- `embedded/core/MAESTRO.md`
+- `embedded/core/DECAPOD.md`
 - `embedded/core/DOC_RULES.md`
 - `embedded/core/CLAIMS.md`
 - `embedded/core/DEPRECATION.md`

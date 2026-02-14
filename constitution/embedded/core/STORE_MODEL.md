@@ -67,7 +67,7 @@ All guarantees here are registered in `embedded/core/CLAIMS.md`.
 ## Links
 
 - `embedded/core/CONTROL_PLANE.md`
-- `embedded/core/MAESTRO.md`
+- `embedded/core/DECAPOD.md`
 - `embedded/core/CLAIMS.md`
 - `embedded/core/PLUGINS.md`
 - `embedded/core/DOC_RULES.md`
