@@ -88,6 +88,29 @@ From that point on, agents operate inside the governed environment. You observe 
 
 ---
 
+## The Difference
+
+**Without Decapod:**
+```
+You: “Add OAuth to the login flow”
+Agent: Writes 500 lines across 8 files
+You: Review everything manually
+You: Find broken tests, ignored conventions, missing error paths
+Agent: Forgets context when you ask for fixes
+```
+
+**With Decapod:**
+```
+You: “Add OAuth to the login flow”
+Agent: Checks recorded conventions and constraints
+Agent: Produces tracked work, records decisions
+Agent: Runs proof gates, fixes failures, re-validates
+Agent: Marks work done with an auditable trail
+You: Review summary and merge
+```
+
+---
+
 ## Security
 
 Decapod is designed with security at the foundation. See [`SECURITY.md`](SECURITY.md) for:
@@ -137,29 +160,6 @@ Decapod standardizes the surfaces agents use to collaborate:
 - (planned) safe multi-writer state via a DB broker
 
 Multiple agents can work in parallel without collisions, duplicate effort, or lost context.
-
----
-
-## The Difference
-
-**Without Decapod:**
-```
-You: “Add OAuth to the login flow”
-Agent: Writes 500 lines across 8 files
-You: Review everything manually
-You: Find broken tests, ignored conventions, missing error paths
-Agent: Forgets context when you ask for fixes
-```
-
-**With Decapod:**
-```
-You: “Add OAuth to the login flow”
-Agent: Checks recorded conventions and constraints
-Agent: Produces tracked work, records decisions
-Agent: Runs proof gates, fixes failures, re-validates
-Agent: Marks work done with an auditable trail
-You: Review summary and merge
-```
 
 ---
 
