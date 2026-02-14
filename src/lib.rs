@@ -1280,7 +1280,7 @@ fn run_self_update(project_root: &Path) -> Result<(), error::DecapodError> {
         .args(["install", "--path", ".", "--locked"])
         .current_dir(project_root)
         .status()
-        .map_err(|e| error::DecapodError::IoError(e))?;
+        .map_err(error::DecapodError::IoError)?;
 
     if !status.success() {
         return Err(error::DecapodError::ValidationError(
