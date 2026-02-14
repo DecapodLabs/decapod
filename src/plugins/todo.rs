@@ -5,7 +5,7 @@ use crate::core::store::Store;
 use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{types::ToSql, Connection, OptionalExtension, Result as SqlResult};
+use rusqlite::{Connection, OptionalExtension, Result as SqlResult, types::ToSql};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
