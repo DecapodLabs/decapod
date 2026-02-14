@@ -53,6 +53,34 @@ Decapod is a local-first control plane for coding agents. It helps facilitate mu
 
 ---
 
+## 1.1. Mandatory Session Start Protocol
+
+⚠️ **ABSOLUTE REQUIREMENT:** Every agent session MUST begin with this sequence:
+
+```bash
+decapod --version                   # Verify installed binary version
+decapod --help                      # Check available commands
+decapod docs show core/DECAPOD.md  # Refresh constitution (this file)
+decapod validate                    # Verify system state
+decapod todo list                   # Check active work
+```
+
+**Why this is non-negotiable:**
+
+1. **Version drift**: The decapod binary evolves. Commands change, new features ship, old syntax becomes invalid.
+2. **Constitution updates**: The embedded documentation is updated independently of your knowledge cutoff.
+3. **Command availability**: What worked yesterday may have moved (e.g., `decapod heartbeat` → `decapod govern health summary`).
+4. **State verification**: System health and validation gates must be checked before any mutation.
+
+**Failure to run this protocol will cause:**
+- Command errors (calling removed/renamed commands)
+- Constitution violations (operating on outdated contracts)
+- State corruption (bypassing validation gates)
+
+⚠️ **This is not optional guidance. This is a proof gate.** Agents that skip this protocol will produce unverified, unsafe work.
+
+---
+
 ## 2. Document Layers (Three-Tiered Structure)
 
 Decapod documentation is structured into three layers, with each canonical document declaring its layer:
@@ -110,6 +138,7 @@ Key definitions:
 - Authority and proof doctrine: `embedded/specs/SYSTEM.md`
 - ⚠️ **METHODOLOGY CONTRACT: `embedded/specs/INTENT.md` — READ THIS FIRST. ALWAYS.**
 - ⚠️ **SECURITY CONTRACT: `embedded/specs/SECURITY.md` — Security philosophy, credential architecture, threat model. READ BEFORE HANDLING CREDENTIALS.**
+- ⚠️ **GIT CONTRACT: `embedded/specs/GIT.md` — Git etiquette, branching strategy, commit conventions, push policies. BINDING FOR ALL GIT OPERATIONS.**
 - Change control (amendments): `embedded/specs/AMENDMENTS.md`
 - Agent persona/interaction guidelines: `embedded/core/SOUL.md`
 
@@ -169,6 +198,7 @@ All agents operating in this workspace MUST adhere to the following:
 ## Links
 
 - `embedded/specs/SECURITY.md` — **Security contract (credential handling, threat model, incident response)**
+- `embedded/specs/GIT.md` — **Git etiquette contract (branching, commits, push policies)**
 - `embedded/plugins/TODO.md` — **TODO subsystem (start here for work tracking)**
 - `embedded/plugins/MANIFEST.md`
 - `embedded/plugins/TODO_USER.md`

@@ -88,6 +88,29 @@ From that point on, agents operate inside the governed environment. You observe 
 
 ---
 
+## The Difference
+
+**Without Decapod:**
+```
+You: “Add OAuth to the login flow”
+Agent: Writes 500 lines across 8 files
+You: Review everything manually
+You: Find broken tests, ignored conventions, missing error paths
+Agent: Forgets context when you ask for fixes
+```
+
+**With Decapod:**
+```
+You: “Add OAuth to the login flow”
+Agent: Checks recorded conventions and constraints
+Agent: Produces tracked work, records decisions
+Agent: Runs proof gates, fixes failures, re-validates
+Agent: Marks work done with an auditable trail
+You: Review summary and merge
+```
+
+---
+
 ## Security
 
 Decapod is designed with security at the foundation. See [`SECURITY.md`](SECURITY.md) for:
@@ -140,29 +163,6 @@ Multiple agents can work in parallel without collisions, duplicate effort, or lo
 
 ---
 
-## The Difference
-
-**Without Decapod:**
-```
-You: “Add OAuth to the login flow”
-Agent: Writes 500 lines across 8 files
-You: Review everything manually
-You: Find broken tests, ignored conventions, missing error paths
-Agent: Forgets context when you ask for fixes
-```
-
-**With Decapod:**
-```
-You: “Add OAuth to the login flow”
-Agent: Checks recorded conventions and constraints
-Agent: Produces tracked work, records decisions
-Agent: Runs proof gates, fixes failures, re-validates
-Agent: Marks work done with an auditable trail
-You: Review summary and merge
-```
-
----
-
 ## Architecture
 
 ```text
@@ -189,60 +189,6 @@ Storage:
 ```
 
 You don’t touch `.decapod/data/` directly. Agents use the control surface. Like neurons—they’re there, they work, you don’t manipulate them individually.
-
----
-
-## Subsystems
-
-Decapod's control surface is organized into 9 top-level commands with grouped subsystems. **Agents interact with these; you communicate your desires to the agent and observe outcomes.**
-
-### Core Commands
-
-| Command | Purpose |
-|---------|---------|
-| `decapod init` | Bootstrap project with constitution |
-| `decapod setup` | Configure git hooks and repository setup |
-| `decapod docs` | Constitution discovery and access |
-| `decapod todo` | Work tracking with audit trail and task claiming |
-| `decapod validate` | Proof gate before promotion |
-
-### Governance (`decapod govern`)
-
-| Subcommand | Purpose |
-|------------|---------|
-| `policy` | Risk classification and approval gates |
-| `health` | Proof ledger + system state monitoring |
-| `health summary` | System health overview |
-| `health autonomy` | Agent autonomy tiers |
-| `proof` | Executable verification and proof gates |
-| `watcher` | Proactive integrity checks |
-| `feedback` | User preference refinement |
-
-### Data Management (`decapod data`)
-
-| Subcommand | Purpose |
-|------------|---------|
-| `archive` | Session history indexing and verification |
-| `knowledge` | Project facts and rationale storage |
-| `context` | Token budget management and archival |
-| `schema` | Subsystem schema discovery |
-| `repo` | Repository structure mapping |
-| `broker` | SQLite audit trail access |
-| `teammate` | User conventions and preferences |
-
-### Automation (`decapod auto`)
-
-| Subcommand | Purpose |
-|------------|---------|
-| `cron` | Scheduled automation jobs |
-| `reflex` | Event-driven triggers and actions |
-
-### Quality Assurance (`decapod qa`)
-
-| Subcommand | Purpose |
-|------------|---------|
-| `verify` | Proof replay and drift detection |
-| `check` | CI validation checks |
 
 ---
 
