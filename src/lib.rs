@@ -263,6 +263,9 @@ enum QaCommand {
         #[clap(long)]
         all: bool,
     },
+
+    /// Run gatling regression test across all CLI code paths
+    Gatling(plugins::gatling::GatlingCli),
 }
 
 // ===== Main Command Enum =====
@@ -1092,6 +1095,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                         all,
                     } => {
                         run_check(crate_description, all)?;
+                    }
+                    QaCommand::Gatling(ref gatling_cli) => {
+                        plugins::gatling::run_gatling_cli(gatling_cli)?;
                     }
                 },
                 _ => unreachable!(),
