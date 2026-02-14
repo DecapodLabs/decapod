@@ -30,7 +30,7 @@ dev/
 # --- Decapod Sidecar (State) ---
 # We never commit local sidecar state or databases
 .decapod/data
-.decapod/.stfolder/syncthing-folder-509db3.txt
+.decapod/.stfolder
 .decapod/generated/decapod.sync-conflict-20260212-224557-Y75YA6D.version
 
 # --- Environment & Secrets ---

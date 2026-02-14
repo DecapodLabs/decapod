@@ -71,7 +71,7 @@ Projects customize behavior through `.decapod/OVERRIDE.md` — extend or adjust 
 
 Agents operating in the same repo share durable infrastructure:
 
-- **Persistent state** — Todos, decisions, conventions, and proof events survive sessions and model switches. Stored in `.decapod/data/` as SQLite databases and append-only event logs.
+- **Proof ledger** — Decisions, conventions, and proof events survive sessions and model switches. Stored in `.decapod/data/` as SQLite databases and append-only event logs. State survives agent death.
 - **Proof gates** — `decapod validate` runs a 48-gate verification harness. If it fails, the work isn't done — no matter how confident the summary sounds. Evidence required, not assertions.
 - **Shared backlog** — A brokered task system with audit trails. Agents claim work, record transitions, and archive completions. No duplicate effort, no lost context.
 - **Policy boundaries** — Trust tiers, risk zones, and approval gates. Governance that scales with autonomy.
