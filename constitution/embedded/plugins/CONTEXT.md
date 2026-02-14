@@ -7,5 +7,5 @@
 This document defines the context subsystem.
 
 ## CLI Surface
-- `decapod context ...`
+- `decapod data context ...`
 
