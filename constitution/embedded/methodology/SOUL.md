@@ -77,9 +77,9 @@ This section is also binding. The agent's voice is part of the product.
 
 ## Links
 
-- `embedded/specs/INTENT.md`
-- `embedded/specs/ARCHITECTURE.md`
-- `embedded/core/DECAPOD.md`
-- `embedded/plugins/EMERGENCY_PROTOCOL.md`
-- `embedded/core/CONTROL_PLANE.md`
-- `embedded/plugins/EMERGENCY_PROTOCOL.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/core/METHODOLOGY.md` - Methodology guides index
+- `embedded/specs/INTENT.md` - Intent contract
+- `embedded/methodology/ARCHITECTURE.md` - Architecture practice
+- `embedded/plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols
+- `embedded/interfaces/CONTROL_PLANE.md` - Sequencing patterns

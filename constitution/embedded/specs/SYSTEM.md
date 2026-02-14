@@ -44,11 +44,11 @@ Reverse flow (e.g., changing specs to match code) is forbidden, except during a 
 When guidance from different documents conflicts, the most specific, highest-authority document in the current working directory prevails.
 
 1.  `embedded/specs/INTENT.md` (Binding Contract)
-2.  `embedded/specs/ARCHITECTURE.md` (Compiled from Intent)
+2.  `embedded/methodology/ARCHITECTURE.md` (Compiled from Intent)
 3.  Proof surface (`decapod validate`, `tests/`, and optional `proof.md`)
 4.  `embedded/specs/SYSTEM.md` (This document, the foundational methodology)
 5.  `embedded/core/DECAPOD.md` (Router/index; not a contract, but the default entrypoint if present)
-6.  `templates/AGENTS.md` (Machine-facing entrypoint)
+6.  `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` / `CODEX.md` / `OPENCODE.md` (Machine-facing entrypoints)
 7.  `embedded/plugins/TODO.md` (Operational guidance, must not override intent)
 8.  repo-local non-binding rationale notes (if present)
 9.  repo-local non-binding context/history notes (if present)
@@ -64,7 +64,7 @@ All AI agents operating within this system must adhere to the following behavior
 -   **Before Acting:**
     1.  If present, start at `embedded/core/DECAPOD.md` (repo router/index).
     2.  Read `embedded/specs/INTENT.md`.
-    3.  Read `embedded/specs/ARCHITECTURE.md`.
+    3.  Read `embedded/methodology/ARCHITECTURE.md`.
     4.  Read the proof surface (`decapod validate`, `tests/`, and optional `proof.md`).
     5.  Then, and only then, read or modify the implementation.
 -   **While Acting:**
@@ -176,9 +176,9 @@ Until this is implemented, do not document script-based plugin systems or extern
 
 ## 10. See Also
 
--   `embedded/core/SOUL.md`: Defines the agent's core identity and prime directives.
--   `embedded/core/MEMORY.md`: Outlines principles and mechanisms for agent's persistent memory.
--   `embedded/core/KNOWLEDGE.md`: Defines principles for managing project-specific knowledge.
+-   `embedded/methodology/SOUL.md`: Defines the agent's core identity and prime directives.
+-   `embedded/methodology/MEMORY.md`: Outlines principles and mechanisms for agent's memory.
+-   `embedded/methodology/KNOWLEDGE.md`: Defines principles for managing project-specific knowledge.
 
 For domain-specific guidance, keep it repo-local under `docs/` and reference it from your project `AGENTS.md`.
 
@@ -186,19 +186,16 @@ For operational workflow and TODO governance, see `embedded/plugins/TODO.md`.
 
 ## Links
 
-- `embedded/core/CONTROL_PLANE.md`
-- `embedded/core/DECAPOD.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/core/KNOWLEDGE.md`
-- `embedded/core/MEMORY.md`
-- `embedded/core/SOUL.md`
-- `embedded/plugins/TODO.md`
-- `embedded/core/PLUGINS.md`
-- `embedded/specs/ARCHITECTURE.md`
-- `embedded/specs/INTENT.md`
-- `embedded/specs/SYSTEM.md`
-- `templates/AGENTS.md`
-- `templates/CLAUDE.md`
-- `templates/GEMINI.md`
-- `templates/CODEX.md`
-- `templates/OPENCODE.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/specs/INTENT.md` - Intent-driven methodology contract
+- `embedded/methodology/ARCHITECTURE.md` - Architecture practice
+- `embedded/core/PLUGINS.md` - Subsystem registry
+- `embedded/interfaces/CONTROL_PLANE.md` - Agent sequencing patterns
+- `embedded/interfaces/DOC_RULES.md` - Doc compilation rules
+- `embedded/methodology/KNOWLEDGE.md` - Knowledge management
+- `embedded/methodology/MEMORY.md` - Agent memory and learning
+- `embedded/methodology/SOUL.md` - Agent identity
+- `embedded/plugins/TODO.md` - Work tracking
+- `embedded/interfaces/CLAIMS.md` - Promises ledger
+- `embedded/specs/AMENDMENTS.md` - Change control
+- `embedded/specs/SECURITY.md` - Security doctrine

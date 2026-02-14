@@ -497,3 +497,13 @@ This contract is enforced through:
 ---
 
 **This contract is binding. Git operations MUST follow these rules.**
+
+## Links
+
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/specs/SYSTEM.md` - System definition
+- `embedded/specs/INTENT.md` - Intent contract
+- `embedded/specs/SECURITY.md` - Security doctrine
+- `embedded/specs/AMENDMENTS.md` - Change control
+- `embedded/plugins/TODO.md` - Work tracking
+- `embedded/interfaces/CONTROL_PLANE.md` - Sequencing patterns
