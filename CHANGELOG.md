@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/DecapodLabs/decapod/compare/v0.2.2...v0.3.0) - 2026-02-14
+
+### Added
+
+- beautify CLI help output with cleaner descriptions and aliases
+- restructure CLI from 22 to 9 grouped commands
+- add summary and autonomy subcommands to health module
+
+### Fixed
+
+- resolve clippy manual_map warning in verify.rs
+- update validation to use new 'data schema' command path
+
+### Other
+
+- run cargo fmt for formatting consistency
+- update constitution with new CLI command structure
+- add comprehensive CLI migration guide
+- deprecate heartbeat and trust modules
+
 ## [0.2.2](https://github.com/DecapodLabs/decapod/compare/v0.2.1...v0.2.2) - 2026-02-14
 
 ### Added
