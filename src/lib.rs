@@ -1359,8 +1359,7 @@ fn run_self_update(project_root: &Path) -> Result<(), error::DecapodError> {
 /// Read version from Cargo.toml in project root
 fn read_cargo_version(project_root: &Path) -> Result<String, error::DecapodError> {
     let cargo_toml = project_root.join("Cargo.toml");
-    let content =
-        std::fs::read_to_string(&cargo_toml).map_err(|e| error::DecapodError::IoError(e))?;
+    let content = std::fs::read_to_string(&cargo_toml).map_err(error::DecapodError::IoError)?;
 
     // Simple parsing - find line starting with "version = "
     for line in content.lines() {
