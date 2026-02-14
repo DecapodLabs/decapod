@@ -159,7 +159,7 @@ jobs:
         run: cargo install --path . --locked
 
       - name: Initialize Decapod
-        run: decapod init
+        run: decapod init --force
 
       - name: Run validation harness
         run: decapod validate
