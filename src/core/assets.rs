@@ -73,6 +73,7 @@ embedded_docs! {
     "plugins/TODO.md" => EMBEDDED_PLUGINS_TODO,
     "plugins/TODO_USER.md" => EMBEDDED_PLUGINS_TODO_USER,
     "plugins/TRUST.md" => EMBEDDED_PLUGINS_TRUST,
+    "plugins/VERIFY.md" => EMBEDDED_PLUGINS_VERIFY,
     "plugins/WATCHER.md" => EMBEDDED_PLUGINS_WATCHER,
 }
 
