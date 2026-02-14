@@ -39,5 +39,5 @@ Same four invariants as all agents:
 ## Links
 
 - `AGENTS.md` — Universal agent contract (binding)
-- `embedded/core/DECAPOD.md` — Router
+- `core/DECAPOD.md` — Router
 - `.decapod/OVERRIDE.md` — Project customizations
