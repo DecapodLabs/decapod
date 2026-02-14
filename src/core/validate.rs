@@ -458,8 +458,8 @@ fn validate_entrypoint_invariants(
 
     let content = fs::read_to_string(&agents_path).map_err(error::DecapodError::IoError)?;
 
-    // Invariant markers to look for
-    let invariants = [
+    // Exact invariant strings (tamper detection)
+    let exact_invariants = [
         ("core/DECAPOD.md", "Router pointer to core/DECAPOD.md"),
         ("decapod validate", "Validation gate language"),
         ("Stop if", "Stop-if-missing behavior"),
@@ -467,7 +467,7 @@ fn validate_entrypoint_invariants(
     ];
 
     let mut all_present = true;
-    for (marker, description) in invariants {
+    for (marker, description) in exact_invariants {
         if content.contains(marker) {
             pass(&format!("Invariant present: {}", description), pass_count);
         } else {
@@ -476,17 +476,116 @@ fn validate_entrypoint_invariants(
         }
     }
 
-    // Check that agent-specific files defer to AGENTS.md
+    // Check for legacy router names (must not exist)
+    let legacy_routers = ["MAESTRO.md", "GLOBEX.md", "CODEX.md\" as router"];
+    for legacy in legacy_routers {
+        if content.contains(legacy) {
+            fail(
+                &format!("AGENTS.md contains legacy router reference: {}", legacy),
+                fail_count,
+            );
+            all_present = false;
+        }
+    }
+
+    // Line count check (AGENTS.md should be thin: max 100 lines for universal contract)
+    let line_count = content.lines().count();
+    const MAX_AGENTS_LINES: usize = 100;
+    if line_count <= MAX_AGENTS_LINES {
+        pass(
+            &format!(
+                "AGENTS.md is thin ({} lines ≤ {})",
+                line_count, MAX_AGENTS_LINES
+            ),
+            pass_count,
+        );
+    } else {
+        fail(
+            &format!(
+                "AGENTS.md exceeds line limit ({} lines > {})",
+                line_count, MAX_AGENTS_LINES
+            ),
+            fail_count,
+        );
+        all_present = false;
+    }
+
+    // Check that agent-specific files defer to AGENTS.md and are thin
+    const MAX_AGENT_SPECIFIC_LINES: usize = 50;
     for agent_file in ["CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"] {
         let agent_path = decapod_dir.join(agent_file);
-        if agent_path.is_file() {
-            let agent_content =
-                fs::read_to_string(&agent_path).map_err(error::DecapodError::IoError)?;
-            if agent_content.contains("See `AGENTS.md`") || agent_content.contains("AGENTS.md") {
-                pass(&format!("{} defers to AGENTS.md", agent_file), pass_count);
-            } else {
+        if !agent_path.is_file() {
+            fail(
+                &format!("{} missing from project root", agent_file),
+                fail_count,
+            );
+            all_present = false;
+            continue;
+        }
+
+        let agent_content =
+            fs::read_to_string(&agent_path).map_err(error::DecapodError::IoError)?;
+
+        // Must defer to AGENTS.md
+        if agent_content.contains("See `AGENTS.md`") || agent_content.contains("AGENTS.md") {
+            pass(&format!("{} defers to AGENTS.md", agent_file), pass_count);
+        } else {
+            fail(
+                &format!("{} does not reference AGENTS.md", agent_file),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must reference canonical router
+        if agent_content.contains("core/DECAPOD.md") {
+            pass(
+                &format!("{} references canonical router", agent_file),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!("{} missing canonical router reference", agent_file),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must be thin (max 50 lines for agent-specific shims)
+        let agent_lines = agent_content.lines().count();
+        if agent_lines <= MAX_AGENT_SPECIFIC_LINES {
+            pass(
+                &format!(
+                    "{} is thin ({} lines ≤ {})",
+                    agent_file, agent_lines, MAX_AGENT_SPECIFIC_LINES
+                ),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!(
+                    "{} exceeds line limit ({} lines > {})",
+                    agent_file, agent_lines, MAX_AGENT_SPECIFIC_LINES
+                ),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must not contain duplicated contracts (check for common duplication markers)
+        let duplication_markers = [
+            "## Lifecycle States", // Contract details belong in constitution
+            "## Validation Rules", // Contract details belong in constitution
+            "### Proof Gates",     // Contract details belong in constitution
+            "## Store Model",      // Contract details belong in constitution
+        ];
+        for marker in duplication_markers {
+            if agent_content.contains(marker) {
                 fail(
-                    &format!("{} does not reference AGENTS.md", agent_file),
+                    &format!(
+                        "{} contains duplicated contract details ({})",
+                        agent_file, marker
+                    ),
                     fail_count,
                 );
                 all_present = false;
