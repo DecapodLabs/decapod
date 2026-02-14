@@ -53,6 +53,34 @@ Decapod is a local-first control plane for coding agents. It helps facilitate mu
 
 ---
 
+## 1.1. Mandatory Session Start Protocol
+
+⚠️ **ABSOLUTE REQUIREMENT:** Every agent session MUST begin with this sequence:
+
+```bash
+decapod --version                   # Verify installed binary version
+decapod --help                      # Check available commands
+decapod docs show core/DECAPOD.md  # Refresh constitution (this file)
+decapod validate                    # Verify system state
+decapod todo list                   # Check active work
+```
+
+**Why this is non-negotiable:**
+
+1. **Version drift**: The decapod binary evolves. Commands change, new features ship, old syntax becomes invalid.
+2. **Constitution updates**: The embedded documentation is updated independently of your knowledge cutoff.
+3. **Command availability**: What worked yesterday may have moved (e.g., `decapod heartbeat` → `decapod govern health summary`).
+4. **State verification**: System health and validation gates must be checked before any mutation.
+
+**Failure to run this protocol will cause:**
+- Command errors (calling removed/renamed commands)
+- Constitution violations (operating on outdated contracts)
+- State corruption (bypassing validation gates)
+
+⚠️ **This is not optional guidance. This is a proof gate.** Agents that skip this protocol will produce unverified, unsafe work.
+
+---
+
 ## 2. Document Layers (Three-Tiered Structure)
 
 Decapod documentation is structured into three layers, with each canonical document declaring its layer:
