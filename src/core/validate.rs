@@ -360,12 +360,22 @@ fn validate_repo_map(
         pass_count,
     );
 
-    let required_specs = [
-        "specs/INTENT.md",
-        "specs/ARCHITECTURE.md",
-        "specs/SYSTEM.md",
-    ];
+    let required_specs = ["specs/INTENT.md", "specs/SYSTEM.md"];
+    let required_methodology = ["methodology/ARCHITECTURE.md"];
     for r in required_specs {
+        if crate::core::assets::get_doc(&format!("embedded/{}", r)).is_some() {
+            pass(
+                &format!("Constitution doc {} present (embedded)", r),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!("Constitution doc {} missing (embedded)", r),
+                fail_count,
+            );
+        }
+    }
+    for r in required_methodology {
         if crate::core::assets::get_doc(&format!("embedded/{}", r)).is_some() {
             pass(
                 &format!("Constitution doc {} present (embedded)", r),

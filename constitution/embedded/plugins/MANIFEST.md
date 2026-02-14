@@ -15,69 +15,93 @@ This file answers two questions:
 
 ## 1. Canonical Docs
 
-Primary sources for contract and design:
-- `embedded/specs/INTENT.md`
-- `embedded/specs/ARCHITECTURE.md`
-- `embedded/specs/SYSTEM.md`
+### Primary Sources (Constitution)
+- `embedded/specs/INTENT.md` - Intent-driven methodology contract
+- `embedded/specs/SYSTEM.md` - System definition and proof doctrine
+- `embedded/specs/SECURITY.md` - Security doctrine
+- `embedded/specs/GIT.md` - Git workflow contract
+- `embedded/specs/AMENDMENTS.md` - Change control
 
-Agent entrypoints (home-linkable templates):
-- `templates/AGENTS.md`
-- `templates/CLAUDE.md`
-- `templates/GEMINI.md`
-- `templates/CODEX.md`
-- `templates/OPENCODE.md`
+### Core Indices and Routers
+- `embedded/core/DECAPOD.md` - Main router and navigation charter
+- `embedded/core/INTERFACES.md` - Interface contracts index
+- `embedded/core/METHODOLOGY.md` - Methodology guides index
+- `embedded/core/PLUGINS.md` - Subsystem registry
+- `embedded/core/GAPS.md` - Gap analysis methodology
+- `embedded/core/DEMANDS.md` - User demands
+- `embedded/core/DEPRECATION.md` - Deprecation contract
 
-System internals (internal, repo-local):
-- `embedded/core/` (this directory)
-- `embedded/core/DECAPOD.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/core/PLUGINS.md`
-- `embedded/core/STORE_MODEL.md`
-- `embedded/core/CONTROL_PLANE.md`
-- `docs/REPO_MAP.md`
-- `docs/DOC_MAP.md`
+### Interface Contracts (Binding)
+- `embedded/interfaces/CLAIMS.md` - Promises ledger
+- `embedded/interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `embedded/interfaces/DOC_RULES.md` - Doc compilation rules
+- `embedded/interfaces/GLOSSARY.md` - Term definitions
+- `embedded/interfaces/STORE_MODEL.md` - Store semantics
+
+### Methodology Guides (Reference)
+- `embedded/methodology/ARCHITECTURE.md` - Architecture practice
+- `embedded/methodology/SOUL.md` - Agent identity
+- `embedded/methodology/KNOWLEDGE.md` - Knowledge management
+- `embedded/methodology/MEMORY.md` - Agent memory and learning
+
+### Architecture Patterns (Reference)
+- `embedded/architecture/DATA.md` - Data architecture
+- `embedded/architecture/CACHING.md` - Caching patterns
+- `embedded/architecture/MEMORY.md` - Memory management
+- `embedded/architecture/WEB.md` - Web architecture
+- `embedded/architecture/CLOUD.md` - Cloud patterns
+- `embedded/architecture/FRONTEND.md` - Frontend architecture
+- `embedded/architecture/ALGORITHMS.md` - Algorithms and data structures
+- `embedded/architecture/SECURITY.md` - Security architecture
+
+### Agent Entrypoints (Templates)
+- `AGENTS.md` (or `templates/AGENTS.md`)
+- `CLAUDE.md` (or `templates/CLAUDE.md`)
+- `GEMINI.md` (or `templates/GEMINI.md`)
+- `CODEX.md` (or `templates/CODEX.md`)
+- `OPENCODE.md` (or `templates/OPENCODE.md`)
 
 ---
 
-## 2. Proof Surface
+## 2. Derived Docs
 
-Minimal proof surface:
+These are generated from canonical sources:
 
-- `decapod validate`
+- `docs/REPO_MAP.md` - Repository structure map
+- `docs/DOC_MAP.md` - Document dependency graph
+
+**Do not hand-edit derived docs.**
 
 ---
 
 ## 3. State (Not Docs)
 
-State roots:
+State roots contain runtime data, not documentation:
 
-- User store: `~/.decapod` (blank slate by default)
-- Repo dogfood store: `<repo>/.decapod/project`
+- User store: `~/.decapod/` (blank slate by default)
+- Repo store: `<repo>/.decapod/project/`
+- Override: `<repo>/.decapod/OVERRIDE.md`
+- Checksums: `<repo>/.decapod/data/`
 
-The `.decapod/` directories primarily contain state. They are generally not intended as documentation to be copied directly as templates.
+The `.decapod/` directories primarily contain state and configuration.
+
+---
+
+## 4. Proof Surface
+
+Minimal proof surface:
+
+- `decapod validate` - Primary validation gate
 
 ---
 
 ## Links
 
-- `docs/REPO_MAP.md`
-- `docs/DOC_MAP.md`
-- `embedded/plugins/MANIFEST.md`
-- `embedded/core/DECAPOD.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/core/PLUGINS.md`
-- `embedded/core/STORE_MODEL.md`
-- `embedded/core/CONTROL_PLANE.md`
-- `embedded/plugins/EMERGENCY_PROTOCOL.md`
-- `embedded/core/DECAPOD.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/core/PLUGINS.md`
-- `embedded/core/STORE_MODEL.md`
-- `embedded/specs/ARCHITECTURE.md`
-- `embedded/specs/INTENT.md`
-- `embedded/specs/SYSTEM.md`
-- `templates/AGENTS.md`
-- `templates/CLAUDE.md`
-- `templates/GEMINI.md`
-- `templates/CODEX.md`
-- `templates/OPENCODE.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/specs/INTENT.md` - Intent contract
+- `embedded/specs/SYSTEM.md` - System definition
+- `embedded/core/PLUGINS.md` - Subsystem registry
+- `embedded/plugins/TODO.md` - Work tracking
+- `embedded/plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols
+- `docs/REPO_MAP.md` - Repository structure
+- `docs/DOC_MAP.md` - Document graph

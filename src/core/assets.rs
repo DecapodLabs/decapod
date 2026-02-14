@@ -42,24 +42,44 @@ macro_rules! embedded_docs {
 }
 
 embedded_docs! {
-    "core/CLAIMS.md" => EMBEDDED_CORE_CLAIMS,
-    "core/CONTROL_PLANE.md" => EMBEDDED_CORE_CONTROL_PLANE,
+    // Core: Routers and indices
     "core/DECAPOD.md" => EMBEDDED_CORE_DECAPOD,
+    "core/INTERFACES.md" => EMBEDDED_CORE_INTERFACES,
+    "core/METHODOLOGY.md" => EMBEDDED_CORE_METHODOLOGY,
+    "core/PLUGINS.md" => EMBEDDED_CORE_PLUGINS,
+    "core/GAPS.md" => EMBEDDED_CORE_GAPS,
     "core/DEMANDS.md" => EMBEDDED_CORE_DEMANDS,
     "core/DEPRECATION.md" => EMBEDDED_CORE_DEPRECATION,
-    "core/DOC_RULES.md" => EMBEDDED_CORE_DOC_RULES,
-    "core/GLOSSARY.md" => EMBEDDED_CORE_GLOSSARY,
-    "core/KNOWLEDGE.md" => EMBEDDED_CORE_KNOWLEDGE,
-    "core/MEMORY.md" => EMBEDDED_CORE_MEMORY,
-    "core/PLUGINS.md" => EMBEDDED_CORE_PLUGINS,
-    "core/SOUL.md" => EMBEDDED_CORE_SOUL,
-    "core/STORE_MODEL.md" => EMBEDDED_CORE_STORE_MODEL,
-    "specs/AMENDMENTS.md" => EMBEDDED_SPECS_AMENDMENTS,
-    "specs/ARCHITECTURE.md" => EMBEDDED_SPECS_ARCHITECTURE,
-    "specs/GIT.md" => EMBEDDED_SPECS_GIT,
+
+    // Specs: System contracts
     "specs/INTENT.md" => EMBEDDED_SPECS_INTENT,
-    "specs/SECURITY.md" => EMBEDDED_SPECS_SECURITY,
     "specs/SYSTEM.md" => EMBEDDED_SPECS_SYSTEM,
+    "specs/AMENDMENTS.md" => EMBEDDED_SPECS_AMENDMENTS,
+    "specs/SECURITY.md" => EMBEDDED_SPECS_SECURITY,
+    "specs/GIT.md" => EMBEDDED_SPECS_GIT,
+
+    // Interfaces: Binding contracts
+    "interfaces/CLAIMS.md" => EMBEDDED_INTERFACES_CLAIMS,
+    "interfaces/CONTROL_PLANE.md" => EMBEDDED_INTERFACES_CONTROL_PLANE,
+    "interfaces/DOC_RULES.md" => EMBEDDED_INTERFACES_DOC_RULES,
+    "interfaces/GLOSSARY.md" => EMBEDDED_INTERFACES_GLOSSARY,
+    "interfaces/STORE_MODEL.md" => EMBEDDED_INTERFACES_STORE_MODEL,
+
+    // Methodology: Practice guides
+    "methodology/ARCHITECTURE.md" => EMBEDDED_METHODOLOGY_ARCHITECTURE,
+    "methodology/SOUL.md" => EMBEDDED_METHODOLOGY_SOUL,
+    "methodology/KNOWLEDGE.md" => EMBEDDED_METHODOLOGY_KNOWLEDGE,
+    "methodology/MEMORY.md" => EMBEDDED_METHODOLOGY_MEMORY,
+
+    // Architecture: Domain patterns
+    "architecture/DATA.md" => EMBEDDED_ARCHITECTURE_DATA,
+    "architecture/CACHING.md" => EMBEDDED_ARCHITECTURE_CACHING,
+    "architecture/MEMORY.md" => EMBEDDED_ARCHITECTURE_MEMORY,
+    "architecture/WEB.md" => EMBEDDED_ARCHITECTURE_WEB,
+    "architecture/CLOUD.md" => EMBEDDED_ARCHITECTURE_CLOUD,
+    "architecture/FRONTEND.md" => EMBEDDED_ARCHITECTURE_FRONTEND,
+    "architecture/ALGORITHMS.md" => EMBEDDED_ARCHITECTURE_ALGORITHMS,
+    "architecture/SECURITY.md" => EMBEDDED_ARCHITECTURE_SECURITY,
     "plugins/ARCHIVE.md" => EMBEDDED_PLUGINS_ARCHIVE,
     "plugins/AUTOUPDATE.md" => EMBEDDED_PLUGINS_AUTOUPDATE,
     "plugins/CONTEXT.md" => EMBEDDED_PLUGINS_CONTEXT,

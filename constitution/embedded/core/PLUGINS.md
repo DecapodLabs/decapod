@@ -159,14 +159,17 @@ V1 scope (when implemented):
 
 ## Links
 
-- `embedded/plugins/TODO.md` — **TODO subsystem reference (START HERE)**
-- `embedded/plugins/TEAMMATE.md` — **Teammate preference memory reference**
-- `embedded/core/DECAPOD.md`
-- `embedded/core/CONTROL_PLANE.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/core/CLAIMS.md`
-- `embedded/core/DEPRECATION.md`
-- `embedded/core/STORE_MODEL.md`
-- `embedded/specs/ARCHITECTURE.md`
-- `embedded/specs/INTENT.md`
-- `embedded/specs/SYSTEM.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/core/INTERFACES.md` - Interface contracts index
+- `embedded/core/METHODOLOGY.md` - Methodology guides index
+- `embedded/core/GAPS.md` - Gap analysis methodology
+- `embedded/interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `embedded/interfaces/DOC_RULES.md` - Doc compilation rules
+- `embedded/interfaces/CLAIMS.md` - Promises ledger
+- `embedded/core/DEPRECATION.md` - Deprecation contract
+- `embedded/interfaces/STORE_MODEL.md` - Store semantics
+- `embedded/methodology/ARCHITECTURE.md` - Architecture practice
+- `embedded/specs/INTENT.md` - Intent contract
+- `embedded/specs/SYSTEM.md` - System definition
+- `embedded/plugins/TODO.md` - TODO subsystem reference
+- `embedded/plugins/TEAMMATE.md` - Teammate preference memory

@@ -16,13 +16,13 @@ This guide exists to reduce "agent keeps going and damages shared state" failure
 
 1. **Stop.** Do not mutate stores or rewrite binding docs while confused.
 2. **Identify store context:**
-   - Read `embedded/core/STORE_MODEL.md`.
+   - Read `embedded/interfaces/STORE_MODEL.md`.
    - If you cannot say "I am operating on user store vs repo store" in one sentence, stop.
 3. **Run proof surface:**
    - Run `decapod validate` for relevant store(s).
 4. **Re-anchor authority:**
    - Start at `embedded/core/DECAPOD.md`.
-   - For decision rights, consult `embedded/core/DOC_RULES.md` (Decision Rights Matrix).
+   - For decision rights, consult `embedded/interfaces/DOC_RULES.md` (Decision Rights Matrix).
    - For subsystem existence and truth labels, consult `embedded/core/PLUGINS.md`.
 5. **If contradiction exists:**
    - Treat it as invalid state.
@@ -77,9 +77,9 @@ To avoid emergency stops:
 
 ## Links
 
-- `embedded/core/DECAPOD.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/core/PLUGINS.md`
-- `embedded/core/STORE_MODEL.md`
-- `embedded/specs/AMENDMENTS.md`
-- `embedded/core/CLAIMS.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/core/PLUGINS.md` - Subsystem registry
+- `embedded/interfaces/DOC_RULES.md` - Doc compilation rules
+- `embedded/interfaces/STORE_MODEL.md` - Store semantics
+- `embedded/interfaces/CLAIMS.md` - Promises ledger
+- `embedded/specs/AMENDMENTS.md` - Change control

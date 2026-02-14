@@ -154,6 +154,9 @@ Some repos standardize agent behavior via a local "control plane" (a CLI plus a 
 
 ## Links
 
-- `embedded/specs/ARCHITECTURE.md`
-- `embedded/specs/SYSTEM.md`
-- `embedded/core/SOUL.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/methodology/ARCHITECTURE.md` - Architecture practice
+- `embedded/specs/SYSTEM.md` - System definition
+- `embedded/methodology/SOUL.md` - Agent identity
+- `embedded/interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `embedded/interfaces/CLAIMS.md` - Promises ledger

@@ -30,11 +30,11 @@ This glossary is binding: if a term is defined here, other canonical docs MUST u
 - Proof surface:
   - A named, runnable mechanism that can detect drift or validate invariants (e.g. `decapod validate`, schema checks).
 - Claim:
-  - A registered promise/guarantee/invariant with a stable claim-id, tracked in `embedded/core/CLAIMS.md`.
+  - A registered promise/guarantee/invariant with a stable claim-id, tracked in `embedded/interfaces/CLAIMS.md`.
 - Enforcement:
   - Whether a claim is checked by a proof surface (`enforced`), partly checked (`partially_enforced`), or only documented (`not_enforced`).
 - Store:
-  - A state root that scopes reads/writes (see `embedded/core/STORE_MODEL.md`).
+  - A state root that scopes reads/writes (see `embedded/interfaces/STORE_MODEL.md`).
   - User store: `~/.decapod`
   - Repo store: `<repo>/.decapod/project`
 - Subsystem:
@@ -54,11 +54,12 @@ This glossary is binding: if a term is defined here, other canonical docs MUST u
 
 ## Links
 
-- `embedded/core/DECAPOD.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/core/CLAIMS.md`
-- `embedded/core/DEPRECATION.md`
-- `embedded/core/PLUGINS.md`
-- `embedded/core/STORE_MODEL.md`
-- `embedded/plugins/MANIFEST.md`
-- `embedded/specs/AMENDMENTS.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/core/INTERFACES.md` - Interface contracts index
+- `embedded/interfaces/DOC_RULES.md` - Doc compilation rules
+- `embedded/interfaces/CLAIMS.md` - Promises ledger
+- `embedded/interfaces/STORE_MODEL.md` - Store semantics
+- `embedded/core/PLUGINS.md` - Subsystem registry
+- `embedded/core/DEPRECATION.md` - Deprecation contract
+- `embedded/specs/AMENDMENTS.md` - Change control
+- `embedded/specs/SYSTEM.md` - System definition
