@@ -21,10 +21,11 @@ Primary sources for contract and design:
 - `embedded/specs/SYSTEM.md`
 
 Agent entrypoints (home-linkable templates):
-- `embedded/templates/AGENTS.md`
-- `embedded/templates/CLAUDE.md`
-- `embedded/templates/GEMINI.md`
-- `embedded/templates/DEMANDS.md`
+- `templates/AGENTS.md`
+- `templates/CLAUDE.md`
+- `templates/GEMINI.md`
+- `templates/CODEX.md`
+- `templates/OPENCODE.md`
 
 System internals (internal, repo-local):
 - `embedded/core/` (this directory)
@@ -75,7 +76,8 @@ The `.decapod/` directories primarily contain state. They are generally not inte
 - `embedded/specs/ARCHITECTURE.md`
 - `embedded/specs/INTENT.md`
 - `embedded/specs/SYSTEM.md`
-- `embedded/templates/AGENTS.md`
-- `embedded/templates/CLAUDE.md`
-- `embedded/templates/DEMANDS.md`
-- `embedded/templates/GEMINI.md`
+- `templates/AGENTS.md`
+- `templates/CLAUDE.md`
+- `templates/GEMINI.md`
+- `templates/CODEX.md`
+- `templates/OPENCODE.md`

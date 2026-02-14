@@ -29,10 +29,10 @@ Columns:
 
 | Claim ID | Claim (normative) | Owner Doc | Enforcement | Proof Surface | Notes |
 |---|---|---|---|---|---|
-| claim.doc.decapod_is_router_only | `embedded/core/MAESTRO.md` routes and prioritizes canonical docs but does not define or override behavioral rules. | `embedded/core/MAESTRO.md` | partially_enforced | `decapod validate` (doc graph + canon headers) | Social + doc-layer boundary; code enforcement is limited. |
+| claim.doc.decapod_is_router_only | `embedded/core/DECAPOD.md` routes and prioritizes canonical docs but does not define or override behavioral rules. | `embedded/core/DECAPOD.md` | partially_enforced | `decapod validate` (doc graph + canon headers) | Social + doc-layer boundary; code enforcement is limited. |
 | claim.doc.no_shadow_policy | If a rule is not declared in canonical docs, it is not enforceable. | `embedded/core/DOC_RULES.md` | partially_enforced | `decapod validate` (doc graph) | Enforcement of "shadow policy" is largely procedural. |
 | claim.doc.real_requires_proof | Any `REAL` interface claim requires a named proof surface; otherwise it must be `STUB` or `SPEC`. | `embedded/core/DOC_RULES.md` | not_enforced | planned: validate checks for proof surface annotations | Current enforcement is doc-level; future validate gate can check. |
-| claim.doc.decapod_reaches_all_canonical | `embedded/core/MAESTRO.md` reaches every canonical doc via the `## Links` graph. | `embedded/core/DOC_RULES.md` | enforced | `decapod validate` (doc graph gate) | Prevents buried canonical law and unreachable contracts. |
+| claim.doc.decapod_reaches_all_canonical | `embedded/core/DECAPOD.md` reaches every canonical doc via the `## Links` graph. | `embedded/core/DOC_RULES.md` | enforced | `decapod validate` (doc graph gate) | Prevents buried canonical law and unreachable contracts. |
 | claim.doc.no_duplicate_authority | No requirement may be defined in multiple canonical docs; duplicates must defer to the owner doc. | `embedded/core/DOC_RULES.md` | not_enforced | planned: validate checks for duplicated requirements | Procedural today; becomes enforceable only with additional tooling. |
 | claim.doc.no_contradicting_canon | If two canonical binding docs appear to disagree, the system is invalid; resolution is amendment, not interpretation. | `embedded/specs/AMENDMENTS.md` | not_enforced | `decapod validate` (planned: contradiction checks) | Humans must treat contradictions as a stop condition. |
 | claim.store.blank_slate | A fresh user store contains no TODOs unless the user adds them. | `embedded/core/STORE_MODEL.md` | enforced | `decapod validate --store user` | Protects user-store privacy and blank slate semantics. |
@@ -59,7 +59,7 @@ When adding or changing a guarantee:
 
 ## Links
 
-- `embedded/core/MAESTRO.md`
+- `embedded/core/DECAPOD.md`
 - `embedded/core/DOC_RULES.md`
 - `embedded/core/DEPRECATION.md`
 - `embedded/specs/AMENDMENTS.md`
