@@ -6,12 +6,17 @@ You (Claude) are working in a Decapod-managed repository.
 
 ## Quick Start
 
+**MANDATORY FIRST STEPS** - Run these EVERY session:
+
 ```bash
-decapod docs show core/DECAPOD.md  # Router (alias: decapod d)
-decapod validate                     # System state (alias: decapod v)
-decapod todo list                    # Active work (alias: decapod t)
-decapod govern health summary        # System health overview
+decapod --version                   # Check current version
+decapod --help                      # Verify available commands
+decapod docs show core/DECAPOD.md  # Refresh constitution
+decapod validate                    # System state
+decapod todo list                   # Active work
 ```
+
+**Why this matters:** The decapod binary and constitution evolve. Always verify what commands are available and refresh your understanding of the latest contract before acting.
 
 ## Claude-Specific Notes
 
