@@ -110,6 +110,19 @@ pub enum TodoCommand {
         #[clap(long)]
         owner: Option<String>,
     },
+    /// Claim a task for active work (prevents other agents from interfering).
+    Claim {
+        #[clap(long)]
+        id: String,
+        /// Agent identifier (defaults to environment or 'unknown').
+        #[clap(long)]
+        agent: Option<String>,
+    },
+    /// Release a claimed task (makes it available for others).
+    Release {
+        #[clap(long)]
+        id: String,
+    },
     /// Rebuild the SQLite DB deterministically from the JSONL event log.
     Rebuild,
     /// List available task categories.
@@ -138,6 +151,8 @@ pub struct Task {
     pub blocks: String,
     pub category: String,
     pub component: String,
+    pub assigned_to: String,
+    pub assigned_at: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -230,6 +245,14 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     if current_version < 6 {
         conn.execute(schemas::TODO_DB_SCHEMA_TASK_VERIFICATION, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS, [])?;
+    }
+
+    if current_version < 7 {
+        let _ = conn.execute(
+            "ALTER TABLE tasks ADD COLUMN assigned_to TEXT DEFAULT ''",
+            [],
+        );
+        let _ = conn.execute("ALTER TABLE tasks ADD COLUMN assigned_at TEXT", []);
     }
 
     conn.execute(
@@ -619,6 +642,59 @@ pub fn record_task_event(
     })
 }
 
+/// Infer category from task title and tags by matching against known categories
+fn infer_category_from_task(
+    conn: &Connection,
+    title: &str,
+    tags: &str,
+) -> Result<Option<String>, error::DecapodError> {
+    let search_text = format!("{} {}", title.to_lowercase(), tags.to_lowercase());
+
+    let mut stmt = conn
+        .prepare("SELECT name, keywords FROM categories")
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    let rows = stmt
+        .query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    for row_result in rows {
+        let (category_name, keywords) = row_result.map_err(error::DecapodError::RusqliteError)?;
+        let keywords_list: Vec<&str> = keywords.split(',').map(|k| k.trim()).collect();
+
+        for keyword in keywords_list {
+            if !keyword.is_empty() && search_text.contains(keyword) {
+                return Ok(Some(category_name));
+            }
+        }
+    }
+
+    Ok(None)
+}
+
+/// Find an agent that's currently working on tasks in this category
+fn find_agent_for_category(
+    conn: &Connection,
+    category: &str,
+) -> Result<Option<String>, error::DecapodError> {
+    let agent: Option<String> = conn
+        .query_row(
+            "SELECT assigned_to FROM tasks
+             WHERE category = ?
+             AND assigned_to != ''
+             AND status NOT IN ('done', 'archived')
+             LIMIT 1",
+            [category],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    Ok(agent)
+}
+
 pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, error::DecapodError> {
     let TodoCommand::Add {
         title,
@@ -657,9 +733,27 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
 
     broker.with_conn(&db_path, "decapod", None, "todo.add", |conn| {
         ensure_schema(conn)?;
+
+        // Infer category from tags or title for auto-assignment
+        let inferred_category = infer_category_from_task(conn, title, tags)?;
+
+        // Check if there's an agent already working on tasks in this category
+        let auto_assigned_agent = if let Some(cat) = &inferred_category {
+            find_agent_for_category(conn, cat)?
+        } else {
+            None
+        };
+
+        // Determine assigned_to and assigned_at
+        let (assigned_to, assigned_at) = if let Some(agent) = auto_assigned_agent {
+            (agent, Some(ts.clone()))
+        } else {
+            (String::new(), None)
+        };
+
         conn.execute(
-            "INSERT INTO tasks(id, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, 'open', ?8, ?9, NULL, NULL, ?10, ?11, ?12, ?13, ?14, ?15)",
+            "INSERT INTO tasks(id, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, assigned_to, assigned_at)
+             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, 'open', ?8, ?9, NULL, NULL, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
             rusqlite::params![
                 task_id,
                 title,
@@ -675,29 +769,43 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 parent,
                 priority,
                 depends_on,
-                blocks
+                blocks,
+                inferred_category.clone().unwrap_or_default(),
+                assigned_to,
+                assigned_at
             ],
         )?;
+
+        let mut payload = serde_json::json!({
+            "title": title,
+            "description": description,
+            "tags": tags,
+            "owner": owner,
+            "due": due,
+            "ref": r#ref,
+            "dir_path": dir_abs,
+            "scope": scope,
+            "parent_task_id": parent,
+            "priority": priority,
+            "depends_on": depends_on,
+            "blocks": blocks,
+            "category": inferred_category.clone().unwrap_or_default(),
+        });
+
+        // Add auto-assignment info if applicable
+        if !assigned_to.is_empty() {
+            if let Some(obj) = payload.as_object_mut() {
+                obj.insert("assigned_to".to_string(), serde_json::json!(assigned_to));
+                obj.insert("auto_assigned".to_string(), serde_json::json!(true));
+            }
+        }
 
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "task.add".to_string(),
             task_id: Some(task_id.clone()),
-            payload: serde_json::json!({
-                "title": title,
-                "description": description,
-                "tags": tags,
-                "owner": owner,
-                "due": due,
-                "ref": r#ref,
-                "dir_path": dir_abs,
-                "scope": scope,
-                "parent_task_id": parent,
-                "priority": priority,
-                "depends_on": depends_on,
-                "blocks": blocks,
-            }),
+            payload,
             actor: "decapod".to_string(),
         };
         append_event(root, &ev)?;
@@ -895,13 +1003,153 @@ fn edit_task(
     }))
 }
 
+fn claim_task(
+    root: &Path,
+    id: &str,
+    agent_id: &str,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let ts = now_iso();
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    let result = broker.with_conn(&db_path, "decapod", None, "todo.claim", |conn| {
+        ensure_schema(conn)?;
+
+        // Check if task exists and is not already claimed
+        let current: Option<(String, String)> = conn
+            .query_row(
+                "SELECT status, assigned_to FROM tasks WHERE id = ?",
+                [id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(error::DecapodError::RusqliteError)?;
+
+        match current {
+            None => {
+                return Ok(serde_json::json!({
+                    "status": "not_found",
+                    "message": format!("Task {} not found", id)
+                }));
+            }
+            Some((status, assigned_to)) => {
+                if status == "done" || status == "archived" {
+                    return Ok(serde_json::json!({
+                        "status": "error",
+                        "message": format!("Task {} is already {}", id, status)
+                    }));
+                }
+                if !assigned_to.is_empty() && assigned_to != agent_id {
+                    return Ok(serde_json::json!({
+                        "status": "error",
+                        "message": format!("Task {} is already claimed by {}", id, assigned_to)
+                    }));
+                }
+            }
+        }
+
+        // Claim the task
+        conn.execute(
+            "UPDATE tasks SET assigned_to = ?, assigned_at = ?, updated_at = ? WHERE id = ?",
+            [agent_id, &ts, &ts, id],
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+
+        // Create claim event
+        let ev = TodoEvent {
+            ts: ts.clone(),
+            event_id: Ulid::new().to_string(),
+            event_type: "task.claim".to_string(),
+            task_id: Some(id.to_string()),
+            payload: serde_json::json!({
+                "assigned_to": agent_id,
+            }),
+            actor: agent_id.to_string(),
+        };
+        append_event(root, &ev)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+
+        Ok(serde_json::json!({
+            "status": "ok",
+            "message": format!("Task {} claimed by {}", id, agent_id)
+        }))
+    })?;
+
+    Ok(serde_json::json!({
+        "ts": ts,
+        "cmd": "todo.claim",
+        "status": result.get("status").and_then(|v| v.as_str()).unwrap_or("error"),
+        "root": root.to_string_lossy(),
+        "id": id,
+        "result": result,
+    }))
+}
+
+fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::DecapodError> {
+    let ts = now_iso();
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    let result = broker.with_conn(&db_path, "decapod", None, "todo.release", |conn| {
+        ensure_schema(conn)?;
+
+        // Check if task exists
+        let exists: Option<String> = conn
+            .query_row("SELECT assigned_to FROM tasks WHERE id = ?", [id], |row| {
+                row.get(0)
+            })
+            .optional()
+            .map_err(error::DecapodError::RusqliteError)?;
+
+        if exists.is_none() {
+            return Ok(serde_json::json!({
+                "status": "not_found",
+                "message": format!("Task {} not found", id)
+            }));
+        }
+
+        // Release the task
+        conn.execute(
+            "UPDATE tasks SET assigned_to = '', assigned_at = NULL, updated_at = ? WHERE id = ?",
+            [&ts, id],
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+
+        // Create release event
+        let ev = TodoEvent {
+            ts: ts.clone(),
+            event_id: Ulid::new().to_string(),
+            event_type: "task.release".to_string(),
+            task_id: Some(id.to_string()),
+            payload: serde_json::json!({}),
+            actor: "decapod".to_string(),
+        };
+        append_event(root, &ev)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+
+        Ok(serde_json::json!({
+            "status": "ok",
+            "message": format!("Task {} released", id)
+        }))
+    })?;
+
+    Ok(serde_json::json!({
+        "ts": ts,
+        "cmd": "todo.release",
+        "status": result.get("status").and_then(|v| v.as_str()).unwrap_or("error"),
+        "root": root.to_string_lossy(),
+        "id": id,
+        "result": result,
+    }))
+}
+
 pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodError> {
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "todo.get", |conn| {
         ensure_schema(conn)?;
-        let mut stmt = conn.prepare("SELECT id,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component FROM tasks WHERE id = ?1")?;
+        let mut stmt = conn.prepare("SELECT id,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at FROM tasks WHERE id = ?1")?;
         let mut rows = stmt.query(rusqlite::params![id])?;
         if let Some(row) = rows.next()? {
             Ok(Some(Task {
@@ -925,6 +1173,8 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
                 blocks: row.get(17)?,
                 category: row.get(18)?,
                 component: row.get(19)?,
+                assigned_to: row.get(20).unwrap_or_default(),
+                assigned_at: row.get(21)?,
             }))
         } else {
             Ok(None)
@@ -946,7 +1196,7 @@ pub fn list_tasks(
     broker.with_conn(&db_path, "decapod", None, "todo.list", |conn| {
         ensure_schema(conn)?;
 
-        let mut query = "SELECT id,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component FROM tasks WHERE 1=1".to_string();
+        let mut query = "SELECT id,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at FROM tasks WHERE 1=1".to_string();
         let mut params: Vec<Box<dyn ToSql>> = Vec::new();
 
         if let Some(s) = status {
@@ -1001,6 +1251,8 @@ pub fn list_tasks(
                 blocks: row.get(17)?,
                 category: row.get(18)?,
                 component: row.get(19)?,
+                assigned_to: row.get(20).unwrap_or_default(),
+                assigned_at: row.get(21)?,
             })
         })?;
 
@@ -1328,6 +1580,13 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
             description.as_deref(),
             owner.as_deref(),
         )?,
+        TodoCommand::Claim { id, agent } => {
+            let default_agent =
+                env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let agent_id = agent.as_deref().unwrap_or(&default_agent);
+            claim_task(root, id, agent_id)?
+        }
+        TodoCommand::Release { id } => release_task(root, id)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,
         TodoCommand::Categories => {
             let categories = list_categories(root)?;
