@@ -7,5 +7,5 @@
 This document defines the reflex subsystem.
 
 ## CLI Surface
-- `decapod reflex ...`
+- `decapod auto reflex ...`
 

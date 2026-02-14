@@ -12,7 +12,7 @@ This document outlines how project knowledge is captured, retrieved, and maintai
 
 ## 1. Purpose of the Knowledge Base
 
-The `decapod knowledge` subsystem aims to:
+The `decapod data knowledge` subsystem aims to:
 
 -   **Centralize non-contractual context:** Store information that doesn’t primarily belong in `embedded/specs/INTENT.md` (contract), `embedded/specs/ARCHITECTURE.md` (compiled design), or `proof.md` (verification), but still holds value.
 -   **Preserve rationale:** Capture reasons behind decisions, not just outcomes.
@@ -48,7 +48,7 @@ Decapod benefits from information residing in its appropriate place.
 -   **Proof (`proof.md`, tests, checks) provides evidence.**
     It demonstrates that the system behaves as intended. Proof should be executable when possible, and falsifiable otherwise.
 
--   **Knowledge (`decapod knowledge`) offers context.**
+-   **Knowledge (`decapod data knowledge`) offers context.**
     This includes rationale, research, decisions, runbooks, historical context, and other supporting information. Knowledge can explain and guide but generally does not alter core contracts.
 
 ### Guidelines (for effective knowledge base usage)
@@ -94,7 +94,7 @@ Decapod supports multiple stores ("roots"), similar to TODO:
 -   **Repo store (dogfood mode):** `<repo>/.decapod`
     Used for developing Decapod and holding repo-scoped knowledge for the codebase.
 
-The `decapod knowledge` subsystem stores entries in a structured, queryable format. The primary storage is typically a database (SQLite), with optional merge-friendly exports.
+The `decapod data knowledge` subsystem stores entries in a structured, queryable format. The primary storage is typically a database (SQLite), with optional merge-friendly exports.
 
 Recommended repo layout (repo store):
 -   `<repo>/.decapod/project/knowledge.db`
@@ -139,13 +139,13 @@ If the entry concerns a decision, consider including:
 
 Humans and agents can interact via CLI. Core commands might include:
 
--   `decapod knowledge add`
--   `decapod knowledge get <id>`
--   `decapod knowledge search <query>`
--   `decapod knowledge list`
--   `decapod knowledge link --todo <id> --knowledge <id>` (or equivalent)
--   `decapod knowledge mark-stale <id>`
--   `decapod knowledge supersede <old> <new>`
+-   `decapod data knowledge add`
+-   `decapod data knowledge get <id>`
+-   `decapod data knowledge search <query>`
+-   `decapod data knowledge list`
+-   `decapod data knowledge link --todo <id> --knowledge <id>` (or equivalent)
+-   `decapod data knowledge mark-stale <id>`
+-   `decapod data knowledge supersede <old> <new>`
 
 Commands are designed to support `--json` (or `--format json|text`) and return a stable machine envelope.
 

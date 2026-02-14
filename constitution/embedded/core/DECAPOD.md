@@ -156,13 +156,13 @@ All agents operating in this workspace MUST adhere to the following:
 
 2. **Obey Validate**: Never claim a change is correct unless `decapod validate` passes.
 
-3. **Propose, Don't Fiat**: Do not write directly to canonical documents (embedded/core, embedded/specs, root README). Propose diffs or use `decapod feedback propose`.
+3. **Propose, Don't Fiat**: Do not write directly to canonical documents (embedded/core, embedded/specs, root README). Propose diffs or use `decapod govern feedback propose`.
 
-4. **Record Proofs**: Every meaningful change needs a proof event (`decapod proof record`). No proof, no health promotion.
+4. **Record Proofs**: Every meaningful change needs a proof event (`decapod govern proof record`). No proof, no health promotion.
 
-5. **Respect Budgets**: Monitor context token usage via `decapod context audit`. Use `decapod context pack` to archive history instead of silent truncation.
+5. **Respect Budgets**: Monitor context token usage via `decapod data context audit`. Use `decapod data context pack` to archive history instead of silent truncation.
 
-6. **Consult Policy**: For high-risk or irreversible actions, use `decapod policy eval` and await an `APPROVAL_EVENT`.
+6. **Consult Policy**: For high-risk or irreversible actions, use `decapod govern policy eval` and await an `APPROVAL_EVENT`.
 
 ---
 

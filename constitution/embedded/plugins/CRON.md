@@ -7,5 +7,5 @@
 This document defines the cron subsystem.
 
 ## CLI Surface
-- `decapod cron ...`
+- `decapod auto cron ...`
 

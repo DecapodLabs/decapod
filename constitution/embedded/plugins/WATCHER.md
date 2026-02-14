@@ -7,5 +7,5 @@
 This document defines the watcher subsystem.
 
 ## CLI Surface
-- `decapod watcher ...`
+- `decapod govern watcher ...`
 

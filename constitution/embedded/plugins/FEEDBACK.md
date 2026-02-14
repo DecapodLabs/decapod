@@ -7,5 +7,5 @@
 This document defines the feedback subsystem.
 
 ## CLI Surface
-- `decapod feedback ...`
+- `decapod govern feedback ...`
 
