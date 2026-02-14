@@ -47,7 +47,7 @@ pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
 /// TODO database schema version
 ///
 /// Used for migration tracking in the `meta` table
-pub const TODO_SCHEMA_VERSION: u32 = 6;
+pub const TODO_SCHEMA_VERSION: u32 = 7;
 
 /// TODO metadata table schema
 ///
@@ -62,6 +62,8 @@ pub const TODO_DB_SCHEMA_META: &str = "
 /// TODO tasks table schema
 ///
 /// Core task tracking table with full lifecycle support (open → in-progress → completed → closed)
+/// `owner`: Static field set at creation for task ownership/responsibility
+/// `assigned_to`: Dynamic field for active agent assignment (claim/release)
 pub const TODO_DB_SCHEMA_TASKS: &str = "
     CREATE TABLE IF NOT EXISTS tasks (
         id TEXT PRIMARY KEY,
@@ -83,7 +85,9 @@ pub const TODO_DB_SCHEMA_TASKS: &str = "
         depends_on TEXT DEFAULT '',
         blocks TEXT DEFAULT '',
         category TEXT DEFAULT '',
-        component TEXT DEFAULT ''
+        component TEXT DEFAULT '',
+        assigned_to TEXT DEFAULT '',
+        assigned_at TEXT
     )
 ";
 
