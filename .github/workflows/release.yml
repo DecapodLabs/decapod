@@ -72,37 +72,39 @@ jobs:
 
       - name: Update version file in release PR
         run: |
-          # Wait a moment for the PR to be created
-          sleep 2
-          
-          # Get the release PR branch
-          PR_BRANCH=$(git branch -r | grep "release-plz" | head -n1 | sed 's/origin\///' | xargs)
-          if [ -z "$PR_BRANCH" ]; then
-            echo "No release-plz branch found yet, checking again..."
-            sleep 3
-            PR_BRANCH=$(git branch -r | grep "release-plz" | head -n1 | sed 's/origin\///' | xargs)
-          fi
-          
-          if [ -z "$PR_BRANCH" ]; then
-            echo "No release-plz branch found, skipping version file update"
-            exit 0
-          fi
-          
-          echo "Found release branch: $PR_BRANCH"
-          
           # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Fetch and checkout the PR branch
-          git fetch origin "$PR_BRANCH"
+          # Poll for release-plz branch (it may take time for the PR to be created)
+          echo "Waiting for release-plz to create PR branch..."
+          PR_BRANCH=""
+          for i in {1..30}; do
+            git fetch origin
+            PR_BRANCH=$(git branch -r | grep "release-plz" | head -n1 | sed 's/origin\///' | xargs)
+            if [ -n "$PR_BRANCH" ]; then
+              echo "✓ Found release branch: $PR_BRANCH"
+              break
+            fi
+            echo "  Attempt $i/30: No release-plz branch yet, waiting..."
+            sleep 2
+          done
+          
+          if [ -z "$PR_BRANCH" ]; then
+            echo "⚠️ No release-plz branch found after 60 seconds"
+            echo "This may indicate release-plz didn't create a PR (no version bump needed)"
+            exit 0
+          fi
+          
+          # Checkout the PR branch
           git checkout "$PR_BRANCH"
           
           # Get new version from Cargo.toml
           NEW_VERSION=$(grep '^version = ' Cargo.toml | head -n1 | cut -d'"' -f2)
-          echo "New version: $NEW_VERSION"
+          echo "Cargo.toml version: $NEW_VERSION"
           
           # Update version file
+          mkdir -p .decapod/generated
           echo "$NEW_VERSION" > .decapod/generated/decapod.version
           
           # Check if there are changes
@@ -115,7 +117,7 @@ jobs:
           git add .decapod/generated/decapod.version
           git commit -m "chore: update version file to $NEW_VERSION"
           git push origin "$PR_BRANCH"
-          echo "✓ Updated version file in $PR_BRANCH"
+          echo "✅ Updated version file to $NEW_VERSION in $PR_BRANCH"
         continue-on-error: true
 
   # Publish to crates.io when release PR is merged
