@@ -170,7 +170,7 @@ Run mechanical checks in CI, not just locally. Every merge must pass:
 
 ## Links
 
-- `methodology/ARCHITECTURE.md` - CTO-level architecture
+- `methodology/ARCHITECTURE.md` - binding architecture
 - `architecture/SECURITY.md` - Security patterns
 - `architecture/CONCURRENCY.md` - Concurrency patterns
 - `specs/SYSTEM.md` - System definition

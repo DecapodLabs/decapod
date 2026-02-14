@@ -285,7 +285,7 @@ GET /users/123/update
 
 ## Links
 
-- `methodology/ARCHITECTURE.md` - CTO-level architecture doctrine
+- `methodology/ARCHITECTURE.md` - binding architecture doctrine
 - `architecture/SECURITY.md` - Security architecture
 - `architecture/CACHING.md` - HTTP caching
 - `architecture/FRONTEND.md` - Frontend architecture

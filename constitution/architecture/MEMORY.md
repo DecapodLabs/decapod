@@ -243,7 +243,7 @@ When exact answer requires too much memory:
 
 ## Links
 
-- `methodology/ARCHITECTURE.md` - CTO-level architecture doctrine
+- `methodology/ARCHITECTURE.md` - binding architecture doctrine
 - `architecture/DATA.md` - Data architecture
 - `architecture/CACHING.md` - Caching patterns
 - `architecture/CONCURRENCY.md` - Shared memory patterns

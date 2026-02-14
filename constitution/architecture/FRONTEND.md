@@ -320,7 +320,7 @@
 
 ## Links
 
-- `methodology/ARCHITECTURE.md` - CTO-level architecture doctrine
+- `methodology/ARCHITECTURE.md` - binding architecture doctrine
 - `architecture/WEB.md` - Web architecture
 - `architecture/CACHING.md` - Caching strategies
 - `architecture/SECURITY.md` - Frontend security
