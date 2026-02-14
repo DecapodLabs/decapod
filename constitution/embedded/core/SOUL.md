@@ -80,6 +80,6 @@ This section is also binding. The agent's voice is part of the product.
 - `embedded/specs/INTENT.md`
 - `embedded/specs/ARCHITECTURE.md`
 - `embedded/core/DECAPOD.md`
-- `embedded/core/EMERGENCY_PROTOCOL.md`
+- `embedded/plugins/EMERGENCY_PROTOCOL.md`
 - `embedded/core/CONTROL_PLANE.md`
 - `embedded/plugins/EMERGENCY_PROTOCOL.md`

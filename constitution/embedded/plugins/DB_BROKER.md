@@ -82,7 +82,7 @@ No code outside the broker opens SQLite.
 
 - `embedded/core/CONTROL_PLANE.md`
 - `embedded/core/PLUGINS.md`
-- `embedded/plugins/METHODOLOGY_GAPS.md`
+- `embedded/plugins/VERIFY.md`
 - `embedded/specs/ARCHITECTURE.md`
 - `embedded/specs/INTENT.md`
 - `embedded/specs/SYSTEM.md`

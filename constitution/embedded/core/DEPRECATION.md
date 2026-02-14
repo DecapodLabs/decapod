@@ -67,7 +67,7 @@ For large transitions, maintain a small registry table here:
 
 ## Links
 
-- `embedded/core/MAESTRO.md`
+- `embedded/core/DECAPOD.md`
 - `embedded/core/DOC_RULES.md`
 - `embedded/core/CLAIMS.md`
 - `embedded/specs/AMENDMENTS.md`

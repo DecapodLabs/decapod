@@ -42,7 +42,7 @@ Decapod benefits from information residing in its appropriate place.
 -   **Intent (`embedded/specs/INTENT.md`) is a key contract.**
     It defines what is being built, its purpose, and success criteria.
 
--   **Specification (`embedded/specs/*.md`) details the design.**
+-   **Specification (`embedded/specs/INTENT.md`, `embedded/specs/ARCHITECTURE.md`, `embedded/specs/SYSTEM.md`) details the design.**
     This covers how intent will be satisfied: interfaces, invariants, architectures, data models, workflows. Specs can evolve but should remain coherent and traceable to intent.
 
 -   **Proof (`proof.md`, tests, checks) provides evidence.**

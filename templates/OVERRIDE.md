@@ -84,15 +84,15 @@ For this project, we use a 5-level priority system:
 
 ### specs/AMENDMENTS.md
 
+### specs/SECURITY.md
+
+### specs/GIT.md
+
 ---
 
 ## Plugin Overrides
 
 ### plugins/TODO.md
-
-### plugins/TODO_USER.md
-
-### plugins/WORKFLOW.md
 
 ### plugins/MANIFEST.md
 
@@ -123,3 +123,7 @@ For this project, we use a 5-level priority system:
 ### plugins/HEARTBEAT.md
 
 ### plugins/TEAMMATE.md
+
+### plugins/VERIFY.md
+
+### plugins/AUTOUPDATE.md
