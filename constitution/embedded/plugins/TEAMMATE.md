@@ -7,9 +7,9 @@
 **Quick Reference:**
 | Command | Purpose |
 |---------|---------|
-| `decapod teammate add --category git --key ssh --value "mine"` | Record a preference |
-| `decapod teammate get --category git --key ssh` | Retrieve a preference |
-| `decapod teammate list` | List all preferences by category |
+| `decapod data teammate add --category git --key ssh --value "mine"` | Record a preference |
+| `decapod data teammate get --category git --key ssh` | Retrieve a preference |
+| `decapod data teammate list` | List all preferences by category |
 
 **Related:** `embedded/core/PLUGINS.md` (subsystem registry) | `AGENTS.md` (entrypoint)
 
@@ -18,10 +18,10 @@
 ## CLI Surface
 
 ```bash
-decapod teammate add --category <cat> --key <key> --value <val> [--context <ctx>] [--source <src>]
-decapod teammate get --category <cat> --key <key>
-decapod teammate list [--category <cat>] [--format text|json]
-decapod teammate schema  # JSON schema for programmatic use
+decapod data teammate add --category <cat> --key <key> --value <val> [--context <ctx>] [--source <src>]
+decapod data teammate get --category <cat> --key <key>
+decapod data teammate list [--category <cat>] [--format text|json]
+decapod data teammate schema  # JSON schema for programmatic use
 ```
 
 ## Purpose
@@ -47,12 +47,12 @@ With the teammate plugin:
 **Git Preferences:**
 ```bash
 # User says: "always use my SSH key, don't add yourself as a contributor"
-decapod teammate add --category git --key ssh_key --value "use_mine" \
+decapod data teammate add --category git --key ssh_key --value "use_mine" \
   --context "Use user's SSH key for git operations, don't add self as contributor" \
   --source "user_request"
 
 # User says: "keep commit messages concise and imperative"
-decapod teammate add --category style --key commit_messages --value "concise_imperative" \
+decapod data teammate add --category style --key commit_messages --value "concise_imperative" \
   --context "Keep commit messages under 72 chars, use imperative mood" \
   --source "user_request"
 ```
@@ -60,7 +60,7 @@ decapod teammate add --category style --key commit_messages --value "concise_imp
 **Workflow Conventions:**
 ```bash
 # User says: "use feature/ prefix for branches"
-decapod teammate add --category workflow --key branch_naming --value "feature/descriptive-name" \
+decapod data teammate add --category workflow --key branch_naming --value "feature/descriptive-name" \
   --context "Prefix feature branches with feature/ followed by kebab-case description" \
   --source "user_request"
 ```
@@ -97,12 +97,12 @@ When a user expresses a preference:
 
 ```bash
 # Good: Specific, contextual, actionable
-decapod teammate add --category git --key ssh_contributor --value "user_only" \
+decapod data teammate add --category git --key ssh_contributor --value "user_only" \
   --context "Use user's SSH credentials, never add self as commit contributor" \
   --source "user_request"
 
 # Bad: Vague, no context
-# decapod teammate add --category style --key prefs --value "good"
+# decapod data teammate add --category style --key prefs --value "good"
 ```
 
 ### Retrieving Preferences
@@ -111,10 +111,10 @@ Agents MUST check preferences before acting:
 
 ```bash
 # Before committing, check SSH preference
-decapod teammate get --category git --key ssh_contributor
+decapod data teammate get --category git --key ssh_contributor
 
 # Before creating a branch, check naming convention
-decapod teammate get --category workflow --key branch_naming
+decapod data teammate get --category workflow --key branch_naming
 ```
 
 ### Updating Preferences
@@ -123,7 +123,7 @@ Preferences can be updated by recording again with the same category/key:
 
 ```bash
 # User changes their mind about commit style
-decapod teammate add --category style --key commit_messages --value "detailed_explanatory" \
+decapod data teammate add --category style --key commit_messages --value "detailed_explanatory" \
   --context "Now prefer detailed commit messages with full context" \
   --source "user_request"
 ```
@@ -167,11 +167,11 @@ The `(category, key)` combination is unique - recording again updates the existi
 ```bash
 # User asks to commit something
 # 1. Check for git preferences
-decapod teammate get --category git --key ssh_contributor
+decapod data teammate get --category git --key ssh_contributor
 # Returns: use user's SSH, don't add self as contributor
 
 # 2. Check commit style
-decapod teammate get --category style --key commit_messages
+decapod data teammate get --category style --key commit_messages
 # Returns: concise and imperative
 
 # 3. Perform action respecting preferences
@@ -179,7 +179,7 @@ git commit -m "feat: add teammate plugin"  # Using user's SSH
 
 # 4. User expresses new preference
 # User: "always push to ahr/work branch"
-decapod teammate add --category git --key default_push_branch --value "ahr/work" \
+decapod data teammate add --category git --key default_push_branch --value "ahr/work" \
   --context "Default branch for pushing work" \
   --source "user_request"
 ```

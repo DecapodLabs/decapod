@@ -7,5 +7,5 @@
 This document defines the archive subsystem.
 
 ## CLI Surface
-- `decapod archive ...`
+- `decapod data archive ...`
 

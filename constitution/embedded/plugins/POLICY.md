@@ -7,5 +7,5 @@
 This document defines the policy subsystem.
 
 ## CLI Surface
-- `decapod policy ...`
+- `decapod govern policy ...`
 
