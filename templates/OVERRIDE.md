@@ -19,7 +19,7 @@ The embedded constitution (read-only, shipped with Decapod) provides the base me
 
 ## How to Use
 
-1. Find the component section below (Core, Specs, or Plugins)
+1. Find the component section below (Core, Specs, Interfaces, Methodology, Plugins, or Architecture)
 2. Scroll to the specific component you want to override (e.g., `### plugins/TODO.md`)
 3. Write your override content under that heading
 4. Use markdown formatting for your overrides
@@ -46,39 +46,27 @@ For this project, we use a 5-level priority system:
 <!-- ⚠️  CHANGES ARE NOT PERMITTED ABOVE THIS LINE                           -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 
-## Core Overrides
+## Core Overrides (Routers and Indices)
 
 ### core/DECAPOD.md
 
-### core/CONTROL_PLANE.md
+### core/INTERFACES.md
 
-### core/STORE_MODEL.md
+### core/METHODOLOGY.md
 
 ### core/PLUGINS.md
 
-### core/DOC_RULES.md
-
-### core/CLAIMS.md
+### core/GAPS.md
 
 ### core/DEMANDS.md
 
 ### core/DEPRECATION.md
 
-### core/GLOSSARY.md
-
-### core/KNOWLEDGE.md
-
-### core/MEMORY.md
-
-### core/SOUL.md
-
 ---
 
-## Specs Overrides
+## Specs Overrides (System Contracts)
 
 ### specs/INTENT.md
-
-### specs/ARCHITECTURE.md
 
 ### specs/SYSTEM.md
 
@@ -90,7 +78,57 @@ For this project, we use a 5-level priority system:
 
 ---
 
-## Plugin Overrides
+## Interfaces Overrides (Binding Contracts)
+
+### interfaces/CLAIMS.md
+
+### interfaces/CONTROL_PLANE.md
+
+### interfaces/DOC_RULES.md
+
+### interfaces/GLOSSARY.md
+
+### interfaces/STORE_MODEL.md
+
+---
+
+## Methodology Overrides (Practice Guides)
+
+### methodology/ARCHITECTURE.md
+
+### methodology/SOUL.md
+
+### methodology/KNOWLEDGE.md
+
+### methodology/MEMORY.md
+
+---
+
+## Architecture Overrides (Domain Patterns)
+
+### architecture/DATA.md
+
+### architecture/CACHING.md
+
+### architecture/MEMORY.md
+
+### architecture/WEB.md
+
+### architecture/CLOUD.md
+
+### architecture/FRONTEND.md
+
+### architecture/ALGORITHMS.md
+
+### architecture/SECURITY.md
+
+### architecture/OBSERVABILITY.md
+
+### architecture/CONCURRENCY.md
+
+---
+
+## Plugins Overrides (Operational Subsystems)
 
 ### plugins/TODO.md
 

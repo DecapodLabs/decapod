@@ -140,7 +140,7 @@ Meta-rule:
 Any guarantee/invariant in a canonical doc MUST:
 
 - include a claim-id (e.g. `(claim: claim.store.blank_slate)`) near the guarantee
-- be registered in `embedded/core/CLAIMS.md`
+- be registered in `embedded/interfaces/CLAIMS.md`
 - declare its proof surface if labeled `REAL` (see §5)
 
 If a guarantee is not registered, treat it as non-existent for enforcement purposes.
@@ -156,24 +156,24 @@ This matrix defines which canonical doc owns which type of decision. If you need
 | Authority hierarchy, proof doctrine, contradiction handling | `embedded/specs/SYSTEM.md` |
 | Change control for binding docs | `embedded/specs/AMENDMENTS.md` |
 | Methodology contract (how agents should work) | `embedded/specs/INTENT.md` |
-| Agent persona/interaction constraints | `embedded/core/SOUL.md` |
-| Doc compilation rules, graph semantics, truth labels, claims registration | `embedded/core/DOC_RULES.md` |
-| Claims registry (what we promise + proof surfaces) | `embedded/core/CLAIMS.md` |
-| Store semantics and purity model | `embedded/core/STORE_MODEL.md` |
+| Agent persona/interaction constraints | `embedded/methodology/SOUL.md` |
+| Doc compilation rules, graph semantics, truth labels, claims registration | `embedded/interfaces/DOC_RULES.md` |
+| Claims registry (what we promise + proof surfaces) | `embedded/interfaces/CLAIMS.md` |
+| Store semantics and purity model | `embedded/interfaces/STORE_MODEL.md` |
 | Subsystem existence/status/truth labels registry | `embedded/core/PLUGINS.md` |
-| Control-plane sequencing patterns | `embedded/core/CONTROL_PLANE.md` |
+| Control-plane sequencing patterns | `embedded/interfaces/CONTROL_PLANE.md` |
 | Deprecation and migration contract | `embedded/core/DEPRECATION.md` |
-| Loaded-term definitions | `embedded/core/GLOSSARY.md` |
+| Loaded-term definitions | `embedded/interfaces/GLOSSARY.md` |
 
 ---
 
 ## Links
 
-- `embedded/core/DECAPOD.md`
-- `embedded/core/PLUGINS.md`
-- `embedded/specs/SYSTEM.md`
-- `embedded/specs/AMENDMENTS.md`
-- `embedded/core/CLAIMS.md`
-- `embedded/core/DEPRECATION.md`
-- `embedded/core/GLOSSARY.md`
-- `docs/DOC_MAP.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/core/INTERFACES.md` - Interface contracts index
+- `embedded/interfaces/CLAIMS.md` - Promises ledger
+- `embedded/interfaces/GLOSSARY.md` - Term definitions
+- `embedded/core/PLUGINS.md` - Subsystem registry
+- `embedded/core/DEPRECATION.md` - Deprecation contract
+- `embedded/specs/SYSTEM.md` - System definition
+- `embedded/specs/AMENDMENTS.md` - Change control

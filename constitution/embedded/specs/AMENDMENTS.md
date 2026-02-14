@@ -33,7 +33,7 @@ An amendment is valid only if all of the following are true:
 3. The change is recorded.
    - Add an entry to the Amendment Log in this document (§6).
 4. The change is claim-safe.
-   - If the change introduces/updates a guarantee, register/update the claim in `embedded/core/CLAIMS.md`.
+   - If the change introduces/updates a guarantee, register/update the claim in `embedded/interfaces/CLAIMS.md`.
 5. The change is deprecation-safe.
    - If the change replaces or retires binding meaning, follow `embedded/core/DEPRECATION.md`.
 6. The change is validated.
@@ -49,14 +49,14 @@ When a binding doc change touches these areas, the following co-updates are requ
   - Update `embedded/core/DECAPOD.md` routing as needed.
   - Regenerate `docs/DOC_MAP.md` (derived; do not hand-edit).
 - Doc compiler and authority routing:
-  - If header fields, layers, truth labels, reachability, or decision rights change: update `embedded/core/DOC_RULES.md`.
+   - If header fields, layers, truth labels, reachability, or decision rights change: update `embedded/interfaces/DOC_RULES.md`.
 - Subsystems and extensibility:
   - If a subsystem is added/removed/renamed/status-changed: update `embedded/core/PLUGINS.md`.
   - If shipped CLI surfaces change: ensure `decapod validate` gates cover the drift.
 - Store semantics and safety:
-  - If store selection or purity model changes: update `embedded/core/STORE_MODEL.md`.
+   - If store selection or purity model changes: update `embedded/interfaces/STORE_MODEL.md`.
 - Claims and promises:
-  - If a guarantee/invariant changes: update `embedded/core/CLAIMS.md`.
+   - If a guarantee/invariant changes: update `embedded/interfaces/CLAIMS.md`.
 - Deprecations and migrations:
   - If anything is being retired: update `embedded/core/DEPRECATION.md`.
 
@@ -120,12 +120,14 @@ Each entry MUST include:
 
 ## Links
 
-- `embedded/core/DECAPOD.md`
-- `embedded/core/DOC_RULES.md`
-- `embedded/core/CLAIMS.md`
-- `embedded/core/DEPRECATION.md`
-- `embedded/plugins/EMERGENCY_PROTOCOL.md`
-- `embedded/core/PLUGINS.md`
-- `embedded/core/STORE_MODEL.md`
-- `embedded/specs/SYSTEM.md`
-- `embedded/specs/INTENT.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/interfaces/DOC_RULES.md` - Doc compilation rules
+- `embedded/interfaces/CLAIMS.md` - Promises ledger
+- `embedded/core/DEPRECATION.md` - Deprecation contract
+- `embedded/plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols
+- `embedded/core/PLUGINS.md` - Subsystem registry
+- `embedded/interfaces/STORE_MODEL.md` - Store semantics
+- `embedded/specs/SYSTEM.md` - System definition
+- `embedded/specs/INTENT.md` - Intent contract
+- `embedded/specs/SECURITY.md` - Security doctrine
+- `embedded/specs/GIT.md` - Git workflow

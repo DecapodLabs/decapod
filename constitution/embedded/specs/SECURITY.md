@@ -387,3 +387,13 @@ This document is binding. Agents must:
 ---
 
 *This document is inspired by decades of security failures, hard-won lessons, and the fundamental truth that security is a process, not a product. Trust nothing. Verify everything. Document decisions. Learn from failures.*
+
+## Links
+
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/specs/SYSTEM.md` - System definition
+- `embedded/specs/INTENT.md` - Intent contract
+- `embedded/specs/GIT.md` - Git workflow
+- `embedded/specs/AMENDMENTS.md` - Change control
+- `embedded/architecture/SECURITY.md` - Security architecture patterns
+- `embedded/plugins/EMERGENCY_PROTOCOL.md` - Emergency response

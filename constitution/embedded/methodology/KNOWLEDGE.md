@@ -14,7 +14,7 @@ This document outlines how project knowledge is captured, retrieved, and maintai
 
 The `decapod data knowledge` subsystem aims to:
 
--   **Centralize non-contractual context:** Store information that doesn’t primarily belong in `embedded/specs/INTENT.md` (contract), `embedded/specs/ARCHITECTURE.md` (compiled design), or `proof.md` (verification), but still holds value.
+-   **Centralize non-contractual context:** Store information that doesn’t primarily belong in `embedded/specs/INTENT.md` (contract), `embedded/methodology/ARCHITECTURE.md` (compiled design), or `proof.md` (verification), but still holds value.
 -   **Preserve rationale:** Capture reasons behind decisions, not just outcomes.
 -   **Accelerate onboarding:** Help humans and agents understand historical context quickly.
 -   **Reduce rework:** Minimize re-learning and re-investigation.
@@ -42,7 +42,7 @@ Decapod benefits from information residing in its appropriate place.
 -   **Intent (`embedded/specs/INTENT.md`) is a key contract.**
     It defines what is being built, its purpose, and success criteria.
 
--   **Specification (`embedded/specs/INTENT.md`, `embedded/specs/ARCHITECTURE.md`, `embedded/specs/SYSTEM.md`) details the design.**
+-   **Specification (`embedded/specs/INTENT.md`, `embedded/methodology/ARCHITECTURE.md`, `embedded/specs/SYSTEM.md`) details the design.**
     This covers how intent will be satisfied: interfaces, invariants, architectures, data models, workflows. Specs can evolve but should remain coherent and traceable to intent.
 
 -   **Proof (`proof.md`, tests, checks) provides evidence.**
@@ -195,15 +195,17 @@ If documentation indicates a CLI knowledge subsystem exists, the CLI should gene
 
 ## See Also
 
-- `embedded/core/MEMORY.md`: How agents store and retrieve persistent information.
-- `embedded/core/SOUL.md`: Agent identity and core principles.
+- `embedded/methodology/MEMORY.md`: How agents store and retrieve persistent information.
+- `embedded/methodology/SOUL.md`: Agent identity and core principles.
 - `embedded/specs/SYSTEM.md`: Decapod system definition.
 
 ## Links
 
-- `embedded/core/KNOWLEDGE.md`
-- `embedded/core/MEMORY.md`
-- `embedded/core/SOUL.md`
-- `embedded/specs/ARCHITECTURE.md`
-- `embedded/specs/INTENT.md`
-- `embedded/specs/SYSTEM.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/core/METHODOLOGY.md` - Methodology guides index
+- `embedded/methodology/MEMORY.md` - Agent memory and learning
+- `embedded/methodology/SOUL.md` - Agent identity
+- `embedded/methodology/ARCHITECTURE.md` - Architecture practice
+- `embedded/specs/INTENT.md` - Intent contract
+- `embedded/specs/SYSTEM.md` - System definition
+- `embedded/plugins/TODO.md` - Work tracking

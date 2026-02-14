@@ -257,15 +257,18 @@ Optional metrics could include:
 
 ## See Also
 
-- `embedded/core/SOUL.md`: Agent identity and core principles.
-- `embedded/core/KNOWLEDGE.md`: Durable project context and research base.
+- `embedded/methodology/SOUL.md`: Agent identity and core principles.
+- `embedded/methodology/KNOWLEDGE.md`: Durable project context and research base.
 - `embedded/specs/SYSTEM.md`: Decapod system definition.
 - `proof.md`: Evidence and verification surfaces.
 
 ## Links
 
-- `embedded/core/KNOWLEDGE.md`
-- `embedded/core/MEMORY.md`
-- `embedded/core/SOUL.md`
-- `embedded/specs/SYSTEM.md`
+- `embedded/core/DECAPOD.md` - Router and navigation charter
+- `embedded/core/METHODOLOGY.md` - Methodology guides index
+- `embedded/methodology/KNOWLEDGE.md` - Knowledge management
+- `embedded/methodology/SOUL.md` - Agent identity
+- `embedded/methodology/ARCHITECTURE.md` - Architecture practice
+- `embedded/specs/SYSTEM.md` - System definition
+- `embedded/plugins/TODO.md` - Work tracking
 
