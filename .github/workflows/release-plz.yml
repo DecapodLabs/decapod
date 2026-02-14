@@ -32,22 +32,35 @@ jobs:
 
       - name: Publish stale tagged versions
         run: |
+          set -x  # Enable debug output
           # Get current version from Cargo.toml
           CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -n1 | cut -d'"' -f2)
+          echo "Current Cargo.toml version: ${CARGO_VERSION}"
 
           # Check if tag exists for this version
           if git rev-parse "v${CARGO_VERSION}" >/dev/null 2>&1; then
-            echo "Tag v${CARGO_VERSION} exists, checking if published..."
+            echo "Tag v${CARGO_VERSION} exists"
 
-            # Check if this version exists on crates.io
-            if ! cargo search decapod --limit 1 | grep -q "decapod = \"${CARGO_VERSION}\""; then
-              echo "Version ${CARGO_VERSION} is tagged but not published. Publishing now..."
-              cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || echo "Publish failed or already exists"
+            # Try to fetch version info from crates.io API
+            CRATES_IO_VERSION=$(curl -s "https://crates.io/api/v1/crates/decapod" | jq -r '.crate.max_version // "0.0.0"')
+            echo "Latest version on crates.io: ${CRATES_IO_VERSION}"
+
+            # If tag exists but version not on crates.io, publish it
+            if [ "${CARGO_VERSION}" != "${CRATES_IO_VERSION}" ]; then
+              echo "Version ${CARGO_VERSION} is tagged but not on crates.io. Publishing..."
+              cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || {
+                echo "Publish failed - version might already exist or is in process"
+                exit 0
+              }
             else
-              echo "Version ${CARGO_VERSION} already published to crates.io"
+              echo "Version ${CARGO_VERSION} already published"
             fi
+          else
+            echo "No tag found for v${CARGO_VERSION}"
           fi
         continue-on-error: true
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
       - name: Generate GitHub App token
         uses: actions/create-github-app-token@v2
