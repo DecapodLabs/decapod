@@ -1,3 +1,20 @@
+//! # DEPRECATED MODULE
+//!
+//! This module has been deprecated and merged into `health.rs`.
+//!
+//! ## Migration
+//!
+//! - **Old**: `decapod trust status --id <agent>`
+//! - **New**: `decapod govern health autonomy --id <agent>`
+//!
+//! The `trust` functionality is now available as the `autonomy` subcommand
+//! under `decapod govern health`. All functionality has been preserved.
+//!
+//! This file is kept for reference only and will be removed in a future version.
+
+#![allow(dead_code)]
+#![allow(deprecated)]
+
 use crate::core::error;
 use crate::core::store::Store;
 use crate::health;
