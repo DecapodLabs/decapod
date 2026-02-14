@@ -127,18 +127,18 @@ fn validate_embedded_self_contained(
 ) -> Result<(), error::DecapodError> {
     info("Embedded Self-Contained Gate");
 
-    let constitution_embedded = repo_root.join("constitution").join("embedded");
-    if !constitution_embedded.exists() {
+    let constitution_dir = repo_root.join("constitution");
+    if !constitution_dir.exists() {
         // This is a decapod repo, not a project with embedded docs
         skip(
-            "No constitution/embedded/ directory found (decapod repo)",
+            "No constitution/ directory found (decapod repo)",
             &mut 0,
         );
         return Ok(());
     }
 
     let mut files = Vec::new();
-    collect_repo_files(&constitution_embedded, &mut files)?;
+    collect_repo_files(&constitution_dir, &mut files)?;
 
     let mut offenders: Vec<PathBuf> = Vec::new();
 
@@ -363,7 +363,7 @@ fn validate_repo_map(
     let required_specs = ["specs/INTENT.md", "specs/SYSTEM.md"];
     let required_methodology = ["methodology/ARCHITECTURE.md"];
     for r in required_specs {
-        if crate::core::assets::get_doc(&format!("embedded/{}", r)).is_some() {
+        if crate::core::assets::get_doc(r).is_some() {
             pass(
                 &format!("Constitution doc {} present (embedded)", r),
                 pass_count,
@@ -376,7 +376,7 @@ fn validate_repo_map(
         }
     }
     for r in required_methodology {
-        if crate::core::assets::get_doc(&format!("embedded/{}", r)).is_some() {
+        if crate::core::assets::get_doc(r).is_some() {
             pass(
                 &format!("Constitution doc {} present (embedded)", r),
                 pass_count,
@@ -1085,7 +1085,7 @@ pub fn run_validation(
 
     // Directly get content from embedded assets
     let intent_content =
-        crate::core::assets::get_doc("embedded/specs/INTENT.md").unwrap_or_default();
+        crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
     let intent_version =
         extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
     println!(

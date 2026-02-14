@@ -24,10 +24,11 @@ macro_rules! embedded_docs {
     ($($path:expr => $const_name:ident),* $(,)?) => {
         $(
             pub const $const_name: &str =
-                include_str!(concat!("../../constitution/embedded/", $path));
+                include_str!(concat!("../../constitution/", $path));
         )*
 
         pub fn get_embedded_doc(path: &str) -> Option<String> {
+            // Support both bare paths and legacy "embedded/" prefix
             let key = path.strip_prefix("embedded/").unwrap_or(path);
             match key {
                 $( $path => Some($const_name.to_string()), )*
@@ -36,7 +37,7 @@ macro_rules! embedded_docs {
         }
 
         pub fn list_docs() -> Vec<String> {
-            vec![ $( format!("embedded/{}", $path), )* ]
+            vec![ $( $path.to_string(), )* ]
         }
     };
 }
@@ -80,6 +81,8 @@ embedded_docs! {
     "architecture/FRONTEND.md" => EMBEDDED_ARCHITECTURE_FRONTEND,
     "architecture/ALGORITHMS.md" => EMBEDDED_ARCHITECTURE_ALGORITHMS,
     "architecture/SECURITY.md" => EMBEDDED_ARCHITECTURE_SECURITY,
+    "architecture/CONCURRENCY.md" => EMBEDDED_ARCHITECTURE_CONCURRENCY,
+    "architecture/OBSERVABILITY.md" => EMBEDDED_ARCHITECTURE_OBSERVABILITY,
     "plugins/ARCHIVE.md" => EMBEDDED_PLUGINS_ARCHIVE,
     "plugins/AUTOUPDATE.md" => EMBEDDED_PLUGINS_AUTOUPDATE,
     "plugins/CONTEXT.md" => EMBEDDED_PLUGINS_CONTEXT,

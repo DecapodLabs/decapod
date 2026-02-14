@@ -1,0 +1,107 @@
+# MANIFEST.md - What Is Canonical vs State
+
+**Authority:** reference (canonical vs derived vs state)
+**Layer:** Guides
+**Binding:** No
+**Scope:** clarify what is source vs derived vs state
+**Non-goals:** defining authority or requirements
+
+This file answers two questions:
+
+1. What markdown is contractually important (canonical)?
+2. What directories are state and should not be treated as docs?
+
+---
+
+## 1. Canonical Docs
+
+### Primary Sources (Constitution)
+- `specs/INTENT.md` - Intent-driven methodology contract
+- `specs/SYSTEM.md` - System definition and proof doctrine
+- `specs/SECURITY.md` - Security doctrine
+- `specs/GIT.md` - Git workflow contract
+- `specs/AMENDMENTS.md` - Change control
+
+### Core Indices and Routers
+- `core/DECAPOD.md` - Main router and navigation charter
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+- `core/PLUGINS.md` - Subsystem registry
+- `core/GAPS.md` - Gap analysis methodology
+- `core/DEMANDS.md` - User demands
+- `core/DEPRECATION.md` - Deprecation contract
+
+### Interface Contracts (Binding)
+- `interfaces/CLAIMS.md` - Promises ledger
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/DOC_RULES.md` - Doc compilation rules
+- `interfaces/GLOSSARY.md` - Term definitions
+- `interfaces/STORE_MODEL.md` - Store semantics
+
+### Methodology Guides (Reference)
+- `methodology/ARCHITECTURE.md` - Architecture practice
+- `methodology/SOUL.md` - Agent identity
+- `methodology/KNOWLEDGE.md` - Knowledge management
+- `methodology/MEMORY.md` - Agent memory and learning
+
+### Architecture Patterns (Reference)
+- `architecture/DATA.md` - Data architecture
+- `architecture/CACHING.md` - Caching patterns
+- `architecture/MEMORY.md` - Memory management
+- `architecture/WEB.md` - Web architecture
+- `architecture/CLOUD.md` - Cloud patterns
+- `architecture/FRONTEND.md` - Frontend architecture
+- `architecture/ALGORITHMS.md` - Algorithms and data structures
+- `architecture/SECURITY.md` - Security architecture
+
+### Agent Entrypoints (Templates)
+- `AGENTS.md` (or `templates/AGENTS.md`)
+- `CLAUDE.md` (or `templates/CLAUDE.md`)
+- `GEMINI.md` (or `templates/GEMINI.md`)
+- `CODEX.md` (or `templates/CODEX.md`)
+- `OPENCODE.md` (or `templates/OPENCODE.md`)
+
+---
+
+## 2. Derived Docs
+
+These are generated from canonical sources:
+
+- `docs/REPO_MAP.md` - Repository structure map
+- `docs/DOC_MAP.md` - Document dependency graph
+
+**Do not hand-edit derived docs.**
+
+---
+
+## 3. State (Not Docs)
+
+State roots contain runtime data, not documentation:
+
+- User store: `~/.decapod/` (blank slate by default)
+- Repo store: `<repo>/.decapod/project/`
+- Override: `<repo>/.decapod/OVERRIDE.md`
+- Checksums: `<repo>/.decapod/data/`
+
+The `.decapod/` directories primarily contain state and configuration.
+
+---
+
+## 4. Proof Surface
+
+Minimal proof surface:
+
+- `decapod validate` - Primary validation gate
+
+---
+
+## Links
+
+- `core/DECAPOD.md` - Router and navigation charter
+- `specs/INTENT.md` - Intent contract
+- `specs/SYSTEM.md` - System definition
+- `core/PLUGINS.md` - Subsystem registry
+- `plugins/TODO.md` - Work tracking
+- `plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols
+- `docs/REPO_MAP.md` - Repository structure
+- `docs/DOC_MAP.md` - Document graph
