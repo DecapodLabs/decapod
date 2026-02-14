@@ -1,3 +1,20 @@
+//! # DEPRECATED MODULE
+//!
+//! This module has been deprecated and merged into `health.rs`.
+//!
+//! ## Migration
+//!
+//! - **Old**: `decapod heartbeat`
+//! - **New**: `decapod govern health summary`
+//!
+//! The `heartbeat` functionality is now available as the `summary` subcommand
+//! under `decapod govern health`. All functionality has been preserved.
+//!
+//! This file is kept for reference only and will be removed in a future version.
+
+#![allow(dead_code)]
+#![allow(deprecated)]
+
 use crate::core::error;
 use crate::core::store::Store;
 use crate::health;
