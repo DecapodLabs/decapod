@@ -2,6 +2,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
+use crate::plugins::{policy, watcher};
 use clap::{Parser, Subcommand};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
@@ -60,6 +61,13 @@ pub enum HealthCommand {
         #[clap(long)]
         id: String,
     },
+    /// Show system health summary (aggregates health, policy, watcher status).
+    Summary,
+    /// Show agent autonomy status based on proof history.
+    Autonomy {
+        #[clap(long, default_value = "decapod")]
+        id: String,
+    },
 }
 
 pub fn run_health_cli(store: &Store, cli: HealthCli) -> Result<(), error::DecapodError> {
@@ -87,6 +95,14 @@ pub fn run_health_cli(store: &Store, cli: HealthCli) -> Result<(), error::Decapo
             let (state, reason) = get_health(store, &id)?;
             println!("Claim: {}\nHealth: {:?}\nReason: {}", id, state, reason);
         }
+        HealthCommand::Summary => {
+            let summary = get_summary(store)?;
+            println!("{}", serde_json::to_string_pretty(&summary).unwrap());
+        }
+        HealthCommand::Autonomy { id } => {
+            let status = get_autonomy(store, &id)?;
+            println!("{}", serde_json::to_string_pretty(&status).unwrap());
+        }
     }
     Ok(())
 }
@@ -97,6 +113,36 @@ pub enum HealthState {
     STALE,
     CONTRADICTED,
     VERIFIED,
+}
+
+// ===== Summary (formerly heartbeat) =====
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SummaryStatus {
+    pub ts: String,
+    pub health_summary: std::collections::HashMap<String, usize>, // state -> count
+    pub pending_approvals: usize,
+    pub watcher_last_run: Option<String>,
+    pub watcher_stale: bool,
+    pub alerts: Vec<String>,
+}
+
+// ===== Autonomy (formerly trust) =====
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub enum AutonomyTier {
+    Tier0, // Human-only
+    Tier1, // Confirm all
+    Tier2, // Auto-reversible
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AutonomyStatus {
+    pub actor_id: String,
+    pub tier: AutonomyTier,
+    pub success_count: usize,
+    pub failure_count: usize,
+    pub reasons: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -302,6 +348,142 @@ pub fn get_all_health(
     })
 }
 
+pub fn get_summary(store: &Store) -> Result<SummaryStatus, error::DecapodError> {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    initialize_health_db(&store.root)?;
+    policy::initialize_policy_db(&store.root)?;
+
+    let mut health_summary = std::collections::HashMap::new();
+    let all_health = get_all_health(store)?;
+    for (_, state, _) in all_health {
+        let count = health_summary.entry(format!("{:?}", state)).or_insert(0);
+        *count += 1;
+    }
+
+    let approvals = policy::list_approvals(store).unwrap_or_default();
+    let pending_approvals = approvals.len();
+
+    let watcher_events = watcher::watcher_events_path(&store.root);
+    let (last_run, watcher_stale) = if watcher_events.exists() {
+        let content = std::fs::read_to_string(watcher_events).unwrap_or_default();
+        let last_line = content.lines().last();
+        let last_ts = last_line.and_then(|l| {
+            let v: serde_json::Value = serde_json::from_str(l).ok()?;
+            v.get("ts").and_then(|t| t.as_str()).map(|s| s.to_string())
+        });
+
+        // Check if watcher is stale (> 10 minutes since last run)
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        let is_stale = match &last_ts {
+            None => true,
+            Some(ts) => ts
+                .trim_end_matches('Z')
+                .parse::<u64>()
+                .map(|last_run_secs| now.saturating_sub(last_run_secs) > 600)
+                .unwrap_or(true),
+        };
+
+        (last_ts, is_stale)
+    } else {
+        (None, true)
+    };
+
+    // Build alerts
+    let mut alerts = Vec::new();
+    if watcher_stale {
+        alerts.push(
+            "Watcher has not run recently (> 10 minutes). Run: decapod govern watcher run".to_string(),
+        );
+    }
+    if health_summary.get("CONTRADICTED").unwrap_or(&0) > &0 {
+        alerts.push("Some health claims are contradicted. Check: decapod govern health get".to_string());
+    }
+    if health_summary.get("STALE").unwrap_or(&0) > &0 {
+        alerts.push("Some health claims are stale. Run: decapod govern proof run".to_string());
+    }
+    if pending_approvals > 0 {
+        alerts.push(format!(
+            "{} pending approvals require review",
+            pending_approvals
+        ));
+    }
+
+    Ok(SummaryStatus {
+        ts: now_iso(),
+        health_summary,
+        pending_approvals,
+        watcher_last_run: last_run,
+        watcher_stale,
+        alerts,
+    })
+}
+
+pub fn get_autonomy(store: &Store, actor_id: &str) -> Result<AutonomyStatus, error::DecapodError> {
+    initialize_health_db(&store.root)?;
+
+    // Validate actor_id exists in audit history to prevent spoofing
+    let audit_log = store.root.join("broker.events.jsonl");
+    let mut known_actors = std::collections::HashSet::new();
+    known_actors.insert("decapod".to_string());
+    if audit_log.exists() {
+        let content = std::fs::read_to_string(audit_log).unwrap_or_default();
+        for line in content.lines() {
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(line) {
+                if let Some(a) = v.get("actor").and_then(|x| x.as_str()) {
+                    known_actors.insert(a.to_string());
+                }
+            }
+        }
+    }
+
+    if !known_actors.contains(actor_id) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "Actor '{}' has no recorded audit history; autonomy cannot be computed.",
+            actor_id
+        )));
+    }
+
+    // Compute autonomy from proof history
+    let all_health = get_all_health(store)?;
+    let mut success_count = 0;
+    let mut failure_count = 0;
+
+    for (_, state, _) in all_health {
+        match state {
+            HealthState::VERIFIED => success_count += 1,
+            HealthState::CONTRADICTED => failure_count += 1,
+            _ => {}
+        }
+    }
+
+    let mut reasons = Vec::new();
+    let tier = if failure_count > 0 {
+        reasons.push("Contradicted claims detected; restricted to Tier 1".to_string());
+        AutonomyTier::Tier1
+    } else if success_count >= 5 {
+        reasons.push(format!(
+            "Verified success count ({}) exceeds threshold",
+            success_count
+        ));
+        AutonomyTier::Tier2
+    } else {
+        reasons.push("Insufficient verified history for Tier 2".to_string());
+        AutonomyTier::Tier1
+    };
+
+    Ok(AutonomyStatus {
+        actor_id: actor_id.to_string(),
+        tier,
+        success_count,
+        failure_count,
+        reasons,
+    })
+}
+
 fn now_iso() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
     let secs = SystemTime::now()
@@ -338,11 +520,16 @@ pub fn proof_schema() -> serde_json::Value {
 pub fn health_schema() -> serde_json::Value {
     serde_json::json!({
         "name": "health",
-        "version": "0.1.0",
-        "description": "Get computed health status",
+        "version": "0.2.0",
+        "description": "Health Engine: claims, proofs, system summary, and agent autonomy",
         "commands": [
-            { "name": "get", "parameters": ["id"] }
+            { "name": "claim", "parameters": ["id", "subject", "kind", "provenance"] },
+            { "name": "proof", "parameters": ["claim_id", "surface", "result", "sla"] },
+            { "name": "get", "parameters": ["id"] },
+            { "name": "summary", "description": "System health overview (formerly heartbeat)" },
+            { "name": "autonomy", "parameters": ["id"], "description": "Agent autonomy tier (formerly trust)" }
         ],
-        "storage": ["health.db"]
+        "storage": ["health.db"],
+        "notes": "Summary consolidates heartbeat; Autonomy consolidates trust"
     })
 }
