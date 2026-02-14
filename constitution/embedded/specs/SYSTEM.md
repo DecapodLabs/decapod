@@ -47,11 +47,11 @@ When guidance from different documents conflicts, the most specific, highest-aut
 2.  `embedded/specs/ARCHITECTURE.md` (Compiled from Intent)
 3.  Proof surface (`decapod validate`, `tests/`, and optional `proof.md`)
 4.  `embedded/specs/SYSTEM.md` (This document, the foundational methodology)
-5.  `embedded/core/MAESTRO.md` (Router/index; not a contract, but the default entrypoint if present)
-6.  `docs/templates/AGENTS.md` (Machine-facing entrypoint)
-7.  `embedded/plugins/WORKFLOW.md` (Operational guidance, must not override intent)
-8.  `embedded/specs/philosophy.md` (Non-binding rationale)
-9.  `embedded/specs/context.md` (Non-binding history)
+5.  `embedded/core/DECAPOD.md` (Router/index; not a contract, but the default entrypoint if present)
+6.  `templates/AGENTS.md` (Machine-facing entrypoint)
+7.  `embedded/plugins/TODO.md` (Operational guidance, must not override intent)
+8.  repo-local non-binding rationale notes (if present)
+9.  repo-local non-binding context/history notes (if present)
 
 ---
 
@@ -62,7 +62,7 @@ All AI agents operating within this system must adhere to the following behavior
 ### 4.1. Default Agent Behavior
 
 -   **Before Acting:**
-    1.  If present, start at `embedded/core/MAESTRO.md` (repo router/index).
+    1.  If present, start at `embedded/core/DECAPOD.md` (repo router/index).
     2.  Read `embedded/specs/INTENT.md`.
     3.  Read `embedded/specs/ARCHITECTURE.md`.
     4.  Read the proof surface (`decapod validate`, `tests/`, and optional `proof.md`).
@@ -182,24 +182,23 @@ Until this is implemented, do not document script-based plugin systems or extern
 
 For domain-specific guidance, keep it repo-local under `docs/` and reference it from your project `AGENTS.md`.
 
-For operational workflow and TODO governance, see `embedded/plugins/WORKFLOW.md`.
+For operational workflow and TODO governance, see `embedded/plugins/TODO.md`.
 
 ## Links
 
 - `embedded/core/CONTROL_PLANE.md`
-- `embedded/core/MAESTRO.md`
+- `embedded/core/DECAPOD.md`
 - `embedded/core/DOC_RULES.md`
 - `embedded/core/KNOWLEDGE.md`
 - `embedded/core/MEMORY.md`
 - `embedded/core/SOUL.md`
-- `embedded/plugins/WORKFLOW.md`
+- `embedded/plugins/TODO.md`
 - `embedded/core/PLUGINS.md`
 - `embedded/specs/ARCHITECTURE.md`
 - `embedded/specs/INTENT.md`
 - `embedded/specs/SYSTEM.md`
-- `embedded/specs/context.md`
-- `embedded/specs/philosophy.md`
-- `docs/templates/AGENTS.md`
-- `docs/templates/CLAUDE.md`
-- `docs/templates/GEMINI.md`
-- `docs/templates/DEMANDS.md`
+- `templates/AGENTS.md`
+- `templates/CLAUDE.md`
+- `templates/GEMINI.md`
+- `templates/CODEX.md`
+- `templates/OPENCODE.md`

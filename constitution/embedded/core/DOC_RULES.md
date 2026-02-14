@@ -78,12 +78,12 @@ The canonical markdown dependency graph is defined exclusively by `## Links` foo
 
 Rules:
 - Every canonical doc MUST have a `## Links` footer.
-- Links SHOULD be repo-relative paths in backticks (e.g. `embedded/core/MAESTRO.md`).
-- `embedded/core/MAESTRO.md` MUST reach every canonical doc via the `## Links` graph (reachability) (claim: claim.doc.decapod_reaches_all_canonical).
+- Links SHOULD be repo-relative paths in backticks (e.g. `embedded/core/DECAPOD.md`).
+- `embedded/core/DECAPOD.md` MUST reach every canonical doc via the `## Links` graph (reachability) (claim: claim.doc.decapod_reaches_all_canonical).
 - Constitution hop constraint (intended invariant):
-  - Every Constitution doc with `**Binding:** Yes` SHOULD be linked directly from `embedded/core/MAESTRO.md` (no buried law).
+  - Every Constitution doc with `**Binding:** Yes` SHOULD be linked directly from `embedded/core/DECAPOD.md` (no buried law).
 - Interfaces hop constraint (intended invariant):
-  - Every Interfaces doc with `**Binding:** Yes` SHOULD be reachable from `embedded/core/MAESTRO.md` within 2 hops (directly or via a single router doc).
+  - Every Interfaces doc with `**Binding:** Yes` SHOULD be reachable from `embedded/core/DECAPOD.md` within 2 hops (directly or via a single router doc).
 - `docs/DOC_MAP.md` is derived from this graph and MUST NOT be edited by hand.
 
 ---
@@ -169,7 +169,7 @@ This matrix defines which canonical doc owns which type of decision. If you need
 
 ## Links
 
-- `embedded/core/MAESTRO.md`
+- `embedded/core/DECAPOD.md`
 - `embedded/core/PLUGINS.md`
 - `embedded/specs/SYSTEM.md`
 - `embedded/specs/AMENDMENTS.md`

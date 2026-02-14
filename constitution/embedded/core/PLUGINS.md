@@ -123,7 +123,7 @@ Constraint:
 | trust | implemented | DEPRECATED | `embedded/plugins/TRUST.md` | both | reads | `decapod govern health autonomy` | merged into health |
 | context | implemented | REAL | `embedded/plugins/CONTEXT.md` | both | writes | `decapod data context audit` | budget gating |
 | heartbeat | implemented | DEPRECATED | `embedded/plugins/HEARTBEAT.md` | both | reads | `decapod govern health summary` | merged into health |
-| docs | implemented | REAL | `embedded/plugins/DOCS.md` | N/A | reads | `decapod docs list` | embedded assets |
+| docs | implemented | REAL | `embedded/core/DECAPOD.md` | N/A | reads | `decapod docs list` | embedded assets |
 | db_broker | planned | SPEC | `embedded/plugins/DB_BROKER.md` | both | both | (not yet enforced) | planned: "no sqlite opens outside broker" |
 
 ---
