@@ -33,13 +33,7 @@ fn test_init_creates_all_entrypoints() {
     assert!(success, "decapod init should succeed");
 
     // Check that all 5 entrypoint files exist
-    let expected_files = [
-        "AGENTS.md",
-        "CLAUDE.md",
-        "GEMINI.md",
-        "CODEX.md",
-        "OPENCODE.md",
-    ];
+    let expected_files = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"];
 
     for file in expected_files {
         let file_path = temp_path.join(file);
@@ -100,7 +94,7 @@ fn test_entrypoints_are_thin() {
     );
 
     // Check agent-specific files (should be ≤ 50)
-    for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"] {
+    for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let content = fs::read_to_string(temp_path.join(file))
             .unwrap_or_else(|_| panic!("Failed to read {}", file));
         let line_count = content.lines().count();
@@ -123,13 +117,7 @@ fn test_entrypoints_contain_canonical_router() {
     assert!(success, "decapod init should succeed");
 
     // Check that all entrypoints reference core/DECAPOD.md
-    let files = [
-        "AGENTS.md",
-        "CLAUDE.md",
-        "GEMINI.md",
-        "CODEX.md",
-        "OPENCODE.md",
-    ];
+    let files = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"];
 
     for file in files {
         let content = fs::read_to_string(temp_path.join(file))
@@ -236,7 +224,7 @@ fn test_agent_specific_files_defer_to_agents() {
     assert!(success, "decapod init should succeed");
 
     // Check that agent-specific files reference AGENTS.md
-    for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"] {
+    for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let content = fs::read_to_string(temp_path.join(file))
             .unwrap_or_else(|_| panic!("Failed to read {}", file));
         assert!(

@@ -396,13 +396,7 @@ fn validate_docs_templates_bucket(
     info("Entrypoint Gate");
 
     // Entrypoints MUST be in the project root
-    let required = [
-        "AGENTS.md",
-        "CLAUDE.md",
-        "GEMINI.md",
-        "CODEX.md",
-        "OPENCODE.md",
-    ];
+    let required = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"];
     for a in required {
         let p = decapod_dir.join(a);
         if p.is_file() {
@@ -519,7 +513,7 @@ fn validate_entrypoint_invariants(
 
     // Check that agent-specific files defer to AGENTS.md and are thin
     const MAX_AGENT_SPECIFIC_LINES: usize = 50;
-    for agent_file in ["CLAUDE.md", "GEMINI.md", "CODEX.md", "OPENCODE.md"] {
+    for agent_file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let agent_path = decapod_dir.join(agent_file);
         if !agent_path.is_file() {
             fail(
