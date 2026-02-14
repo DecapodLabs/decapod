@@ -1,7 +1,7 @@
 //! Project scaffolding for Decapod initialization.
 //!
 //! This module handles the creation of Decapod project structure, including:
-//! - Root entrypoints (AGENTS.md, CLAUDE.md, GEMINI.md, CODEX.md, OPENCODE.md)
+//! - Root entrypoints (AGENTS.md, CLAUDE.md, GEMINI.md, CODEX.md)
 //! - Constitution directory (.decapod/constitution/)
 //! - Embedded methodology documents
 //!
@@ -141,13 +141,7 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     // If agent_files is empty, generate all five
     // If agent_files has entries, only generate those
     let files_to_generate = if opts.all || opts.agent_files.is_empty() {
-        vec![
-            "AGENTS.md",
-            "CLAUDE.md",
-            "GEMINI.md",
-            "CODEX.md",
-            "OPENCODE.md",
-        ]
+        vec!["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"]
     } else {
         opts.agent_files.iter().map(|s| s.as_str()).collect()
     };
@@ -213,8 +207,7 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
     println!(
         "  {} {}",
         "▸".bright_green(),
-        "Neural interfaces: AGENTS.md | CLAUDE.md | GEMINI.md | CODEX.md | OPENCODE.md"
-            .bright_cyan()
+        "Neural interfaces: AGENTS.md | CLAUDE.md | GEMINI.md | CODEX.md".bright_cyan()
     );
 
     // Show backup instructions if .bak files were created

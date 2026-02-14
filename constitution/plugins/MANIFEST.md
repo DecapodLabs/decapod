@@ -59,7 +59,7 @@ This file answers two questions:
 - `CLAUDE.md` (or `templates/CLAUDE.md`)
 - `GEMINI.md` (or `templates/GEMINI.md`)
 - `CODEX.md` (or `templates/CODEX.md`)
-- `OPENCODE.md` (or `templates/OPENCODE.md`)
+
 
 ---
 
