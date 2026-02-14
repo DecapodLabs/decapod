@@ -136,7 +136,7 @@ decapod update
 
 - `core/DECAPOD.md` — Router (mandates this protocol in §1.1)
 - `AGENTS.md` — Universal agent contract (includes mandatory start sequence)
-- `CLAUDE.md`, `GEMINI.md`, `CODEX.md`, `OPENCODE.md` — Agent entrypoints (all mandate this)
+- `CLAUDE.md`, `GEMINI.md`, `CODEX.md` — Agent entrypoints (all mandate this)
 
 ---
 

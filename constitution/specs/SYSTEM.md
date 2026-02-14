@@ -48,7 +48,7 @@ When guidance from different documents conflicts, the most specific, highest-aut
 3.  Proof surface (`decapod validate`, `tests/`, and optional `proof.md`)
 4.  `specs/SYSTEM.md` (This document, the foundational methodology)
 5.  `core/DECAPOD.md` (Router/index; not a contract, but the default entrypoint if present)
-6.  `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` / `CODEX.md` / `OPENCODE.md` (Machine-facing entrypoints)
+6.  `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` / `CODEX.md` (Machine-facing entrypoints)
 7.  `plugins/TODO.md` (Operational guidance, must not override intent)
 8.  repo-local non-binding rationale notes (if present)
 9.  repo-local non-binding context/history notes (if present)
