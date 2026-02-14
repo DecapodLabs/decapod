@@ -289,6 +289,10 @@ enum Command {
     #[clap(name = "validate", visible_alias = "v")]
     Validate(ValidateCli),
 
+    /// Update decapod binary to latest version in current directory
+    #[clap(name = "update")]
+    Update,
+
     /// Governance: policy, health, proofs, audits
     #[clap(name = "govern", visible_alias = "g")]
     Govern(GovernCli),
@@ -865,6 +869,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                     };
                     validate::run_validation(&store, &decapod_root, &decapod_root)?;
                 }
+                Command::Update => {
+                    run_self_update(&project_root)?;
+                }
                 Command::Docs(docs_cli) => {
                     docs_cli::run_docs_cli(docs_cli)?;
                 }
@@ -1258,6 +1265,32 @@ fn run_check(crate_description: bool, all: bool) -> Result<(), error::DecapodErr
     if all && !crate_description {
         println!("Note: --all requires --crate-description");
     }
+
+    Ok(())
+}
+
+fn run_self_update(project_root: &Path) -> Result<(), error::DecapodError> {
+    use std::process::Command;
+
+    println!("Updating decapod binary from current directory...");
+    println!("Running: cargo install --path . --locked");
+    println!();
+
+    let status = Command::new("cargo")
+        .args(["install", "--path", ".", "--locked"])
+        .current_dir(project_root)
+        .status()
+        .map_err(|e| error::DecapodError::IoError(e))?;
+
+    if !status.success() {
+        return Err(error::DecapodError::ValidationError(
+            "cargo install failed - see output above for details".into(),
+        ));
+    }
+
+    println!();
+    println!("✓ Decapod binary updated successfully");
+    println!("  Run 'decapod --version' to verify the new version");
 
     Ok(())
 }
