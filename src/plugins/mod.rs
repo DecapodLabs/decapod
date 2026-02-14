@@ -2,6 +2,7 @@ pub mod archive;
 pub mod context;
 pub mod cron;
 pub mod feedback;
+pub mod gatling;
 pub mod health;
 pub mod heartbeat;
 pub mod knowledge;
