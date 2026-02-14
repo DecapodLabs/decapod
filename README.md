@@ -194,30 +194,65 @@ You don’t touch `.decapod/data/` directly. Agents use the control surface. Lik
 
 ## Subsystems
 
-Decapod’s control surface is organized into subsystems. **Agents interact with these; you communicate your desires to the agent and observe outcomes.**
+Decapod's control surface is organized into 9 top-level commands with grouped subsystems. **Agents interact with these; you communicate your desires to the agent and observe outcomes.**
 
 Status legend:
 - **REAL** = implemented and usable today
 - **SPEC** = designed/claimed, but not fully shipped yet
 
-| Subsystem | Purpose | Status |
-|----------|---------|--------|
-| **todo** | Work tracking with audit trail | REAL |
-| **validate** | Proof gate before promotion | REAL |
-| **cron** | Scheduled automation | REAL |
-| **reflex** | Rule-driven triggers/actions | REAL |
-| **docs** | Constitution discovery | REAL |
-| **teammate** | User conventions + preferences | REAL |
-| **knowledge** | Project facts + rationale | SPEC |
-| **health** | Proof ledger + system state | SPEC |
-| **policy** | Risk zones + approvals | SPEC |
-| **trust** | Autonomy tiers based on proof history | SPEC |
-| **context** | Token budget management | SPEC |
-| **archive** | Session history indexing | SPEC |
-| **watcher** | Integrity checks | SPEC |
-| **heartbeat** | One-shot system summary | SPEC |
-| **feedback** | Preference refinement | SPEC |
-| **db_broker** | Multi-agent SQLite safety (write serialization) | SPEC |
+### Core Commands
+
+| Command | Purpose | Status |
+|---------|---------|--------|
+| `decapod init` | Bootstrap project with constitution | REAL |
+| `decapod setup` | Configure git hooks and repository setup | REAL |
+| `decapod docs` | Constitution discovery and access | REAL |
+| `decapod todo` | Work tracking with audit trail | REAL |
+| `decapod validate` | Proof gate before promotion | REAL |
+
+### Governance (`decapod govern`)
+
+| Subcommand | Purpose | Status |
+|------------|---------|--------|
+| `policy` | Risk classification and approval gates | REAL |
+| `health` | Proof ledger + system state monitoring | REAL |
+| `health summary` | System health overview (replaces heartbeat) | REAL |
+| `health autonomy` | Agent autonomy tiers (replaces trust) | REAL |
+| `proof` | Executable verification and proof gates | REAL |
+| `watcher` | Proactive integrity checks | REAL |
+| `feedback` | User preference refinement | REAL |
+
+### Data Management (`decapod data`)
+
+| Subcommand | Purpose | Status |
+|------------|---------|--------|
+| `archive` | Session history indexing and verification | REAL |
+| `knowledge` | Project facts and rationale storage | REAL |
+| `context` | Token budget management and archival | REAL |
+| `schema` | Subsystem schema discovery | REAL |
+| `repo` | Repository structure mapping | REAL |
+| `broker` | SQLite audit trail access | REAL |
+| `teammate` | User conventions and preferences | REAL |
+
+### Automation (`decapod auto`)
+
+| Subcommand | Purpose | Status |
+|------------|---------|--------|
+| `cron` | Scheduled automation jobs | REAL |
+| `reflex` | Event-driven triggers and actions | REAL |
+
+### Quality Assurance (`decapod qa`)
+
+| Subcommand | Purpose | Status |
+|------------|---------|--------|
+| `verify` | Proof replay and drift detection | REAL |
+| `check` | CI validation checks | REAL |
+
+### Planned Enhancements
+
+| Feature | Purpose | Status |
+|---------|---------|--------|
+| `db_broker` | Multi-agent SQLite safety (write serialization) | SPEC |
 
 ---
 
