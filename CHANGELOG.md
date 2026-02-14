@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2](https://github.com/DecapodLabs/decapod/compare/v0.3.1...v0.3.2) - 2026-02-14
+
+### Added
+
+- **Task claiming and release**: New `decapod todo claim` and `decapod todo release` commands enable agents to claim tasks for active work, preventing coordination conflicts
+- **Smart auto-assignment by category**: When creating tasks, system automatically assigns them to agents already working in the same category (inferred from title/tags)
+- **Task assignment tracking**: Added `assigned_to` and `assigned_at` fields to task schema for visibility into who's working on what
+- **Category-based agent routing**: Tasks are intelligently routed to the appropriate agent based on category affinity and existing work allocation
+
+### Changed
+
+- Bumped TODO schema version to 7 with automatic migration
+- Enhanced task.add events with category inference and auto-assignment metadata
+- Updated Task struct and all SQL queries to include assignment fields
+
 ## [0.3.1](https://github.com/DecapodLabs/decapod/compare/v0.3.0...v0.3.1) - 2026-02-14
 
 ### Other
