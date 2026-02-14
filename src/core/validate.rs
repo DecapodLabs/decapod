@@ -957,7 +957,7 @@ fn validate_watcher_audit(
         pass("Watcher audit trail present", pass_count);
     } else {
         warn(
-            "Watcher audit trail missing (run `decapod watcher run`)",
+            "Watcher audit trail missing (run `decapod govern watcher run`)",
             pass_count,
         );
     }

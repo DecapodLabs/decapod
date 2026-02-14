@@ -165,7 +165,7 @@ jobs:
         run: decapod validate
 
       - name: Run watcher
-        run: decapod watcher run
+        run: decapod govern watcher run
 
       - name: Check heartbeat
         run: |
