@@ -57,26 +57,25 @@ That's it. Agents now operate inside the governed environment. You observe outco
 
 ## How It Works
 
-**Persistent state** — Agents persist work to `.decapod/`: todos, conventions, decisions, proof events. Durable state that survives sessions and model switches.
+Decapod is a tool for agents, not for humans. You run `decapod init` once; from then on, agents interact with the `decapod` CLI as their control surface. Two things set it apart from orchestration frameworks: an **embedded constitution** and **coordination primitives**.
 
-**Enforced methodology** — An embedded constitution defines binding contracts for how agents operate. Generated entrypoints (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `CODEX.md`, `OPENCODE.md`) require agents to read the constitution, use the control surface, and follow Intent > Architecture > Implementation > Proof. Projects customize via `.decapod/OVERRIDE.md`.
+### Embedded Constitution
 
-**Proof gates** — Agents must satisfy validation gates before claiming completion. If `decapod validate` fails, the work isn't done. Evidence required, not assertions.
+Every Decapod binary ships with a compiled-in methodology: binding contracts, authority chains, proof doctrine, and architectural guidance — 40+ documents covering specs, interfaces, architecture, and plugins. Agents don't receive tips; they receive contracts.
 
-**Coordination** — A shared backlog with audit trail, shared conventions and preferences, a proof ledger, and policy boundaries. Multiple agents work in parallel without collisions.
+`decapod init` generates thin entrypoints (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md`) that point agents into the constitution. Every agent, regardless of provider, enters through the same contract and follows the same authority ladder: **Intent > Architecture > Implementation > Proof**.
 
-## CLI Reference
+Projects customize behavior through `.decapod/OVERRIDE.md` — extend or adjust any contract without forking the constitution.
 
-```
-decapod init        Bootstrap a project                    (alias: i)
-decapod docs        Access methodology documentation       (alias: d)
-decapod todo        Track tasks and work items              (alias: t)
-decapod validate    Validate methodology compliance         (alias: v)
-decapod govern      Governance: policy, health, proofs      (alias: g)
-decapod data        Data: archives, knowledge, context
-decapod auto        Automation: scheduled, event-driven     (alias: a)
-decapod qa          Quality assurance: verification         (alias: q)
-```
+### Coordination Primitives
+
+Agents operating in the same repo share durable infrastructure:
+
+- **Persistent state** — Todos, decisions, conventions, and proof events survive sessions and model switches. Stored in `.decapod/data/` as SQLite databases and append-only event logs.
+- **Proof gates** — `decapod validate` runs a 48-gate verification harness. If it fails, the work isn't done — no matter how confident the summary sounds. Evidence required, not assertions.
+- **Shared backlog** — A brokered task system with audit trails. Agents claim work, record transitions, and archive completions. No duplicate effort, no lost context.
+- **Policy boundaries** — Trust tiers, risk zones, and approval gates. Governance that scales with autonomy.
+- **Event sourcing** — Every state mutation goes through a broker that records who did what, when, and why. State can be deterministically rebuilt from events.
 
 ## Architecture
 
@@ -86,7 +85,6 @@ your-project/
 ├── CLAUDE.md              Claude entrypoint (generated)
 ├── GEMINI.md              Gemini entrypoint (generated)
 ├── CODEX.md               Codex entrypoint (generated)
-├── OPENCODE.md            OpenCode entrypoint (generated)
 └── .decapod/
     ├── data/              State: SQLite DBs + event logs
     ├── generated/         Derived artifacts (auto-managed)
