@@ -44,7 +44,7 @@ Do not claim brokered serialization is implemented. It is SPEC (see §4.1).
 
 For a subsystem to be considered "plugin-grade," it generally aims to provide:
 
-- A stable CLI command group: `decapod <subsystem> ...`
+- A stable CLI command group: `decapod <group> <subsystem> ...` (or top-level for core commands)
 - Stable output envelopes (prefer `--format json` as a default for agents).
 - Store-awareness, indicated by options like `--store user|repo` and `--root <path>`.
 - Schema/discovery capabilities: `decapod <subsystem> schema`.
@@ -70,27 +70,27 @@ Agents are generally advised not to open SQLite directly, especially as a broker
 ## 3. Subsystems (Current, REAL)
 
 ### 3.1 Task & Schedule (Operational)
-- **todo** ⭐: Backlog management with audit trail. **See: `embedded/plugins/TODO.md`**
-- **cron**: Scheduled jobs and repo-local automation.
-- **reflex**: Event-driven automated responses.
+- **todo** ⭐: Backlog management with audit trail. **See: `embedded/plugins/TODO.md`** (CLI: `decapod todo`)
+- **cron**: Scheduled jobs and repo-local automation. (CLI: `decapod auto cron`)
+- **reflex**: Event-driven automated responses. (CLI: `decapod auto reflex`)
 
 ### 3.2 Knowledge & Memory (Intelligence)
-- **knowledge**: Rationale, context, and project-specific facts.
-- **teammate** ⭐: User preference memory for persistent behaviors. **See: `embedded/plugins/TEAMMATE.md`**
-- **context**: Token budget management and MOVE-not-TRIM archival.
-- **archive**: Immutable session history indexing.
+- **knowledge**: Rationale, context, and project-specific facts. (CLI: `decapod data knowledge`)
+- **teammate** ⭐: User preference memory for persistent behaviors. **See: `embedded/plugins/TEAMMATE.md`** (CLI: `decapod data teammate`)
+- **context**: Token budget management and MOVE-not-TRIM archival. (CLI: `decapod data context`)
+- **archive**: Immutable session history indexing. (CLI: `decapod data archive`)
 
 ### 3.3 Integrity & Governance (Core)
-- **health**: Claim/proof ledger and system state monitoring.
-- **policy**: Risk classification, blast-radius zones, and approvals.
-- **trust**: Agent autonomy tiers based on historical proof.
-- **watcher**: Proactive read-only integrity checks.
+- **health**: Claim/proof ledger and system state monitoring. (CLI: `decapod govern health`)
+- **policy**: Risk classification, blast-radius zones, and approvals. (CLI: `decapod govern policy`)
+- **trust**: Agent autonomy tiers based on historical proof. **DEPRECATED - now `decapod govern health autonomy`**
+- **watcher**: Proactive read-only integrity checks. (CLI: `decapod govern watcher`)
 
 ### 3.4 Operational & Meta
-- **broker**: The thin-waist for state mutations (serialized SQLite).
-- **feedback**: Operator preference refinement and non-binding diffs.
-- **heartbeat**: High-level system health and pending action summary.
-- **docs**: Methodology discovery and ingestion.
+- **broker**: The thin-waist for state mutations (serialized SQLite). (CLI: `decapod data broker`)
+- **feedback**: Operator preference refinement and non-binding diffs. (CLI: `decapod govern feedback`)
+- **heartbeat**: High-level system health and pending action summary. **DEPRECATED - now `decapod govern health summary`**
+- **docs**: Methodology discovery and ingestion. (CLI: `decapod docs`)
 
 ---
 
@@ -111,18 +111,18 @@ Constraint:
 | Name | Status | Truth | Owner Doc | Store | Mutability | Proof Surface | Safety Gates |
 |------|--------|-------|-----------|-------|------------|--------------|--------------|
 | todo | implemented | REAL | `embedded/plugins/TODO.md` | user+repo | writes | `decapod todo schema` | store isolation, deterministic rebuild (repo) |
-| health | implemented | REAL | `embedded/plugins/HEALTH.md` | both | writes | `decapod health get` | deterministic proof hooks |
-| policy | implemented | REAL | `embedded/plugins/POLICY.md` | both | writes | `decapod policy riskmap verify` | risk gating, trust analysis |
-| cron | implemented | REAL | `embedded/plugins/CRON.md` | both | writes | `decapod cron schema` | brokered sqlite, audit trail |
-| reflex | implemented | REAL | `embedded/plugins/REFLEX.md` | both | writes | `decapod reflex schema` | brokered sqlite, audit trail |
-| watcher | implemented | REAL | `embedded/plugins/WATCHER.md` | both | reads | `decapod watcher run` | audit trail |
-| knowledge | implemented | REAL | `embedded/plugins/KNOWLEDGE.md` | both | writes | `decapod knowledge search` | provenance check |
-| teammate | implemented | REAL | `embedded/plugins/TEAMMATE.md` | both | writes | `decapod teammate schema` | user preference persistence |
-| archive | implemented | REAL | `embedded/plugins/ARCHIVE.md` | both | writes | `decapod archive verify` | hash matching |
-| feedback | implemented | REAL | `embedded/plugins/FEEDBACK.md` | both | writes | `decapod feedback propose` | non-binding isolation |
-| trust | implemented | REAL | `embedded/plugins/TRUST.md` | both | reads | `decapod trust status` | audit history check |
-| context | implemented | REAL | `embedded/plugins/CONTEXT.md` | both | writes | `decapod context audit` | budget gating |
-| heartbeat | implemented | REAL | `embedded/plugins/HEARTBEAT.md` | both | reads | `decapod heartbeat` | status summary |
+| health | implemented | REAL | `embedded/plugins/HEALTH.md` | both | writes | `decapod govern health get` | deterministic proof hooks |
+| policy | implemented | REAL | `embedded/plugins/POLICY.md` | both | writes | `decapod govern policy riskmap verify` | risk gating, trust analysis |
+| cron | implemented | REAL | `embedded/plugins/CRON.md` | both | writes | `decapod auto cron schema` | brokered sqlite, audit trail |
+| reflex | implemented | REAL | `embedded/plugins/REFLEX.md` | both | writes | `decapod auto reflex schema` | brokered sqlite, audit trail |
+| watcher | implemented | REAL | `embedded/plugins/WATCHER.md` | both | reads | `decapod govern watcher run` | audit trail |
+| knowledge | implemented | REAL | `embedded/plugins/KNOWLEDGE.md` | both | writes | `decapod data knowledge search` | provenance check |
+| teammate | implemented | REAL | `embedded/plugins/TEAMMATE.md` | both | writes | `decapod data teammate schema` | user preference persistence |
+| archive | implemented | REAL | `embedded/plugins/ARCHIVE.md` | both | writes | `decapod data archive verify` | hash matching |
+| feedback | implemented | REAL | `embedded/plugins/FEEDBACK.md` | both | writes | `decapod govern feedback propose` | non-binding isolation |
+| trust | implemented | DEPRECATED | `embedded/plugins/TRUST.md` | both | reads | `decapod govern health autonomy` | merged into health |
+| context | implemented | REAL | `embedded/plugins/CONTEXT.md` | both | writes | `decapod data context audit` | budget gating |
+| heartbeat | implemented | DEPRECATED | `embedded/plugins/HEARTBEAT.md` | both | reads | `decapod govern health summary` | merged into health |
 | docs | implemented | REAL | `embedded/plugins/DOCS.md` | N/A | reads | `decapod docs list` | embedded assets |
 | db_broker | planned | SPEC | `embedded/plugins/DB_BROKER.md` | both | both | (not yet enforced) | planned: "no sqlite opens outside broker" |
 

@@ -17,7 +17,7 @@ This document defines the verification subsystem for Decapod: proof-plan replay 
 - Scope: Current repo state
 - Frequency: On-demand, pre-commit, CI
 
-**Verification (`decapod verify`):** Completed work is still true OVER TIME.
+**Verification (`decapod qa verify`):** Completed work is still true OVER TIME.
 - Checks: Proof-plan replay, artifact drift detection, claim staleness
 - Scope: Historical completed work (TODOs, claims, decisions)
 - Frequency: Periodic (daily/weekly), on-demand, post-deploy
@@ -90,7 +90,7 @@ verification_artifacts: JSON (captured at completion time)
 4. Store in `verification_artifacts`
 5. Set `last_verified_at` = now, `last_verified_status` = pass
 
-**On verification** (`decapod verify todo <id>`):
+**On verification** (`decapod qa verify todo <id>`):
 1. Re-execute each proof in `proof_plan`
 2. Compare results against `verification_artifacts.proof_plan_results`
 3. Check file artifacts for drift (hash mismatch, missing files)
@@ -116,22 +116,22 @@ Stale TODOs are flagged but do not fail verification (warning only).
 
 ```bash
 # Verify all due items (stale or never verified)
-decapod verify
+decapod qa verify
 
 # Verify specific TODO
-decapod verify todo <id>
+decapod qa verify todo <id>
 
 # List items due for re-verification
-decapod verify --stale
+decapod qa verify --stale
 
 # Machine-readable output for CI
-decapod verify --json
+decapod qa verify --json
 
 # Force verification even if not stale
-decapod verify --force
+decapod qa verify --force
 
 # Show verification history for TODO
-decapod verify todo <id> --history
+decapod qa verify todo <id> --history
 ```
 
 ### 6. Output Format
@@ -214,11 +214,11 @@ No separate verification.db (keep it integrated).
 ### 9. Governance
 
 **Who can mark as verified?**
-- Automated: `decapod verify` (re-runs proofs)
-- Manual: `decapod verify todo <id> --manual --notes "<reason>"` (with audit trail)
+- Automated: `decapod qa verify` (re-runs proofs)
+- Manual: `decapod qa verify todo <id> --manual --notes "<reason>"` (with audit trail)
 
 **Who can waive verification failures?**
-- `decapod verify todo <id> --waive --reason "<text>"` (sets status=pass despite failures, logged)
+- `decapod qa verify todo <id> --waive --reason "<text>"` (sets status=pass despite failures, logged)
 
 **Audit trail:**
 - All verification runs logged to `verification_events.jsonl`
@@ -253,7 +253,7 @@ Each gate is a string in format `type:details` or just `type` for known gates.
 **Verification fails:**
 - TODO `last_verified_status` = fail
 - Output shows which proofs/artifacts failed
-- Human reviews, fixes issues, re-runs `decapod verify todo <id>`
+- Human reviews, fixes issues, re-runs `decapod qa verify todo <id>`
 
 **Verification blocked (missing artifacts):**
 - If `verification_artifacts` is NULL/empty, verification cannot run

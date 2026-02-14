@@ -7,5 +7,5 @@
 This document defines the knowledge subsystem.
 
 ## CLI Surface
-- `decapod knowledge ...`
+- `decapod data knowledge ...`
 
