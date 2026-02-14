@@ -364,6 +364,6 @@ Registries (plugin names, constitution paths, tool names) must protect against s
 ## Links
 
 - `specs/SECURITY.md` - Security doctrine (binding)
-- `methodology/ARCHITECTURE.md` - CTO-level architecture
+- `methodology/ARCHITECTURE.md` - binding architecture
 - `architecture/WEB.md` - Web security
 - `architecture/CLOUD.md` - Cloud security

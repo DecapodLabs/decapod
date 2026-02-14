@@ -348,7 +348,7 @@
 
 ## Links
 
-- `methodology/ARCHITECTURE.md` - CTO-level architecture doctrine
+- `methodology/ARCHITECTURE.md` - binding architecture doctrine
 - `architecture/MEMORY.md` - Memory and cache efficiency
 - `architecture/CONCURRENCY.md` - Parallel algorithms
 - `architecture/PERFORMANCE.md` - Performance optimization

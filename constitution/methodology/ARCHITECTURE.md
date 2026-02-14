@@ -1,16 +1,16 @@
-# ARCHITECTURE.md - Chief Technology Officer's Architecture Doctrine
+# ARCHITECTURE.md - Architecture Doctrine
 
-**Authority:** binding (CTO-level architectural principles and technology strategy)
+**Authority:** binding (binding architectural principles and technology strategy)
 **Layer:** Guides
 **Binding:** No ⚠️ BUT STILL REQUIRED READING
 **Scope:** high-level technology strategy, cross-cutting concerns, and architectural governance
 **Non-goals:** implementation details (see architecture/*), project-specific designs, subsystem registries
 
-⚠️ **THIS IS THE CTO'S ARCHITECTURAL VISION. REQUIRED READING FOR ALL TECHNICAL LEADERS.** ⚠️
+⚠️ **THIS IS THE ARCHITECTURAL VISION. REQUIRED READING FOR ALL TECHNICAL LEADERS.** ⚠️
 
 This document establishes the technology strategy, architectural principles, and cross-cutting concerns that guide all technical decisions. It defines *what kind of architecture we build*, not *how to build specific systems*.
 
-Think of this as the CTO's mandate: the principles that every VP of Engineering, Principal Engineer, and Architect must uphold.
+Think of this as the Foundational mandate: the principles that every technical leaders must uphold.
 
 ---
 
@@ -43,13 +43,13 @@ Every architectural decision is evaluated against:
 
 ## 2. Cross-Cutting Technology Domains
 
-The CTO's architecture spans these critical domains. Each domain has dedicated principles and references detailed guidance in `architecture/*`.
+The Foundational architecture spans these critical domains. Each domain has dedicated principles and references detailed guidance in `architecture/*`.
 
 ### 2.1 Data Architecture (`architecture/DATA.md`)
 
 **Principle:** Data is the only thing that persists. Code is temporary; data is forever.
 
-**CTO Mandate:**
+**Required:**
 - Schema changes are migrations, not patches
 - Data ownership must be clear (single source of truth)
 - Query patterns drive storage decisions, not vice versa
@@ -70,7 +70,7 @@ The CTO's architecture spans these critical domains. Each domain has dedicated p
 
 **Principle:** Cache is a performance tool, not a consistency mechanism.
 
-**CTO Mandate:**
+**Required:**
 - Cache invalidation is harder than caching; design for it first
 - Never cache what you can't afford to lose
 - Monitor cache hit rates; low hit rate = cache smell
@@ -91,7 +91,7 @@ The CTO's architecture spans these critical domains. Each domain has dedicated p
 
 **Principle:** Memory is fast, finite, and fragile. Use it deliberately.
 
-**CTO Mandate:**
+**Required:**
 - Understand memory hierarchy (L1/L2/L3/DRAM/disk)
 - Memory leaks are architecture failures, not bugs
 - Large heap = GC pressure = latency spikes
@@ -112,7 +112,7 @@ The CTO's architecture spans these critical domains. Each domain has dedicated p
 
 **Principle:** The web is stateless by default; state must be explicit.
 
-**CTO Mandate:**
+**Required:**
 - REST is a convention, not a religion; use the right pattern for the job
 - HTTP/2 and HTTP/3 are the baseline; HTTP/1.1 is legacy
 - Stateless services scale horizontally; stateful services scale vertically
@@ -133,7 +133,7 @@ The CTO's architecture spans these critical domains. Each domain has dedicated p
 
 **Principle:** Cloud is a capability multiplier, not a complexity generator.
 
-**CTO Mandate:**
+**Required:**
 - Design for failure: every component will fail eventually
 - Multi-region is for availability, not performance
 - Serverless is for event-driven, not everything-driven
@@ -154,7 +154,7 @@ The CTO's architecture spans these critical domains. Each domain has dedicated p
 
 **Principle:** Frontend is the user experience; performance is the experience.
 
-**CTO Mandate:**
+**Required:**
 - Core Web Vitals are engineering requirements, not marketing metrics
 - Bundle size budgets are architecture constraints
 - Hydration is expensive; consider server components
@@ -175,7 +175,7 @@ The CTO's architecture spans these critical domains. Each domain has dedicated p
 
 **Principle:** The right algorithm makes impossible possible; the wrong one makes simple complex.
 
-**CTO Mandate:**
+**Required:**
 - Big-O is the start, not the end; constants matter in practice
 - Algorithm choice is an architecture decision, not an implementation detail
 - NP-hard problems need approximation, not brute force
@@ -196,7 +196,7 @@ The CTO's architecture spans these critical domains. Each domain has dedicated p
 
 **Principle:** Security is not a feature; it's a property of the system.
 
-**CTO Mandate:**
+**Required:**
 - Defense in depth: no single point of security failure
 - Principle of least privilege at every layer
 - Secrets don't belong in code, configs, or logs
@@ -217,7 +217,7 @@ The CTO's architecture spans these critical domains. Each domain has dedicated p
 
 **Principle:** You can't operate what you can't observe.
 
-**CTO Mandate:**
+**Required:**
 - Metrics for dashboards, logs for debugging, traces for understanding
 - Alert on symptoms, not causes (but log causes for investigation)
 - Structured logging is required; string parsing is prohibited
@@ -238,7 +238,7 @@ The CTO's architecture spans these critical domains. Each domain has dedicated p
 
 **Principle:** Concurrency is hard; parallelism is harder. Choose the right model.
 
-**CTO Mandate:**
+**Required:**
 - Shared memory is fast but dangerous; message passing is slower but safer
 - Actor model for distributed state; CSP for coordination
 - Async/await is not free; understand the runtime cost
@@ -259,7 +259,7 @@ The CTO's architecture spans these critical domains. Each domain has dedicated p
 
 ### 3.1 Architecture Review Board (ARB)
 
-**When to escalate to CTO/ARB level:**
+**When to escalate to Architecture Review Board level:**
 - Cross-domain architectural changes
 - Technology stack changes
 - Breaking API changes
@@ -281,7 +281,7 @@ The CTO's architecture spans these critical domains. Each domain has dedicated p
 - **Assess:** Interesting, evaluate in POCs
 - **Hold:** Problematic, avoid for new work
 
-**CTO maintains the radar; architects advocate for movements.**
+**Leadership maintains the radar; architects advocate for movements.**
 
 ### 3.3 Architecture Decision Records (ADRs)
 
@@ -391,7 +391,7 @@ Architecture drifts when:
 
 ---
 
-## 7. CTO's Architectural Principles (The Immutable)
+## 7. Foundational Architectural Principles (The Immutable)
 
 1. **Simplicity over cleverness.** If you can't explain it to a junior engineer, it's too complex.
 
