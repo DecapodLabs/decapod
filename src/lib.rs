@@ -143,7 +143,7 @@ struct InitGroupCli {
 
 #[derive(Subcommand, Debug)]
 enum InitCommand {
-    /// Remove all Decapod-related files from the current repository.
+    /// Remove all Decapod files from repository
     Clean {
         /// Directory to clean (defaults to current working directory).
         #[clap(short, long)]
@@ -159,7 +159,7 @@ struct SetupCli {
 
 #[derive(Subcommand, Debug)]
 enum SetupCommand {
-    /// Install git hooks for commit message validation
+    /// Git hooks for commit validation
     Hook {
         /// Install commit-msg hook for conventional commits
         #[clap(long, default_value = "true")]
@@ -181,15 +181,19 @@ struct GovernCli {
 
 #[derive(Subcommand, Debug)]
 enum GovernCommand {
-    /// Evaluate risk classification and policy approvals
+    /// Risk classification and approvals
     Policy(policy::PolicyCli),
-    /// Manage the Health Engine (claims, proofs, system summary, agent autonomy)
+
+    /// Claims, proofs, and system health
     Health(health::HealthCli),
-    /// Run configurable proofs with audit trail
+
+    /// Execute verification proofs
     Proof(ProofCommandCli),
-    /// Execute read-only watchlist checks
+
+    /// Run integrity watchlist checks
     Watcher(WatcherCli),
-    /// Manage operator feedback and preference refinement
+
+    /// Operator feedback and preferences
     Feedback(FeedbackCli),
 }
 
@@ -201,19 +205,25 @@ struct DataCli {
 
 #[derive(Subcommand, Debug)]
 enum DataCommand {
-    /// Manage session archives (MOVE-not-TRIM)
+    /// Session archives (MOVE-not-TRIM)
     Archive(ArchiveCli),
-    /// Manage repository knowledge
+
+    /// Repository knowledge base
     Knowledge(KnowledgeCli),
-    /// Manage agent context budgets and archival
+
+    /// Token budgets and context packing
     Context(ContextCli),
-    /// Discover schemas for all subsystems
+
+    /// Subsystem schemas and discovery
     Schema(SchemaCli),
-    /// Output a deterministic repository map
+
+    /// Repository structure and dependencies
     Repo(RepoCli),
-    /// Manage brokered state access (The Thin Waist)
+
+    /// Audit log access (The Thin Waist)
     Broker(BrokerCli),
-    /// Manage teammate preferences and remembered behaviors
+
+    /// Teammate preferences and patterns
     Teammate(teammate::TeammateCli),
 }
 
@@ -225,9 +235,10 @@ struct AutoCli {
 
 #[derive(Subcommand, Debug)]
 enum AutoCommand {
-    /// Manage cron jobs
+    /// Scheduled tasks (time-based)
     Cron(cron::CronCli),
-    /// Manage automated responses (reflexes)
+
+    /// Event-driven automation
     Reflex(reflex::ReflexCli),
 }
 
@@ -239,9 +250,10 @@ struct QaCli {
 
 #[derive(Subcommand, Debug)]
 enum QaCommand {
-    /// Run an end-to-end usability verification (simulates fresh install)
+    /// End-to-end system verification
     Verify,
-    /// Run CI checks (crate description, etc.)
+
+    /// CI validation checks
     Check {
         /// Check crate description matches expected
         #[clap(long)]
@@ -256,23 +268,40 @@ enum QaCommand {
 
 #[derive(Subcommand, Debug)]
 enum Command {
-    /// Initialize the Decapod system (user store + project entrypoints)
+    /// Bootstrap system and manage lifecycle
+    #[clap(name = "init", visible_alias = "i")]
     Init(InitGroupCli),
-    /// Configure repository settings (git hooks, etc.)
+
+    /// Configure repository (hooks, settings)
+    #[clap(name = "setup")]
     Setup(SetupCli),
-    /// Access embedded Decapod methodology documentation
+
+    /// Access methodology documentation
+    #[clap(name = "docs", visible_alias = "d")]
     Docs(docs_cli::DocsCli),
-    /// Manage TODO tasks (repo dogfooding + end-user tasks)
+
+    /// Track tasks and work items
+    #[clap(name = "todo", visible_alias = "t")]
     Todo(todo::TodoCli),
-    /// Validate the Decapod methodology against the documentation
+
+    /// Validate methodology compliance
+    #[clap(name = "validate", visible_alias = "v")]
     Validate(ValidateCli),
-    /// Governance & safety (policy, health, proofs, watcher, feedback)
+
+    /// Governance: policy, health, proofs, audits
+    #[clap(name = "govern", visible_alias = "g")]
     Govern(GovernCli),
-    /// Data management (archive, knowledge, context, schema, repo, broker, teammate)
+
+    /// Data: archives, knowledge, context, schemas
+    #[clap(name = "data")]
     Data(DataCli),
-    /// Automation (cron, reflex)
+
+    /// Automation: scheduled and event-driven
+    #[clap(name = "auto", visible_alias = "a")]
     Auto(AutoCli),
-    /// Quality assurance (verify, check)
+
+    /// Quality assurance: verification and checks
+    #[clap(name = "qa", visible_alias = "q")]
     Qa(QaCli),
 }
 
