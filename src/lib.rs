@@ -507,7 +507,6 @@ fn clean_project(dir: Option<PathBuf>) -> Result<(), error::DecapodError> {
         "AGENTS.md",
         "CLAUDE.md",
         "GEMINI.md",
-        "CODEX.md",
         "OPENCODE.md",
     ] {
         let path = target_dir.join(file);
@@ -639,7 +638,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                 "AGENTS.md",
                 "CLAUDE.md",
                 "GEMINI.md",
-                "CODEX.md",
                 "OPENCODE.md",
             ] {
                 if target_dir.join(file).exists() {
