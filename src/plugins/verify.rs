@@ -624,7 +624,10 @@ pub fn run_verify_cli(
     repo_root: &Path,
     cli: VerifyCli,
 ) -> Result<(), error::DecapodError> {
-    let single_id = cli.command.as_ref().map(|VerifyCommand::Todo { id }| id.as_str());
+    let single_id = cli
+        .command
+        .as_ref()
+        .map(|VerifyCommand::Todo { id }| id.as_str());
 
     let targets = load_targets(store, single_id)?;
     if single_id.is_some() && targets.is_empty() {

@@ -82,7 +82,8 @@ pub fn get_status(store: &Store) -> Result<HeartbeatStatus, error::DecapodError>
     let mut alerts = Vec::new();
     if watcher_stale {
         alerts.push(
-            "Watcher has not run recently (> 10 minutes). Run: decapod watcher run".to_string(),
+            "Watcher has not run recently (> 10 minutes). Run: decapod govern watcher run"
+                .to_string(),
         );
     }
     if health_summary.get("CONTRADICTED").unwrap_or(&0) > &0 {
