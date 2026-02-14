@@ -235,7 +235,7 @@ When cache expires, multiple requests hit DB simultaneously.
 
 ## Links
 
-- `methodology/ARCHITECTURE.md` - CTO-level architecture doctrine
+- `methodology/ARCHITECTURE.md` - binding architecture doctrine
 - `architecture/DATA.md` - Data architecture
 - `architecture/MEMORY.md` - Memory management
 - `architecture/CONCURRENCY.md` - Concurrent cache access
