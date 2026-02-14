@@ -37,6 +37,27 @@ pub struct ScaffoldOptions {
     pub all: bool,
 }
 
+/// Ensure a given entry exists in the project's .gitignore file.
+/// Creates the file if it doesn't exist. Appends the entry if not already present.
+fn ensure_gitignore_entry(target_dir: &Path, entry: &str) -> Result<(), error::DecapodError> {
+    let gitignore_path = target_dir.join(".gitignore");
+    let content = fs::read_to_string(&gitignore_path).unwrap_or_default();
+
+    // Check if the entry already exists (exact line match)
+    if content.lines().any(|line| line.trim() == entry) {
+        return Ok(());
+    }
+
+    let mut new_content = content;
+    if !new_content.is_empty() && !new_content.ends_with('\n') {
+        new_content.push('\n');
+    }
+    new_content.push_str(entry);
+    new_content.push('\n');
+    fs::write(&gitignore_path, new_content).map_err(error::DecapodError::IoError)?;
+    Ok(())
+}
+
 fn ensure_parent(path: &Path) -> Result<(), error::DecapodError> {
     if let Some(p) = path.parent() {
         fs::create_dir_all(p).map_err(error::DecapodError::IoError)?;
@@ -109,6 +130,11 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
 
     // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
     fs::create_dir_all(opts.target_dir.join(data_dir_rel)).map_err(error::DecapodError::IoError)?;
+
+    // Ensure .decapod/data is in .gitignore (sqlite databases should not be version controlled)
+    if !opts.dry_run {
+        ensure_gitignore_entry(&opts.target_dir, ".decapod/data")?;
+    }
 
     // Determine which agent files to generate
     // If --all flag is set, force generate all five regardless of existing state

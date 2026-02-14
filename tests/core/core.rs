@@ -15,7 +15,7 @@ use tempfile::tempdir;
 #[test]
 fn assets_docs_and_templates_resolve() {
     let docs = assets::list_docs();
-    assert!(docs.contains(&"embedded/core/DECAPOD.md".to_string()));
+    assert!(docs.contains(&"core/DECAPOD.md".to_string()));
 
     for doc in docs {
         let content = assets::get_doc(&doc).expect("listed doc should be readable");
@@ -35,7 +35,7 @@ fn assets_docs_and_templates_resolve() {
         assert!(!content.trim().is_empty());
     }
 
-    assert!(assets::get_doc("embedded/core/DOES_NOT_EXIST.md").is_none());
+    assert!(assets::get_doc("core/DOES_NOT_EXIST.md").is_none());
     assert!(assets::get_template("plugins/DOES_NOT_EXIST.md").is_none());
 }
 

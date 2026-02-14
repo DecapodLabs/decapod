@@ -61,8 +61,8 @@ This repo may customize behavior via `.decapod/OVERRIDE.md`. Run `decapod docs s
 
 ## Links
 
-- `embedded/core/DECAPOD.md` — **Router (start here)**
-- `embedded/core/CONTROL_PLANE.md` — Sequencing patterns
-- `embedded/specs/INTENT.md` — Authority contracts
-- `embedded/specs/ARCHITECTURE.md` — System boundaries
-- `embedded/core/PLUGINS.md` — Subsystem registry
+- `core/DECAPOD.md` — **Router (start here)**
+- `core/CONTROL_PLANE.md` — Sequencing patterns
+- `specs/INTENT.md` — Authority contracts
+- `specs/ARCHITECTURE.md` — System boundaries
+- `core/PLUGINS.md` — Subsystem registry
