@@ -1279,9 +1279,55 @@ fn run_check(crate_description: bool, all: bool) -> Result<(), error::DecapodErr
 }
 
 fn run_self_update(project_root: &Path) -> Result<(), error::DecapodError> {
+    use colored::Colorize;
     use std::process::Command;
 
-    println!("Updating decapod binary from current directory...");
+    let current_version = migration::DECAPOD_VERSION;
+    let repo_version = read_cargo_version(project_root)?;
+
+    // Compare versions
+    match compare_versions(current_version, &repo_version) {
+        std::cmp::Ordering::Equal => {
+            println!(
+                "{} Already at version {} (repo matches binary)",
+                "✓".bright_green(),
+                current_version.bright_green()
+            );
+            return Ok(());
+        }
+        std::cmp::Ordering::Greater => {
+            println!(
+                "{} Binary ({}) is newer than repo version ({})",
+                "⚠".bright_yellow(),
+                current_version.bright_green(),
+                repo_version.bright_yellow()
+            );
+            println!(
+                "  {} This would be a {}. Use {} to force.",
+                "▸".bright_cyan(),
+                "DOWNGRADE".bright_red().bold(),
+                "--force".bright_cyan()
+            );
+            println!();
+            println!(
+                "  Consider pulling latest changes: {} or {}",
+                "git pull".bright_cyan(),
+                "cargo install decapod".bright_cyan()
+            );
+            return Err(error::DecapodError::ValidationError(
+                "Update would downgrade - use --force to override".into(),
+            ));
+        }
+        std::cmp::Ordering::Less => {
+            println!(
+                "{} Updating from {} → {}",
+                "▸".bright_cyan(),
+                current_version.bright_yellow(),
+                repo_version.bright_green()
+            );
+        }
+    }
+
     println!("Running: cargo install --path . --locked");
     println!();
 
@@ -1308,6 +1354,30 @@ fn run_self_update(project_root: &Path) -> Result<(), error::DecapodError> {
     }
 
     Ok(())
+}
+
+/// Read version from Cargo.toml in project root
+fn read_cargo_version(project_root: &Path) -> Result<String, error::DecapodError> {
+    let cargo_toml = project_root.join("Cargo.toml");
+    let content =
+        std::fs::read_to_string(&cargo_toml).map_err(|e| error::DecapodError::IoError(e))?;
+
+    // Simple parsing - find line starting with "version = "
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("version = ") {
+            // Extract version between quotes
+            if let Some(start) = trimmed.find('"') {
+                if let Some(end) = trimmed[start + 1..].find('"') {
+                    return Ok(trimmed[start + 1..start + 1 + end].to_string());
+                }
+            }
+        }
+    }
+
+    Err(error::DecapodError::ValidationError(
+        "Could not parse version from Cargo.toml".into(),
+    ))
 }
 
 /// Show version information and compare with repo version

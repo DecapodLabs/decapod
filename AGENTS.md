@@ -4,13 +4,22 @@
 
 ## Required Protocol
 
-If `decapod docs show core/DECAPOD.md` works, this repo is Decapod-managed:
+**⚠️ MANDATORY START SEQUENCE - Run these EVERY session before ANY work:**
 
-1. **Read the router**: `decapod docs show core/DECAPOD.md`
-2. **Check system state**: `decapod validate`
-3. **See active work**: `decapod todo list`
-4. **Use the control plane**: All shared state goes through `decapod` commands (never bypass)
-5. **Proof gates matter**: Run `decapod validate` before claiming "verified" or "compliant"
+```bash
+decapod --version                   # 1. Check installed version
+decapod --help                      # 2. Verify available commands
+decapod docs show core/DECAPOD.md  # 3. Refresh constitution
+decapod validate                    # 4. Check system state
+decapod todo list                   # 5. See active work
+```
+
+**Why this is mandatory:** The decapod binary evolves. Commands change. Constitution updates. You MUST verify what's available and refresh your understanding before acting. Skipping this causes errors.
+
+**After the start sequence:**
+
+1. **Use the control plane**: All shared state goes through `decapod` commands (never bypass)
+2. **Proof gates matter**: Run `decapod validate` before claiming "verified" or "compliant"
 
 If the router is missing or `decapod` command doesn't exist, **stop and ask the human for the entrypoint.**
 
