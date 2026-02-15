@@ -32,6 +32,7 @@ dev/
 .decapod/data
 .decapod/.stfolder
 .decapod/generated/decapod.sync-conflict-20260212-224557-Y75YA6D.version
+.decapod/generated/decapod.version
 
 # --- Environment & Secrets ---
 .env
