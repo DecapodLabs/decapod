@@ -1013,7 +1013,7 @@ fn create_decision_federation_node(
 
 // --- Core operations ---
 
-fn start_session(
+pub fn start_session(
     store: &Store,
     tree_id: &str,
     title: &str,
@@ -1066,7 +1066,7 @@ fn start_session(
     Ok(session)
 }
 
-fn record_decision(
+pub fn record_decision(
     store: &Store,
     session_id: &str,
     question_id: &str,
