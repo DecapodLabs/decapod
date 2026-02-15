@@ -1393,7 +1393,10 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     })?;
 
     // Create federation node for intent→change→proof chain
-    let store = Store::new(root, crate::core::store::StoreKind::Repo);
+    let store = Store {
+        kind: crate::core::store::StoreKind::Repo,
+        root: root.clone(),
+    };
     let _ = federation::add_node(
         &store,
         &format!("Task: {}", title),
