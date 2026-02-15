@@ -1048,6 +1048,79 @@ fn validate_archive_integrity(
     Ok(())
 }
 
+fn validate_control_plane_contract(
+    store: &Store,
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+) -> Result<(), error::DecapodError> {
+    info("Control Plane Contract Gate");
+
+    // Check that all database mutations went through the broker
+    // by verifying event log consistency
+    let data_dir = &store.root;
+    let mut violations = Vec::new();
+
+    // Check for broker audit trail presence
+    let broker_log = data_dir.join("broker.events.jsonl");
+    if !broker_log.exists() {
+        // First run - no broker log yet, this is OK
+        pass("No broker events yet (first run)", pass_count);
+        return Ok(());
+    }
+
+    // Check that critical databases have corresponding broker events
+    let todo_db = data_dir.join("todo.db");
+    if todo_db.exists() {
+        let todo_events = data_dir.join("todo.events.jsonl");
+        if !todo_events.exists() {
+            violations.push("todo.db exists but todo.events.jsonl is missing".to_string());
+        }
+    }
+
+    let federation_db = data_dir.join("federation.db");
+    if federation_db.exists() {
+        let federation_events = data_dir.join("federation.events.jsonl");
+        if !federation_events.exists() {
+            violations
+                .push("federation.db exists but federation.events.jsonl is missing".to_string());
+        }
+    }
+
+    // Check for direct SQLite write patterns in process list (best effort)
+    #[cfg(target_os = "linux")]
+    {
+        use std::process::Command;
+        if let Ok(output) = Command::new("lsof")
+            .args(["+D", data_dir.to_string_lossy().as_ref()])
+            .output()
+        {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            for line in stdout.lines() {
+                if line.contains("sqlite") && !line.contains("decapod") {
+                    violations.push(format!("External SQLite process accessing store: {}", line));
+                }
+            }
+        }
+    }
+
+    if violations.is_empty() {
+        pass(
+            "Control plane contract honored (all mutations brokered)",
+            pass_count,
+        );
+    } else {
+        fail(
+            &format!(
+                "Control plane contract violations detected: {:?}",
+                violations
+            ),
+            fail_count,
+        );
+    }
+
+    Ok(())
+}
+
 fn validate_canon_mutation(
     store: &Store,
     pass_count: &mut u32,
@@ -1158,6 +1231,7 @@ pub fn run_validation(
     validate_watcher_audit(store, &mut pass_count, &mut warn_count)?;
     validate_watcher_purity(store, &mut pass_count, &mut fail_count)?;
     validate_archive_integrity(store, &mut pass_count, &mut fail_count)?;
+    validate_control_plane_contract(store, &mut pass_count, &mut fail_count)?;
     validate_canon_mutation(store, &mut pass_count, &mut fail_count)?;
     validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
 

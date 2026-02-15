@@ -136,6 +136,7 @@ pub enum AutonomyTier {
     Basic,    // Confirm all operations
     Verified, // Auto-reversible operations
     Core,     // Full autonomy with trusted operations
+
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -96,6 +96,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'DecapodLabs/decapod'
     environment: release
+    concurrency:
+      group: release-publish
+      cancel-in-progress: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -115,10 +118,36 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
-      - name: Run release-plz
-        uses: release-plz/action@v0.5
-        with:
-          command: release
+      - name: Install release-plz
+        shell: bash
+        run: |
+          cargo install release-plz --version 0.3.155 --locked
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Run release-plz (handle crates.io rate limit)
+        shell: bash
+        run: |
+          set -o pipefail
+          set +e
+          OUTPUT="$($HOME/.cargo/bin/release-plz release \
+            --config .github/release.toml \
+            --forge github \
+            --git-token "${GITHUB_TOKEN}" 2>&1)"
+          STATUS=$?
+          set -e
+
+          printf '%s\n' "$OUTPUT"
+
+          if [ "$STATUS" -eq 0 ]; then
+            exit 0
+          fi
+
+          if printf '%s\n' "$OUTPUT" | grep -Eiq "429 Too Many Requests|published too many versions of this crate in the last 24 hours"; then
+            echo "::warning::crates.io publish rate limit hit (429). Skipping failure; rerun after cooldown."
+            exit 0
+          fi
+
+          exit "$STATUS"
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}

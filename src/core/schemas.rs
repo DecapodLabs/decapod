@@ -47,7 +47,7 @@ pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
 /// TODO database schema version
 ///
 /// Used for migration tracking in the `meta` table
-pub const TODO_SCHEMA_VERSION: u32 = 10;
+pub const TODO_SCHEMA_VERSION: u32 = 11;
 
 /// TODO metadata table schema
 ///
@@ -174,6 +174,36 @@ pub const TODO_DB_SCHEMA_AGENT_PRESENCE: &str = "
 
 pub const TODO_DB_SCHEMA_INDEX_AGENT_PRESENCE_LAST_SEEN: &str =
     "CREATE INDEX IF NOT EXISTS idx_agent_presence_last_seen ON agent_presence(last_seen)";
+
+/// Agent trust tiers table schema.
+/// Trust levels: untrusted, basic, verified, core
+pub const TODO_DB_SCHEMA_AGENT_TRUST: &str = "
+    CREATE TABLE IF NOT EXISTS agent_trust (
+        agent_id TEXT PRIMARY KEY,
+        trust_level TEXT NOT NULL DEFAULT 'basic',
+        granted_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        granted_by TEXT NOT NULL DEFAULT 'system'
+    )
+";
+
+pub const TODO_DB_SCHEMA_INDEX_AGENT_TRUST_LEVEL: &str =
+    "CREATE INDEX IF NOT EXISTS idx_agent_trust_level ON agent_trust(trust_level)";
+
+/// Risk zones table schema for operational boundaries
+pub const TODO_DB_SCHEMA_RISK_ZONES: &str = "
+    CREATE TABLE IF NOT EXISTS risk_zones (
+        id TEXT PRIMARY KEY,
+        zone_name TEXT NOT NULL UNIQUE,
+        description TEXT DEFAULT '',
+        required_trust_level TEXT NOT NULL DEFAULT 'basic',
+        requires_approval BOOLEAN NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL
+    )
+";
+
+pub const TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME: &str =
+    "CREATE INDEX IF NOT EXISTS idx_risk_zones_name ON risk_zones(zone_name)";
 
 /// Task ownership table for multiple owners support
 pub const TODO_DB_SCHEMA_TASK_OWNERS: &str = "
