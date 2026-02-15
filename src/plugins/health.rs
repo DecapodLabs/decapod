@@ -137,7 +137,6 @@ pub enum AutonomyTier {
     Basic,    // Confirm all operations
     Verified, // Auto-reversible operations
     Core,     // Full autonomy with trusted operations
-
 }
 
 impl fmt::Display for AutonomyTier {
