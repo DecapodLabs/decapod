@@ -561,7 +561,10 @@ fn validate_entrypoint_invariants(
             );
         } else {
             fail(
-                &format!("{} missing version update step (`decapod update`)", agent_file),
+                &format!(
+                    "{} missing version update step (`decapod update`)",
+                    agent_file
+                ),
                 fail_count,
             );
             all_present = false;
