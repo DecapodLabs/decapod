@@ -751,7 +751,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                             "archive.db" => archive::initialize_archive_db(&setup_store_root)?,
                             "feedback.db" => feedback::initialize_feedback_db(&setup_store_root)?,
                             "teammate.db" => teammate::initialize_teammate_db(&setup_store_root)?,
-                            "federation.db" => federation::initialize_federation_db(&setup_store_root)?,
+                            "federation.db" => {
+                                federation::initialize_federation_db(&setup_store_root)?
+                            }
                             _ => unreachable!(),
                         }
                         println!("    {} {}", "●".bright_green(), db_name.bright_white());
