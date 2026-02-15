@@ -3,89 +3,35 @@
 **Authority:** interface (machine-readable contracts and invariants)
 **Layer:** Interfaces
 **Binding:** Yes
-**Scope:** all binding interface contracts for the Decapod system
-**Non-goals:** methodology guidance, system architecture, subsystem tutorials
+**Scope:** canonical index of binding interfaces
+**Non-goals:** methodology guidance or subsystem tutorials
 
-This document indexes all interface contracts in the `interfaces/` directory. Interface contracts define machine surfaces, schemas, invariants, and safety gates.
-
----
-
-## 1. What Are Interfaces
-
-Interfaces in Decapod are binding contracts that:
-- Define CLI surfaces and JSON envelopes
-- Specify store semantics and mutation rules
-- Declare invariants and proof gates
-- Establish normative term definitions
+This registry defines the canonical binding interface surfaces.
 
 ---
 
-## 2. Interface Contracts (Registry)
+## 1. Interface Contracts
 
 | Document | Purpose | Binding |
 |----------|---------|---------|
 | `interfaces/CLAIMS.md` | Promises ledger with proof surfaces | Yes |
-| `interfaces/CONTROL_PLANE.md` | Agent sequencing and interoperability patterns | Yes |
-| `interfaces/DOC_RULES.md` | Doc compilation rules and graph semantics | Yes |
+| `interfaces/CONTROL_PLANE.md` | Agent sequencing and interoperability | Yes |
+| `interfaces/DOC_RULES.md` | Doc compilation and graph semantics | Yes |
 | `interfaces/GLOSSARY.md` | Normative term definitions | Yes |
 | `interfaces/STORE_MODEL.md` | Store semantics and purity model | Yes |
+| `interfaces/TESTING.md` | Verification and proof claim contract | Yes |
+| `interfaces/KNOWLEDGE_SCHEMA.md` | Knowledge schema + invariants | Yes |
+| `interfaces/MEMORY_SCHEMA.md` | Memory schema + retrieval-event contract | Yes |
+| `interfaces/DEMANDS_SCHEMA.md` | User-demand schema + precedence rules | Yes |
 
 ---
 
-## 3. Document Purposes
+## 2. Decision Rights (Routing)
 
-### CLAIMS.md
-Registry of all system guarantees and invariants with:
-- Stable claim IDs
-- Proof surfaces that enforce them
-- Enforcement status (enforced/partially_enforced/not_enforced)
-
-### CONTROL_PLANE.md
-Sequencing patterns for agent interaction:
-- Standard change sequence
-- Store selection rules
-- Concurrency patterns
-- Validate doctrine
-
-### DOC_RULES.md
-Machine interface for documentation:
-- Canonical header requirements
-- Layer definitions (Constitution/Interfaces/Guides)
-- Links graph contract
-- Truth labels (REAL/STUB/SPEC/IDEA/DEPRECATED)
-
-### GLOSSARY.md
-Normative definitions for loaded terms:
-- Binding term definitions
-- Cross-document consistency requirements
-- Authority routing terms
-
-### STORE_MODEL.md
-State root semantics:
-- User store (`~/.decapod`) vs repo store (`<repo>/.decapod/project`)
-- Cross-store contamination prevention
-- Asset protection and threat model
-
----
-
-## 4. Decision Rights Matrix
-
-| Decision Type | Owner Document |
-|---------------|----------------|
-| Promises and invariants registry | `interfaces/CLAIMS.md` |
-| Sequencing and concurrency patterns | `interfaces/CONTROL_PLANE.md` |
-| Doc compilation and validation | `interfaces/DOC_RULES.md` |
-| Term definitions | `interfaces/GLOSSARY.md` |
-| Store semantics | `interfaces/STORE_MODEL.md` |
-
----
-
-## 5. Relationship to Other Layers
-
-- **specs/**: System-level contracts (SYSTEM.md, AMENDMENTS.md, etc.)
-- **methodology/**: How-to guides and practice documents
-- **plugins/**: Subsystem-specific documentation
-- **core/**: Routing and coordination documents
+- Proof claims and testing obligations: `interfaces/TESTING.md`
+- Knowledge structure and validation: `interfaces/KNOWLEDGE_SCHEMA.md`
+- Memory structure and retrieval-event semantics: `interfaces/MEMORY_SCHEMA.md`
+- User demand typing and precedence: `interfaces/DEMANDS_SCHEMA.md`
 
 ---
 
@@ -94,9 +40,6 @@ State root semantics:
 - `core/DECAPOD.md` - Router and navigation charter
 - `core/METHODOLOGY.md` - Methodology guides registry
 - `core/PLUGINS.md` - Subsystem registry
-- `core/GAPS.md` - Gap analysis methodology
-- `specs/SYSTEM.md` - System definition
-- `specs/INTENT.md` - Intent contract
 - `interfaces/CLAIMS.md` - Promises ledger
 - `interfaces/CONTROL_PLANE.md` - Sequencing patterns
 - `interfaces/DOC_RULES.md` - Doc compilation rules
