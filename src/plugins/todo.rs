@@ -7,7 +7,7 @@ use crate::plugins::teammate;
 use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, Result as SqlResult, types::ToSql};
+use rusqlite::{types::ToSql, Connection, OptionalExtension, Result as SqlResult};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
@@ -173,6 +173,44 @@ pub enum TodoCommand {
         from: Option<String>,
         #[clap(long)]
         summary: String,
+    },
+    /// Add an additional owner to a task (supports multiple ownership).
+    AddOwner {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        agent: String,
+        /// Type of ownership claim: primary, secondary, watcher
+        #[clap(long, default_value = "secondary")]
+        claim_type: String,
+    },
+    /// Remove an owner from a task.
+    RemoveOwner {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        agent: String,
+    },
+    /// List all owners of a task.
+    ListOwners {
+        #[clap(long)]
+        id: String,
+    },
+    /// Register agent expertise level for a category.
+    RegisterExpertise {
+        #[clap(long)]
+        agent: Option<String>,
+        #[clap(long)]
+        category: String,
+        #[clap(long, default_value = "intermediate")]
+        level: String,
+    },
+    /// List agent expertise claims.
+    Expertise {
+        #[clap(long)]
+        agent: Option<String>,
+        #[clap(long)]
+        category: Option<String>,
     },
 }
 
@@ -453,6 +491,15 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     if current_version < 9 {
         conn.execute(schemas::TODO_DB_SCHEMA_AGENT_PRESENCE, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_PRESENCE_LAST_SEEN, [])?;
+    }
+
+    if current_version < 10 {
+        // Multiple owners support
+        conn.execute(schemas::TODO_DB_SCHEMA_TASK_OWNERS, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK, [])?;
+        // Agent expertise support
+        conn.execute(schemas::TODO_DB_SCHEMA_AGENT_EXPERTISE, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_EXPERTISE_AGENT, [])?;
     }
 
     conn.execute(
@@ -1805,6 +1852,311 @@ fn handoff_task(
     }))
 }
 
+fn add_task_owner(
+    root: &Path,
+    task_id: &str,
+    agent_id: &str,
+    claim_type: &str,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let ts = now_iso();
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    broker.with_conn(&db_path, "decapod", None, "todo.add_owner", |conn| {
+        ensure_schema(conn)?;
+
+        // Verify task exists
+        let exists: bool = conn
+            .query_row("SELECT 1 FROM tasks WHERE id = ?", [task_id], |_| Ok(true))
+            .unwrap_or(false);
+
+        if !exists {
+            return Ok(serde_json::json!({
+                "status": "not_found",
+                "message": format!("Task {} not found", task_id)
+            }));
+        }
+
+        // Check for conflict - primary owner already exists
+        if claim_type == "primary" {
+            let has_primary: bool = conn
+                .query_row(
+                    "SELECT 1 FROM task_owners WHERE task_id = ? AND claim_type = 'primary'",
+                    [task_id],
+                    |_| Ok(true),
+                )
+                .unwrap_or(false);
+
+            if has_primary {
+                return Ok(serde_json::json!({
+                    "status": "conflict",
+                    "message": "Task already has a primary owner. Use 'secondary' or resolve conflict."
+                }));
+            }
+        }
+
+        let claim_id = Ulid::new().to_string();
+
+        conn.execute(
+            "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
+             VALUES(?1, ?2, ?3, ?4, ?5)
+             ON CONFLICT(id) DO UPDATE SET
+               claim_type = excluded.claim_type,
+               claimed_at = excluded.claimed_at",
+            rusqlite::params![claim_id, task_id, agent_id, ts, claim_type],
+        )?;
+
+        // Log ownership event
+        let ev = TodoEvent {
+            ts: ts.clone(),
+            event_id: Ulid::new().to_string(),
+            event_type: "ownership.claim".to_string(),
+            task_id: Some(task_id.to_string()),
+            payload: serde_json::json!({
+                "agent_id": agent_id,
+                "claim_type": claim_type,
+                "claim_id": claim_id,
+            }),
+            actor: "decapod".to_string(),
+        };
+        append_event(root, &ev)?;
+        insert_event(conn, &ev)?;
+
+        Ok(serde_json::json!({
+            "ts": ts,
+            "cmd": "todo.add_owner",
+            "status": "ok",
+            "root": root.to_string_lossy(),
+            "task_id": task_id,
+            "agent_id": agent_id,
+            "claim_type": claim_type,
+            "claim_id": claim_id,
+        }))
+    })
+}
+
+fn remove_task_owner(
+    root: &Path,
+    task_id: &str,
+    agent_id: &str,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let ts = now_iso();
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    broker.with_conn(&db_path, "decapod", None, "todo.remove_owner", |conn| {
+        ensure_schema(conn)?;
+
+        let deleted = conn.execute(
+            "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+            rusqlite::params![task_id, agent_id],
+        )?;
+
+        if deleted == 0 {
+            return Ok(serde_json::json!({
+                "status": "not_found",
+                "message": format!("Owner {} not found for task {}", agent_id, task_id)
+            }));
+        }
+
+        // Log ownership release event
+        let ev = TodoEvent {
+            ts: ts.clone(),
+            event_id: Ulid::new().to_string(),
+            event_type: "ownership.release".to_string(),
+            task_id: Some(task_id.to_string()),
+            payload: serde_json::json!({
+                "agent_id": agent_id,
+            }),
+            actor: "decapod".to_string(),
+        };
+        append_event(root, &ev)?;
+        insert_event(conn, &ev)?;
+
+        Ok(serde_json::json!({
+            "ts": ts,
+            "cmd": "todo.remove_owner",
+            "status": "ok",
+            "root": root.to_string_lossy(),
+            "task_id": task_id,
+            "agent_id": agent_id,
+        }))
+    })
+}
+
+fn list_task_owners(
+    root: &Path,
+    task_id: &str,
+) -> Result<Vec<serde_json::Value>, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    broker.with_conn(&db_path, "decapod", None, "todo.list_owners", |conn| {
+        ensure_schema(conn)?;
+
+        let mut stmt = conn.prepare(
+            "SELECT agent_id, claim_type, claimed_at FROM task_owners WHERE task_id = ? ORDER BY claimed_at"
+        )?;
+
+        let owners: Vec<serde_json::Value> = stmt
+            .query_map([task_id], |row| {
+                Ok(serde_json::json!({
+                    "agent_id": row.get::<_, String>(0)?,
+                    "claim_type": row.get::<_, String>(1)?,
+                    "claimed_at": row.get::<_, String>(2)?,
+                }))
+            })?
+            .filter_map(|r| r.ok())
+            .collect();
+
+        Ok(owners)
+    })
+}
+
+fn register_agent_expertise(
+    root: &Path,
+    agent_id: &str,
+    category: &str,
+    level: &str,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let ts = now_iso();
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    broker.with_conn(&db_path, "decapod", None, "todo.register_expertise", |conn| {
+        ensure_schema(conn)?;
+
+        conn.execute(
+            "INSERT INTO agent_expertise(id, agent_id, category, expertise_level, claimed_at, updated_at)
+             VALUES(lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?4)
+             ON CONFLICT(agent_id, category) DO UPDATE SET
+               expertise_level = excluded.expertise_level,
+               updated_at = excluded.updated_at",
+            rusqlite::params![agent_id, category, level, ts],
+        )?;
+
+        // Log expertise event
+        let ev = TodoEvent {
+            ts: ts.clone(),
+            event_id: Ulid::new().to_string(),
+            event_type: "agent.expertise".to_string(),
+            task_id: None,
+            payload: serde_json::json!({
+                "agent_id": agent_id,
+                "category": category,
+                "expertise_level": level,
+            }),
+            actor: "decapod".to_string(),
+        };
+        append_event(root, &ev)?;
+        insert_event(conn, &ev)?;
+
+        Ok(serde_json::json!({
+            "ts": ts,
+            "cmd": "todo.register_expertise",
+            "status": "ok",
+            "root": root.to_string_lossy(),
+            "agent_id": agent_id,
+            "category": category,
+            "expertise_level": level,
+        }))
+    })
+}
+
+fn list_agent_expertise(
+    root: &Path,
+    agent_filter: Option<&str>,
+    category_filter: Option<&str>,
+) -> Result<Vec<serde_json::Value>, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    broker.with_conn(&db_path, "decapod", None, "todo.expertise", |conn| {
+        ensure_schema(conn)?;
+
+        // Handle the four cases of optional filters
+        let expertise: Vec<serde_json::Value> = match (agent_filter, category_filter) {
+            (Some(agent), Some(category)) => {
+                let mut stmt = conn.prepare(
+                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at 
+                     FROM agent_expertise 
+                     WHERE agent_id = ? AND category = ?
+                     ORDER BY agent_id, category",
+                )?;
+                stmt.query_map([agent, category], |row| {
+                    Ok(serde_json::json!({
+                        "agent_id": row.get::<_, String>(0)?,
+                        "category": row.get::<_, String>(1)?,
+                        "expertise_level": row.get::<_, String>(2)?,
+                        "claimed_at": row.get::<_, String>(3)?,
+                        "updated_at": row.get::<_, String>(4)?,
+                    }))
+                })?
+                .filter_map(|r| r.ok())
+                .collect()
+            }
+            (Some(agent), None) => {
+                let mut stmt = conn.prepare(
+                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at 
+                     FROM agent_expertise 
+                     WHERE agent_id = ?
+                     ORDER BY agent_id, category",
+                )?;
+                stmt.query_map([agent], |row| {
+                    Ok(serde_json::json!({
+                        "agent_id": row.get::<_, String>(0)?,
+                        "category": row.get::<_, String>(1)?,
+                        "expertise_level": row.get::<_, String>(2)?,
+                        "claimed_at": row.get::<_, String>(3)?,
+                        "updated_at": row.get::<_, String>(4)?,
+                    }))
+                })?
+                .filter_map(|r| r.ok())
+                .collect()
+            }
+            (None, Some(category)) => {
+                let mut stmt = conn.prepare(
+                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at 
+                     FROM agent_expertise 
+                     WHERE category = ?
+                     ORDER BY agent_id, category",
+                )?;
+                stmt.query_map([category], |row| {
+                    Ok(serde_json::json!({
+                        "agent_id": row.get::<_, String>(0)?,
+                        "category": row.get::<_, String>(1)?,
+                        "expertise_level": row.get::<_, String>(2)?,
+                        "claimed_at": row.get::<_, String>(3)?,
+                        "updated_at": row.get::<_, String>(4)?,
+                    }))
+                })?
+                .filter_map(|r| r.ok())
+                .collect()
+            }
+            (None, None) => {
+                let mut stmt = conn.prepare(
+                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at 
+                     FROM agent_expertise 
+                     ORDER BY agent_id, category",
+                )?;
+                stmt.query_map([], |row| {
+                    Ok(serde_json::json!({
+                        "agent_id": row.get::<_, String>(0)?,
+                        "category": row.get::<_, String>(1)?,
+                        "expertise_level": row.get::<_, String>(2)?,
+                        "claimed_at": row.get::<_, String>(3)?,
+                        "updated_at": row.get::<_, String>(4)?,
+                    }))
+                })?
+                .filter_map(|r| r.ok())
+                .collect()
+            }
+        };
+
+        Ok(expertise)
+    })
+}
+
 fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::DecapodError> {
     let ts = now_iso();
     let broker = DbBroker::new(root);
@@ -2210,6 +2562,41 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         rusqlite::params![agent_id, ev.ts],
                     )?;
                 }
+                "ownership.claim" => {
+                    let task_id = ev.task_id.clone().unwrap_or_default();
+                    let agent_id = ev.payload.get("agent_id").and_then(|v| v.as_str()).unwrap_or(&ev.actor);
+                    let claim_type = ev.payload.get("claim_type").and_then(|v| v.as_str()).unwrap_or("secondary");
+                    let claim_id = ev.payload.get("claim_id").and_then(|v| v.as_str()).unwrap_or("");
+                    conn.execute(
+                        "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
+                         VALUES(?1, ?2, ?3, ?4, ?5)
+                         ON CONFLICT(id) DO UPDATE SET
+                           claim_type = excluded.claim_type,
+                           claimed_at = excluded.claimed_at",
+                        rusqlite::params![claim_id, task_id, agent_id, ev.ts, claim_type],
+                    )?;
+                }
+                "ownership.release" => {
+                    let task_id = ev.task_id.clone().unwrap_or_default();
+                    let agent_id = ev.payload.get("agent_id").and_then(|v| v.as_str()).unwrap_or(&ev.actor);
+                    conn.execute(
+                        "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+                        rusqlite::params![task_id, agent_id],
+                    )?;
+                }
+                "agent.expertise" => {
+                    let agent_id = ev.payload.get("agent_id").and_then(|v| v.as_str()).unwrap_or(&ev.actor);
+                    let category = ev.payload.get("category").and_then(|v| v.as_str()).unwrap_or("");
+                    let expertise_level = ev.payload.get("expertise_level").and_then(|v| v.as_str()).unwrap_or("intermediate");
+                    conn.execute(
+                        "INSERT INTO agent_expertise(id, agent_id, category, expertise_level, claimed_at, updated_at)
+                         VALUES(lower(hex(randomblob(16))), ?1, ?2, ?3, ?4, ?4)
+                         ON CONFLICT(agent_id, category) DO UPDATE SET
+                           expertise_level = excluded.expertise_level,
+                           updated_at = excluded.updated_at",
+                        rusqlite::params![agent_id, category, expertise_level, ev.ts],
+                    )?;
+                }
                 "task.verify.capture" | "task.verify.result" => {
                     let id = ev.task_id.clone().ok_or_else(|| {
                         error::DecapodError::ValidationError(format!(
@@ -2302,6 +2689,11 @@ pub fn schema() -> serde_json::Value {
             { "name": "heartbeat", "parameters": ["agent"] },
             { "name": "presence", "parameters": ["agent"] },
             { "name": "handoff", "parameters": ["id", "to", "from", "summary"] },
+            { "name": "add-owner", "parameters": ["id", "agent", "claim_type"] },
+            { "name": "remove-owner", "parameters": ["id", "agent"] },
+            { "name": "list-owners", "parameters": ["id"] },
+            { "name": "register-expertise", "parameters": ["agent", "category", "level"] },
+            { "name": "expertise", "parameters": ["agent", "category"] },
 
             { "name": "rebuild", "parameters": [] }
         ],
@@ -2431,6 +2823,43 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
             from,
             summary,
         } => handoff_task(store, id, to, from.as_deref(), summary)?,
+        TodoCommand::AddOwner {
+            id,
+            agent,
+            claim_type,
+        } => add_task_owner(root, id, agent, claim_type)?,
+        TodoCommand::RemoveOwner { id, agent } => remove_task_owner(root, id, agent)?,
+        TodoCommand::ListOwners { id } => {
+            let owners = list_task_owners(root, id)?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.list_owners",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "task_id": id,
+                "owners": owners,
+            })
+        }
+        TodoCommand::RegisterExpertise {
+            agent,
+            category,
+            level,
+        } => {
+            let default_agent =
+                env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let agent_id = agent.as_deref().unwrap_or(&default_agent);
+            register_agent_expertise(root, agent_id, category, level)?
+        }
+        TodoCommand::Expertise { agent, category } => {
+            let expertise = list_agent_expertise(root, agent.as_deref(), category.as_deref())?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.expertise",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "expertise": expertise,
+            })
+        }
     };
 
     match cli.format {
@@ -2526,6 +2955,49 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                                 "  {} (status: {}, last_seen: {}, age_s: {})",
                                 id, status, last_seen, age_secs
                             );
+                        }
+                    }
+                }
+            }
+            TodoCommand::ListOwners { .. } => {
+                if let Some(owners) = out.get("owners").and_then(|x| x.as_array()) {
+                    if owners.is_empty() {
+                        println!("No additional owners for this task.");
+                    } else {
+                        println!("Task owners:");
+                        for owner in owners {
+                            let agent_id = owner
+                                .get("agent_id")
+                                .and_then(|x| x.as_str())
+                                .unwrap_or("?");
+                            let claim_type = owner
+                                .get("claim_type")
+                                .and_then(|x| x.as_str())
+                                .unwrap_or("?");
+                            let claimed_at = owner
+                                .get("claimed_at")
+                                .and_then(|x| x.as_str())
+                                .unwrap_or("?");
+                            println!("  {} [{}] (since: {})", agent_id, claim_type, claimed_at);
+                        }
+                    }
+                }
+            }
+            TodoCommand::Expertise { .. } => {
+                if let Some(expertise) = out.get("expertise").and_then(|x| x.as_array()) {
+                    if expertise.is_empty() {
+                        println!("No expertise records found.");
+                    } else {
+                        println!("Agent expertise:");
+                        for exp in expertise {
+                            let agent = exp.get("agent_id").and_then(|x| x.as_str()).unwrap_or("?");
+                            let category =
+                                exp.get("category").and_then(|x| x.as_str()).unwrap_or("?");
+                            let level = exp
+                                .get("expertise_level")
+                                .and_then(|x| x.as_str())
+                                .unwrap_or("?");
+                            println!("  {} -> {} [{}]", agent, category, level);
                         }
                     }
                 }

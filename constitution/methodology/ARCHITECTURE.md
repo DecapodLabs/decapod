@@ -76,3 +76,13 @@ Binding system rules live in `specs/SYSTEM.md` and `specs/INTENT.md`.
 - `interfaces/TESTING.md` - Testing and proof contract
 - `specs/INTENT.md` - Intent contract
 - `specs/SYSTEM.md` - System contract
+
+---
+
+## Project Override Context
+
+Project architecture emphasis:
+- Organize by responsibility domains (agent loop, channels, tools, storage, orchestration).
+- Keep service-specific logic at the edge; preserve a reusable core.
+- Use interface contracts and state transitions to reduce hidden coupling.
+- Prefer evolvable extension points over one-off feature branches in core flow.

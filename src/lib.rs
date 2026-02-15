@@ -89,7 +89,7 @@ use plugins::{
     todo, verify, watcher,
 };
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -1058,17 +1058,18 @@ fn run_data_command(
                     }
                 }
                 ContextCommand::Pack { path, summary } => {
-                    match manager.pack_and_archive(project_store, &path, &summary) {
-                        Ok(archive_path) => {
-                            println!("Session archived to: {}", archive_path.display());
-                        }
-                        Err(error::DecapodError::ContextPackError(msg)) => {
-                            eprintln!("Context pack failed: {}", msg);
-                        }
-                        Err(e) => {
-                            eprintln!("Unexpected error during context pack: {}", e);
-                        }
-                    }
+                    let archive_path = manager
+                        .pack_and_archive(project_store, &path, &summary)
+                        .map_err(|err| match err {
+                            error::DecapodError::ContextPackError(msg) => {
+                                error::DecapodError::ContextPackError(format!(
+                                    "Context pack failed: {}",
+                                    msg
+                                ))
+                            }
+                            other => other,
+                        })?;
+                    println!("Session archived to: {}", archive_path.display());
                 }
                 ContextCommand::Restore {
                     id,
@@ -1084,22 +1085,7 @@ fn run_data_command(
             }
         }
         DataCommand::Schema(schema_cli) => {
-            let mut schemas = std::collections::BTreeMap::new();
-            schemas.insert("todo", todo::schema());
-            schemas.insert("cron", cron::schema());
-            schemas.insert("reflex", reflex::schema());
-            schemas.insert("health", health::health_schema());
-            schemas.insert("broker", core::broker::schema());
-            schemas.insert("context", context::schema());
-            schemas.insert("policy", policy::schema());
-            schemas.insert("knowledge", knowledge::schema());
-            schemas.insert("repomap", repomap::schema());
-            schemas.insert("watcher", watcher::schema());
-            schemas.insert("archive", archive::schema());
-            schemas.insert("feedback", feedback::schema());
-            schemas.insert("teammate", teammate::schema());
-            schemas.insert("federation", federation::schema());
-            schemas.insert("docs", docs_cli::schema());
+            let schemas = schema_catalog();
 
             let output = if let Some(sub) = schema_cli.subsystem {
                 schemas
@@ -1109,7 +1095,9 @@ fn run_data_command(
             } else {
                 let mut envelope = serde_json::json!({
                     "schema_version": "1.0.0",
-                    "subsystems": schemas
+                    "subsystems": schemas,
+                    "deprecations": deprecation_metadata(),
+                    "command_registry": cli_command_registry()
                 });
                 if !schema_cli.deterministic {
                     envelope.as_object_mut().unwrap().insert(
@@ -1120,11 +1108,18 @@ fn run_data_command(
                 envelope
             };
 
-            if schema_cli.format == "json" {
-                println!("{}", serde_json::to_string_pretty(&output).unwrap());
-            } else {
-                println!("Markdown schema format not yet implemented. Defaulting to JSON.");
-                println!("{}", serde_json::to_string_pretty(&output).unwrap());
+            match schema_cli.format.as_str() {
+                "json" => println!("{}", serde_json::to_string_pretty(&output).unwrap()),
+                "md" => {
+                    println!("Markdown schema format not yet implemented. Defaulting to JSON.");
+                    println!("{}", serde_json::to_string_pretty(&output).unwrap());
+                }
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported schema format '{}'. Use 'json' or 'md'.",
+                        other
+                    )));
+                }
             }
         }
         DataCommand::Repo(repo_cli) => match repo_cli.command {
@@ -1157,6 +1152,148 @@ fn run_data_command(
     }
 
     Ok(())
+}
+
+fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Value> {
+    let mut schemas = std::collections::BTreeMap::new();
+    schemas.insert("todo", todo::schema());
+    schemas.insert("cron", cron::schema());
+    schemas.insert("reflex", reflex::schema());
+    schemas.insert("health", health::health_schema());
+    schemas.insert("broker", core::broker::schema());
+    schemas.insert("context", context::schema());
+    schemas.insert("policy", policy::schema());
+    schemas.insert("knowledge", knowledge::schema());
+    schemas.insert("repomap", repomap::schema());
+    schemas.insert("watcher", watcher::schema());
+    schemas.insert("archive", archive::schema());
+    schemas.insert("feedback", feedback::schema());
+    schemas.insert("teammate", teammate::schema());
+    schemas.insert("federation", federation::schema());
+    schemas.insert("docs", docs_cli::schema());
+    schemas.insert("deprecations", deprecation_metadata());
+    schemas.insert(
+        "command_registry",
+        serde_json::json!({
+            "name": "command_registry",
+            "version": "0.1.0",
+            "description": "Machine-readable CLI command registry generated from clap command definitions",
+            "root": cli_command_registry()
+        }),
+    );
+    schemas
+}
+
+fn deprecation_metadata() -> serde_json::Value {
+    serde_json::json!({
+        "name": "deprecations",
+        "version": "0.1.0",
+        "description": "Deprecated command surfaces and replacement pointers",
+        "entries": [
+            {
+                "surface": "command",
+                "path": "decapod heartbeat",
+                "status": "deprecated",
+                "replacement": "decapod govern health summary",
+                "notes": "Heartbeat command family was consolidated into govern health"
+            },
+            {
+                "surface": "command",
+                "path": "decapod trust",
+                "status": "deprecated",
+                "replacement": "decapod govern health autonomy",
+                "notes": "Trust command family was consolidated into govern health"
+            },
+            {
+                "surface": "module",
+                "path": "src/plugins/heartbeat.rs",
+                "status": "deprecated",
+                "replacement": "src/plugins/health.rs"
+            },
+            {
+                "surface": "module",
+                "path": "src/plugins/trust.rs",
+                "status": "deprecated",
+                "replacement": "src/plugins/health.rs"
+            }
+        ]
+    })
+}
+
+fn cli_command_registry() -> serde_json::Value {
+    let command = Cli::command();
+    command_to_registry(&command)
+}
+
+fn command_to_registry(command: &clap::Command) -> serde_json::Value {
+    let mut subcommands: Vec<serde_json::Value> = command
+        .get_subcommands()
+        .filter(|sub| !sub.is_hide_set())
+        .map(command_to_registry)
+        .collect();
+    subcommands.sort_by(|a, b| {
+        let a_name = a
+            .get("name")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or_default();
+        let b_name = b
+            .get("name")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or_default();
+        a_name.cmp(b_name)
+    });
+
+    let mut options: Vec<serde_json::Value> = command
+        .get_arguments()
+        .filter(|arg| !arg.is_hide_set())
+        .map(|arg| {
+            let mut flags = Vec::new();
+            if let Some(long) = arg.get_long() {
+                flags.push(format!("--{}", long));
+            }
+            if let Some(short) = arg.get_short() {
+                flags.push(format!("-{}", short));
+            }
+            if flags.is_empty() {
+                flags.push(arg.get_id().to_string());
+            }
+
+            let value_names = arg
+                .get_value_names()
+                .map(|values| values.iter().map(|v| v.to_string()).collect::<Vec<_>>())
+                .unwrap_or_default();
+
+            serde_json::json!({
+                "id": arg.get_id().to_string(),
+                "flags": flags,
+                "required": arg.is_required_set(),
+                "help": arg.get_help().map(|help| help.to_string()),
+                "value_names": value_names
+            })
+        })
+        .collect();
+
+    options.sort_by(|a, b| {
+        let a_id = a
+            .get("id")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or_default();
+        let b_id = b
+            .get("id")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or_default();
+        a_id.cmp(b_id)
+    });
+
+    let aliases: Vec<String> = command.get_all_aliases().map(str::to_string).collect();
+
+    serde_json::json!({
+        "name": command.get_name(),
+        "about": command.get_about().map(|about| about.to_string()),
+        "aliases": aliases,
+        "options": options,
+        "subcommands": subcommands
+    })
 }
 
 fn run_auto_command(auto_cli: AutoCli, project_store: &Store) -> Result<(), error::DecapodError> {
@@ -1322,6 +1459,14 @@ fn run_check(crate_description: bool, all: bool) -> Result<(), error::DecapodErr
             .args(["metadata", "--no-deps", "--format-version", "1"])
             .output()
             .map_err(|e| error::DecapodError::IoError(std::io::Error::other(e)))?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(error::DecapodError::ValidationError(format!(
+                "cargo metadata failed: {}",
+                stderr.trim()
+            )));
+        }
 
         let json_str = String::from_utf8_lossy(&output.stdout);
 

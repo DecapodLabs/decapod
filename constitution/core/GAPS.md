@@ -513,3 +513,18 @@ decapod validate
 - `methodology/KNOWLEDGE.md` - Knowledge management
 - `methodology/MEMORY.md` - Learning patterns
 - `methodology/ARCHITECTURE.md` - Architecture practice
+
+---
+
+## Project Override Context
+
+Current gap themes:
+- Integration maturity: some domain adapters are still placeholder-level.
+- Verification depth: broaden end-to-end and backend-parity test coverage.
+- Runtime ergonomics: improve capability granting, versioning, and visibility of subsystem status.
+- Interface completeness: close remaining stubs in automation and extension lifecycle workflows.
+
+Completed themes:
+- Stronger sandboxing and tool isolation model.
+- Better context handling and background maintenance flows.
+- Improved control plane surfaces for channels, routines, and extension management.

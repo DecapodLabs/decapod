@@ -247,3 +247,13 @@ When exact answer requires too much memory:
 - `architecture/DATA.md` - Data architecture
 - `architecture/CACHING.md` - Caching patterns
 - `architecture/CONCURRENCY.md` - Shared memory patterns
+
+---
+
+## Project Override Context
+
+Project memory architecture emphasis:
+- Treat workspace memory as a first-class subsystem with clear ownership boundaries.
+- Enforce provenance, freshness, and recoverability for stored context.
+- Use chunking and indexing strategies that trade recall quality against cost predictably.
+- Keep memory operations observable and policy-aware.
