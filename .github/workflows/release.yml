@@ -160,7 +160,10 @@ jobs:
         run: |
           set -o pipefail
           set +e
-          OUTPUT="$($HOME/.cargo/bin/release-plz release --config .github/release.toml 2>&1)"
+          OUTPUT="$($HOME/.cargo/bin/release-plz release \
+            --config .github/release.toml \
+            --forge github \
+            --git-token "${GITHUB_TOKEN}" 2>&1)"
           STATUS=$?
           set -e
 
