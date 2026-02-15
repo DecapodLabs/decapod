@@ -14,6 +14,8 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
 
+const AGENT_EVICT_TIMEOUT_SECS: u64 = 30 * 60;
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
 enum OutputFormat {
     Text,
@@ -141,6 +143,18 @@ pub enum TodoCommand {
         /// Filter by category name.
         #[clap(long)]
         category: Option<String>,
+        /// Filter by agent identifier.
+        #[clap(long)]
+        agent: Option<String>,
+    },
+    /// Record agent heartbeat/presence.
+    Heartbeat {
+        /// Agent identifier (defaults to environment or 'unknown').
+        #[clap(long)]
+        agent: Option<String>,
+    },
+    /// List agent presence records.
+    Presence {
         /// Filter by agent identifier.
         #[clap(long)]
         agent: Option<String>,
@@ -571,6 +585,14 @@ pub struct CategoryOwnership {
     pub agent_id: String,
     pub category: String,
     pub claimed_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct AgentPresence {
+    pub agent_id: String,
+    pub last_seen: String,
+    pub status: String,
     pub updated_at: String,
 }
 
