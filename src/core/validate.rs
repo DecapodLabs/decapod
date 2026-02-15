@@ -1091,7 +1091,7 @@ fn validate_control_plane_contract(
     {
         use std::process::Command;
         if let Ok(output) = Command::new("lsof")
-            .args(&["+D", &data_dir.to_string_lossy().to_string()])
+            .args(["+D", data_dir.to_string_lossy().as_ref()])
             .output()
         {
             let stdout = String::from_utf8_lossy(&output.stdout);
