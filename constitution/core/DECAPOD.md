@@ -59,6 +59,7 @@ Decapod is a local-first control plane for coding agents. It helps facilitate mu
 
 ```bash
 decapod --version                   # Verify installed binary version
+decapod update                      # Update if repo version is newer (safe no-op if current)
 decapod --help                      # Check available commands
 decapod docs show core/DECAPOD.md  # Refresh constitution (this file)
 decapod validate                    # Verify system state
@@ -67,7 +68,7 @@ decapod todo list                   # Check active work
 
 **Why this is non-negotiable:**
 
-1. **Version drift**: The decapod binary evolves. Commands change, new features ship, old syntax becomes invalid.
+1. **Version drift**: The decapod binary evolves. Commands change, new features ship, old syntax becomes invalid. If version mismatch exists, you MUST run `decapod update` before continuing.
 2. **Constitution updates**: The embedded documentation is updated independently of your knowledge cutoff.
 3. **Command availability**: What worked yesterday may have moved (e.g., `decapod heartbeat` → `decapod govern health summary`).
 4. **State verification**: System health and validation gates must be checked before any mutation.

@@ -10,13 +10,14 @@ You (Codex/ChatGPT/OpenAI agent) are working in a Decapod-managed repository.
 
 ```bash
 decapod --version                   # Check current version
+decapod update                      # Update if repo version is newer (safe no-op if current)
 decapod --help                      # Verify available commands
 decapod docs show core/DECAPOD.md  # Refresh constitution
 decapod validate                    # System state
 decapod todo list                   # Active work
 ```
 
-**Why this matters:** The decapod binary and constitution evolve. Always verify what commands are available and refresh your understanding of the latest contract before acting.
+**Why this matters:** The decapod binary and constitution evolve. Always update on mismatch, then verify commands and refresh your understanding of the latest contract before acting.
 
 ## Codex-Specific Notes
 

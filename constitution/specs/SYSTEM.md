@@ -63,10 +63,11 @@ All AI agents operating within this system must adhere to the following behavior
 
 -   **Before Acting:**
     1.  If present, start at `core/DECAPOD.md` (repo router/index).
-    2.  Read `specs/INTENT.md`.
-    3.  Read `methodology/ARCHITECTURE.md`.
-    4.  Read the proof surface (`decapod validate`, `tests/`, and optional `proof.md`).
-    5.  Then, and only then, read or modify the implementation.
+    2.  Run `decapod --version`, then `decapod update` if repo version is newer.
+    3.  Read `specs/INTENT.md`.
+    4.  Read `methodology/ARCHITECTURE.md`.
+    5.  Read the proof surface (`decapod validate`, `tests/`, and optional `proof.md`).
+    6.  Then, and only then, read or modify the implementation.
 -   **While Acting:**
     -   If a request changes "what must be true," propose intent deltas **before** coding.
     -   Prefer minimal diffs that satisfy proof obligations.
