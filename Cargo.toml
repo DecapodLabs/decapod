@@ -64,6 +64,9 @@ path = "tests/plugins/policy.rs"
 name = "plugins_teammate_tests"
 path = "tests/plugins/teammate.rs"
 
+[[test]]
+name = "plugins_federation_tests"
+path = "tests/plugins/federation.rs"
 
 [[test]]
 name = "gatling"

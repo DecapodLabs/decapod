@@ -1082,6 +1082,26 @@ fn validate_canon_mutation(
     Ok(())
 }
 
+fn validate_federation_gates(
+    store: &Store,
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+) -> Result<(), error::DecapodError> {
+    info("Federation Gates");
+
+    let results = crate::plugins::federation::validate_federation(&store.root)?;
+
+    for (gate_name, passed, message) in results {
+        if passed {
+            pass(&format!("[{}] {}", gate_name, message), pass_count);
+        } else {
+            fail(&format!("[{}] {}", gate_name, message), fail_count);
+        }
+    }
+
+    Ok(())
+}
+
 pub fn run_validation(
     store: &Store,
     decapod_dir: &Path,
@@ -1139,6 +1159,7 @@ pub fn run_validation(
     validate_watcher_purity(store, &mut pass_count, &mut fail_count)?;
     validate_archive_integrity(store, &mut pass_count, &mut fail_count)?;
     validate_canon_mutation(store, &mut pass_count, &mut fail_count)?;
+    validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
 
     tui::print_summary(pass_count as usize, fail_count as usize);
 

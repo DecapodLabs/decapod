@@ -175,6 +175,115 @@ pub const TODO_DB_SCHEMA_AGENT_PRESENCE: &str = "
 pub const TODO_DB_SCHEMA_INDEX_AGENT_PRESENCE_LAST_SEEN: &str =
     "CREATE INDEX IF NOT EXISTS idx_agent_presence_last_seen ON agent_presence(last_seen)";
 
+// --- Federation ---
+
+/// Federation database file name
+pub const FEDERATION_DB_NAME: &str = "federation.db";
+
+/// Federation event log file name
+///
+/// Event-sourced append-only log for deterministic rebuild of federation.db
+pub const FEDERATION_EVENTS_NAME: &str = "federation.events.jsonl";
+
+/// Federation database schema version
+pub const FEDERATION_SCHEMA_VERSION: u32 = 1;
+
+/// Federation metadata table schema
+pub const FEDERATION_DB_SCHEMA_META: &str = "
+    CREATE TABLE IF NOT EXISTS meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+    )
+";
+
+/// Federation nodes table schema
+///
+/// Typed memory objects with lifecycle, provenance, and governance semantics.
+/// Each node is a "claim" — an assertion with metadata about reliability and lineage.
+pub const FEDERATION_DB_SCHEMA_NODES: &str = "
+    CREATE TABLE IF NOT EXISTS nodes (
+        id TEXT PRIMARY KEY,
+        node_type TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        priority TEXT NOT NULL DEFAULT 'notable',
+        confidence TEXT NOT NULL DEFAULT 'agent_inferred',
+        title TEXT NOT NULL,
+        body TEXT NOT NULL DEFAULT '',
+        scope TEXT NOT NULL DEFAULT 'repo',
+        tags TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        effective_from TEXT,
+        effective_to TEXT,
+        dir_path TEXT NOT NULL,
+        actor TEXT NOT NULL DEFAULT 'decapod'
+    )
+";
+
+/// Federation sources table schema
+///
+/// Provenance pointers for nodes. Critical nodes require at least one source.
+/// Each source must use a scheme prefix: file:, url:, cmd:, commit:, event:
+pub const FEDERATION_DB_SCHEMA_SOURCES: &str = "
+    CREATE TABLE IF NOT EXISTS sources (
+        id TEXT PRIMARY KEY,
+        node_id TEXT NOT NULL,
+        source TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(node_id) REFERENCES nodes(id)
+    )
+";
+
+/// Federation edges table schema
+///
+/// Typed directed edges between nodes forming the knowledge graph.
+/// Edge types: relates_to, depends_on, supersedes, invalidated_by
+pub const FEDERATION_DB_SCHEMA_EDGES: &str = "
+    CREATE TABLE IF NOT EXISTS edges (
+        id TEXT PRIMARY KEY,
+        source_id TEXT NOT NULL,
+        target_id TEXT NOT NULL,
+        edge_type TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        actor TEXT NOT NULL DEFAULT 'decapod',
+        FOREIGN KEY(source_id) REFERENCES nodes(id),
+        FOREIGN KEY(target_id) REFERENCES nodes(id)
+    )
+";
+
+/// Federation event log table (mirrors JSONL for in-DB queries)
+pub const FEDERATION_DB_SCHEMA_EVENTS: &str = "
+    CREATE TABLE IF NOT EXISTS federation_events (
+        event_id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        node_id TEXT,
+        payload TEXT NOT NULL,
+        actor TEXT NOT NULL
+    )
+";
+
+pub const FEDERATION_DB_INDEX_NODES_TYPE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_fed_nodes_type ON nodes(node_type)";
+pub const FEDERATION_DB_INDEX_NODES_STATUS: &str =
+    "CREATE INDEX IF NOT EXISTS idx_fed_nodes_status ON nodes(status)";
+pub const FEDERATION_DB_INDEX_NODES_SCOPE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_fed_nodes_scope ON nodes(scope)";
+pub const FEDERATION_DB_INDEX_NODES_PRIORITY: &str =
+    "CREATE INDEX IF NOT EXISTS idx_fed_nodes_priority ON nodes(priority)";
+pub const FEDERATION_DB_INDEX_NODES_UPDATED: &str =
+    "CREATE INDEX IF NOT EXISTS idx_fed_nodes_updated ON nodes(updated_at)";
+pub const FEDERATION_DB_INDEX_SOURCES_NODE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_fed_sources_node ON sources(node_id)";
+pub const FEDERATION_DB_INDEX_EDGES_SOURCE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_fed_edges_source ON edges(source_id)";
+pub const FEDERATION_DB_INDEX_EDGES_TARGET: &str =
+    "CREATE INDEX IF NOT EXISTS idx_fed_edges_target ON edges(target_id)";
+pub const FEDERATION_DB_INDEX_EDGES_TYPE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_fed_edges_type ON edges(edge_type)";
+pub const FEDERATION_DB_INDEX_EVENTS_NODE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_fed_events_node ON federation_events(node_id)";
+
 // --- Cron ---
 pub const CRON_DB_NAME: &str = "cron.db";
 pub const CRON_DB_SCHEMA: &str = "
