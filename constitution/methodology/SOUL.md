@@ -44,7 +44,27 @@ Authority and proof doctrine live in `specs/INTENT.md` and `specs/SYSTEM.md`.
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `core/EMERGENCY_PROTOCOL.md` - Stop-the-line protocol
-- `specs/INTENT.md` - Intent contract
-- `specs/SYSTEM.md` - System contract
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+
+### Contracts (Interfaces Layer)
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/GLOSSARY.md` - Term definitions
+
+### Practice (Methodology Layer - This Document)
+- `methodology/ARCHITECTURE.md` - Architecture practice
+- `methodology/KNOWLEDGE.md` - Knowledge curation
+- `methodology/MEMORY.md` - Memory and learning
+
+### Operations (Plugins Layer)
+- `plugins/TODO.md` - Work tracking
+- `plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols

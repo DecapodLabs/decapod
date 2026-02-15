@@ -37,11 +37,29 @@ This registry defines the canonical binding interface surfaces.
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `core/METHODOLOGY.md` - Methodology guides registry
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+- `specs/SECURITY.md` - Security contract
+- `specs/GIT.md` - Git etiquette contract
+- `specs/AMENDMENTS.md` - Change control
+
+### Registry (Core Indices)
 - `core/PLUGINS.md` - Subsystem registry
+- `core/METHODOLOGY.md` - Methodology guides index
+- `core/DEPRECATION.md` - Deprecation contract
+
+### Contracts (Interfaces Layer - This Registry)
 - `interfaces/CLAIMS.md` - Promises ledger
 - `interfaces/CONTROL_PLANE.md` - Sequencing patterns
 - `interfaces/DOC_RULES.md` - Doc compilation rules
-- `interfaces/GLOSSARY.md` - Term definitions
 - `interfaces/STORE_MODEL.md` - Store semantics
+- `interfaces/GLOSSARY.md` - Term definitions
+- `interfaces/TESTING.md` - Testing contract
+
+### Operations (Plugins Layer)
+- `plugins/TODO.md` - Work tracking
+- `plugins/VERIFY.md` - Validation subsystem

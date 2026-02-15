@@ -58,12 +58,12 @@ Decapod is a local-first control plane for coding agents. It helps facilitate mu
 ⚠️ **ABSOLUTE REQUIREMENT:** Every agent session MUST begin with this sequence:
 
 ```bash
-cargo install decapod              # Install/update to latest release
-decapod --version                   # Verify installed binary version
-decapod --help                      # Check available commands
-decapod docs show core/DECAPOD.md  # Refresh constitution (this file)
-decapod validate                    # Verify system state
-decapod todo list                   # Check active work
+cargo install decapod              # 1. Install/update to latest release
+decapod --version                   # 2. Check installed version
+decapod --help                      # 3. Verify available commands
+decapod docs show core/DECAPOD.md  # 4. Refresh constitution
+decapod validate                    # 5. Check system state
+decapod todo list                   # 6. See active work
 ```
 
 **Why this is non-negotiable:**
@@ -79,6 +79,13 @@ decapod todo list                   # Check active work
 - State corruption (bypassing validation gates)
 
 ⚠️ **This is not optional guidance. This is a proof gate.** Agents that skip this protocol will produce unverified, unsafe work.
+
+---
+
+## 1.2. First-Time vs Returning Agent Flow
+
+**First-Time Agents:** Follow the complete ladder below in order.
+**Returning Agents:** After running the session start protocol, skip to §3 for topic-specific navigation.
 
 ---
 
@@ -135,40 +142,75 @@ Key definitions:
 
 ---
 
-## 3. Navigation by Topic
+## 3. Navigation by Topic (Optimized Reading Order)
 
-**Constitution (Guiding Principles) - ABSOLUTE AUTHORITY:**
-- Authority and proof doctrine: `specs/SYSTEM.md`
-- ⚠️ **METHODOLOGY CONTRACT: `specs/INTENT.md` — READ THIS FIRST. ALWAYS.**
-- ⚠️ **SECURITY CONTRACT: `specs/SECURITY.md` — Security philosophy, credential architecture, threat model. READ BEFORE HANDLING CREDENTIALS.**
-- ⚠️ **GIT CONTRACT: `specs/GIT.md` — Git etiquette, branching strategy, commit conventions, push policies. BINDING FOR ALL GIT OPERATIONS.**
-- Change control (amendments): `specs/AMENDMENTS.md`
-- Agent persona/interaction guidelines: `methodology/SOUL.md`
+### Phase 1: Authority — READ FIRST (Constitution Layer)
+⚠️ These documents are **BINDING** and form the foundation. Read in order:
 
-**Interfaces (Contracts & Plans) - BINDING SURFACES:**
-- **Interface contracts index: `core/INTERFACES.md` — START HERE for all interface contracts**
-- Agent<->Decapod sequencing: `interfaces/CONTROL_PLANE.md`
-- Subsystem registry + truth labels: `core/PLUGINS.md`
-- Store purity model: `interfaces/STORE_MODEL.md`
-- Doc compiler contract: `interfaces/DOC_RULES.md`
-- Claims ledger (promises + proof surfaces): `interfaces/CLAIMS.md`
-- Deprecation + migration contract: `core/DEPRECATION.md`
-- Glossary of loaded terms (normative): `interfaces/GLOSSARY.md`
-- Planned broker interface: `plugins/DB_BROKER.md`
+1. **`specs/INTENT.md`** — **METHODOLOGY CONTRACT (READ FIRST)**
+   Intent-first flow, choice protocol, proof doctrine
+   
+2. **`specs/SYSTEM.md`** — System definition, authority hierarchy, proof doctrine
+   
+3. **`specs/SECURITY.md`** — **Security philosophy, credential architecture, threat model**
+   READ BEFORE HANDLING CREDENTIALS
+   
+4. **`specs/GIT.md`** — **Git etiquette, branching, commits, push policies**
+   BINDING FOR ALL GIT OPERATIONS
+   
+5. **`specs/AMENDMENTS.md`** — Change control for binding documents
 
-**Methodology (How-To Guides) - REFERENCE ONLY:**
-- **Methodology guides index: `core/METHODOLOGY.md` — START HERE for all methodology**
-- Architecture practice: `methodology/ARCHITECTURE.md`
-- Agent persona: `methodology/SOUL.md`
-- Knowledge management: `methodology/KNOWLEDGE.md`
-- Memory/learning: `methodology/MEMORY.md`
+### Phase 2: Registry — Core Indices (Router Layer)
+These route you to the right subsystem:
 
-**Plugins (Operational Subsystems):**
-- **TODO Subsystem (PRIMARY):** `plugins/TODO.md` — **Use this for all work tracking**
-- Operating loop: `plugins/TODO.md`
-- Canonical vs derived vs state: `plugins/MANIFEST.md`
-- Verification and drift checks: `plugins/VERIFY.md`
-- Emergency protocol (stop-the-line): `plugins/EMERGENCY_PROTOCOL.md`
+6. **`core/PLUGINS.md`** — Subsystem registry + truth labels (REAL/STUB/SPEC)
+   
+7. **`core/INTERFACES.md`** — Interface contracts index
+   
+8. **`core/METHODOLOGY.md`** — Methodology guides index
+   
+9. **`core/DEPRECATION.md`** — Deprecation and migration contract
+   
+10. **`core/DEMANDS.md`** — User demand system
+    
+11. **`core/GAPS.md`** — Gap analysis methodology
+
+### Phase 3: Contracts — BINDING SURFACES (Interfaces Layer)
+Machine-readable contracts and invariants:
+
+12. **`interfaces/CONTROL_PLANE.md`** — Agent sequencing patterns
+    
+13. **`interfaces/DOC_RULES.md`** — Doc compilation rules, truth labels
+    
+14. **`interfaces/STORE_MODEL.md`** — Store semantics and purity model
+    
+15. **`interfaces/CLAIMS.md`** — Promises ledger with proof surfaces
+    
+16. **`interfaces/GLOSSARY.md`** — Normative term definitions
+    
+17. **`interfaces/TESTING.md`** — Testing and verification contract
+
+### Phase 4: Practice — Operational Guidance (Guides Layer)
+Non-binding but highly recommended:
+
+18. **`methodology/SOUL.md`** — Agent identity and behavioral style
+    
+19. **`methodology/ARCHITECTURE.md`** — Architecture practice and tradeoffs
+    
+20. **`methodology/KNOWLEDGE.md`** — Knowledge curation practice
+    
+21. **`methodology/MEMORY.md`** — Memory hygiene and retrieval practice
+
+### Phase 5: Operations — Daily Use (Plugins Layer)
+Start here for specific tasks:
+
+22. **`plugins/TODO.md`** — **PRIMARY: Work tracking and task lifecycle**
+    
+23. **`plugins/VERIFY.md`** — Validation and verification subsystem
+    
+24. **`plugins/MANIFEST.md`** — Canonical vs derived vs state
+    
+25. **`plugins/EMERGENCY_PROTOCOL.md`** — Emergency stop-the-line procedures
 
 ---
 
@@ -209,26 +251,38 @@ All agents operating in this workspace MUST adhere to the following:
 
 ## Links
 
-- `specs/SECURITY.md` — **Security contract (credential handling, threat model, incident response)**
-- `specs/GIT.md` — **Git etiquette contract (branching, commits, push policies)**
-- `plugins/TODO.md` — **TODO subsystem (start here for work tracking)**
-- `plugins/MANIFEST.md`
-- `plugins/VERIFY.md`
-- `plugins/DB_BROKER.md`
-- `plugins/EMERGENCY_PROTOCOL.md`
-- `specs/INTENT.md`
-- `specs/SYSTEM.md`
-- `specs/AMENDMENTS.md`
-- `core/PLUGINS.md`
-- `core/DEPRECATION.md`
+### Phase 1: Authority (Constitution)
+- `specs/INTENT.md` — **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` — System definition and authority doctrine
+- `specs/SECURITY.md` — **Security contract (credentials, threat model)**
+- `specs/GIT.md` — **Git etiquette contract**
+- `specs/AMENDMENTS.md` — Change control for binding documents
+
+### Phase 2: Registry (Core Indices)
+- `core/PLUGINS.md` — Subsystem registry and truth labels
 - `core/INTERFACES.md` — **Interface contracts index**
-- `interfaces/CONTROL_PLANE.md`
-- `interfaces/DOC_RULES.md`
-- `interfaces/STORE_MODEL.md`
-- `interfaces/CLAIMS.md`
-- `interfaces/GLOSSARY.md`
 - `core/METHODOLOGY.md` — **Methodology guides index**
-- `methodology/ARCHITECTURE.md`
-- `methodology/SOUL.md`
-- `methodology/MEMORY.md`
-- `methodology/KNOWLEDGE.md`
+- `core/DEPRECATION.md` — Deprecation and migration contract
+- `core/DEMANDS.md` — User demand system
+- `core/GAPS.md` — Gap analysis methodology
+
+### Phase 3: Contracts (Interfaces)
+- `interfaces/CONTROL_PLANE.md` — Agent sequencing patterns
+- `interfaces/DOC_RULES.md` — Doc compilation rules
+- `interfaces/STORE_MODEL.md` — Store semantics and purity model
+- `interfaces/CLAIMS.md` — Promises ledger
+- `interfaces/GLOSSARY.md` — Normative term definitions
+- `interfaces/TESTING.md` — Testing contract
+
+### Phase 4: Practice (Methodology)
+- `methodology/SOUL.md` — Agent identity and behavioral style
+- `methodology/ARCHITECTURE.md` — Architecture practice
+- `methodology/KNOWLEDGE.md` — Knowledge curation
+- `methodology/MEMORY.md` — Memory and learning
+
+### Phase 5: Operations (Plugins)
+- `plugins/TODO.md` — **Work tracking (PRIMARY)**
+- `plugins/VERIFY.md` — Validation subsystem
+- `plugins/MANIFEST.md` — Canonical vs derived vs state
+- `plugins/EMERGENCY_PROTOCOL.md` — Emergency protocols
+- `plugins/DB_BROKER.md` — Database broker (planned)

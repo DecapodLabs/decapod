@@ -390,10 +390,30 @@ This document is binding. Agents must:
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `specs/SYSTEM.md` - System definition
-- `specs/INTENT.md` - Intent contract
-- `specs/GIT.md` - Git workflow
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+- `specs/GIT.md` - Git etiquette contract
 - `specs/AMENDMENTS.md` - Change control
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+
+### Contracts (Interfaces Layer)
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/CLAIMS.md` - Promises ledger
+- `interfaces/GLOSSARY.md` - Term definitions
+
+### Practice (Methodology Layer)
+- `methodology/SOUL.md` - Agent identity
+
+### Operations (Plugins Layer)
+- `plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols
+
+### Architecture Patterns
 - `architecture/SECURITY.md` - Security architecture patterns
-- `plugins/EMERGENCY_PROTOCOL.md` - Emergency response

@@ -187,19 +187,38 @@ For operational workflow and TODO governance, see `plugins/TODO.md`.
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `specs/INTENT.md` - Intent-driven methodology contract
-- `methodology/ARCHITECTURE.md` - Architecture practice
-- `core/PLUGINS.md` - Subsystem registry
-- `interfaces/CONTROL_PLANE.md` - Agent sequencing patterns
-- `interfaces/DOC_RULES.md` - Doc compilation rules
-- `methodology/KNOWLEDGE.md` - Knowledge management
-- `methodology/MEMORY.md` - Agent memory and learning
-- `methodology/SOUL.md` - Agent identity
-- `plugins/TODO.md` - Work tracking
-- `interfaces/CLAIMS.md` - Promises ledger
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SECURITY.md` - Security contract
+- `specs/GIT.md` - Git etiquette contract
 - `specs/AMENDMENTS.md` - Change control
-- `specs/SECURITY.md` - Security doctrine
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+- `core/DEPRECATION.md` - Deprecation contract
+
+### Contracts (Interfaces Layer)
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/DOC_RULES.md` - Doc compilation rules
+- `interfaces/STORE_MODEL.md` - Store semantics
+- `interfaces/CLAIMS.md` - Promises ledger
+- `interfaces/GLOSSARY.md` - Term definitions
+
+### Practice (Methodology Layer)
+- `methodology/SOUL.md` - Agent identity
+- `methodology/ARCHITECTURE.md` - Architecture practice
+- `methodology/KNOWLEDGE.md` - Knowledge management
+- `methodology/MEMORY.md` - Memory and learning
+
+### Operations (Plugins Layer)
+- `plugins/TODO.md` - Work tracking
+- `plugins/VERIFY.md` - Validation subsystem
+- `plugins/MANIFEST.md` - Canonical vs derived vs state
 
 ---
 

@@ -43,8 +43,27 @@ At minimum, validation checks:
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `core/INTERFACES.md` - Interface contracts registry
-- `interfaces/DEMANDS_SCHEMA.md` - Binding demand schema
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
 - `specs/SECURITY.md` - Security contract
-- `specs/GIT.md` - Git contract
+- `specs/GIT.md` - Git etiquette contract
+- `specs/AMENDMENTS.md` - Change control
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+
+### Contracts (Interfaces Layer)
+- `interfaces/DEMANDS_SCHEMA.md` - Binding demand schema
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/DOC_RULES.md` - Doc compilation rules
+- `interfaces/GLOSSARY.md` - Term definitions
+
+### Operations (Plugins Layer)
+- `plugins/TODO.md` - Work tracking
+- `plugins/VERIFY.md` - Validation subsystem
