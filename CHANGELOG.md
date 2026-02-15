@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/DecapodLabs/decapod/compare/v0.6.9...v0.7.0) - 2026-02-15
+
+### Added
+
+- multi-user schema
+- mult-agent
+
 ## [0.6.9](https://github.com/DecapodLabs/decapod/compare/v0.6.8...v0.6.9) - 2026-02-15
 
 ### Other
