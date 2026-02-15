@@ -25,37 +25,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Publish stale tagged versions
-        run: |
-          echo "=== Checking for stale tagged versions ==="
-          CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -n1 | cut -d'"' -f2)
-          echo "Cargo.toml version: ${CARGO_VERSION}"
-
-          # Check if tag exists
-          if git rev-parse "v${CARGO_VERSION}" >/dev/null 2>&1; then
-            echo "✓ Tag v${CARGO_VERSION} exists"
-            echo "Attempting to publish (will fail gracefully if already published)..."
-
-            # Try dry-run first
-            if cargo publish --dry-run 2>&1 | grep -q "already uploaded"; then
-              echo "✓ Version ${CARGO_VERSION} already published to crates.io"
-            else
-              echo "Publishing version ${CARGO_VERSION}..."
-              cargo publish --token "${CARGO_REGISTRY_TOKEN}" || echo "⚠ Publish failed (might already exist)"
-            fi
-          else
-            echo "No tag v${CARGO_VERSION} found, skipping publish"
-          fi
-        continue-on-error: true
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-
       - name: Generate GitHub App token
         uses: actions/create-github-app-token@v2
         id: generate-token
