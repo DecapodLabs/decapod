@@ -614,6 +614,21 @@ pub fn run() -> Result<(), error::DecapodError> {
                     .bold()
             );
             println!();
+            tui::render_box(
+                "⛔ DESIGNED FROM INCEPTION FOR AGENTS",
+                "AI TOOL FOR AGENTS. NOT A HUMAN TOOL FOR AI.",
+                tui::BoxStyle::Error,
+            );
+            tui::render_box(
+                "⚠ DO NOT DISRUPT AGENT FLOW",
+                "YOU WILL DEGRADE SYSTEM OUTPUTS",
+                tui::BoxStyle::Warning,
+            );
+            println!(
+                "  {} {}",
+                "OVERRIDES ONLY:".bright_red().bold(),
+                ".decapod/OVERRIDE.md".bright_cyan().bold().underline()
+            );
             println!();
 
             let target_dir = match init_group.dir {
