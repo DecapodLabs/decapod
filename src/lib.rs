@@ -842,8 +842,12 @@ pub fn run() -> Result<(), error::DecapodError> {
             store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
 
-            // Check version compatibility FIRST (before migration updates the version file)
-            check_version_compatibility(&decapod_root_path)?;
+            // Gate outdated binaries before normal command execution.
+            // Allow inspection/recovery commands to run so users can diagnose and self-update.
+            let skip_version_gate = matches!(&cli.command, Command::Update | Command::Version);
+            if !skip_version_gate {
+                check_version_compatibility(&decapod_root_path)?;
+            }
 
             // Check for version changes and run migrations if needed
             migration::check_and_migrate(&decapod_root_path)?;
@@ -1473,7 +1477,7 @@ fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
     a_parts.len().cmp(&b_parts.len())
 }
 
-/// Check if binary version is compatible with repo version and warn if outdated
+/// Check if binary version is compatible with repo version and fail if outdated
 fn check_version_compatibility(decapod_root: &Path) -> Result<(), error::DecapodError> {
     use colored::Colorize;
 
@@ -1494,12 +1498,12 @@ fn check_version_compatibility(decapod_root: &Path) -> Result<(), error::Decapod
 
     let binary_version = migration::DECAPOD_VERSION;
 
-    // Only warn if binary is OLDER than repo version
+    // Hard-stop when binary is OLDER than repo version.
     if compare_versions(binary_version, &repo_version) == std::cmp::Ordering::Less {
         eprintln!();
         eprintln!(
             "{} {} {}",
-            "⚠ WARNING:".bright_yellow().bold(),
+            "⚠ VERSION MISMATCH:".bright_yellow().bold(),
             "Binary version".bright_white(),
             binary_version.bright_yellow()
         );
@@ -1507,14 +1511,18 @@ fn check_version_compatibility(decapod_root: &Path) -> Result<(), error::Decapod
             "  {} {} {}",
             "is older than repo version".bright_white(),
             repo_version.bright_yellow(),
-            "- some features may not work correctly".bright_white()
+            "- command execution is blocked until update".bright_white()
         );
         eprintln!(
             "  {} {}",
-            "Run:".bright_white(),
+            "Run now:".bright_white(),
             "decapod update".bright_cyan().bold()
         );
         eprintln!();
+        return Err(error::DecapodError::ValidationError(
+            "Binary version is older than repo version; run `decapod update` before other commands"
+                .into(),
+        ));
     }
 
     Ok(())
