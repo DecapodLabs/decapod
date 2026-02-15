@@ -1421,7 +1421,7 @@ fn build_index_file(store: &Store) -> Result<usize, error::DecapodError> {
         "decapod",
         None,
         "federation.index.build",
-        |conn| build_index_markdown(conn),
+        build_index_markdown,
     )?;
     fs::write(path, content.as_bytes()).map_err(error::DecapodError::IoError)?;
     Ok(content.lines().count())
@@ -1439,7 +1439,7 @@ fn export_graph_file(store: &Store) -> Result<(usize, usize), error::DecapodErro
         "decapod",
         None,
         "federation.graph.export",
-        |conn| build_graph_json(conn),
+        build_graph_json,
     )?;
     let nodes = graph
         .get("nodes")
