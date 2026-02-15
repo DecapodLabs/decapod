@@ -39,13 +39,15 @@ pub struct DecisionOption {
 
 // --- Embedded Decision Trees ---
 
+static DECISION_TREES: [&DecisionTree; 4] = [
+    &TREE_WEB_APP,
+    &TREE_MICROSERVICE,
+    &TREE_CLI_TOOL,
+    &TREE_LIBRARY,
+];
+
 pub fn decision_trees() -> &'static [&'static DecisionTree] {
-    &[
-        &TREE_WEB_APP,
-        &TREE_MICROSERVICE,
-        &TREE_CLI_TOOL,
-        &TREE_LIBRARY,
-    ]
+    &DECISION_TREES
 }
 
 static TREE_WEB_APP: DecisionTree = DecisionTree {
@@ -833,11 +835,12 @@ pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
 }
 
 fn find_tree(tree_id: &str) -> Result<&'static DecisionTree, error::DecapodError> {
-    DECISION_TREES
+    decision_trees()
         .iter()
+        .copied()
         .find(|t| t.id == tree_id)
         .ok_or_else(|| {
-            let valid: Vec<&str> = DECISION_TREES.iter().map(|t| t.id).collect();
+            let valid: Vec<&str> = decision_trees().iter().map(|t| t.id).collect();
             error::DecapodError::ValidationError(format!(
                 "Unknown tree '{}'. Available: {}",
                 tree_id,
@@ -890,10 +893,10 @@ pub fn suggest_trees(prompt: &str) -> Vec<TreeSuggestion> {
             s.trim_matches(|c: char| !c.is_alphanumeric())
                 .to_string()
         })
-        .filter(|s| !s.is_empty())
+        .filter(|s| s.len() >= 3)
         .collect();
 
-    let mut suggestions: Vec<TreeSuggestion> = DECISION_TREES
+    let mut suggestions: Vec<TreeSuggestion> = decision_trees()
         .iter()
         .map(|tree| {
             let matched: Vec<String> = tree
@@ -1502,7 +1505,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "schema", "description": "Print subsystem schema" }
         ],
         "storage": ["decisions.db"],
-        "trees": DECISION_TREES.iter().map(|t| serde_json::json!({
+        "trees": decision_trees().iter().map(|t| serde_json::json!({
             "id": t.id,
             "name": t.name,
             "question_count": t.questions.len(),
@@ -1517,7 +1520,7 @@ pub fn run_decide_cli(store: &Store, cli: DecideCli) -> Result<(), error::Decapo
 
     match cli.command {
         DecideCommand::Trees => {
-            let trees: Vec<serde_json::Value> = DECISION_TREES
+            let trees: Vec<serde_json::Value> = decision_trees()
                 .iter()
                 .map(|t| {
                     serde_json::json!({
