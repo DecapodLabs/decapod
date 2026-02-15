@@ -4,7 +4,7 @@
 **Layer:** Constitution
 **Binding:** Yes ⚠️
 **Scope:** intent-first flow, choice protocol, proof doctrine, drift recovery
-**Non-goals:** project-specific requirements or subsystem registries
+**Non-goals:** project-specific requirements, control-plane interfaces, subsystem registries, or document routing
 
 ⚠️ **THIS IS A BINDING CONSTITUTIONAL CONTRACT. AGENTS MUST COMPLY.** ⚠️
 
@@ -134,22 +134,20 @@ Drift is any mismatch between:
 
 ---
 
-## 8. Local Control Plane (When Present)
+## 8. Layer Boundaries (Methodology vs Interface vs Router)
 
-Some repos standardize agent behavior via a local "control plane" (a CLI plus a state root).
+This contract defines methodology only.
 
-**If present:**
+Interface semantics for agent<->CLI sequencing live in `interfaces/CONTROL_PLANE.md`.
+Routing/navigation semantics live in `core/DECAPOD.md`.
 
-- **DO NOT BYPASS** it (no alternative state stores, no parallel CLIs)
-- Treat it as the shared interface for multi-agent state
-- Require it to expose a stable schema and machine-readable outputs
-
-**BYPASSING THE CONTROL PLANE = UNVERIFIED, UNSAFE WORK.**
+If this file starts specifying command envelopes, store wiring, subsystem indexing, or routing policy, that content belongs elsewhere.
 
 ---
 
 ## 9. Changelog
 
+- v0.0.2: Clarified layer boundaries by extracting control-plane interface and routing content out of this methodology contract.
 - v0.0.1: A general agent-facing methodology contract (not project-specific), restoring the original intent-driven engineering emphasis: authority, one-way flow, choice protocol, proof gating, and drift recovery.
 
 ## Links
