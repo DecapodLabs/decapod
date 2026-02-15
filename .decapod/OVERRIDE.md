@@ -152,6 +152,8 @@ For this project, we use a 5-level priority system:
 
 ### plugins/ARCHIVE.md
 
+### plugins/FEDERATION.md
+
 ### plugins/FEEDBACK.md
 
 ### plugins/TRUST.md

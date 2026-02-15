@@ -47,7 +47,7 @@ pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
 /// TODO database schema version
 ///
 /// Used for migration tracking in the `meta` table
-pub const TODO_SCHEMA_VERSION: u32 = 9;
+pub const TODO_SCHEMA_VERSION: u32 = 10;
 
 /// TODO metadata table schema
 ///
@@ -174,6 +174,37 @@ pub const TODO_DB_SCHEMA_AGENT_PRESENCE: &str = "
 
 pub const TODO_DB_SCHEMA_INDEX_AGENT_PRESENCE_LAST_SEEN: &str =
     "CREATE INDEX IF NOT EXISTS idx_agent_presence_last_seen ON agent_presence(last_seen)";
+
+/// Task ownership table for multiple owners support
+pub const TODO_DB_SCHEMA_TASK_OWNERS: &str = "
+    CREATE TABLE IF NOT EXISTS task_owners (
+        id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL,
+        agent_id TEXT NOT NULL,
+        claimed_at TEXT NOT NULL,
+        claim_type TEXT NOT NULL DEFAULT 'primary',
+        FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE
+    )
+";
+
+pub const TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK: &str =
+    "CREATE INDEX IF NOT EXISTS idx_task_owners_task ON task_owners(task_id)";
+
+/// Agent expertise table for category specialization
+pub const TODO_DB_SCHEMA_AGENT_EXPERTISE: &str = "
+    CREATE TABLE IF NOT EXISTS agent_expertise (
+        id TEXT PRIMARY KEY,
+        agent_id TEXT NOT NULL,
+        category TEXT NOT NULL,
+        expertise_level TEXT NOT NULL DEFAULT 'intermediate',
+        claimed_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(agent_id, category)
+    )
+";
+
+pub const TODO_DB_SCHEMA_INDEX_AGENT_EXPERTISE_AGENT: &str =
+    "CREATE INDEX IF NOT EXISTS idx_agent_expertise_agent ON agent_expertise(agent_id)";
 
 // --- Federation ---
 

@@ -93,6 +93,21 @@ The TODO subsystem coordinates multiple agents using category ownership plus hea
 
 ---
 
+## Pre-TODO Audit Requirement
+
+**Binding: Yes**
+
+Before creating or modifying any TODO (via `decapod todo add`, `decapod todo done`, `decapod todo archive`, or any TODO mutation), agents MUST:
+
+1. Run `decapod validate` to audit system state
+2. Review validation results for any failures
+3. Address critical issues before proceeding with TODO operations
+4. Document any intentional exceptions in the TODO description
+
+**Rationale:** TODO operations mutate shared state. System audits ensure integrity before mutations occur, preventing corrupted state from being propagated through the task lifecycle.
+
+---
+
 ## State Transition Validation
 
 Every lifecycle enum must have an explicit transition table. Invalid transitions must be rejected with an error, not silently ignored.

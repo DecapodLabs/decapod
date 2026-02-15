@@ -215,3 +215,13 @@ Every data entity has a single owner:
 - `architecture/CACHING.md` - Caching patterns
 - `architecture/SECURITY.md` - Security architecture
 - `architecture/OBSERVABILITY.md` - Data observability
+
+---
+
+## Project Override Context
+
+Project data architecture emphasis:
+- Support multiple persistence backends behind a single data contract.
+- Keep migration and replay paths deterministic so state can be reconstructed.
+- Isolate backend-specific behavior from domain logic.
+- Design for local-first operation with optional cloud connectivity.

@@ -60,3 +60,13 @@ Binding entry schema and validation requirements are defined in `interfaces/KNOW
 - `interfaces/KNOWLEDGE_SCHEMA.md` - Binding knowledge schema
 - `methodology/MEMORY.md` - Memory practice
 - `plugins/TODO.md` - Work tracking
+
+---
+
+## Project Override Context
+
+Project knowledge emphasis:
+- Capture patterns that generalize across incidents, not only one-off fixes.
+- Promote architectural learnings into shared contracts and docs.
+- Track provenance so claims and decisions can be audited.
+- Keep knowledge actionable: each entry should inform a concrete next decision.
