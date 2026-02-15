@@ -61,6 +61,8 @@ Gaps are not bugs. Bugs are deviations from spec. Gaps are *missing or incomplet
 - Knowledge management has no staleness policy
 - Memory system lacks retrieval validation
 - Unclear when to use which subsystem
+- UI components lack architectural patterns
+- Frontend/backend integration undefined
 
 **Detection:**
 - Agents asking repetitive clarifying questions
@@ -68,6 +70,7 @@ Gaps are not bugs. Bugs are deviations from spec. Gaps are *missing or incomplet
 - Documentation exists but isn't actionable
 - Process gaps in multi-agent coordination
 - Missing "how to" guidance for common tasks
+- UI implementations diverge without pattern
 
 **Routing:**
 - Intent-driven workflow gaps → `specs/INTENT.md` (binding methodology)
@@ -75,6 +78,8 @@ Gaps are not bugs. Bugs are deviations from spec. Gaps are *missing or incomplet
 - Agent behavior gaps → `methodology/SOUL.md`
 - Knowledge management gaps → `methodology/KNOWLEDGE.md`
 - Learning/memory gaps → `methodology/MEMORY.md`
+- UI architecture gaps → `architecture/UI.md`
+- Frontend architecture gaps → `architecture/FRONTEND.md`
 
 **See:** `core/METHODOLOGY.md` for methodology registry
 
@@ -525,6 +530,14 @@ decapod validate
 - `methodology/SOUL.md` - Agent identity
 - `methodology/KNOWLEDGE.md` - Knowledge curation
 - `methodology/MEMORY.md` - Memory and learning
+
+### Domain Architecture Patterns
+- `architecture/UI.md` - UI architecture patterns and component design
+- `architecture/FRONTEND.md` - Frontend architecture patterns
+- `architecture/WEB.md` - Web architecture patterns
+- `architecture/DATA.md` - Data architecture patterns
+- `architecture/SECURITY.md` - Security architecture patterns
+- `architecture/CLOUD.md` - Cloud deployment patterns
 
 ### Operations (Plugins Layer)
 - `plugins/TODO.md` - Work tracking

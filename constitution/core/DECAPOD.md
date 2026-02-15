@@ -295,7 +295,15 @@ All agents operating in this workspace MUST adhere to the following:
 - `methodology/KNOWLEDGE.md` — Knowledge curation
 - `methodology/MEMORY.md` — Memory and learning
 
-### Phase 5: Operations (Plugins)
+### Phase 5: Domain Architecture
+- `architecture/UI.md` — **UI architecture patterns and component design**
+- `architecture/FRONTEND.md` — Frontend architecture patterns
+- `architecture/WEB.md` — Web architecture patterns
+- `architecture/DATA.md` — Data architecture patterns
+- `architecture/SECURITY.md` — Security architecture patterns
+- `architecture/CLOUD.md` — Cloud deployment patterns
+
+### Phase 6: Operations (Plugins)
 - `plugins/TODO.md` — **Work tracking (PRIMARY)**
 - `plugins/VERIFY.md` — Validation subsystem
 - `plugins/MANIFEST.md` — Canonical vs derived vs state
