@@ -1,0 +1,3 @@
+{"ts":"1700000000Z","event_id":"MIGRATION_T_LEGACY_1","event_type":"task.add","task_id":"T_LEGACY_1","payload":{"title":"Legacy open task"},"actor":"migration"}
+{"ts":"1700000100Z","event_id":"MIGRATION_T_LEGACY_2","event_type":"task.add","task_id":"T_LEGACY_2","payload":{"title":"Legacy done task"},"actor":"migration"}
+{"ts":"1700000100Z","event_id":"MIGRATION_T_LEGACY_2_DONE","event_type":"task.done","task_id":"T_LEGACY_2","payload":{},"actor":"migration"}
