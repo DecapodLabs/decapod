@@ -200,3 +200,13 @@ For operational workflow and TODO governance, see `plugins/TODO.md`.
 - `interfaces/CLAIMS.md` - Promises ledger
 - `specs/AMENDMENTS.md` - Change control
 - `specs/SECURITY.md` - Security doctrine
+
+---
+
+## Project Override Context
+
+Project system emphasis:
+- Keep configuration explicit and environment-driven, with safe defaults.
+- Separate provider choices (LLM, storage, embeddings, channels) behind stable abstractions.
+- Support concurrent execution with guardrails for resource limits and recovery.
+- Maintain operational toggles for automation features so risky behavior can be disabled quickly.

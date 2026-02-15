@@ -158,3 +158,13 @@ If this file starts specifying command envelopes, store wiring, subsystem indexi
 - `methodology/SOUL.md` - Agent identity
 - `interfaces/CONTROL_PLANE.md` - Sequencing patterns
 - `interfaces/CLAIMS.md` - Promises ledger
+
+---
+
+## Project Override Context
+
+Project intent emphasis:
+- Build an assistant that is secure-by-default and user-controlled.
+- Prefer extensibility through clear interfaces over hardcoded integrations.
+- Support multiple interaction channels while preserving consistent behavior.
+- Treat autonomy as bounded by policy, proofs, and explicit human control points.

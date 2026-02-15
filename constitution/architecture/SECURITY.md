@@ -367,3 +367,13 @@ Registries (plugin names, constitution paths, tool names) must protect against s
 - `methodology/ARCHITECTURE.md` - binding architecture
 - `architecture/WEB.md` - Web security
 - `architecture/CLOUD.md` - Cloud security
+
+---
+
+## Project Override Context
+
+Project security architecture emphasis:
+- Minimize trust by default: least-privilege capabilities and explicit allowlists.
+- Keep secrets out of model-visible context; inject only where execution requires them.
+- Distinguish sandboxed tool execution from externally hosted connectors, and apply stricter controls to the latter.
+- Require auditable approval flows for high-risk actions and irreversible operations.

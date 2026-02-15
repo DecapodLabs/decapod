@@ -55,3 +55,13 @@ Binding schema, validation rules, and retrieval-event requirements are defined i
 - `interfaces/MEMORY_SCHEMA.md` - Binding memory schema
 - `methodology/KNOWLEDGE.md` - Knowledge practice
 - `plugins/TODO.md` - Work tracking
+
+---
+
+## Project Override Context
+
+Project memory emphasis:
+- Use layered memory (short-term context + durable workspace knowledge).
+- Prefer retrieval strategies that combine lexical and semantic signals.
+- Trigger compaction/summarization before context pressure causes silent loss.
+- Keep memory interfaces tool-agnostic so storage backends can evolve.
