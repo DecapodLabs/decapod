@@ -14,6 +14,7 @@ use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use ulid::Ulid;
 
 const AGENT_EVICT_TIMEOUT_SECS: u64 = 30 * 60;
@@ -248,6 +249,119 @@ fn now_unix_secs() -> u64 {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs()
+}
+
+fn sanitize_branch_segment(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    for ch in input.chars() {
+        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' || ch == '/' {
+            out.push(ch);
+        } else {
+            out.push('-');
+        }
+    }
+    out.trim_matches('/').to_string()
+}
+
+fn run_git(repo_root: &Path, args: &[&str]) -> Result<String, error::DecapodError> {
+    let output = Command::new("git")
+        .args(args)
+        .current_dir(repo_root)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "git {} failed: {}",
+            args.join(" "),
+            String::from_utf8_lossy(&output.stderr)
+        )));
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
+fn reconcile_commit_to_agent_branch(
+    repo_root: &Path,
+    task_id: &str,
+    target_agent: &str,
+    summary: &str,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let is_repo = run_git(repo_root, &["rev-parse", "--is-inside-work-tree"]);
+    if is_repo.is_err() {
+        return Ok(serde_json::json!({
+            "status": "skipped",
+            "reason": "not_a_git_repo"
+        }));
+    }
+
+    let source_branch = run_git(repo_root, &["branch", "--show-current"])?;
+    if source_branch.is_empty() {
+        return Ok(serde_json::json!({
+            "status": "skipped",
+            "reason": "detached_head"
+        }));
+    }
+
+    let target_branch = format!("{}/work", sanitize_branch_segment(target_agent));
+    let status = run_git(repo_root, &["status", "--porcelain"])?;
+    if status.trim().is_empty() {
+        return Ok(serde_json::json!({
+            "status": "skipped",
+            "reason": "no_changes",
+            "source_branch": source_branch,
+            "target_branch": target_branch
+        }));
+    }
+
+    run_git(repo_root, &["add", "-A"])?;
+    let msg = format!("chore(reconcile): handoff {} to {}", task_id, target_agent);
+    run_git(repo_root, &["commit", "-m", &msg])?;
+    let commit = run_git(repo_root, &["rev-parse", "HEAD"])?;
+
+    if source_branch == target_branch {
+        return Ok(serde_json::json!({
+            "status": "ok",
+            "mode": "same_branch",
+            "commit": commit,
+            "source_branch": source_branch,
+            "target_branch": target_branch
+        }));
+    }
+
+    let target_exists = run_git(
+        repo_root,
+        &[
+            "rev-parse",
+            "--verify",
+            &format!("refs/heads/{}", target_branch),
+        ],
+    )
+    .is_ok();
+
+    if target_exists {
+        run_git(repo_root, &["checkout", &target_branch])?;
+        let cherry = run_git(repo_root, &["cherry-pick", &commit]);
+        let _ = run_git(repo_root, &["checkout", &source_branch]);
+        cherry?;
+        Ok(serde_json::json!({
+            "status": "ok",
+            "mode": "cherry_pick",
+            "commit": commit,
+            "source_branch": source_branch,
+            "target_branch": target_branch,
+            "summary": summary
+        }))
+    } else {
+        run_git(repo_root, &["checkout", "-b", &target_branch])?;
+        let _ = run_git(repo_root, &["checkout", &source_branch]);
+        Ok(serde_json::json!({
+            "status": "ok",
+            "mode": "created_branch",
+            "commit": commit,
+            "source_branch": source_branch,
+            "target_branch": target_branch,
+            "summary": summary
+        }))
+    }
 }
 
 pub fn todo_db_path(root: &Path) -> PathBuf {
@@ -1645,6 +1759,10 @@ fn handoff_task(
     })?;
 
     let (status_result, event_id): (serde_json::Value, String) = result;
+    let mut reconcile_result = serde_json::json!({
+        "status": "skipped",
+        "reason": "handoff_not_ok"
+    });
     if status_result
         .get("status")
         .and_then(|v| v.as_str())
@@ -1657,6 +1775,14 @@ fn handoff_task(
         let _ = knowledge::add_knowledge(store, &knowledge_id, &title, &content, &provenance, None);
         let obs = format!("Task {} handoff to {}: {}", id, to, summary);
         let _ = teammate::record_observation(store, &obs, Some("multi_agent"));
+
+        // Attempt cross-branch reconciliation: commit current changes and mirror to target agent branch.
+        let repo_root = root
+            .parent()
+            .and_then(|p| p.parent())
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| root.clone());
+        reconcile_result = reconcile_commit_to_agent_branch(&repo_root, id, to, summary)?;
     }
 
     Ok(serde_json::json!({
@@ -1667,6 +1793,7 @@ fn handoff_task(
         "id": id,
         "result": status_result,
         "event_id": if event_id.is_empty() { None::<String> } else { Some(event_id) },
+        "reconcile": reconcile_result,
     }))
 }
 
