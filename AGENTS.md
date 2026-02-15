@@ -7,15 +7,15 @@
 **⚠️ MANDATORY START SEQUENCE - Run these EVERY session before ANY work:**
 
 ```bash
-decapod --version                   # 1. Check installed version
-decapod update                      # 2. Update if repo version is newer (safe no-op if current)
+cargo install decapod              # 1. Install/update to latest release
+decapod --version                   # 2. Check installed version
 decapod --help                      # 3. Verify available commands
 decapod docs show core/DECAPOD.md  # 4. Refresh constitution
 decapod validate                    # 5. Check system state
 decapod todo list                   # 6. See active work
 ```
 
-**Why this is mandatory:** The decapod binary evolves. Commands change. Constitution updates. You MUST update on version mismatch, verify what's available, and refresh your understanding before acting. Skipping this causes errors.
+**Why this is mandatory:** The decapod binary evolves. Commands change. Constitution updates. Always install the latest release first, then verify what's available and refresh your understanding before acting. Skipping this causes errors.
 
 **After the start sequence:**
 
