@@ -774,9 +774,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             "federation.db" => {
                                 federation::initialize_federation_db(&setup_store_root)?
                             }
-                            "decisions.db" => {
-                                decide::initialize_decide_db(&setup_store_root)?
-                            }
+                            "decisions.db" => decide::initialize_decide_db(&setup_store_root)?,
                             _ => unreachable!(),
                         }
                         println!("    {} {}", "●".bright_green(), db_name.bright_white());
@@ -933,9 +931,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
                 Command::Auto(auto_cli) => run_auto_command(auto_cli, &project_store)?,
                 Command::Qa(qa_cli) => run_qa_command(qa_cli, &project_store, &project_root)?,
-                Command::Decide(decide_cli) => {
-                    decide::run_decide_cli(&project_store, decide_cli)?
-                }
+                Command::Decide(decide_cli) => decide::run_decide_cli(&project_store, decide_cli)?,
                 _ => unreachable!(),
             }
         }

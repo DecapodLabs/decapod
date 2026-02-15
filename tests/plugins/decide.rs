@@ -147,14 +147,7 @@ fn test_invalid_option_rejected() {
 
     let session = start_session(&store, "cli-tool", "Test CLI", "", "test-agent").unwrap();
 
-    let result = record_decision(
-        &store,
-        &session.id,
-        "language",
-        "cobol",
-        "",
-        "test-agent",
-    );
+    let result = record_decision(&store, &session.id, "language", "cobol", "", "test-agent");
     assert!(result.is_err());
     let err_msg = format!("{}", result.unwrap_err());
     assert!(err_msg.contains("Invalid value"));
@@ -186,7 +179,15 @@ fn test_next_question_conditional() {
     assert_eq!(q["id"], "runtime");
 
     // Answer runtime = typescript
-    record_decision(&store, &session.id, "runtime", "typescript", "", "test-agent").unwrap();
+    record_decision(
+        &store,
+        &session.id,
+        "runtime",
+        "typescript",
+        "",
+        "test-agent",
+    )
+    .unwrap();
 
     // Next should be "framework" (typescript conditional), not "framework_wasm"
     let next = next_question(&store, &session.id).unwrap();
@@ -219,9 +220,33 @@ fn test_next_question_complete() {
 
     // Answer all 4 questions
     record_decision(&store, &session.id, "language", "rust", "", "test-agent").unwrap();
-    record_decision(&store, &session.id, "distribution", "binary", "", "test-agent").unwrap();
-    record_decision(&store, &session.id, "config_format", "toml", "", "test-agent").unwrap();
-    record_decision(&store, &session.id, "output_format", "text_json", "", "test-agent").unwrap();
+    record_decision(
+        &store,
+        &session.id,
+        "distribution",
+        "binary",
+        "",
+        "test-agent",
+    )
+    .unwrap();
+    record_decision(
+        &store,
+        &session.id,
+        "config_format",
+        "toml",
+        "",
+        "test-agent",
+    )
+    .unwrap();
+    record_decision(
+        &store,
+        &session.id,
+        "output_format",
+        "text_json",
+        "",
+        "test-agent",
+    )
+    .unwrap();
 
     // Should be complete
     let next = next_question(&store, &session.id).unwrap();
@@ -235,7 +260,15 @@ fn test_get_session_with_decisions() {
 
     let session = start_session(&store, "cli-tool", "Test CLI", "", "test-agent").unwrap();
     record_decision(&store, &session.id, "language", "rust", "", "test-agent").unwrap();
-    record_decision(&store, &session.id, "distribution", "binary", "", "test-agent").unwrap();
+    record_decision(
+        &store,
+        &session.id,
+        "distribution",
+        "binary",
+        "",
+        "test-agent",
+    )
+    .unwrap();
 
     let full_session = get_session(&store, &session.id).unwrap();
     let decisions = full_session.decisions.unwrap();
@@ -276,9 +309,18 @@ fn test_complete_nonexistent_session_fails() {
 #[test]
 fn test_trees_have_questions_and_options() {
     for tree in decision_trees() {
-        assert!(!tree.questions.is_empty(), "Tree '{}' has no questions", tree.id);
+        assert!(
+            !tree.questions.is_empty(),
+            "Tree '{}' has no questions",
+            tree.id
+        );
         for q in tree.questions {
-            assert!(!q.options.is_empty(), "Question '{}' in tree '{}' has no options", q.id, tree.id);
+            assert!(
+                !q.options.is_empty(),
+                "Question '{}' in tree '{}' has no options",
+                q.id,
+                tree.id
+            );
             for opt in q.options {
                 assert!(!opt.value.is_empty());
                 assert!(!opt.label.is_empty());
