@@ -172,7 +172,6 @@ pub enum TodoCommand {
         #[clap(long)]
         summary: String,
     },
-
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -740,23 +739,6 @@ pub struct Category {
     pub created_at: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CategoryOwnership {
-    pub id: String,
-    pub agent_id: String,
-    pub category: String,
-    pub claimed_at: String,
-    pub updated_at: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct AgentPresence {
-    pub agent_id: String,
-    pub last_seen: String,
-    pub status: String,
-    pub updated_at: String,
-}
-
 pub fn list_categories(root: &Path) -> Result<Vec<Category>, error::DecapodError> {
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -833,7 +815,6 @@ fn register_agent_categories(
                    agent_id = excluded.agent_id,
                    claimed_at = excluded.claimed_at,
                    updated_at = excluded.updated_at",
-
                 rusqlite::params![Ulid::new().to_string(), agent_id, category, ts, ts],
             )
             .map_err(error::DecapodError::RusqliteError)?;
@@ -913,7 +894,6 @@ fn touch_agent_presence(
            last_seen = excluded.last_seen,
            status = 'active',
            updated_at = excluded.updated_at",
-
         rusqlite::params![agent_id, ts, ts],
     )
     .map_err(error::DecapodError::RusqliteError)?;
@@ -1014,7 +994,6 @@ fn list_agent_presence(
         let mut out = Vec::new();
         for r in rows {
             out.push(r.map_err(error::DecapodError::RusqliteError)?);
-
         }
         Ok(out)
     })
@@ -1174,7 +1153,6 @@ fn find_agent_for_category(
     now_ts: &str,
 ) -> Result<Option<String>, error::DecapodError> {
     let owner: Option<String> = conn
-
         .query_row(
             "SELECT agent_id FROM agent_category_claims WHERE category = ?",
             [category],
@@ -1187,7 +1165,6 @@ fn find_agent_for_category(
             return Ok(None);
         }
         return Ok(Some(agent));
-
     }
 
     let agent: Option<String> = conn
@@ -1603,7 +1580,6 @@ fn claim_task(
                     if let Some(owner) = get_category_owner(conn, &category)? {
                         if owner != agent_id {
                             if is_agent_stale(conn, &owner, &ts, AGENT_EVICT_TIMEOUT_SECS)? {
-
                                 conn.execute(
                                     "UPDATE agent_category_claims
                                      SET agent_id = ?, claimed_at = ?, updated_at = ?
@@ -1622,7 +1598,6 @@ fn claim_task(
                             }
                         }
                     } else {
-
                         claim_category_if_unowned(conn, &category, agent_id, &ts)?;
                     }
                 }
@@ -2421,7 +2396,6 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
             from,
             summary,
         } => handoff_task(store, id, to, from.as_deref(), summary)?,
-
     };
 
     match cli.format {
