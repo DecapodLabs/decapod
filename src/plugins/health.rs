@@ -6,6 +6,7 @@ use crate::plugins::{policy, watcher};
 use clap::{Parser, Subcommand};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
 
@@ -138,14 +139,15 @@ pub enum AutonomyTier {
     Core,     // Full autonomy with trusted operations
 }
 
-impl std::fmt::Display for AutonomyTier {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            AutonomyTier::Untrusted => write!(f, "untrusted"),
-            AutonomyTier::Basic => write!(f, "basic"),
-            AutonomyTier::Verified => write!(f, "verified"),
-            AutonomyTier::Core => write!(f, "core"),
-        }
+impl fmt::Display for AutonomyTier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            AutonomyTier::Untrusted => "untrusted",
+            AutonomyTier::Basic => "basic",
+            AutonomyTier::Verified => "verified",
+            AutonomyTier::Core => "core",
+        };
+        write!(f, "{s}")
     }
 }
 

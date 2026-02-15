@@ -1,8 +1,8 @@
 use decapod::core::store::{Store, StoreKind};
 use decapod::plugins::federation::{
-    add_edge, add_node, add_source_to_node, edit_node, find_node_by_source,
-    initialize_federation_db, rebuild_from_events, run_federation_cli, supersede_node,
-    transition_node_status, validate_federation, FederationCli, FederationCommand, OutputFormat,
+    FederationCli, FederationCommand, OutputFormat, add_edge, add_node, add_source_to_node,
+    edit_node, find_node_by_source, initialize_federation_db, rebuild_from_events,
+    run_federation_cli, supersede_node, transition_node_status, validate_federation,
 };
 use std::fs;
 use tempfile::tempdir;
@@ -139,10 +139,12 @@ fn test_invalid_provenance_rejected() {
         "test",
     );
     assert!(result.is_err());
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid provenance"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid provenance")
+    );
 }
 
 #[test]
@@ -190,10 +192,12 @@ fn test_edit_critical_node_rejected() {
     // Edit should fail for critical type
     let result = edit_node(&store, &node.id, Some("Changed"), None, None, None);
     assert!(result.is_err());
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains("Cannot edit critical"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Cannot edit critical")
+    );
 }
 
 #[test]
@@ -265,10 +269,12 @@ fn test_status_transition_only_from_active() {
     // Can't deprecate again (already deprecated)
     let result = transition_node_status(&store, &node.id, "disputed", "node.dispute", "also bad");
     assert!(result.is_err());
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains("Only active nodes"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Only active nodes")
+    );
 }
 
 #[test]
@@ -345,10 +351,12 @@ fn test_invalid_edge_type_rejected() {
 
     let result = add_edge(&store, &a.id, &b.id, "bogus_type");
     assert!(result.is_err());
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid edge_type"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid edge_type")
+    );
 }
 
 #[test]
@@ -434,10 +442,12 @@ fn test_add_source_to_node() {
     // Invalid source should be rejected
     let result = add_source_to_node(&store, &node.id, "not-valid");
     assert!(result.is_err());
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains("Invalid provenance"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid provenance")
+    );
 
     // Non-existent node should fail
     let result = add_source_to_node(&store, "F_nonexistent", "file:foo.rs");
@@ -603,9 +613,11 @@ fn test_derived_artifacts_build_and_validate() {
     let graph_path = store.root.join("federation/_graph.json");
     assert!(index_path.exists());
     assert!(graph_path.exists());
-    assert!(fs::read_to_string(index_path)
-        .unwrap()
-        .contains("Federation Vault Index"));
+    assert!(
+        fs::read_to_string(index_path)
+            .unwrap()
+            .contains("Federation Vault Index")
+    );
 
     let results = validate_federation(&store.root).unwrap();
     let index_gate = results
