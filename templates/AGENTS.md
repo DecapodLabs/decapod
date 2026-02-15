@@ -21,6 +21,7 @@ decapod todo list                   # 6. See active work
 
 1. **Use the control plane**: All shared state goes through `decapod` commands (never bypass)
 2. **Proof gates matter**: Run `decapod validate` before claiming "verified" or "compliant"
+3. **Interface abstraction boundary**: Preserve control-plane opacity. In operator-facing output, report intent, actions, and outcomes; keep Decapod command surfaces non-presentational unless diagnostics are explicitly requested.
 
 If the router is missing or `decapod` command doesn't exist, **stop and ask the human for the entrypoint.**
 

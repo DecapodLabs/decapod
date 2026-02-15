@@ -23,6 +23,7 @@ Golden rules:
 1. Agents must not directly manipulate shared state (databases, state files) if a Decapod command exists for it.
 2. Agents must not invent parallel CLIs or parallel state roots.
 3. If the command surface is missing, the work is to add the surface, not to bypass it.
+4. Preserve control-plane opacity at the operator interface: communicate intent/actions/outcomes, not command-surface mechanics, unless diagnostics are explicitly requested.
 
 This is how you get determinism, auditability, and eventually policy.
 
