@@ -15,8 +15,9 @@ use crate::core::db;
 use crate::core::error;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex, OnceLock};
 use ulid::Ulid;
 
 /// Database broker providing serialized access to Decapod state.
@@ -74,9 +75,12 @@ impl DbBroker {
     where
         F: FnOnce(&Connection) -> Result<R, error::DecapodError>,
     {
-        // Simple global lock for Phase 1 serialization.
-        static DB_LOCK: Mutex<()> = Mutex::new(());
-        let _lock = DB_LOCK.lock().unwrap();
+        // Serialize operations per database path instead of globally.
+        // This preserves same-DB safety while allowing cross-DB parallelism.
+        let db_lock = get_db_lock(db_path)?;
+        let _lock = db_lock
+            .lock()
+            .map_err(|_| error::DecapodError::ValidationError("DbBroker lock poisoned".into()))?;
 
         let db_id = db_path
             .file_name()
@@ -121,6 +125,11 @@ impl DbBroker {
             status: status.to_string(),
         };
 
+        let audit_lock = get_audit_lock();
+        let _audit_guard = audit_lock
+            .lock()
+            .map_err(|_| error::DecapodError::ValidationError("Audit lock poisoned".into()))?;
+
         let mut f = OpenOptions::new()
             .create(true)
             .append(true)
@@ -131,6 +140,27 @@ impl DbBroker {
             .map_err(error::DecapodError::IoError)?;
         Ok(())
     }
+}
+
+fn db_lock_map() -> &'static Mutex<HashMap<PathBuf, Arc<Mutex<()>>>> {
+    static DB_LOCKS: OnceLock<Mutex<HashMap<PathBuf, Arc<Mutex<()>>>>> = OnceLock::new();
+    DB_LOCKS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn get_db_lock(db_path: &Path) -> Result<Arc<Mutex<()>>, error::DecapodError> {
+    let key = db_path.to_path_buf();
+    let mut map = db_lock_map()
+        .lock()
+        .map_err(|_| error::DecapodError::ValidationError("Db lock map poisoned".into()))?;
+    Ok(map
+        .entry(key)
+        .or_insert_with(|| Arc::new(Mutex::new(())))
+        .clone())
+}
+
+fn get_audit_lock() -> &'static Mutex<()> {
+    static AUDIT_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    AUDIT_LOCK.get_or_init(|| Mutex::new(()))
 }
 
 pub fn schema() -> serde_json::Value {

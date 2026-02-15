@@ -3,6 +3,7 @@ use decapod::core::broker::{self, BrokerEvent, DbBroker};
 use decapod::core::db;
 use decapod::core::docs_cli::{self, DocsCli, DocsCommand};
 use decapod::core::error::DecapodError;
+use decapod::core::migration;
 use decapod::core::repomap;
 use decapod::core::scaffold::{ScaffoldOptions, scaffold_project_entrypoints};
 use decapod::core::schemas;
@@ -10,6 +11,8 @@ use decapod::core::store::{Store, StoreKind};
 use decapod::core::validate;
 use rusqlite::params;
 use std::fs;
+use std::sync::{Arc, Barrier};
+use std::time::{Duration, Instant};
 use tempfile::tempdir;
 
 #[test]
@@ -95,6 +98,129 @@ fn db_and_broker_round_trip_and_audit() {
 
     let schema = broker::schema();
     assert_eq!(schema["name"], "broker");
+}
+
+#[test]
+fn broker_allows_parallel_ops_on_different_databases() {
+    let tmp = tempdir().expect("tempdir");
+    let root = tmp.path();
+    let broker = Arc::new(DbBroker::new(root));
+
+    let db_a = root.join("a.db");
+    let db_b = root.join("b.db");
+
+    let barrier = Arc::new(Barrier::new(3));
+
+    let b1 = Arc::clone(&broker);
+    let gate1 = Arc::clone(&barrier);
+    let h1 = std::thread::spawn(move || {
+        b1.with_conn(&db_a, "tester", None, "parallel.a", |conn| {
+            conn.execute("CREATE TABLE IF NOT EXISTS t (id INTEGER)", [])
+                .map_err(DecapodError::RusqliteError)?;
+            gate1.wait();
+            std::thread::sleep(Duration::from_millis(150));
+            Ok(())
+        })
+    });
+
+    let b2 = Arc::clone(&broker);
+    let gate2 = Arc::clone(&barrier);
+    let h2 = std::thread::spawn(move || {
+        b2.with_conn(&db_b, "tester", None, "parallel.b", |conn| {
+            conn.execute("CREATE TABLE IF NOT EXISTS t (id INTEGER)", [])
+                .map_err(DecapodError::RusqliteError)?;
+            gate2.wait();
+            std::thread::sleep(Duration::from_millis(150));
+            Ok(())
+        })
+    });
+
+    barrier.wait();
+    let started = Instant::now();
+    h1.join().expect("thread a joined").expect("thread a ok");
+    h2.join().expect("thread b joined").expect("thread b ok");
+    let elapsed = started.elapsed();
+
+    assert!(
+        elapsed < Duration::from_millis(260),
+        "expected per-db concurrency (<260ms), got {:?}",
+        elapsed
+    );
+}
+
+#[test]
+fn migration_reconstructs_legacy_events_from_fixture() {
+    let tmp = tempdir().expect("tempdir");
+    let decapod_root = tmp.path();
+    let data_dir = decapod_root.join("data");
+    fs::create_dir_all(&data_dir).expect("data dir");
+
+    let fixture_sql = fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/migration/legacy_tasks.sql"),
+    )
+    .expect("read sql fixture");
+    let conn = rusqlite::Connection::open(data_dir.join("todo.db")).expect("open db");
+    conn.execute_batch(&fixture_sql)
+        .expect("apply fixture schema");
+
+    // Force migration path.
+    let generated = decapod_root.join("generated");
+    fs::create_dir_all(&generated).expect("generated dir");
+    fs::write(generated.join("decapod.version"), "0.8.0").expect("write old version");
+
+    migration::check_and_migrate(decapod_root).expect("migration");
+
+    let expected_lines = fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/migration/expected_todo_events.jsonl"),
+    )
+    .expect("read expected fixture");
+    let actual_lines =
+        fs::read_to_string(data_dir.join("todo.events.jsonl")).expect("read migrated events");
+
+    let expected: Vec<serde_json::Value> = expected_lines
+        .lines()
+        .map(|line| serde_json::from_str(line).expect("expected fixture json"))
+        .collect();
+    let actual: Vec<serde_json::Value> = actual_lines
+        .lines()
+        .map(|line| serde_json::from_str(line).expect("actual event json"))
+        .collect();
+
+    assert_eq!(actual, expected);
+    assert_eq!(
+        fs::read_to_string(generated.join("decapod.version"))
+            .expect("read migrated version")
+            .trim(),
+        migration::DECAPOD_VERSION
+    );
+}
+
+#[test]
+fn migration_preserves_existing_event_log() {
+    let tmp = tempdir().expect("tempdir");
+    let decapod_root = tmp.path();
+    let data_dir = decapod_root.join("data");
+    fs::create_dir_all(&data_dir).expect("data dir");
+
+    // Legacy DB exists but events file is already populated: migration should no-op.
+    let conn = rusqlite::Connection::open(data_dir.join("todo.db")).expect("open db");
+    conn.execute_batch(
+        "CREATE TABLE tasks (id TEXT PRIMARY KEY, title TEXT, status TEXT, created_at TEXT);",
+    )
+    .expect("create tasks table");
+    let sentinel = "{\"event_type\":\"task.add\",\"task_id\":\"SENTINEL\"}\n";
+    fs::write(data_dir.join("todo.events.jsonl"), sentinel).expect("write sentinel events");
+
+    let generated = decapod_root.join("generated");
+    fs::create_dir_all(&generated).expect("generated dir");
+    fs::write(generated.join("decapod.version"), "0.8.0").expect("write old version");
+
+    migration::check_and_migrate(decapod_root).expect("migration");
+
+    let after = fs::read_to_string(data_dir.join("todo.events.jsonl")).expect("read events");
+    assert_eq!(after, sentinel);
 }
 
 #[test]
