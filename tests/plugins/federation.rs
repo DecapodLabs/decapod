@@ -1,8 +1,10 @@
 use decapod::core::store::{Store, StoreKind};
 use decapod::plugins::federation::{
-    add_edge, add_node, add_source_to_node, edit_node, initialize_federation_db,
-    rebuild_from_events, supersede_node, transition_node_status, validate_federation,
+    FederationCli, FederationCommand, OutputFormat, add_edge, add_node, add_source_to_node,
+    edit_node, initialize_federation_db, rebuild_from_events, run_federation_cli, supersede_node,
+    transition_node_status, validate_federation,
 };
+use std::fs;
 use tempfile::tempdir;
 
 fn test_store() -> (tempfile::TempDir, Store) {
@@ -14,6 +16,25 @@ fn test_store() -> (tempfile::TempDir, Store) {
         root,
     };
     (tmp, store)
+}
+
+fn build_derived(store: &Store) {
+    run_federation_cli(
+        store,
+        FederationCli {
+            format: OutputFormat::Json,
+            command: FederationCommand::IndexBuild,
+        },
+    )
+    .unwrap();
+    run_federation_cli(
+        store,
+        FederationCli {
+            format: OutputFormat::Json,
+            command: FederationCommand::GraphExport,
+        },
+    )
+    .unwrap();
 }
 
 #[test]
@@ -216,6 +237,7 @@ fn test_supersede_lifecycle() {
     supersede_node(&store, &old.id, &new.id, "Requirements changed").unwrap();
 
     // Old node should now be superseded (verify via validate)
+    build_derived(&store);
     let results = validate_federation(&store.root).unwrap();
     for (gate, passed, _msg) in &results {
         assert!(passed, "Gate {} failed", gate);
@@ -383,6 +405,7 @@ fn test_rebuild_determinism() {
     assert!(count > 0);
 
     // Validate after rebuild — all gates should pass
+    build_derived(&store);
     let results = validate_federation(&store.root).unwrap();
     for (gate, passed, msg) in &results {
         assert!(passed, "Gate {} failed: {}", gate, msg);
@@ -457,6 +480,7 @@ fn test_add_source_survives_rebuild() {
     let count = rebuild_from_events(&store.root).unwrap();
     assert!(count > 0);
 
+    build_derived(&store);
     let results = validate_federation(&store.root).unwrap();
     for (gate, passed, msg) in &results {
         assert!(passed, "Gate {} failed: {}", gate, msg);
@@ -536,6 +560,7 @@ fn test_rebuild_determinism_gate_passes() {
     transition_node_status(&store, &n2.id, "deprecated", "node.deprecate", "stale").unwrap();
 
     // Validate — the rebuild_determinism gate should pass
+    build_derived(&store);
     let results = validate_federation(&store.root).unwrap();
     let determinism_gate = results
         .iter()
@@ -546,6 +571,116 @@ fn test_rebuild_determinism_gate_passes() {
     );
     let (_, passed, msg) = determinism_gate.unwrap();
     assert!(passed, "rebuild_determinism gate failed: {}", msg);
+}
+
+#[test]
+fn test_derived_artifacts_build_and_validate() {
+    let (_tmp, store) = test_store();
+
+    let a = add_node(
+        &store,
+        "Project A",
+        "project",
+        "notable",
+        "agent_inferred",
+        "body",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
+    )
+    .unwrap();
+    let b = add_node(
+        &store,
+        "Lesson B",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "body",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
+    )
+    .unwrap();
+    add_edge(&store, &a.id, &b.id, "relates_to").unwrap();
+
+    build_derived(&store);
+
+    let index_path = store.root.join("federation/_index.md");
+    let graph_path = store.root.join("federation/_graph.json");
+    assert!(index_path.exists());
+    assert!(graph_path.exists());
+    assert!(
+        fs::read_to_string(index_path)
+            .unwrap()
+            .contains("Federation Vault Index")
+    );
+
+    let results = validate_federation(&store.root).unwrap();
+    let index_gate = results
+        .iter()
+        .find(|(name, _, _)| name == "federation.derived_index_fresh")
+        .unwrap();
+    let graph_gate = results
+        .iter()
+        .find(|(name, _, _)| name == "federation.derived_graph_fresh")
+        .unwrap();
+    assert!(index_gate.1, "{}", index_gate.2);
+    assert!(graph_gate.1, "{}", graph_gate.2);
+}
+
+#[test]
+fn test_derived_freshness_detects_drift_after_write() {
+    let (_tmp, store) = test_store();
+
+    add_node(
+        &store,
+        "Before drift",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "body",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
+    )
+    .unwrap();
+
+    build_derived(&store);
+
+    // Mutation after build should make derived artifacts stale.
+    add_node(
+        &store,
+        "After drift",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "body2",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
+    )
+    .unwrap();
+
+    let results = validate_federation(&store.root).unwrap();
+    let index_gate = results
+        .iter()
+        .find(|(name, _, _)| name == "federation.derived_index_fresh")
+        .unwrap();
+    let graph_gate = results
+        .iter()
+        .find(|(name, _, _)| name == "federation.derived_graph_fresh")
+        .unwrap();
+
+    assert!(!index_gate.1, "index freshness should fail after mutation");
+    assert!(!graph_gate.1, "graph freshness should fail after mutation");
 }
 
 #[test]
