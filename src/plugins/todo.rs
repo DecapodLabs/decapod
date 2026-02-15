@@ -8,7 +8,7 @@ use crate::plugins::teammate;
 use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{params, types::ToSql, Connection, OptionalExtension, Result as SqlResult};
+use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
@@ -1067,6 +1067,7 @@ fn get_agent_trust_level(conn: &Connection, agent_id: &str) -> Result<String, er
     Ok(level.unwrap_or_else(|| "basic".to_string()))
 }
 
+#[allow(dead_code)]
 fn set_agent_trust_level(
     conn: &Connection,
     agent_id: &str,
