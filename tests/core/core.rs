@@ -164,11 +164,6 @@ fn migration_reconstructs_legacy_events_from_fixture() {
     conn.execute_batch(&fixture_sql)
         .expect("apply fixture schema");
 
-    // Force migration path.
-    let generated = decapod_root.join("generated");
-    fs::create_dir_all(&generated).expect("generated dir");
-    fs::write(generated.join("decapod.version"), "0.8.0").expect("write old version");
-
     migration::check_and_migrate(decapod_root).expect("migration");
 
     let expected_lines = fs::read_to_string(
@@ -189,12 +184,6 @@ fn migration_reconstructs_legacy_events_from_fixture() {
         .collect();
 
     assert_eq!(actual, expected);
-    assert_eq!(
-        fs::read_to_string(generated.join("decapod.version"))
-            .expect("read migrated version")
-            .trim(),
-        migration::DECAPOD_VERSION
-    );
 }
 
 #[test]

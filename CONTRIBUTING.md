@@ -7,8 +7,8 @@ Decapod is a minimal kernel with an expansive plugin ecosystem. We prioritize co
 Run this sequence before making changes:
 
 ```bash
+cargo install decapod
 decapod --version
-decapod update
 decapod --help
 decapod docs show core/DECAPOD.md
 decapod validate
@@ -35,7 +35,7 @@ Top-level command groups:
 - `docs`
 - `todo`
 - `validate`
-- `update`, `version`
+- `version`
 - `govern`
 - `data`
 - `auto`

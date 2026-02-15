@@ -63,7 +63,7 @@ All AI agents operating within this system must adhere to the following behavior
 
 -   **Before Acting:**
     1.  If present, start at `core/DECAPOD.md` (repo router/index).
-    2.  Run `decapod --version`, then `decapod update` if repo version is newer.
+    2.  Run `cargo install decapod` to ensure the latest release, then `decapod --version`.
     3.  Read `specs/INTENT.md`.
     4.  Read `methodology/ARCHITECTURE.md`.
     5.  Read the proof surface (`decapod validate`, `tests/`, and optional `proof.md`).

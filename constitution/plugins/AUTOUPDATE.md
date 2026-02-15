@@ -23,25 +23,33 @@ Agents operate on evolving infrastructure. The decapod binary ships updates. The
 Every agent session MUST begin with:
 
 ```bash
-decapod --version                   # 1. Check installed version
-decapod --help                      # 2. Verify command structure
-decapod docs show core/DECAPOD.md  # 3. Refresh constitution
-decapod validate                    # 4. Verify system state
-decapod todo list                   # 5. Check active work
+cargo install decapod              # 1. Install/update to latest release
+decapod --version                   # 2. Check installed version
+decapod --help                      # 3. Verify command structure
+decapod docs show core/DECAPOD.md  # 4. Refresh constitution
+decapod validate                    # 5. Verify system state
+decapod todo list                   # 6. Check active work
 ```
 
 **This is not optional.** This is a proof gate. Agents that skip this will produce unverified work.
 
 ## Why Each Step Matters
 
-### 1. `decapod --version`
+### 1. `cargo install decapod`
+**Action:** Install or update to the latest published release from crates.io.
+
+- Ensures you always have the latest binary with current commands
+- Replaces any stale locally-built version
+- If already at the latest version, cargo will skip the build (fast no-op)
+- No version file tracking needed — just always install the latest
+
+### 2. `decapod --version`
 **Check:** What version of the binary is installed?
 
-- Prevents calling commands from newer versions that don't exist yet
-- Alerts to version mismatches between documentation and binary
+- Confirms the install succeeded
 - Required for debugging and support
 
-### 2. `decapod --help`
+### 3. `decapod --help`
 **Check:** What commands are currently available?
 
 - Shows the current command structure (grouped vs flat)
@@ -50,7 +58,7 @@ decapod todo list                   # 5. Check active work
 
 **Example:** You remember `decapod heartbeat`. Running `--help` shows it's now `decapod govern health summary`. You adjust before calling the wrong command.
 
-### 3. `decapod docs show core/DECAPOD.md`
+### 4. `decapod docs show core/DECAPOD.md`
 **Check:** What's the current contract?
 
 - Refreshes your understanding of the constitution
@@ -59,7 +67,7 @@ decapod todo list                   # 5. Check active work
 
 **Example:** The constitution may have added a new mandatory validation gate. Refreshing ensures you see it.
 
-### 4. `decapod validate`
+### 5. `decapod validate`
 **Check:** Is the system currently healthy?
 
 - Runs all proof gates to verify repo state
@@ -68,7 +76,7 @@ decapod todo list                   # 5. Check active work
 
 **Example:** If validation already fails, you know not to assume your changes broke it.
 
-### 5. `decapod todo list`
+### 6. `decapod todo list`
 **Check:** What work is currently active?
 
 - Shows tasks other agents may be working on
@@ -92,7 +100,8 @@ This protocol is enforced through:
 
 | Skipped Step | Failure Mode | Example |
 |--------------|--------------|---------|
-| `--version` | Call commands that don't exist in this version | You call `decapod data schema` but binary is v0.2.x (doesn't have grouped commands yet) |
+| `cargo install` | Run stale binary with missing commands | You call `decapod decide` but binary is v0.11.x (doesn't have it yet) |
+| `--version` | Can't diagnose issues or confirm update | You report a bug against the wrong version |
 | `--help` | Use renamed/moved commands | You call `decapod heartbeat` (removed) instead of `decapod govern health summary` |
 | `docs show` | Violate updated constitution | New contract requires approval for `task.archive` but you didn't refresh and bypass it |
 | `validate` | Assume clean state when broken | Validation already failing, you make changes and claim you "broke it" |
@@ -103,34 +112,13 @@ This protocol is enforced through:
 This is not a standalone command - it's a protocol. The commands are:
 
 ```bash
+cargo install decapod
 decapod --version
 decapod --help
 decapod docs show core/DECAPOD.md
 decapod validate
 decapod todo list
 ```
-
-## Self-Update Command
-
-When the binary needs updating (new features, bug fixes, or command structure changes), use:
-
-```bash
-decapod update
-```
-
-**What it does:**
-- Rebuilds the decapod binary from the current directory
-- Runs `cargo install --path . --locked` automatically
-- Installs the new version to `~/.cargo/bin/decapod`
-- Preserves all project state and configuration
-
-**When to use:**
-- After pulling new code from git
-- When commands fail with "unrecognized subcommand" errors
-- When `decapod --help` shows outdated command structure
-- When instructed by the operator
-
-**Rationale:** Agents shouldn't call `cargo` directly - use the Decapod control plane instead. This command provides a safe, auditable way to update the binary.
 
 ## See Also
 
