@@ -43,7 +43,7 @@ Like Docker is a runtime for containers, Decapod is a runtime for agents. You se
 
 Agents can write code. But they can't reliably **ship** because they forget what they built yesterday, treat best practices as vibes, say "done" without evidence, and trip over each other in parallel. Decapod fixes that.
 
-Decapod is **not** a prompt pack, an agent framework, a hosted SaaS platform, or a review bot. It's infrastructure: the environment where agent work becomes enforceable.
+Decapod is **not** a prompt pack, an agent framework, a hosted SaaS platform, a review bot, or a human workflow tool. Humans may read artifacts; agents are the operators. It's infrastructure: the environment where agent work becomes enforceable.
 
 ## Quickstart
 
@@ -53,17 +53,19 @@ cd your-project
 decapod init
 ```
 
-That's it. Agents now operate inside the governed environment. You observe outcomes, review summaries, and merge when proofs pass.
+That's it. Agents now operate inside the governed environment. Proofs decide 'done'.
 
 ## How It Works
 
-Decapod is a tool for agents, not for humans. You run `decapod init` once; from then on, agents interact with the `decapod` CLI as their control surface. Two things set it apart from orchestration frameworks: an **embedded constitution** and **coordination primitives**.
+Decapod is a tool for agents, not for humans. After `decapod init` is present in a repo, agents operate inside the governed environment. Two things set it apart from orchestration frameworks: an **embedded constitution** and **coordination primitives**.
 
 ### Embedded Constitution
 
 Every Decapod binary ships with a compiled-in methodology: binding contracts, authority chains, proof doctrine, and architectural guidance — 40+ documents covering specs, interfaces, architecture, and plugins. Agents don't receive tips; they receive contracts.
 
-`decapod init` generates thin entrypoints (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md`) that point agents into the constitution. Every agent, regardless of provider, enters through the same contract and follows the same authority ladder: **Intent > Architecture > Implementation > Proof**.
+`decapod init` generates thin entrypoints (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md`) that point agents into the constitution. Every agent, regardless of provider, enters through the same contract and follows the same authority ladder:
+
+**Intent > Architecture > Implementation > Proof**
 
 Projects customize behavior through `.decapod/OVERRIDE.md` — extend or adjust any contract without forking the constitution.
 
@@ -71,8 +73,8 @@ Projects customize behavior through `.decapod/OVERRIDE.md` — extend or adjust 
 
 Agents operating in the same repo share durable infrastructure:
 
-- **Proof ledger** — Decisions, conventions, and proof events survive sessions and model switches. Stored in `.decapod/data/` as SQLite databases and append-only event logs. State survives agent death.
-- **Proof gates** — `decapod validate` runs a 48-gate verification harness. If it fails, the work isn't done — no matter how confident the summary sounds. Evidence required, not assertions.
+- **Proof ledger + knowledge graph** — Decisions, conventions, and proof events survive sessions and model switches. Stored in `.decapod/data/` as SQLite + append-only event logs, forming a repo-native knowledge graph of intent → change → proof.
+- **Proof gates** — `decapod validate` is authoritative. If it fails, the change is not complete, regardless of summary confidence.
 - **Shared backlog** — A brokered task system with audit trails. Agents claim work, record transitions, and archive completions. No duplicate effort, no lost context.
 - **Policy boundaries** — Trust tiers, risk zones, and approval gates. Governance that scales with autonomy.
 - **Event sourcing** — Every state mutation goes through a broker that records who did what, when, and why. State can be deterministically rebuilt from events.
@@ -92,7 +94,7 @@ your-project/
     └── README.md          Control plane documentation
 ```
 
-Agents interact through the CLI control surface. You don't touch `.decapod/data/` directly.
+Agents interact through the CLI control surface. Direct mutation of `.decapod/data/` violates the control-plane contract.
 
 ## Security
 
