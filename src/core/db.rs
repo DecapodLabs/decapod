@@ -64,5 +64,35 @@ pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
+pub fn decide_db_path(root: &Path) -> PathBuf {
+    root.join(schemas::DECIDE_DB_NAME)
+}
+
+pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
+    let db_path = decide_db_path(root);
+    let parent_dir = db_path.parent().unwrap();
+    fs::create_dir_all(parent_dir).map_err(error::DecapodError::IoError)?;
+
+    let broker = DbBroker::new(root);
+    broker.with_conn(&db_path, "decapod", None, "decide.init", |conn| {
+        conn.execute(schemas::DECIDE_DB_SCHEMA_META, [])?;
+        conn.execute(schemas::DECIDE_DB_SCHEMA_SESSIONS, [])?;
+        conn.execute(schemas::DECIDE_DB_SCHEMA_DECISIONS, [])?;
+        conn.execute(schemas::DECIDE_DB_INDEX_DECISIONS_SESSION, [])?;
+        conn.execute(schemas::DECIDE_DB_INDEX_DECISIONS_TREE, [])?;
+        conn.execute(schemas::DECIDE_DB_INDEX_SESSIONS_TREE, [])?;
+        conn.execute(schemas::DECIDE_DB_INDEX_SESSIONS_STATUS, [])?;
+        Ok(())
+    })?;
+
+    use colored::Colorize;
+    println!(
+        "    {} {}",
+        "●".bright_green(),
+        "Decisions database".bright_white()
+    );
+    Ok(())
+}
+
 // Subsystems own their schemas and initialization. Avoid generic "plugin DB" APIs until
 // a real extension mechanism exists.

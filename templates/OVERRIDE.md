@@ -166,4 +166,6 @@ For this project, we use a 5-level priority system:
 
 ### plugins/VERIFY.md
 
+### plugins/DECIDE.md
+
 ### plugins/AUTOUPDATE.md

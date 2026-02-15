@@ -40,6 +40,7 @@ This is the single source of truth for Decapod subsystem status.
 | cron | `decapod auto cron` | implemented | REAL | `plugins/CRON.md` | `decapod auto cron schema` |
 | reflex | `decapod auto reflex` | implemented | REAL | `plugins/REFLEX.md` | `decapod auto reflex schema` |
 | federation | `decapod data federation` | implemented | REAL | `plugins/FEDERATION.md` | `decapod data federation schema` |
+| decide | `decapod decide` | implemented | REAL | `plugins/DECIDE.md` | `decapod decide schema` |
 | db_broker | `decapod data broker` | planned | SPEC | `plugins/DB_BROKER.md` | not yet enforced |
 | heartbeat | `decapod heartbeat` | removed | DEPRECATED | `plugins/HEARTBEAT.md` | replacement: `decapod govern health summary` |
 | trust | `decapod trust` | removed | DEPRECATED | `plugins/TRUST.md` | replacement: `decapod govern health autonomy` |
@@ -71,4 +72,5 @@ Documentation should point to replacement surfaces, not deprecated command group
 - `plugins/TODO.md` - TODO subsystem
 - `plugins/VERIFY.md` - Validation subsystem
 - `plugins/FEDERATION.md` - Federation (governed agent memory)
+- `plugins/DECIDE.md` - Architecture decision prompting
 - `plugins/DB_BROKER.md` - Broker SPEC
