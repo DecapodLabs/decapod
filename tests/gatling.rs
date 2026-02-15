@@ -158,36 +158,16 @@ fn t003_no_args_errors() {
 }
 
 #[test]
-fn t004_version_mismatch_requires_update() {
+fn t004_version_command_works() {
     let (_tmp, dir) = setup_workspace();
 
-    // Simulate repo requiring a newer decapod than the running binary.
-    std::fs::write(dir.join(".decapod/generated/decapod.version"), "99.99.99\n").unwrap();
-
-    // Normal commands must be blocked until update.
-    let (success_todo, todo_output) = run(&dir, &["todo", "list"]);
+    let (success, output) = run(&dir, &["version"]);
+    assert!(success, "version command should succeed, got:\n{}", output);
+    // Output contains the version number (e.g., "0.12.1")
     assert!(
-        !success_todo,
-        "todo list should fail on version mismatch, got:\n{}",
-        todo_output
-    );
-    assert!(
-        todo_output.contains("VERSION MISMATCH"),
-        "expected mismatch message in output:\n{}",
-        todo_output
-    );
-    assert!(
-        todo_output.contains("decapod update"),
-        "expected update instruction in output:\n{}",
-        todo_output
-    );
-
-    // Recovery/inspection command must remain available.
-    let (success_version, version_output) = run(&dir, &["version"]);
-    assert!(
-        success_version,
-        "version should be allowed during mismatch, got:\n{}",
-        version_output
+        output.contains(env!("CARGO_PKG_VERSION")),
+        "expected version string in output:\n{}",
+        output
     );
 }
 

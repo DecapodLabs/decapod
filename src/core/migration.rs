@@ -5,23 +5,17 @@
 //!
 //! # For AI Agents
 //!
-//! - **Migrations run automatically**: Version mismatch triggers migration
-//! - **Idempotent migrations**: Safe to run multiple times
-//! - **Version tracking**: `.decapod/generated/decapod.version` stores current version
+//! - **Migrations run automatically**: Idempotent migrations run on every startup
 //! - **Schema evolution**: Each migration can modify databases, files, etc.
+//! - **Version management**: Install latest via `cargo install decapod`
 
 use crate::core::error;
-use crate::core::tui;
-use colored::Colorize;
 use rusqlite::Connection;
 use std::fs;
 use std::path::Path;
 
 /// Current Decapod version from Cargo.toml
 pub const DECAPOD_VERSION: &str = env!("CARGO_PKG_VERSION");
-
-/// Path to version file relative to .decapod root
-const VERSION_FILE: &str = "generated/decapod.version";
 
 /// Migration definition
 pub struct Migration {
@@ -45,124 +39,18 @@ pub fn all_migrations() -> Vec<Migration> {
     ]
 }
 
-/// Check if migration is needed and run if necessary
+/// Run any pending migrations (idempotent — safe to call every startup)
 pub fn check_and_migrate(decapod_root: &Path) -> Result<(), error::DecapodError> {
-    let version_path = decapod_root.join(VERSION_FILE);
-
-    // Read stored version
-    let stored_version = if version_path.exists() {
-        fs::read_to_string(&version_path)
-            .map_err(error::DecapodError::IoError)?
-            .trim()
-            .to_string()
-    } else {
-        // No version file - this is either first run or migration from pre-versioning
-        String::new()
-    };
-
-    // Check if migration needed
-    if stored_version == DECAPOD_VERSION {
-        // Up to date - no migration needed
-        return Ok(());
-    }
-
-    // Migration needed!
-    run_migrations(decapod_root, &stored_version)?;
-
-    // Update version file
-    write_version(decapod_root)?;
-
+    run_migrations(decapod_root)?;
     Ok(())
 }
 
-/// Run all necessary migrations
-fn run_migrations(decapod_root: &Path, from_version: &str) -> Result<(), error::DecapodError> {
-    let migrations = all_migrations();
-
-    if migrations.is_empty() {
-        // No migrations defined yet - just version bump
-        return Ok(());
+/// Run all idempotent migrations
+fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    for migration in all_migrations() {
+        // All migrations are idempotent — they check internally if work is needed
+        (migration.up)(decapod_root)?;
     }
-
-    tui::render_box(
-        "🔄 MIGRATION PROTOCOL INITIATED",
-        "Schema & data version upgrades",
-        tui::BoxStyle::Warning,
-    );
-    println!();
-
-    if from_version.is_empty() {
-        println!(
-            "        {} Initializing version tracking",
-            "▸".bright_cyan()
-        );
-    } else {
-        println!(
-            "        {} Upgrading from {} → {}",
-            "▸".bright_cyan(),
-            from_version.bright_yellow(),
-            DECAPOD_VERSION.bright_green()
-        );
-    }
-    println!();
-
-    let mut applied = 0;
-    for migration in migrations {
-        // Run migration if we're upgrading past this version
-        if should_run_migration(from_version, migration.target_version) {
-            println!(
-                "        {} {}",
-                "●".bright_cyan(),
-                migration.description.bright_white()
-            );
-            (migration.up)(decapod_root)?;
-            applied += 1;
-        }
-    }
-
-    if applied > 0 {
-        println!();
-        println!(
-            "        {} {} migration(s) applied successfully",
-            "✓".bright_green(),
-            applied
-        );
-    }
-
-    println!();
-
-    Ok(())
-}
-
-/// Determine if a migration should run based on version comparison
-fn should_run_migration(from: &str, target: &str) -> bool {
-    // Special case: v0.1.7 migration for event log reconstruction
-    // This should ALWAYS run if needed, even on fresh installs
-    if target == "0.1.7" {
-        return true; // Let the migration itself check if it needs to run
-    }
-
-    if from.is_empty() {
-        // Fresh install or pre-versioning - don't run old migrations
-        return false;
-    }
-
-    // Simple string comparison for now - could use semver crate for proper version comparison
-    // For now, run all migrations if versions don't match
-    from < target
-}
-
-/// Write current version to version file
-pub fn write_version(decapod_root: &Path) -> Result<(), error::DecapodError> {
-    let version_path = decapod_root.join(VERSION_FILE);
-
-    // Ensure generated directory exists
-    if let Some(parent) = version_path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
-    }
-
-    fs::write(&version_path, DECAPOD_VERSION).map_err(error::DecapodError::IoError)?;
-
     Ok(())
 }
 
