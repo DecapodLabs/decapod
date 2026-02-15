@@ -462,6 +462,7 @@ fn validate_entrypoint_invariants(
     // Exact invariant strings (tamper detection)
     let exact_invariants = [
         ("core/DECAPOD.md", "Router pointer to core/DECAPOD.md"),
+        ("decapod update", "Version update gate language"),
         ("decapod validate", "Validation gate language"),
         ("Stop if", "Stop-if-missing behavior"),
         ("✅", "Four invariants checklist format"),
@@ -547,6 +548,23 @@ fn validate_entrypoint_invariants(
         } else {
             fail(
                 &format!("{} missing canonical router reference", agent_file),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must include explicit update command in startup sequence
+        if agent_content.contains("decapod update") {
+            pass(
+                &format!("{} includes version update step", agent_file),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!(
+                    "{} missing version update step (`decapod update`)",
+                    agent_file
+                ),
                 fail_count,
             );
             all_present = false;
