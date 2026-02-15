@@ -67,6 +67,7 @@ jobs:
         uses: release-plz/action@v0.5
         with:
           command: release-pr
+          config: .github/release.toml
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
