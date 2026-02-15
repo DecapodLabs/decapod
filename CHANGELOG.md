@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0](https://github.com/DecapodLabs/decapod/compare/v0.11.2...v0.12.0) - 2026-02-15
+
+### Added
+
+- additional fixes
+- additional fixes
+- additional fixes
+- additional fixes
+- additional fixes
+- additional fixes
+- additional fixes
+
+### Other
+
+- fix 429 crates.io backoff
+
 ## [0.11.2](https://github.com/DecapodLabs/decapod/compare/v0.11.1...v0.11.2) - 2026-02-15
 
 ### Other
