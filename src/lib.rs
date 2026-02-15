@@ -296,10 +296,6 @@ enum Command {
     #[clap(name = "validate", visible_alias = "v")]
     Validate(ValidateCli),
 
-    /// Update decapod binary to latest version in current directory
-    #[clap(name = "update")]
-    Update,
-
     /// Show version information
     #[clap(name = "version")]
     Version,
@@ -875,11 +871,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                 created_backups,
                 all: init_group.all,
             })?;
-
-            // Write version file for migration tracking
-            if !init_group.dry_run {
-                migration::write_version(&setup_decapod_root)?;
-            }
         }
         Command::Setup(setup_cli) => match setup_cli.command {
             SetupCommand::Hook {
@@ -897,16 +888,6 @@ pub fn run() -> Result<(), error::DecapodError> {
             store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
 
-            // Gate outdated binaries before normal command execution.
-            // Allow inspection/recovery commands to run so users can diagnose and self-update.
-            let skip_version_gate = matches!(
-                &cli.command,
-                Command::Update | Command::Version | Command::Validate(_)
-            );
-            if !skip_version_gate {
-                check_version_compatibility(&decapod_root_path)?;
-            }
-
             // Check for version changes and run migrations if needed
             migration::check_and_migrate(&decapod_root_path)?;
 
@@ -919,8 +900,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Validate(validate_cli) => {
                     run_validate_command(validate_cli, &project_root, &project_store)?;
                 }
-                Command::Update => run_self_update(&project_root)?,
-                Command::Version => show_version_info(&project_root)?,
+                Command::Version => show_version_info()?,
                 Command::Docs(docs_cli) => docs_cli::run_docs_cli(docs_cli)?,
                 Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
                 Command::Govern(govern_cli) => {
@@ -944,13 +924,6 @@ fn run_validate_command(
     project_root: &Path,
     project_store: &Store,
 ) -> Result<(), error::DecapodError> {
-    if let Err(err) = run_self_update(project_root) {
-        eprintln!(
-            "⚠ Auto-update check failed during validate (continuing): {}",
-            err
-        );
-    }
-
     let decapod_root = project_root.to_path_buf();
     let store = match validate_cli.store.as_str() {
         "user" => {
@@ -1511,248 +1484,20 @@ fn run_check(crate_description: bool, all: bool) -> Result<(), error::DecapodErr
     Ok(())
 }
 
-fn run_self_update(project_root: &Path) -> Result<(), error::DecapodError> {
+/// Show version information
+fn show_version_info() -> Result<(), error::DecapodError> {
     use colored::Colorize;
-    use std::process::Command;
-
-    let current_version = migration::DECAPOD_VERSION;
-    let repo_version = read_cargo_version(project_root)?;
-
-    // Compare versions
-    match compare_versions(current_version, &repo_version) {
-        std::cmp::Ordering::Equal => {
-            println!(
-                "{} Already at version {} (repo matches binary)",
-                "✓".bright_green(),
-                current_version.bright_green()
-            );
-            return Ok(());
-        }
-        std::cmp::Ordering::Greater => {
-            println!(
-                "{} Binary ({}) is newer than repo version ({})",
-                "⚠".bright_yellow(),
-                current_version.bright_green(),
-                repo_version.bright_yellow()
-            );
-            println!(
-                "  {} This would be a {}. Use {} to force.",
-                "▸".bright_cyan(),
-                "DOWNGRADE".bright_red().bold(),
-                "--force".bright_cyan()
-            );
-            println!();
-            println!(
-                "  Consider pulling latest changes: {} or {}",
-                "git pull".bright_cyan(),
-                "cargo install decapod".bright_cyan()
-            );
-            return Err(error::DecapodError::ValidationError(
-                "Update would downgrade - use --force to override".into(),
-            ));
-        }
-        std::cmp::Ordering::Less => {
-            println!(
-                "{} Updating from {} → {}",
-                "▸".bright_cyan(),
-                current_version.bright_yellow(),
-                repo_version.bright_green()
-            );
-        }
-    }
-
-    println!("Running: cargo install --path . --locked");
-    println!();
-
-    let status = Command::new("cargo")
-        .args(["install", "--path", ".", "--locked"])
-        .current_dir(project_root)
-        .status()
-        .map_err(error::DecapodError::IoError)?;
-
-    if !status.success() {
-        return Err(error::DecapodError::ValidationError(
-            "cargo install failed - see output above for details".into(),
-        ));
-    }
-
-    println!();
-    println!("✓ Decapod binary updated successfully");
-    println!("  Run 'decapod --version' to verify the new version");
-
-    // Update the version file to match the new binary version
-    let decapod_root = project_root.join(".decapod");
-    if decapod_root.exists() {
-        migration::write_version(&decapod_root)?;
-    }
-
-    Ok(())
-}
-
-/// Read version from Cargo.toml in project root
-fn read_cargo_version(project_root: &Path) -> Result<String, error::DecapodError> {
-    let cargo_toml = project_root.join("Cargo.toml");
-    let content = std::fs::read_to_string(&cargo_toml).map_err(error::DecapodError::IoError)?;
-
-    // Simple parsing - find line starting with "version = "
-    for line in content.lines() {
-        let trimmed = line.trim();
-        if trimmed.starts_with("version = ") {
-            // Extract version between quotes
-            if let Some(start) = trimmed.find('"') {
-                if let Some(end) = trimmed[start + 1..].find('"') {
-                    return Ok(trimmed[start + 1..start + 1 + end].to_string());
-                }
-            }
-        }
-    }
-
-    Err(error::DecapodError::ValidationError(
-        "Could not parse version from Cargo.toml".into(),
-    ))
-}
-
-/// Show version information and compare with repo version
-fn show_version_info(project_root: &Path) -> Result<(), error::DecapodError> {
-    use colored::Colorize;
-
-    let binary_version = migration::DECAPOD_VERSION;
 
     println!(
         "{} {}",
         "Decapod version:".bright_white(),
-        binary_version.bright_green()
+        migration::DECAPOD_VERSION.bright_green()
     );
-
-    let decapod_root = project_root.join(".decapod");
-
-    // Check if .decapod directory exists
-    if !decapod_root.exists() {
-        println!(
-            "{} No .decapod directory found in {}",
-            "ℹ".bright_blue(),
-            project_root.display()
-        );
-        println!("  Run 'decapod init' to initialize the project");
-        return Ok(());
-    }
-
-    let version_file = decapod_root.join("generated/decapod.version");
-
-    if version_file.exists() {
-        let repo_version = std::fs::read_to_string(&version_file)
-            .map_err(error::DecapodError::IoError)?
-            .trim()
-            .to_string();
-
-        if repo_version.is_empty() {
-            println!(
-                "{} Repo version file exists but is empty",
-                "⚠".bright_yellow()
-            );
-        } else if repo_version == binary_version {
-            println!("{} Repo version matches binary version", "✓".bright_green());
-        } else {
-            // Compare versions to determine which is newer
-            match compare_versions(binary_version, &repo_version) {
-                std::cmp::Ordering::Less => {
-                    println!(
-                        "{} Repo version ({}) is newer than binary version",
-                        "⚠".bright_yellow(),
-                        repo_version.bright_yellow()
-                    );
-                    println!(
-                        "  Consider running: {} to update the binary",
-                        "decapod update".bright_cyan()
-                    );
-                }
-                std::cmp::Ordering::Greater => {
-                    println!(
-                        "{} Binary version is newer than repo version ({})",
-                        "✓".bright_green(),
-                        repo_version.bright_yellow()
-                    );
-                    println!("  Migration will run on next command to update repo");
-                }
-                _ => {} // Equal case already handled above
-            }
-        }
-    } else {
-        println!(
-            "{} No version file found in .decapod/generated/decapod.version",
-            "ℹ".bright_blue()
-        );
-        println!("  Run 'decapod init' to set up version tracking");
-    }
-
-    Ok(())
-}
-
-/// Compare two version strings (simplified semver comparison)
-fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
-    let parse_version =
-        |v: &str| -> Vec<u32> { v.split('.').filter_map(|s| s.parse::<u32>().ok()).collect() };
-
-    let a_parts = parse_version(a);
-    let b_parts = parse_version(b);
-
-    for (a_part, b_part) in a_parts.iter().zip(b_parts.iter()) {
-        match a_part.cmp(b_part) {
-            std::cmp::Ordering::Equal => continue,
-            other => return other,
-        }
-    }
-
-    a_parts.len().cmp(&b_parts.len())
-}
-
-/// Check if binary version is compatible with repo version and fail if outdated
-fn check_version_compatibility(decapod_root: &Path) -> Result<(), error::DecapodError> {
-    use colored::Colorize;
-
-    let version_file = decapod_root.join("generated/decapod.version");
-
-    if !version_file.exists() {
-        return Ok(()); // No version file yet, nothing to check
-    }
-
-    let repo_version = std::fs::read_to_string(&version_file)
-        .map_err(error::DecapodError::IoError)?
-        .trim()
-        .to_string();
-
-    if repo_version.is_empty() {
-        return Ok(()); // Empty version file, skip check
-    }
-
-    let binary_version = migration::DECAPOD_VERSION;
-
-    // Hard-stop when binary is OLDER than repo version.
-    if compare_versions(binary_version, &repo_version) == std::cmp::Ordering::Less {
-        eprintln!();
-        eprintln!(
-            "{} {} {}",
-            "⚠ VERSION MISMATCH:".bright_yellow().bold(),
-            "Binary version".bright_white(),
-            binary_version.bright_yellow()
-        );
-        eprintln!(
-            "  {} {} {}",
-            "is older than repo version".bright_white(),
-            repo_version.bright_yellow(),
-            "- command execution is blocked until update".bright_white()
-        );
-        eprintln!(
-            "  {} {}",
-            "Run now:".bright_white(),
-            "decapod update".bright_cyan().bold()
-        );
-        eprintln!();
-        return Err(error::DecapodError::ValidationError(
-            "Binary version is older than repo version; run `decapod update` before other commands"
-                .into(),
-        ));
-    }
+    println!(
+        "  {} {}",
+        "Update:".bright_white(),
+        "cargo install decapod".bright_cyan()
+    );
 
     Ok(())
 }
