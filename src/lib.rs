@@ -75,6 +75,7 @@
 //! - [`core`]: Fundamental types and control plane (store, broker, proof, validate)
 //! - [`plugins`]: Subsystem implementations (TODO, health, knowledge, etc.)
 
+pub mod constitution;
 pub mod core;
 pub mod plugins;
 
