@@ -455,3 +455,73 @@ pub const FEEDBACK_DB_SCHEMA: &str = "
         created_at TEXT NOT NULL
     )
 ";
+
+// --- Decide ---
+
+/// Decisions database file name
+pub const DECIDE_DB_NAME: &str = "decisions.db";
+
+/// Decisions database schema version
+pub const DECIDE_SCHEMA_VERSION: u32 = 1;
+
+/// Decisions metadata table schema
+pub const DECIDE_DB_SCHEMA_META: &str = "
+    CREATE TABLE IF NOT EXISTS meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+    )
+";
+
+/// Decision sessions table schema
+///
+/// Groups related decisions from a single decision tree walkthrough.
+/// Each session targets one tree (web-app, microservice, etc.) and tracks
+/// completion status. Cross-linked to federation.db via federation_node_id.
+pub const DECIDE_DB_SCHEMA_SESSIONS: &str = "
+    CREATE TABLE IF NOT EXISTS sessions (
+        id TEXT PRIMARY KEY,
+        tree_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'active',
+        federation_node_id TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        completed_at TEXT,
+        dir_path TEXT NOT NULL,
+        scope TEXT NOT NULL DEFAULT 'repo',
+        actor TEXT NOT NULL DEFAULT 'decapod'
+    )
+";
+
+/// Individual decisions table schema
+///
+/// Each row is one answered question within a session. Stores both the
+/// machine-readable value and human-readable label for the chosen option.
+/// Cross-linked to federation.db via federation_node_id.
+pub const DECIDE_DB_SCHEMA_DECISIONS: &str = "
+    CREATE TABLE IF NOT EXISTS decisions (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        question_id TEXT NOT NULL,
+        tree_id TEXT NOT NULL,
+        question_text TEXT NOT NULL,
+        chosen_value TEXT NOT NULL,
+        chosen_label TEXT NOT NULL,
+        rationale TEXT DEFAULT '',
+        user_note TEXT DEFAULT '',
+        federation_node_id TEXT,
+        created_at TEXT NOT NULL,
+        actor TEXT NOT NULL DEFAULT 'decapod',
+        FOREIGN KEY(session_id) REFERENCES sessions(id)
+    )
+";
+
+pub const DECIDE_DB_INDEX_DECISIONS_SESSION: &str =
+    "CREATE INDEX IF NOT EXISTS idx_decisions_session ON decisions(session_id)";
+pub const DECIDE_DB_INDEX_DECISIONS_TREE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_decisions_tree ON decisions(tree_id)";
+pub const DECIDE_DB_INDEX_SESSIONS_TREE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_sessions_tree ON sessions(tree_id)";
+pub const DECIDE_DB_INDEX_SESSIONS_STATUS: &str =
+    "CREATE INDEX IF NOT EXISTS idx_sessions_status ON sessions(status)";

@@ -85,8 +85,8 @@ use core::{
     tui, validate,
 };
 use plugins::{
-    archive, context, cron, federation, feedback, health, knowledge, policy, reflex, teammate,
-    todo, verify, watcher,
+    archive, context, cron, decide, federation, feedback, health, knowledge, policy, reflex,
+    teammate, todo, verify, watcher,
 };
 
 use clap::{CommandFactory, Parser, Subcommand};
@@ -319,6 +319,10 @@ enum Command {
     /// Quality assurance: verification and checks
     #[clap(name = "qa", visible_alias = "q")]
     Qa(QaCli),
+
+    /// Architecture decision prompting
+    #[clap(name = "decide")]
+    Decide(decide::DecideCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -745,6 +749,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     ("feedback.db", setup_store_root.join("feedback.db")),
                     ("teammate.db", setup_store_root.join("teammate.db")),
                     ("federation.db", setup_store_root.join("federation.db")),
+                    ("decisions.db", setup_store_root.join("decisions.db")),
                 ];
 
                 for (db_name, db_path) in dbs {
@@ -769,6 +774,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             "federation.db" => {
                                 federation::initialize_federation_db(&setup_store_root)?
                             }
+                            "decisions.db" => decide::initialize_decide_db(&setup_store_root)?,
                             _ => unreachable!(),
                         }
                         println!("    {} {}", "●".bright_green(), db_name.bright_white());
@@ -925,6 +931,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
                 Command::Auto(auto_cli) => run_auto_command(auto_cli, &project_store)?,
                 Command::Qa(qa_cli) => run_qa_command(qa_cli, &project_store, &project_root)?,
+                Command::Decide(decide_cli) => decide::run_decide_cli(&project_store, decide_cli)?,
                 _ => unreachable!(),
             }
         }
@@ -1185,6 +1192,7 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("feedback", feedback::schema());
     schemas.insert("teammate", teammate::schema());
     schemas.insert("federation", federation::schema());
+    schemas.insert("decide", decide::schema());
     schemas.insert("docs", docs_cli::schema());
     schemas.insert("deprecations", deprecation_metadata());
     schemas.insert(

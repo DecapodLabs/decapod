@@ -1,6 +1,7 @@
 pub mod archive;
 pub mod context;
 pub mod cron;
+pub mod decide;
 pub mod federation;
 pub mod feedback;
 pub mod gatling;

@@ -73,6 +73,7 @@ Projects customize behavior through `.decapod/OVERRIDE.md` — extend or adjust 
 
 Agents operating in the same repo share durable infrastructure:
 
+- **Architecture decision prompting** — When starting a new project, `decapod decide` walks agents through curated engineering questions (runtime, framework, orchestration, database, etc.) with only the best options. Decisions are stored in SQLite and cross-linked into the knowledge graph as a durable Architecture Decision Record.
 - **Proof ledger + knowledge graph** — Decisions, conventions, and proof events survive sessions and model switches. Stored in `.decapod/data/` as SQLite + append-only event logs, forming a repo-native knowledge graph of intent → change → proof.
 - **Proof gates** — `decapod validate` is authoritative. If it fails, the change is not complete, regardless of summary confidence.
 - **Shared backlog** — A brokered task system with audit trails. Agents claim work, record transitions, and archive completions. No duplicate effort, no lost context.
