@@ -34,7 +34,28 @@ Each entry MUST include:
 
 ---
 
-## 3. Invariants
+## 3. Storage Contract
+
+Knowledge entries are persisted in `knowledge.db` table `knowledge` with store-scoped fields:
+- `id` (TEXT, primary key)
+- `title` (TEXT, required)
+- `content` (TEXT, required)
+- `provenance` (TEXT, required)
+- `claim_id` (TEXT, optional)
+- `tags` (TEXT, optional serialized list)
+- `created_at` (TEXT, required)
+- `updated_at` (TEXT, optional)
+- `dir_path` (TEXT, required)
+- `scope` (TEXT, required)
+
+Persistence requirements:
+1. All writes MUST go through the control plane/brokered interface.
+2. Direct manual writes to control-plane state databases are prohibited.
+3. `dir_path` and `scope` MUST identify the write context.
+
+---
+
+## 4. Invariants
 
 1. `updated_ts` MUST be >= `created_ts`.
 2. `status=superseded` SHOULD reference replacement entry in `links`.
@@ -43,7 +64,7 @@ Each entry MUST include:
 
 ---
 
-## 4. Proof Surface
+## 5. Proof Surface
 
 Minimum checks:
 - schema conformance for persisted entries

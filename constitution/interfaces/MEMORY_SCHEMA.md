@@ -49,7 +49,23 @@ When retrieval events are recorded, each event MUST include:
 
 ---
 
-## 4. Invariants
+## 4. Storage Contract
+
+Memory entries are stored in store-scoped data surfaces and MUST remain broker-mediated.
+
+Current canonical surfaces:
+- `repo` and `user` scoped stores as defined in `interfaces/STORE_MODEL.md`
+- retrieval events recorded with actor, query, and outcome metadata
+
+Storage requirements:
+1. Writes MUST be scoped (`repo` or `user`) and attributable (`actor`).
+2. Retrieval events MUST be append-only audit records once persisted.
+3. Cross-store auto-seeding is prohibited.
+4. Direct manual writes to store databases/logs are prohibited.
+
+---
+
+## 5. Invariants
 
 1. `updated_ts` MUST be >= `created_ts`.
 2. `ttl_policy=ephemeral` entries SHOULD have expiry handling.
@@ -58,7 +74,7 @@ When retrieval events are recorded, each event MUST include:
 
 ---
 
-## 5. Proof Surface
+## 6. Proof Surface
 
 Minimum checks:
 - schema conformance for entries and retrieval events
