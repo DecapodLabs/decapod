@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0](https://github.com/DecapodLabs/decapod/compare/v0.7.0...v0.8.0) - 2026-02-15
+
+### Added
+
+- multi-agent todo
+- multi-agent todo schema
+
+### Fixed
+
+- *(schemas)* satisfy clippy doc comment spacing
+- *(todo)* resolve CI fmt and duplicate type errors
+
+### Other
+
+- Merge branch 'master' into ahr/work
+
 ## [0.7.0](https://github.com/DecapodLabs/decapod/compare/v0.6.9...v0.7.0) - 2026-02-15
 
 ### Added
