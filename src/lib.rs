@@ -793,7 +793,7 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Determine which agent files to generate based on flags
             // Individual flags override existing files list
-            let agent_files_to_generate =
+            let mut agent_files_to_generate =
                 if init_group.claude || init_group.gemini || init_group.agents {
                     let mut files = vec![];
                     if init_group.claude {
@@ -812,6 +812,14 @@ pub fn run() -> Result<(), error::DecapodError> {
                         .map(|s| s.to_string())
                         .collect()
                 };
+
+            // AGENTS.md is mandatory whenever we are doing selective entrypoint generation.
+            // Keep empty list semantics intact so scaffold can generate the full default set.
+            if !agent_files_to_generate.is_empty()
+                && !agent_files_to_generate.iter().any(|f| f == "AGENTS.md")
+            {
+                agent_files_to_generate.push("AGENTS.md".to_string());
+            }
 
             scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
                 target_dir,
@@ -845,7 +853,10 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Gate outdated binaries before normal command execution.
             // Allow inspection/recovery commands to run so users can diagnose and self-update.
-            let skip_version_gate = matches!(&cli.command, Command::Update | Command::Version);
+            let skip_version_gate = matches!(
+                &cli.command,
+                Command::Update | Command::Version | Command::Validate(_)
+            );
             if !skip_version_gate {
                 check_version_compatibility(&decapod_root_path)?;
             }
@@ -860,6 +871,13 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             match cli.command {
                 Command::Validate(validate_cli) => {
+                    if let Err(err) = run_self_update(&project_root) {
+                        eprintln!(
+                            "⚠ Auto-update check failed during validate (continuing): {}",
+                            err
+                        );
+                    }
+
                     let decapod_root = project_root.clone();
                     let store = match validate_cli.store.as_str() {
                         "user" => {
