@@ -194,23 +194,38 @@ Machine-readable contracts and invariants:
 Non-binding but highly recommended:
 
 18. **`methodology/SOUL.md`** — Agent identity and behavioral style
-    
+
 19. **`methodology/ARCHITECTURE.md`** — Architecture practice and tradeoffs
-    
+
 20. **`methodology/KNOWLEDGE.md`** — Knowledge curation practice
-    
+
 21. **`methodology/MEMORY.md`** — Memory hygiene and retrieval practice
 
-### Phase 5: Operations — Daily Use (Plugins Layer)
+### Phase 5: Domain Architecture — Specialized Patterns (Architecture Layer)
+Domain-specific architectural guidance:
+
+22. **`architecture/UI.md`** — **UI architecture patterns, component design, interaction models**
+
+23. **`architecture/FRONTEND.md`** — Frontend architecture patterns
+
+24. **`architecture/WEB.md`** — Web architecture patterns
+
+25. **`architecture/DATA.md`** — Data architecture patterns
+
+26. **`architecture/SECURITY.md`** — Security architecture patterns
+
+27. **`architecture/CLOUD.md`** — Cloud deployment patterns
+
+### Phase 6: Operations — Daily Use (Plugins Layer)
 Start here for specific tasks:
 
-22. **`plugins/TODO.md`** — **PRIMARY: Work tracking and task lifecycle**
-    
-23. **`plugins/VERIFY.md`** — Validation and verification subsystem
-    
-24. **`plugins/MANIFEST.md`** — Canonical vs derived vs state
-    
-25. **`plugins/EMERGENCY_PROTOCOL.md`** — Emergency stop-the-line procedures
+28. **`plugins/TODO.md`** — **PRIMARY: Work tracking and task lifecycle**
+
+29. **`plugins/VERIFY.md`** — Validation and verification subsystem
+
+30. **`plugins/MANIFEST.md`** — Canonical vs derived vs state
+
+31. **`plugins/EMERGENCY_PROTOCOL.md`** — Emergency stop-the-line procedures
 
 ---
 

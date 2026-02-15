@@ -18,6 +18,7 @@ This registry lists guidance documents that teach execution practice.
 | `methodology/SOUL.md` | Agent identity and collaboration style |
 | `methodology/KNOWLEDGE.md` | Knowledge curation practice |
 | `methodology/MEMORY.md` | Memory hygiene and retrieval practice |
+| `architecture/UI.md` | UI architecture patterns and component design |
 
 ---
 
@@ -67,6 +68,12 @@ Dedicated files created for previously spliced contract content:
 - `methodology/ARCHITECTURE.md` - Architecture practice
 - `methodology/KNOWLEDGE.md` - Knowledge curation
 - `methodology/MEMORY.md` - Memory and learning
+
+### Architecture Patterns (Domain Layer)
+- `architecture/UI.md` - **UI architecture patterns and component design**
+- `architecture/FRONTEND.md` - Frontend architecture patterns
+- `architecture/WEB.md` - Web architecture patterns
+- `architecture/SECURITY.md` - Security architecture
 
 ### Operations (Plugins Layer)
 - `plugins/TODO.md` - Work tracking
