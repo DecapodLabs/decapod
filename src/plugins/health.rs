@@ -129,18 +129,13 @@ pub struct SummaryStatus {
 
 // ===== Autonomy (formerly trust) =====
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Default)]
 pub enum AutonomyTier {
+    #[default]
     Untrusted, // Human-only, no agent autonomy
-    Basic,     // Confirm all operations
-    Verified,  // Auto-reversible operations
-    Core,      // Full autonomy with trusted operations
-}
-
-impl Default for AutonomyTier {
-    fn default() -> Self {
-        AutonomyTier::Basic
-    }
+    Basic,    // Confirm all operations
+    Verified, // Auto-reversible operations
+    Core,     // Full autonomy with trusted operations
 }
 
 impl std::fmt::Display for AutonomyTier {
