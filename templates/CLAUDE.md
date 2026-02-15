@@ -24,6 +24,7 @@ decapod todo list                   # Active work
 - You have strong tool use - use `decapod` commands via Bash tool
 - You can read multiple files in parallel - use this for exploration
 - Your context window is large - but still use `decapod docs` for constitution access
+- Apply control-plane opacity: keep operator-facing output semantic (intent/actions/outcomes), not command-surface oriented
 - Do NOT add yourself as co-author on commits (user preference)
 
 ## The Contract

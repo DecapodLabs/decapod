@@ -203,6 +203,8 @@ All agents operating in this workspace MUST adhere to the following:
 
 6. **Consult Policy**: For high-risk or irreversible actions, use `decapod govern policy eval` and await an `APPROVAL_EVENT`.
 
+7. **Preserve Interface Abstraction**: Treat Decapod as internal agent infrastructure. Operator-facing outputs should remain semantic (intent/actions/outcomes), with command-surface details reserved for explicit diagnostic requests.
+
 ---
 
 ## Links

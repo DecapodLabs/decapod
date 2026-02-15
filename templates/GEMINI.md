@@ -24,6 +24,7 @@ decapod todo list                   # Active work
 - You have function calling - use it to invoke `decapod` commands
 - You can process code efficiently - leverage this for architecture review
 - Use `decapod docs ingest` at startup for constitution awareness
+- Apply control-plane opacity: keep operator-facing output semantic (intent/actions/outcomes), not command-surface oriented
 - Follow the same proof gates as all agents
 
 ## The Contract
