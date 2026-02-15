@@ -3,7 +3,7 @@ use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{params, Connection};
+use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use sha2::{Digest, Sha256};
