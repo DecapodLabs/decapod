@@ -1193,7 +1193,7 @@ pub fn record_decision(
     Ok(decision)
 }
 
-fn complete_session(store: &Store, session_id: &str) -> Result<(), error::DecapodError> {
+pub fn complete_session(store: &Store, session_id: &str) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = decide_db_path(&store.root);
     let now = now_ts();
@@ -1217,7 +1217,7 @@ fn complete_session(store: &Store, session_id: &str) -> Result<(), error::Decapo
     Ok(())
 }
 
-fn get_session(store: &Store, session_id: &str) -> Result<DecisionSession, error::DecapodError> {
+pub fn get_session(store: &Store, session_id: &str) -> Result<DecisionSession, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = decide_db_path(&store.root);
 
@@ -1277,7 +1277,7 @@ fn get_session(store: &Store, session_id: &str) -> Result<DecisionSession, error
     })
 }
 
-fn list_sessions(
+pub fn list_sessions(
     store: &Store,
     status_filter: Option<&str>,
 ) -> Result<Vec<DecisionSession>, error::DecapodError> {
@@ -1325,7 +1325,7 @@ fn list_sessions(
     })
 }
 
-fn list_decisions(
+pub fn list_decisions(
     store: &Store,
     session_filter: Option<&str>,
     tree_filter: Option<&str>,
@@ -1384,7 +1384,7 @@ fn list_decisions(
     })
 }
 
-fn get_decision(store: &Store, decision_id: &str) -> Result<Decision, error::DecapodError> {
+pub fn get_decision(store: &Store, decision_id: &str) -> Result<Decision, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = decide_db_path(&store.root);
 
@@ -1415,7 +1415,7 @@ fn get_decision(store: &Store, decision_id: &str) -> Result<Decision, error::Dec
     })
 }
 
-fn next_question(
+pub fn next_question(
     store: &Store,
     session_id: &str,
 ) -> Result<NextQuestionResult, error::DecapodError> {

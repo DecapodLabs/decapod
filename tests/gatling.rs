@@ -1150,6 +1150,164 @@ fn t288_health_claim_missing_fields() {
 }
 
 // ---------------------------------------------------------------------------
+// 14. Decide
+// ---------------------------------------------------------------------------
+
+#[test]
+fn t290_decide_trees() {
+    let (_tmp, dir) = setup_workspace();
+    let (success, output) = run(&dir, &["decide", "trees"]);
+    assert!(success, "decide trees failed:\n{}", output);
+    assert!(output.contains("web-app"));
+    assert!(output.contains("microservice"));
+    assert!(output.contains("cli-tool"));
+    assert!(output.contains("library"));
+}
+
+#[test]
+fn t291_decide_suggest() {
+    let (_tmp, dir) = setup_workspace();
+    let (success, output) = run(
+        &dir,
+        &["decide", "suggest", "--prompt", "build a web application"],
+    );
+    assert!(success, "decide suggest failed:\n{}", output);
+    assert!(output.contains("web-app"));
+}
+
+#[test]
+fn t292_decide_session_lifecycle() {
+    let (_tmp, dir) = setup_workspace();
+
+    // Start a session
+    let (success, output) = run(
+        &dir,
+        &[
+            "decide",
+            "start",
+            "--tree",
+            "cli-tool",
+            "--title",
+            "Gatling CLI Test",
+        ],
+    );
+    assert!(success, "decide start failed:\n{}", output);
+    assert!(output.contains("DS_"));
+
+    // Extract session ID
+    let re = regex::Regex::new(r"DS_[0-9A-Z]{26}").unwrap();
+    let session_id = re
+        .find(&output)
+        .map(|m| m.as_str().to_string())
+        .expect("no session ID found");
+
+    // Next question
+    let (success, output) = run(&dir, &["decide", "next", "--session", &session_id]);
+    assert!(success, "decide next failed:\n{}", output);
+    assert!(output.contains("language"));
+
+    // Record a decision
+    let (success, output) = run(
+        &dir,
+        &[
+            "decide",
+            "record",
+            "--session",
+            &session_id,
+            "--question",
+            "language",
+            "--value",
+            "rust",
+        ],
+    );
+    assert!(success, "decide record failed:\n{}", output);
+    assert!(output.contains("DD_"));
+    assert!(output.contains("Rust"));
+
+    // List decisions
+    let (success, output) = run(&dir, &["decide", "list", "--session", &session_id]);
+    assert!(success, "decide list failed:\n{}", output);
+    assert!(output.contains("rust"));
+
+    // Session list
+    let (success, output) = run(&dir, &["decide", "session", "list"]);
+    assert!(success, "decide session list failed:\n{}", output);
+    assert!(output.contains(&session_id));
+
+    // Session get
+    let (success, output) = run(&dir, &["decide", "session", "get", "--id", &session_id]);
+    assert!(success, "decide session get failed:\n{}", output);
+    assert!(output.contains("Gatling CLI Test"));
+
+    // Complete
+    let (success, output) = run(&dir, &["decide", "complete", "--session", &session_id]);
+    assert!(success, "decide complete failed:\n{}", output);
+    assert!(output.contains("completed"));
+}
+
+#[test]
+fn t293_decide_invalid_tree() {
+    let (_tmp, dir) = setup_workspace();
+    fail(
+        &dir,
+        &["decide", "start", "--tree", "nonexistent", "--title", "Bad"],
+    );
+}
+
+#[test]
+fn t294_decide_invalid_option() {
+    let (_tmp, dir) = setup_workspace();
+
+    // Start session
+    let (success, output) = run(
+        &dir,
+        &[
+            "decide",
+            "start",
+            "--tree",
+            "cli-tool",
+            "--title",
+            "Bad Option Test",
+        ],
+    );
+    assert!(success);
+    let re = regex::Regex::new(r"DS_[0-9A-Z]{26}").unwrap();
+    let session_id = re.find(&output).unwrap().as_str();
+
+    // Invalid option value
+    fail(
+        &dir,
+        &[
+            "decide",
+            "record",
+            "--session",
+            session_id,
+            "--question",
+            "language",
+            "--value",
+            "cobol",
+        ],
+    );
+}
+
+#[test]
+fn t295_decide_schema() {
+    let (_tmp, dir) = setup_workspace();
+    let (success, output) = run(&dir, &["decide", "schema"]);
+    assert!(success, "decide schema failed:\n{}", output);
+    assert!(output.contains("decide"));
+    assert!(output.contains("decisions.db"));
+}
+
+#[test]
+fn t296_decide_init() {
+    let (_tmp, dir) = setup_workspace();
+    let (success, output) = run(&dir, &["decide", "init"]);
+    assert!(success, "decide init failed:\n{}", output);
+    assert!(output.contains("initialized"));
+}
+
+// ---------------------------------------------------------------------------
 // Helper: extract a ULID from text output (26-char uppercase alphanumeric)
 // ---------------------------------------------------------------------------
 
