@@ -208,6 +208,18 @@ fn now_iso() -> String {
     format!("{}Z", secs)
 }
 
+fn parse_epoch_z(ts: &str) -> Option<u64> {
+    ts.trim_end_matches('Z').parse::<u64>().ok()
+}
+
+fn now_unix_secs() -> u64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
+
 pub fn todo_db_path(root: &Path) -> PathBuf {
     root.join(schemas::TODO_DB_NAME)
 }
@@ -291,6 +303,11 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         conn.execute(schemas::TODO_DB_SCHEMA_AGENT_CATEGORY_CLAIMS, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_CATEGORY_AGENT, [])?;
         migrate_existing_category_ownerships(conn)?;
+    }
+
+    if current_version < 9 {
+        conn.execute(schemas::TODO_DB_SCHEMA_AGENT_PRESENCE, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_PRESENCE_LAST_SEEN, [])?;
     }
 
     conn.execute(
@@ -646,6 +663,7 @@ fn register_agent_categories(
 
     broker.with_conn(&db_path, "decapod", None, "todo.register_agent", |conn| {
         ensure_schema(conn)?;
+        touch_agent_presence(conn, agent_id, &ts)?;
 
         for category in &normalized {
             let exists: Option<String> = conn
@@ -725,6 +743,127 @@ fn list_category_ownerships(
                         category: row.get(2)?,
                         claimed_at: row.get(3)?,
                         updated_at: row.get(4)?,
+                    })
+                },
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(row.map_err(error::DecapodError::RusqliteError)?);
+        }
+        Ok(out)
+    })
+}
+
+fn touch_agent_presence(
+    conn: &Connection,
+    agent_id: &str,
+    ts: &str,
+) -> Result<(), error::DecapodError> {
+    conn.execute(
+        "INSERT INTO agent_presence(agent_id, last_seen, status, updated_at)
+         VALUES(?1, ?2, 'active', ?3)
+         ON CONFLICT(agent_id) DO UPDATE SET
+            last_seen = excluded.last_seen,
+            status = 'active',
+            updated_at = excluded.updated_at",
+        rusqlite::params![agent_id, ts, ts],
+    )
+    .map_err(error::DecapodError::RusqliteError)?;
+    Ok(())
+}
+
+fn is_agent_stale(
+    conn: &Connection,
+    agent_id: &str,
+    now_ts: &str,
+    timeout_secs: u64,
+) -> Result<bool, error::DecapodError> {
+    let last_seen: Option<String> = conn
+        .query_row(
+            "SELECT last_seen FROM agent_presence WHERE agent_id = ?",
+            [agent_id],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    let Some(last_seen) = last_seen else {
+        return Ok(true);
+    };
+
+    let Some(now) = parse_epoch_z(now_ts) else {
+        return Ok(false);
+    };
+    let Some(seen) = parse_epoch_z(&last_seen) else {
+        return Ok(true);
+    };
+    Ok(now.saturating_sub(seen) > timeout_secs)
+}
+
+fn record_heartbeat(root: &Path, agent_id: &str) -> Result<serde_json::Value, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+    let ts = now_iso();
+
+    broker.with_conn(&db_path, "decapod", None, "todo.heartbeat", |conn| {
+        ensure_schema(conn)?;
+        touch_agent_presence(conn, agent_id, &ts)?;
+
+        let ev = TodoEvent {
+            ts: ts.clone(),
+            event_id: Ulid::new().to_string(),
+            event_type: "agent.heartbeat".to_string(),
+            task_id: None,
+            payload: serde_json::json!({ "agent_id": agent_id }),
+            actor: agent_id.to_string(),
+        };
+        append_event(root, &ev)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+        Ok(())
+    })?;
+
+    Ok(serde_json::json!({
+        "ts": ts,
+        "cmd": "todo.heartbeat",
+        "status": "ok",
+        "root": root.to_string_lossy(),
+        "agent_id": agent_id,
+    }))
+}
+
+fn list_agent_presence(
+    root: &Path,
+    agent: Option<&str>,
+) -> Result<Vec<AgentPresence>, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    broker.with_conn(&db_path, "decapod", None, "todo.presence", |conn| {
+        ensure_schema(conn)?;
+
+        let mut query =
+            "SELECT agent_id, last_seen, status, updated_at FROM agent_presence".to_string();
+        let mut params: Vec<String> = Vec::new();
+        if let Some(agent_id) = agent {
+            query.push_str(" WHERE agent_id = ?");
+            params.push(agent_id.to_string());
+        }
+        query.push_str(" ORDER BY last_seen DESC");
+
+        let mut stmt = conn
+            .prepare(&query)
+            .map_err(error::DecapodError::RusqliteError)?;
+        let rows = stmt
+            .query_map(
+                rusqlite::params_from_iter(params.iter().map(|p| p as &dyn ToSql)),
+                |row| {
+                    Ok(AgentPresence {
+                        agent_id: row.get(0)?,
+                        last_seen: row.get(1)?,
+                        status: row.get(2)?,
+                        updated_at: row.get(3)?,
                     })
                 },
             )
@@ -889,6 +1028,7 @@ fn infer_category_from_task(
 fn find_agent_for_category(
     conn: &Connection,
     category: &str,
+    now_ts: &str,
 ) -> Result<Option<String>, error::DecapodError> {
     let claimed_owner: Option<String> = conn
         .query_row(
@@ -898,8 +1038,11 @@ fn find_agent_for_category(
         )
         .optional()
         .map_err(error::DecapodError::RusqliteError)?;
-    if claimed_owner.is_some() {
-        return Ok(claimed_owner);
+    if let Some(owner) = claimed_owner {
+        if is_agent_stale(conn, &owner, now_ts, AGENT_EVICT_TIMEOUT_SECS)? {
+            return Ok(None);
+        }
+        return Ok(Some(owner));
     }
 
     let agent: Option<String> = conn
@@ -996,7 +1139,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
 
         // Check if there's an agent already working on tasks in this category
         let auto_assigned_agent = if let Some(cat) = &inferred_category {
-            find_agent_for_category(conn, cat)?
+            find_agent_for_category(conn, cat, &ts)?
         } else {
             None
         };
@@ -1278,6 +1421,7 @@ fn claim_task(
 
     let result = broker.with_conn(&db_path, "decapod", None, "todo.claim", |conn| {
         ensure_schema(conn)?;
+        touch_agent_presence(conn, agent_id, &ts)?;
 
         // Check if task exists and is not already claimed
         let current: Option<(String, String, String)> = conn
@@ -1313,13 +1457,25 @@ fn claim_task(
                 if !category.is_empty() {
                     if let Some(owner) = get_category_owner(conn, &category)? {
                         if owner != agent_id {
-                            return Ok(serde_json::json!({
-                                "status": "error",
-                                "message": format!(
-                                    "Category '{}' is owned by {}; cannot claim task {}",
-                                    category, owner, id
+                            let stale =
+                                is_agent_stale(conn, &owner, &ts, AGENT_EVICT_TIMEOUT_SECS)?;
+                            if stale {
+                                conn.execute(
+                                    "UPDATE agent_category_claims
+                                     SET agent_id = ?, claimed_at = ?, updated_at = ?
+                                     WHERE category = ?",
+                                    rusqlite::params![agent_id, ts, ts, category],
                                 )
-                            }));
+                                .map_err(error::DecapodError::RusqliteError)?;
+                            } else {
+                                return Ok(serde_json::json!({
+                                    "status": "error",
+                                    "message": format!(
+                                        "Category '{}' is owned by {}; cannot claim task {}",
+                                        category, owner, id
+                                    )
+                                }));
+                            }
                         }
                     } else {
                         // Auto-claim empty categories on first valid claim.
@@ -1702,6 +1858,23 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     )?;
                 }
                 "task.comment" => {}
+                "agent.heartbeat" => {
+                    let agent_id = ev
+                        .payload
+                        .get("agent_id")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or(&ev.actor)
+                        .to_string();
+                    conn.execute(
+                        "INSERT INTO agent_presence(agent_id, last_seen, status, updated_at)
+                         VALUES(?1, ?2, 'active', ?2)
+                         ON CONFLICT(agent_id) DO UPDATE SET
+                            last_seen = excluded.last_seen,
+                            status = 'active',
+                            updated_at = excluded.updated_at",
+                        rusqlite::params![agent_id, ev.ts],
+                    )?;
+                }
                 "task.verify.capture" | "task.verify.result" => {
                     let id = ev.task_id.clone().ok_or_else(|| {
                         error::DecapodError::ValidationError(format!(
@@ -1791,6 +1964,8 @@ pub fn schema() -> serde_json::Value {
             { "name": "categories", "parameters": [] },
             { "name": "register-agent", "parameters": ["agent", "category"] },
             { "name": "ownerships", "parameters": ["category", "agent"] },
+            { "name": "heartbeat", "parameters": ["agent"] },
+            { "name": "presence", "parameters": ["agent"] },
             { "name": "rebuild", "parameters": [] }
         ],
         "storage": ["todo.db", "todo.events.jsonl"]
@@ -1895,6 +2070,22 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                 "claims": claims,
             })
         }
+        TodoCommand::Heartbeat { agent } => {
+            let default_agent =
+                env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let agent_id = agent.as_deref().unwrap_or(&default_agent);
+            record_heartbeat(root, agent_id)?
+        }
+        TodoCommand::Presence { agent } => {
+            let agents = list_agent_presence(root, agent.as_deref())?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.presence",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "agents": agents,
+            })
+        }
     };
 
     match cli.format {
@@ -1961,6 +2152,35 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                                 .and_then(|x| x.as_str())
                                 .unwrap_or("?");
                             println!("  {} -> {} (claimed_at: {})", category, agent, claimed_at);
+                        }
+                    }
+                }
+            }
+            TodoCommand::Presence { .. } => {
+                if let Some(agents) = out.get("agents").and_then(|x| x.as_array()) {
+                    if agents.is_empty() {
+                        println!("No agent presence records.");
+                    } else {
+                        println!("Agent presence:");
+                        let now = now_unix_secs();
+                        for agent in agents {
+                            let id = agent
+                                .get("agent_id")
+                                .and_then(|x| x.as_str())
+                                .unwrap_or("?");
+                            let last_seen = agent
+                                .get("last_seen")
+                                .and_then(|x| x.as_str())
+                                .unwrap_or("?");
+                            let status =
+                                agent.get("status").and_then(|x| x.as_str()).unwrap_or("?");
+                            let age_secs = parse_epoch_z(last_seen)
+                                .map(|v| now.saturating_sub(v).to_string())
+                                .unwrap_or_else(|| "?".to_string());
+                            println!(
+                                "  {} (status: {}, last_seen: {}, age_s: {})",
+                                id, status, last_seen, age_secs
+                            );
                         }
                     }
                 }
