@@ -150,16 +150,17 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Install release-plz
-        uses: cargo-bins/cargo-binstall@e7cc28468cf17df7cb288daea80c0c5437af360b
-        with:
-          packages: release-plz@0.3.155
+        shell: bash
+        run: |
+          cargo install release-plz --version 0.3.155 --locked
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
       - name: Run release-plz (handle crates.io rate limit)
         shell: bash
         run: |
           set -o pipefail
           set +e
-          OUTPUT="$(release-plz release --config .github/release.toml 2>&1)"
+          OUTPUT="$($HOME/.cargo/bin/release-plz release --config .github/release.toml 2>&1)"
           STATUS=$?
           set -e
 
