@@ -42,6 +42,10 @@ Columns:
 | claim.concurrency.no_git_solve | Decapod does not "solve" Git merge conflicts; it reduces collisions via work partitioning and proof gates. | `core/PLUGINS.md` | enforced | N/A (doc-level constraint) | Prevents over-claiming on concurrency. |
 | claim.broker.is_spec | DB Broker (serialized writes, audit) is SPEC, not REAL. Do not claim it is implemented. | `core/PLUGINS.md` | enforced | `decapod validate` (truth label check) | Will graduate to REAL in Epoch 4. |
 | claim.test.mandatory | Every code change must have corresponding tests. No exceptions. | `methodology/ARCHITECTURE.md` | enforced | `cargo test` + CI | Tests gate merge; untested code is rejected. |
+| claim.federation.store_scoped | Federation data exists only under the selected store root. | `plugins/FEDERATION.md` | enforced | `decapod validate` (federation.store_purity gate) | Prevents cross-store contamination. |
+| claim.federation.provenance_required_for_critical | Critical federation nodes must have ≥1 valid provenance source with scheme prefix. | `plugins/FEDERATION.md` | enforced | `decapod validate` (federation.provenance gate) | Prevents hallucination anchors. |
+| claim.federation.append_only_critical | Critical types (decision, commitment) cannot be edited in place; must be superseded. | `plugins/FEDERATION.md` | enforced | `decapod validate` (federation.write_safety gate) | Write-safety for operational truth. |
+| claim.federation.lifecycle_dag_no_cycles | The supersedes edge graph contains no cycles. | `plugins/FEDERATION.md` | enforced | `decapod validate` (federation.lifecycle_dag gate) | Prevents infinite supersession loops. |
 
 ---
 

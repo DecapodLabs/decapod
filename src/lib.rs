@@ -85,8 +85,8 @@ use core::{
     tui, validate,
 };
 use plugins::{
-    archive, context, cron, feedback, health, knowledge, policy, reflex, teammate, todo, verify,
-    watcher,
+    archive, context, cron, federation, feedback, health, knowledge, policy, reflex, teammate,
+    todo, verify, watcher,
 };
 
 use clap::{Parser, Subcommand};
@@ -227,6 +227,9 @@ enum DataCommand {
 
     /// Teammate preferences and patterns
     Teammate(teammate::TeammateCli),
+
+    /// Governed agent memory — typed knowledge graph
+    Federation(federation::FederationCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -726,6 +729,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     ("archive.db", setup_store_root.join("archive.db")),
                     ("feedback.db", setup_store_root.join("feedback.db")),
                     ("teammate.db", setup_store_root.join("teammate.db")),
+                    ("federation.db", setup_store_root.join("federation.db")),
                 ];
 
                 for (db_name, db_path) in dbs {
@@ -747,6 +751,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             "archive.db" => archive::initialize_archive_db(&setup_store_root)?,
                             "feedback.db" => feedback::initialize_feedback_db(&setup_store_root)?,
                             "teammate.db" => teammate::initialize_teammate_db(&setup_store_root)?,
+                            "federation.db" => federation::initialize_federation_db(&setup_store_root)?,
                             _ => unreachable!(),
                         }
                         println!("    {} {}", "●".bright_green(), db_name.bright_white());
@@ -770,6 +775,24 @@ pub fn run() -> Result<(), error::DecapodError> {
                         "    {} {}",
                         "●".bright_green(),
                         "todo.events.jsonl".bright_white()
+                    );
+                }
+
+                // Create empty federation events file (preserve existing)
+                let fed_events_path = setup_store_root.join("federation.events.jsonl");
+                if fed_events_path.exists() {
+                    println!(
+                        "    {} {} {}",
+                        "✓".bright_green(),
+                        "federation.events.jsonl".bright_white(),
+                        "(preserved - event history kept)".bright_black()
+                    );
+                } else {
+                    std::fs::write(&fed_events_path, "").map_err(error::DecapodError::IoError)?;
+                    println!(
+                        "    {} {}",
+                        "●".bright_green(),
+                        "federation.events.jsonl".bright_white()
                     );
                 }
 
@@ -1058,6 +1081,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                         schemas.insert("archive", archive::schema());
                         schemas.insert("feedback", feedback::schema());
                         schemas.insert("teammate", teammate::schema());
+                        schemas.insert("federation", federation::schema());
                         schemas.insert("docs", docs_cli::schema());
 
                         let output = if let Some(sub) = schema_cli.subsystem {
@@ -1114,6 +1138,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                     },
                     DataCommand::Teammate(teammate_cli) => {
                         teammate::run_teammate_cli(&project_store, teammate_cli)?;
+                    }
+                    DataCommand::Federation(federation_cli) => {
+                        federation::run_federation_cli(&project_store, federation_cli)?;
                     }
                 },
                 Command::Auto(auto_cli) => match auto_cli.command {
