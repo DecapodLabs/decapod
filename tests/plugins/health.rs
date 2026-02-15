@@ -1,7 +1,5 @@
 use decapod::core::store::{Store, StoreKind};
-use decapod::plugins::health::{
-    compute_health, initialize_health_db, AutonomyStatus, AutonomyTier, HealthState,
-};
+use decapod::plugins::health::{AutonomyTier, HealthState, compute_health, initialize_health_db};
 use tempfile::tempdir;
 
 #[test]
