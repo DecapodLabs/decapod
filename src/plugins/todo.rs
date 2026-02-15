@@ -8,7 +8,7 @@ use crate::plugins::teammate;
 use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{types::ToSql, Connection, OptionalExtension, Result as SqlResult};
+use rusqlite::{params, types::ToSql, Connection, OptionalExtension, Result as SqlResult};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
@@ -501,6 +501,12 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         // Agent expertise support
         conn.execute(schemas::TODO_DB_SCHEMA_AGENT_EXPERTISE, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_EXPERTISE_AGENT, [])?;
+    }
+
+    if current_version < 11 {
+        // Agent trust tiers
+        conn.execute(schemas::TODO_DB_SCHEMA_AGENT_TRUST, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_TRUST_LEVEL, [])?;
     }
 
     conn.execute(
@@ -1046,6 +1052,62 @@ fn list_agent_presence(
             out.push(r.map_err(error::DecapodError::RusqliteError)?);
         }
         Ok(out)
+    })
+}
+
+fn get_agent_trust_level(conn: &Connection, agent_id: &str) -> Result<String, error::DecapodError> {
+    let level: Option<String> = conn
+        .query_row(
+            "SELECT trust_level FROM agent_trust WHERE agent_id = ?1",
+            params![agent_id],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?;
+    Ok(level.unwrap_or_else(|| "basic".to_string()))
+}
+
+fn set_agent_trust_level(
+    conn: &Connection,
+    agent_id: &str,
+    level: &str,
+    granted_by: &str,
+) -> Result<(), error::DecapodError> {
+    let ts = now_iso();
+    conn.execute(
+        "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
+         VALUES(?1, ?2, ?3, ?4, ?5)
+         ON CONFLICT(agent_id) DO UPDATE SET 
+           trust_level=excluded.trust_level, 
+           updated_at=excluded.updated_at,
+           granted_by=excluded.granted_by",
+        rusqlite::params![agent_id, level, ts, ts, granted_by],
+    )?;
+    Ok(())
+}
+
+fn trust_level_to_int(level: &str) -> i32 {
+    match level {
+        "untrusted" => 0,
+        "basic" => 1,
+        "verified" => 2,
+        "core" => 3,
+        _ => 1,
+    }
+}
+
+pub fn check_trust_level(
+    root: &Path,
+    agent_id: &str,
+    required_level: &str,
+) -> Result<bool, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    broker.with_conn(&db_path, "decapod", None, "todo.trust.check", |conn| {
+        ensure_schema(conn)?;
+        let current_level = get_agent_trust_level(conn, agent_id)?;
+        Ok(trust_level_to_int(&current_level) >= trust_level_to_int(required_level))
     })
 }
 
