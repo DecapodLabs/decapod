@@ -47,7 +47,7 @@ pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
 /// TODO database schema version
 ///
 /// Used for migration tracking in the `meta` table
-pub const TODO_SCHEMA_VERSION: u32 = 7;
+pub const TODO_SCHEMA_VERSION: u32 = 9;
 
 /// TODO metadata table schema
 ///
@@ -147,6 +147,33 @@ pub const TODO_DB_SCHEMA_CATEGORIES: &str = "
 
 pub const TODO_DB_SCHEMA_INDEX_CATEGORY_NAME: &str =
     "CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name)";
+
+/// Agent category ownership claims table schema.
+pub const TODO_DB_SCHEMA_AGENT_CATEGORY_CLAIMS: &str = "
+    CREATE TABLE IF NOT EXISTS agent_category_claims (
+        id TEXT PRIMARY KEY,
+        agent_id TEXT NOT NULL,
+        category TEXT NOT NULL UNIQUE,
+        claimed_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    )
+";
+
+pub const TODO_DB_SCHEMA_INDEX_AGENT_CATEGORY_AGENT: &str =
+    "CREATE INDEX IF NOT EXISTS idx_agent_category_agent ON agent_category_claims(agent_id)";
+
+/// Agent presence/heartbeat table schema.
+pub const TODO_DB_SCHEMA_AGENT_PRESENCE: &str = "
+    CREATE TABLE IF NOT EXISTS agent_presence (
+        agent_id TEXT PRIMARY KEY,
+        last_seen TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        updated_at TEXT NOT NULL
+    )
+";
+
+pub const TODO_DB_SCHEMA_INDEX_AGENT_PRESENCE_LAST_SEEN: &str =
+    "CREATE INDEX IF NOT EXISTS idx_agent_presence_last_seen ON agent_presence(last_seen)";
 
 // --- Cron ---
 pub const CRON_DB_NAME: &str = "cron.db";
