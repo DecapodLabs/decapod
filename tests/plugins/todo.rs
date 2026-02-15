@@ -1,8 +1,8 @@
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::plugins::todo::{
-    TodoCommand, add_task, get_task, initialize_todo_db, list_tasks, rebuild_from_events,
-    todo_db_path, update_status,
+    add_task, check_trust_level, get_task, initialize_todo_db, list_tasks, rebuild_from_events,
+    todo_db_path, update_status, TodoCommand,
 };
 use std::fs;
 use tempfile::tempdir;
@@ -85,4 +85,37 @@ fn test_todo_rebuild() {
     // Verify
     let tasks = list_tasks(&root, None, None, None, None, None).unwrap();
     assert_eq!(tasks.len(), 3);
+}
+
+#[test]
+fn test_trust_level_check() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+
+    // Unknown agent defaults to basic
+    let has_access = check_trust_level(&root, "unknown_agent", "basic").unwrap();
+    assert!(has_access);
+
+    // Unknown agent should NOT have core access (higher than basic)
+    let has_access = check_trust_level(&root, "unknown_agent", "core").unwrap();
+    assert!(!has_access);
+
+    // Unknown agent should NOT have verified access (higher than basic)
+    let has_access = check_trust_level(&root, "unknown_agent", "verified").unwrap();
+    assert!(!has_access);
+}
+
+#[test]
+fn test_trust_level_hierarchy() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+
+    // Default is basic, so it should pass basic check
+    assert!(check_trust_level(&root, "test_agent", "basic").unwrap());
+
+    // But should fail for higher levels
+    assert!(!check_trust_level(&root, "test_agent", "verified").unwrap());
+    assert!(!check_trust_level(&root, "test_agent", "core").unwrap());
 }
