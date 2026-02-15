@@ -54,7 +54,17 @@ static TREE_WEB_APP: DecisionTree = DecisionTree {
     id: "web-app",
     name: "Web Application",
     description: "Browser-based application (SPA, PWA, or traditional)",
-    keywords: &["web", "app", "website", "frontend", "spa", "pwa", "ui", "dashboard", "page"],
+    keywords: &[
+        "web",
+        "app",
+        "website",
+        "frontend",
+        "spa",
+        "pwa",
+        "ui",
+        "dashboard",
+        "page",
+    ],
     questions: &[
         DecisionQuestion {
             id: "runtime",
@@ -232,7 +242,16 @@ static TREE_MICROSERVICE: DecisionTree = DecisionTree {
     id: "microservice",
     name: "Microservice",
     description: "Backend service exposing an API (REST, gRPC, or GraphQL)",
-    keywords: &["microservice", "service", "api", "backend", "server", "rest", "grpc", "endpoint"],
+    keywords: &[
+        "microservice",
+        "service",
+        "api",
+        "backend",
+        "server",
+        "rest",
+        "grpc",
+        "endpoint",
+    ],
     questions: &[
         DecisionQuestion {
             id: "language",
@@ -410,7 +429,9 @@ static TREE_CLI_TOOL: DecisionTree = DecisionTree {
     id: "cli-tool",
     name: "CLI Tool",
     description: "Command-line tool or utility",
-    keywords: &["cli", "command", "terminal", "shell", "tool", "utility", "script"],
+    keywords: &[
+        "cli", "command", "terminal", "shell", "tool", "utility", "script",
+    ],
     questions: &[
         DecisionQuestion {
             id: "language",
@@ -525,7 +546,15 @@ static TREE_LIBRARY: DecisionTree = DecisionTree {
     id: "library",
     name: "Library / Package",
     description: "Reusable library, crate, or package published to a registry",
-    keywords: &["library", "lib", "crate", "package", "module", "sdk", "framework"],
+    keywords: &[
+        "library",
+        "lib",
+        "crate",
+        "package",
+        "module",
+        "sdk",
+        "framework",
+    ],
     questions: &[
         DecisionQuestion {
             id: "language",
@@ -889,10 +918,7 @@ pub fn suggest_trees(prompt: &str) -> Vec<TreeSuggestion> {
     let tokens: Vec<String> = prompt
         .to_lowercase()
         .split_whitespace()
-        .map(|s| {
-            s.trim_matches(|c: char| !c.is_alphanumeric())
-                .to_string()
-        })
+        .map(|s| s.trim_matches(|c: char| !c.is_alphanumeric()).to_string())
         .filter(|s| s.len() >= 3)
         .collect();
 
@@ -902,7 +928,11 @@ pub fn suggest_trees(prompt: &str) -> Vec<TreeSuggestion> {
             let matched: Vec<String> = tree
                 .keywords
                 .iter()
-                .filter(|kw| tokens.iter().any(|t| t.contains(*kw) || kw.contains(t.as_str())))
+                .filter(|kw| {
+                    tokens
+                        .iter()
+                        .any(|t| t.contains(*kw) || kw.contains(t.as_str()))
+                })
                 .map(|s| s.to_string())
                 .collect();
             let score = if tree.keywords.is_empty() {
@@ -919,7 +949,11 @@ pub fn suggest_trees(prompt: &str) -> Vec<TreeSuggestion> {
         })
         .collect();
 
-    suggestions.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+    suggestions.sort_by(|a, b| {
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     suggestions.retain(|s| s.score > 0.0);
     suggestions
 }
@@ -940,7 +974,7 @@ fn resolve_next_question<'a>(
         if let (Some(dep_id), Some(dep_val)) = (question.depends_on, question.depends_value) {
             match answered.get(dep_id) {
                 Some(val) if val == dep_val => {} // dependency satisfied
-                _ => continue,                     // skip: dependency not met
+                _ => continue,                    // skip: dependency not met
             }
         }
 
@@ -1078,12 +1112,8 @@ pub fn record_decision(
     let db_path = decide_db_path(&store.root);
 
     // Look up session to get tree_id and federation_node_id
-    let (tree_id, session_fed_node_id) = broker.with_conn(
-        &db_path,
-        actor,
-        None,
-        "decide.record.lookup",
-        |conn| {
+    let (tree_id, session_fed_node_id) =
+        broker.with_conn(&db_path, actor, None, "decide.record.lookup", |conn| {
             let mut stmt = conn.prepare(
                 "SELECT tree_id, federation_node_id, status FROM sessions WHERE id = ?1",
             )?;
@@ -1107,8 +1137,7 @@ pub fn record_decision(
             }
 
             Ok((row.0, row.1))
-        },
-    )?;
+        })?;
 
     // Validate question and option against the tree
     let tree = find_tree(&tree_id)?;
@@ -1217,7 +1246,10 @@ pub fn complete_session(store: &Store, session_id: &str) -> Result<(), error::De
     Ok(())
 }
 
-pub fn get_session(store: &Store, session_id: &str) -> Result<DecisionSession, error::DecapodError> {
+pub fn get_session(
+    store: &Store,
+    session_id: &str,
+) -> Result<DecisionSession, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = decide_db_path(&store.root);
 
@@ -1423,12 +1455,8 @@ pub fn next_question(
     let db_path = decide_db_path(&store.root);
 
     // Get session tree_id and answered questions
-    let (tree_id, answered) = broker.with_conn(
-        &db_path,
-        "cli",
-        None,
-        "decide.next.lookup",
-        |conn| {
+    let (tree_id, answered) =
+        broker.with_conn(&db_path, "cli", None, "decide.next.lookup", |conn| {
             let tree_id: String = conn
                 .query_row(
                     "SELECT tree_id FROM sessions WHERE id = ?1 AND status = 'active'",
@@ -1442,9 +1470,8 @@ pub fn next_question(
                     ))
                 })?;
 
-            let mut stmt = conn.prepare(
-                "SELECT question_id, chosen_value FROM decisions WHERE session_id = ?1",
-            )?;
+            let mut stmt = conn
+                .prepare("SELECT question_id, chosen_value FROM decisions WHERE session_id = ?1")?;
             let answered: std::collections::HashMap<String, String> = stmt
                 .query_map(params![session_id], |row| {
                     Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
@@ -1452,8 +1479,7 @@ pub fn next_question(
                 .collect::<Result<_, _>>()?;
 
             Ok((tree_id, answered))
-        },
-    )?;
+        })?;
 
     let tree = find_tree(&tree_id)?;
 
@@ -1537,10 +1563,7 @@ pub fn run_decide_cli(store: &Store, cli: DecideCli) -> Result<(), error::Decapo
 
         DecideCommand::Suggest { prompt } => {
             let suggestions = suggest_trees(&prompt);
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&suggestions).unwrap()
-            );
+            println!("{}", serde_json::to_string_pretty(&suggestions).unwrap());
         }
 
         DecideCommand::Start {
@@ -1550,18 +1573,12 @@ pub fn run_decide_cli(store: &Store, cli: DecideCli) -> Result<(), error::Decapo
             actor,
         } => {
             let session = start_session(store, &tree, &title, &description, &actor)?;
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&session).unwrap()
-            );
+            println!("{}", serde_json::to_string_pretty(&session).unwrap());
         }
 
         DecideCommand::Next { session } => {
             let result = next_question(store, &session)?;
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&result).unwrap()
-            );
+            println!("{}", serde_json::to_string_pretty(&result).unwrap());
         }
 
         DecideCommand::Record {
@@ -1571,12 +1588,8 @@ pub fn run_decide_cli(store: &Store, cli: DecideCli) -> Result<(), error::Decapo
             rationale,
             actor,
         } => {
-            let decision =
-                record_decision(store, &session, &question, &value, &rationale, &actor)?;
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&decision).unwrap()
-            );
+            let decision = record_decision(store, &session, &question, &value, &rationale, &actor)?;
+            println!("{}", serde_json::to_string_pretty(&decision).unwrap());
         }
 
         DecideCommand::Complete { session } => {
@@ -1592,36 +1605,23 @@ pub fn run_decide_cli(store: &Store, cli: DecideCli) -> Result<(), error::Decapo
         }
 
         DecideCommand::List { session, tree } => {
-            let decisions =
-                list_decisions(store, session.as_deref(), tree.as_deref())?;
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&decisions).unwrap()
-            );
+            let decisions = list_decisions(store, session.as_deref(), tree.as_deref())?;
+            println!("{}", serde_json::to_string_pretty(&decisions).unwrap());
         }
 
         DecideCommand::Get { id } => {
             let decision = get_decision(store, &id)?;
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&decision).unwrap()
-            );
+            println!("{}", serde_json::to_string_pretty(&decision).unwrap());
         }
 
         DecideCommand::Session { command } => match command {
             SessionSubCommand::List { status } => {
                 let sessions = list_sessions(store, status.as_deref())?;
-                println!(
-                    "{}",
-                    serde_json::to_string_pretty(&sessions).unwrap()
-                );
+                println!("{}", serde_json::to_string_pretty(&sessions).unwrap());
             }
             SessionSubCommand::Get { id } => {
                 let session = get_session(store, &id)?;
-                println!(
-                    "{}",
-                    serde_json::to_string_pretty(&session).unwrap()
-                );
+                println!("{}", serde_json::to_string_pretty(&session).unwrap());
             }
         },
 
@@ -1637,10 +1637,7 @@ pub fn run_decide_cli(store: &Store, cli: DecideCli) -> Result<(), error::Decapo
         }
 
         DecideCommand::Schema => {
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&schema()).unwrap()
-            );
+            println!("{}", serde_json::to_string_pretty(&schema()).unwrap());
         }
     }
 
