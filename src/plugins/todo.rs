@@ -1395,7 +1395,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     // Create federation node for intent→change→proof chain
     let store = Store {
         kind: crate::core::store::StoreKind::Repo,
-        root: root.clone(),
+        root: root.to_path_buf(),
     };
     let _ = federation::add_node(
         &store,
@@ -1481,7 +1481,7 @@ pub fn update_status(
             .flatten();
 
         // Create the proof node
-        let proof_node = federation::add_node(
+        let proof_result = federation::add_node(
             store,
             &format!("Proof: Task {} completed", id),
             "decision",
@@ -1495,8 +1495,8 @@ pub fn update_status(
             "decapod",
         );
 
-        // If we found the intent node, create an edge to link intent→proof
-        if let (Ok(Some(proof)), Some(intent_id)) = (proof_node, intent_node_id) {
+        // If we found the intent node and proof node was created, link them
+        if let (Ok(proof), Some(intent_id)) = (proof_result, intent_node_id) {
             let _ = federation::add_edge(store, &intent_id, &proof.id, "depends_on");
         }
     }
