@@ -61,6 +61,10 @@ name = "plugins_policy_tests"
 path = "tests/plugins/policy.rs"
 
 [[test]]
+name = "plugins_health_tests"
+path = "tests/plugins/health.rs"
+
+[[test]]
 name = "plugins_teammate_tests"
 path = "tests/plugins/teammate.rs"
 

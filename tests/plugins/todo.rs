@@ -1,8 +1,8 @@
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::plugins::todo::{
-    add_task, check_trust_level, get_task, initialize_todo_db, list_tasks, rebuild_from_events,
-    todo_db_path, update_status, TodoCommand,
+    TodoCommand, add_task, check_trust_level, get_task, initialize_todo_db, list_tasks,
+    rebuild_from_events, todo_db_path, update_status,
 };
 use std::fs;
 use tempfile::tempdir;

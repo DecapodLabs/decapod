@@ -1,7 +1,7 @@
 use decapod::core::store::{Store, StoreKind};
 use decapod::plugins::policy::{
-    approve_action, check_approval, derive_fingerprint, eval_risk, initialize_policy_db,
-    is_high_risk, list_approvals, RiskLevel, RiskMap, RiskZone,
+    RiskLevel, RiskMap, RiskZone, approve_action, check_approval, derive_fingerprint, eval_risk,
+    initialize_policy_db, is_high_risk,
 };
 use tempfile::tempdir;
 

@@ -1,10 +1,10 @@
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::plugins::teammate::{
-    add_preference, add_skill, delete_preference, generate_contextual_reminders, get_preference,
-    get_preferences_by_category, get_prompts_for_context, get_skill, initialize_teammate_db,
-    list_preferences, list_skills, match_patterns, record_observation, teammate_db_path,
-    PreferenceInput, SkillInput,
+    PreferenceInput, SkillInput, add_preference, add_skill, delete_preference,
+    generate_contextual_reminders, get_preference, get_preferences_by_category,
+    get_prompts_for_context, get_skill, initialize_teammate_db, list_preferences, list_skills,
+    match_patterns, record_observation, teammate_db_path,
 };
 use tempfile::tempdir;
 
