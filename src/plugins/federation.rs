@@ -188,6 +188,12 @@ pub enum FederationCommand {
     },
     /// Initialize federation DB and events file (no-op if already initialized).
     Init,
+    /// Export Obsidian-compatible vault notes under federation/vault/.
+    VaultExport,
+    /// Build deterministic index file at federation/_index.md.
+    IndexBuild,
+    /// Export deterministic graph file at federation/_graph.json.
+    GraphExport,
     /// Rebuild federation.db deterministically from federation.events.jsonl.
     Rebuild,
     /// Print the JSON schema for the federation subsystem.
@@ -255,6 +261,22 @@ fn federation_db_path(root: &Path) -> PathBuf {
 
 fn federation_events_path(root: &Path) -> PathBuf {
     root.join(schemas::FEDERATION_EVENTS_NAME)
+}
+
+fn federation_derived_dir(root: &Path) -> PathBuf {
+    root.join("federation")
+}
+
+fn federation_vault_dir(root: &Path) -> PathBuf {
+    federation_derived_dir(root).join("vault")
+}
+
+fn federation_index_path(root: &Path) -> PathBuf {
+    federation_derived_dir(root).join("_index.md")
+}
+
+fn federation_graph_path(root: &Path) -> PathBuf {
+    federation_derived_dir(root).join("_graph.json")
 }
 
 fn validate_node_type(t: &str) -> Result<(), error::DecapodError> {
@@ -1176,6 +1198,264 @@ fn graph_neighbors(store: &Store, id: &str, depth: u32) -> Result<JsonValue, err
     })
 }
 
+fn parse_tags(tags: &str) -> Vec<String> {
+    tags.split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect()
+}
+
+fn yaml_escape(v: &str) -> String {
+    v.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+fn build_index_markdown(conn: &Connection) -> Result<String, error::DecapodError> {
+    let mut out = String::new();
+    out.push_str("# Federation Vault Index\n\n");
+    out.push_str("| Note | Description |\n");
+    out.push_str("|------|-------------|\n");
+
+    let mut stmt = conn.prepare(
+        "SELECT id, node_type, title, status, priority
+         FROM nodes
+         ORDER BY node_type, id",
+    )?;
+    let mut rows = stmt.query([])?;
+    while let Some(row) = rows.next()? {
+        let id: String = row.get(0)?;
+        let node_type: String = row.get(1)?;
+        let title: String = row.get(2)?;
+        let status: String = row.get(3)?;
+        let priority: String = row.get(4)?;
+        let note = format!("vault/{}/{}.md", node_type, id);
+        let desc = format!("{} [{}|{}]", title.replace('|', "\\|"), status, priority);
+        out.push_str(&format!("| {} | {} |\n", note, desc));
+    }
+
+    Ok(out)
+}
+
+fn build_graph_json(conn: &Connection) -> Result<JsonValue, error::DecapodError> {
+    let mut nodes = Vec::new();
+    let mut edges = Vec::new();
+
+    {
+        let mut stmt = conn.prepare(
+            "SELECT id, node_type, status, priority, title
+             FROM nodes ORDER BY id",
+        )?;
+        let mut rows = stmt.query([])?;
+        while let Some(row) = rows.next()? {
+            nodes.push(serde_json::json!({
+                "id": row.get::<_, String>(0)?,
+                "node_type": row.get::<_, String>(1)?,
+                "status": row.get::<_, String>(2)?,
+                "priority": row.get::<_, String>(3)?,
+                "title": row.get::<_, String>(4)?,
+            }));
+        }
+    }
+
+    {
+        let mut stmt = conn.prepare(
+            "SELECT id, source_id, target_id, edge_type
+             FROM edges ORDER BY source_id, edge_type, target_id, id",
+        )?;
+        let mut rows = stmt.query([])?;
+        while let Some(row) = rows.next()? {
+            edges.push(serde_json::json!({
+                "id": row.get::<_, String>(0)?,
+                "source_id": row.get::<_, String>(1)?,
+                "target_id": row.get::<_, String>(2)?,
+                "edge_type": row.get::<_, String>(3)?,
+            }));
+        }
+    }
+
+    Ok(serde_json::json!({
+        "version": "1",
+        "nodes": nodes,
+        "edges": edges
+    }))
+}
+
+fn export_vault_notes(store: &Store) -> Result<usize, error::DecapodError> {
+    let broker = DbBroker::new(&store.root);
+    let db_path = federation_db_path(&store.root);
+    let vault_dir = federation_vault_dir(&store.root);
+    fs::create_dir_all(&vault_dir).map_err(error::DecapodError::IoError)?;
+
+    broker.with_conn(&db_path, "decapod", None, "federation.vault.export", |conn| {
+        let mut stmt = conn.prepare(
+            "SELECT id, node_type, status, priority, confidence, title, body, scope, tags,
+                    created_at, updated_at, effective_from, effective_to, actor
+             FROM nodes ORDER BY id",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(FederationNode {
+                id: row.get(0)?,
+                node_type: row.get(1)?,
+                status: row.get(2)?,
+                priority: row.get(3)?,
+                confidence: row.get(4)?,
+                title: row.get(5)?,
+                body: row.get(6)?,
+                scope: row.get(7)?,
+                tags: row.get(8)?,
+                created_at: row.get(9)?,
+                updated_at: row.get(10)?,
+                effective_from: row.get(11)?,
+                effective_to: row.get(12)?,
+                actor: row.get(13)?,
+                sources: None,
+                edges: None,
+            })
+        })?;
+
+        let mut count = 0usize;
+        for row in rows {
+            let mut node = row?;
+
+            let mut src_stmt =
+                conn.prepare("SELECT source FROM sources WHERE node_id = ?1 ORDER BY source")?;
+            let sources = src_stmt
+                .query_map(params![node.id.clone()], |r| r.get(0))?
+                .collect::<Result<Vec<String>, _>>()?;
+            node.sources = Some(sources);
+
+            let mut edge_stmt = conn.prepare(
+                "SELECT edge_type, target_id FROM edges WHERE source_id = ?1 ORDER BY edge_type, target_id",
+            )?;
+            let outgoing = edge_stmt
+                .query_map(params![node.id.clone()], |r| {
+                    Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
+                })?
+                .collect::<Result<Vec<(String, String)>, _>>()?;
+
+            let node_type_dir = vault_dir.join(&node.node_type);
+            fs::create_dir_all(&node_type_dir).map_err(error::DecapodError::IoError)?;
+            let note_path = node_type_dir.join(format!("{}.md", node.id));
+
+            let tags = parse_tags(&node.tags);
+            let tags_yaml = if tags.is_empty() {
+                "[]".to_string()
+            } else {
+                format!(
+                    "[{}]",
+                    tags.iter()
+                        .map(|t| format!("\"{}\"", yaml_escape(t)))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            };
+
+            let mut md = String::new();
+            md.push_str("---\n");
+            md.push_str(&format!("id: \"{}\"\n", yaml_escape(&node.id)));
+            md.push_str(&format!("type: \"{}\"\n", yaml_escape(&node.node_type)));
+            md.push_str(&format!("status: \"{}\"\n", yaml_escape(&node.status)));
+            md.push_str(&format!("priority: \"{}\"\n", yaml_escape(&node.priority)));
+            md.push_str(&format!("confidence: \"{}\"\n", yaml_escape(&node.confidence)));
+            md.push_str(&format!("title: \"{}\"\n", yaml_escape(&node.title)));
+            md.push_str(&format!("scope: \"{}\"\n", yaml_escape(&node.scope)));
+            md.push_str(&format!("tags: {}\n", tags_yaml));
+            md.push_str(&format!("created_at: \"{}\"\n", yaml_escape(&node.created_at)));
+            md.push_str(&format!("updated_at: \"{}\"\n", yaml_escape(&node.updated_at)));
+            match node.effective_from.as_ref() {
+                Some(v) => md.push_str(&format!("effective_from: \"{}\"\n", yaml_escape(v))),
+                None => md.push_str("effective_from: null\n"),
+            }
+            match node.effective_to.as_ref() {
+                Some(v) => md.push_str(&format!("effective_to: \"{}\"\n", yaml_escape(v))),
+                None => md.push_str("effective_to: null\n"),
+            }
+            md.push_str(&format!("actor: \"{}\"\n", yaml_escape(&node.actor)));
+            md.push_str("sources:\n");
+            if let Some(ref srcs) = node.sources {
+                if srcs.is_empty() {
+                    md.push_str("  []\n");
+                } else {
+                    for src in srcs {
+                        md.push_str(&format!("  - \"{}\"\n", yaml_escape(src)));
+                    }
+                }
+            } else {
+                md.push_str("  []\n");
+            }
+            md.push_str("edges:\n");
+            if outgoing.is_empty() {
+                md.push_str("  []\n");
+            } else {
+                for (edge_type, target_id) in outgoing {
+                    md.push_str(&format!(
+                        "  - {{ type: \"{}\", target: \"{}\" }}\n",
+                        yaml_escape(&edge_type),
+                        yaml_escape(&target_id)
+                    ));
+                }
+            }
+            md.push_str("---\n\n");
+            md.push_str(
+                "<!-- Derived artifact. Edit through `decapod data federation` commands. -->\n\n",
+            );
+            md.push_str(&node.body);
+            md.push('\n');
+
+            fs::write(&note_path, md).map_err(error::DecapodError::IoError)?;
+            count += 1;
+        }
+
+        Ok(count)
+    })
+}
+
+fn build_index_file(store: &Store) -> Result<usize, error::DecapodError> {
+    let broker = DbBroker::new(&store.root);
+    let db_path = federation_db_path(&store.root);
+    let derived_dir = federation_derived_dir(&store.root);
+    fs::create_dir_all(&derived_dir).map_err(error::DecapodError::IoError)?;
+    let path = federation_index_path(&store.root);
+
+    let content = broker.with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "federation.index.build",
+        |conn| build_index_markdown(conn),
+    )?;
+    fs::write(path, content.as_bytes()).map_err(error::DecapodError::IoError)?;
+    Ok(content.lines().count())
+}
+
+fn export_graph_file(store: &Store) -> Result<(usize, usize), error::DecapodError> {
+    let broker = DbBroker::new(&store.root);
+    let db_path = federation_db_path(&store.root);
+    let derived_dir = federation_derived_dir(&store.root);
+    fs::create_dir_all(&derived_dir).map_err(error::DecapodError::IoError)?;
+    let path = federation_graph_path(&store.root);
+
+    let graph = broker.with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "federation.graph.export",
+        |conn| build_graph_json(conn),
+    )?;
+    let nodes = graph
+        .get("nodes")
+        .and_then(|v| v.as_array())
+        .map(|a| a.len())
+        .unwrap_or(0);
+    let edges = graph
+        .get("edges")
+        .and_then(|v| v.as_array())
+        .map(|a| a.len())
+        .unwrap_or(0);
+    fs::write(path, serde_json::to_string_pretty(&graph).unwrap())
+        .map_err(error::DecapodError::IoError)?;
+    Ok((nodes, edges))
+}
+
 // --- Rebuild ---
 
 pub fn rebuild_from_events(root: &Path) -> Result<usize, error::DecapodError> {
@@ -1675,6 +1955,88 @@ pub fn validate_federation(
                 true,
                 "No events file found (clean state)".to_string(),
             ));
+        }
+    }
+
+    // Gate 6: Derived index freshness — federation/_index.md matches deterministic render
+    {
+        let (node_count, _source_count, edge_count) = db_counts(&conn)?;
+        if node_count == 0 && edge_count == 0 {
+            results.push((
+                "federation.derived_index_fresh".to_string(),
+                true,
+                "No nodes/edges found (clean state)".to_string(),
+            ));
+        } else {
+            let path = federation_index_path(store_root);
+            let expected = build_index_markdown(&conn)?;
+            match fs::read_to_string(&path) {
+                Ok(actual) => {
+                    if actual == expected {
+                        results.push((
+                            "federation.derived_index_fresh".to_string(),
+                            true,
+                            "Derived index is fresh".to_string(),
+                        ));
+                    } else {
+                        results.push((
+                        "federation.derived_index_fresh".to_string(),
+                        false,
+                        "Derived index drift detected. Run: decapod data federation index-build"
+                            .to_string(),
+                    ));
+                    }
+                }
+                Err(_) => {
+                    results.push((
+                        "federation.derived_index_fresh".to_string(),
+                        false,
+                        "Derived index missing. Run: decapod data federation index-build"
+                            .to_string(),
+                    ));
+                }
+            }
+        }
+    }
+
+    // Gate 7: Derived graph freshness — federation/_graph.json matches deterministic render
+    {
+        let (node_count, _source_count, edge_count) = db_counts(&conn)?;
+        if node_count == 0 && edge_count == 0 {
+            results.push((
+                "federation.derived_graph_fresh".to_string(),
+                true,
+                "No nodes/edges found (clean state)".to_string(),
+            ));
+        } else {
+            let path = federation_graph_path(store_root);
+            let expected = serde_json::to_string_pretty(&build_graph_json(&conn)?).unwrap();
+            match fs::read_to_string(&path) {
+                Ok(actual) => {
+                    if actual == expected {
+                        results.push((
+                            "federation.derived_graph_fresh".to_string(),
+                            true,
+                            "Derived graph is fresh".to_string(),
+                        ));
+                    } else {
+                        results.push((
+                        "federation.derived_graph_fresh".to_string(),
+                        false,
+                        "Derived graph drift detected. Run: decapod data federation graph-export"
+                            .to_string(),
+                    ));
+                    }
+                }
+                Err(_) => {
+                    results.push((
+                        "federation.derived_graph_fresh".to_string(),
+                        false,
+                        "Derived graph missing. Run: decapod data federation graph-export"
+                            .to_string(),
+                    ));
+                }
+            }
         }
     }
 
@@ -2216,6 +2578,80 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
             }
         }
 
+        FederationCommand::VaultExport => {
+            let count = export_vault_notes(store)?;
+            match cli.format {
+                OutputFormat::Json => {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status":"ok",
+                            "op":"vault.export",
+                            "nodes_exported":count,
+                            "path":federation_vault_dir(&store.root)
+                        })
+                    );
+                }
+                OutputFormat::Text => {
+                    println!(
+                        "Vault exported: {} note(s) under {}",
+                        count,
+                        federation_vault_dir(&store.root).to_string_lossy()
+                    );
+                }
+            }
+        }
+
+        FederationCommand::IndexBuild => {
+            let lines = build_index_file(store)?;
+            match cli.format {
+                OutputFormat::Json => {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status":"ok",
+                            "op":"index.build",
+                            "lines":lines,
+                            "path":federation_index_path(&store.root)
+                        })
+                    );
+                }
+                OutputFormat::Text => {
+                    println!(
+                        "Index built ({} lines): {}",
+                        lines,
+                        federation_index_path(&store.root).to_string_lossy()
+                    );
+                }
+            }
+        }
+
+        FederationCommand::GraphExport => {
+            let (nodes, edges) = export_graph_file(store)?;
+            match cli.format {
+                OutputFormat::Json => {
+                    println!(
+                        "{}",
+                        serde_json::json!({
+                            "status":"ok",
+                            "op":"graph.export",
+                            "nodes":nodes,
+                            "edges":edges,
+                            "path":federation_graph_path(&store.root)
+                        })
+                    );
+                }
+                OutputFormat::Text => {
+                    println!(
+                        "Graph exported: {} nodes, {} edges -> {}",
+                        nodes,
+                        edges,
+                        federation_graph_path(&store.root).to_string_lossy()
+                    );
+                }
+            }
+        }
+
         FederationCommand::Schema => {
             println!("{}", serde_json::to_string_pretty(&schema()).unwrap());
         }
@@ -2249,10 +2685,13 @@ pub fn schema() -> serde_json::Value {
             {"name": "link", "description": "Add a typed edge between nodes"},
             {"name": "unlink", "description": "Remove an edge"},
             {"name": "graph", "description": "Show node neighborhood"},
+            {"name": "vault-export", "description": "Export vault markdown notes under federation/vault"},
+            {"name": "index-build", "description": "Build deterministic federation/_index.md"},
+            {"name": "graph-export", "description": "Build deterministic federation/_graph.json"},
             {"name": "rebuild", "description": "Rebuild DB from event log"},
             {"name": "schema", "description": "Print JSON schema"},
         ],
-        "storage": ["federation.db", "federation.events.jsonl"],
+        "storage": ["federation.db", "federation.events.jsonl", "federation/_index.md", "federation/_graph.json", "federation/vault/"],
         "provenance_schemes": ["file:", "url:", "cmd:", "commit:", "event:"],
     })
 }
