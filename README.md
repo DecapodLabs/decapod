@@ -63,7 +63,9 @@ Decapod is a tool for agents, not for humans. After `decapod init` is present in
 
 Every Decapod binary ships with a compiled-in methodology: binding contracts, authority chains, proof doctrine, and architectural guidance — 40+ documents covering specs, interfaces, architecture, and plugins. Agents don't receive tips; they receive contracts.
 
-`decapod init` generates thin entrypoints (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md`) that point agents into the constitution. Every agent, regardless of provider, enters through the same contract and follows the same authority ladder: **Intent > Architecture > Implementation > Proof**.
+`decapod init` generates thin entrypoints (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md`) that point agents into the constitution. Every agent, regardless of provider, enters through the same contract and follows the same authority ladder:
+
+**Intent > Architecture > Implementation > Proof**
 
 Projects customize behavior through `.decapod/OVERRIDE.md` — extend or adjust any contract without forking the constitution.
 
