@@ -969,7 +969,7 @@ fn create_session_federation_node(
             "Architecture decision session for tree '{}'. Session ID: {}",
             tree_id, session_id
         ),
-        &format!("event:decide.session.start:{}", session_id),
+        &format!("cmd:decide.session.start.{}", session_id),
         &format!("decide,session,{}", tree_id),
         "repo",
         None,
@@ -998,7 +998,7 @@ fn create_decision_federation_node(
             "Chose '{}' for '{}'. Decision ID: {}",
             chosen_label, question_text, decision_id
         ),
-        &format!("event:decide.record:{}", decision_id),
+        &format!("cmd:decide.record.{}", decision_id),
         &format!("decide,answer,{}", tree_id),
         "repo",
         None,
