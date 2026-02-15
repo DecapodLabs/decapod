@@ -3,7 +3,7 @@ use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, params};
+use rusqlite::{Connection, OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use sha2::{Digest, Sha256};
@@ -371,6 +371,34 @@ fn node_exists(conn: &Connection, id: &str) -> Result<bool, error::DecapodError>
         |r| r.get(0),
     )?;
     Ok(count > 0)
+}
+
+pub fn find_node_by_source(
+    store: &Store,
+    source_pattern: &str,
+) -> Result<Option<String>, error::DecapodError> {
+    let broker = DbBroker::new(&store.root);
+    let db_path = federation_db_path(&store.root);
+
+    broker.with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "federation.find_by_source",
+        |conn| {
+            let node_id: Option<String> = conn
+                .query_row(
+                    "SELECT n.id FROM nodes n 
+             JOIN sources s ON n.id = s.node_id 
+             WHERE s.source = ?1 
+             LIMIT 1",
+                    params![source_pattern],
+                    |row| row.get(0),
+                )
+                .optional()?;
+            Ok(node_id)
+        },
+    )
 }
 
 fn get_node_type_and_priority(
