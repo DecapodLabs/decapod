@@ -76,6 +76,7 @@
 //! - [`plugins`]: Subsystem implementations (TODO, health, knowledge, etc.)
 
 pub mod core;
+pub mod constitution;
 pub mod plugins;
 
 use core::{
