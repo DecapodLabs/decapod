@@ -465,6 +465,10 @@ fn validate_entrypoint_invariants(
         ("decapod update", "Version update gate language"),
         ("decapod validate", "Validation gate language"),
         ("Stop if", "Stop-if-missing behavior"),
+        (
+            "Interface abstraction boundary",
+            "Control-plane opacity language",
+        ),
         ("✅", "Four invariants checklist format"),
     ];
 

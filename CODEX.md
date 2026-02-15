@@ -24,7 +24,7 @@ decapod todo list                   # Active work
 - You excel at code completion - but still read architecture first
 - You have strong pattern matching - use it to follow existing code style
 - You may have tool use or function calling - use it for `decapod` commands
-- If you don't have tool use, output the commands for human execution
+- Apply control-plane opacity: keep operator-facing output semantic (intent/actions/outcomes), not command-surface oriented
 
 ## The Contract
 
