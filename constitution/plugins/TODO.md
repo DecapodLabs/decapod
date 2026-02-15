@@ -24,6 +24,11 @@ decapod todo list [--status open|done|archived] [--scope <scope>] [--tags <tags>
 decapod todo get --id <id>
 decapod todo done --id <id>
 decapod todo archive --id <id>
+decapod todo claim --id <id> [--agent <agent-id>]
+decapod todo register-agent --agent <agent-id> --category <name> [--category <name>]
+decapod todo ownerships [--category <name>] [--agent <agent-id>]
+decapod todo heartbeat [--agent <agent-id>]
+decapod todo presence [--agent <agent-id>]
 decapod todo schema  # JSON schema for programmatic use
 ```
 
@@ -64,6 +69,30 @@ decapod todo archive R_XXXXXXXX
 
 ---
 
+## Multi-Agent Coordination
+
+The TODO subsystem coordinates multiple agents using category ownership plus heartbeats.
+
+### Ownership model
+
+- Agents claim category ownership via `decapod todo register-agent`.
+- Category ownership is durable and queryable via `decapod todo ownerships`.
+- New tasks auto-assign to the active owner of their inferred category.
+
+### Presence model
+
+- Agents publish liveness via `decapod todo heartbeat`.
+- Presence state is visible via `decapod todo presence`.
+- Ownership checks treat missing/stale presence as inactive.
+
+### Timeout eviction (30 minutes)
+
+- If category owner heartbeat is stale for more than 30 minutes, another agent can claim work in that category.
+- On successful claim, ownership transfers to the claiming agent.
+- This prevents abandoned ownership from blocking progress.
+
+---
+
 ## State Transition Validation
 
 Every lifecycle enum must have an explicit transition table. Invalid transitions must be rejected with an error, not silently ignored.
@@ -90,4 +119,3 @@ All other transitions are invalid and must produce an error.
 ---
 
 **See also:** `core/PLUGINS.md` for subsystem registry and truth labels.
-
