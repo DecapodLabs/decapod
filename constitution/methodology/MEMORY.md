@@ -50,11 +50,30 @@ Binding schema, validation rules, and retrieval-event requirements are defined i
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `core/INTERFACES.md` - Interface contracts registry
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+
+### Contracts (Interfaces Layer)
 - `interfaces/MEMORY_SCHEMA.md` - Binding memory schema
-- `methodology/KNOWLEDGE.md` - Knowledge practice
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+
+### Practice (Methodology Layer - This Document)
+- `methodology/SOUL.md` - Agent identity
+- `methodology/ARCHITECTURE.md` - Architecture practice
+- `methodology/KNOWLEDGE.md` - Knowledge curation
+
+### Operations (Plugins Layer)
 - `plugins/TODO.md` - Work tracking
+- `plugins/FEDERATION.md` - Federation (governed agent memory)
 
 ---
 

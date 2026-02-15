@@ -54,12 +54,22 @@ This glossary is binding: if a term is defined here, other canonical docs MUST u
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+- `specs/AMENDMENTS.md` - Change control
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
 - `core/INTERFACES.md` - Interface contracts index
+- `core/DEPRECATION.md` - Deprecation contract
+
+### Contracts (Interfaces Layer - This Document)
 - `interfaces/DOC_RULES.md` - Doc compilation rules
 - `interfaces/CLAIMS.md` - Promises ledger
 - `interfaces/STORE_MODEL.md` - Store semantics
-- `core/PLUGINS.md` - Subsystem registry
-- `core/DEPRECATION.md` - Deprecation contract
-- `specs/AMENDMENTS.md` - Change control
-- `specs/SYSTEM.md` - System definition
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/TESTING.md` - Testing contract

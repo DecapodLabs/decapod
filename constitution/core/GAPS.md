@@ -498,21 +498,38 @@ decapod validate
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+- `specs/SECURITY.md` - Security contract
+- `specs/GIT.md` - Git etiquette contract
+- `specs/AMENDMENTS.md` - Change control
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
 - `core/INTERFACES.md` - Interface contracts index
 - `core/METHODOLOGY.md` - Methodology guides index
-- `core/PLUGINS.md` - Subsystem registry
-- `specs/INTENT.md` - Intent contract
-- `specs/SYSTEM.md` - System definition
-- `specs/AMENDMENTS.md` - Change control
-- `specs/SECURITY.md` - Security doctrine
-- `plugins/TODO.md` - Work tracking
-- `plugins/EMERGENCY_PROTOCOL.md` - Critical issues
-- `interfaces/CONTROL_PLANE.md` - Validation doctrine
+- `core/DEPRECATION.md` - Deprecation contract
+
+### Contracts (Interfaces Layer)
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns and validation doctrine
+- `interfaces/DOC_RULES.md` - Doc compilation rules
 - `interfaces/CLAIMS.md` - Promises ledger
-- `methodology/KNOWLEDGE.md` - Knowledge management
-- `methodology/MEMORY.md` - Learning patterns
+- `interfaces/GLOSSARY.md` - Term definitions
+
+### Practice (Methodology Layer)
 - `methodology/ARCHITECTURE.md` - Architecture practice
+- `methodology/SOUL.md` - Agent identity
+- `methodology/KNOWLEDGE.md` - Knowledge curation
+- `methodology/MEMORY.md` - Memory and learning
+
+### Operations (Plugins Layer)
+- `plugins/TODO.md` - Work tracking
+- `plugins/VERIFY.md` - Validation subsystem
+- `plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols
 
 ---
 
