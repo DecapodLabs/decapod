@@ -118,7 +118,12 @@ fn test_invalid_provenance_rejected() {
         "test",
     );
     assert!(result.is_err());
-    assert!(result.unwrap_err().to_string().contains("Invalid provenance"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid provenance")
+    );
 }
 
 #[test]
@@ -166,7 +171,12 @@ fn test_edit_critical_node_rejected() {
     // Edit should fail for critical type
     let result = edit_node(&store, &node.id, Some("Changed"), None, None, None);
     assert!(result.is_err());
-    assert!(result.unwrap_err().to_string().contains("Cannot edit critical"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Cannot edit critical")
+    );
 }
 
 #[test]
@@ -235,10 +245,14 @@ fn test_status_transition_only_from_active() {
     transition_node_status(&store, &node.id, "deprecated", "node.deprecate", "outdated").unwrap();
 
     // Can't deprecate again (already deprecated)
-    let result =
-        transition_node_status(&store, &node.id, "disputed", "node.dispute", "also bad");
+    let result = transition_node_status(&store, &node.id, "disputed", "node.dispute", "also bad");
     assert!(result.is_err());
-    assert!(result.unwrap_err().to_string().contains("Only active nodes"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Only active nodes")
+    );
 }
 
 #[test]
@@ -246,12 +260,32 @@ fn test_edge_operations() {
     let (_tmp, store) = test_store();
 
     let a = add_node(
-        &store, "Node A", "project", "notable", "agent_inferred", "", "", "", "repo", None, "test",
+        &store,
+        "Node A",
+        "project",
+        "notable",
+        "agent_inferred",
+        "",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
     )
     .unwrap();
 
     let b = add_node(
-        &store, "Node B", "lesson", "notable", "agent_inferred", "", "", "", "repo", None, "test",
+        &store,
+        "Node B",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
     )
     .unwrap();
 
@@ -264,18 +298,43 @@ fn test_invalid_edge_type_rejected() {
     let (_tmp, store) = test_store();
 
     let a = add_node(
-        &store, "Node A", "project", "notable", "agent_inferred", "", "", "", "repo", None, "test",
+        &store,
+        "Node A",
+        "project",
+        "notable",
+        "agent_inferred",
+        "",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
     )
     .unwrap();
 
     let b = add_node(
-        &store, "Node B", "lesson", "notable", "agent_inferred", "", "", "", "repo", None, "test",
+        &store,
+        "Node B",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
     )
     .unwrap();
 
     let result = add_edge(&store, &a.id, &b.id, "bogus_type");
     assert!(result.is_err());
-    assert!(result.unwrap_err().to_string().contains("Invalid edge_type"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid edge_type")
+    );
 }
 
 #[test]
@@ -284,14 +343,32 @@ fn test_rebuild_determinism() {
 
     // Create several nodes
     let n1 = add_node(
-        &store, "Decision 1", "decision", "critical", "human_confirmed", "Body 1",
-        "file:a.rs", "tag1", "repo", None, "test",
+        &store,
+        "Decision 1",
+        "decision",
+        "critical",
+        "human_confirmed",
+        "Body 1",
+        "file:a.rs",
+        "tag1",
+        "repo",
+        None,
+        "test",
     )
     .unwrap();
 
     let n2 = add_node(
-        &store, "Lesson 1", "lesson", "notable", "agent_inferred", "Body 2",
-        "", "", "repo", None, "test",
+        &store,
+        "Lesson 1",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "Body 2",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
     )
     .unwrap();
 
@@ -317,7 +394,17 @@ fn test_add_source_to_node() {
     let (_tmp, store) = test_store();
 
     let node = add_node(
-        &store, "A lesson", "lesson", "notable", "agent_inferred", "", "", "", "repo", None, "test",
+        &store,
+        "A lesson",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
     )
     .unwrap();
 
@@ -332,7 +419,12 @@ fn test_add_source_to_node() {
     // Invalid source should be rejected
     let result = add_source_to_node(&store, &node.id, "not-valid");
     assert!(result.is_err());
-    assert!(result.unwrap_err().to_string().contains("Invalid provenance"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("Invalid provenance")
+    );
 
     // Non-existent node should fail
     let result = add_source_to_node(&store, "F_nonexistent", "file:foo.rs");
@@ -344,8 +436,17 @@ fn test_add_source_survives_rebuild() {
     let (_tmp, store) = test_store();
 
     let node = add_node(
-        &store, "Decision X", "decision", "critical", "agent_inferred", "body",
-        "file:initial.rs", "", "repo", None, "test",
+        &store,
+        "Decision X",
+        "decision",
+        "critical",
+        "agent_inferred",
+        "body",
+        "file:initial.rs",
+        "",
+        "repo",
+        None,
+        "test",
     )
     .unwrap();
 
@@ -379,8 +480,17 @@ fn test_init_idempotent() {
         root,
     };
     let node = add_node(
-        &store, "After re-init", "lesson", "notable", "agent_inferred", "", "", "", "repo",
-        None, "test",
+        &store,
+        "After re-init",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
     )
     .unwrap();
     assert!(node.id.starts_with("F_"));
@@ -392,14 +502,32 @@ fn test_rebuild_determinism_gate_passes() {
 
     // Build up some state: nodes, edges, sources, status transitions
     let n1 = add_node(
-        &store, "Decision A", "decision", "critical", "human_confirmed", "Body",
-        "file:a.rs", "arch", "repo", None, "test",
+        &store,
+        "Decision A",
+        "decision",
+        "critical",
+        "human_confirmed",
+        "Body",
+        "file:a.rs",
+        "arch",
+        "repo",
+        None,
+        "test",
     )
     .unwrap();
 
     let n2 = add_node(
-        &store, "Lesson B", "lesson", "notable", "agent_inferred", "Body 2",
-        "", "", "repo", None, "test",
+        &store,
+        "Lesson B",
+        "lesson",
+        "notable",
+        "agent_inferred",
+        "Body 2",
+        "",
+        "",
+        "repo",
+        None,
+        "test",
     )
     .unwrap();
 
@@ -412,7 +540,10 @@ fn test_rebuild_determinism_gate_passes() {
     let determinism_gate = results
         .iter()
         .find(|(name, _, _)| name == "federation.rebuild_determinism");
-    assert!(determinism_gate.is_some(), "rebuild_determinism gate should exist");
+    assert!(
+        determinism_gate.is_some(),
+        "rebuild_determinism gate should exist"
+    );
     let (_, passed, msg) = determinism_gate.unwrap();
     assert!(passed, "rebuild_determinism gate failed: {}", msg);
 }

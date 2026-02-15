@@ -3,7 +3,7 @@ use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use sha2::{Digest, Sha256};
@@ -331,10 +331,7 @@ fn is_critical(node_type: &str, priority: &str) -> bool {
     CRITICAL_NODE_TYPES.contains(&node_type) || priority == "critical"
 }
 
-fn append_event(
-    events_path: &Path,
-    event: &FederationEvent,
-) -> Result<(), error::DecapodError> {
+fn append_event(events_path: &Path, event: &FederationEvent) -> Result<(), error::DecapodError> {
     let mut f = OpenOptions::new()
         .create(true)
         .append(true)
@@ -346,11 +343,11 @@ fn append_event(
 }
 
 fn node_exists(conn: &Connection, id: &str) -> Result<bool, error::DecapodError> {
-    let count: i64 = conn
-        .query_row("SELECT COUNT(*) FROM nodes WHERE id = ?1", params![id], |r| {
-            r.get(0)
-        })
-        ?;
+    let count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM nodes WHERE id = ?1",
+        params![id],
+        |r| r.get(0),
+    )?;
     Ok(count > 0)
 }
 
@@ -363,9 +360,7 @@ fn get_node_type_and_priority(
         params![id],
         |row| Ok((row.get(0)?, row.get(1)?)),
     )
-    .map_err(|_| {
-        error::DecapodError::NotFound(format!("Node '{}' not found", id))
-    })
+    .map_err(|_| error::DecapodError::NotFound(format!("Node '{}' not found", id)))
 }
 
 fn get_node_status(conn: &Connection, id: &str) -> Result<String, error::DecapodError> {
@@ -374,9 +369,7 @@ fn get_node_status(conn: &Connection, id: &str) -> Result<String, error::Decapod
         params![id],
         |row| row.get(0),
     )
-    .map_err(|_| {
-        error::DecapodError::NotFound(format!("Node '{}' not found", id))
-    })
+    .map_err(|_| error::DecapodError::NotFound(format!("Node '{}' not found", id)))
 }
 
 fn read_node_full(conn: &Connection, id: &str) -> Result<FederationNode, error::DecapodError> {
@@ -410,22 +403,17 @@ fn read_node_full(conn: &Connection, id: &str) -> Result<FederationNode, error::
         .map_err(|_| error::DecapodError::NotFound(format!("Node '{}' not found", id)))?;
 
     // Fetch sources
-    let mut stmt = conn
-        .prepare("SELECT source FROM sources WHERE node_id = ?1")
-        ?;
+    let mut stmt = conn.prepare("SELECT source FROM sources WHERE node_id = ?1")?;
     let sources: Vec<String> = stmt
-        .query_map(params![id], |row| row.get(0))
-        ?
+        .query_map(params![id], |row| row.get(0))?
         .filter_map(|r| r.ok())
         .collect();
 
     // Fetch edges (both directions)
-    let mut edge_stmt = conn
-        .prepare(
-            "SELECT id, source_id, target_id, edge_type, created_at, actor
+    let mut edge_stmt = conn.prepare(
+        "SELECT id, source_id, target_id, edge_type, created_at, actor
              FROM edges WHERE source_id = ?1 OR target_id = ?1",
-        )
-        ?;
+    )?;
     let edges: Vec<FederationEdge> = edge_stmt
         .query_map(params![id], |row| {
             Ok(FederationEdge {
@@ -436,8 +424,7 @@ fn read_node_full(conn: &Connection, id: &str) -> Result<FederationNode, error::
                 created_at: row.get(4)?,
                 actor: row.get(5)?,
             })
-        })
-        ?
+        })?
         .filter_map(|r| r.ok())
         .collect();
 
@@ -454,45 +441,29 @@ pub fn initialize_federation_db(root: &Path) -> Result<(), error::DecapodError> 
     let db_path = federation_db_path(root);
     let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
 
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_META)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS)
-        ?;
+    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_META)?;
+    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES)?;
+    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES)?;
+    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES)?;
+    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS)?;
 
     // Indexes
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_TYPE)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_STATUS)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_SCOPE)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_PRIORITY)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_UPDATED)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_SOURCES_NODE)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_SOURCE)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_TARGET)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_TYPE)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EVENTS_NODE)
-        ?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_TYPE)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_STATUS)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_SCOPE)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_PRIORITY)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_UPDATED)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_SOURCES_NODE)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_SOURCE)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_TARGET)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_TYPE)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EVENTS_NODE)?;
 
     // Version tracking
     conn.execute(
         "INSERT OR IGNORE INTO meta(key, value) VALUES('schema_version', ?1)",
         params![schemas::FEDERATION_SCHEMA_VERSION.to_string()],
-    )
-    ?;
+    )?;
 
     // Create events file if missing
     let events_path = federation_events_path(root);
@@ -1008,9 +979,7 @@ fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> 
     let now = now_ts();
 
     broker.with_conn(&db_path, "decapod", None, "federation.unlink", |conn| {
-        let changes = conn
-            .execute("DELETE FROM edges WHERE id = ?1", params![edge_id])
-            ?;
+        let changes = conn.execute("DELETE FROM edges WHERE id = ?1", params![edge_id])?;
 
         if changes == 0 {
             return Err(error::DecapodError::NotFound(format!(
@@ -1063,45 +1032,51 @@ pub fn add_source_to_node(
     let now = now_ts();
     let src_id = format!("FS_{}", Ulid::new());
 
-    broker.with_conn(&db_path, "decapod", None, "federation.sources.add", |conn| {
-        if !node_exists(conn, node_id)? {
-            return Err(error::DecapodError::NotFound(format!(
-                "Node '{}' not found",
-                node_id
-            )));
-        }
+    broker.with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "federation.sources.add",
+        |conn| {
+            if !node_exists(conn, node_id)? {
+                return Err(error::DecapodError::NotFound(format!(
+                    "Node '{}' not found",
+                    node_id
+                )));
+            }
 
-        conn.execute(
-            "INSERT INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)",
-            params![src_id, node_id, source, now],
-        )?;
+            conn.execute(
+                "INSERT INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)",
+                params![src_id, node_id, source, now],
+            )?;
 
-        // Update node timestamp
-        conn.execute(
-            "UPDATE nodes SET updated_at = ?1 WHERE id = ?2",
-            params![now, node_id],
-        )?;
+            // Update node timestamp
+            conn.execute(
+                "UPDATE nodes SET updated_at = ?1 WHERE id = ?2",
+                params![now, node_id],
+            )?;
 
-        let event_id = Ulid::new().to_string();
-        conn.execute(
-            "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
+            let event_id = Ulid::new().to_string();
+            conn.execute(
+                "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
-            params![
-                event_id,
-                now,
-                "source.add",
-                node_id,
-                serde_json::to_string(&serde_json::json!({
-                    "source_id": src_id,
-                    "source": source,
-                }))
-                .unwrap(),
-                "decapod",
-            ],
-        )?;
+                params![
+                    event_id,
+                    now,
+                    "source.add",
+                    node_id,
+                    serde_json::to_string(&serde_json::json!({
+                        "source_id": src_id,
+                        "source": source,
+                    }))
+                    .unwrap(),
+                    "decapod",
+                ],
+            )?;
 
-        Ok(())
-    })?;
+            Ok(())
+        },
+    )?;
 
     append_event(
         &events_path,
@@ -1121,11 +1096,7 @@ pub fn add_source_to_node(
     Ok(src_id.clone())
 }
 
-fn graph_neighbors(
-    store: &Store,
-    id: &str,
-    depth: u32,
-) -> Result<JsonValue, error::DecapodError> {
+fn graph_neighbors(store: &Store, id: &str, depth: u32) -> Result<JsonValue, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = federation_db_path(&store.root);
 
@@ -1224,42 +1195,26 @@ pub fn rebuild_from_events(root: &Path) -> Result<usize, error::DecapodError> {
     let conn = crate::core::db::db_connect(&tmp_db.to_string_lossy())?;
 
     // Initialize schema
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_META)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_TYPE)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_STATUS)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_SCOPE)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_PRIORITY)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_UPDATED)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_SOURCES_NODE)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_SOURCE)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_TARGET)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_TYPE)
-        ?;
-    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EVENTS_NODE)
-        ?;
+    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_META)?;
+    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES)?;
+    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES)?;
+    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES)?;
+    conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_TYPE)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_STATUS)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_SCOPE)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_PRIORITY)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_NODES_UPDATED)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_SOURCES_NODE)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_SOURCE)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_TARGET)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EDGES_TYPE)?;
+    conn.execute_batch(schemas::FEDERATION_DB_INDEX_EVENTS_NODE)?;
 
     conn.execute(
         "INSERT OR IGNORE INTO meta(key, value) VALUES('schema_version', ?1)",
         params![schemas::FEDERATION_SCHEMA_VERSION.to_string()],
-    )
-    ?;
+    )?;
 
     let file = fs::File::open(&events_path).map_err(error::DecapodError::IoError)?;
     let reader = BufReader::new(file);
@@ -1302,8 +1257,7 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
             serde_json::to_string(&event.payload).unwrap(),
             event.actor,
         ],
-    )
-    ?;
+    )?;
 
     match event.event_type.as_str() {
         "node.create" => {
@@ -1351,29 +1305,25 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
                 conn.execute(
                     "UPDATE nodes SET title = ?1, updated_at = ?2 WHERE id = ?3",
                     params![title, event.ts, node_id],
-                )
-                ?;
+                )?;
             }
             if let Some(body) = p.get("body").and_then(|v| v.as_str()) {
                 conn.execute(
                     "UPDATE nodes SET body = ?1, updated_at = ?2 WHERE id = ?3",
                     params![body, event.ts, node_id],
-                )
-                ?;
+                )?;
             }
             if let Some(tags) = p.get("tags").and_then(|v| v.as_str()) {
                 conn.execute(
                     "UPDATE nodes SET tags = ?1, updated_at = ?2 WHERE id = ?3",
                     params![tags, event.ts, node_id],
-                )
-                ?;
+                )?;
             }
             if let Some(pri) = p.get("priority").and_then(|v| v.as_str()) {
                 conn.execute(
                     "UPDATE nodes SET priority = ?1, updated_at = ?2 WHERE id = ?3",
                     params![pri, event.ts, node_id],
-                )
-                ?;
+                )?;
             }
         }
         "node.supersede" => {
@@ -1404,16 +1354,14 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
             conn.execute(
                 "UPDATE nodes SET status = 'deprecated', updated_at = ?1 WHERE id = ?2",
                 params![event.ts, node_id],
-            )
-            ?;
+            )?;
         }
         "node.dispute" => {
             let node_id = event.node_id.as_deref().unwrap_or("");
             conn.execute(
                 "UPDATE nodes SET status = 'disputed', updated_at = ?1 WHERE id = ?2",
                 params![event.ts, node_id],
-            )
-            ?;
+            )?;
         }
         "edge.add" => {
             let p = &event.payload;
@@ -1435,8 +1383,7 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
                 .get("edge_id")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            conn.execute("DELETE FROM edges WHERE id = ?1", params![edge_id])
-                ?;
+            conn.execute("DELETE FROM edges WHERE id = ?1", params![edge_id])?;
         }
         "source.add" => {
             let p = &event.payload;
@@ -1454,8 +1401,7 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
             conn.execute(
                 "UPDATE nodes SET updated_at = ?1 WHERE id = ?2",
                 params![event.ts, node_id],
-            )
-            ?;
+            )?;
         }
         _ => {
             // Unknown event type — skip silently during rebuild
@@ -1565,23 +1511,20 @@ pub fn validate_federation(
 
     // Gate 2: Provenance — all critical nodes have ≥1 valid source
     {
-        let mut stmt = conn
-            .prepare(
-                "SELECT n.id, n.title, n.node_type, n.priority
+        let mut stmt = conn.prepare(
+            "SELECT n.id, n.title, n.node_type, n.priority
                  FROM nodes n
                  WHERE n.status = 'active'
                    AND (n.node_type IN ('decision', 'commitment') OR n.priority = 'critical')
                    AND NOT EXISTS (SELECT 1 FROM sources s WHERE s.node_id = n.id)",
-            )
-            ?;
+        )?;
 
         let violations: Vec<String> = stmt
             .query_map([], |row| {
                 let id: String = row.get(0)?;
                 let title: String = row.get(1)?;
                 Ok(format!("{} ({})", id, title))
-            })
-            ?
+            })?
             .filter_map(|r| r.ok())
             .collect();
 
@@ -1605,19 +1548,16 @@ pub fn validate_federation(
 
     // Gate 3: Write safety — no node.edit events for critical types
     {
-        let mut stmt = conn
-            .prepare(
-                "SELECT fe.node_id
+        let mut stmt = conn.prepare(
+            "SELECT fe.node_id
                  FROM federation_events fe
                  JOIN nodes n ON fe.node_id = n.id
                  WHERE fe.event_type = 'node.edit'
                    AND (n.node_type IN ('decision', 'commitment') OR n.priority = 'critical')",
-            )
-            ?;
+        )?;
 
         let violations: Vec<String> = stmt
-            .query_map([], |row| row.get(0))
-            ?
+            .query_map([], |row| row.get(0))?
             .filter_map(|r| r.ok())
             .collect();
 
@@ -1641,13 +1581,11 @@ pub fn validate_federation(
 
     // Gate 4: Lifecycle DAG — no cycles in supersedes edges
     {
-        let mut stmt = conn
-            .prepare("SELECT source_id, target_id FROM edges WHERE edge_type = 'supersedes'")
-            ?;
+        let mut stmt =
+            conn.prepare("SELECT source_id, target_id FROM edges WHERE edge_type = 'supersedes'")?;
 
         let edges: Vec<(String, String)> = stmt
-            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
-            ?
+            .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
             .filter_map(|r| r.ok())
             .collect();
 
@@ -1683,24 +1621,13 @@ pub fn validate_federation(
             }
 
             let tmp_conn = crate::core::db::db_connect(&tmp_db.to_string_lossy())?;
-            tmp_conn
-                .execute_batch(schemas::FEDERATION_DB_SCHEMA_META)
-                ?;
-            tmp_conn
-                .execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES)
-                ?;
-            tmp_conn
-                .execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES)
-                ?;
-            tmp_conn
-                .execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES)
-                ?;
-            tmp_conn
-                .execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS)
-                ?;
+            tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_META)?;
+            tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES)?;
+            tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES)?;
+            tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES)?;
+            tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS)?;
 
-            let file =
-                fs::File::open(&events_path).map_err(error::DecapodError::IoError)?;
+            let file = fs::File::open(&events_path).map_err(error::DecapodError::IoError)?;
             let reader = BufReader::new(file);
 
             for line in reader.lines() {
@@ -1808,10 +1735,7 @@ fn detect_cycle_in_edges(edges: &[(String, String)]) -> bool {
 
 // --- CLI Runner ---
 
-pub fn run_federation_cli(
-    store: &Store,
-    cli: FederationCli,
-) -> Result<(), error::DecapodError> {
+pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error::DecapodError> {
     initialize_federation_db(&store.root)?;
 
     match cli.command {
@@ -1855,10 +1779,9 @@ pub fn run_federation_cli(
             let broker = DbBroker::new(&store.root);
             let db_path = federation_db_path(&store.root);
 
-            let node =
-                broker.with_conn(&db_path, "decapod", None, "federation.get", |conn| {
-                    read_node_full(conn, &id)
-                })?;
+            let node = broker.with_conn(&db_path, "decapod", None, "federation.get", |conn| {
+                read_node_full(conn, &id)
+            })?;
 
             match cli.format {
                 OutputFormat::Json => {
@@ -1917,74 +1840,71 @@ pub fn run_federation_cli(
             let broker = DbBroker::new(&store.root);
             let db_path = federation_db_path(&store.root);
 
-            let nodes =
-                broker.with_conn(&db_path, "decapod", None, "federation.list", |conn| {
-                    let mut conditions = vec!["1=1".to_string()];
-                    let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = vec![];
-                    let mut idx = 1u32;
+            let nodes = broker.with_conn(&db_path, "decapod", None, "federation.list", |conn| {
+                let mut conditions = vec!["1=1".to_string()];
+                let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = vec![];
+                let mut idx = 1u32;
 
-                    if let Some(ref nt) = node_type {
-                        conditions.push(format!("node_type = ?{}", idx));
-                        param_values.push(Box::new(nt.clone()));
-                        idx += 1;
-                    }
-                    if let Some(ref s) = status {
-                        conditions.push(format!("status = ?{}", idx));
-                        param_values.push(Box::new(s.clone()));
-                        idx += 1;
-                    }
-                    if let Some(ref p) = priority {
-                        conditions.push(format!("priority = ?{}", idx));
-                        param_values.push(Box::new(p.clone()));
-                        idx += 1;
-                    }
-                    if let Some(ref sc) = scope {
-                        conditions.push(format!("scope = ?{}", idx));
-                        param_values.push(Box::new(sc.clone()));
-                        idx += 1;
-                    }
-                    let _ = idx;
+                if let Some(ref nt) = node_type {
+                    conditions.push(format!("node_type = ?{}", idx));
+                    param_values.push(Box::new(nt.clone()));
+                    idx += 1;
+                }
+                if let Some(ref s) = status {
+                    conditions.push(format!("status = ?{}", idx));
+                    param_values.push(Box::new(s.clone()));
+                    idx += 1;
+                }
+                if let Some(ref p) = priority {
+                    conditions.push(format!("priority = ?{}", idx));
+                    param_values.push(Box::new(p.clone()));
+                    idx += 1;
+                }
+                if let Some(ref sc) = scope {
+                    conditions.push(format!("scope = ?{}", idx));
+                    param_values.push(Box::new(sc.clone()));
+                    idx += 1;
+                }
+                let _ = idx;
 
-                    let sql = format!(
-                        "SELECT id, node_type, status, priority, confidence, title, body, scope, tags,
+                let sql = format!(
+                    "SELECT id, node_type, status, priority, confidence, title, body, scope, tags,
                                 created_at, updated_at, effective_from, effective_to, actor
                          FROM nodes WHERE {} ORDER BY updated_at DESC",
-                        conditions.join(" AND ")
-                    );
+                    conditions.join(" AND ")
+                );
 
-                    let mut stmt = conn.prepare(&sql)?;
-                    let params_refs: Vec<&dyn rusqlite::types::ToSql> =
-                        param_values.iter().map(|b| b.as_ref()).collect();
+                let mut stmt = conn.prepare(&sql)?;
+                let params_refs: Vec<&dyn rusqlite::types::ToSql> =
+                    param_values.iter().map(|b| b.as_ref()).collect();
 
-                    let rows = stmt
-                        .query_map(params_refs.as_slice(), |row| {
-                            Ok(FederationNode {
-                                id: row.get(0)?,
-                                node_type: row.get(1)?,
-                                status: row.get(2)?,
-                                priority: row.get(3)?,
-                                confidence: row.get(4)?,
-                                title: row.get(5)?,
-                                body: row.get(6)?,
-                                scope: row.get(7)?,
-                                tags: row.get(8)?,
-                                created_at: row.get(9)?,
-                                updated_at: row.get(10)?,
-                                effective_from: row.get(11)?,
-                                effective_to: row.get(12)?,
-                                actor: row.get(13)?,
-                                sources: None,
-                                edges: None,
-                            })
-                        })
-                        ?;
-
-                    let mut nodes = Vec::new();
-                    for r in rows {
-                        nodes.push(r?);
-                    }
-                    Ok(nodes)
+                let rows = stmt.query_map(params_refs.as_slice(), |row| {
+                    Ok(FederationNode {
+                        id: row.get(0)?,
+                        node_type: row.get(1)?,
+                        status: row.get(2)?,
+                        priority: row.get(3)?,
+                        confidence: row.get(4)?,
+                        title: row.get(5)?,
+                        body: row.get(6)?,
+                        scope: row.get(7)?,
+                        tags: row.get(8)?,
+                        created_at: row.get(9)?,
+                        updated_at: row.get(10)?,
+                        effective_from: row.get(11)?,
+                        effective_to: row.get(12)?,
+                        actor: row.get(13)?,
+                        sources: None,
+                        edges: None,
+                    })
                 })?;
+
+                let mut nodes = Vec::new();
+                for r in rows {
+                    nodes.push(r?);
+                }
+                Ok(nodes)
+            })?;
 
             match cli.format {
                 OutputFormat::Json => {
@@ -2291,10 +2211,7 @@ pub fn run_federation_cli(
                     );
                 }
                 OutputFormat::Text => {
-                    println!(
-                        "Federation initialized at {}",
-                        store.root.to_string_lossy()
-                    );
+                    println!("Federation initialized at {}", store.root.to_string_lossy());
                 }
             }
         }
