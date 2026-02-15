@@ -104,7 +104,7 @@ pub enum TodoCommand {
         #[clap(long)]
         comment: String,
     },
-    /// Edit a task's title, description, or owner.
+    /// Edit a task's title, description, owner, or category.
     Edit {
         #[clap(long)]
         id: String,
@@ -114,6 +114,8 @@ pub enum TodoCommand {
         description: Option<String>,
         #[clap(long)]
         owner: Option<String>,
+        #[clap(long)]
+        category: Option<String>,
     },
     /// Claim a task for active work (prevents other agents from interfering).
     Claim {
@@ -1449,6 +1451,7 @@ fn edit_task(
     title: Option<&str>,
     description: Option<&str>,
     owner: Option<&str>,
+    category: Option<&str>,
 ) -> Result<serde_json::Value, error::DecapodError> {
     let ts = now_iso();
     let broker = DbBroker::new(root);
@@ -1456,6 +1459,27 @@ fn edit_task(
 
     let changed = broker.with_conn(&db_path, "decapod", None, "todo.edit", |conn| {
         ensure_schema(conn)?;
+
+        // Validate category if provided
+        if let Some(cat) = category {
+            if !cat.is_empty() {
+                let valid: bool = conn
+                    .query_row(
+                        "SELECT 1 FROM categories WHERE name = ?",
+                        [cat],
+                        |_| Ok(true),
+                    )
+                    .optional()
+                    .map_err(error::DecapodError::RusqliteError)?
+                    .unwrap_or(false);
+                if !valid {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unknown category '{}'. Run `decapod todo categories` to see valid categories.",
+                        cat
+                    )));
+                }
+            }
+        }
 
         // Build update fields and track what changed
         let mut updates = vec![];
@@ -1478,6 +1502,12 @@ fn edit_task(
             updates.push("owner = ?");
             params.push(Box::new(o.to_string()));
             changed_fields.push("owner");
+        }
+
+        if let Some(c) = category {
+            updates.push("category = ?");
+            params.push(Box::new(c.to_string()));
+            changed_fields.push("category");
         }
 
         if updates.is_empty() {
@@ -1507,6 +1537,9 @@ fn edit_task(
         }
         if let Some(o) = owner {
             payload.insert("owner".to_string(), serde_json::json!(o));
+        }
+        if let Some(c) = category {
+            payload.insert("category".to_string(), serde_json::json!(c));
         }
 
         let ev = TodoEvent {
@@ -2339,12 +2372,14 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
             title,
             description,
             owner,
+            category,
         } => edit_task(
             root,
             id,
             title.as_deref(),
             description.as_deref(),
             owner.as_deref(),
+            category.as_deref(),
         )?,
         TodoCommand::Claim { id, agent } => {
             let default_agent =
