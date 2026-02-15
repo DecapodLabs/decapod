@@ -149,6 +149,7 @@ pub const TODO_DB_SCHEMA_INDEX_CATEGORY_NAME: &str =
     "CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name)";
 
 /// Agent category ownership claims table schema.
+
 pub const TODO_DB_SCHEMA_AGENT_CATEGORY_CLAIMS: &str = "
     CREATE TABLE IF NOT EXISTS agent_category_claims (
         id TEXT PRIMARY KEY,
@@ -163,6 +164,7 @@ pub const TODO_DB_SCHEMA_INDEX_AGENT_CATEGORY_AGENT: &str =
     "CREATE INDEX IF NOT EXISTS idx_agent_category_agent ON agent_category_claims(agent_id)";
 
 /// Agent presence/heartbeat table schema.
+
 pub const TODO_DB_SCHEMA_AGENT_PRESENCE: &str = "
     CREATE TABLE IF NOT EXISTS agent_presence (
         agent_id TEXT PRIMARY KEY,
