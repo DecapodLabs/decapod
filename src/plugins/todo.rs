@@ -1469,21 +1469,33 @@ pub fn update_status(
         Ok(changed)
     })?;
 
-    // Create federation node for proof when task is completed
+    // Create federation node for proof when task is completed and link to intent
     if new_status == "done" && changed > 0 {
-        let _ = federation::add_node(
+        // Find the original intent node (created at task.add)
+        let intent_source = format!("event:{}", id);
+        let intent_node_id = federation::find_node_by_source(store, &intent_source)
+            .ok()
+            .flatten();
+
+        // Create the proof node
+        let proof_node = federation::add_node(
             store,
             &format!("Proof: Task {} completed", id),
             "decision",
             "notable",
             "agent_inferred",
             &format!("Task {} marked as done. Validation gates passed.", id),
-            &format!("event:{}", id),
+            &intent_source,
             "proof,completion",
             "repo",
             None,
             "decapod",
         );
+
+        // If we found the intent node, create an edge to link intent→proof
+        if let (Ok(Some(proof)), Some(intent_id)) = (proof_node, intent_node_id) {
+            let _ = federation::add_edge(store, &intent_id, &proof.id, "depends_on");
+        }
     }
 
     Ok(serde_json::json!({
