@@ -129,11 +129,24 @@ pub struct SummaryStatus {
 
 // ===== Autonomy (formerly trust) =====
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Default)]
 pub enum AutonomyTier {
-    Tier0, // Human-only
-    Tier1, // Confirm all
-    Tier2, // Auto-reversible
+    #[default]
+    Untrusted, // Human-only, no agent autonomy
+    Basic,    // Confirm all operations
+    Verified, // Auto-reversible operations
+    Core,     // Full autonomy with trusted operations
+}
+
+impl std::fmt::Display for AutonomyTier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AutonomyTier::Untrusted => write!(f, "untrusted"),
+            AutonomyTier::Basic => write!(f, "basic"),
+            AutonomyTier::Verified => write!(f, "verified"),
+            AutonomyTier::Core => write!(f, "core"),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -465,17 +478,17 @@ pub fn get_autonomy(store: &Store, actor_id: &str) -> Result<AutonomyStatus, err
 
     let mut reasons = Vec::new();
     let tier = if failure_count > 0 {
-        reasons.push("Contradicted claims detected; restricted to Tier 1".to_string());
-        AutonomyTier::Tier1
+        reasons.push("Contradicted claims detected; restricted to Basic".to_string());
+        AutonomyTier::Basic
     } else if success_count >= 5 {
         reasons.push(format!(
             "Verified success count ({}) exceeds threshold",
             success_count
         ));
-        AutonomyTier::Tier2
+        AutonomyTier::Verified
     } else {
-        reasons.push("Insufficient verified history for Tier 2".to_string());
-        AutonomyTier::Tier1
+        reasons.push("Insufficient verified history for Verified tier".to_string());
+        AutonomyTier::Basic
     };
 
     Ok(AutonomyStatus {

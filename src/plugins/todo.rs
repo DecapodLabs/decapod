@@ -2,12 +2,13 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas; // Import the new schemas module
 use crate::core::store::Store;
+use crate::plugins::federation;
 use crate::plugins::knowledge;
 use crate::plugins::teammate;
 use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, Result as SqlResult, types::ToSql};
+use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
@@ -500,6 +501,12 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         // Agent expertise support
         conn.execute(schemas::TODO_DB_SCHEMA_AGENT_EXPERTISE, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_EXPERTISE_AGENT, [])?;
+    }
+
+    if current_version < 11 {
+        // Agent trust tiers
+        conn.execute(schemas::TODO_DB_SCHEMA_AGENT_TRUST, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_TRUST_LEVEL, [])?;
     }
 
     conn.execute(
@@ -1048,6 +1055,63 @@ fn list_agent_presence(
     })
 }
 
+fn get_agent_trust_level(conn: &Connection, agent_id: &str) -> Result<String, error::DecapodError> {
+    let level: Option<String> = conn
+        .query_row(
+            "SELECT trust_level FROM agent_trust WHERE agent_id = ?1",
+            params![agent_id],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?;
+    Ok(level.unwrap_or_else(|| "basic".to_string()))
+}
+
+#[allow(dead_code)]
+fn set_agent_trust_level(
+    conn: &Connection,
+    agent_id: &str,
+    level: &str,
+    granted_by: &str,
+) -> Result<(), error::DecapodError> {
+    let ts = now_iso();
+    conn.execute(
+        "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
+         VALUES(?1, ?2, ?3, ?4, ?5)
+         ON CONFLICT(agent_id) DO UPDATE SET 
+           trust_level=excluded.trust_level, 
+           updated_at=excluded.updated_at,
+           granted_by=excluded.granted_by",
+        rusqlite::params![agent_id, level, ts, ts, granted_by],
+    )?;
+    Ok(())
+}
+
+fn trust_level_to_int(level: &str) -> i32 {
+    match level {
+        "untrusted" => 0,
+        "basic" => 1,
+        "verified" => 2,
+        "core" => 3,
+        _ => 1,
+    }
+}
+
+pub fn check_trust_level(
+    root: &Path,
+    agent_id: &str,
+    required_level: &str,
+) -> Result<bool, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    broker.with_conn(&db_path, "decapod", None, "todo.trust.check", |conn| {
+        ensure_schema(conn)?;
+        let current_level = get_agent_trust_level(conn, agent_id)?;
+        Ok(trust_level_to_int(&current_level) >= trust_level_to_int(required_level))
+    })
+}
+
 pub fn initialize_todo_db(root: &Path) -> Result<(), error::DecapodError> {
     fs::create_dir_all(root).map_err(error::DecapodError::IoError)?;
     let broker = DbBroker::new(root);
@@ -1391,6 +1455,28 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         Ok(())
     })?;
 
+    // Create federation node for intent→change→proof chain
+    let store = Store {
+        kind: crate::core::store::StoreKind::Repo,
+        root: root.to_path_buf(),
+    };
+    let _ = federation::add_node(
+        &store,
+        &format!("Task: {}", title),
+        "commitment",
+        "notable",
+        "agent_inferred",
+        &format!(
+            "Task {} created with priority {}. Description: {}",
+            task_id, priority, description
+        ),
+        &format!("event:{}", task_id),
+        tags,
+        "repo",
+        None,
+        "decapod",
+    );
+
     Ok(serde_json::json!({
         "ts": ts,
         "cmd": "todo.add",
@@ -1441,13 +1527,42 @@ pub fn update_status(
             event_id: Ulid::new().to_string(),
             event_type: event_type.to_string(),
             task_id: Some(id.to_string()),
-            payload,
+            payload: payload.clone(),
             actor: "decapod".to_string(),
         };
         append_event(root, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
         Ok(changed)
     })?;
+
+    // Create federation node for proof when task is completed and link to intent
+    if new_status == "done" && changed > 0 {
+        // Find the original intent node (created at task.add)
+        let intent_source = format!("event:{}", id);
+        let intent_node_id = federation::find_node_by_source(store, &intent_source)
+            .ok()
+            .flatten();
+
+        // Create the proof node
+        let proof_result = federation::add_node(
+            store,
+            &format!("Proof: Task {} completed", id),
+            "decision",
+            "notable",
+            "agent_inferred",
+            &format!("Task {} marked as done. Validation gates passed.", id),
+            &intent_source,
+            "proof,completion",
+            "repo",
+            None,
+            "decapod",
+        );
+
+        // If we found the intent node and proof node was created, link them
+        if let (Ok(proof), Some(intent_id)) = (proof_result, intent_node_id) {
+            let _ = federation::add_edge(store, &intent_id, &proof.id, "depends_on");
+        }
+    }
 
     Ok(serde_json::json!({
         "ts": ts,
