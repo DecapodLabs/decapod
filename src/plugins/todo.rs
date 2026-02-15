@@ -127,6 +127,24 @@ pub enum TodoCommand {
     Rebuild,
     /// List available task categories.
     Categories,
+    /// Register an agent and claim ownership of one or more categories.
+    RegisterAgent {
+        /// Agent identifier (defaults to environment or 'unknown').
+        #[clap(long)]
+        agent: Option<String>,
+        /// Category to claim. Repeat flag to claim multiple categories.
+        #[clap(long = "category", required = true)]
+        categories: Vec<String>,
+    },
+    /// List current category ownership claims.
+    Ownerships {
+        /// Filter by category name.
+        #[clap(long)]
+        category: Option<String>,
+        /// Filter by agent identifier.
+        #[clap(long)]
+        agent: Option<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -255,6 +273,12 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         let _ = conn.execute("ALTER TABLE tasks ADD COLUMN assigned_at TEXT", []);
     }
 
+    if current_version < 8 {
+        conn.execute(schemas::TODO_DB_SCHEMA_AGENT_CATEGORY_CLAIMS, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_CATEGORY_AGENT, [])?;
+        migrate_existing_category_ownerships(conn)?;
+    }
+
     conn.execute(
         "INSERT INTO meta(key, value) VALUES('schema_version', ?1)
          ON CONFLICT(key) DO UPDATE SET value=excluded.value",
@@ -362,6 +386,46 @@ fn migrate_task_categories(conn: &Connection) -> Result<(), error::DecapodError>
             )?;
         }
     }
+    Ok(())
+}
+
+fn migrate_existing_category_ownerships(conn: &Connection) -> Result<(), error::DecapodError> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT category, assigned_to, MIN(COALESCE(assigned_at, created_at)) AS claimed_at
+             FROM tasks
+             WHERE category != '' AND assigned_to != '' AND status NOT IN ('done', 'archived')
+             GROUP BY category, assigned_to
+             ORDER BY claimed_at ASC",
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    let rows = stmt
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+            ))
+        })
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    for row in rows {
+        let (category, agent_id, claimed_at) = row.map_err(error::DecapodError::RusqliteError)?;
+        conn.execute(
+            "INSERT OR IGNORE INTO agent_category_claims(id, agent_id, category, claimed_at, updated_at)
+             VALUES(?1, ?2, ?3, ?4, ?5)",
+            rusqlite::params![
+                Ulid::new().to_string(),
+                agent_id,
+                category,
+                claimed_at.clone(),
+                claimed_at
+            ],
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    }
+
     Ok(())
 }
 
@@ -501,6 +565,15 @@ pub struct Category {
     pub created_at: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CategoryOwnership {
+    pub id: String,
+    pub agent_id: String,
+    pub category: String,
+    pub claimed_at: String,
+    pub updated_at: String,
+}
+
 pub fn list_categories(root: &Path) -> Result<Vec<Category>, error::DecapodError> {
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -524,6 +597,122 @@ pub fn list_categories(root: &Path) -> Result<Vec<Category>, error::DecapodError
             categories.push(r?);
         }
         Ok(categories)
+    })
+}
+
+fn register_agent_categories(
+    root: &Path,
+    agent_id: &str,
+    categories: &[String],
+) -> Result<serde_json::Value, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+    let ts = now_iso();
+
+    let normalized: Vec<String> = categories
+        .iter()
+        .flat_map(|c| c.split(','))
+        .map(|c| c.trim().to_lowercase())
+        .filter(|c| !c.is_empty())
+        .collect();
+
+    if normalized.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "At least one non-empty category is required".into(),
+        ));
+    }
+
+    broker.with_conn(&db_path, "decapod", None, "todo.register_agent", |conn| {
+        ensure_schema(conn)?;
+
+        for category in &normalized {
+            let exists: Option<String> = conn
+                .query_row(
+                    "SELECT name FROM categories WHERE name = ?",
+                    [category],
+                    |row| row.get(0),
+                )
+                .optional()
+                .map_err(error::DecapodError::RusqliteError)?;
+
+            if exists.is_none() {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Unknown category '{}' (run `decapod todo categories`)",
+                    category
+                )));
+            }
+
+            conn.execute(
+                "INSERT INTO agent_category_claims(id, agent_id, category, claimed_at, updated_at)
+                 VALUES(?1, ?2, ?3, ?4, ?5)
+                 ON CONFLICT(category) DO UPDATE SET
+                    agent_id = excluded.agent_id,
+                    claimed_at = excluded.claimed_at,
+                    updated_at = excluded.updated_at",
+                rusqlite::params![Ulid::new().to_string(), agent_id, category, ts, ts],
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        }
+
+        Ok(())
+    })?;
+
+    Ok(serde_json::json!({
+        "ts": ts,
+        "cmd": "todo.register_agent",
+        "status": "ok",
+        "root": root.to_string_lossy(),
+        "agent_id": agent_id,
+        "categories": normalized,
+    }))
+}
+
+fn list_category_ownerships(
+    root: &Path,
+    category: Option<&str>,
+    agent: Option<&str>,
+) -> Result<Vec<CategoryOwnership>, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+
+    broker.with_conn(&db_path, "decapod", None, "todo.ownerships", |conn| {
+        ensure_schema(conn)?;
+        let mut query = "SELECT id, agent_id, category, claimed_at, updated_at FROM agent_category_claims WHERE 1=1".to_string();
+        let mut params: Vec<String> = Vec::new();
+
+        if let Some(c) = category {
+            query.push_str(" AND category = ?");
+            params.push(c.to_lowercase());
+        }
+        if let Some(a) = agent {
+            query.push_str(" AND agent_id = ?");
+            params.push(a.to_string());
+        }
+        query.push_str(" ORDER BY category");
+
+        let mut stmt = conn
+            .prepare(&query)
+            .map_err(error::DecapodError::RusqliteError)?;
+        let rows = stmt
+            .query_map(
+                rusqlite::params_from_iter(params.iter().map(|p| p as &dyn ToSql)),
+                |row| {
+                    Ok(CategoryOwnership {
+                        id: row.get(0)?,
+                        agent_id: row.get(1)?,
+                        category: row.get(2)?,
+                        claimed_at: row.get(3)?,
+                        updated_at: row.get(4)?,
+                    })
+                },
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(row.map_err(error::DecapodError::RusqliteError)?);
+        }
+        Ok(out)
     })
 }
 
@@ -679,6 +868,18 @@ fn find_agent_for_category(
     conn: &Connection,
     category: &str,
 ) -> Result<Option<String>, error::DecapodError> {
+    let claimed_owner: Option<String> = conn
+        .query_row(
+            "SELECT agent_id FROM agent_category_claims WHERE category = ?",
+            [category],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?;
+    if claimed_owner.is_some() {
+        return Ok(claimed_owner);
+    }
+
     let agent: Option<String> = conn
         .query_row(
             "SELECT assigned_to FROM tasks
@@ -693,6 +894,40 @@ fn find_agent_for_category(
         .map_err(error::DecapodError::RusqliteError)?;
 
     Ok(agent)
+}
+
+fn claim_category_if_unowned(
+    conn: &Connection,
+    category: &str,
+    agent_id: &str,
+    ts: &str,
+) -> Result<(), error::DecapodError> {
+    if category.is_empty() || agent_id.is_empty() {
+        return Ok(());
+    }
+
+    conn.execute(
+        "INSERT OR IGNORE INTO agent_category_claims(id, agent_id, category, claimed_at, updated_at)
+         VALUES(?1, ?2, ?3, ?4, ?5)",
+        rusqlite::params![Ulid::new().to_string(), agent_id, category, ts, ts],
+    )
+    .map_err(error::DecapodError::RusqliteError)?;
+    Ok(())
+}
+
+fn get_category_owner(
+    conn: &Connection,
+    category: &str,
+) -> Result<Option<String>, error::DecapodError> {
+    let owner: Option<String> = conn
+        .query_row(
+            "SELECT agent_id FROM agent_category_claims WHERE category = ?",
+            [category],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?;
+    Ok(owner)
 }
 
 pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, error::DecapodError> {
@@ -750,6 +985,13 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         } else {
             (String::new(), None)
         };
+
+        // If this category was unowned and we auto-assigned an agent, establish ownership.
+        if let Some(cat) = inferred_category.as_deref() {
+            if !assigned_to.is_empty() {
+                claim_category_if_unowned(conn, cat, &assigned_to, &ts)?;
+            }
+        }
 
         conn.execute(
             "INSERT INTO tasks(id, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, assigned_to, assigned_at)
@@ -1016,11 +1258,11 @@ fn claim_task(
         ensure_schema(conn)?;
 
         // Check if task exists and is not already claimed
-        let current: Option<(String, String)> = conn
+        let current: Option<(String, String, String)> = conn
             .query_row(
-                "SELECT status, assigned_to FROM tasks WHERE id = ?",
+                "SELECT status, assigned_to, category FROM tasks WHERE id = ?",
                 [id],
-                |row| Ok((row.get(0)?, row.get(1)?)),
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
             )
             .optional()
             .map_err(error::DecapodError::RusqliteError)?;
@@ -1032,7 +1274,7 @@ fn claim_task(
                     "message": format!("Task {} not found", id)
                 }));
             }
-            Some((status, assigned_to)) => {
+            Some((status, assigned_to, category)) => {
                 if status == "done" || status == "archived" {
                     return Ok(serde_json::json!({
                         "status": "error",
@@ -1044,6 +1286,23 @@ fn claim_task(
                         "status": "error",
                         "message": format!("Task {} is already claimed by {}", id, assigned_to)
                     }));
+                }
+
+                if !category.is_empty() {
+                    if let Some(owner) = get_category_owner(conn, &category)? {
+                        if owner != agent_id {
+                            return Ok(serde_json::json!({
+                                "status": "error",
+                                "message": format!(
+                                    "Category '{}' is owned by {}; cannot claim task {}",
+                                    category, owner, id
+                                )
+                            }));
+                        }
+                    } else {
+                        // Auto-claim empty categories on first valid claim.
+                        claim_category_if_unowned(conn, &category, agent_id, &ts)?;
+                    }
                 }
             }
         }
@@ -1504,6 +1763,12 @@ pub fn schema() -> serde_json::Value {
             { "name": "done", "parameters": ["id", "validated", "artifact"] },
             { "name": "archive", "parameters": ["id"] },
             { "name": "comment", "parameters": ["id", "comment"] },
+            { "name": "edit", "parameters": ["id", "title", "description", "owner"] },
+            { "name": "claim", "parameters": ["id", "agent"] },
+            { "name": "release", "parameters": ["id"] },
+            { "name": "categories", "parameters": [] },
+            { "name": "register-agent", "parameters": ["agent", "category"] },
+            { "name": "ownerships", "parameters": ["category", "agent"] },
             { "name": "rebuild", "parameters": [] }
         ],
         "storage": ["todo.db", "todo.events.jsonl"]
@@ -1592,6 +1857,22 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
             let categories = list_categories(root)?;
             serde_json::json!({ "categories": categories })
         }
+        TodoCommand::RegisterAgent { agent, categories } => {
+            let default_agent =
+                env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let agent_id = agent.as_deref().unwrap_or(&default_agent);
+            register_agent_categories(root, agent_id, categories)?
+        }
+        TodoCommand::Ownerships { category, agent } => {
+            let claims = list_category_ownerships(root, category.as_deref(), agent.as_deref())?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.ownerships",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "claims": claims,
+            })
+        }
     };
 
     match cli.format {
@@ -1634,6 +1915,30 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                             let keywords =
                                 cat.get("keywords").and_then(|x| x.as_str()).unwrap_or("");
                             println!("  {} - {} (keywords: {})", name, desc, keywords);
+                        }
+                    }
+                }
+            }
+            TodoCommand::Ownerships { .. } => {
+                if let Some(claims) = out.get("claims").and_then(|x| x.as_array()) {
+                    if claims.is_empty() {
+                        println!("No category ownership claims.");
+                    } else {
+                        println!("Category ownership claims:");
+                        for claim in claims {
+                            let category = claim
+                                .get("category")
+                                .and_then(|x| x.as_str())
+                                .unwrap_or("?");
+                            let agent = claim
+                                .get("agent_id")
+                                .and_then(|x| x.as_str())
+                                .unwrap_or("?");
+                            let claimed_at = claim
+                                .get("claimed_at")
+                                .and_then(|x| x.as_str())
+                                .unwrap_or("?");
+                            println!("  {} -> {} (claimed_at: {})", category, agent, claimed_at);
                         }
                     }
                 }
