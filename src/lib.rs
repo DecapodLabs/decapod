@@ -793,7 +793,7 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Determine which agent files to generate based on flags
             // Individual flags override existing files list
-            let agent_files_to_generate =
+            let mut agent_files_to_generate =
                 if init_group.claude || init_group.gemini || init_group.agents {
                     let mut files = vec![];
                     if init_group.claude {
@@ -812,6 +812,14 @@ pub fn run() -> Result<(), error::DecapodError> {
                         .map(|s| s.to_string())
                         .collect()
                 };
+
+            // AGENTS.md is mandatory whenever we are doing selective entrypoint generation.
+            // Keep empty list semantics intact so scaffold can generate the full default set.
+            if !agent_files_to_generate.is_empty()
+                && !agent_files_to_generate.iter().any(|f| f == "AGENTS.md")
+            {
+                agent_files_to_generate.push("AGENTS.md".to_string());
+            }
 
             scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
                 target_dir,
