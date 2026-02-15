@@ -2,12 +2,13 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas; // Import the new schemas module
 use crate::core::store::Store;
+use crate::plugins::federation;
 use crate::plugins::knowledge;
 use crate::plugins::teammate;
 use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, Result as SqlResult, types::ToSql};
+use rusqlite::{types::ToSql, Connection, OptionalExtension, Result as SqlResult};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
@@ -1391,6 +1392,25 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         Ok(())
     })?;
 
+    // Create federation node for intent→change→proof chain
+    let store = Store::new(root, crate::core::store::StoreKind::Repo);
+    let _ = federation::add_node(
+        &store,
+        &format!("Task: {}", title),
+        "commitment",
+        "notable",
+        "agent_inferred",
+        &format!(
+            "Task {} created with priority {}. Description: {}",
+            task_id, priority, description
+        ),
+        &format!("event:{}", task_id),
+        tags,
+        "repo",
+        None,
+        "decapod",
+    );
+
     Ok(serde_json::json!({
         "ts": ts,
         "cmd": "todo.add",
@@ -1441,13 +1461,30 @@ pub fn update_status(
             event_id: Ulid::new().to_string(),
             event_type: event_type.to_string(),
             task_id: Some(id.to_string()),
-            payload,
+            payload: payload.clone(),
             actor: "decapod".to_string(),
         };
         append_event(root, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
         Ok(changed)
     })?;
+
+    // Create federation node for proof when task is completed
+    if new_status == "done" && changed > 0 {
+        let _ = federation::add_node(
+            store,
+            &format!("Proof: Task {} completed", id),
+            "decision",
+            "notable",
+            "agent_inferred",
+            &format!("Task {} marked as done. Validation gates passed.", id),
+            &format!("event:{}", id),
+            "proof,completion",
+            "repo",
+            None,
+            "decapod",
+        );
+    }
 
     Ok(serde_json::json!({
         "ts": ts,
