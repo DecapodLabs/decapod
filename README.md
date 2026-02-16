@@ -2,15 +2,9 @@
   <img src="assets/decapod-demo.gif" alt="Decapod demo" width="100%" />
 </p>
 
-## Quickstart
-
-```bash
-# install decapod
-cargo install decapod
-
-# initialize control plane in your repo
-decapod init
-```
+<p align="center">
+  <code>cargo install decapod<br/>decapod init</code>
+</p>
 
 <p align="center">
   <strong>Decapod</strong> is a governance runtime for AI coding agents. Local-first, repo-native, built in Rust.
