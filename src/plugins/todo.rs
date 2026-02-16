@@ -90,10 +90,23 @@ pub enum TodoCommand {
         #[clap(long)]
         id: String,
     },
+    /// Show a task by ID (compat alias for get).
+    Show {
+        /// Task ID (supports `--id <ID>` or positional `<ID>`).
+        #[clap(long)]
+        id: Option<String>,
+        /// Task ID positional fallback.
+        #[clap(value_name = "ID")]
+        id_positional: Option<String>,
+    },
     /// Mark a task done.
     Done {
+        /// Task ID (supports `--id <ID>` or positional `<ID>`).
         #[clap(long)]
-        id: String,
+        id: Option<String>,
+        /// Task ID positional fallback.
+        #[clap(value_name = "ID")]
+        id_positional: Option<String>,
         /// Capture verification artifacts and proof baseline while marking done.
         #[clap(long)]
         validated: bool,
@@ -103,8 +116,12 @@ pub enum TodoCommand {
     },
     /// Archive a task (keeps audit trail).
     Archive {
+        /// Task ID (supports `--id <ID>` or positional `<ID>`).
         #[clap(long)]
-        id: String,
+        id: Option<String>,
+        /// Task ID positional fallback.
+        #[clap(value_name = "ID")]
+        id_positional: Option<String>,
     },
     /// Add a comment to a task (audit-only event).
     Comment {
@@ -196,7 +213,7 @@ pub enum TodoCommand {
         #[clap(long, default_value_t = true)]
         lesson: bool,
         /// Archive tasks after completion.
-        #[clap(long, default_value_t = true)]
+        #[clap(long, default_value_t = false)]
         autoclose: bool,
     },
     /// Transfer a task between agents and record handoff artifacts.
@@ -1378,7 +1395,7 @@ fn run_worker_loop(
         }
 
         let archive_out = if autoclose {
-            Some(update_status(
+            match update_status(
                 store,
                 &task_id,
                 "archived",
@@ -1387,7 +1404,13 @@ fn run_worker_loop(
                     "reason": "worker_loop_autoclose",
                     "actor": agent_id
                 }),
-            )?)
+            ) {
+                Ok(out) => Some(out),
+                Err(e) => Some(serde_json::json!({
+                    "status": "error",
+                    "error": e.to_string(),
+                })),
+            }
         } else {
             None
         };
@@ -3745,6 +3768,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "add", "parameters": ["title", "tags", "owner", "due", "ref", "dir", "priority", "depends_on", "blocks", "parent"] },
             { "name": "list", "parameters": ["status", "scope", "tags", "title_search", "dir"] },
             { "name": "get", "parameters": ["id"] },
+            { "name": "show", "parameters": ["id"] },
             { "name": "done", "parameters": ["id", "validated", "artifact"] },
             { "name": "archive", "parameters": ["id"] },
             { "name": "comment", "parameters": ["id", "comment"] },
@@ -3775,6 +3799,25 @@ pub fn schema() -> serde_json::Value {
         ],
         "storage": ["todo.db", "todo.events.jsonl"]
     })
+}
+
+fn resolve_task_id_arg(
+    id_flag: &Option<String>,
+    id_positional: &Option<String>,
+    command: &str,
+) -> Result<String, error::DecapodError> {
+    match (id_flag.as_deref(), id_positional.as_deref()) {
+        (Some(a), Some(b)) if a != b => Err(error::DecapodError::ValidationError(format!(
+            "{} received conflicting IDs (--id={} vs positional={})",
+            command, a, b
+        ))),
+        (Some(id), _) => Ok(id.to_string()),
+        (None, Some(id)) => Ok(id.to_string()),
+        (None, None) => Err(error::DecapodError::ValidationError(format!(
+            "{} requires a task ID (use --id <ID> or positional <ID>)",
+            command
+        ))),
+    }
 }
 
 pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodError> {
@@ -3814,12 +3857,25 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                 "item": t,
             })
         }
+        TodoCommand::Show { id, id_positional } => {
+            let task_id = resolve_task_id_arg(id, id_positional, "todo show")?;
+            let t = get_task(root, &task_id)?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.get",
+                "status": if t.is_some() { "ok" } else { "not_found" },
+                "root": root.to_string_lossy(),
+                "item": t,
+            })
+        }
         TodoCommand::Done {
             id,
+            id_positional,
             validated,
             artifact,
         } => {
-            let out = update_status(store, id, "done", "task.done", serde_json::json!({}))?;
+            let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
+            let out = update_status(store, &task_id, "done", "task.done", serde_json::json!({}))?;
             if *validated && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
                 let repo_root = store
                     .root
@@ -3827,12 +3883,19 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                     .and_then(|p| p.parent())
                     .map(|p| p.to_path_buf())
                     .unwrap_or(std::env::current_dir().map_err(error::DecapodError::IoError)?);
-                verify::capture_baseline_for_todo(store, &repo_root, id, artifact.clone())?;
+                verify::capture_baseline_for_todo(store, &repo_root, &task_id, artifact.clone())?;
             }
             out
         }
-        TodoCommand::Archive { id } => {
-            update_status(store, id, "archived", "task.archive", serde_json::json!({}))?
+        TodoCommand::Archive { id, id_positional } => {
+            let task_id = resolve_task_id_arg(id, id_positional, "todo archive")?;
+            update_status(
+                store,
+                &task_id,
+                "archived",
+                "task.archive",
+                serde_json::json!({}),
+            )?
         }
         TodoCommand::Comment { id, comment } => comment_task(root, id, comment)?,
         TodoCommand::Edit {

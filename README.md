@@ -1,8 +1,9 @@
-<p align="center"><code>cargo install decapod</code></p>
-<p align="center"><code>decapod init</code></p>
+<p align="center">
+  <img src="assets/decapod-demo.gif" alt="Decapod demo" width="66%" />
+</p>
 
 <p align="center">
-  <img src="assets/decapod-ultra.svg" width="600" alt="Decapod">
+  <code>cargo install decapod && decapod init</code>
 </p>
 
 <p align="center">
@@ -19,25 +20,6 @@
 
 ---
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="assets/screenshot-task-1.png" alt="Create agent-agnostic tasks" width="100%">
-      <br>
-      <sub><b>Make Tasks</b> — agents create tasks to do later.</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="assets/screenshot-task-2.png" alt="Discover tasks with other agents" width="100%">
-      <br>
-      <sub><b>Share the Work</b> — other agents discover tasks and complete them.</sub>
-    </td>
-  </tr>
-</table>
-
-Demo: **[Watch on GitHub](https://github.com/DecapodLabs/decapod/raw/master/assets/decapod-demo.mp4)** (12 MB)
-
----
-
 ## What Is Decapod
 
 Like Docker is a runtime for containers, Decapod is a runtime for agents. You set it up once, then agents operate inside a governed environment with persistent state, enforced methodology, proof gates, and coordination primitives.
@@ -45,16 +27,6 @@ Like Docker is a runtime for containers, Decapod is a runtime for agents. You se
 Agents can write code. But they can't reliably **ship** because they forget what they built yesterday, treat best practices as vibes, say "done" without evidence, and trip over each other in parallel. Decapod fixes that with over 75 validation gates that enforce the agent<->Decapod contract.
 
 Decapod is **not** a prompt pack, an agent framework, a hosted SaaS platform, a review bot, or a human workflow tool. Humans may read artifacts; agents are the operators. It's infrastructure: the environment where agent work becomes enforceable.
-
-## Quickstart
-
-```bash
-cargo install decapod
-cd your-project
-decapod init
-```
-
-That's it. Agents now operate inside the governed environment. Proofs decide 'done'.
 
 ## How It Works
 

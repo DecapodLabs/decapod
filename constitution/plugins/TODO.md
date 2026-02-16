@@ -9,8 +9,8 @@
 |---------|---------|
 | `decapod todo add "title" --priority high` | Create task |
 | `decapod todo list` | List all tasks |
-| `decapod todo done <id>` | Mark complete |
-| `decapod todo archive <id>` | Archive (REQUIRED) |
+| `decapod todo done --id <id>` | Mark complete / closeout |
+| `decapod todo archive --id <id>` | Optional archival (policy-gated) |
 
 **Related:** `core/PLUGINS.md` (subsystem registry) | `AGENTS.md` (entrypoint)
 
@@ -56,10 +56,16 @@ All tasks track three timestamps:
 **As an AI agent, you MUST close out tickets you complete.**
 
 When you finish work on a task:
-1. Mark it done: `decapod todo done <task-id>`
-2. Archive it: `decapod todo archive <task-id>`
+1. Mark it done: `decapod todo done --id <task-id>`
+2. Archive only if explicitly required by policy/workflow: `decapod todo archive --id <task-id>`
 
-This ensures proper audit trails and lifecycle tracking. Tasks left in "done" state without being archived create ambiguity about whether the work is truly complete and ready for archival.
+Done state is the default closeout state. Archive is optional and may require approval in some repos.
+
+### Command Strictness (Avoid Invalid Subcommands)
+
+- Use only the explicit TODO commands shown above.
+- Do **not** call `decapod complete`, `decapod close`, `decapod todo close`, or `decapod todo complete` (these are not valid CLI surfaces).
+- Always pass the task id explicitly: `--id <task-id>`.
 
 ### Workflow
 
@@ -71,13 +77,13 @@ decapod todo add "Implement feature X" --priority high
 # ... implementation ...
 
 # 3. Mark as done (sets completed_at)
-decapod todo done R_XXXXXXXX
+decapod todo done --id R_XXXXXXXX
 
-# 4. Archive (sets closed_at) - REQUIRED
-decapod todo archive R_XXXXXXXX
+# 4. Optional archive (sets closed_at) when required/approved
+decapod todo archive --id R_XXXXXXXX
 ```
 
-**Rule**: If you mark a task done, you must also archive it unless explicitly instructed otherwise.
+**Rule**: Use `todo done --id` for normal closeout. Use `todo archive --id` only when the workflow requires archival and approvals are satisfied.
 
 ---
 
