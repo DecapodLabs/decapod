@@ -44,6 +44,7 @@ All guarantees here are registered in `interfaces/CLAIMS.md`.
 - blank-slate (claim: claim.store.blank_slate): a fresh user store has no tasks unless the user adds them
 - no auto-seeding (claim: claim.store.no_auto_seeding): repo store content must never appear in the user store automatically
 - explicit store selection (claim: claim.store.explicit_store_selection): `--store` is the preferred selector; `--root` is an escape hatch and must be treated as dangerous
+- `.decapod` CLI-only access (claim: claim.store.decapod_cli_only): agents must not read/write `<repo>/.decapod/*` directly; use `decapod` commands
 
 ---
 
@@ -52,6 +53,7 @@ All guarantees here are registered in `interfaces/CLAIMS.md`.
 - writing repo backlog into user store
 - silently switching stores mid-session
 - creating alternate state roots outside `.decapod`
+- direct read/write of `<repo>/.decapod/*` files outside `decapod` CLI surfaces
 - claiming compliance/verification without running a proof surface
 
 ---
