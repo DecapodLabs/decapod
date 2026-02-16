@@ -25,7 +25,11 @@ fn run_decapod(temp_dir: &PathBuf, args: &[&str]) -> (bool, String) {
 
 fn acquire_session(temp_path: &PathBuf) {
     let (success, output) = run_decapod(temp_path, &["session", "acquire"]);
-    assert!(success, "decapod session acquire should succeed. Output:\n{}", output);
+    assert!(
+        success,
+        "decapod session acquire should succeed. Output:\n{}",
+        output
+    );
 }
 
 #[test]
