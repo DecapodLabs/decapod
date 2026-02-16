@@ -88,7 +88,15 @@ verification_artifacts: JSON (captured at completion time)
 2. Capture results (status, command, output hash)
 3. Capture file artifacts (paths, hashes, sizes)
 4. Store in `verification_artifacts`
-5. Set `last_verified_at` = now, `last_verified_status` = pass
+5. Set `last_verified_at` = now, `last_verified_status` = pass|fail based on proof outcome
+
+**Baseline capture policy (MVP):**
+- Baseline capture MUST NOT fail solely because `decapod validate` fails.
+- When validate fails at capture time, the baseline is still recorded with:
+  - `proof_plan_results[].status = fail` for `validate_passes`
+  - `last_verified_status = fail`
+  - `last_verified_notes` indicating capture occurred while validation was failing
+- This preserves deterministic evidence for later drift/recovery workflows.
 
 **On verification** (`decapod qa verify todo <id>`):
 1. Re-execute each proof in `proof_plan`
@@ -258,6 +266,11 @@ Each gate is a string in format `type:details` or just `type` for known gates.
 **Verification blocked (missing artifacts):**
 - If `verification_artifacts` is NULL/empty, verification cannot run
 - Status = unknown (never verified)
+
+**Validation failing at baseline-capture time:**
+- Capture still records artifacts and proof outputs (non-blocking)
+- Status is recorded as fail (not pass)
+- Remediation is to restore validation health and re-run verification
 - Must complete TODO with artifact capture first
 
 **Stale verification:**
