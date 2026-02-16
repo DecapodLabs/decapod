@@ -75,10 +75,11 @@ struct DockerSpec {
 }
 
 #[derive(Debug, Clone)]
-struct WorktreeSpec {
+struct WorkspaceSpec {
     branch: String,
     path: PathBuf,
     base_branch: String,
+    backend: String,
 }
 
 #[derive(Debug, Clone)]
@@ -214,7 +215,7 @@ fn run_container(
     let branch_name = branch
         .map(|s| s.to_string())
         .unwrap_or_else(|| default_branch_name(agent, task_id));
-    let worktree = prepare_worktree(&repo, &branch_name, pr_base)?;
+    let workspace = prepare_workspace_clone(&repo, &branch_name, pr_base)?;
 
     let pr_title_val = pr_title
         .map(|s| s.to_string())
@@ -226,12 +227,12 @@ fn run_container(
     let spec = build_docker_spec(
         &docker,
         &repo,
-        &worktree.path,
+        &workspace.path,
         &image,
         agent,
         user_cmd,
-        &worktree.branch,
-        &worktree.base_branch,
+        &workspace.branch,
+        &workspace.base_branch,
         push,
         pr,
         &pr_title_val,
@@ -260,9 +261,11 @@ fn run_container(
         "image": image,
         "container_name": spec.container_name,
         "repo": repo,
-        "worktree": worktree.path,
-        "branch": worktree.branch,
-        "base_branch": worktree.base_branch,
+        "workspace": workspace.path,
+        "worktree": workspace.path,
+        "branch": workspace.branch,
+        "base_branch": workspace.base_branch,
+        "isolation_backend": workspace.backend,
         "task_id": task_id,
         "push": push,
         "pr": pr,
@@ -276,7 +279,7 @@ fn run_container(
     let cleanup_err = if keep_worktree {
         None
     } else {
-        cleanup_worktree(&repo, &worktree.path).err()
+        cleanup_workspace_clone(&workspace.path).err()
     };
 
     if !output.status.success() {
@@ -520,55 +523,74 @@ fn run_git(repo: &Path, args: &[&str]) -> Result<(), error::DecapodError> {
     )))
 }
 
-fn prepare_worktree(
+fn git_output(repo: &Path, args: &[&str]) -> Result<String, error::DecapodError> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(args)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "git {} failed: {}",
+            args.join(" "),
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
+fn prepare_workspace_clone(
     repo: &Path,
     branch: &str,
     base_branch: &str,
-) -> Result<WorktreeSpec, error::DecapodError> {
+) -> Result<WorkspaceSpec, error::DecapodError> {
     run_git(repo, &["fetch", "origin", base_branch])?;
+    let origin_url = git_output(repo, &["remote", "get-url", "origin"])?;
 
-    let worktrees_root = repo.join(".decapod").join("worktrees");
-    fs::create_dir_all(&worktrees_root).map_err(error::DecapodError::IoError)?;
+    let workspaces_root = repo.join(".decapod").join("workspaces");
+    fs::create_dir_all(&workspaces_root).map_err(error::DecapodError::IoError)?;
 
     let suffix = Ulid::new().to_string().to_lowercase();
     let dir_name = format!("{}-{}", sanitize_branch_component(branch), &suffix[..8]);
-    let worktree_path = worktrees_root.join(dir_name);
+    let workspace_path = workspaces_root.join(dir_name);
     let base_ref = format!("origin/{}", base_branch);
 
-    run_git(
-        repo,
-        &[
-            "worktree",
-            "add",
-            "-B",
-            branch,
-            worktree_path.to_str().ok_or_else(|| {
-                error::DecapodError::PathError("invalid worktree path".to_string())
-            })?,
-            &base_ref,
-        ],
-    )?;
+    let workspace_path_str = workspace_path
+        .to_str()
+        .ok_or_else(|| error::DecapodError::PathError("invalid workspace path".to_string()))?;
 
-    Ok(WorktreeSpec {
+    let clone_output = Command::new("git")
+        .arg("clone")
+        .arg("--origin")
+        .arg("origin")
+        .arg("--branch")
+        .arg(base_branch)
+        .arg("--single-branch")
+        .arg(&origin_url)
+        .arg(workspace_path_str)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if !clone_output.status.success() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "git clone failed: {}",
+            String::from_utf8_lossy(&clone_output.stderr).trim()
+        )));
+    }
+    run_git(&workspace_path, &["checkout", "-B", branch, &base_ref])?;
+
+    Ok(WorkspaceSpec {
         branch: branch.to_string(),
-        path: worktree_path,
+        path: workspace_path,
         base_branch: base_branch.to_string(),
+        backend: "clone".to_string(),
     })
 }
 
-fn cleanup_worktree(repo: &Path, worktree_path: &Path) -> Result<(), error::DecapodError> {
-    run_git(
-        repo,
-        &[
-            "worktree",
-            "remove",
-            "--force",
-            worktree_path.to_str().ok_or_else(|| {
-                error::DecapodError::PathError("invalid worktree path".to_string())
-            })?,
-        ],
-    )?;
-    let _ = run_git(repo, &["worktree", "prune"]);
+fn cleanup_workspace_clone(workspace_path: &Path) -> Result<(), error::DecapodError> {
+    if workspace_path.exists() {
+        fs::remove_dir_all(workspace_path).map_err(error::DecapodError::IoError)?;
+    }
     Ok(())
 }
 
@@ -809,7 +831,7 @@ pub fn schema() -> serde_json::Value {
     json!({
         "name": "container",
         "version": "0.2.0",
-        "description": "Ephemeral containerized agent execution with isolated worktrees and optional push/PR automation",
+        "description": "Ephemeral containerized agent execution with isolated clone workspaces and optional push/PR automation",
         "commands": [
             { "name": "run", "parameters": ["agent", "cmd", "branch", "task_id", "push", "pr", "pr_base", "pr_title", "pr_body", "image_profile", "image", "timeout_seconds", "memory", "cpus", "repo", "keep_worktree", "inherit_env"] }
         ],
