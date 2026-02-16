@@ -578,7 +578,7 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         conn.execute(schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
-        backfill_task_dependencies(conn, &now_iso())?;
+        backfill_task_dependencies(conn)?;
     }
     // Keep defaults current across upgrades; INSERT OR IGNORE is idempotent.
     seed_default_risk_zones(conn)?;
