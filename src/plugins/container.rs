@@ -721,11 +721,12 @@ fn prepare_workspace_clone(
         .ok_or_else(|| error::DecapodError::PathError("invalid workspace path".to_string()))?;
 
     let clone_output = if local_only {
+        let local_source = repo.join(".git");
         Command::new("git")
             .arg("clone")
             .arg("--local")
             .arg("--no-hardlinks")
-            .arg(repo)
+            .arg(local_source)
             .arg(workspace_path_str)
             .output()
             .map_err(error::DecapodError::IoError)?
