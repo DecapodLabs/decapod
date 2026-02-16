@@ -1,5 +1,6 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::external_action::{self, ExternalCapability};
 use crate::core::store::Store;
 use crate::plugins::todo;
 use clap::{Parser, Subcommand};
@@ -10,7 +11,6 @@ use sha2::{Digest, Sha256};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 #[derive(Parser, Debug)]
 #[clap(name = "verify", about = "Replay verification proofs and detect drift")]
@@ -183,14 +183,20 @@ fn hash_file(path: &Path) -> Result<(String, u64, Option<u64>), error::DecapodEr
     Ok((sha256_hex(&bytes), meta.len(), mtime))
 }
 
-fn run_validate_and_hash(repo_root: &Path) -> Result<(bool, String), error::DecapodError> {
+fn run_validate_and_hash(
+    store_root: &Path,
+    repo_root: &Path,
+) -> Result<(bool, String), error::DecapodError> {
     let exe = std::env::current_exe()?;
-    let output = Command::new(exe)
-        .arg("validate")
-        .arg("--format")
-        .arg("json")
-        .current_dir(repo_root)
-        .output()?;
+    let exe_str = exe.to_string_lossy().to_string();
+    let output = external_action::execute(
+        store_root,
+        ExternalCapability::VerificationExec,
+        "verify.validate_passes",
+        &exe_str,
+        &["validate", "--format", "json"],
+        repo_root,
+    )?;
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     if let Ok(value) = serde_json::from_str::<serde_json::Value>(&stdout) {
@@ -353,6 +359,7 @@ fn resolve_artifact_path(repo_root: &Path, stored: &str) -> PathBuf {
 
 fn verify_target(
     target: &VerifyTarget,
+    store_root: &Path,
     repo_root: &Path,
 ) -> Result<VerifyTodoResult, error::DecapodError> {
     let mut result = VerifyTodoResult {
@@ -437,7 +444,7 @@ fn verify_target(
         return Ok(result);
     }
 
-    let (validate_ok, actual_hash) = run_validate_and_hash(repo_root)?;
+    let (validate_ok, actual_hash) = run_validate_and_hash(store_root, repo_root)?;
     let expected = expected_hash.unwrap_or_default();
 
     if !validate_ok {
@@ -574,7 +581,7 @@ pub fn capture_baseline_for_todo(
         });
     }
 
-    let (validate_ok, output_hash) = run_validate_and_hash(repo_root)?;
+    let (validate_ok, output_hash) = run_validate_and_hash(&store.root, repo_root)?;
 
     let ts = now_iso();
     let artifacts = VerificationArtifacts {
@@ -689,7 +696,7 @@ pub fn run_verify_cli(
     let mut results = Vec::new();
 
     for target in &targets {
-        let result = verify_target(target, repo_root)?;
+        let result = verify_target(target, &store.root, repo_root)?;
         persist_result(
             store,
             &result.todo_id,

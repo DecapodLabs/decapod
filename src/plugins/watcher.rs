@@ -1,11 +1,11 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::external_action::{self, ExternalCapability};
 use crate::core::store::Store;
 use crate::health;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Watchlist {
@@ -43,10 +43,20 @@ pub fn run_watcher(store: &Store) -> Result<WatcherReport, error::DecapodError> 
     };
 
     if watchlist.check_repo_dirty {
-        let output = Command::new("git")
-            .arg("status")
-            .arg("--porcelain")
-            .output();
+        let repo_root = store
+            .root
+            .parent()
+            .and_then(|p| p.parent())
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| store.root.clone());
+        let output = external_action::execute(
+            &store.root,
+            ExternalCapability::VcsRead,
+            "watcher.repo_dirty",
+            "git",
+            &["status", "--porcelain"],
+            &repo_root,
+        );
         if let Ok(out) = output {
             report.repo_dirty = Some(!out.stdout.is_empty());
         }

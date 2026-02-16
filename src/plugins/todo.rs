@@ -1,5 +1,6 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::external_action::{self, ExternalCapability};
 use crate::core::schemas; // Import the new schemas module
 use crate::core::store::Store;
 use crate::plugins::federation;
@@ -16,7 +17,6 @@ use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use ulid::Ulid;
 
 const AGENT_EVICT_TIMEOUT_SECS: u64 = 30 * 60;
@@ -323,11 +323,31 @@ fn sanitize_branch_segment(input: &str) -> String {
 }
 
 fn run_git(repo_root: &Path, args: &[&str]) -> Result<String, error::DecapodError> {
-    let output = Command::new("git")
-        .args(args)
-        .current_dir(repo_root)
-        .output()
-        .map_err(error::DecapodError::IoError)?;
+    let mut current = Some(repo_root);
+    let mut store_root = None;
+    while let Some(path) = current {
+        let candidate = path.join(".decapod").join("data");
+        if candidate.exists() {
+            store_root = Some(candidate);
+            break;
+        }
+        current = path.parent();
+    }
+    let store_root = store_root.unwrap_or_else(|| repo_root.join(".decapod").join("data"));
+
+    let capability = match args.first().copied().unwrap_or_default() {
+        "status" | "branch" | "rev-parse" => ExternalCapability::VcsRead,
+        _ => ExternalCapability::VcsWrite,
+    };
+
+    let output = external_action::execute(
+        &store_root,
+        capability,
+        "todo.handoff.reconcile",
+        "git",
+        args,
+        repo_root,
+    )?;
     if !output.status.success() {
         return Err(error::DecapodError::ValidationError(format!(
             "git {} failed: {}",
@@ -1664,13 +1684,14 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     let prefix = task_prefix_from_scope(&scope);
     let task_id = format!("{}_{}", prefix, Ulid::new());
     let ts = now_iso();
+    let intent_ref = format!("intent:todo.add:{}", Ulid::new());
     let owner_list = parse_owners_input(owner);
     let primary_owner = owner_list.first().cloned().unwrap_or_default();
 
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    broker.with_conn(&db_path, "decapod", None, "todo.add", |conn| {
+    broker.with_conn(&db_path, "decapod", Some(&intent_ref), "todo.add", |conn| {
         ensure_schema(conn)?;
 
         // Infer category from tags or title for auto-assignment
@@ -1723,6 +1744,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         )?;
 
         let mut payload = serde_json::json!({
+            "intent_ref": intent_ref,
             "title": title,
             "description": description,
             "tags": tags,
@@ -1817,6 +1839,7 @@ pub fn update_status(
     payload: JsonValue,
 ) -> Result<serde_json::Value, error::DecapodError> {
     let ts = now_iso();
+    let intent_ref = format!("intent:{}:{}", event_type, Ulid::new());
     let root = &store.root;
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -1839,7 +1862,15 @@ pub fn update_status(
         )));
     }
 
-    let changed = broker.with_conn(&db_path, "decapod", None, event_type, |conn| {
+    let mut payload = payload;
+    if let Some(obj) = payload.as_object_mut() {
+        obj.insert(
+            "intent_ref".to_string(),
+            serde_json::json!(intent_ref.clone()),
+        );
+    }
+
+    let changed = broker.with_conn(&db_path, "decapod", Some(&intent_ref), event_type, |conn| {
         ensure_schema(conn)?;
         let changed = conn.execute(
             "UPDATE tasks SET status = ?1, updated_at = ?2, completed_at = CASE WHEN ?1 = 'done' THEN ?2 ELSE completed_at END WHERE id = ?3",
