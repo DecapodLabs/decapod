@@ -93,6 +93,7 @@ use clap::{CommandFactory, Parser, Subcommand};
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::process::Command as ProcessCommand;
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -864,6 +865,85 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
 
                 println!();
+
+                write_init_container_ssh_key_path(&target_dir)?;
+                let has_runtime = init_has_container_runtime();
+                let dedicated_key_hint = init_container_ssh_key_hint(&target_dir);
+                let has_dedicated_key = init_has_dedicated_agent_key(&target_dir);
+                let github_keys_url = "https://github.com/settings/keys";
+
+                if !has_runtime {
+                    tui::render_box(
+                        "⚠ CONTAINER RUNTIME REQUIRED",
+                        "Install Docker or Podman for isolated per-agent execution",
+                        tui::BoxStyle::Warning,
+                    );
+                    println!();
+                    println!(
+                        "  {} {}",
+                        "Prompt:".bright_yellow().bold(),
+                        "Install Docker or Podman now".bright_white()
+                    );
+                    println!(
+                        "  {} Without container isolation, concurrent agents can step on each other.",
+                        "Why:".bright_yellow().bold(),
+                    );
+                    println!();
+                }
+
+                if !has_dedicated_key {
+                    tui::render_box(
+                        "⚠ DEDICATED SSH KEY REQUIRED FOR CONTAINER PUSH/PR",
+                        "Use a separate local-only key for agent containers",
+                        tui::BoxStyle::Warning,
+                    );
+                    println!();
+                    println!(
+                        "  {} {}",
+                        "Prompt:".bright_yellow().bold(),
+                        "Generate dedicated SSH key now".bright_white()
+                    );
+                    println!(
+                        "  {} {}",
+                        "Command:".bright_yellow().bold(),
+                        format!(
+                            "ssh-keygen -t ed25519 -f {} -C \"decapod-agent\"",
+                            dedicated_key_hint
+                        )
+                        .bright_cyan()
+                    );
+                    println!(
+                        "  {} {}",
+                        "Then add public key in GitHub:".bright_yellow().bold(),
+                        github_keys_url.bright_cyan().underline()
+                    );
+                    println!(
+                        "  {} This key stays local on your machine and is never committed.",
+                        "Note:".bright_yellow().bold(),
+                    );
+                    println!();
+                }
+
+                if !has_runtime || !has_dedicated_key {
+                    let mut reasons = Vec::new();
+                    if !has_runtime {
+                        reasons.push("missing docker/podman");
+                    }
+                    if !has_dedicated_key {
+                        reasons.push("missing dedicated ssh key (see .decapod/generated/container_ssh_key_path)");
+                    }
+                    ensure_init_container_disable_override(&target_dir, &reasons.join(", "))?;
+                    tui::render_box(
+                        "⚠ CONTAINER SUBSYSTEM DISABLED BY OVERRIDE",
+                        "Wrote .decapod/OVERRIDE.md disable marker until prerequisites are met",
+                        tui::BoxStyle::Warning,
+                    );
+                    println!(
+                        "  {} Without isolated containers, concurrent agents can step on each other.",
+                        "Warning:".bright_yellow().bold(),
+                    );
+                    println!();
+                }
             }
 
             // Determine which agent files to generate based on flags
@@ -989,6 +1069,9 @@ fn requires_session_token(command: &Command) -> bool {
     match command {
         // Only bootstrap/session lifecycle + version are sessionless.
         Command::Init(_) | Command::Session(_) | Command::Version => false,
+        Command::Data(DataCli {
+            command: DataCommand::Schema(_),
+        }) => false,
         _ => true,
     }
 }
@@ -1689,6 +1772,95 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
                 String::from_utf8_lossy(&output.stderr).trim()
             )));
         }
+    }
+    Ok(())
+}
+
+fn init_has_container_runtime() -> bool {
+    command_exists("docker") || command_exists("podman")
+}
+
+fn init_container_ssh_key_hint(target_dir: &Path) -> String {
+    let path_file = target_dir
+        .join(".decapod")
+        .join("generated")
+        .join("container_ssh_key_path");
+    fs::read_to_string(path_file)
+        .ok()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "~/.ssh/decapod_agent_ed25519".to_string())
+}
+
+fn init_has_dedicated_agent_key(target_dir: &Path) -> bool {
+    let hint = init_container_ssh_key_hint(target_dir);
+    let key = if let Some(home) = std::env::var_os("HOME") {
+        if hint.starts_with("~/") {
+            PathBuf::from(home).join(hint.trim_start_matches("~/"))
+        } else {
+            PathBuf::from(hint)
+        }
+    } else {
+        PathBuf::from(hint)
+    };
+    key.is_file() && key.with_extension("pub").is_file()
+}
+
+fn command_exists(name: &str) -> bool {
+    ProcessCommand::new(name)
+        .arg("--version")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+}
+
+fn ensure_init_container_disable_override(
+    target_dir: &Path,
+    reason: &str,
+) -> Result<(), error::DecapodError> {
+    let override_path = target_dir.join(".decapod").join("OVERRIDE.md");
+    let existing = if override_path.exists() {
+        fs::read_to_string(&override_path).map_err(error::DecapodError::IoError)?
+    } else {
+        String::new()
+    };
+    if existing.contains(container::CONTAINER_DISABLE_MARKER) {
+        return Ok(());
+    }
+    if let Some(parent) = override_path.parent() {
+        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    }
+    let mut file = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&override_path)
+        .map_err(error::DecapodError::IoError)?;
+    if !existing.ends_with('\n') && !existing.is_empty() {
+        writeln!(file).map_err(error::DecapodError::IoError)?;
+    }
+    writeln!(file, "### plugins/CONTAINER.md").map_err(error::DecapodError::IoError)?;
+    writeln!(file, "## Runtime Guard Override (auto-generated)")
+        .map_err(error::DecapodError::IoError)?;
+    writeln!(file, "{}", container::CONTAINER_DISABLE_MARKER)
+        .map_err(error::DecapodError::IoError)?;
+    writeln!(file, "reason: {}", reason).map_err(error::DecapodError::IoError)?;
+    writeln!(
+        file,
+        "warning: disabling isolated containers increases risk of concurrent agents stepping on each other."
+    )
+    .map_err(error::DecapodError::IoError)?;
+    Ok(())
+}
+
+fn write_init_container_ssh_key_path(target_dir: &Path) -> Result<(), error::DecapodError> {
+    let generated_dir = target_dir.join(".decapod").join("generated");
+    fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
+    let path_file = generated_dir.join("container_ssh_key_path");
+    if !path_file.exists() {
+        fs::write(&path_file, "~/.ssh/decapod_agent_ed25519\n")
+            .map_err(error::DecapodError::IoError)?;
     }
     Ok(())
 }
