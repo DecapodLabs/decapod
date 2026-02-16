@@ -63,8 +63,9 @@ cargo install decapod              # 1. Install/update to latest release
 decapod --version                   # 2. Check installed version
 decapod --help                      # 3. Verify available commands
 decapod docs show core/DECAPOD.md  # 4. Refresh constitution
-decapod validate                    # 5. Check system state
-decapod todo list                   # 6. See active work
+decapod session acquire             # 5. Acquire session token (required for all commands)
+decapod validate                    # 6. Check system state
+decapod todo list                   # 7. See active work
 ```
 
 **Why this is non-negotiable:**
