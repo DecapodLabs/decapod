@@ -502,6 +502,9 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_EVENTS_TASK, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_VERIFICATION, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS, [])?;
+    conn.execute(schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES, [])?;
+    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
+    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
 
     if current_version < 2 {
         conn.execute(schemas::TODO_DB_SCHEMA_CATEGORIES, [])?;
@@ -569,6 +572,13 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         // Operational risk zones
         conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
+    }
+
+    if current_version < 13 {
+        conn.execute(schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
+        backfill_task_dependencies(conn, &now_iso())?;
     }
     // Keep defaults current across upgrades; INSERT OR IGNORE is idempotent.
     seed_default_risk_zones(conn)?;
@@ -1803,6 +1813,61 @@ fn parse_owners_input(owners: &str) -> Vec<String> {
     out
 }
 
+fn parse_dependency_ids(depends_on: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut seen = HashSet::new();
+    for dep in depends_on
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_string())
+    {
+        if seen.insert(dep.clone()) {
+            out.push(dep);
+        }
+    }
+    out
+}
+
+fn sync_task_dependencies(
+    conn: &Connection,
+    task_id: &str,
+    depends_on: &str,
+    ts: &str,
+) -> Result<(), error::DecapodError> {
+    conn.execute(
+        "DELETE FROM task_dependencies WHERE task_id = ?1",
+        rusqlite::params![task_id],
+    )
+    .map_err(error::DecapodError::RusqliteError)?;
+
+    for dep_id in parse_dependency_ids(depends_on) {
+        conn.execute(
+            "INSERT OR IGNORE INTO task_dependencies(id, task_id, depends_on_task_id, created_at)
+             VALUES(?1, ?2, ?3, ?4)",
+            rusqlite::params![Ulid::new().to_string(), task_id, dep_id, ts],
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    }
+    Ok(())
+}
+
+fn backfill_task_dependencies(conn: &Connection, ts: &str) -> Result<(), error::DecapodError> {
+    let mut stmt = conn
+        .prepare("SELECT id, depends_on FROM tasks")
+        .map_err(error::DecapodError::RusqliteError)?;
+    let rows = stmt
+        .query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })
+        .map_err(error::DecapodError::RusqliteError)?;
+    for row in rows {
+        let (task_id, depends_on) = row.map_err(error::DecapodError::RusqliteError)?;
+        sync_task_dependencies(conn, &task_id, &depends_on, ts)?;
+    }
+    Ok(())
+}
+
 fn upsert_task_owner(
     conn: &Connection,
     task_id: &str,
@@ -2056,6 +2121,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 assigned_at
             ],
         )?;
+        sync_task_dependencies(conn, &task_id, depends_on, &ts)?;
 
         let mut payload = serde_json::json!({
             "intent_ref": intent_ref,
@@ -3390,6 +3456,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         let _ = upsert_task_owner(conn, &id, &owner, "primary", &ev.ts)?;
                     }
                     sync_legacy_owner_column(conn, &id)?;
+                    sync_task_dependencies(conn, &id, &depends_on, &ev.ts)?;
                 }
                 "task.done" => {
                     let id = ev.task_id.clone().unwrap_or_default();
@@ -3630,6 +3697,13 @@ pub fn schema() -> serde_json::Value {
             { "name": "expertise", "parameters": ["agent", "category"] },
 
             { "name": "rebuild", "parameters": [] }
+        ],
+        "task_columns": [
+            "id", "title", "description", "tags", "owner", "status", "created_at", "updated_at",
+            "priority", "depends_on", "blocks", "category", "assigned_to", "parent_task_id"
+        ],
+        "dependency_tables": [
+            "task_dependencies(task_id, depends_on_task_id, created_at)"
         ],
         "storage": ["todo.db", "todo.events.jsonl"]
     })
