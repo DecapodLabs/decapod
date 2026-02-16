@@ -41,7 +41,7 @@ This is the default sequence when operating in a Decapod-managed repo:
 4. Add a repo TODO for multi-step work before implementation (dogfood mode inside this repo).
 5. Implement the change.
 6. Run proof and report results.
-7. Close the TODO and record the event.
+7. Close the TODO with the explicit command `decapod todo done --id <task-id>` and record the event.
 
 If you cannot name the proof surface, you're not ready to claim correctness.
 
