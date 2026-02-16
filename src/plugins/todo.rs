@@ -1383,27 +1383,31 @@ fn upsert_task_owner(
     }
 }
 
+struct OwnershipClaimRecord<'a> {
+    task_id: &'a str,
+    agent_id: &'a str,
+    claim_type: &'a str,
+    claim_id: &'a str,
+    actor: &'a str,
+    ts: &'a str,
+}
+
 fn write_ownership_claim_event(
     root: &Path,
     conn: &Connection,
-    task_id: &str,
-    agent_id: &str,
-    claim_type: &str,
-    claim_id: &str,
-    actor: &str,
-    ts: &str,
+    claim: &OwnershipClaimRecord<'_>,
 ) -> Result<(), error::DecapodError> {
     let ev = TodoEvent {
-        ts: ts.to_string(),
+        ts: claim.ts.to_string(),
         event_id: Ulid::new().to_string(),
         event_type: "ownership.claim".to_string(),
-        task_id: Some(task_id.to_string()),
+        task_id: Some(claim.task_id.to_string()),
         payload: serde_json::json!({
-            "agent_id": agent_id,
-            "claim_type": claim_type,
-            "claim_id": claim_id,
+            "agent_id": claim.agent_id,
+            "claim_type": claim.claim_type,
+            "claim_id": claim.claim_id,
         }),
-        actor: actor.to_string(),
+        actor: claim.actor.to_string(),
     };
     append_event(root, &ev)?;
     insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
@@ -1567,12 +1571,14 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             write_ownership_claim_event(
                 root,
                 conn,
-                &task_id,
-                owner_agent,
-                claim_type,
-                &claim_id,
-                "decapod",
-                &ts,
+                &OwnershipClaimRecord {
+                    task_id: &task_id,
+                    agent_id: owner_agent,
+                    claim_type,
+                    claim_id: &claim_id,
+                    actor: "decapod",
+                    ts: &ts,
+                },
             )?;
         }
         Ok(())
@@ -1892,12 +1898,14 @@ fn claim_task(
                     write_ownership_claim_event(
                         root,
                         conn,
-                        id,
-                        agent_id,
-                        "secondary",
-                        &claim_id,
-                        agent_id,
-                        &ts,
+                        &OwnershipClaimRecord {
+                            task_id: id,
+                            agent_id,
+                            claim_type: "secondary",
+                            claim_id: &claim_id,
+                            actor: agent_id,
+                            ts: &ts,
+                        },
                     )?;
                     return Ok(serde_json::json!({
                         "status": "conflict",
@@ -1945,7 +1953,16 @@ fn claim_task(
 
         let claim_id = upsert_task_owner(conn, id, agent_id, "primary", &ts)?;
         write_ownership_claim_event(
-            root, conn, id, agent_id, "primary", &claim_id, agent_id, &ts,
+            root,
+            conn,
+            &OwnershipClaimRecord {
+                task_id: id,
+                agent_id,
+                claim_type: "primary",
+                claim_id: &claim_id,
+                actor: agent_id,
+                ts: &ts,
+            },
         )?;
 
         // Create claim event
@@ -2155,7 +2172,16 @@ fn add_task_owner(
 
         let claim_id = upsert_task_owner(conn, task_id, agent_id, claim_type, &ts)?;
         write_ownership_claim_event(
-            root, conn, task_id, agent_id, claim_type, &claim_id, "decapod", &ts,
+            root,
+            conn,
+            &OwnershipClaimRecord {
+                task_id,
+                agent_id,
+                claim_type,
+                claim_id: &claim_id,
+                actor: "decapod",
+                ts: &ts,
+            },
         )?;
 
         Ok(serde_json::json!({
