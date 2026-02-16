@@ -834,16 +834,31 @@ fn build_docker_spec(
         }
     }
     let mut ssh_mount_added = false;
-    let ssh_dir = std::env::var("DECAPOD_CONTAINER_SSH_DIR")
-        .ok()
-        .map(PathBuf::from)
-        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".ssh")));
-    if let Some(ssh_dir) = ssh_dir {
-        if ssh_dir.exists() {
-            if let Some(ssh_dir_str) = ssh_dir.to_str() {
+    if let Some(key_path) = generated_container_ssh_key_path(repo_root) {
+        if key_path.is_file() {
+            if let Some(key_parent) = key_path.parent().and_then(Path::to_str) {
                 args.push("-v".to_string());
-                args.push(format!("{}:/decapod-ssh:ro", ssh_dir_str));
+                args.push(format!("{}:/decapod-ssh:ro", key_parent));
+                if let Some(key_name) = key_path.file_name().and_then(|n| n.to_str()) {
+                    args.push("-e".to_string());
+                    args.push(format!("DECAPOD_SSH_KEY_PATH=/decapod-ssh/{}", key_name));
+                }
                 ssh_mount_added = true;
+            }
+        }
+    }
+    if !ssh_mount_added {
+        let ssh_dir = std::env::var("DECAPOD_CONTAINER_SSH_DIR")
+            .ok()
+            .map(PathBuf::from)
+            .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".ssh")));
+        if let Some(ssh_dir) = ssh_dir {
+            if ssh_dir.exists() {
+                if let Some(ssh_dir_str) = ssh_dir.to_str() {
+                    args.push("-v".to_string());
+                    args.push(format!("{}:/decapod-ssh:ro", ssh_dir_str));
+                    ssh_mount_added = true;
+                }
             }
         }
     }
@@ -853,8 +868,11 @@ fn build_docker_spec(
     }
     if env_bool("DECAPOD_CONTAINER_DEBUG", false) {
         eprintln!(
-            "debug: host ssh_dir={} ssh_mount_added={}",
+            "debug: host ssh_dir={} generated_key_path={} ssh_mount_added={}",
             std::env::var("DECAPOD_CONTAINER_SSH_DIR").unwrap_or_default(),
+            generated_container_ssh_key_path(repo_root)
+                .map(|p| p.display().to_string())
+                .unwrap_or_default(),
             ssh_mount_added
         );
     }
