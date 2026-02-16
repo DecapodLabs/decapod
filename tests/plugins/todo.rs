@@ -153,21 +153,27 @@ fn run_raw(repo_root: &Path, args: &[&str]) -> std::process::Output {
         .expect("run decapod")
 }
 
-#[test]
-fn test_claim_modes_and_owner_consolidation() {
-    let tmp = tempdir().unwrap();
-    let repo = tmp.path();
-
-    let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .current_dir(repo)
-        .args(["init", "--force"])
-        .output()
-        .expect("run init");
+fn bootstrap_repo(repo: &Path) {
+    let init = run_raw(repo, &["init", "--force"]);
     assert!(
         init.status.success(),
         "init failed: {}",
         String::from_utf8_lossy(&init.stderr)
     );
+
+    let session = run_raw(repo, &["session", "acquire"]);
+    assert!(
+        session.status.success(),
+        "session acquire failed: {}",
+        String::from_utf8_lossy(&session.stderr)
+    );
+}
+
+#[test]
+fn test_claim_modes_and_owner_consolidation() {
+    let tmp = tempdir().unwrap();
+    let repo = tmp.path();
+    bootstrap_repo(repo);
     let added = run_cmd(
         repo,
         &[
@@ -270,13 +276,7 @@ fn test_claim_modes_and_owner_consolidation() {
 fn test_risk_zones_and_trust_tiers_enforced() {
     let tmp = tempdir().unwrap();
     let repo = tmp.path();
-
-    let init = run_raw(repo, &["init", "--force"]);
-    assert!(
-        init.status.success(),
-        "init failed: {}",
-        String::from_utf8_lossy(&init.stderr)
-    );
+    bootstrap_repo(repo);
 
     let added = run_cmd(
         repo,
@@ -387,13 +387,7 @@ fn test_risk_zones_and_trust_tiers_enforced() {
 fn test_ownership_rebuild_replay_parity() {
     let tmp = tempdir().unwrap();
     let repo = tmp.path();
-
-    let init = run_raw(repo, &["init", "--force"]);
-    assert!(
-        init.status.success(),
-        "init failed: {}",
-        String::from_utf8_lossy(&init.stderr)
-    );
+    bootstrap_repo(repo);
 
     let added = run_cmd(
         repo,
