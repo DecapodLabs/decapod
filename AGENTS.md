@@ -62,10 +62,6 @@ This is **guidance**, not **contract**. The binding requirements are the four in
 
 See `decapod docs show plugins/WORKFLOW.md` for the full operating loop.
 
-## Project-Specific Overrides
-
-This repo may customize behavior via `.decapod/OVERRIDE.md`. Run `decapod docs show <path>` to see merged content.
-
 ## Links
 
 ### Core Router (Start Here)

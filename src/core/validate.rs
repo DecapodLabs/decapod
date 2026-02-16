@@ -1551,6 +1551,7 @@ pub fn run_validation(
     validate_embedded_self_contained(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_docs_templates_bucket(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_entrypoint_invariants(&mut pass_count, &mut fail_count, decapod_dir)?;
+    println!("validate: gate Four Invariants Gate");
     validate_health_purity(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_project_scoped_state(store, &mut pass_count, &mut fail_count, decapod_dir)?;
     validate_schema_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
