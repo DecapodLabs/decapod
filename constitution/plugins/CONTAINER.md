@@ -17,10 +17,10 @@ Container subsystem runs agent actions in ephemeral Docker/Podman containers wit
 
 ## Contracts
 - One container per invocation (`--rm`), then teardown.
-- Before each run, Decapod fetches `origin/<base>` (default `origin/master`) and creates an isolated clone workspace under `.decapod/workspaces/`.
-- Container mounts that worktree at `/workspace`; user can remain on local `master`.
-- Container always mounts repo control-plane state at `/workspace/.decapod` so in-container build/test can run Decapod commands against shared state.
-- Decapod manages a generated Dockerfile at `.decapod/generated/Dockerfile` for `--image-profile alpine`.
+- Before each run, Decapod fetches `origin/<base>` (default `origin/master`) and creates an isolated clone workspace in the control-plane workspace area.
+- Container mounts that workspace; user can remain on local `master`.
+- Container includes repo control-plane state so in-container build/test can run Decapod commands against shared state.
+- Decapod manages a generated Dockerfile template for `--image-profile alpine`.
 - In-container script syncs from base (`fetch` + `rebase`), executes command, optionally commit/push/PR.
 - Local environment is inherited by default (`--inherit-env`), including SSH agent passthrough when present.
 - Safety defaults: cap-drop all, no-new-privileges, pids limit, tmpfs `/tmp`.
@@ -40,8 +40,7 @@ Container subsystem runs agent actions in ephemeral Docker/Podman containers wit
    `decapod auto container run --agent clawdious --image-profile alpine --cmd "cargo check -q"`.
 4. Keep worktree for postmortem debugging:
    `decapod auto container run --agent clawdious --task-id R_01ABC --keep-worktree --cmd "..."`
-5. Inspect generated image template:
-   `.decapod/generated/Dockerfile`
+5. Inspect generated image template from the control-plane generated output.
 
 Expected loop:
 - Agent claims TODO.
