@@ -31,7 +31,7 @@
 use crate::core::error;
 use crate::core::store::{Store, StoreKind};
 use crate::core::tui;
-use crate::{db, todo};
+use crate::{db, primitives, todo};
 use regex::Regex;
 use serde_json;
 use std::fs;
@@ -1362,6 +1362,29 @@ fn validate_federation_gates(
     Ok(())
 }
 
+fn validate_markdown_primitives_roundtrip_gate(
+    store: &Store,
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+) -> Result<(), error::DecapodError> {
+    info("Markdown Primitive Round-Trip Gate");
+    match primitives::validate_roundtrip_gate(store) {
+        Ok(()) => {
+            pass(
+                "Markdown primitives export and round-trip validation pass",
+                pass_count,
+            );
+        }
+        Err(err) => {
+            fail(
+                &format!("Markdown primitive round-trip failed: {}", err),
+                fail_count,
+            );
+        }
+    }
+    Ok(())
+}
+
 /// Validates that tooling requirements are satisfied.
 /// This gate ensures formatting, linting, and type checking pass before promotion.
 fn validate_tooling_gate(
@@ -1531,6 +1554,7 @@ pub fn run_validation(
     validate_control_plane_contract(store, &mut pass_count, &mut fail_count)?;
     validate_canon_mutation(store, &mut pass_count, &mut fail_count)?;
     validate_heartbeat_invocation_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
+    validate_markdown_primitives_roundtrip_gate(store, &mut pass_count, &mut fail_count)?;
     validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
     validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 

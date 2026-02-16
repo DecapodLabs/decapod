@@ -41,5 +41,6 @@ pub mod repomap;
 pub mod scaffold;
 pub mod schemas;
 pub mod store;
+pub mod time;
 pub mod tui;
 pub mod validate;
