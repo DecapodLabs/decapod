@@ -26,6 +26,7 @@ decapod todo list                   # 8. See active work
 3. **TODO closeout contract**: Close tasks via `decapod todo done --id <task-id>` (and optional policy-approved `decapod todo archive --id <task-id>`); never use `decapod complete`
 4. **Interface abstraction boundary**: Preserve control-plane opacity. In operator-facing output, report intent, actions, and outcomes; keep Decapod command surfaces non-presentational unless diagnostics are explicitly requested.
 5. **Clarification gate**: Ask concise questions before ambiguous/high-risk/irreversible actions; do not guess when IDs, command surfaces, or success criteria are unclear.
+6. **CLI comprehension gate**: Before mutating any subsystem, verify active CLI surfaces from `decapod data schema --subsystem command_registry --deterministic` and the target subsystem schema; never invent commands.
 
 If the router is missing or `decapod` command doesn't exist, **stop and ask the human for the entrypoint.**
 
