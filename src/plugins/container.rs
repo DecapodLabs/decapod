@@ -944,46 +944,48 @@ fn build_docker_spec(
         }
     }
 
-    if let Ok(sock) = std::env::var("SSH_AUTH_SOCK") {
-        if !sock.trim().is_empty() {
-            args.push("-e".to_string());
-            args.push(format!("SSH_AUTH_SOCK={}", sock));
-            args.push("-v".to_string());
-            args.push(format!("{}:{}", sock, sock));
-        }
-    }
     let mut ssh_mount_added = false;
-    if let Some(key_path) = generated_container_ssh_key_path(repo_root) {
-        if key_path.is_file() {
-            if let Some(key_parent) = key_path.parent().and_then(Path::to_str) {
+    if !local_only {
+        if let Ok(sock) = std::env::var("SSH_AUTH_SOCK") {
+            if !sock.trim().is_empty() {
+                args.push("-e".to_string());
+                args.push(format!("SSH_AUTH_SOCK={}", sock));
                 args.push("-v".to_string());
-                args.push(format!("{}:/decapod-ssh:ro", key_parent));
-                if let Some(key_name) = key_path.file_name().and_then(|n| n.to_str()) {
-                    args.push("-e".to_string());
-                    args.push(format!("DECAPOD_SSH_KEY_PATH=/decapod-ssh/{}", key_name));
-                }
-                ssh_mount_added = true;
+                args.push(format!("{}:{}", sock, sock));
             }
         }
-    }
-    if !ssh_mount_added {
-        let ssh_dir = std::env::var("DECAPOD_CONTAINER_SSH_DIR")
-            .ok()
-            .map(PathBuf::from)
-            .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".ssh")));
-        if let Some(ssh_dir) = ssh_dir {
-            if ssh_dir.exists() {
-                if let Some(ssh_dir_str) = ssh_dir.to_str() {
+        if let Some(key_path) = generated_container_ssh_key_path(repo_root) {
+            if key_path.is_file() {
+                if let Some(key_parent) = key_path.parent().and_then(Path::to_str) {
                     args.push("-v".to_string());
-                    args.push(format!("{}:/decapod-ssh:ro", ssh_dir_str));
+                    args.push(format!("{}:/decapod-ssh:ro", key_parent));
+                    if let Some(key_name) = key_path.file_name().and_then(|n| n.to_str()) {
+                        args.push("-e".to_string());
+                        args.push(format!("DECAPOD_SSH_KEY_PATH=/decapod-ssh/{}", key_name));
+                    }
                     ssh_mount_added = true;
                 }
             }
         }
-    }
-    if ssh_mount_added {
-        args.push("-e".to_string());
-        args.push("DECAPOD_SSH_DIR=/decapod-ssh".to_string());
+        if !ssh_mount_added {
+            let ssh_dir = std::env::var("DECAPOD_CONTAINER_SSH_DIR")
+                .ok()
+                .map(PathBuf::from)
+                .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".ssh")));
+            if let Some(ssh_dir) = ssh_dir {
+                if ssh_dir.exists() {
+                    if let Some(ssh_dir_str) = ssh_dir.to_str() {
+                        args.push("-v".to_string());
+                        args.push(format!("{}:/decapod-ssh:ro", ssh_dir_str));
+                        ssh_mount_added = true;
+                    }
+                }
+            }
+        }
+        if ssh_mount_added {
+            args.push("-e".to_string());
+            args.push("DECAPOD_SSH_DIR=/decapod-ssh".to_string());
+        }
     }
     if env_bool("DECAPOD_CONTAINER_DEBUG", false) {
         eprintln!(
@@ -1056,26 +1058,30 @@ fn build_container_script(
          git_safe() {\n\
            git -c safe.directory=\"${DECAPOD_WORKSPACE:-$PWD}\" \"$@\"\n\
          }\n\
-         export GIT_SSH_COMMAND=\"ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${HOME:-/tmp/decapod-home}/.ssh/known_hosts\"\n\
          key_path=\"\"\n\
-         if [ -n \"${DECAPOD_SSH_KEY_PATH:-}\" ] && [ -f \"${DECAPOD_SSH_KEY_PATH}\" ]; then\n\
-           key_path=\"${DECAPOD_SSH_KEY_PATH}\"\n\
-         fi\n\
-         for candidate in \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_ed25519\" \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_rsa\" \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_ecdsa\"; do\n\
+         if [ \"${DECAPOD_LOCAL_ONLY:-0}\" != \"1\" ]; then\n\
+           export GIT_SSH_COMMAND=\"ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${HOME:-/tmp/decapod-home}/.ssh/known_hosts\"\n\
+           if [ -n \"${DECAPOD_SSH_KEY_PATH:-}\" ] && [ -f \"${DECAPOD_SSH_KEY_PATH}\" ]; then\n\
+             key_path=\"${DECAPOD_SSH_KEY_PATH}\"\n\
+           fi\n\
+           for candidate in \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_ed25519\" \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_rsa\" \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_ecdsa\"; do\n\
+             if [ -n \"$key_path\" ]; then\n\
+               break\n\
+             fi\n\
+             if [ -f \"$candidate\" ]; then\n\
+               key_path=\"$candidate\"\n\
+               break\n\
+             fi\n\
+           done\n\
            if [ -n \"$key_path\" ]; then\n\
-             break\n\
+             chmod 600 \"$key_path\" 2>/dev/null || true\n\
+             export GIT_SSH_COMMAND=\"${GIT_SSH_COMMAND} -i $key_path -o IdentitiesOnly=yes\"\n\
+             unset SSH_AUTH_SOCK || true\n\
+           elif [ -S \"${SSH_AUTH_SOCK:-}\" ]; then\n\
+             export GIT_SSH_COMMAND=\"${GIT_SSH_COMMAND} -o IdentityAgent=${SSH_AUTH_SOCK}\"\n\
            fi\n\
-           if [ -f \"$candidate\" ]; then\n\
-             key_path=\"$candidate\"\n\
-             break\n\
-           fi\n\
-         done\n\
-         if [ -n \"$key_path\" ]; then\n\
-           chmod 600 \"$key_path\" 2>/dev/null || true\n\
-           export GIT_SSH_COMMAND=\"${GIT_SSH_COMMAND} -i $key_path -o IdentitiesOnly=yes\"\n\
+         else\n\
            unset SSH_AUTH_SOCK || true\n\
-         elif [ -S \"${SSH_AUTH_SOCK:-}\" ]; then\n\
-           export GIT_SSH_COMMAND=\"${GIT_SSH_COMMAND} -o IdentityAgent=${SSH_AUTH_SOCK}\"\n\
          fi\n\
          if [ \"${DECAPOD_CONTAINER_DEBUG:-0}\" = \"1\" ]; then\n\
            echo \"debug: workspace=${DECAPOD_WORKSPACE:-$PWD}\" >&2\n\
