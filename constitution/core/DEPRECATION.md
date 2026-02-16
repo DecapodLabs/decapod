@@ -67,8 +67,21 @@ For large transitions, maintain a small registry table here:
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+- `specs/AMENDMENTS.md` - Change control
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+- `core/GAPS.md` - Gap analysis methodology
+
+### Contracts (Interfaces Layer)
 - `interfaces/DOC_RULES.md` - Doc compilation rules
 - `interfaces/CLAIMS.md` - Promises ledger
-- `specs/AMENDMENTS.md` - Change control
-- `core/GAPS.md` - Gap analysis methodology
+- `interfaces/GLOSSARY.md` - Term definitions

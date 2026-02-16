@@ -169,11 +169,23 @@ This matrix defines which canonical doc owns which type of decision. If you need
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `core/INTERFACES.md` - Interface contracts index
-- `interfaces/CLAIMS.md` - Promises ledger
-- `interfaces/GLOSSARY.md` - Term definitions
-- `core/PLUGINS.md` - Subsystem registry
-- `core/DEPRECATION.md` - Deprecation contract
-- `specs/SYSTEM.md` - System definition
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
 - `specs/AMENDMENTS.md` - Change control
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+- `core/DEPRECATION.md` - Deprecation contract
+
+### Contracts (Interfaces Layer - This Document)
+- `interfaces/CLAIMS.md` - Promises ledger
+- `interfaces/STORE_MODEL.md` - Store semantics
+- `interfaces/GLOSSARY.md` - Term definitions
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/TESTING.md` - Testing contract

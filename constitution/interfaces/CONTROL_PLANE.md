@@ -147,15 +147,30 @@ Validate coverage matrix (starter; expand over time):
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
 - `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+
+### Contracts (Interfaces Layer - This Document)
 - `interfaces/DOC_RULES.md` - Doc compilation rules
 - `interfaces/STORE_MODEL.md` - Store semantics
 - `interfaces/CLAIMS.md` - Promises ledger
-- `core/PLUGINS.md` - Subsystem registry
-- `plugins/MANIFEST.md` - Manifest patterns
-- `plugins/TODO.md` - Work tracking
+- `interfaces/GLOSSARY.md` - Term definitions
+- `interfaces/TESTING.md` - Testing contract
+
+### Practice (Methodology Layer)
 - `methodology/SOUL.md` - Agent identity
 - `methodology/ARCHITECTURE.md` - Architecture practice
-- `specs/INTENT.md` - Intent contract
-- `specs/SYSTEM.md` - System definition
+
+### Operations (Plugins Layer)
+- `plugins/TODO.md` - Work tracking
+- `plugins/MANIFEST.md` - Manifest patterns
+- `plugins/VERIFY.md` - Validation subsystem

@@ -286,3 +286,31 @@ This subsystem defers to:
 - `specs/SYSTEM.md` — Authority and proof doctrine
 - `plugins/TODO.md` — TODO subsystem
 - `specs/TODO_MODEL.md` — TODO schema
+
+---
+
+## Links
+
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+- `specs/SECURITY.md` - Security contract
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+
+### Contracts (Interfaces Layer)
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/TESTING.md` - Testing contract
+- `interfaces/CLAIMS.md` - Promises ledger
+
+### Practice (Methodology Layer)
+- `methodology/SOUL.md` - Agent identity
+
+### Operations (Plugins Layer - This Subsystem)
+- `plugins/TODO.md` - Work tracking
+- `plugins/MANIFEST.md` - Canonical vs derived vs state

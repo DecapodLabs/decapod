@@ -66,11 +66,20 @@ All guarantees here are registered in `interfaces/CLAIMS.md`.
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `core/INTERFACES.md` - Interface contracts index
-- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
-- `interfaces/CLAIMS.md` - Promises ledger
-- `interfaces/DOC_RULES.md` - Doc compilation rules
-- `core/PLUGINS.md` - Subsystem registry
-- `specs/SYSTEM.md` - System definition
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
 - `specs/AMENDMENTS.md` - Change control
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+
+### Contracts (Interfaces Layer - This Document)
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/DOC_RULES.md` - Doc compilation rules
+- `interfaces/CLAIMS.md` - Promises ledger
+- `interfaces/GLOSSARY.md` - Term definitions

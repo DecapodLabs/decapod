@@ -239,6 +239,15 @@ pub struct Task {
     pub component: String,
     pub assigned_to: String,
     pub assigned_at: Option<String>,
+    #[serde(default)]
+    pub owners: Vec<TaskOwner>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TaskOwner {
+    pub agent_id: String,
+    pub claim_type: String,
+    pub claimed_at: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -1330,6 +1339,106 @@ fn get_category_owner(
     Ok(owner)
 }
 
+fn parse_owners_input(owners: &str) -> Vec<String> {
+    owners
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_string())
+        .collect()
+}
+
+fn upsert_task_owner(
+    conn: &Connection,
+    task_id: &str,
+    agent_id: &str,
+    claim_type: &str,
+    ts: &str,
+) -> Result<String, error::DecapodError> {
+    let existing_id: Option<String> = conn
+        .query_row(
+            "SELECT id FROM task_owners WHERE task_id = ?1 AND agent_id = ?2 ORDER BY claimed_at LIMIT 1",
+            rusqlite::params![task_id, agent_id],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    if let Some(id) = existing_id {
+        conn.execute(
+            "UPDATE task_owners SET claim_type = ?1, claimed_at = ?2 WHERE id = ?3",
+            rusqlite::params![claim_type, ts, id],
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+        Ok(id)
+    } else {
+        let claim_id = Ulid::new().to_string();
+        conn.execute(
+            "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
+             VALUES(?1, ?2, ?3, ?4, ?5)",
+            rusqlite::params![claim_id, task_id, agent_id, ts, claim_type],
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+        Ok(claim_id)
+    }
+}
+
+struct OwnershipClaimRecord<'a> {
+    task_id: &'a str,
+    agent_id: &'a str,
+    claim_type: &'a str,
+    claim_id: &'a str,
+    actor: &'a str,
+    ts: &'a str,
+}
+
+fn write_ownership_claim_event(
+    root: &Path,
+    conn: &Connection,
+    claim: &OwnershipClaimRecord<'_>,
+) -> Result<(), error::DecapodError> {
+    let ev = TodoEvent {
+        ts: claim.ts.to_string(),
+        event_id: Ulid::new().to_string(),
+        event_type: "ownership.claim".to_string(),
+        task_id: Some(claim.task_id.to_string()),
+        payload: serde_json::json!({
+            "agent_id": claim.agent_id,
+            "claim_type": claim.claim_type,
+            "claim_id": claim.claim_id,
+        }),
+        actor: claim.actor.to_string(),
+    };
+    append_event(root, &ev)?;
+    insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+    Ok(())
+}
+
+fn fetch_task_owners(
+    conn: &Connection,
+    task_id: &str,
+) -> Result<Vec<TaskOwner>, error::DecapodError> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT agent_id, claim_type, claimed_at FROM task_owners WHERE task_id = ? ORDER BY claimed_at",
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    let rows = stmt
+        .query_map([task_id], |row| {
+            Ok(TaskOwner {
+                agent_id: row.get(0)?,
+                claim_type: row.get(1)?,
+                claimed_at: row.get(2)?,
+            })
+        })
+        .map_err(error::DecapodError::RusqliteError)?;
+    let mut out = Vec::new();
+    for row in rows {
+        out.push(row.map_err(error::DecapodError::RusqliteError)?);
+    }
+    Ok(out)
+}
+
 pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, error::DecapodError> {
     let TodoCommand::Add {
         title,
@@ -1362,6 +1471,8 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     let prefix = task_prefix_from_scope(&scope);
     let task_id = format!("{}_{}", prefix, Ulid::new());
     let ts = now_iso();
+    let owner_list = parse_owners_input(owner);
+    let primary_owner = owner_list.first().cloned().unwrap_or_default();
 
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -1401,7 +1512,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 title,
                 description,
                 tags,
-                owner,
+                primary_owner,
                 due,
                 r#ref,
                 ts,
@@ -1422,7 +1533,8 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             "title": title,
             "description": description,
             "tags": tags,
-            "owner": owner,
+            "owner": primary_owner,
+            "owners": owner_list.clone(),
             "due": due,
             "ref": r#ref,
             "dir_path": dir_abs,
@@ -1452,6 +1564,23 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         };
         append_event(root, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+
+        for (idx, owner_agent) in owner_list.iter().enumerate() {
+            let claim_type = if idx == 0 { "primary" } else { "secondary" };
+            let claim_id = upsert_task_owner(conn, &task_id, owner_agent, claim_type, &ts)?;
+            write_ownership_claim_event(
+                root,
+                conn,
+                &OwnershipClaimRecord {
+                    task_id: &task_id,
+                    agent_id: owner_agent,
+                    claim_type,
+                    claim_id: &claim_id,
+                    actor: "decapod",
+                    ts: &ts,
+                },
+            )?;
+        }
         Ok(())
     })?;
 
@@ -1765,9 +1894,25 @@ fn claim_task(
                     }));
                 }
                 if !assigned_to.is_empty() && assigned_to != agent_id {
+                    let claim_id = upsert_task_owner(conn, id, agent_id, "secondary", &ts)?;
+                    write_ownership_claim_event(
+                        root,
+                        conn,
+                        &OwnershipClaimRecord {
+                            task_id: id,
+                            agent_id,
+                            claim_type: "secondary",
+                            claim_id: &claim_id,
+                            actor: agent_id,
+                            ts: &ts,
+                        },
+                    )?;
                     return Ok(serde_json::json!({
-                        "status": "error",
-                        "message": format!("Task {} is already claimed by {}", id, assigned_to)
+                        "status": "conflict",
+                        "message": format!("Task {} is already claimed by {}", id, assigned_to),
+                        "resolution": "added_secondary_owner",
+                        "assigned_to": assigned_to,
+                        "claim_id": claim_id
                     }));
                 }
 
@@ -1806,6 +1951,20 @@ fn claim_task(
         )
         .map_err(error::DecapodError::RusqliteError)?;
 
+        let claim_id = upsert_task_owner(conn, id, agent_id, "primary", &ts)?;
+        write_ownership_claim_event(
+            root,
+            conn,
+            &OwnershipClaimRecord {
+                task_id: id,
+                agent_id,
+                claim_type: "primary",
+                claim_id: &claim_id,
+                actor: agent_id,
+                ts: &ts,
+            },
+        )?;
+
         // Create claim event
         let ev = TodoEvent {
             ts: ts.clone(),
@@ -1822,7 +1981,8 @@ fn claim_task(
 
         Ok(serde_json::json!({
             "status": "ok",
-            "message": format!("Task {} claimed by {}", id, agent_id)
+            "message": format!("Task {} claimed by {}", id, agent_id),
+            "claim_id": claim_id
         }))
     })?;
 
@@ -2010,32 +2170,19 @@ fn add_task_owner(
             }
         }
 
-        let claim_id = Ulid::new().to_string();
-
-        conn.execute(
-            "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
-             VALUES(?1, ?2, ?3, ?4, ?5)
-             ON CONFLICT(id) DO UPDATE SET
-               claim_type = excluded.claim_type,
-               claimed_at = excluded.claimed_at",
-            rusqlite::params![claim_id, task_id, agent_id, ts, claim_type],
+        let claim_id = upsert_task_owner(conn, task_id, agent_id, claim_type, &ts)?;
+        write_ownership_claim_event(
+            root,
+            conn,
+            &OwnershipClaimRecord {
+                task_id,
+                agent_id,
+                claim_type,
+                claim_id: &claim_id,
+                actor: "decapod",
+                ts: &ts,
+            },
         )?;
-
-        // Log ownership event
-        let ev = TodoEvent {
-            ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
-            event_type: "ownership.claim".to_string(),
-            task_id: Some(task_id.to_string()),
-            payload: serde_json::json!({
-                "agent_id": agent_id,
-                "claim_type": claim_type,
-                "claim_id": claim_id,
-            }),
-            actor: "decapod".to_string(),
-        };
-        append_event(root, &ev)?;
-        insert_event(conn, &ev)?;
 
         Ok(serde_json::json!({
             "ts": ts,
@@ -2108,23 +2255,17 @@ fn list_task_owners(
 
     broker.with_conn(&db_path, "decapod", None, "todo.list_owners", |conn| {
         ensure_schema(conn)?;
-
-        let mut stmt = conn.prepare(
-            "SELECT agent_id, claim_type, claimed_at FROM task_owners WHERE task_id = ? ORDER BY claimed_at"
-        )?;
-
-        let owners: Vec<serde_json::Value> = stmt
-            .query_map([task_id], |row| {
-                Ok(serde_json::json!({
-                    "agent_id": row.get::<_, String>(0)?,
-                    "claim_type": row.get::<_, String>(1)?,
-                    "claimed_at": row.get::<_, String>(2)?,
-                }))
-            })?
-            .filter_map(|r| r.ok())
-            .collect();
-
-        Ok(owners)
+        let owners = fetch_task_owners(conn, task_id)?;
+        Ok(owners
+            .into_iter()
+            .map(|owner| {
+                serde_json::json!({
+                    "agent_id": owner.agent_id,
+                    "claim_type": owner.claim_type,
+                    "claimed_at": owner.claimed_at,
+                })
+            })
+            .collect())
     })
 }
 
@@ -2339,8 +2480,10 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
         let mut stmt = conn.prepare("SELECT id,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at FROM tasks WHERE id = ?1")?;
         let mut rows = stmt.query(rusqlite::params![id])?;
         if let Some(row) = rows.next()? {
+            let task_id: String = row.get(0)?;
+            let owners = fetch_task_owners(conn, &task_id)?;
             Ok(Some(Task {
-                id: row.get(0)?,
+                id: task_id,
                 title: row.get(1)?,
                 description: row.get(2)?,
                 tags: row.get(3)?,
@@ -2362,6 +2505,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
                 component: row.get(19)?,
                 assigned_to: row.get(20).unwrap_or_default(),
                 assigned_at: row.get(21)?,
+                owners,
             }))
         } else {
             Ok(None)
@@ -2416,36 +2560,41 @@ pub fn list_tasks(
 
         let mut stmt = conn.prepare(&query)?;
         let params_as_dyn: Vec<&dyn ToSql> = params.iter().map(|p| p.as_ref()).collect();
-        let rows = stmt.query_map(&params_as_dyn[..], |row| {
-            Ok(Task {
-                id: row.get(0)?,
-                title: row.get(1)?,
-                description: row.get(2)?,
-                tags: row.get(3)?,
-                owner: row.get(4)?,
-                due: row.get(5)?,
-                r#ref: row.get(6)?,
-                status: row.get(7)?,
-                created_at: row.get(8)?,
-                updated_at: row.get(9)?,
-                completed_at: row.get(10)?,
-                closed_at: row.get(11)?,
-                dir_path: row.get(12)?,
-                scope: row.get(13)?,
-                parent_task_id: row.get(14)?,
-                priority: row.get(15)?,
-                depends_on: row.get(16)?,
-                blocks: row.get(17)?,
-                category: row.get(18)?,
-                component: row.get(19)?,
-                assigned_to: row.get(20).unwrap_or_default(),
-                assigned_at: row.get(21)?,
-            })
-        })?;
-
+        let mut rows = stmt
+            .query(rusqlite::params_from_iter(params_as_dyn.iter().copied()))
+            .map_err(error::DecapodError::RusqliteError)?;
         let mut out = Vec::new();
-        for r in rows {
-            out.push(r?);
+        while let Some(row) = rows.next().map_err(error::DecapodError::RusqliteError)? {
+            let task_id: String = row.get(0).map_err(error::DecapodError::RusqliteError)?;
+            let owners = fetch_task_owners(conn, &task_id)?;
+            out.push(Task {
+                id: task_id,
+                title: row.get(1).map_err(error::DecapodError::RusqliteError)?,
+                description: row.get(2).map_err(error::DecapodError::RusqliteError)?,
+                tags: row.get(3).map_err(error::DecapodError::RusqliteError)?,
+                owner: row.get(4).map_err(error::DecapodError::RusqliteError)?,
+                due: row.get(5).map_err(error::DecapodError::RusqliteError)?,
+                r#ref: row.get(6).map_err(error::DecapodError::RusqliteError)?,
+                status: row.get(7).map_err(error::DecapodError::RusqliteError)?,
+                created_at: row.get(8).map_err(error::DecapodError::RusqliteError)?,
+                updated_at: row.get(9).map_err(error::DecapodError::RusqliteError)?,
+                completed_at: row.get(10).map_err(error::DecapodError::RusqliteError)?,
+                closed_at: row.get(11).map_err(error::DecapodError::RusqliteError)?,
+                dir_path: row.get(12).map_err(error::DecapodError::RusqliteError)?,
+                scope: row.get(13).map_err(error::DecapodError::RusqliteError)?,
+                parent_task_id: row.get(14).map_err(error::DecapodError::RusqliteError)?,
+                priority: row.get(15).map_err(error::DecapodError::RusqliteError)?,
+                depends_on: row.get(16).map_err(error::DecapodError::RusqliteError)?,
+                blocks: row.get(17).map_err(error::DecapodError::RusqliteError)?,
+                category: row.get(18).map_err(error::DecapodError::RusqliteError)?,
+                component: row.get(19).map_err(error::DecapodError::RusqliteError)?,
+                assigned_to: row
+                    .get(20)
+                    .map_err(error::DecapodError::RusqliteError)
+                    .unwrap_or_default(),
+                assigned_at: row.get(21).map_err(error::DecapodError::RusqliteError)?,
+                owners,
+            });
         }
         Ok(out)
     })
@@ -2534,6 +2683,12 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         .and_then(|v| v.as_str())
                         .unwrap_or("")
                         .to_string();
+                    let description = ev
+                        .payload
+                        .get("description")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
                     let owner = ev
                         .payload
                         .get("owner")
@@ -2586,12 +2741,50 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         .and_then(|v| v.as_str())
                         .unwrap_or("")
                         .to_string();
+                    let category = ev
+                        .payload
+                        .get("category")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let component = ev
+                        .payload
+                        .get("component")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let assigned_to = ev
+                        .payload
+                        .get("assigned_to")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let assigned_at = if assigned_to.is_empty() {
+                        None
+                    } else {
+                        Some(ev.ts.clone())
+                    };
 
                     conn.execute(
-                        "INSERT OR REPLACE INTO tasks(id,title,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks)
-                         VALUES(?1,?2,?3,?4,?5,?6,'open',?7,?8,NULL,NULL,?9,?10,?11,?12,?13,?14)",
-                        rusqlite::params![id, title, tags, owner, due, r#ref, ev.ts, ev.ts, dir_path, scope, parent_task_id, priority, depends_on, blocks],
+                        "INSERT OR REPLACE INTO tasks(id,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at)
+                         VALUES(?1,?2,?3,?4,?5,?6,?7,'open',?8,?9,NULL,NULL,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19)",
+                        rusqlite::params![id, title, description, tags, owner, due, r#ref, ev.ts, ev.ts, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, component, assigned_to, assigned_at],
                     )?;
+
+                    if let Some(owners) = ev.payload.get("owners").and_then(|v| v.as_array()) {
+                        for (idx, owner_value) in owners.iter().enumerate() {
+                            if let Some(owner_agent) = owner_value.as_str() {
+                                if owner_agent.is_empty() {
+                                    continue;
+                                }
+                                let claim_type = if idx == 0 { "primary" } else { "secondary" };
+                                let _ =
+                                    upsert_task_owner(conn, &id, owner_agent, claim_type, &ev.ts)?;
+                            }
+                        }
+                    } else if !owner.is_empty() {
+                        let _ = upsert_task_owner(conn, &id, &owner, "primary", &ev.ts)?;
+                    }
                 }
                 "task.done" => {
                     let id = ev.task_id.clone().unwrap_or_default();
@@ -2682,14 +2875,31 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     let agent_id = ev.payload.get("agent_id").and_then(|v| v.as_str()).unwrap_or(&ev.actor);
                     let claim_type = ev.payload.get("claim_type").and_then(|v| v.as_str()).unwrap_or("secondary");
                     let claim_id = ev.payload.get("claim_id").and_then(|v| v.as_str()).unwrap_or("");
-                    conn.execute(
-                        "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
-                         VALUES(?1, ?2, ?3, ?4, ?5)
-                         ON CONFLICT(id) DO UPDATE SET
-                           claim_type = excluded.claim_type,
-                           claimed_at = excluded.claimed_at",
-                        rusqlite::params![claim_id, task_id, agent_id, ev.ts, claim_type],
-                    )?;
+                    let existing_id: Option<String> = conn
+                        .query_row(
+                            "SELECT id FROM task_owners WHERE task_id = ?1 AND agent_id = ?2 ORDER BY claimed_at LIMIT 1",
+                            rusqlite::params![task_id, agent_id],
+                            |row| row.get(0),
+                        )
+                        .optional()
+                        .map_err(error::DecapodError::RusqliteError)?;
+                    if let Some(existing_id) = existing_id {
+                        conn.execute(
+                            "UPDATE task_owners SET claim_type = ?1, claimed_at = ?2 WHERE id = ?3",
+                            rusqlite::params![claim_type, ev.ts, existing_id],
+                        )?;
+                    } else {
+                        let insert_id = if claim_id.is_empty() {
+                            Ulid::new().to_string()
+                        } else {
+                            claim_id.to_string()
+                        };
+                        conn.execute(
+                            "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
+                             VALUES(?1, ?2, ?3, ?4, ?5)",
+                            rusqlite::params![insert_id, task_id, agent_id, ev.ts, claim_type],
+                        )?;
+                    }
                 }
                 "ownership.release" => {
                     let task_id = ev.task_id.clone().unwrap_or_default();

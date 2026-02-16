@@ -71,11 +71,31 @@ Binding system rules live in `specs/SYSTEM.md` and `specs/INTENT.md`.
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `core/INTERFACES.md` - Interface contracts registry
-- `interfaces/TESTING.md` - Testing and proof contract
-- `specs/INTENT.md` - Intent contract
-- `specs/SYSTEM.md` - System contract
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+
+### Contracts (Interfaces Layer)
+- `interfaces/TESTING.md` - Testing contract
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/GLOSSARY.md` - Term definitions
+
+### Practice (Methodology Layer - This Document)
+- `methodology/SOUL.md` - Agent identity
+- `methodology/KNOWLEDGE.md` - Knowledge curation
+- `methodology/MEMORY.md` - Memory and learning
+
+### Operations (Plugins Layer)
+- `plugins/TODO.md` - Work tracking
+- `plugins/VERIFY.md` - Validation subsystem
 
 ---
 

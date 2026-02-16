@@ -55,11 +55,30 @@ Binding entry schema and validation requirements are defined in `interfaces/KNOW
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `core/INTERFACES.md` - Interface contracts registry
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+
+### Contracts (Interfaces Layer)
 - `interfaces/KNOWLEDGE_SCHEMA.md` - Binding knowledge schema
-- `methodology/MEMORY.md` - Memory practice
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+
+### Practice (Methodology Layer - This Document)
+- `methodology/SOUL.md` - Agent identity
+- `methodology/ARCHITECTURE.md` - Architecture practice
+- `methodology/MEMORY.md` - Memory and learning
+
+### Operations (Plugins Layer)
 - `plugins/TODO.md` - Work tracking
+- `plugins/KNOWLEDGE.md` - Knowledge subsystem
 
 ---
 
