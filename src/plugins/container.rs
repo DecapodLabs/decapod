@@ -280,9 +280,13 @@ fn run_container(
     };
 
     if !output.status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(error::DecapodError::ValidationError(format!(
-            "Container command failed (exit {:?})",
-            output.status.code()
+            "Container command failed (exit {:?})\nstdout:\n{}\nstderr:\n{}",
+            output.status.code(),
+            stdout.trim(),
+            stderr.trim()
         )));
     }
     if let Some(err) = cleanup_err {
@@ -588,7 +592,7 @@ fn build_container_script(
     pr_body: &str,
 ) -> String {
     let mut script = String::from(
-        "set -euo pipefail\n\
+        "set -eu\n\
          git config --global --add safe.directory /workspace || true\n\
          git config user.name \"${DECAPOD_GIT_USER_NAME:-Decapod Agent}\"\n\
          git config user.email \"${DECAPOD_GIT_USER_EMAIL:-agent@decapod.local}\"\n",
