@@ -1026,6 +1026,14 @@ fn t200_reflex() {
 // ---------------------------------------------------------------------------
 
 #[test]
+fn t208_container_surface() {
+    let (_tmp, dir) = setup_workspace();
+    ok(&dir, &["auto", "container", "--help"]);
+    ok(&dir, &["auto", "container", "run", "--help"]);
+    ok(&dir, &["data", "schema", "--subsystem", "container"]);
+}
+
+#[test]
 fn t210_verify() {
     let (_tmp, dir) = setup_workspace();
     ok(
