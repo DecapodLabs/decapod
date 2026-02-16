@@ -24,6 +24,7 @@ Golden rules:
 2. Agents must not invent parallel CLIs or parallel state roots.
 3. If the command surface is missing, the work is to add the surface, not to bypass it.
 4. Preserve control-plane opacity at the operator interface: communicate intent/actions/outcomes, not command-surface mechanics, unless diagnostics are explicitly requested.
+5. Liveness must be maintained through invocation heartbeat: each Decapod command invocation should refresh agent presence.
 
 This is how you get determinism, auditability, and eventually policy.
 
@@ -63,6 +64,18 @@ Cross-cutting requirements:
 - one place to manage entrypoints to agents (link subsystem, planned)
 
 If a subsystem cannot meet these, it is not a control-plane subsystem yet. Treat it as planned.
+
+---
+
+## 3.6 Invocation Heartbeat
+
+Decapod uses invocation heartbeat for agent presence:
+
+- Decapod auto-clocks liveness on normal command invocation.
+- Explicit `decapod todo heartbeat` remains available for forced/manual heartbeat and optional autoclaim.
+- Control-plane checks must detect regressions where heartbeat decoration is removed.
+
+This keeps liveness aligned with actual command-driven activity without requiring a daemon process.
 
 ---
 
