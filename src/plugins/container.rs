@@ -818,7 +818,10 @@ fn build_container_script(
     );
 
     if push || pr {
-        script.push_str(&format!("git_safe push -u origin {}\n", shell_escape(branch)));
+        script.push_str(&format!(
+            "git_safe push -u origin {}\n",
+            shell_escape(branch)
+        ));
     }
 
     if pr {
