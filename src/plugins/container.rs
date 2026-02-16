@@ -3,8 +3,8 @@ use crate::core::store::Store;
 use crate::core::time;
 use clap::{Parser, Subcommand, ValueEnum};
 use serde_json::json;
-use std::collections::BTreeSet;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -225,6 +225,7 @@ fn run_container(
 
     let spec = build_docker_spec(
         &docker,
+        &repo,
         &worktree.path,
         &image,
         agent,
@@ -537,6 +538,7 @@ fn cleanup_worktree(repo: &Path, worktree_path: &Path) -> Result<(), error::Deca
 #[allow(clippy::too_many_arguments)]
 fn build_docker_spec(
     runtime: &str,
+    repo_root: &Path,
     workspace: &Path,
     image: &str,
     agent: &str,
@@ -552,9 +554,14 @@ fn build_docker_spec(
     task_id: Option<&str>,
     inherit_env: bool,
 ) -> Result<DockerSpec, error::DecapodError> {
+    let decapod_dir = repo_root.join(".decapod");
+    fs::create_dir_all(&decapod_dir).map_err(error::DecapodError::IoError)?;
     let workspace_str = workspace
         .to_str()
         .ok_or_else(|| error::DecapodError::PathError("invalid repository path".to_string()))?;
+    let decapod_dir_str = decapod_dir
+        .to_str()
+        .ok_or_else(|| error::DecapodError::PathError("invalid .decapod path".to_string()))?;
     let container_name = format!(
         "decapod-agent-{}-{}",
         sanitize_name(agent),
@@ -593,6 +600,8 @@ fn build_docker_spec(
         format!("DECAPOD_PR={}", if pr { "1" } else { "0" }),
         "-v".to_string(),
         format!("{}:/workspace", workspace_str),
+        "-v".to_string(),
+        format!("{}:/workspace/.decapod", decapod_dir_str),
         "-w".to_string(),
         "/workspace".to_string(),
     ];
@@ -668,7 +677,13 @@ fn build_container_script(
         "set -eu\n\
          git config --global --add safe.directory /workspace || true\n\
          git config user.name \"${DECAPOD_GIT_USER_NAME:-Decapod Agent}\"\n\
-         git config user.email \"${DECAPOD_GIT_USER_EMAIL:-agent@decapod.local}\"\n",
+         git config user.email \"${DECAPOD_GIT_USER_EMAIL:-agent@decapod.local}\"\n\
+         if command -v decapod >/dev/null 2>&1; then\n\
+           decapod --version >/dev/null 2>&1 || true\n\
+           if decapod --help 2>/dev/null | grep -qE \"(^|[[:space:]])update([[:space:]]|$)\"; then\n\
+             decapod update\n\
+           fi\n\
+         fi\n",
     );
     script.push_str(&format!("git fetch origin {}\n", shell_escape(base_branch)));
     script.push_str(&format!("git checkout -B {}\n", shell_escape(branch)));
@@ -782,6 +797,7 @@ mod tests {
         let spec = build_docker_spec(
             "docker",
             &repo,
+            &repo,
             "rust:1.85",
             "agent-a",
             "cargo test -q",
@@ -805,6 +821,7 @@ mod tests {
         assert!(joined.contains("git fetch origin 'master'"));
         assert!(joined.contains("git checkout -B 'ahr/branch'"));
         assert!(joined.contains("git rebase origin/'master'"));
+        assert!(joined.contains("decapod update"));
         assert!(joined.contains("git push -u origin 'ahr/branch'"));
         assert!(joined.contains("gh auth status"));
         assert!(joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
