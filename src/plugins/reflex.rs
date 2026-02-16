@@ -1,10 +1,12 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::external_action;
 use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand};
 use rusqlite::{Result, types::ToSql};
 use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 use std::env;
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
@@ -157,6 +159,28 @@ pub enum ReflexCommand {
         #[clap(long)]
         id: String,
     },
+    /// Run active reflex actions by id or trigger type.
+    Run {
+        #[clap(long)]
+        id: Option<String>,
+        #[clap(long)]
+        trigger_type: Option<String>,
+        #[clap(long, default_value_t = 10)]
+        limit: usize,
+    },
+    /// Install a canonical human-triggered heartbeat autoclaim reflex.
+    AddHeartbeatLoop {
+        #[clap(long, default_value = "human-heartbeat-autoclaim")]
+        name: String,
+        #[clap(long)]
+        agent: Option<String>,
+        #[clap(long, default_value_t = 1)]
+        max_claims: usize,
+        #[clap(long, default_value = "")]
+        tags: String,
+        #[clap(long)]
+        dir: Option<String>,
+    },
 }
 
 pub fn schema() -> serde_json::Value {
@@ -207,6 +231,24 @@ pub fn schema() -> serde_json::Value {
                 "description": "Delete a reflex entry",
                 "parameters": [
                     {"name": "id", "required": true, "description": "Reflex entry ID to delete"}
+                ]
+            },
+            {
+                "name": "run",
+                "description": "Run active reflex actions by id or trigger type",
+                "parameters": [
+                    {"name": "id", "required": false, "description": "Optional specific reflex ID to run"},
+                    {"name": "trigger_type", "required": false, "description": "Optional trigger type filter (e.g. human)"},
+                    {"name": "limit", "required": false, "description": "Maximum reflex actions to run", "default": 10}
+                ]
+            },
+            {
+                "name": "add-heartbeat-loop",
+                "description": "Install a canonical human-triggered heartbeat autoclaim reflex",
+                "parameters": [
+                    {"name": "name", "required": false, "description": "Reflex name", "default": "human-heartbeat-autoclaim"},
+                    {"name": "agent", "required": false, "description": "Agent ID (defaults to DECAPOD_AGENT_ID or unknown)"},
+                    {"name": "max_claims", "required": false, "description": "Maximum tasks to autoclaim per heartbeat run", "default": 1}
                 ]
             }
         ],
@@ -270,10 +312,216 @@ pub fn run_reflex_cli(store: &Store, cli: ReflexCli) {
             dir,
         } => list_reflexes(root, status, scope, tags, name_search, dir),
         ReflexCommand::Delete { id } => delete_reflex(root, id),
+        ReflexCommand::Run {
+            id,
+            trigger_type,
+            limit,
+        } => run_reflex_actions(root, &id, &trigger_type, &limit),
+        ReflexCommand::AddHeartbeatLoop {
+            name,
+            agent,
+            max_claims,
+            tags,
+            dir,
+        } => add_heartbeat_loop_reflex(root, &name, &agent, &max_claims, &tags, &dir),
     };
     if let Err(e) = result {
         eprintln!("Error: {}", e);
     }
+}
+
+fn parse_json_config(raw: &str, field: &str) -> Result<JsonValue, error::DecapodError> {
+    serde_json::from_str(raw)
+        .map_err(|e| error::DecapodError::ValidationError(format!("invalid {} JSON: {}", field, e)))
+}
+
+fn fetch_matching_reflexes(
+    root: &Path,
+    id: Option<String>,
+    trigger_type: Option<String>,
+    limit: usize,
+) -> Result<Vec<Reflex>, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = reflex_db_path(root);
+    broker.with_conn(&db_path, "decapod", None, "reflex.run.scan", |conn| {
+        let mut query = "SELECT id, name, description, trigger_type, trigger_config, action_type, action_config, status, tags, created_at, updated_at, dir_path, scope FROM reflexes WHERE status = 'active'".to_string();
+        let mut params: Vec<Box<dyn ToSql>> = Vec::new();
+
+        if let Some(i) = id {
+            query.push_str(" AND id = ?");
+            params.push(Box::new(i));
+        }
+        if let Some(t) = trigger_type {
+            query.push_str(" AND trigger_type = ?");
+            params.push(Box::new(t));
+        }
+        query.push_str(" ORDER BY updated_at DESC LIMIT ?");
+        params.push(Box::new(limit as i64));
+
+        let params_as_dyn: Vec<&dyn ToSql> = params.iter().map(|p| p.as_ref()).collect();
+        let mut stmt = conn.prepare(&query)?;
+        let rows = stmt.query_map(&params_as_dyn[..], |row| {
+            Ok(Reflex {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                description: row.get(2)?,
+                trigger_type: row.get(3)?,
+                trigger_config: row.get(4)?,
+                action_type: row.get(5)?,
+                action_config: row.get(6)?,
+                status: row.get(7)?,
+                tags: row.get(8)?,
+                created_at: row.get(9)?,
+                updated_at: row.get(10)?,
+                dir_path: row.get(11)?,
+                scope: row.get(12)?,
+            })
+        })?;
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(row?);
+        }
+        Ok(out)
+    })
+}
+
+fn execute_reflex_action(
+    root: &Path,
+    reflex: &Reflex,
+) -> Result<serde_json::Value, error::DecapodError> {
+    match reflex.action_type.as_str() {
+        "todo.heartbeat.autoclaim" => {
+            let cfg = parse_json_config(&reflex.action_config, "action_config")?;
+            let default_agent =
+                env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let agent = cfg
+                .get("agent")
+                .and_then(|v| v.as_str())
+                .unwrap_or(default_agent.as_str());
+            let max_claims = cfg.get("max_claims").and_then(|v| v.as_u64()).unwrap_or(1);
+            let max_claims_s = max_claims.to_string();
+            let decapod_bin = std::env::current_exe()
+                .map_err(error::DecapodError::IoError)?
+                .to_string_lossy()
+                .to_string();
+            let args = vec![
+                "todo",
+                "heartbeat",
+                "--format",
+                "json",
+                "--agent",
+                agent,
+                "--autoclaim",
+                "--max-claims",
+                max_claims_s.as_str(),
+            ];
+            let cwd = root
+                .parent()
+                .and_then(|p| p.parent())
+                .map(Path::to_path_buf)
+                .unwrap_or(std::env::current_dir().map_err(error::DecapodError::IoError)?);
+            let output = external_action::execute(
+                root,
+                external_action::ExternalCapability::VerificationExec,
+                "reflex.action.todo.heartbeat.autoclaim",
+                decapod_bin.as_str(),
+                &args,
+                &cwd,
+            )?;
+            let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+            let payload = serde_json::from_str::<JsonValue>(&stdout)
+                .unwrap_or_else(|_| serde_json::json!({ "raw_stdout": stdout }));
+            Ok(serde_json::json!({
+                "status": if output.status.success() { "ok" } else { "error" },
+                "exit_code": output.status.code(),
+                "payload": payload,
+                "stderr": stderr
+            }))
+        }
+        other => Err(error::DecapodError::ValidationError(format!(
+            "unsupported reflex action_type '{}'",
+            other
+        ))),
+    }
+}
+
+fn run_reflex_actions(
+    root: &Path,
+    id: &Option<String>,
+    trigger_type: &Option<String>,
+    limit: &usize,
+) -> Result<(), error::DecapodError> {
+    let reflexes = fetch_matching_reflexes(root, id.clone(), trigger_type.clone(), *limit)?;
+    let mut results = Vec::new();
+    for reflex in reflexes {
+        let action_result = execute_reflex_action(root, &reflex);
+        match action_result {
+            Ok(payload) => results.push(serde_json::json!({
+                "reflex_id": reflex.id,
+                "name": reflex.name,
+                "trigger_type": reflex.trigger_type,
+                "action_type": reflex.action_type,
+                "result": payload
+            })),
+            Err(e) => results.push(serde_json::json!({
+                "reflex_id": reflex.id,
+                "name": reflex.name,
+                "trigger_type": reflex.trigger_type,
+                "action_type": reflex.action_type,
+                "result": {
+                    "status": "error",
+                    "error": e.to_string()
+                }
+            })),
+        }
+    }
+
+    println!(
+        "{}",
+        serde_json::json!({
+            "ts": now_iso(),
+            "cmd": "reflex.run",
+            "status": "ok",
+            "count": results.len(),
+            "results": results
+        })
+    );
+    Ok(())
+}
+
+fn add_heartbeat_loop_reflex(
+    root: &Path,
+    name: &str,
+    agent: &Option<String>,
+    max_claims: &usize,
+    tags: &str,
+    dir: &Option<String>,
+) -> Result<(), error::DecapodError> {
+    let default_agent = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+    let agent = agent.clone().unwrap_or(default_agent);
+    let trigger_config = serde_json::json!({
+        "source": "human",
+        "intent": "heartbeat_pull"
+    })
+    .to_string();
+    let action_config = serde_json::json!({
+        "agent": agent,
+        "max_claims": max_claims
+    })
+    .to_string();
+    add_reflex(
+        root,
+        name.to_string(),
+        "Human-triggered reflex that runs todo heartbeat autoclaim".to_string(),
+        "human".to_string(),
+        trigger_config,
+        "todo.heartbeat.autoclaim".to_string(),
+        action_config,
+        "active".to_string(),
+        tags.to_string(),
+        dir.clone(),
+    )
 }
 
 #[allow(clippy::too_many_arguments)]
