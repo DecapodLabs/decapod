@@ -167,6 +167,12 @@ pub enum TodoCommand {
         /// Agent identifier (defaults to environment or 'unknown').
         #[clap(long)]
         agent: Option<String>,
+        /// Automatically claim eligible open tasks for this agent after heartbeat.
+        #[clap(long, default_value_t = false)]
+        autoclaim: bool,
+        /// Maximum number of tasks to claim when --autoclaim is enabled.
+        #[clap(long, default_value_t = 1)]
+        max_claims: usize,
     },
     /// List agent presence records.
     Presence {
@@ -1099,6 +1105,61 @@ fn record_heartbeat(root: &Path, agent_id: &str) -> Result<serde_json::Value, er
         "root": root.to_string_lossy(),
         "agent_id": agent_id,
     }))
+}
+
+fn list_claimable_tasks_for_agent(
+    root: &Path,
+    agent_id: &str,
+    max_claims: usize,
+) -> Result<Vec<String>, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+    broker.with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "todo.heartbeat.autoclaim.scan",
+        |conn| {
+            ensure_schema(conn)?;
+            let mut stmt = conn
+                .prepare(
+                    "SELECT id
+                     FROM tasks
+                     WHERE status = 'open'
+                       AND (assigned_to = '' OR assigned_to = ?1)
+                       AND (
+                           assigned_to = ?1
+                           OR category = ''
+                           OR EXISTS (
+                               SELECT 1 FROM agent_category_claims acc
+                               WHERE acc.agent_id = ?1
+                                 AND acc.category = tasks.category
+                           )
+                       )
+                     ORDER BY
+                         CASE priority
+                             WHEN 'critical' THEN 0
+                             WHEN 'high' THEN 1
+                             WHEN 'medium' THEN 2
+                             WHEN 'low' THEN 3
+                             ELSE 4
+                         END ASC,
+                         created_at ASC
+                     LIMIT ?2",
+                )
+                .map_err(error::DecapodError::RusqliteError)?;
+            let rows = stmt
+                .query_map(rusqlite::params![agent_id, max_claims as i64], |row| {
+                    row.get::<_, String>(0)
+                })
+                .map_err(error::DecapodError::RusqliteError)?;
+            let mut ids = Vec::new();
+            for row in rows {
+                ids.push(row.map_err(error::DecapodError::RusqliteError)?);
+            }
+            Ok(ids)
+        },
+    )
 }
 
 fn list_agent_presence(
@@ -3269,13 +3330,13 @@ pub fn schema() -> serde_json::Value {
             { "name": "done", "parameters": ["id", "validated", "artifact"] },
             { "name": "archive", "parameters": ["id"] },
             { "name": "comment", "parameters": ["id", "comment"] },
-            { "name": "edit", "parameters": ["id", "title", "description", "owner"] },
+            { "name": "edit", "parameters": ["id", "title", "description", "owner", "category"] },
             { "name": "claim", "parameters": ["id", "agent", "mode"] },
             { "name": "release", "parameters": ["id"] },
             { "name": "categories", "parameters": [] },
             { "name": "register-agent", "parameters": ["agent", "category"] },
             { "name": "ownerships", "parameters": ["category", "agent"] },
-            { "name": "heartbeat", "parameters": ["agent"] },
+            { "name": "heartbeat", "parameters": ["agent", "autoclaim", "max_claims"] },
             { "name": "presence", "parameters": ["agent"] },
             { "name": "handoff", "parameters": ["id", "to", "from", "summary"] },
             { "name": "add-owner", "parameters": ["id", "agent", "claim_type"] },
@@ -3390,11 +3451,54 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                 "claims": claims,
             })
         }
-        TodoCommand::Heartbeat { agent } => {
+        TodoCommand::Heartbeat {
+            agent,
+            autoclaim,
+            max_claims,
+        } => {
             let default_agent =
                 env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let agent_id = agent.as_deref().unwrap_or(&default_agent);
-            record_heartbeat(root, agent_id)?
+            let heartbeat = record_heartbeat(root, agent_id)?;
+            if !*autoclaim {
+                heartbeat
+            } else {
+                let task_ids = list_claimable_tasks_for_agent(root, agent_id, *max_claims)?;
+                let mut claimed: Vec<String> = Vec::new();
+                let mut skipped: Vec<serde_json::Value> = Vec::new();
+
+                for task_id in task_ids {
+                    let claim_out = claim_task(root, &task_id, agent_id, ClaimMode::Exclusive)?;
+                    let status = claim_out
+                        .get("status")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("error");
+                    if status == "ok" {
+                        claimed.push(task_id);
+                    } else {
+                        skipped.push(serde_json::json!({
+                            "task_id": task_id,
+                            "status": status,
+                            "result": claim_out.get("result").cloned().unwrap_or(serde_json::json!({}))
+                        }));
+                    }
+                }
+
+                serde_json::json!({
+                    "ts": now_iso(),
+                    "cmd": "todo.heartbeat",
+                    "status": "ok",
+                    "root": root.to_string_lossy(),
+                    "agent_id": agent_id,
+                    "heartbeat": heartbeat,
+                    "autoclaim": {
+                        "enabled": true,
+                        "max_claims": max_claims,
+                        "claimed_task_ids": claimed,
+                        "skipped": skipped
+                    }
+                })
+            }
         }
         TodoCommand::Presence { agent } => {
             let agents = list_agent_presence(root, agent.as_deref())?;
