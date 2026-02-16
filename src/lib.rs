@@ -167,10 +167,15 @@ enum SessionCommand {
     Status,
     /// Release the current session token
     Release,
-    },
-
 }
 
+#[derive(clap::Args, Debug)]
+struct SetupCli {
+    #[clap(subcommand)]
+    command: SetupCommand,
+}
+
+#[derive(Subcommand, Debug)]
 enum SetupCommand {
     /// Install or uninstall repository git hooks
     Hook {
@@ -184,23 +189,6 @@ enum SetupCommand {
         #[clap(long)]
         uninstall: bool,
     },
-
-}
-
-#[derive(clap::Args, Debug)]
-struct SessionCli {
-    #[clap(subcommand)]
-    command: SessionCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum SessionCommand {
-    /// Acquire a new session token (required before using other commands)
-    Acquire,
-    /// Show current session status
-    Status,
-    /// Release the current session token
-    Release,
 }
 
 #[derive(clap::Args, Debug)]
