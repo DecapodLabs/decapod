@@ -336,7 +336,7 @@ fn validate_edge_type(t: &str) -> Result<(), error::DecapodError> {
 
 fn validate_provenance(source: &str) -> Result<(), error::DecapodError> {
     let prov_re = regex::Regex::new(
-        r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:[A-Za-z0-9_]+)$",
+        r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:.+)$",
     )
     .unwrap();
 
