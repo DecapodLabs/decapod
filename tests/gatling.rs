@@ -144,11 +144,15 @@ fn t001_version() {
         .arg("--version")
         .output()
         .unwrap();
-    assert!(out.status.success());
-    let s = String::from_utf8_lossy(&out.stdout);
     assert!(
-        s.contains("decapod"),
-        "version output should contain 'decapod'"
+        !out.status.success(),
+        "--version flag should be rejected; use `decapod version`"
+    );
+    let s = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        s.contains("unexpected argument '--version'") || s.contains("Usage: decapod <COMMAND>"),
+        "expected clap argument rejection for --version, got:\n{}",
+        s
     );
 }
 
