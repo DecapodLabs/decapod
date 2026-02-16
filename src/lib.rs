@@ -908,6 +908,15 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
         }
+        Command::Setup(setup_cli) => match setup_cli.command {
+            SetupCommand::Hook {
+                commit_msg,
+                pre_commit,
+                uninstall,
+            } => {
+                run_hook_install(commit_msg, pre_commit, uninstall)?;
+            }
+        },
         _ => {
             if requires_session_token(&cli.command) {
                 ensure_session_valid()?;
