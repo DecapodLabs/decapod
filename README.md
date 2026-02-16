@@ -1,4 +1,5 @@
 <p align="center"><code>cargo install decapod</code></p>
+<p align="center"><code>decapod init</code></p>
 
 <p align="center">
   <img src="assets/decapod-ultra.svg" width="600" alt="Decapod">
