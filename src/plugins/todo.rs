@@ -10,7 +10,7 @@ use crate::plugins::teammate;
 use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
+use rusqlite::{params, types::ToSql, Connection, OptionalExtension, Result as SqlResult};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::collections::HashSet;
@@ -3498,7 +3498,6 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                 "task.worker.run" => {}
                 "task.edit" => {
                     let id = ev.task_id.clone().unwrap_or_default();
-                    eprintln!("DEBUG: task.edit for {} payload={:?}", id, ev.payload);
                     if let Some(title) = ev.payload.get("title").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET title = ?1, updated_at = ?2 WHERE id = ?3",
