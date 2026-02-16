@@ -96,12 +96,7 @@ pub fn search_knowledge(
 }
 
 fn now_iso() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    format!("{}Z", secs)
+    crate::core::time::now_epoch_z()
 }
 
 pub fn schema() -> serde_json::Value {
