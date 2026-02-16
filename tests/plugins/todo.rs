@@ -384,6 +384,25 @@ fn test_risk_zones_and_trust_tiers_enforced() {
 }
 
 #[test]
+fn test_done_accepts_positional_id() {
+    let tmp = tempdir().unwrap();
+    let repo = tmp.path();
+    bootstrap_repo(repo);
+
+    let added = run_cmd(
+        repo,
+        &["todo", "--format", "json", "add", "Positional done test"],
+    );
+    let task_id = added["id"].as_str().unwrap().to_string();
+
+    let done_out = run_cmd(repo, &["todo", "--format", "json", "done", &task_id]);
+    assert_eq!(done_out["status"], "ok");
+
+    let got = run_cmd(repo, &["todo", "--format", "json", "get", "--id", &task_id]);
+    assert_eq!(got["item"]["status"], "done");
+}
+
+#[test]
 fn test_claim_includes_container_result_when_autorun_enabled() {
     let tmp = tempdir().unwrap();
     let repo = tmp.path();
