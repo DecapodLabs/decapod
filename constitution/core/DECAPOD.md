@@ -60,12 +60,13 @@ Decapod is a local-first control plane for coding agents. It helps facilitate mu
 
 ```bash
 cargo install decapod              # 1. Install/update to latest release
-decapod --version                   # 2. Check installed version
+decapod version                     # 2. Check installed version
 decapod --help                      # 3. Verify available commands
-decapod docs show core/DECAPOD.md  # 4. Refresh constitution
-decapod session acquire             # 5. Acquire session token (required for all commands)
-decapod validate                    # 6. Check system state
-decapod todo list                   # 7. See active work
+decapod data schema --subsystem command_registry --deterministic >/dev/null  # 4. Refresh CLI command index
+decapod docs show core/DECAPOD.md   # 5. Refresh constitution
+decapod session acquire             # 6. Acquire session token (required for all commands)
+decapod validate                    # 7. Check system state
+decapod todo list                   # 8. See active work
 ```
 
 **Why this is non-negotiable:**
@@ -265,6 +266,10 @@ All agents operating in this workspace MUST adhere to the following:
 7. **Preserve Interface Abstraction**: Treat Decapod as internal agent infrastructure. Operator-facing outputs should remain semantic (intent/actions/outcomes), with command-surface details reserved for explicit diagnostic requests.
 
 8. **Rely on invocation heartbeat**: Presence is expected to auto-refresh on each Decapod command invocation. Do not bypass the CLI for shared-state work.
+
+9. **Clarification Gate (Stop Guessing)**: Before taking ambiguous, high-risk, irreversible, or user-visible actions, ask concise clarifying question(s) and wait for confirmation. If scope, target ID, command surface, or success criteria are unclear, do not guess.
+
+10. **Command Surface Comprehension Gate**: Before mutating any subsystem state, agents MUST verify the active CLI surfaces via `decapod data schema --subsystem command_registry --deterministic` and read the target subsystem schema/docs (for example: `decapod data schema --subsystem todo`, `decapod data schema --subsystem policy`, etc.). Do not invent commands or subcommands.
 
 ---
 

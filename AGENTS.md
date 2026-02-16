@@ -8,9 +8,9 @@
 
 ```bash
 cargo install decapod              # 1. Install/update to latest release
-decapod --version                   # 2. Check installed version
-decapod update                      # 3. Update if repo version is newer (safe no-op if current)
-decapod --help                      # 4. Verify available commands
+decapod version                   # 2. Check installed version
+decapod --help                      # 3. Verify available commands
+decapod data schema --subsystem command_registry --deterministic >/dev/null  # 4. Refresh CLI command index
 decapod docs show core/DECAPOD.md  # 5. Refresh constitution
 decapod session acquire             # 6. Acquire session token (required for all commands)
 decapod validate                    # 7. Check system state
@@ -21,9 +21,12 @@ decapod todo list                   # 8. See active work
 
 **After the start sequence:**
 
-1. **Use the control plane**: All shared state goes through `decapod` commands (never bypass)
+1. **Use the control plane**: All shared state and `.decapod` file access goes through `decapod` commands (never bypass)
 2. **Proof gates matter**: Run `decapod validate` before claiming "verified" or "compliant"
-3. **Interface abstraction boundary**: Preserve control-plane opacity. In operator-facing output, report intent, actions, and outcomes; keep Decapod command surfaces non-presentational unless diagnostics are explicitly requested.
+3. **TODO closeout contract**: Close tasks via `decapod todo done --id <task-id>` (and optional policy-approved `decapod todo archive --id <task-id>`); never use `decapod complete`
+4. **Interface abstraction boundary**: Preserve control-plane opacity. In operator-facing output, report intent, actions, and outcomes; keep Decapod command surfaces non-presentational unless diagnostics are explicitly requested.
+5. **Clarification gate**: Ask concise questions before ambiguous/high-risk/irreversible actions; do not guess when IDs, command surfaces, or success criteria are unclear.
+6. **CLI comprehension gate**: Before mutating any subsystem, verify active CLI surfaces from `decapod data schema --subsystem command_registry --deterministic` and the target subsystem schema; never invent commands.
 
 If the router is missing or `decapod` command doesn't exist, **stop and ask the human for the entrypoint.**
 
@@ -32,7 +35,7 @@ If the router is missing or `decapod` command doesn't exist, **stop and ask the 
 Every agent working in this repo MUST:
 
 1. ✅ **Start at the router** - `decapod docs show core/DECAPOD.md` is your navigation charter
-2. ✅ **Use the control plane** - `decapod` commands are the interface to shared state (TODOs, proofs, etc.)
+2. ✅ **Use the control plane** - `decapod` commands are the interface to shared state; `.decapod` files are accessed only via `decapod` CLI
 3. ✅ **Pass validation** - `decapod validate` must pass before claiming completion
 4. ✅ **Stop if router missing** - If Decapod doesn't exist, ask for guidance
 
@@ -58,10 +61,6 @@ Think of yourself as a **complete engineering organization**, not just a coder:
 This is **guidance**, not **contract**. The binding requirements are the four invariants above.
 
 See `decapod docs show plugins/WORKFLOW.md` for the full operating loop.
-
-## Project-Specific Overrides
-
-This repo may customize behavior via `.decapod/OVERRIDE.md`. Run `decapod docs show <path>` to see merged content.
 
 ## Links
 

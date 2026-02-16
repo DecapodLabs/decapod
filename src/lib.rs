@@ -80,9 +80,9 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs_cli, error, migration, proof, repomap, scaffold,
+    db, docs_cli, error, migration, output, proof, repomap, scaffold,
     store::{Store, StoreKind},
-    tui, validate,
+    validate,
 };
 use plugins::{
     archive, container, context, cron, decide, federation, feedback, health, knowledge, policy,
@@ -99,7 +99,8 @@ use std::process::Command as ProcessCommand;
 #[clap(
     name = "decapod",
     version = env!("CARGO_PKG_VERSION"),
-    about = "The Intent-Driven Engineering System"
+    about = "The Intent-Driven Engineering System",
+    disable_version_flag = true
 )]
 struct Cli {
     #[clap(subcommand)]
@@ -583,87 +584,6 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
 
             // Base init command
-            use colored::Colorize;
-
-            // Clear screen and position cursor for pristine alien output
-            print!("\x1B[2J\x1B[1;1H");
-
-            let _width = tui::terminal_width();
-
-            // 🛸 ALIEN SPACESHIP BANNER 🛸
-            println!();
-            println!();
-            println!(
-                "{}",
-                "              ▗▄▄▄▄▖  ▗▄▄▄▄▄▄▄▄▄▄▄▄▖  ▗▄▄▄▄▖"
-                    .bright_magenta()
-                    .bold()
-            );
-            println!(
-                "{}",
-                "            ▗▀▀      ▝▀              ▀▘      ▀▀▖"
-                    .bright_magenta()
-                    .bold()
-            );
-            println!(
-                "          {}   {}   {}",
-                "▗▀".bright_magenta().bold(),
-                "🦀 D E C A P O D 🦀".bright_white().bold().underline(),
-                "▀▖".bright_magenta().bold()
-            );
-            println!(
-                "{}",
-                "         ▐                                        ▌"
-                    .bright_cyan()
-                    .bold()
-            );
-            println!(
-                "         {} {} {}",
-                "▐".bright_cyan().bold(),
-                "C O N T R O L   P L A N E".bright_cyan().bold(),
-                "▌".bright_cyan().bold()
-            );
-            println!(
-                "{}",
-                "         ▐                                        ▌"
-                    .bright_cyan()
-                    .bold()
-            );
-            println!(
-                "{}",
-                "          ▝▖                                    ▗▘"
-                    .bright_magenta()
-                    .bold()
-            );
-            println!(
-                "{}",
-                "            ▝▄▄                              ▄▄▘"
-                    .bright_magenta()
-                    .bold()
-            );
-            println!(
-                "{}",
-                "              ▝▀▀▀▀▖  ▝▀▀▀▀▀▀▀▀▀▀▀▀▘  ▗▀▀▀▀▘"
-                    .bright_magenta()
-                    .bold()
-            );
-            println!();
-            tui::render_box(
-                "⛔ DESIGNED FROM INCEPTION FOR AGENTS",
-                "AI TOOL FOR AGENTS. NOT A HUMAN TOOL FOR AI.",
-                tui::BoxStyle::Error,
-            );
-            tui::render_box(
-                "⚠ DO NOT DISRUPT AGENT FLOW",
-                "YOU WILL DEGRADE SYSTEM OUTPUTS",
-                tui::BoxStyle::Warning,
-            );
-            println!(
-                "  {} {}",
-                "OVERRIDES ONLY:".bright_red().bold(),
-                ".decapod/OVERRIDE.md".bright_cyan().bold().underline()
-            );
-            println!();
 
             let target_dir = match init_group.dir {
                 Some(d) => d,
@@ -675,19 +595,9 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Check if .decapod exists and skip if it does, unless --force
             let setup_decapod_root = target_dir.join(".decapod");
             if setup_decapod_root.exists() && !init_group.force {
-                tui::render_box(
-                    "⚠  SYSTEM ALREADY INITIALIZED",
-                    "Use --force to override",
-                    tui::BoxStyle::Warning,
-                );
-                println!();
-                println!("  {} Detected existing control plane", "▸".bright_yellow());
                 println!(
-                    "  {} Use {} flag to override",
-                    "▸".bright_yellow(),
-                    "--force".bright_cyan().bold()
+                    "init: already initialized (.decapod exists); rerun with --force to overwrite"
                 );
-                println!();
                 return Ok(());
             }
 
@@ -702,8 +612,8 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Safely backup root agent entrypoint files if they exist and differ from templates
             let mut created_backups = false;
+            let mut backup_count = 0usize;
             if !init_group.dry_run {
-                let mut backed_up = false;
                 for file in &existing_agent_files {
                     let path = target_dir.join(file);
 
@@ -723,31 +633,11 @@ pub fn run() -> Result<(), error::DecapodError> {
 
                     // Only backup if checksums differ
                     if template_hash != existing_hash {
-                        if !backed_up {
-                            println!(
-                                "        {}",
-                                "▼▼▼ PRESERVATION PROTOCOL ACTIVATED ▼▼▼"
-                                    .bright_yellow()
-                                    .bold()
-                            );
-                            println!();
-                            backed_up = true;
-                            created_backups = true;
-                        }
+                        created_backups = true;
+                        backup_count += 1;
                         let backup_path = target_dir.join(format!("{}.bak", file));
                         fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
-                        println!(
-                            "          {} {} {} {}",
-                            "◆".bright_cyan(),
-                            file.bright_white().bold(),
-                            "⟿".bright_yellow(),
-                            format!("{}.bak", file.strip_suffix(".md").unwrap_or(file))
-                                .bright_black()
-                        );
                     }
-                }
-                if backed_up {
-                    println!();
                 }
             }
 
@@ -758,15 +648,14 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
 
             // `--dry-run` should not perform any mutations.
+            let mut db_created = 0usize;
+            let mut db_preserved = 0usize;
+            let mut events_created = 0usize;
+            let mut events_preserved = 0usize;
+            let mut generated_created = false;
+            let mut generated_preserved = false;
+            let mut init_warnings: Vec<String> = Vec::new();
             if !init_group.dry_run {
-                // Databases setup section - TUI styled box
-                tui::render_box(
-                    "⚡ SUBSYSTEM INITIALIZATION",
-                    "Database & State Management",
-                    tui::BoxStyle::Cyan,
-                );
-                println!();
-
                 // Initialize all store DBs in the resolved store root (preserve existing)
                 let dbs = [
                     ("todo.db", setup_store_root.join("todo.db")),
@@ -784,12 +673,7 @@ pub fn run() -> Result<(), error::DecapodError> {
 
                 for (db_name, db_path) in dbs {
                     if db_path.exists() {
-                        println!(
-                            "    {} {} {}",
-                            "✓".bright_green(),
-                            db_name.bright_white(),
-                            "(preserved - existing data kept)".bright_black()
-                        );
+                        db_preserved += 1;
                     } else {
                         match db_name {
                             "todo.db" => todo::initialize_todo_db(&setup_store_root)?,
@@ -807,121 +691,55 @@ pub fn run() -> Result<(), error::DecapodError> {
                             "decisions.db" => decide::initialize_decide_db(&setup_store_root)?,
                             _ => unreachable!(),
                         }
-                        println!("    {} {}", "●".bright_green(), db_name.bright_white());
+                        db_created += 1;
                     }
                 }
-
-                println!();
 
                 // Create empty todo events file for validation (preserve existing)
                 let events_path = setup_store_root.join("todo.events.jsonl");
                 if events_path.exists() {
-                    println!(
-                        "    {} {} {}",
-                        "✓".bright_green(),
-                        "todo.events.jsonl".bright_white(),
-                        "(preserved - event history kept)".bright_black()
-                    );
+                    events_preserved += 1;
                 } else {
                     std::fs::write(&events_path, "").map_err(error::DecapodError::IoError)?;
-                    println!(
-                        "    {} {}",
-                        "●".bright_green(),
-                        "todo.events.jsonl".bright_white()
-                    );
+                    events_created += 1;
                 }
 
                 // Create empty federation events file (preserve existing)
                 let fed_events_path = setup_store_root.join("federation.events.jsonl");
                 if fed_events_path.exists() {
-                    println!(
-                        "    {} {} {}",
-                        "✓".bright_green(),
-                        "federation.events.jsonl".bright_white(),
-                        "(preserved - event history kept)".bright_black()
-                    );
+                    events_preserved += 1;
                 } else {
                     std::fs::write(&fed_events_path, "").map_err(error::DecapodError::IoError)?;
-                    println!(
-                        "    {} {}",
-                        "●".bright_green(),
-                        "federation.events.jsonl".bright_white()
-                    );
+                    events_created += 1;
                 }
 
                 // Create generated directory for derived files (checksums, caches, etc.)
                 let generated_dir = setup_decapod_root.join("generated");
                 if generated_dir.exists() {
-                    println!(
-                        "    {} {} {}",
-                        "✓".bright_green(),
-                        "generated/".bright_white(),
-                        "(preserved - existing files kept)".bright_black()
-                    );
+                    generated_preserved = true;
                 } else {
                     std::fs::create_dir_all(&generated_dir)
                         .map_err(error::DecapodError::IoError)?;
-                    println!("    {} {}", "●".bright_green(), "generated/".bright_white());
+                    generated_created = true;
                 }
-
-                println!();
 
                 write_init_container_ssh_key_path(&target_dir)?;
                 let has_runtime = init_has_container_runtime();
                 let dedicated_key_hint = init_container_ssh_key_hint(&target_dir);
                 let has_dedicated_key = init_has_dedicated_agent_key(&target_dir);
-                let github_keys_url = "https://github.com/settings/keys";
 
                 if !has_runtime {
-                    tui::render_box(
-                        "⚠ CONTAINER RUNTIME REQUIRED",
-                        "Install Docker or Podman for isolated per-agent execution",
-                        tui::BoxStyle::Warning,
+                    init_warnings.push(
+                        "container runtime missing (install Docker or Podman for isolated execution)"
+                            .to_string(),
                     );
-                    println!();
-                    println!(
-                        "  {} {}",
-                        "Prompt:".bright_yellow().bold(),
-                        "Install Docker or Podman now".bright_white()
-                    );
-                    println!(
-                        "  {} Without container isolation, concurrent agents can step on each other.",
-                        "Why:".bright_yellow().bold(),
-                    );
-                    println!();
                 }
 
                 if !has_dedicated_key {
-                    tui::render_box(
-                        "⚠ DEDICATED SSH KEY REQUIRED FOR CONTAINER PUSH/PR",
-                        "Use a separate local-only key for agent containers",
-                        tui::BoxStyle::Warning,
-                    );
-                    println!();
-                    println!(
-                        "  {} {}",
-                        "Prompt:".bright_yellow().bold(),
-                        "Generate dedicated SSH key now".bright_white()
-                    );
-                    println!(
-                        "  {} {}",
-                        "Command:".bright_yellow().bold(),
-                        format!(
-                            "ssh-keygen -t ed25519 -f {} -C \"decapod-agent\"",
-                            dedicated_key_hint
-                        )
-                        .bright_cyan()
-                    );
-                    println!(
-                        "  {} {}",
-                        "Then add public key in GitHub:".bright_yellow().bold(),
-                        github_keys_url.bright_cyan().underline()
-                    );
-                    println!(
-                        "  {} This key stays local on your machine and is never committed.",
-                        "Note:".bright_yellow().bold(),
-                    );
-                    println!();
+                    init_warnings.push(format!(
+                        "missing dedicated SSH key ({})",
+                        dedicated_key_hint
+                    ));
                 }
 
                 if !has_runtime || !has_dedicated_key {
@@ -933,16 +751,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                         reasons.push("missing dedicated ssh key (see .decapod/generated/container_ssh_key_path)");
                     }
                     ensure_init_container_disable_override(&target_dir, &reasons.join(", "))?;
-                    tui::render_box(
-                        "⚠ CONTAINER SUBSYSTEM DISABLED BY OVERRIDE",
-                        "Wrote .decapod/OVERRIDE.md disable marker until prerequisites are met",
-                        tui::BoxStyle::Warning,
+                    init_warnings.push(
+                        "container subsystem disabled until prerequisites are met".to_string(),
                     );
-                    println!(
-                        "  {} Without isolated containers, concurrent agents can step on each other.",
-                        "Warning:".bright_yellow().bold(),
-                    );
-                    println!();
                 }
             }
 
@@ -976,14 +787,59 @@ pub fn run() -> Result<(), error::DecapodError> {
                 agent_files_to_generate.push("AGENTS.md".to_string());
             }
 
-            scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
-                target_dir,
-                force: init_group.force,
-                dry_run: init_group.dry_run,
-                agent_files: agent_files_to_generate,
-                created_backups,
-                all: init_group.all,
-            })?;
+            let scaffold_summary =
+                scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
+                    target_dir,
+                    force: init_group.force,
+                    dry_run: init_group.dry_run,
+                    agent_files: agent_files_to_generate,
+                    created_backups,
+                    all: init_group.all,
+                })?;
+
+            let target_display = setup_decapod_root
+                .parent()
+                .unwrap_or(current_dir.as_path())
+                .display()
+                .to_string();
+            println!(
+                "init: ok target={} mode={}",
+                target_display,
+                if init_group.dry_run {
+                    "dry-run"
+                } else {
+                    "apply"
+                }
+            );
+            if !init_group.dry_run {
+                println!(
+                    "init: store db+{}={} events+{}={} generated+{}={}",
+                    db_created,
+                    db_preserved,
+                    events_created,
+                    events_preserved,
+                    usize::from(generated_created),
+                    usize::from(generated_preserved)
+                );
+            }
+            println!(
+                "init: files entry+{}={}~{} cfg+{}={}~{} backups={}",
+                scaffold_summary.entrypoints_created,
+                scaffold_summary.entrypoints_unchanged,
+                scaffold_summary.entrypoints_preserved,
+                scaffold_summary.config_created,
+                scaffold_summary.config_unchanged,
+                scaffold_summary.config_preserved,
+                backup_count
+            );
+            if !init_warnings.is_empty() {
+                println!(
+                    "init: warnings {}: {}",
+                    init_warnings.len(),
+                    output::preview_messages(&init_warnings, 2, 120)
+                );
+            }
+            println!("init: status=ready");
         }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;

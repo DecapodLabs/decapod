@@ -10,9 +10,9 @@ You (Gemini) are working in a Decapod-managed repository.
 
 ```bash
 cargo install decapod              # 1. Install/update to latest release
-decapod --version                   # 2. Check current version
-decapod update                      # 3. Update if repo version is newer (safe no-op if current)
-decapod --help                      # 4. Verify available commands
+decapod version                   # 2. Check current version
+decapod --help                      # 3. Verify available commands
+decapod data schema --subsystem command_registry --deterministic >/dev/null  # 4. Refresh CLI command index
 decapod docs show core/DECAPOD.md  # 5. Refresh constitution
 decapod session acquire             # 6. Acquire session token (required for all commands)
 decapod validate                    # 7. System state
@@ -34,7 +34,7 @@ decapod todo list                   # 8. Active work
 Same four invariants as all agents:
 
 1. ✅ Start at router (`core/DECAPOD.md`)
-2. ✅ Use control plane (`decapod` commands only)
+2. ✅ Use control plane (`decapod` commands only; `.decapod` files only via `decapod` CLI)
 3. ✅ Pass validation (`decapod validate` before done)
 4. ✅ Stop if missing (ask for guidance)
 

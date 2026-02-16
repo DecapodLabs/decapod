@@ -29,14 +29,20 @@
 //! - Tooling validation gate (formatting, linting, type checking)
 
 use crate::core::error;
+use crate::core::output;
 use crate::core::store::{Store, StoreKind};
-use crate::core::tui;
 use crate::{db, primitives, todo};
 use regex::Regex;
 use serde_json;
+use std::cell::RefCell;
 use std::fs;
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
+
+thread_local! {
+    static VALIDATION_FAILS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+    static VALIDATION_WARNS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+}
 
 fn collect_repo_files(root: &Path, out: &mut Vec<PathBuf>) -> Result<(), error::DecapodError> {
     fn recurse(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), error::DecapodError> {
@@ -201,32 +207,27 @@ fn validate_embedded_self_contained(
 }
 
 fn pass(message: &str, pass_count: &mut u32) {
-    use colored::Colorize;
     *pass_count += 1;
-    println!("    {} {}", "●".bright_green(), message.bright_white());
+    let _ = message;
 }
 
 fn fail(message: &str, fail_count: &mut u32) {
-    use colored::Colorize;
     *fail_count += 1;
-    eprintln!("    {} {}", "●".bright_red(), message.bright_white());
+    VALIDATION_FAILS.with(|v| v.borrow_mut().push(message.to_string()));
 }
 
 fn skip(message: &str, skip_count: &mut u32) {
-    use colored::Colorize;
     *skip_count += 1;
-    println!("    {} {}", "○".bright_yellow(), message.bright_white());
+    let _ = message;
 }
 
 fn warn(message: &str, warn_count: &mut u32) {
-    use colored::Colorize;
     *warn_count += 1;
-    println!("    {} {}", "●".bright_yellow(), message.bright_white());
+    VALIDATION_WARNS.with(|v| v.borrow_mut().push(message.to_string()));
 }
 
 fn info(message: &str) {
-    use colored::Colorize;
-    println!("    {} {}", "ℹ".bright_cyan(), message.bright_black());
+    let _ = message;
 }
 
 fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
@@ -468,6 +469,10 @@ fn validate_entrypoint_invariants(
         ("decapod validate", "Validation gate language"),
         ("Stop if", "Stop-if-missing behavior"),
         (
+            ".decapod` files are accessed only via `decapod` CLI",
+            "Jail rule: .decapod access is CLI-only",
+        ),
+        (
             "Interface abstraction boundary",
             "Control-plane opacity language",
         ),
@@ -554,6 +559,20 @@ fn validate_entrypoint_invariants(
         } else {
             fail(
                 &format!("{} missing canonical router reference", agent_file),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must include explicit jail rule for .decapod access
+        if agent_content.contains("`.decapod` files only via `decapod` CLI") {
+            pass(
+                &format!("{} includes .decapod CLI-only jail rule", agent_file),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!("{} missing .decapod CLI-only jail rule marker", agent_file),
                 fail_count,
             );
             all_present = false;
@@ -1500,25 +1519,15 @@ pub fn run_validation(
     decapod_dir: &Path,
     _home_dir: &Path,
 ) -> Result<(), error::DecapodError> {
-    use colored::Colorize;
-
-    tui::render_box(
-        "⚡ PROOF HARNESS - VALIDATION PROTOCOL",
-        "Intent-Driven Methodology Enforcement",
-        tui::BoxStyle::Magenta,
-    );
-    println!();
+    VALIDATION_FAILS.with(|v| v.borrow_mut().clear());
+    VALIDATION_WARNS.with(|v| v.borrow_mut().clear());
+    println!("validate: running");
 
     // Directly get content from embedded assets
     let intent_content = crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
     let intent_version =
         extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
-    println!(
-        "  {} Intent Version: {}",
-        "ℹ".bright_cyan(),
-        intent_version.bright_white()
-    );
-    println!();
+    println!("validate: intent_version={}", intent_version);
 
     let mut pass_count = 0;
     let mut fail_count = 0;
@@ -1539,6 +1548,7 @@ pub fn run_validation(
     validate_embedded_self_contained(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_docs_templates_bucket(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_entrypoint_invariants(&mut pass_count, &mut fail_count, decapod_dir)?;
+    println!("validate: gate Four Invariants Gate");
     validate_health_purity(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_project_scoped_state(store, &mut pass_count, &mut fail_count, decapod_dir)?;
     validate_schema_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
@@ -1559,12 +1569,43 @@ pub fn run_validation(
     validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
     validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 
-    tui::print_summary(pass_count as usize, fail_count as usize);
+    let fail_total = VALIDATION_FAILS
+        .with(|v| v.borrow().len() as u32)
+        .max(fail_count);
+    let warn_total = VALIDATION_WARNS
+        .with(|v| v.borrow().len() as u32)
+        .max(warn_count);
+    println!(
+        "validate: summary pass={} fail={} warn={}",
+        pass_count, fail_total, warn_total
+    );
 
-    if fail_count > 0 {
+    VALIDATION_FAILS.with(|v| {
+        let fails = v.borrow();
+        if !fails.is_empty() {
+            println!(
+                "validate: failures {}: {}",
+                fails.len(),
+                output::preview_messages(&fails, 2, 110)
+            );
+        }
+    });
+
+    VALIDATION_WARNS.with(|v| {
+        let warns = v.borrow();
+        if !warns.is_empty() {
+            println!(
+                "validate: warnings {}: {}",
+                warns.len(),
+                output::preview_messages(&warns, 2, 110)
+            );
+        }
+    });
+
+    if fail_total > 0 {
         Err(error::DecapodError::ValidationError(format!(
             "{} test(s) failed.",
-            fail_count
+            fail_total
         )))
     } else {
         Ok(())
