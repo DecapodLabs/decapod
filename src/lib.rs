@@ -91,6 +91,7 @@ use plugins::{
 
 use clap::{CommandFactory, Parser, Subcommand};
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 #[derive(Parser, Debug)]
@@ -307,6 +308,10 @@ enum Command {
     /// Bootstrap system and manage lifecycle
     #[clap(name = "init", visible_alias = "i")]
     Init(InitGroupCli),
+
+    /// Configure repository (hooks, settings)
+    #[clap(name = "setup")]
+    Setup(SetupCli),
 
     /// Session token management (required for agent operation)
     #[clap(name = "session", visible_alias = "s")]
@@ -903,6 +908,15 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
         }
+        Command::Setup(setup_cli) => match setup_cli.command {
+            SetupCommand::Hook {
+                commit_msg,
+                pre_commit,
+                uninstall,
+            } => {
+                run_hook_install(commit_msg, pre_commit, uninstall)?;
+            }
+        },
         _ => {
             // Session token is optional for bootstrap/validation surfaces used in CI and startup
             if !matches!(cli.command, Command::Validate(_)) {
@@ -967,7 +981,7 @@ pub fn run() -> Result<(), error::DecapodError> {
 fn should_auto_clock_in(command: &Command) -> bool {
     match command {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
-        Command::Version | Command::Init(_) | Command::Session(_) => false,
+        Command::Version | Command::Init(_) | Command::Setup(_) | Command::Session(_) => false,
         _ => true,
     }
 }
@@ -1486,6 +1500,105 @@ fn run_qa_command(
             all,
         } => run_check(crate_description, commands, all)?,
         QaCommand::Gatling(ref gatling_cli) => plugins::gatling::run_gatling_cli(gatling_cli)?,
+    }
+
+    Ok(())
+}
+
+fn run_hook_install(
+    commit_msg: bool,
+    pre_commit: bool,
+    uninstall: bool,
+) -> Result<(), error::DecapodError> {
+    let git_dir_output = std::process::Command::new("git")
+        .args(["rev-parse", "--git-dir"])
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+
+    if !git_dir_output.status.success() {
+        return Err(error::DecapodError::ValidationError(
+            "Not in a git repository".to_string(),
+        ));
+    }
+
+    let git_dir = String::from_utf8_lossy(&git_dir_output.stdout)
+        .trim()
+        .to_string();
+    let hooks_dir = PathBuf::from(git_dir).join("hooks");
+    fs::create_dir_all(&hooks_dir).map_err(error::DecapodError::IoError)?;
+
+    if uninstall {
+        let commit_msg_path = hooks_dir.join("commit-msg");
+        let pre_commit_path = hooks_dir.join("pre-commit");
+        let mut removed_any = false;
+
+        if commit_msg_path.exists() {
+            fs::remove_file(&commit_msg_path).map_err(error::DecapodError::IoError)?;
+            println!("✓ Removed commit-msg hook");
+            removed_any = true;
+        }
+        if pre_commit_path.exists() {
+            fs::remove_file(&pre_commit_path).map_err(error::DecapodError::IoError)?;
+            println!("✓ Removed pre-commit hook");
+            removed_any = true;
+        }
+        if !removed_any {
+            println!("No hooks found to remove");
+        }
+        return Ok(());
+    }
+
+    if commit_msg {
+        let hook_content = r#"#!/bin/sh
+MSG_FILE="$1"
+SUBJECT="$(head -n1 "$MSG_FILE")"
+if printf '%s' "$SUBJECT" | grep -Eq '^(feat|fix|docs|style|refactor|test|chore|ci|build|perf|revert)(\([^)]+\))?: .+'; then
+  exit 0
+fi
+echo "commit-msg hook: expected conventional commit subject"
+echo "got: $SUBJECT"
+exit 1
+"#;
+        let hook_path = hooks_dir.join("commit-msg");
+        let mut file = fs::File::create(&hook_path).map_err(error::DecapodError::IoError)?;
+        file.write_all(hook_content.as_bytes())
+            .map_err(error::DecapodError::IoError)?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = fs::metadata(&hook_path)
+                .map_err(error::DecapodError::IoError)?
+                .permissions();
+            perms.set_mode(0o755);
+            fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
+        }
+        println!("✓ Installed commit-msg hook for conventional commits");
+    }
+
+    if pre_commit {
+        let hook_content = r#"#!/bin/sh
+set -e
+cargo fmt --check
+cargo clippy --all-targets --all-features -- -D warnings
+"#;
+        let hook_path = hooks_dir.join("pre-commit");
+        let mut file = fs::File::create(&hook_path).map_err(error::DecapodError::IoError)?;
+        file.write_all(hook_content.as_bytes())
+            .map_err(error::DecapodError::IoError)?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = fs::metadata(&hook_path)
+                .map_err(error::DecapodError::IoError)?
+                .permissions();
+            perms.set_mode(0o755);
+            fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
+        }
+        println!("✓ Installed pre-commit hook (fmt + clippy)");
+    }
+
+    if !commit_msg && !pre_commit {
+        println!("No hooks specified. Use --commit-msg and/or --pre-commit");
     }
 
     Ok(())
