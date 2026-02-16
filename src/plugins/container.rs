@@ -1,6 +1,6 @@
 use crate::core::error;
-use crate::core::time;
 use crate::core::store::Store;
+use crate::core::time;
 use clap::{Parser, Subcommand, ValueEnum};
 use serde_json::json;
 use std::path::{Path, PathBuf};
@@ -106,15 +106,7 @@ fn run_container(
         .map(|s| s.to_string())
         .unwrap_or_else(|| default_image_for_profile(image_profile).to_string());
     let spec = build_docker_spec(
-        &docker,
-        &repo,
-        &image,
-        agent,
-        user_cmd,
-        branch,
-        push,
-        memory,
-        cpus,
+        &docker, &repo, &image, agent, user_cmd, branch, push, memory, cpus,
     )?;
 
     let start = Instant::now();
@@ -128,7 +120,9 @@ fn run_container(
     let timeout = Duration::from_secs(timeout_seconds);
     loop {
         if let Some(status) = child.try_wait().map_err(error::DecapodError::IoError)? {
-            let output = child.wait_with_output().map_err(error::DecapodError::IoError)?;
+            let output = child
+                .wait_with_output()
+                .map_err(error::DecapodError::IoError)?;
             let elapsed = start.elapsed().as_secs();
             println!(
                 "{}",

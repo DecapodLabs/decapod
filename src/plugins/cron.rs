@@ -4,7 +4,7 @@ use crate::core::schemas;
 use crate::core::store::Store;
 use crate::plugins::todo;
 use clap::{Parser, Subcommand};
-use rusqlite::{types::ToSql, Result as SqlResult};
+use rusqlite::{Result as SqlResult, types::ToSql};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;

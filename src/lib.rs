@@ -154,6 +154,28 @@ enum InitCommand {
 }
 
 #[derive(clap::Args, Debug)]
+struct SetupCli {
+    #[clap(subcommand)]
+    command: SetupCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum SetupCommand {
+    /// Install or uninstall repository git hooks
+    Hook {
+        /// Install conventional commit message validation hook
+        #[clap(long)]
+        commit_msg: bool,
+        /// Install Rust pre-commit hook (fmt + clippy)
+        #[clap(long)]
+        pre_commit: bool,
+        /// Remove installed hooks
+        #[clap(long)]
+        uninstall: bool,
+    },
+}
+
+#[derive(clap::Args, Debug)]
 struct SessionCli {
     #[clap(subcommand)]
     command: SessionCommand,
