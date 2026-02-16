@@ -481,6 +481,49 @@ fn risk_level_for_operation(op_name: &str) -> RiskLevel {
     RiskLevel::LOW
 }
 
+fn risk_zone_for_operation(op_name: &str) -> &'static str {
+    if op_name.starts_with("todo.") {
+        return "todo.claim.exclusive";
+    }
+    if op_name.starts_with("federation.") {
+        return "federation.mutate";
+    }
+    if op_name.starts_with("decide.") {
+        return "decisioning.mutate";
+    }
+    if op_name.starts_with("policy.") {
+        return "policy.control";
+    }
+    if op_name.starts_with("teammate.") {
+        return "teammate.mutate";
+    }
+    "control.mutate"
+}
+
+fn zone_policy_from_todo(
+    root: &Path,
+    zone_name: &str,
+) -> Result<Option<(String, bool)>, error::DecapodError> {
+    let todo_db = root.join(schemas::TODO_DB_NAME);
+    if !todo_db.exists() {
+        return Ok(None);
+    }
+    let conn = rusqlite::Connection::open(todo_db).map_err(error::DecapodError::RusqliteError)?;
+    let res = conn
+        .query_row(
+            "SELECT required_trust_level, requires_approval FROM risk_zones WHERE zone_name = ?1",
+            params![zone_name],
+            |row| {
+                let trust: String = row.get(0)?;
+                let requires_approval: i64 = row.get(1)?;
+                Ok((trust, requires_approval != 0))
+            },
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?;
+    Ok(res)
+}
+
 fn actor_trust_level_raw(root: &Path, actor: &str) -> Result<String, error::DecapodError> {
     if actor == "decapod" || actor == "cli" || actor == "operator" {
         return Ok("core".to_string());
@@ -520,12 +563,31 @@ pub fn enforce_broker_mutation_policy(
     }
 
     let risk = risk_level_for_operation(op_name);
-    if !matches!(risk, RiskLevel::HIGH | RiskLevel::CRITICAL) {
-        return Ok(());
+    let zone_name = risk_zone_for_operation(op_name);
+    if let Some((zone_trust, zone_requires_approval)) = zone_policy_from_todo(root, zone_name)? {
+        if trust_level_to_int(&actor_trust) < trust_level_to_int(&zone_trust) {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Policy gate denied for '{}': zone '{}' requires trust '{}' (actor '{}')",
+                op_name, zone_name, zone_trust, actor_trust
+            )));
+        }
+        if zone_requires_approval {
+            let store = Store {
+                kind: crate::core::store::StoreKind::Repo,
+                root: root.to_path_buf(),
+            };
+            let high = matches!(risk, RiskLevel::HIGH | RiskLevel::CRITICAL);
+            if human_in_loop_required(&store, zone_name, risk, high)
+                && !check_approval(&store, zone_name, None, "global")?
+            {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Policy gate denied for '{}': zone '{}' requires approval",
+                    op_name, zone_name
+                )));
+            }
+        }
     }
-    // For now, broker-level policy enforces trust tier for all mutators.
-    // Approval requirements remain capability-specific (external actions) or
-    // subsystem-specific (e.g., TODO risk-zone checks) to avoid policy overlap.
+
     Ok(())
 }
 
@@ -600,12 +662,7 @@ pub fn list_approvals(store: &Store) -> Result<Vec<Approval>, error::DecapodErro
 }
 
 fn now_iso() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    format!("{}Z", secs)
+    crate::core::time::now_epoch_z()
 }
 
 pub fn schema() -> serde_json::Value {

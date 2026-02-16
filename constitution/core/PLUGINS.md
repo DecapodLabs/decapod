@@ -26,7 +26,7 @@ This is the single source of truth for Decapod subsystem status.
 
 | Name | CLI Surface | Status | Truth | Owner Doc | Proof Surface |
 |------|-------------|--------|-------|-----------|---------------|
-| todo | `decapod todo` | implemented | REAL | `plugins/TODO.md` | `decapod todo schema` |
+| todo | `decapod todo` | implemented | REAL | `plugins/TODO.md` | `decapod data schema --subsystem todo` |
 | docs | `decapod docs` | implemented | REAL | `core/DECAPOD.md` | `decapod docs list` |
 | validate | `decapod validate` | implemented | REAL | `plugins/VERIFY.md` | `decapod validate` |
 | health | `decapod govern health` | implemented | REAL | `plugins/HEALTH.md` | `decapod govern health get` |
@@ -37,10 +37,12 @@ This is the single source of truth for Decapod subsystem status.
 | teammate | `decapod data teammate` | implemented | REAL | `plugins/TEAMMATE.md` | `decapod data teammate schema` |
 | context | `decapod data context` | implemented | REAL | `plugins/CONTEXT.md` | `decapod data context audit` |
 | archive | `decapod data archive` | implemented | REAL | `plugins/ARCHIVE.md` | `decapod data archive verify` |
-| cron | `decapod auto cron` | implemented | REAL | `plugins/CRON.md` | `decapod auto cron schema` |
-| reflex | `decapod auto reflex` | implemented | REAL | `plugins/REFLEX.md` | `decapod auto reflex schema` |
-| federation | `decapod data federation` | implemented | REAL | `plugins/FEDERATION.md` | `decapod data federation schema` |
-| decide | `decapod decide` | implemented | REAL | `plugins/DECIDE.md` | `decapod decide schema` |
+| cron | `decapod auto cron` | implemented | REAL | `plugins/CRON.md` | `decapod data schema --subsystem cron` |
+| reflex | `decapod auto reflex` | implemented | REAL | `plugins/REFLEX.md` | `decapod data schema --subsystem reflex` |
+| workflow | `decapod auto workflow` | implemented | REAL | `plugins/REFLEX.md` | `decapod data schema --subsystem workflow` |
+| federation | `decapod data federation` | implemented | REAL | `plugins/FEDERATION.md` | `decapod data schema --subsystem federation` |
+| primitives | `decapod data primitives` | implemented | REAL | `plugins/TODO.md` | `decapod data primitives validate` |
+| decide | `decapod decide` | implemented | REAL | `plugins/DECIDE.md` | `decapod data schema --subsystem decide` |
 | db_broker | `decapod data broker` | planned | SPEC | `plugins/DB_BROKER.md` | not yet enforced |
 | heartbeat | `decapod heartbeat` | removed | DEPRECATED | `plugins/HEARTBEAT.md` | replacement: `decapod govern health summary` |
 | trust | `decapod trust` | removed | DEPRECATED | `plugins/TRUST.md` | replacement: `decapod govern health autonomy` |

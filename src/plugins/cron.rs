@@ -2,6 +2,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
+use crate::plugins::todo;
 use clap::{Parser, Subcommand};
 use rusqlite::{Result as SqlResult, types::ToSql};
 use serde::{Deserialize, Serialize};
@@ -27,10 +28,7 @@ pub fn initialize_cron_db(root: &Path) -> Result<(), error::DecapodError> {
 }
 
 fn now_iso() -> String {
-    // A simplified equivalent to the Python version. For full RFC3339, a crate like `chrono` would be better.
-    let now = std::time::SystemTime::now();
-    let now_str = format!("{:?}", now); // Not exactly ISO, but a placeholder
-    now_str
+    crate::core::time::now_epoch_z()
 }
 
 const COMPONENT_NAMES: &[&str] = &[
@@ -155,6 +153,11 @@ pub enum CronCommand {
     Delete {
         #[clap(long)]
         id: String,
+    },
+    /// Suggest schedules from open tasks using heuristics.
+    Suggest {
+        #[clap(long, default_value_t = 8)]
+        limit: usize,
     },
 }
 
@@ -374,6 +377,45 @@ fn delete_cron_job(root: &Path, id: String) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
+fn suggest_cron_jobs(root: &Path, limit: usize) -> Result<(), error::DecapodError> {
+    let tasks = todo::list_tasks(root, Some("open".to_string()), None, None, None, None)?;
+    let suggestions: Vec<serde_json::Value> = tasks
+        .iter()
+        .take(limit)
+        .map(|task| {
+            let (schedule, rationale) = if task.priority == "high" {
+                ("*/15 * * * *", "high-priority open task")
+            } else if task.category == "ci" {
+                ("0 * * * *", "CI maintenance cadence")
+            } else if task.category == "docs" {
+                ("0 9 * * 1-5", "weekday docs maintenance")
+            } else {
+                ("0 */6 * * *", "general background cadence")
+            };
+            serde_json::json!({
+                "task_id": task.id,
+                "title": task.title,
+                "priority": task.priority,
+                "category": task.category,
+                "schedule": schedule,
+                "rationale": rationale
+            })
+        })
+        .collect();
+
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&serde_json::json!({
+            "ts": now_iso(),
+            "cmd": "suggest",
+            "status": "ok",
+            "suggestions": suggestions
+        }))
+        .unwrap()
+    );
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn update_cron_job(
     root: &Path,
@@ -490,6 +532,7 @@ pub fn run_cron_cli(store: &Store, cli: CronCli) -> Result<(), error::DecapodErr
         } => list_cron_jobs(root, status, scope, tags, name_search, dir),
         CronCommand::Get { id } => get_cron_job(root, id),
         CronCommand::Delete { id } => delete_cron_job(root, id),
+        CronCommand::Suggest { limit } => suggest_cron_jobs(root, limit),
         CronCommand::Update {
             id,
             name,
@@ -530,7 +573,8 @@ pub fn schema() -> serde_json::Value {
             { "name": "list", "parameters": ["status", "scope", "tags"] },
             { "name": "get", "parameters": ["id"] },
             { "name": "update", "parameters": ["id"] },
-            { "name": "delete", "parameters": ["id"] }
+            { "name": "delete", "parameters": ["id"] },
+            { "name": "suggest", "parameters": ["limit"] }
         ],
         "storage": ["cron.db"]
     })
