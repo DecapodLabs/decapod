@@ -80,8 +80,7 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs_cli, error, migration, proof, repomap, scaffold,
-    output,
+    db, docs_cli, error, migration, output, proof, repomap, scaffold,
     store::{Store, StoreKind},
     validate,
 };
@@ -596,7 +595,9 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Check if .decapod exists and skip if it does, unless --force
             let setup_decapod_root = target_dir.join(".decapod");
             if setup_decapod_root.exists() && !init_group.force {
-                println!("init: already initialized (.decapod exists); rerun with --force to overwrite");
+                println!(
+                    "init: already initialized (.decapod exists); rerun with --force to overwrite"
+                );
                 return Ok(());
             }
 
@@ -786,14 +787,15 @@ pub fn run() -> Result<(), error::DecapodError> {
                 agent_files_to_generate.push("AGENTS.md".to_string());
             }
 
-            let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
-                target_dir,
-                force: init_group.force,
-                dry_run: init_group.dry_run,
-                agent_files: agent_files_to_generate,
-                created_backups,
-                all: init_group.all,
-            })?;
+            let scaffold_summary =
+                scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
+                    target_dir,
+                    force: init_group.force,
+                    dry_run: init_group.dry_run,
+                    agent_files: agent_files_to_generate,
+                    created_backups,
+                    all: init_group.all,
+                })?;
 
             let target_display = setup_decapod_root
                 .parent()
@@ -803,7 +805,11 @@ pub fn run() -> Result<(), error::DecapodError> {
             println!(
                 "init: ok target={} mode={}",
                 target_display,
-                if init_group.dry_run { "dry-run" } else { "apply" }
+                if init_group.dry_run {
+                    "dry-run"
+                } else {
+                    "apply"
+                }
             );
             if !init_group.dry_run {
                 println!(

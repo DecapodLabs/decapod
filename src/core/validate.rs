@@ -572,10 +572,7 @@ fn validate_entrypoint_invariants(
             );
         } else {
             fail(
-                &format!(
-                    "{} missing .decapod CLI-only jail rule marker",
-                    agent_file
-                ),
+                &format!("{} missing .decapod CLI-only jail rule marker", agent_file),
                 fail_count,
             );
             all_present = false;
@@ -1572,8 +1569,12 @@ pub fn run_validation(
     validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
     validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 
-    let fail_total = VALIDATION_FAILS.with(|v| v.borrow().len() as u32).max(fail_count);
-    let warn_total = VALIDATION_WARNS.with(|v| v.borrow().len() as u32).max(warn_count);
+    let fail_total = VALIDATION_FAILS
+        .with(|v| v.borrow().len() as u32)
+        .max(fail_count);
+    let warn_total = VALIDATION_WARNS
+        .with(|v| v.borrow().len() as u32)
+        .max(warn_count);
     println!(
         "validate: summary pass={} fail={} warn={}",
         pass_count, fail_total, warn_total
