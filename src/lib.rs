@@ -154,25 +154,19 @@ enum InitCommand {
 }
 
 #[derive(clap::Args, Debug)]
-struct SetupCli {
+struct SessionCli {
     #[clap(subcommand)]
-    command: SetupCommand,
+    command: SessionCommand,
 }
 
 #[derive(Subcommand, Debug)]
-enum SetupCommand {
-    /// Git hooks for commit validation
-    Hook {
-        /// Install commit-msg hook for conventional commits
-        #[clap(long, default_value = "true")]
-        commit_msg: bool,
-        /// Install pre-commit hook (fmt, clippy)
-        #[clap(long)]
-        pre_commit: bool,
-        /// Uninstall hooks
-        #[clap(long)]
-        uninstall: bool,
-    },
+enum SessionCommand {
+    /// Acquire a new session token (required before using other commands)
+    Acquire,
+    /// Show current session status
+    Status,
+    /// Release the current session token
+    Release,
 }
 
 #[derive(clap::Args, Debug)]

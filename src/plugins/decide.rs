@@ -156,7 +156,8 @@ static TREE_WEB_APP: DecisionTree = DecisionTree {
                 DecisionOption {
                     value: "vite",
                     label: "Vite",
-                    rationale: "Fast dev server, Rollup-based production builds, framework-agnostic",
+                    rationale:
+                        "Fast dev server, Rollup-based production builds, framework-agnostic",
                 },
                 DecisionOption {
                     value: "rspack",
@@ -214,7 +215,8 @@ static TREE_WEB_APP: DecisionTree = DecisionTree {
                 DecisionOption {
                     value: "built_in",
                     label: "Framework built-in",
-                    rationale: "Use the framework's native state primitives (signals, stores, context)",
+                    rationale:
+                        "Use the framework's native state primitives (signals, stores, context)",
                 },
                 DecisionOption {
                     value: "zustand",
@@ -224,7 +226,8 @@ static TREE_WEB_APP: DecisionTree = DecisionTree {
                 DecisionOption {
                     value: "redux",
                     label: "Redux Toolkit",
-                    rationale: "Predictable state container, time-travel debugging, mature ecosystem",
+                    rationale:
+                        "Predictable state container, time-travel debugging, mature ecosystem",
                 },
                 DecisionOption {
                     value: "none",
@@ -261,7 +264,8 @@ static TREE_MICROSERVICE: DecisionTree = DecisionTree {
                 DecisionOption {
                     value: "rust",
                     label: "Rust",
-                    rationale: "Memory safety, excellent performance, strong type system (axum, actix)",
+                    rationale:
+                        "Memory safety, excellent performance, strong type system (axum, actix)",
                 },
                 DecisionOption {
                     value: "go",
@@ -276,7 +280,8 @@ static TREE_MICROSERVICE: DecisionTree = DecisionTree {
                 DecisionOption {
                     value: "python",
                     label: "Python",
-                    rationale: "Rich ecosystem (FastAPI, Django), ML/data integration, rapid prototyping",
+                    rationale:
+                        "Rich ecosystem (FastAPI, Django), ML/data integration, rapid prototyping",
                 },
                 DecisionOption {
                     value: "java",
@@ -343,7 +348,8 @@ static TREE_MICROSERVICE: DecisionTree = DecisionTree {
                 DecisionOption {
                     value: "kubernetes",
                     label: "Kubernetes",
-                    rationale: "Production-grade orchestration, auto-scaling, self-healing, complex",
+                    rationale:
+                        "Production-grade orchestration, auto-scaling, self-healing, complex",
                 },
                 DecisionOption {
                     value: "compose",
@@ -456,7 +462,8 @@ static TREE_CLI_TOOL: DecisionTree = DecisionTree {
                 DecisionOption {
                     value: "python",
                     label: "Python",
-                    rationale: "argparse/click/typer, rapid prototyping, extensive standard library",
+                    rationale:
+                        "argparse/click/typer, rapid prototyping, extensive standard library",
                 },
             ],
             depends_on: None,
@@ -470,7 +477,8 @@ static TREE_CLI_TOOL: DecisionTree = DecisionTree {
                 DecisionOption {
                     value: "binary",
                     label: "Static binary",
-                    rationale: "Single file, no runtime deps (cargo install, go install, GH releases)",
+                    rationale:
+                        "Single file, no runtime deps (cargo install, go install, GH releases)",
                 },
                 DecisionOption {
                     value: "package_manager",
@@ -494,7 +502,8 @@ static TREE_CLI_TOOL: DecisionTree = DecisionTree {
                 DecisionOption {
                     value: "toml",
                     label: "TOML",
-                    rationale: "Human-friendly, good for config files, Rust/cargo ecosystem standard",
+                    rationale:
+                        "Human-friendly, good for config files, Rust/cargo ecosystem standard",
                 },
                 DecisionOption {
                     value: "yaml",
