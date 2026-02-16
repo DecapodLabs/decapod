@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2](https://github.com/DecapodLabs/decapod/compare/v0.19.1...v0.19.2) - 2026-02-16
+
+### Added
+
+- task dependencies
+- task dependencies
+- task dependencies
+- task dependencies
+
 ## [0.19.1](https://github.com/DecapodLabs/decapod/compare/v0.19.0...v0.19.1) - 2026-02-16
 
 ### Added
