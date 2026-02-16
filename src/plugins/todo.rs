@@ -3162,6 +3162,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                             rusqlite::params![insert_id, task_id, agent_id, ev.ts, claim_type],
                         )?;
                     }
+                    sync_legacy_owner_column(conn, &task_id)?;
                 }
                 "ownership.release" => {
                     let task_id = ev.task_id.clone().unwrap_or_default();
@@ -3170,6 +3171,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
                         rusqlite::params![task_id, agent_id],
                     )?;
+                    sync_legacy_owner_column(conn, &task_id)?;
                 }
                 "agent.expertise" => {
                     let agent_id = ev.payload.get("agent_id").and_then(|v| v.as_str()).unwrap_or(&ev.actor);
