@@ -590,7 +590,6 @@ pub fn run() -> Result<(), error::DecapodError> {
             };
             let target_dir =
                 std::fs::canonicalize(&target_dir).map_err(error::DecapodError::IoError)?;
-            println!("init: target={}", target_dir.display());
 
             // Check if .decapod exists and skip if it does, unless --force
             let setup_decapod_root = target_dir.join(".decapod");
@@ -610,8 +609,8 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Safely backup root agent entrypoint files if they exist and differ from templates
             let mut created_backups = false;
+            let mut backup_count = 0usize;
             if !init_group.dry_run {
-                let mut backup_count = 0usize;
                 for file in &existing_agent_files {
                     let path = target_dir.join(file);
 
@@ -637,9 +636,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                         fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
                     }
                 }
-                if backup_count > 0 {
-                    println!("init: preserved {} existing entrypoint file(s) as .bak", backup_count);
-                }
             }
 
             // Create .decapod/data for init
@@ -649,6 +645,13 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
 
             // `--dry-run` should not perform any mutations.
+            let mut db_created = 0usize;
+            let mut db_preserved = 0usize;
+            let mut events_created = 0usize;
+            let mut events_preserved = 0usize;
+            let mut generated_created = false;
+            let mut generated_preserved = false;
+            let mut init_warnings: Vec<String> = Vec::new();
             if !init_group.dry_run {
                 // Initialize all store DBs in the resolved store root (preserve existing)
                 let dbs = [
@@ -664,8 +667,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                     ("federation.db", setup_store_root.join("federation.db")),
                     ("decisions.db", setup_store_root.join("decisions.db")),
                 ];
-                let mut db_created = 0usize;
-                let mut db_preserved = 0usize;
 
                 for (db_name, db_path) in dbs {
                     if db_path.exists() {
@@ -690,15 +691,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                         db_created += 1;
                     }
                 }
-                println!(
-                    "init: databases created={}, preserved={}",
-                    db_created, db_preserved
-                );
 
                 // Create empty todo events file for validation (preserve existing)
                 let events_path = setup_store_root.join("todo.events.jsonl");
-                let mut events_created = 0usize;
-                let mut events_preserved = 0usize;
                 if events_path.exists() {
                     events_preserved += 1;
                 } else {
@@ -714,19 +709,15 @@ pub fn run() -> Result<(), error::DecapodError> {
                     std::fs::write(&fed_events_path, "").map_err(error::DecapodError::IoError)?;
                     events_created += 1;
                 }
-                println!(
-                    "init: event logs created={}, preserved={}",
-                    events_created, events_preserved
-                );
 
                 // Create generated directory for derived files (checksums, caches, etc.)
                 let generated_dir = setup_decapod_root.join("generated");
                 if generated_dir.exists() {
-                    println!("init: generated/ preserved");
+                    generated_preserved = true;
                 } else {
                     std::fs::create_dir_all(&generated_dir)
                         .map_err(error::DecapodError::IoError)?;
-                    println!("init: generated/ created");
+                    generated_created = true;
                 }
 
                 write_init_container_ssh_key_path(&target_dir)?;
@@ -736,16 +727,17 @@ pub fn run() -> Result<(), error::DecapodError> {
                 let github_keys_url = "https://github.com/settings/keys";
 
                 if !has_runtime {
-                    println!(
-                        "init: warning container runtime missing (install Docker or Podman for isolated execution)"
+                    init_warnings.push(
+                        "container runtime missing (install Docker or Podman for isolated execution)"
+                            .to_string(),
                     );
                 }
 
                 if !has_dedicated_key {
-                    println!(
-                        "init: warning dedicated SSH key missing; run `ssh-keygen -t ed25519 -f {} -C \"decapod-agent\"` and add it at {}",
+                    init_warnings.push(format!(
+                        "dedicated SSH key missing; run `ssh-keygen -t ed25519 -f {} -C \"decapod-agent\"` and add it at {}",
                         dedicated_key_hint, github_keys_url
-                    );
+                    ));
                 }
 
                 if !has_runtime || !has_dedicated_key {
@@ -757,8 +749,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                         reasons.push("missing dedicated ssh key (see .decapod/generated/container_ssh_key_path)");
                     }
                     ensure_init_container_disable_override(&target_dir, &reasons.join(", "))?;
-                    println!(
-                        "init: warning container subsystem disabled by override until prerequisites are met"
+                    init_warnings.push(
+                        "container subsystem disabled by override until prerequisites are met"
+                            .to_string(),
                     );
                 }
             }
@@ -793,7 +786,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 agent_files_to_generate.push("AGENTS.md".to_string());
             }
 
-            scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
+            let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
                 target_dir,
                 force: init_group.force,
                 dry_run: init_group.dry_run,
@@ -801,6 +794,50 @@ pub fn run() -> Result<(), error::DecapodError> {
                 created_backups,
                 all: init_group.all,
             })?;
+
+            println!("init: summary");
+            println!(
+                "  target={}",
+                setup_decapod_root
+                    .parent()
+                    .unwrap_or(current_dir.as_path())
+                    .display()
+            );
+            if init_group.dry_run {
+                println!("  mode=dry-run");
+            } else {
+                println!("  databases created={}, preserved={}", db_created, db_preserved);
+                println!(
+                    "  event_logs created={}, preserved={}",
+                    events_created, events_preserved
+                );
+                println!(
+                    "  generated created={}, preserved={}",
+                    generated_created, generated_preserved
+                );
+            }
+            println!(
+                "  entrypoints created={}, unchanged={}, preserved={}",
+                scaffold_summary.entrypoints_created,
+                scaffold_summary.entrypoints_unchanged,
+                scaffold_summary.entrypoints_preserved
+            );
+            println!(
+                "  config created={}, unchanged={}, preserved={}",
+                scaffold_summary.config_created,
+                scaffold_summary.config_unchanged,
+                scaffold_summary.config_preserved
+            );
+            if backup_count > 0 {
+                println!("  backups created={}", backup_count);
+            }
+            if !init_warnings.is_empty() {
+                println!("  warnings={}", init_warnings.len());
+                for warning in init_warnings {
+                    println!("    - {}", warning);
+                }
+            }
+            println!("  status=ready");
         }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;

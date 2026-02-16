@@ -55,12 +55,6 @@ pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
         Ok(())
     })?;
 
-    use colored::Colorize;
-    println!(
-        "    {} {}",
-        "●".bright_green(),
-        "Knowledge database".bright_white()
-    );
     Ok(())
 }
 
@@ -85,12 +79,6 @@ pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
         Ok(())
     })?;
 
-    use colored::Colorize;
-    println!(
-        "    {} {}",
-        "●".bright_green(),
-        "Decisions database".bright_white()
-    );
     Ok(())
 }
 
