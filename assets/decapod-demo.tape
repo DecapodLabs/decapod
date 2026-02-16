@@ -17,9 +17,9 @@ Enter
 Sleep 3s
 Set TypingSpeed 45ms
 
-Type 'opencode run --model opencode/minimax-m2.5-free --dir /tmp/codebase "Use decapod control-plane commands to complete the existing TODO titled VHS demo handoff. Acquire session first if needed."'
+Type 'opencode run --model opencode/minimax-m2.5-free "Complete the existing TODO titled VHS demo handoff."'
 Enter
-Sleep 6s
+Sleep 20s
 
 Type "exit"
 Enter
