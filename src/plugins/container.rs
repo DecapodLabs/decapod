@@ -612,6 +612,7 @@ fn build_container_script(
 
     if pr {
         script.push_str("if ! command -v gh >/dev/null 2>&1; then echo 'gh CLI required for PR creation' >&2; exit 2; fi\n");
+        script.push_str("if ! gh auth status >/dev/null 2>&1; then echo 'gh auth required for PR creation (run gh auth login)' >&2; exit 2; fi\n");
         script.push_str(&format!(
             "if gh pr view --head {} >/dev/null 2>&1; then\n  echo 'PR already exists for branch'\nelse\n  gh pr create --base {} --head {} --title {} --body {}\nfi\n",
             shell_escape(branch),
