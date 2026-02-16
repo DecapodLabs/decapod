@@ -11,6 +11,7 @@
 //! - **Health purity**: No manual health values allowed in canonical docs
 //! - **Event sourcing**: Repo stores must match deterministic rebuild from events
 //! - **Namespace purge**: Legacy namespace references are forbidden
+//! - **Tooling validation**: Formatting, linting, and type checking must pass (see Tooling Validation Gate)
 //!
 //! # Validation Categories
 //!
@@ -25,6 +26,7 @@
 //! - Watcher purity (read-only checks only)
 //! - Archive integrity (hash verification)
 //! - Canon mutation gate (no unauthorized doc writes)
+//! - Tooling validation gate (formatting, linting, type checking)
 
 use crate::core::error;
 use crate::core::store::{Store, StoreKind};
@@ -951,6 +953,108 @@ fn validate_knowledge_integrity(
     Ok(())
 }
 
+fn validate_lineage_hard_gate(
+    store: &Store,
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+) -> Result<(), error::DecapodError> {
+    info("Lineage Hard Gate");
+    let todo_events = store.root.join("todo.events.jsonl");
+    let federation_db = store.root.join("federation.db");
+    if !todo_events.exists() || !federation_db.exists() {
+        skip(
+            "lineage inputs missing (todo.events.jsonl or federation.db); skipping",
+            pass_count,
+        );
+        return Ok(());
+    }
+
+    let content = fs::read_to_string(&todo_events)?;
+    let mut add_candidates = Vec::new();
+    let mut done_candidates = Vec::new();
+    for line in content.lines() {
+        let Ok(v) = serde_json::from_str::<serde_json::Value>(line) else {
+            continue;
+        };
+        let event_type = v.get("event_type").and_then(|x| x.as_str()).unwrap_or("");
+        let task_id = v.get("task_id").and_then(|x| x.as_str()).unwrap_or("");
+        if task_id.is_empty() {
+            continue;
+        }
+        let intent_ref = v
+            .get("payload")
+            .and_then(|p| p.get("intent_ref"))
+            .and_then(|x| x.as_str())
+            .unwrap_or("");
+        // Hard gate only applies to new intent-tagged events.
+        if !intent_ref.starts_with("intent:") {
+            continue;
+        }
+        if event_type == "task.add" {
+            add_candidates.push(task_id.to_string());
+        } else if event_type == "task.done" {
+            done_candidates.push(task_id.to_string());
+        }
+    }
+
+    let conn = db::db_connect(&federation_db.to_string_lossy())?;
+    let mut violations = Vec::new();
+
+    for task_id in add_candidates {
+        let source = format!("event:{}", task_id);
+        let commitment_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM nodes n JOIN sources s ON s.node_id = n.id WHERE s.source = ?1 AND n.node_type = 'commitment'",
+                rusqlite::params![source],
+                |row| row.get(0),
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        if commitment_count == 0 {
+            violations.push(format!(
+                "task.add {} missing commitment lineage node",
+                task_id
+            ));
+        }
+    }
+
+    for task_id in done_candidates {
+        let source = format!("event:{}", task_id);
+        let commitment_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM nodes n JOIN sources s ON s.node_id = n.id WHERE s.source = ?1 AND n.node_type = 'commitment'",
+                rusqlite::params![source.clone()],
+                |row| row.get(0),
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        let decision_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM nodes n JOIN sources s ON s.node_id = n.id WHERE s.source = ?1 AND n.node_type = 'decision'",
+                rusqlite::params![source],
+                |row| row.get(0),
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        if commitment_count == 0 || decision_count == 0 {
+            violations.push(format!(
+                "task.done {} missing commitment/decision lineage nodes",
+                task_id
+            ));
+        }
+    }
+
+    if violations.is_empty() {
+        pass(
+            "Intent-tagged task.add/task.done events have commitment+proof lineage",
+            pass_count,
+        );
+    } else {
+        fail(
+            &format!("Lineage gate violations: {:?}", violations),
+            fail_count,
+        );
+    }
+    Ok(())
+}
+
 fn validate_repomap_determinism(
     pass_count: &mut u32,
     fail_count: &mut u32,
@@ -1175,6 +1279,115 @@ fn validate_federation_gates(
     Ok(())
 }
 
+/// Validates that tooling requirements are satisfied.
+/// This gate ensures formatting, linting, and type checking pass before promotion.
+fn validate_tooling_gate(
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Tooling Validation Gate");
+
+    // Check for Cargo.toml to detect Rust projects
+    let cargo_toml = repo_root.join("Cargo.toml");
+    if !cargo_toml.exists() {
+        // Not a Rust project, skip tooling validation for now
+        // Future: Add support for other language toolchains
+        skip(
+            "No Cargo.toml found; skipping Rust toolchain validation",
+            pass_count,
+        );
+        return Ok(());
+    }
+
+    let mut has_failures = false;
+
+    // Check formatting with cargo fmt
+    match std::process::Command::new("cargo")
+        .args(["fmt", "--all", "--", "--check"])
+        .current_dir(repo_root)
+        .output()
+    {
+        Ok(output) => {
+            if output.status.success() {
+                pass("Rust code formatting passes (cargo fmt)", pass_count);
+            } else {
+                fail(
+                    "Rust code formatting failed - run `cargo fmt --all`",
+                    fail_count,
+                );
+                has_failures = true;
+            }
+        }
+        Err(e) => {
+            fail(&format!("Failed to run cargo fmt: {}", e), fail_count);
+            has_failures = true;
+        }
+    }
+
+    // Check linting with cargo clippy
+    match std::process::Command::new("cargo")
+        .args([
+            "clippy",
+            "--all-targets",
+            "--all-features",
+            "--",
+            "-D",
+            "warnings",
+        ])
+        .current_dir(repo_root)
+        .output()
+    {
+        Ok(output) => {
+            if output.status.success() {
+                pass("Rust linting passes (cargo clippy)", pass_count);
+            } else {
+                fail(
+                    "Rust linting failed - run `cargo clippy --all-targets --all-features`",
+                    fail_count,
+                );
+                has_failures = true;
+            }
+        }
+        Err(e) => {
+            fail(&format!("Failed to run cargo clippy: {}", e), fail_count);
+            has_failures = true;
+        }
+    }
+
+    // Check type checking with cargo check
+    match std::process::Command::new("cargo")
+        .args(["check", "--all-targets", "--all-features"])
+        .current_dir(repo_root)
+        .output()
+    {
+        Ok(output) => {
+            if output.status.success() {
+                pass("Rust type checking passes (cargo check)", pass_count);
+            } else {
+                fail(
+                    "Rust type checking failed - run `cargo check --all-targets --all-features`",
+                    fail_count,
+                );
+                has_failures = true;
+            }
+        }
+        Err(e) => {
+            fail(&format!("Failed to run cargo check: {}", e), fail_count);
+            has_failures = true;
+        }
+    }
+
+    if !has_failures {
+        pass(
+            "All toolchain validations pass - project is ready for promotion",
+            pass_count,
+        );
+    }
+
+    Ok(())
+}
+
 pub fn run_validation(
     store: &Store,
     decapod_dir: &Path,
@@ -1227,6 +1440,7 @@ pub fn run_validation(
     validate_risk_map_violations(store, &mut pass_count, &mut fail_count)?;
     validate_policy_integrity(store, &mut pass_count, &mut fail_count)?;
     validate_knowledge_integrity(store, &mut pass_count, &mut fail_count)?;
+    validate_lineage_hard_gate(store, &mut pass_count, &mut fail_count)?;
     validate_repomap_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_watcher_audit(store, &mut pass_count, &mut warn_count)?;
     validate_watcher_purity(store, &mut pass_count, &mut fail_count)?;
@@ -1234,6 +1448,7 @@ pub fn run_validation(
     validate_control_plane_contract(store, &mut pass_count, &mut fail_count)?;
     validate_canon_mutation(store, &mut pass_count, &mut fail_count)?;
     validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
+    validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 
     tui::print_summary(pass_count as usize, fail_count as usize);
 

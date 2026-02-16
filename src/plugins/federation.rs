@@ -336,7 +336,7 @@ fn validate_edge_type(t: &str) -> Result<(), error::DecapodError> {
 
 fn validate_provenance(source: &str) -> Result<(), error::DecapodError> {
     let prov_re = regex::Regex::new(
-        r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:[A-Z0-9]+)$",
+        r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:[A-Za-z0-9_]+)$",
     )
     .unwrap();
 
@@ -1453,6 +1453,12 @@ fn build_index_file(store: &Store) -> Result<usize, error::DecapodError> {
     )?;
     fs::write(path, content.as_bytes()).map_err(error::DecapodError::IoError)?;
     Ok(content.lines().count())
+}
+
+pub fn refresh_derived_files(store: &Store) -> Result<(), error::DecapodError> {
+    build_index_file(store)?;
+    export_graph_file(store)?;
+    Ok(())
 }
 
 fn export_graph_file(store: &Store) -> Result<(usize, usize), error::DecapodError> {

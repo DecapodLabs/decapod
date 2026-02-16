@@ -13,6 +13,7 @@
 
 use crate::core::db;
 use crate::core::error;
+use crate::plugins::policy;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -97,6 +98,23 @@ impl DbBroker {
     where
         F: FnOnce(&Connection) -> Result<R, error::DecapodError>,
     {
+        let is_read = policy::is_read_only_operation(op_name);
+        let effective_intent = if let Some(i) = intent_ref {
+            Some(i.to_string())
+        } else if !is_read {
+            Some(format!("intent:auto:{}:{}", op_name, Ulid::new()))
+        } else {
+            None
+        };
+
+        if !is_read {
+            let store_root = self
+                .audit_log_path
+                .parent()
+                .ok_or_else(|| error::DecapodError::PathError("invalid broker root".to_string()))?;
+            policy::enforce_broker_mutation_policy(store_root, actor, op_name)?;
+        }
+
         // Serialize operations per database path instead of globally.
         // This preserves same-DB safety while allowing cross-DB parallelism.
         let db_lock = get_db_lock(db_path)?;
@@ -114,7 +132,7 @@ impl DbBroker {
         let result = f(&conn);
 
         let status = if result.is_ok() { "success" } else { "error" };
-        self.log_event(actor, intent_ref, op_name, &db_id, status)?;
+        self.log_event(actor, effective_intent.as_deref(), op_name, &db_id, status)?;
 
         result
     }

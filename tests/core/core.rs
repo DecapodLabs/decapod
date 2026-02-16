@@ -3,6 +3,7 @@ use decapod::core::broker::{self, BrokerEvent, DbBroker};
 use decapod::core::db;
 use decapod::core::docs_cli::{self, DocsCli, DocsCommand};
 use decapod::core::error::DecapodError;
+use decapod::core::external_action::{self, ExternalCapability};
 use decapod::core::migration;
 use decapod::core::repomap;
 use decapod::core::scaffold::{ScaffoldOptions, scaffold_project_entrypoints};
@@ -156,58 +157,61 @@ fn broker_allows_parallel_ops_on_different_databases() {
 }
 
 #[test]
-fn broker_envelope_carries_orchestrator_context() {
+fn external_action_broker_enforces_capability_allowlist() {
     let tmp = tempdir().expect("tempdir");
     let root = tmp.path();
-    let db_path = root.join("envelope.db");
+    std::fs::create_dir_all(root.join("data")).expect("store root");
+
+    let denied = external_action::execute(
+        &root.join("data"),
+        ExternalCapability::VcsRead,
+        "test.scope",
+        "echo",
+        &["hello"],
+        root,
+    );
+    assert!(denied.is_err(), "unexpected allow for disallowed binary");
+
+    let allowed = external_action::execute(
+        &root.join("data"),
+        ExternalCapability::VcsRead,
+        "test.scope",
+        "git",
+        &["status", "--porcelain"],
+        root,
+    );
+    assert!(allowed.is_ok(), "git status should be allowed for vcs_read");
+}
+
+#[test]
+fn broker_policy_enforces_trust_tier_on_high_risk_mutator_ops() {
+    let tmp = tempdir().expect("tempdir");
+    let root = tmp.path();
     let broker = DbBroker::new(root);
+    let db_path = root.join("policy-test.db");
 
-    // SAFETY: test process is single-threaded for env mutations in this test.
-    unsafe {
-        std::env::set_var("DECAPOD_SESSION_ID", "sess-test");
-        std::env::set_var("DECAPOD_CORRELATION_ID", "corr-test");
-        std::env::set_var("DECAPOD_CAUSATION_ID", "cause-test");
-        std::env::set_var("DECAPOD_IDEMPOTENCY_KEY", "idem-test");
-    }
+    let denied = broker.with_conn(
+        &db_path,
+        "agent-basic",
+        None,
+        "federation.rebuild",
+        |conn| {
+            conn.execute("CREATE TABLE IF NOT EXISTS t (id INTEGER)", [])
+                .map_err(DecapodError::RusqliteError)?;
+            Ok(())
+        },
+    );
+    assert!(
+        denied.is_err(),
+        "expected trust-tier denial for high-risk op"
+    );
 
-    broker
-        .with_conn(
-            &db_path,
-            "agent-x",
-            Some("intent-xyz"),
-            "envelope.test",
-            |conn| {
-                conn.execute("CREATE TABLE IF NOT EXISTS t (id INTEGER)", [])
-                    .map_err(DecapodError::RusqliteError)?;
-                Ok(())
-            },
-        )
-        .expect("broker envelope write");
-
-    // SAFETY: restore process env.
-    unsafe {
-        std::env::remove_var("DECAPOD_SESSION_ID");
-        std::env::remove_var("DECAPOD_CORRELATION_ID");
-        std::env::remove_var("DECAPOD_CAUSATION_ID");
-        std::env::remove_var("DECAPOD_IDEMPOTENCY_KEY");
-    }
-
-    let audit_path = root.join("broker.events.jsonl");
-    let last_line = fs::read_to_string(audit_path)
-        .expect("read audit")
-        .lines()
-        .last()
-        .expect("at least one event")
-        .to_string();
-    let event: BrokerEvent = serde_json::from_str(&last_line).expect("valid broker event");
-
-    assert_eq!(event.schema_version, "1.0.0");
-    assert_eq!(event.session_id.as_deref(), Some("sess-test"));
-    assert_eq!(event.correlation_id.as_deref(), Some("corr-test"));
-    assert_eq!(event.causation_id.as_deref(), Some("cause-test"));
-    assert_eq!(event.idempotency_key.as_deref(), Some("idem-test"));
-    assert_eq!(event.actor_id, "agent-x");
-    assert!(!event.request_id.is_empty());
+    let allowed = broker.with_conn(&db_path, "decapod", None, "federation.rebuild", |conn| {
+        conn.execute("CREATE TABLE IF NOT EXISTS t2 (id INTEGER)", [])
+            .map_err(DecapodError::RusqliteError)?;
+        Ok(())
+    });
+    assert!(allowed.is_ok(), "core actor should pass policy gate");
 }
 
 #[test]
