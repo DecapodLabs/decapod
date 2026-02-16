@@ -722,7 +722,7 @@ fn prepare_workspace_clone(
 
     let clone_output = if local_only {
         let base_ref = format!("refs/heads/{}", base_branch);
-        let try_branch_clone = if git_ref_exists(repo, &base_ref)? {
+        if git_ref_exists(repo, &base_ref)? {
             Command::new("git")
                 .arg("clone")
                 .arg("--no-local")
@@ -741,8 +741,7 @@ fn prepare_workspace_clone(
                 .arg(workspace_path_str)
                 .output()
                 .map_err(error::DecapodError::IoError)?
-        };
-        try_branch_clone
+        }
     } else {
         run_git(repo, &["fetch", "origin", base_branch])?;
         let origin_url = git_output(repo, &["remote", "get-url", "origin"])?;
@@ -1039,6 +1038,7 @@ fn inherited_env_vars() -> BTreeMap<String, String> {
     vars
 }
 
+#[allow(clippy::too_many_arguments)]
 fn build_container_script(
     user_cmd: &str,
     branch: &str,
