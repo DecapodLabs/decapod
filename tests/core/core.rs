@@ -212,7 +212,6 @@ fn broker_policy_enforces_trust_tier_on_high_risk_mutator_ops() {
         Ok(())
     });
     assert!(allowed.is_ok(), "core actor should pass policy gate");
-
 }
 
 #[test]

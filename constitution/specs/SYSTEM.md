@@ -109,8 +109,25 @@ To prevent drift and ensure quality, all projects must adhere to strict structur
 2.  The automated proof harness (`decapod validate`, if it exists) runs and exits with code 0.
 3.  The compliance numbers in `proof.md` and `specs/INTENT.md` match exactly.
 4.  If the intent declares invariants, there is runtime validation code for them.
+5.  **Tooling validation passes** - All declared language toolchain requirements (formatting, linting, type checking) are satisfied.
 
 **Violation of these rules is considered drift.** The process must stop, the proof surface must be updated, and verification must be re-run.
+
+### 5.3. Tooling Validation Gate (First-Class Citizen)
+
+Tooling that validates the repo's own source code and the tooling the project relies on MUST be treated as first-class citizens in proof checking.
+
+**Requirements:**
+
+-   **Language Toolchains:** Projects MUST declare their language toolchain requirements in `specs/INTENT.md` (e.g., `lang.rust.toolchain = "stable"`, `lang.rust.format = "cargo fmt"`, `lang.rust.lint = "cargo clippy"`).
+-   **Tooling Proof Gates:** Before signing off that a change is ready for PR/merge/production, the following MUST pass:
+    1.  **Formatting Gate:** Source code MUST pass the declared formatter (e.g., `cargo fmt --check`).
+    2.  **Linting Gate:** Source code MUST pass the declared linter (e.g., `cargo clippy --all-targets`).
+    3.  **Type Safety Gate:** For typed languages, type checking MUST pass (e.g., `cargo check`).
+-   **Tooling as Dependencies:** Tooling versions MUST be treated as dependencies. Changes to tooling versions require the same proof discipline as code changes.
+-   **CI/CD Parity:** Local `decapod validate` MUST enforce the same toolchain gates as CI/CD pipelines.
+
+**Rationale:** Tooling drift is code drift. A project that passes tests but fails formatting or linting is not "ready." This gate ensures tooling hygiene is enforced at the same priority level as functional correctness.
 
 ---
 
