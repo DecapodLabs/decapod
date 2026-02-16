@@ -3,6 +3,8 @@ use crate::core::store::Store;
 use crate::core::time;
 use clap::{Parser, Subcommand, ValueEnum};
 use serde_json::json;
+use std::collections::BTreeMap;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
@@ -26,7 +28,7 @@ pub struct ContainerCli {
 
 #[derive(Subcommand, Debug)]
 pub enum ContainerCommand {
-    /// Execute one command in a fresh container against the mounted repository.
+    /// Execute one command in a fresh container against an isolated git worktree.
     Run {
         #[clap(long)]
         agent: String,
@@ -34,8 +36,18 @@ pub enum ContainerCommand {
         cmd: String,
         #[clap(long)]
         branch: Option<String>,
+        #[clap(long)]
+        task_id: Option<String>,
         #[clap(long, default_value_t = false)]
         push: bool,
+        #[clap(long, default_value_t = false)]
+        pr: bool,
+        #[clap(long, default_value = "master")]
+        pr_base: String,
+        #[clap(long)]
+        pr_title: Option<String>,
+        #[clap(long)]
+        pr_body: Option<String>,
         #[clap(long, value_enum, default_value = "debian-slim")]
         image_profile: ImageProfile,
         #[clap(long)]
@@ -48,6 +60,10 @@ pub enum ContainerCommand {
         cpus: String,
         #[clap(long)]
         repo: Option<String>,
+        #[clap(long, default_value_t = false)]
+        keep_worktree: bool,
+        #[clap(long, default_value_t = true)]
+        inherit_env: bool,
     },
 }
 
@@ -57,33 +73,116 @@ struct DockerSpec {
     container_name: String,
 }
 
+#[derive(Debug, Clone)]
+struct WorktreeSpec {
+    branch: String,
+    path: PathBuf,
+    base_branch: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct RunSummary {
+    pub value: serde_json::Value,
+}
+
 pub fn run_container_cli(store: &Store, cli: ContainerCli) -> Result<(), error::DecapodError> {
-    match cli.command {
+    let summary = match cli.command {
         ContainerCommand::Run {
             agent,
             cmd,
             branch,
+            task_id,
             push,
+            pr,
+            pr_base,
+            pr_title,
+            pr_body,
             image_profile,
             image,
             timeout_seconds,
             memory,
             cpus,
             repo,
+            keep_worktree,
+            inherit_env,
         } => run_container(
             store,
             &agent,
             &cmd,
             branch.as_deref(),
+            task_id.as_deref(),
             push,
+            pr,
+            &pr_base,
+            pr_title.as_deref(),
+            pr_body.as_deref(),
             image_profile,
             image.as_deref(),
             timeout_seconds,
             &memory,
             &cpus,
             repo.as_deref(),
-        ),
-    }
+            keep_worktree,
+            inherit_env,
+        )?,
+    };
+
+    println!("{}", serde_json::to_string_pretty(&summary.value).unwrap());
+    Ok(())
+}
+
+pub fn run_container_for_claim(
+    store: &Store,
+    agent: &str,
+    task_id: &str,
+    task_title: &str,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let repo = repo_root_from_store(store)?;
+    let cmd = std::env::var("DECAPOD_CLAIM_CMD")
+        .unwrap_or_else(|_| "echo \"container initialized for claimed task\"".to_string());
+    let branch = format!(
+        "agent/{}/{}",
+        sanitize_branch_component(agent),
+        sanitize_branch_component(task_id)
+    );
+
+    let push = env_bool("DECAPOD_CLAIM_PUSH", true);
+    let pr = env_bool("DECAPOD_CLAIM_PR", true);
+    let keep_worktree = env_bool("DECAPOD_CLAIM_KEEP_WORKTREE", false);
+    let pr_title = std::env::var("DECAPOD_CLAIM_PR_TITLE")
+        .ok()
+        .or_else(|| Some(format!("{} [{}]", task_title, task_id)));
+    let pr_body = std::env::var("DECAPOD_CLAIM_PR_BODY").ok().or_else(|| {
+        Some(format!(
+            "Automated container run for claimed task {}",
+            task_id
+        ))
+    });
+
+    let summary = run_container(
+        store,
+        agent,
+        &cmd,
+        Some(&branch),
+        Some(task_id),
+        push,
+        pr,
+        "master",
+        pr_title.as_deref(),
+        pr_body.as_deref(),
+        ImageProfile::DebianSlim,
+        None,
+        1800,
+        "2g",
+        "2.0",
+        Some(repo.to_str().ok_or_else(|| {
+            error::DecapodError::PathError("invalid repository path".to_string())
+        })?),
+        keep_worktree,
+        true,
+    )?;
+
+    Ok(summary.value)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -92,26 +191,115 @@ fn run_container(
     agent: &str,
     user_cmd: &str,
     branch: Option<&str>,
+    task_id: Option<&str>,
     push: bool,
+    pr: bool,
+    pr_base: &str,
+    pr_title: Option<&str>,
+    pr_body: Option<&str>,
     image_profile: ImageProfile,
     image_override: Option<&str>,
     timeout_seconds: u64,
     memory: &str,
     cpus: &str,
     repo_override: Option<&str>,
-) -> Result<(), error::DecapodError> {
+    keep_worktree: bool,
+    inherit_env: bool,
+) -> Result<RunSummary, error::DecapodError> {
     let repo = resolve_repo_path(repo_override)?;
     let docker = find_container_runtime()?;
     let image = image_override
         .map(|s| s.to_string())
         .unwrap_or_else(|| default_image_for_profile(image_profile).to_string());
+
+    let branch_name = branch
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| default_branch_name(agent, task_id));
+    let worktree = prepare_worktree(&repo, &branch_name, pr_base)?;
+
+    let pr_title_val = pr_title
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("{}", branch_name));
+    let pr_body_val = pr_body
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| format!("Automated update from {}", branch_name));
+
     let spec = build_docker_spec(
-        &docker, &repo, &image, agent, user_cmd, branch, push, memory, cpus,
+        &docker,
+        &worktree.path,
+        &image,
+        agent,
+        user_cmd,
+        &worktree.branch,
+        &worktree.base_branch,
+        push,
+        pr,
+        &pr_title_val,
+        &pr_body_val,
+        memory,
+        cpus,
+        task_id,
+        inherit_env,
     )?;
 
     let start = Instant::now();
-    let mut child = Command::new(&docker)
-        .args(&spec.args)
+    let output = execute_container_with_timeout(&docker, &spec.args, timeout_seconds)?;
+    let elapsed = start.elapsed().as_secs();
+
+    let status = if output.status.success() {
+        "ok"
+    } else {
+        "error"
+    };
+    let summary = json!({
+        "ts": time::now_epoch_z(),
+        "cmd": "container.run",
+        "status": status,
+        "agent": agent,
+        "runtime": docker,
+        "image": image,
+        "container_name": spec.container_name,
+        "repo": repo,
+        "worktree": worktree.path,
+        "branch": worktree.branch,
+        "base_branch": worktree.base_branch,
+        "task_id": task_id,
+        "push": push,
+        "pr": pr,
+        "keep_worktree": keep_worktree,
+        "exit_code": output.status.code(),
+        "elapsed_seconds": elapsed,
+        "stdout": String::from_utf8_lossy(&output.stdout),
+        "stderr": String::from_utf8_lossy(&output.stderr)
+    });
+
+    let cleanup_err = if keep_worktree {
+        None
+    } else {
+        cleanup_worktree(&repo, &worktree.path).err()
+    };
+
+    if !output.status.success() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "Container command failed (exit {:?})",
+            output.status.code()
+        )));
+    }
+    if let Some(err) = cleanup_err {
+        return Err(err);
+    }
+
+    Ok(RunSummary { value: summary })
+}
+
+fn execute_container_with_timeout(
+    runtime: &str,
+    args: &[String],
+    timeout_seconds: u64,
+) -> Result<std::process::Output, error::DecapodError> {
+    let start = Instant::now();
+    let mut child = Command::new(runtime)
+        .args(args)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
@@ -119,38 +307,10 @@ fn run_container(
 
     let timeout = Duration::from_secs(timeout_seconds);
     loop {
-        if let Some(status) = child.try_wait().map_err(error::DecapodError::IoError)? {
-            let output = child
+        if let Some(_status) = child.try_wait().map_err(error::DecapodError::IoError)? {
+            return child
                 .wait_with_output()
-                .map_err(error::DecapodError::IoError)?;
-            let elapsed = start.elapsed().as_secs();
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&json!({
-                    "ts": time::now_epoch_z(),
-                    "cmd": "container.run",
-                    "status": if status.success() { "ok" } else { "error" },
-                    "agent": agent,
-                    "runtime": docker,
-                    "image": image,
-                    "container_name": spec.container_name,
-                    "repo": repo,
-                    "branch": branch,
-                    "push": push,
-                    "exit_code": status.code(),
-                    "elapsed_seconds": elapsed,
-                    "stdout": String::from_utf8_lossy(&output.stdout),
-                    "stderr": String::from_utf8_lossy(&output.stderr)
-                }))
-                .unwrap()
-            );
-            if status.success() {
-                return Ok(());
-            }
-            return Err(error::DecapodError::ValidationError(format!(
-                "Container command failed (exit {:?})",
-                status.code()
-            )));
+                .map_err(error::DecapodError::IoError);
         }
         if start.elapsed() > timeout {
             let _ = child.kill();
@@ -170,6 +330,19 @@ fn resolve_repo_path(repo_override: Option<&str>) -> Result<PathBuf, error::Deca
         std::env::current_dir().map_err(error::DecapodError::IoError)?
     };
     base.canonicalize().map_err(error::DecapodError::IoError)
+}
+
+fn repo_root_from_store(store: &Store) -> Result<PathBuf, error::DecapodError> {
+    store
+        .root
+        .parent()
+        .and_then(|p| p.parent())
+        .map(Path::to_path_buf)
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "unable to resolve repo root from store root".to_string(),
+            )
+        })
 }
 
 fn find_container_runtime() -> Result<String, error::DecapodError> {
@@ -215,19 +388,94 @@ fn current_uid_gid() -> Option<(String, String)> {
     Some((uid_s, gid_s))
 }
 
+fn run_git(repo: &Path, args: &[&str]) -> Result<(), error::DecapodError> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(args)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if output.status.success() {
+        return Ok(());
+    }
+    Err(error::DecapodError::ValidationError(format!(
+        "git {} failed: {}",
+        args.join(" "),
+        String::from_utf8_lossy(&output.stderr).trim()
+    )))
+}
+
+fn prepare_worktree(
+    repo: &Path,
+    branch: &str,
+    base_branch: &str,
+) -> Result<WorktreeSpec, error::DecapodError> {
+    run_git(repo, &["fetch", "origin", base_branch])?;
+
+    let worktrees_root = repo.join(".decapod").join("worktrees");
+    fs::create_dir_all(&worktrees_root).map_err(error::DecapodError::IoError)?;
+
+    let suffix = Ulid::new().to_string().to_lowercase();
+    let dir_name = format!("{}-{}", sanitize_branch_component(branch), &suffix[..8]);
+    let worktree_path = worktrees_root.join(dir_name);
+    let base_ref = format!("origin/{}", base_branch);
+
+    run_git(
+        repo,
+        &[
+            "worktree",
+            "add",
+            "-B",
+            branch,
+            worktree_path.to_str().ok_or_else(|| {
+                error::DecapodError::PathError("invalid worktree path".to_string())
+            })?,
+            &base_ref,
+        ],
+    )?;
+
+    Ok(WorktreeSpec {
+        branch: branch.to_string(),
+        path: worktree_path,
+        base_branch: base_branch.to_string(),
+    })
+}
+
+fn cleanup_worktree(repo: &Path, worktree_path: &Path) -> Result<(), error::DecapodError> {
+    run_git(
+        repo,
+        &[
+            "worktree",
+            "remove",
+            "--force",
+            worktree_path.to_str().ok_or_else(|| {
+                error::DecapodError::PathError("invalid worktree path".to_string())
+            })?,
+        ],
+    )?;
+    let _ = run_git(repo, &["worktree", "prune"]);
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn build_docker_spec(
     runtime: &str,
-    repo: &Path,
+    workspace: &Path,
     image: &str,
     agent: &str,
     user_cmd: &str,
-    branch: Option<&str>,
+    branch: &str,
+    base_branch: &str,
     push: bool,
+    pr: bool,
+    pr_title: &str,
+    pr_body: &str,
     memory: &str,
     cpus: &str,
+    task_id: Option<&str>,
+    inherit_env: bool,
 ) -> Result<DockerSpec, error::DecapodError> {
-    let repo_str = repo
+    let workspace_str = workspace
         .to_str()
         .ok_or_else(|| error::DecapodError::PathError("invalid repository path".to_string()))?;
     let container_name = format!(
@@ -257,12 +505,27 @@ fn build_docker_spec(
         "-e".to_string(),
         format!("DECAPOD_AGENT_ID={}", agent),
         "-e".to_string(),
+        format!("DECAPOD_TASK_ID={}", task_id.unwrap_or("")),
+        "-e".to_string(),
+        format!("DECAPOD_BRANCH={}", branch),
+        "-e".to_string(),
+        format!("DECAPOD_BASE_BRANCH={}", base_branch),
+        "-e".to_string(),
         format!("DECAPOD_PUSH={}", if push { "1" } else { "0" }),
+        "-e".to_string(),
+        format!("DECAPOD_PR={}", if pr { "1" } else { "0" }),
         "-v".to_string(),
-        format!("{}:/workspace", repo_str),
+        format!("{}:/workspace", workspace_str),
         "-w".to_string(),
         "/workspace".to_string(),
     ];
+
+    if inherit_env {
+        for (k, v) in inherited_env_vars() {
+            args.push("-e".to_string());
+            args.push(format!("{}={}", k, v));
+        }
+    }
 
     if let Some((uid, gid)) = current_uid_gid() {
         args.push("--user".to_string());
@@ -278,16 +541,6 @@ fn build_docker_spec(
         }
     }
 
-    if let Some(branch_name) = branch {
-        args.push("-e".to_string());
-        args.push(format!("DECAPOD_BRANCH={}", branch_name));
-    }
-
-    args.push(image.to_string());
-    args.push("sh".to_string());
-    args.push("-lc".to_string());
-    args.push(build_container_script(user_cmd, branch, push));
-
     if runtime != "docker" && runtime != "podman" {
         return Err(error::DecapodError::ValidationError(format!(
             "Unsupported container runtime '{}'",
@@ -295,31 +548,80 @@ fn build_docker_spec(
         )));
     }
 
+    args.push(image.to_string());
+    args.push("sh".to_string());
+    args.push("-lc".to_string());
+    args.push(build_container_script(
+        user_cmd,
+        branch,
+        base_branch,
+        push,
+        pr,
+        pr_title,
+        pr_body,
+    ));
+
     Ok(DockerSpec {
         args,
         container_name,
     })
 }
 
-fn build_container_script(user_cmd: &str, branch: Option<&str>, push: bool) -> String {
-    let mut script = String::from(
-        "set -euo pipefail\ngit config --global --add safe.directory /workspace || true\n",
-    );
-    if let Some(branch_name) = branch {
-        script.push_str(&format!("git checkout -B {}\n", shell_escape(branch_name)));
+fn inherited_env_vars() -> BTreeMap<String, String> {
+    let mut vars = BTreeMap::new();
+    for (k, v) in std::env::vars() {
+        if k.starts_with("BASH_FUNC_") {
+            continue;
+        }
+        vars.insert(k, v);
     }
+    vars
+}
+
+fn build_container_script(
+    user_cmd: &str,
+    branch: &str,
+    base_branch: &str,
+    push: bool,
+    pr: bool,
+    pr_title: &str,
+    pr_body: &str,
+) -> String {
+    let mut script = String::from(
+        "set -euo pipefail\n\
+         git config --global --add safe.directory /workspace || true\n\
+         git config user.name \"${DECAPOD_GIT_USER_NAME:-Decapod Agent}\"\n\
+         git config user.email \"${DECAPOD_GIT_USER_EMAIL:-agent@decapod.local}\"\n",
+    );
+    script.push_str(&format!("git fetch origin {}\n", shell_escape(base_branch)));
+    script.push_str(&format!("git checkout -B {}\n", shell_escape(branch)));
+    script.push_str(&format!(
+        "git rebase origin/{}\n",
+        shell_escape(base_branch)
+    ));
     script.push_str(user_cmd);
     script.push('\n');
-    if push {
-        if let Some(branch_name) = branch {
-            script.push_str(&format!(
-                "git push -u origin {}\n",
-                shell_escape(branch_name)
-            ));
-        } else {
-            script.push_str("echo 'push requested but --branch missing' >&2\nexit 2\n");
-        }
+
+    script.push_str(
+        "if [ -n \"$(git status --porcelain)\" ]; then\n  git add -A\n  git commit -m \"chore: automated container updates\"\nfi\n",
+    );
+
+    if push || pr {
+        script.push_str(&format!("git push -u origin {}\n", shell_escape(branch)));
     }
+
+    if pr {
+        script.push_str("if ! command -v gh >/dev/null 2>&1; then echo 'gh CLI required for PR creation' >&2; exit 2; fi\n");
+        script.push_str(&format!(
+            "if gh pr view --head {} >/dev/null 2>&1; then\n  echo 'PR already exists for branch'\nelse\n  gh pr create --base {} --head {} --title {} --body {}\nfi\n",
+            shell_escape(branch),
+            shell_escape(base_branch),
+            shell_escape(branch),
+            shell_escape(pr_title),
+            shell_escape(pr_body)
+        ));
+    }
+
     script
 }
 
@@ -342,13 +644,41 @@ fn sanitize_name(s: &str) -> String {
         .to_string()
 }
 
+fn sanitize_branch_component(s: &str) -> String {
+    s.chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '-' {
+                c.to_ascii_lowercase()
+            } else {
+                '-'
+            }
+        })
+        .collect::<String>()
+        .trim_matches('-')
+        .to_string()
+}
+
+fn default_branch_name(agent: &str, task_id: Option<&str>) -> String {
+    let suffix = task_id
+        .map(sanitize_branch_component)
+        .unwrap_or_else(|| Ulid::new().to_string().to_lowercase());
+    format!("agent/{}/{}", sanitize_branch_component(agent), suffix)
+}
+
+fn env_bool(name: &str, default_value: bool) -> bool {
+    match std::env::var(name) {
+        Ok(v) => matches!(v.to_ascii_lowercase().as_str(), "1" | "true" | "yes" | "on"),
+        Err(_) => default_value,
+    }
+}
+
 pub fn schema() -> serde_json::Value {
     json!({
         "name": "container",
-        "version": "0.1.0",
-        "description": "Ephemeral containerized agent execution with repo mount isolation",
+        "version": "0.2.0",
+        "description": "Ephemeral containerized agent execution with isolated worktrees and optional push/PR automation",
         "commands": [
-            { "name": "run", "parameters": ["agent", "cmd", "branch", "push", "image_profile", "image", "timeout_seconds", "memory", "cpus", "repo"] }
+            { "name": "run", "parameters": ["agent", "cmd", "branch", "task_id", "push", "pr", "pr_base", "pr_title", "pr_body", "image_profile", "image", "timeout_seconds", "memory", "cpus", "repo", "keep_worktree", "inherit_env"] }
         ],
         "profiles": {
             "debian-slim": "rust:1.85-slim",
@@ -369,7 +699,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn docker_spec_contains_safety_flags() {
+    fn docker_spec_contains_safety_flags_and_sdlc_steps() {
         let repo = PathBuf::from("/tmp/repo");
         let spec = build_docker_spec(
             "docker",
@@ -377,10 +707,16 @@ mod tests {
             "rust:1.85-slim",
             "agent-a",
             "cargo test -q",
-            Some("ahr/branch"),
+            "ahr/branch",
+            "master",
             true,
+            true,
+            "title",
+            "body",
             "2g",
             "2.0",
+            Some("R_123"),
+            false,
         )
         .expect("spec");
 
@@ -388,20 +724,22 @@ mod tests {
         assert!(joined.contains("--rm"));
         assert!(joined.contains("--cap-drop ALL"));
         assert!(joined.contains("--security-opt no-new-privileges:true"));
+        assert!(joined.contains("git fetch origin 'master'"));
         assert!(joined.contains("git checkout -B 'ahr/branch'"));
+        assert!(joined.contains("git rebase origin/'master'"));
         assert!(joined.contains("git push -u origin 'ahr/branch'"));
-    }
-
-    #[test]
-    fn push_without_branch_emits_explicit_error_in_script() {
-        let script = build_container_script("echo hi", None, true);
-        assert!(script.contains("push requested but --branch missing"));
-        assert!(script.contains("exit 2"));
+        assert!(joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
     }
 
     #[test]
     fn sanitize_name_normalizes_agent_identifiers() {
         assert_eq!(sanitize_name("Agent_One"), "agent-one");
         assert_eq!(sanitize_name("  team/a  "), "team-a");
+    }
+
+    #[test]
+    fn default_branch_name_includes_agent_and_task() {
+        let branch = default_branch_name("Agent_One", Some("R_ABC-123"));
+        assert_eq!(branch, "agent/agent-one/r-abc-123");
     }
 }
