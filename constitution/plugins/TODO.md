@@ -64,7 +64,7 @@ Done state is the default closeout state. Archive is optional and may require ap
 ### Command Strictness (Avoid Invalid Subcommands)
 
 - Use only the explicit TODO commands shown above.
-- Do **not** call `decapod close`, `decapod todo close`, or `decapod todo complete` (these are not valid CLI surfaces).
+- Do **not** call `decapod complete`, `decapod close`, `decapod todo close`, or `decapod todo complete` (these are not valid CLI surfaces).
 - Always pass the task id explicitly: `--id <task-id>`.
 
 ### Workflow
