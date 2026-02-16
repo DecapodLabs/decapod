@@ -578,7 +578,7 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         conn.execute(schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
-        backfill_task_dependencies(conn, &now_iso())?;
+        backfill_task_dependencies(conn)?;
     }
     // Keep defaults current across upgrades; INSERT OR IGNORE is idempotent.
     seed_default_risk_zones(conn)?;
@@ -1842,6 +1842,16 @@ fn sync_task_dependencies(
     .map_err(error::DecapodError::RusqliteError)?;
 
     for dep_id in parse_dependency_ids(depends_on) {
+        let dep_exists: bool = conn
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM tasks WHERE id = ?1)",
+                rusqlite::params![dep_id],
+                |row| row.get(0),
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        if !dep_exists {
+            continue;
+        }
         conn.execute(
             "INSERT OR IGNORE INTO task_dependencies(id, task_id, depends_on_task_id, created_at)
              VALUES(?1, ?2, ?3, ?4)",
@@ -1852,18 +1862,22 @@ fn sync_task_dependencies(
     Ok(())
 }
 
-fn backfill_task_dependencies(conn: &Connection, ts: &str) -> Result<(), error::DecapodError> {
+fn backfill_task_dependencies(conn: &Connection) -> Result<(), error::DecapodError> {
     let mut stmt = conn
-        .prepare("SELECT id, depends_on FROM tasks")
+        .prepare("SELECT id, depends_on, created_at FROM tasks")
         .map_err(error::DecapodError::RusqliteError)?;
     let rows = stmt
         .query_map([], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+            ))
         })
         .map_err(error::DecapodError::RusqliteError)?;
     for row in rows {
-        let (task_id, depends_on) = row.map_err(error::DecapodError::RusqliteError)?;
-        sync_task_dependencies(conn, &task_id, &depends_on, ts)?;
+        let (task_id, depends_on, created_at) = row.map_err(error::DecapodError::RusqliteError)?;
+        sync_task_dependencies(conn, &task_id, &depends_on, &created_at)?;
     }
     Ok(())
 }
