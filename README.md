@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/decapod-demo.gif" alt="Decapod demo" width="100%" />
+  <img src="assets/decapod-demo.gif" alt="Decapod demo" width="66%" />
 </p>
 
 <p align="center">
