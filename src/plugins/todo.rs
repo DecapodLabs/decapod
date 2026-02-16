@@ -180,6 +180,24 @@ pub enum TodoCommand {
         #[clap(long)]
         agent: Option<String>,
     },
+    /// Run the autonomous worker loop (heartbeat -> claim -> context -> execute -> lesson).
+    WorkerRun {
+        /// Agent identifier (defaults to environment or 'unknown').
+        #[clap(long)]
+        agent: Option<String>,
+        /// Optional specific task id to execute first.
+        #[clap(long)]
+        task_id: Option<String>,
+        /// Maximum tasks to claim and execute in this run.
+        #[clap(long, default_value_t = 1)]
+        max_tasks: usize,
+        /// Persist lesson artifacts to knowledge + federation.
+        #[clap(long, default_value_t = true)]
+        lesson: bool,
+        /// Archive tasks after completion.
+        #[clap(long, default_value_t = true)]
+        autoclose: bool,
+    },
     /// Transfer a task between agents and record handoff artifacts.
     Handoff {
         #[clap(long)]
@@ -1168,6 +1186,211 @@ fn list_claimable_tasks_for_agent(
     )
 }
 
+fn repo_root_from_store_root(store_root: &Path) -> Result<PathBuf, error::DecapodError> {
+    store_root
+        .parent()
+        .and_then(|p| p.parent())
+        .map(Path::to_path_buf)
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "unable to resolve repo root from store root".to_string(),
+            )
+        })
+}
+
+fn summarize_task_context(
+    store: &Store,
+    task: &Task,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let mut hints = Vec::new();
+    let title_words: Vec<&str> = task
+        .title
+        .split_whitespace()
+        .filter(|w| w.len() >= 4)
+        .take(4)
+        .collect();
+
+    for word in title_words {
+        let hits = knowledge::search_knowledge(store, word).unwrap_or_default();
+        if !hits.is_empty() {
+            hints.push(serde_json::json!({
+                "query": word,
+                "knowledge_hits": hits.len()
+            }));
+        }
+    }
+
+    Ok(serde_json::json!({
+        "task_id": task.id,
+        "title": task.title,
+        "priority": task.priority,
+        "category": task.category,
+        "hints": hints
+    }))
+}
+
+fn record_task_lesson(
+    store: &Store,
+    task: &Task,
+    agent_id: &str,
+    context_summary: &serde_json::Value,
+) {
+    let lesson_id = format!("K_{}", Ulid::new());
+    let provenance = format!("event:{}", task.id);
+    let lesson_title = format!("Lesson: {}", task.title);
+    let lesson_content = format!(
+        "Agent {} completed task {} using worker loop.\nContext summary: {}",
+        agent_id,
+        task.id,
+        serde_json::to_string(context_summary).unwrap_or_else(|_| "{}".to_string())
+    );
+    let _ = knowledge::add_knowledge(
+        store,
+        &lesson_id,
+        &lesson_title,
+        &lesson_content,
+        &provenance,
+        None,
+    );
+
+    let _ = federation::add_node(
+        store,
+        &format!("Lesson from task {}", task.id),
+        "lesson",
+        "notable",
+        "agent_inferred",
+        &lesson_content,
+        &provenance,
+        "lesson,worker,autonomy",
+        "repo",
+        None,
+        "decapod",
+    );
+    let _ = federation::refresh_derived_files(store);
+}
+
+fn run_worker_loop(
+    store: &Store,
+    agent_id: &str,
+    preferred_task_id: Option<&str>,
+    max_tasks: usize,
+    lesson: bool,
+    autoclose: bool,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let root = &store.root;
+    let heartbeat = record_heartbeat(root, agent_id)?;
+    let mut claimable = list_claimable_tasks_for_agent(root, agent_id, max_tasks)?;
+    if let Some(task_id) = preferred_task_id {
+        claimable.retain(|id| id != task_id);
+        claimable.insert(0, task_id.to_string());
+        claimable.truncate(max_tasks);
+    }
+    let repo_root = repo_root_from_store_root(root)?;
+    let mut processed = Vec::new();
+    let mut skipped = Vec::new();
+
+    for task_id in claimable {
+        let claim_out = claim_task(root, &task_id, agent_id, ClaimMode::Exclusive)?;
+        let claim_status = claim_out
+            .get("status")
+            .and_then(|v| v.as_str())
+            .unwrap_or("error");
+        if claim_status != "ok" {
+            skipped.push(serde_json::json!({
+                "task_id": task_id,
+                "reason": "claim_failed",
+                "claim": claim_out
+            }));
+            continue;
+        }
+
+        let Some(task) = get_task(root, &task_id)? else {
+            skipped.push(serde_json::json!({
+                "task_id": task_id,
+                "reason": "task_missing_after_claim"
+            }));
+            continue;
+        };
+
+        let context_summary = summarize_task_context(store, &task)?;
+        let _ = comment_task(
+            root,
+            &task_id,
+            &format!(
+                "worker.run context={} actor={}",
+                serde_json::to_string(&context_summary).unwrap_or_else(|_| "{}".to_string()),
+                agent_id
+            ),
+        );
+
+        let done_out = update_status(
+            store,
+            &task_id,
+            "done",
+            "task.done",
+            serde_json::json!({
+                "reason": "worker_loop_execution",
+                "actor": agent_id
+            }),
+        )?;
+
+        let baseline = verify::capture_baseline_for_todo(store, &repo_root, &task_id, vec![]);
+        let baseline_status = if baseline.is_ok() { "ok" } else { "error" };
+        let baseline_error = baseline.err().map(|e| e.to_string());
+
+        if lesson {
+            record_task_lesson(store, &task, agent_id, &context_summary);
+        }
+
+        let archive_out = if autoclose {
+            Some(update_status(
+                store,
+                &task_id,
+                "archived",
+                "task.archive",
+                serde_json::json!({
+                    "reason": "worker_loop_autoclose",
+                    "actor": agent_id
+                }),
+            )?)
+        } else {
+            None
+        };
+
+        let _ = record_task_event(
+            root,
+            "task.worker.run",
+            Some(&task_id),
+            serde_json::json!({
+                "agent_id": agent_id,
+                "context_summary": context_summary,
+                "lesson": lesson,
+                "autoclose": autoclose,
+                "baseline_status": baseline_status,
+                "baseline_error": baseline_error
+            }),
+        );
+
+        processed.push(serde_json::json!({
+            "task_id": task_id,
+            "done": done_out,
+            "archive": archive_out,
+            "baseline_status": baseline_status,
+        }));
+    }
+
+    Ok(serde_json::json!({
+        "ts": now_iso(),
+        "cmd": "todo.worker.run",
+        "status": "ok",
+        "root": root.to_string_lossy(),
+        "agent_id": agent_id,
+        "heartbeat": heartbeat,
+        "processed": processed,
+        "skipped": skipped,
+    }))
+}
+
 fn list_agent_presence(
     root: &Path,
     agent: Option<&str>,
@@ -1961,6 +2184,35 @@ pub fn update_status(
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
         Ok(changed)
     })?;
+
+    // Create a lifecycle-change node for every successful task status transition.
+    if changed > 0 {
+        let source = format!("event:{}", id);
+        let anchor = federation::find_node_by_source(store, &source)
+            .ok()
+            .flatten();
+        if let Ok(change_node) = federation::add_node(
+            store,
+            &format!("Task {} status -> {}", id, new_status),
+            "observation",
+            "notable",
+            "agent_inferred",
+            &format!(
+                "Status transition recorded via {} with intent_ref={}",
+                event_type, intent_ref
+            ),
+            &source,
+            "task,status,change",
+            "repo",
+            None,
+            "decapod",
+        ) {
+            if let Some(anchor_id) = anchor {
+                let _ = federation::add_edge(store, &anchor_id, &change_node.id, "depends_on");
+            }
+            let _ = federation::refresh_derived_files(store);
+        }
+    }
 
     // Create federation node for proof when task is completed and link to intent
     if new_status == "done" && changed > 0 {
@@ -3130,6 +3382,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     )?;
                 }
                 "task.comment" => {}
+                "task.worker.run" => {}
                 "task.edit" => {
                     let id = ev.task_id.clone().unwrap_or_default();
                     if let Some(title) = ev.payload.get("title").and_then(|v| v.as_str()) {
@@ -3344,6 +3597,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "ownerships", "parameters": ["category", "agent"] },
             { "name": "heartbeat", "parameters": ["agent", "autoclaim", "max_claims"] },
             { "name": "presence", "parameters": ["agent"] },
+            { "name": "worker-run", "parameters": ["agent", "task_id", "max_tasks", "lesson", "autoclose"] },
             { "name": "handoff", "parameters": ["id", "to", "from", "summary"] },
             { "name": "add-owner", "parameters": ["id", "agent", "claim_type"] },
             { "name": "remove-owner", "parameters": ["id", "agent"] },
@@ -3515,6 +3769,25 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                 "root": root.to_string_lossy(),
                 "agents": agents,
             })
+        }
+        TodoCommand::WorkerRun {
+            agent,
+            task_id,
+            max_tasks,
+            lesson,
+            autoclose,
+        } => {
+            let default_agent =
+                env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let agent_id = agent.as_deref().unwrap_or(&default_agent);
+            run_worker_loop(
+                store,
+                agent_id,
+                task_id.as_deref(),
+                *max_tasks,
+                *lesson,
+                *autoclose,
+            )?
         }
         TodoCommand::Handoff {
             id,

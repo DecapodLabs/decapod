@@ -34,6 +34,7 @@ decapod todo register-agent --agent <agent-id> --category <name> [--category <na
 decapod todo ownerships [--category <name>] [--agent <agent-id>]
 decapod todo heartbeat [--agent <agent-id>] [--autoclaim] [--max-claims <n>]
 decapod todo presence [--agent <agent-id>]
+decapod todo worker-run [--agent <agent-id>] [--task-id <id>] [--max-tasks <n>] [--lesson] [--autoclose]
 decapod todo handoff --id <id> --to <agent-id> [--from <agent-id>] --summary "<handoff summary>"
 decapod todo add-owner --id <id> --agent <agent-id> [--claim-type primary|secondary|watcher]
 decapod todo remove-owner --id <id> --agent <agent-id>
