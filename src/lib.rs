@@ -885,9 +885,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                         "Install Docker or Podman now".bright_white()
                     );
                     println!(
-                        "  {} {}",
+                        "  {} Without container isolation, concurrent agents can step on each other.",
                         "Why:".bright_yellow().bold(),
-                        "Without container isolation, concurrent agents can step on each other."
                     );
                     println!();
                 }
@@ -919,9 +918,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                         github_keys_url.bright_cyan().underline()
                     );
                     println!(
-                        "  {} {}",
+                        "  {} This key stays local on your machine and is never committed.",
                         "Note:".bright_yellow().bold(),
-                        "This key stays local on your machine and is never committed."
                     );
                     println!();
                 }
@@ -941,9 +939,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                         tui::BoxStyle::Warning,
                     );
                     println!(
-                        "  {} {}",
+                        "  {} Without isolated containers, concurrent agents can step on each other.",
                         "Warning:".bright_yellow().bold(),
-                        "Without isolated containers, concurrent agents can step on each other."
                     );
                     println!();
                 }
@@ -1072,6 +1069,9 @@ fn requires_session_token(command: &Command) -> bool {
     match command {
         // Only bootstrap/session lifecycle + version are sessionless.
         Command::Init(_) | Command::Session(_) | Command::Version => false,
+        Command::Data(DataCli {
+            command: DataCommand::Schema(_),
+        }) => false,
         _ => true,
     }
 }

@@ -263,7 +263,7 @@ Warning: without isolated containers, concurrent agents can step on each other."
 
     let pr_title_val = pr_title
         .map(|s| s.to_string())
-        .unwrap_or_else(|| format!("{}", branch_name));
+        .unwrap_or_else(|| branch_name.to_string());
     let pr_body_val = pr_body
         .map(|s| s.to_string())
         .unwrap_or_else(|| format!("Automated update from {}", branch_name));
