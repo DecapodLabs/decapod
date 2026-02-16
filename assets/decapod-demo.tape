@@ -10,9 +10,13 @@ Set BorderRadius 8
 Set TypingSpeed 45ms
 Set Shell "zsh"
 
-Type "cd /tmp/decapod-vhs-demo"
+Hide
+Type "cd /tmp/codebase"
 Enter
-Sleep 400ms
+Type "export PS1='%1~ %# '"
+Enter
+Show
+Sleep 300ms
 
 Set TypingSpeed 220ms
 Type "decapod init"
@@ -20,23 +24,11 @@ Enter
 Sleep 3s
 Set TypingSpeed 45ms
 
-Type "clear"
-Enter
-Sleep 500ms
-
-Type 'opencode run --dir /tmp/decapod-vhs-demo "Use decapod control-plane commands to create one TODO titled VHS demo handoff. Acquire session first if needed."'
+Type 'opencode run --model opencode/minimax-m2.5-free --dir /tmp/codebase "Use decapod control-plane commands to complete the existing TODO titled VHS demo handoff. Acquire session first if needed."'
 Enter
 Sleep 6s
 
-Type "clear"
-Enter
-Sleep 500ms
-
-Type 'opencode run --dir /tmp/decapod-vhs-demo "Use decapod control-plane commands to complete the TODO titled VHS demo handoff. Acquire session first if needed."'
-Enter
-Sleep 6s
-
-Type "decapod session acquire >/dev/null 2>&1 || true; decapod todo list"
+Type "decapod session acquire >/dev/null 2>&1 || true; decapod todo list --status done"
 Enter
 Sleep 3s
 
