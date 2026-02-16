@@ -46,6 +46,7 @@ Decapod is a local-first control plane for coding agents. It helps facilitate mu
 - Interoperability via a consistent CLI interface.
 - Auditability through events, proofs, and invariants.
 - A streamlined approach to agent collaboration.
+- Agent liveness through invocation heartbeat (every Decapod invocation auto-clocks presence).
 
 ⚠️ **ABSOLUTE REQUIREMENT:** Agents MUST interact with Decapod through its commands, not by directly manipulating internal state if a command exists for it.
 
@@ -261,6 +262,8 @@ All agents operating in this workspace MUST adhere to the following:
 6. **Consult Policy**: For high-risk or irreversible actions, use `decapod govern policy eval` and await an `APPROVAL_EVENT`.
 
 7. **Preserve Interface Abstraction**: Treat Decapod as internal agent infrastructure. Operator-facing outputs should remain semantic (intent/actions/outcomes), with command-surface details reserved for explicit diagnostic requests.
+
+8. **Rely on invocation heartbeat**: Presence is expected to auto-refresh on each Decapod command invocation. Do not bypass the CLI for shared-state work.
 
 ---
 
