@@ -4,7 +4,7 @@ use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand};
-use rusqlite::{params, OptionalExtension};
+use rusqlite::{OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use ulid::Ulid;

@@ -3,7 +3,7 @@ use crate::core::schemas;
 use crate::core::store::Store;
 use crate::plugins::todo;
 use clap::{Parser, Subcommand};
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -467,11 +467,7 @@ fn extract_kv(raw: &str, key: &str) -> Option<String> {
 }
 
 fn empty_dash(v: &str) -> &str {
-    if v.trim().is_empty() {
-        "-"
-    } else {
-        v.trim()
-    }
+    if v.trim().is_empty() { "-" } else { v.trim() }
 }
 
 fn escape_table(v: &str) -> String {
