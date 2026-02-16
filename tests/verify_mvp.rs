@@ -136,6 +136,23 @@ fn verify_mvp_pass_fail_unknown_flow() {
     );
 
     let db = Connection::open(repo.join(".decapod/data/todo.db")).unwrap();
+    let (status, notes, artifacts_json): (String, String, String) = db
+        .query_row(
+            "SELECT last_verified_status, last_verified_notes, verification_artifacts
+             FROM task_verification WHERE todo_id = ?1",
+            rusqlite::params![unknown_id.clone()],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .unwrap();
+    assert_eq!(status, "fail");
+    assert!(notes.contains("baseline captured while validate was failing"));
+    let artifacts: Value = serde_json::from_str(&artifacts_json).unwrap();
+    assert_eq!(
+        artifacts["proof_plan_results"][0]["proof_gate"],
+        "validate_passes"
+    );
+    assert_eq!(artifacts["proof_plan_results"][0]["status"], "fail");
+
     db.execute(
         "UPDATE task_verification SET verification_artifacts = NULL WHERE todo_id = ?1",
         rusqlite::params![unknown_id.clone()],

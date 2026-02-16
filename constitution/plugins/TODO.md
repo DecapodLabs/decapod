@@ -24,12 +24,23 @@ decapod todo list [--status open|done|archived] [--scope <scope>] [--tags <tags>
 decapod todo get --id <id>
 decapod todo done --id <id>
 decapod todo archive --id <id>
+decapod todo comment --id <id> --comment "<text>"
+decapod todo edit --id <id> [--title <title>] [--description <desc>] [--owner <owner>] [--category <name>]
 decapod todo claim --id <id> [--agent <agent-id>]
+decapod todo release --id <id>
+decapod todo rebuild
+decapod todo categories
 decapod todo register-agent --agent <agent-id> --category <name> [--category <name>]
 decapod todo ownerships [--category <name>] [--agent <agent-id>]
 decapod todo heartbeat [--agent <agent-id>]
 decapod todo presence [--agent <agent-id>]
-decapod todo schema  # JSON schema for programmatic use
+decapod todo handoff --id <id> --to <agent-id> [--from <agent-id>] --summary "<handoff summary>"
+decapod todo add-owner --id <id> --agent <agent-id> [--claim-type primary|secondary|watcher]
+decapod todo remove-owner --id <id> --agent <agent-id>
+decapod todo list-owners --id <id>
+decapod todo register-expertise --category <name> [--agent <agent-id>] [--level beginner|intermediate|advanced|expert]
+decapod todo expertise [--agent <agent-id>] [--category <name>]
+decapod data schema --subsystem todo  # JSON schema for programmatic use
 ```
 
 ## Task Lifecycle & Agent Obligations
