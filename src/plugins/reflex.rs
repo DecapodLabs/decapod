@@ -4,7 +4,7 @@ use crate::core::external_action;
 use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand};
-use rusqlite::{Result, types::ToSql};
+use rusqlite::{types::ToSql, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;

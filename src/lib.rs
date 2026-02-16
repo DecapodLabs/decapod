@@ -918,8 +918,8 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
         },
         _ => {
-            // Session token is optional for bootstrap/validation surfaces used in CI and startup
-            if !matches!(cli.command, Command::Validate(_)) {
+            // Only init/session/version are sessionless.
+            if !matches!(cli.command, Command::Version) {
                 ensure_session_valid()?;
             }
 
@@ -993,9 +993,6 @@ fn get_session_token_path() -> Result<PathBuf, error::DecapodError> {
 }
 
 fn ensure_session_valid() -> Result<(), error::DecapodError> {
-    if std::env::var_os("DECAPOD_BYPASS_SESSION").is_some() {
-        return Ok(());
-    }
     let token_path = get_session_token_path()?;
     if !token_path.exists() {
         return Err(error::DecapodError::SessionError(
