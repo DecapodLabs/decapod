@@ -1842,6 +1842,16 @@ fn sync_task_dependencies(
     .map_err(error::DecapodError::RusqliteError)?;
 
     for dep_id in parse_dependency_ids(depends_on) {
+        let dep_exists: bool = conn
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM tasks WHERE id = ?1)",
+                rusqlite::params![dep_id],
+                |row| row.get(0),
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        if !dep_exists {
+            continue;
+        }
         conn.execute(
             "INSERT OR IGNORE INTO task_dependencies(id, task_id, depends_on_task_id, created_at)
              VALUES(?1, ?2, ?3, ?4)",
