@@ -47,7 +47,7 @@ pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
 /// TODO database schema version
 ///
 /// Used for migration tracking in the `meta` table
-pub const TODO_SCHEMA_VERSION: u32 = 12;
+pub const TODO_SCHEMA_VERSION: u32 = 13;
 
 /// TODO metadata table schema
 ///
@@ -219,6 +219,23 @@ pub const TODO_DB_SCHEMA_TASK_OWNERS: &str = "
 
 pub const TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK: &str =
     "CREATE INDEX IF NOT EXISTS idx_task_owners_task ON task_owners(task_id)";
+
+/// Task dependency edges for explicit dependency graph queries.
+pub const TODO_DB_SCHEMA_TASK_DEPENDENCIES: &str = "
+    CREATE TABLE IF NOT EXISTS task_dependencies (
+        id TEXT PRIMARY KEY,
+        task_id TEXT NOT NULL,
+        depends_on_task_id TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE(task_id, depends_on_task_id),
+        FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+        FOREIGN KEY(depends_on_task_id) REFERENCES tasks(id) ON DELETE CASCADE
+    )
+";
+
+pub const TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK: &str =
+    "CREATE INDEX IF NOT EXISTS idx_task_dependencies_task ON task_dependencies(task_id)";
+pub const TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON: &str = "CREATE INDEX IF NOT EXISTS idx_task_dependencies_depends_on ON task_dependencies(depends_on_task_id)";
 
 /// Agent expertise table for category specialization
 pub const TODO_DB_SCHEMA_AGENT_EXPERTISE: &str = "
