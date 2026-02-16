@@ -22,3 +22,6 @@ Sleep 2500ms
 Type "Complete the hello world todo task"
 Enter
 Sleep 40s
+
+Type "exit"
+Enter
