@@ -17,7 +17,7 @@ Enter
 Sleep 3s
 Set TypingSpeed 45ms
 
-Type 'opencode run --model opencode/minimax-m2.5-free "Complete the existing TODO titled VHS demo handoff."'
+Type 'opencode run --model opencode/minimax-m2.5-free "Complete the hello world todo task"
 Enter
 Sleep 60s
 
