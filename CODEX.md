@@ -33,7 +33,7 @@ decapod todo list                   # 8. Active work
 Same four invariants as all agents:
 
 1. ✅ Start at router (`core/DECAPOD.md`)
-2. ✅ Use control plane (`decapod` commands only)
+2. ✅ Use control plane (`decapod` commands only; `.decapod` files only via `decapod` CLI)
 3. ✅ Pass validation (`decapod validate` before done)
 4. ✅ Stop if missing (ask for guidance)
 

@@ -21,7 +21,7 @@ decapod todo list                   # 8. See active work
 
 **After the start sequence:**
 
-1. **Use the control plane**: All shared state goes through `decapod` commands (never bypass)
+1. **Use the control plane**: All shared state and `.decapod` file access goes through `decapod` commands (never bypass)
 2. **Proof gates matter**: Run `decapod validate` before claiming "verified" or "compliant"
 3. **Interface abstraction boundary**: Preserve control-plane opacity. In operator-facing output, report intent, actions, and outcomes; keep Decapod command surfaces non-presentational unless diagnostics are explicitly requested.
 
@@ -32,7 +32,7 @@ If the router is missing or `decapod` command doesn't exist, **stop and ask the 
 Every agent working in this repo MUST:
 
 1. ✅ **Start at the router** - `decapod docs show core/DECAPOD.md` is your navigation charter
-2. ✅ **Use the control plane** - `decapod` commands are the interface to shared state (TODOs, proofs, etc.)
+2. ✅ **Use the control plane** - `decapod` commands are the interface to shared state; `.decapod` files are accessed only via `decapod` CLI
 3. ✅ **Pass validation** - `decapod validate` must pass before claiming completion
 4. ✅ **Stop if router missing** - If Decapod doesn't exist, ask for guidance
 

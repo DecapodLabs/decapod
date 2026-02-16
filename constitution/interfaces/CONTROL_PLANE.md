@@ -21,10 +21,11 @@ The control plane exists to make multi-agent behavior converge.
 Golden rules:
 
 1. Agents must not directly manipulate shared state (databases, state files) if a Decapod command exists for it.
-2. Agents must not invent parallel CLIs or parallel state roots.
-3. If the command surface is missing, the work is to add the surface, not to bypass it.
-4. Preserve control-plane opacity at the operator interface: communicate intent/actions/outcomes, not command-surface mechanics, unless diagnostics are explicitly requested.
-5. Liveness must be maintained through invocation heartbeat: each Decapod command invocation should refresh agent presence.
+2. Agents must not read or write `<repo>/.decapod/*` files directly; access is only through `decapod` CLI surfaces.
+3. Agents must not invent parallel CLIs or parallel state roots.
+4. If the command surface is missing, the work is to add the surface, not to bypass it.
+5. Preserve control-plane opacity at the operator interface: communicate intent/actions/outcomes, not command-surface mechanics, unless diagnostics are explicitly requested.
+6. Liveness must be maintained through invocation heartbeat: each Decapod command invocation should refresh agent presence.
 
 This is how you get determinism, auditability, and eventually policy.
 

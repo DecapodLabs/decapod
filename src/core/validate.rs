@@ -468,6 +468,10 @@ fn validate_entrypoint_invariants(
         ("decapod validate", "Validation gate language"),
         ("Stop if", "Stop-if-missing behavior"),
         (
+            ".decapod` files are accessed only via `decapod` CLI",
+            "Jail rule: .decapod access is CLI-only",
+        ),
+        (
             "Interface abstraction boundary",
             "Control-plane opacity language",
         ),
@@ -554,6 +558,23 @@ fn validate_entrypoint_invariants(
         } else {
             fail(
                 &format!("{} missing canonical router reference", agent_file),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must include explicit jail rule for .decapod access
+        if agent_content.contains("`.decapod` files only via `decapod` CLI") {
+            pass(
+                &format!("{} includes .decapod CLI-only jail rule", agent_file),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!(
+                    "{} missing .decapod CLI-only jail rule marker",
+                    agent_file
+                ),
                 fail_count,
             );
             all_present = false;
