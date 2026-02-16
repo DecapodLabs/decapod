@@ -32,7 +32,7 @@ decapod todo rebuild
 decapod todo categories
 decapod todo register-agent --agent <agent-id> --category <name> [--category <name>]
 decapod todo ownerships [--category <name>] [--agent <agent-id>]
-decapod todo heartbeat [--agent <agent-id>]
+decapod todo heartbeat [--agent <agent-id>] [--autoclaim] [--max-claims <n>]
 decapod todo presence [--agent <agent-id>]
 decapod todo handoff --id <id> --to <agent-id> [--from <agent-id>] --summary "<handoff summary>"
 decapod todo add-owner --id <id> --agent <agent-id> [--claim-type primary|secondary|watcher]
@@ -95,6 +95,12 @@ The TODO subsystem coordinates multiple agents using category ownership plus hea
 - Agents publish liveness via `decapod todo heartbeat`.
 - Presence state is visible via `decapod todo presence`.
 - Ownership checks treat missing/stale presence as inactive.
+- Decapod auto-clocks liveness on normal command invocation (invocation heartbeat).
+
+### Heartbeat execution assist
+
+- `decapod todo heartbeat --autoclaim --max-claims <n>` can claim eligible open tasks for the active agent.
+- This is the manual control-plane hook for command-driven worker loops when needed.
 
 ### Timeout eviction (30 minutes)
 
