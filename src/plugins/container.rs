@@ -714,9 +714,10 @@ fn build_container_script(
 ) -> String {
     let mut script = String::from(
         "set -eu\n\
-         git config --add safe.directory \"${DECAPOD_WORKSPACE:-$PWD}\" || true\n\
-         git config user.name \"${DECAPOD_GIT_USER_NAME:-Decapod Agent}\"\n\
-         git config user.email \"${DECAPOD_GIT_USER_EMAIL:-agent@decapod.local}\"\n\
+         cd \"${DECAPOD_WORKSPACE:-$PWD}\"\n\
+         git config --global --add safe.directory \"${DECAPOD_WORKSPACE:-$PWD}\" || true\n\
+         git config --global user.name \"${DECAPOD_GIT_USER_NAME:-Decapod Agent}\"\n\
+         git config --global user.email \"${DECAPOD_GIT_USER_EMAIL:-agent@decapod.local}\"\n\
          if command -v decapod >/dev/null 2>&1; then\n\
            decapod --version >/dev/null 2>&1 || true\n\
            if decapod --help 2>/dev/null | grep -qE \"(^|[[:space:]])update([[:space:]]|$)\"; then\n\
