@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1](https://github.com/DecapodLabs/decapod/compare/v0.15.0...v0.15.1) - 2026-02-16
+
+### Added
+
+- todo trust grants
+- todo trust grants
+
 ## [0.15.0](https://github.com/DecapodLabs/decapod/compare/v0.14.1...v0.15.0) - 2026-02-16
 
 ### Added
