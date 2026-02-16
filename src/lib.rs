@@ -725,7 +725,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                 let has_runtime = init_has_container_runtime();
                 let dedicated_key_hint = init_container_ssh_key_hint(&target_dir);
                 let has_dedicated_key = init_has_dedicated_agent_key(&target_dir);
-                let github_keys_url = "https://github.com/settings/keys";
 
                 if !has_runtime {
                     init_warnings.push(
@@ -736,8 +735,8 @@ pub fn run() -> Result<(), error::DecapodError> {
 
                 if !has_dedicated_key {
                     init_warnings.push(format!(
-                        "dedicated SSH key missing; run `ssh-keygen -t ed25519 -f {} -C \"decapod-agent\"` and add it at {}",
-                        dedicated_key_hint, github_keys_url
+                        "missing dedicated SSH key ({})",
+                        dedicated_key_hint
                     ));
                 }
 
@@ -751,8 +750,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     }
                     ensure_init_container_disable_override(&target_dir, &reasons.join(", "))?;
                     init_warnings.push(
-                        "container subsystem disabled by override until prerequisites are met"
-                            .to_string(),
+                        "container subsystem disabled until prerequisites are met".to_string(),
                     );
                 }
             }
