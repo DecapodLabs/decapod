@@ -37,9 +37,9 @@ Type "clear"
 Enter
 Sleep 500ms
 
-Type 'opencode run --dir "$DEMO_DIR" "Use decapod control-plane commands to create one TODO task titled VHS demo handoff. If a session token is required, run decapod session acquire first."'
+Type 'opencode run --dir "$DEMO_DIR" --command '"'"'decapod session acquire >/dev/null 2>&1 || true; decapod todo add --title "VHS demo handoff" --priority medium --type task'"'"' "Create TODO via decapod control plane"'
 Enter
-Sleep 10s
+Sleep 4s
 
 Type "tmux select-pane -R"
 Enter
@@ -49,15 +49,15 @@ Type "clear"
 Enter
 Sleep 500ms
 
-Type 'opencode run --dir "$DEMO_DIR" "Use decapod control-plane commands to find the open TODO titled VHS demo handoff and mark it done. If a session token is required, run decapod session acquire first."'
+Type 'opencode run --dir "$DEMO_DIR" --command '"'"'decapod session acquire >/dev/null 2>&1 || true; TASK=$(decapod todo list | rg -o "R_[A-Z0-9]+" | head -n1); [ -n "$TASK" ] && decapod todo done "$TASK"'"'"' "Complete TODO via decapod control plane"'
 Enter
-Sleep 10s
+Sleep 4s
 
 Type "tmux select-pane -L"
 Enter
 Sleep 800ms
 
-Type "decapod todo list"
+Type "decapod session acquire >/dev/null 2>&1 || true; decapod todo list"
 Enter
 Sleep 3s
 
