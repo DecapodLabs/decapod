@@ -66,11 +66,32 @@ Documentation should point to replacement surfaces, not deprecated command group
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `core/INTERFACES.md` - Interface contracts registry
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+- `specs/SECURITY.md` - Security contract
+- `specs/GIT.md` - Git etiquette contract
+- `specs/AMENDMENTS.md` - Change control
+
+### Registry (Core Indices)
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+- `core/DEPRECATION.md` - Deprecation contract
+
+### Contracts (Interfaces Layer)
 - `interfaces/CONTROL_PLANE.md` - Sequencing patterns
-- `plugins/TODO.md` - TODO subsystem
+- `interfaces/DOC_RULES.md` - Doc compilation rules
+- `interfaces/CLAIMS.md` - Promises ledger
+- `interfaces/GLOSSARY.md` - Term definitions
+
+### Operations (Plugins - This Registry)
+- `plugins/TODO.md` - **Work tracking (PRIMARY)**
 - `plugins/VERIFY.md` - Validation subsystem
+- `plugins/MANIFEST.md` - Canonical vs derived vs state
+- `plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols
 - `plugins/FEDERATION.md` - Federation (governed agent memory)
 - `plugins/DECIDE.md` - Architecture decision prompting
-- `plugins/DB_BROKER.md` - Broker SPEC
+- `plugins/DB_BROKER.md` - Database broker (SPEC)

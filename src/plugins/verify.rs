@@ -575,18 +575,17 @@ pub fn capture_baseline_for_todo(
     }
 
     let (validate_ok, output_hash) = run_validate_and_hash(repo_root)?;
-    if !validate_ok {
-        return Err(error::DecapodError::ValidationError(
-            "Cannot capture baseline: `decapod validate` failed".to_string(),
-        ));
-    }
 
     let ts = now_iso();
     let artifacts = VerificationArtifacts {
         completed_at: ts.clone(),
         proof_plan_results: vec![ProofPlanResult {
             proof_gate: "validate_passes".to_string(),
-            status: "pass".to_string(),
+            status: if validate_ok {
+                "pass".to_string()
+            } else {
+                "fail".to_string()
+            },
             command: "decapod validate".to_string(),
             output_hash,
         }],
@@ -595,11 +594,24 @@ pub fn capture_baseline_for_todo(
 
     let artifacts_json = serde_json::to_string(&artifacts).unwrap();
     let proof_plan_json = serde_json::to_string(&vec!["validate_passes"]).unwrap();
+    let baseline_status = if validate_ok { "pass" } else { "fail" };
+    let baseline_notes = if validate_ok {
+        "baseline captured"
+    } else {
+        "baseline captured while validate was failing"
+    };
 
     broker.with_conn(&db_path, "decapod", None, "verify.capture.write", |conn| {
         conn.execute(
-            "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)\n             VALUES(?1, ?2, ?3, ?4, 'pass', 'baseline captured', 90, ?4)\n             ON CONFLICT(todo_id) DO UPDATE SET\n               proof_plan=excluded.proof_plan,\n               verification_artifacts=excluded.verification_artifacts,\n               last_verified_at=excluded.last_verified_at,\n               last_verified_status=excluded.last_verified_status,\n               last_verified_notes=excluded.last_verified_notes,\n               verification_policy_days=excluded.verification_policy_days,\n               updated_at=excluded.updated_at",
-            rusqlite::params![todo_id, proof_plan_json, artifacts_json, ts],
+            "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)\n             VALUES(?1, ?2, ?3, ?4, ?5, ?6, 90, ?4)\n             ON CONFLICT(todo_id) DO UPDATE SET\n               proof_plan=excluded.proof_plan,\n               verification_artifacts=excluded.verification_artifacts,\n               last_verified_at=excluded.last_verified_at,\n               last_verified_status=excluded.last_verified_status,\n               last_verified_notes=excluded.last_verified_notes,\n               verification_policy_days=excluded.verification_policy_days,\n               updated_at=excluded.updated_at",
+            rusqlite::params![
+                todo_id,
+                proof_plan_json,
+                artifacts_json,
+                ts,
+                baseline_status,
+                baseline_notes
+            ],
         )?;
         Ok(())
     })?;
@@ -611,8 +623,8 @@ pub fn capture_baseline_for_todo(
         serde_json::json!({
             "proof_plan": ["validate_passes"],
             "verification_artifacts": artifacts,
-            "last_verified_status": "pass",
-            "last_verified_notes": "baseline captured",
+            "last_verified_status": baseline_status,
+            "last_verified_notes": baseline_notes,
             "verification_policy_days": 90
         }),
     )?;

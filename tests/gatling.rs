@@ -309,6 +309,34 @@ fn t040_todo_lifecycle() {
         &dir,
         &["todo", "comment", "--id", &id, "--comment", "Test comment"],
     );
+    // T047A: add owner
+    ok(
+        &dir,
+        &[
+            "todo",
+            "add-owner",
+            "--id",
+            &id,
+            "--agent",
+            "test-reviewer",
+            "--claim-type",
+            "secondary",
+        ],
+    );
+    // T047B: list owners
+    ok(&dir, &["todo", "list-owners", "--id", &id]);
+    // T047C: remove owner
+    ok(
+        &dir,
+        &[
+            "todo",
+            "remove-owner",
+            "--id",
+            &id,
+            "--agent",
+            "test-reviewer",
+        ],
+    );
     // T048: edit
     ok(
         &dir,

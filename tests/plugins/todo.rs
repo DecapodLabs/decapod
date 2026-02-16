@@ -35,6 +35,9 @@ fn test_todo_lifecycle() {
     let task = get_task(&root, task_id).unwrap().expect("Task not found");
     assert_eq!(task.title, "Test task");
     assert_eq!(task.status, "open");
+    assert_eq!(task.owners.len(), 1);
+    assert_eq!(task.owners[0].agent_id, "arx");
+    assert_eq!(task.owners[0].claim_type, "primary");
 
     // 3. Mark done
     let store = Store {

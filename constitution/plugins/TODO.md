@@ -134,3 +134,33 @@ All other transitions are invalid and must produce an error.
 ---
 
 **See also:** `core/PLUGINS.md` for subsystem registry and truth labels.
+
+---
+
+## Links
+
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+- `specs/SECURITY.md` - Security contract
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+
+### Contracts (Interfaces Layer)
+- `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/TODO_SCHEMA.md` - TODO schema definition
+- `interfaces/STORE_MODEL.md` - Store semantics
+
+### Practice (Methodology Layer)
+- `methodology/SOUL.md` - Agent identity
+
+### Operations (Plugins Layer - This Subsystem)
+- `plugins/VERIFY.md` - Validation subsystem
+- `plugins/MANIFEST.md` - Canonical vs derived vs state
+- `plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols

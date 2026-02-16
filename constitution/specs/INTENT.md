@@ -152,12 +152,36 @@ If this file starts specifying command envelopes, store wiring, subsystem indexi
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
-- `methodology/ARCHITECTURE.md` - Architecture practice
-- `specs/SYSTEM.md` - System definition
-- `methodology/SOUL.md` - Agent identity
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/SYSTEM.md` - System definition and authority doctrine
+- `specs/SECURITY.md` - Security contract
+- `specs/GIT.md` - Git etiquette contract
+- `specs/AMENDMENTS.md` - Change control
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/METHODOLOGY.md` - Methodology guides index
+
+### Contracts (Interfaces Layer)
 - `interfaces/CONTROL_PLANE.md` - Sequencing patterns
+- `interfaces/DOC_RULES.md` - Doc compilation rules
+- `interfaces/STORE_MODEL.md` - Store semantics
 - `interfaces/CLAIMS.md` - Promises ledger
+- `interfaces/GLOSSARY.md` - Term definitions
+
+### Practice (Methodology Layer)
+- `methodology/ARCHITECTURE.md` - Architecture practice
+- `methodology/SOUL.md` - Agent identity
+- `methodology/KNOWLEDGE.md` - Knowledge curation
+- `methodology/MEMORY.md` - Memory and learning
+
+### Operations (Plugins Layer)
+- `plugins/TODO.md` - Work tracking
+- `plugins/VERIFY.md` - Validation subsystem
 
 ---
 

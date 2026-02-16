@@ -9,10 +9,11 @@
 ```bash
 cargo install decapod              # 1. Install/update to latest release
 decapod --version                   # 2. Check installed version
-decapod --help                      # 3. Verify available commands
-decapod docs show core/DECAPOD.md  # 4. Refresh constitution
-decapod validate                    # 5. Check system state
-decapod todo list                   # 6. See active work
+decapod update                      # 3. Update if repo version is newer (safe no-op if current)
+decapod --help                      # 4. Verify available commands
+decapod docs show core/DECAPOD.md  # 5. Refresh constitution
+decapod validate                    # 6. Check system state
+decapod todo list                   # 7. See active work
 ```
 
 **Why this is mandatory:** The decapod binary evolves. Commands change. Constitution updates. Always install the latest release first, then verify what's available and refresh your understanding before acting. Skipping this causes errors.
@@ -63,8 +64,36 @@ This repo may customize behavior via `.decapod/OVERRIDE.md`. Run `decapod docs s
 
 ## Links
 
-- `core/DECAPOD.md` — **Router (start here)**
-- `core/CONTROL_PLANE.md` — Sequencing patterns
-- `specs/INTENT.md` — Authority contracts
-- `specs/ARCHITECTURE.md` — System boundaries
+### Core Router (Start Here)
+- `core/DECAPOD.md` — **Router and navigation charter**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` — **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` — System definition and authority doctrine
+- `specs/SECURITY.md` — Security contract
+- `specs/GIT.md` — Git etiquette contract
+- `specs/AMENDMENTS.md` — Change control
+
+### Registry (Core Indices)
 - `core/PLUGINS.md` — Subsystem registry
+- `core/INTERFACES.md` — Interface contracts index
+- `core/METHODOLOGY.md` — Methodology guides index
+
+### Contracts (Interfaces Layer)
+- `interfaces/CONTROL_PLANE.md` — Sequencing patterns
+- `interfaces/DOC_RULES.md` — Doc compilation rules
+- `interfaces/STORE_MODEL.md` — Store semantics
+- `interfaces/CLAIMS.md` — Promises ledger
+- `interfaces/GLOSSARY.md` — Term definitions
+
+### Practice (Methodology Layer)
+- `methodology/SOUL.md` — Agent identity
+- `methodology/ARCHITECTURE.md` — Architecture practice
+- `methodology/KNOWLEDGE.md` — Knowledge curation
+- `methodology/MEMORY.md` — Memory and learning
+
+### Operations (Plugins Layer)
+- `plugins/TODO.md` — **Work tracking (PRIMARY)**
+- `plugins/VERIFY.md` — Validation subsystem
+- `plugins/MANIFEST.md` — Canonical vs derived vs state
+- `plugins/EMERGENCY_PROTOCOL.md` — Emergency protocols

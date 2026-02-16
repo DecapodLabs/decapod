@@ -120,14 +120,26 @@ Each entry MUST include:
 
 ## Links
 
-- `core/DECAPOD.md` - Router and navigation charter
+### Core Router
+- `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+
+### Authority (Constitution Layer)
+- `specs/INTENT.md` - **Methodology contract (READ FIRST)**
+- `specs/SYSTEM.md` - System definition and authority doctrine
+- `specs/SECURITY.md` - Security contract
+- `specs/GIT.md` - Git etiquette contract
+
+### Registry (Core Indices)
+- `core/PLUGINS.md` - Subsystem registry
+- `core/INTERFACES.md` - Interface contracts index
+- `core/DEPRECATION.md` - Deprecation contract
+
+### Contracts (Interfaces Layer)
 - `interfaces/DOC_RULES.md` - Doc compilation rules
 - `interfaces/CLAIMS.md` - Promises ledger
-- `core/DEPRECATION.md` - Deprecation contract
-- `plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols
-- `core/PLUGINS.md` - Subsystem registry
 - `interfaces/STORE_MODEL.md` - Store semantics
-- `specs/SYSTEM.md` - System definition
-- `specs/INTENT.md` - Intent contract
-- `specs/SECURITY.md` - Security doctrine
-- `specs/GIT.md` - Git workflow
+- `interfaces/GLOSSARY.md` - Term definitions
+
+### Operations (Plugins Layer)
+- `plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols
+- `plugins/TODO.md` - Work tracking
