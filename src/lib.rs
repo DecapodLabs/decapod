@@ -85,8 +85,8 @@ use core::{
     tui, validate,
 };
 use plugins::{
-    archive, context, cron, decide, federation, feedback, health, knowledge, policy, reflex,
-    teammate, todo, verify, watcher,
+    archive, context, cron, decide, federation, feedback, health, knowledge, policy, primitives,
+    reflex, teammate, todo, verify, watcher, workflow,
 };
 
 use clap::{CommandFactory, Parser, Subcommand};
@@ -230,6 +230,9 @@ enum DataCommand {
 
     /// Governed agent memory — typed knowledge graph
     Federation(federation::FederationCli),
+
+    /// Markdown-native primitive layer
+    Primitives(primitives::PrimitivesCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -245,6 +248,9 @@ enum AutoCommand {
 
     /// Event-driven automation
     Reflex(reflex::ReflexCli),
+
+    /// Workflow automation and discovery
+    Workflow(workflow::WorkflowCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -263,6 +269,9 @@ enum QaCommand {
         /// Check crate description matches expected
         #[clap(long)]
         crate_description: bool,
+        /// Smoke-check all discoverable command help surfaces
+        #[clap(long)]
+        commands: bool,
         /// Run all checks
         #[clap(long)]
         all: bool,
@@ -1118,8 +1127,7 @@ fn run_data_command(
             match schema_cli.format.as_str() {
                 "json" => println!("{}", serde_json::to_string_pretty(&output).unwrap()),
                 "md" => {
-                    println!("Markdown schema format not yet implemented. Defaulting to JSON.");
-                    println!("{}", serde_json::to_string_pretty(&output).unwrap());
+                    println!("{}", schema_to_markdown(&output));
                 }
                 other => {
                     return Err(error::DecapodError::ValidationError(format!(
@@ -1156,9 +1164,57 @@ fn run_data_command(
         DataCommand::Federation(federation_cli) => {
             federation::run_federation_cli(project_store, federation_cli)?;
         }
+        DataCommand::Primitives(primitives_cli) => {
+            primitives::run_primitives_cli(project_store, primitives_cli)?;
+        }
     }
 
     Ok(())
+}
+
+fn schema_to_markdown(schema: &serde_json::Value) -> String {
+    fn render_value(v: &serde_json::Value) -> String {
+        match v {
+            serde_json::Value::Object(map) => {
+                let mut keys: Vec<_> = map.keys().cloned().collect();
+                keys.sort();
+                let mut out = String::new();
+                for key in keys {
+                    let value = &map[&key];
+                    match value {
+                        serde_json::Value::Object(_) | serde_json::Value::Array(_) => {
+                            out.push_str(&format!("- **{}**:\n", key));
+                            for line in render_value(value).lines() {
+                                out.push_str(&format!("  {}\n", line));
+                            }
+                        }
+                        _ => out.push_str(&format!("- **{}**: `{}`\n", key, value)),
+                    }
+                }
+                out
+            }
+            serde_json::Value::Array(items) => {
+                let mut out = String::new();
+                for item in items {
+                    match item {
+                        serde_json::Value::Object(_) | serde_json::Value::Array(_) => {
+                            out.push_str("- item:\n");
+                            for line in render_value(item).lines() {
+                                out.push_str(&format!("  {}\n", line));
+                            }
+                        }
+                        _ => out.push_str(&format!("- `{}`\n", item)),
+                    }
+                }
+                out
+            }
+            _ => format!("- `{}`\n", v),
+        }
+    }
+
+    let mut out = String::from("# Decapod Schema\n\n");
+    out.push_str(&render_value(schema));
+    out
 }
 
 fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Value> {
@@ -1166,6 +1222,7 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("todo", todo::schema());
     schemas.insert("cron", cron::schema());
     schemas.insert("reflex", reflex::schema());
+    schemas.insert("workflow", workflow::schema());
     schemas.insert("health", health::health_schema());
     schemas.insert("broker", core::broker::schema());
     schemas.insert("external_action", core::external_action::schema());
@@ -1178,6 +1235,7 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("feedback", feedback::schema());
     schemas.insert("teammate", teammate::schema());
     schemas.insert("federation", federation::schema());
+    schemas.insert("primitives", primitives::schema());
     schemas.insert("decide", decide::schema());
     schemas.insert("docs", docs_cli::schema());
     schemas.insert("deprecations", deprecation_metadata());
@@ -1309,6 +1367,9 @@ fn run_auto_command(auto_cli: AutoCli, project_store: &Store) -> Result<(), erro
     match auto_cli.command {
         AutoCommand::Cron(cron_cli) => cron::run_cron_cli(project_store, cron_cli)?,
         AutoCommand::Reflex(reflex_cli) => reflex::run_reflex_cli(project_store, reflex_cli),
+        AutoCommand::Workflow(workflow_cli) => {
+            workflow::run_workflow_cli(project_store, workflow_cli)?
+        }
     }
 
     Ok(())
@@ -1325,8 +1386,9 @@ fn run_qa_command(
         }
         QaCommand::Check {
             crate_description,
+            commands,
             all,
-        } => run_check(crate_description, all)?,
+        } => run_check(crate_description, commands, all)?,
         QaCommand::Gatling(ref gatling_cli) => plugins::gatling::run_gatling_cli(gatling_cli)?,
     }
 
@@ -1460,7 +1522,11 @@ exit 0
     Ok(())
 }
 
-fn run_check(crate_description: bool, all: bool) -> Result<(), error::DecapodError> {
+fn run_check(
+    crate_description: bool,
+    commands: bool,
+    all: bool,
+) -> Result<(), error::DecapodError> {
     if crate_description || all {
         let expected = "Decapod is a Rust-built governance runtime for AI agents: repo-native state, enforced workflow, proof gates, safe coordination.";
 
@@ -1490,10 +1556,51 @@ fn run_check(crate_description: bool, all: bool) -> Result<(), error::DecapodErr
         }
     }
 
-    if all && !crate_description {
-        println!("Note: --all requires --crate-description");
+    if commands || all {
+        run_command_help_smoke()?;
+        println!("✓ Command help surfaces are valid");
     }
 
+    if all && !(crate_description || commands) {
+        println!("Note: --all enables all checks");
+    }
+
+    Ok(())
+}
+
+fn run_command_help_smoke() -> Result<(), error::DecapodError> {
+    fn walk(cmd: &clap::Command, prefix: Vec<String>, all_paths: &mut Vec<Vec<String>>) {
+        if cmd.get_name() != "help" {
+            all_paths.push(prefix.clone());
+        }
+        for sub in cmd.get_subcommands().filter(|sub| !sub.is_hide_set()) {
+            let mut next = prefix.clone();
+            next.push(sub.get_name().to_string());
+            walk(sub, next, all_paths);
+        }
+    }
+
+    let exe = std::env::current_exe().map_err(error::DecapodError::IoError)?;
+    let mut command_paths = Vec::new();
+    walk(&Cli::command(), Vec::new(), &mut command_paths);
+    command_paths.sort();
+    command_paths.dedup();
+
+    for path in command_paths {
+        let mut args = path.clone();
+        args.push("--help".to_string());
+        let output = std::process::Command::new(&exe)
+            .args(&args)
+            .output()
+            .map_err(error::DecapodError::IoError)?;
+        if !output.status.success() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "help smoke failed for `decapod {}`: {}",
+                path.join(" "),
+                String::from_utf8_lossy(&output.stderr).trim()
+            )));
+        }
+    }
     Ok(())
 }
 

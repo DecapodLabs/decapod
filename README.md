@@ -42,7 +42,7 @@ Demo: **[Watch on GitHub](https://github.com/DecapodLabs/decapod/raw/master/asse
 
 Like Docker is a runtime for containers, Decapod is a runtime for agents. You set it up once, then agents operate inside a governed environment with persistent state, enforced methodology, proof gates, and coordination primitives.
 
-Agents can write code. But they can't reliably **ship** because they forget what they built yesterday, treat best practices as vibes, say "done" without evidence, and trip over each other in parallel. Decapod fixes that with over 60 validation gates that enforce the agent<->Decapod contract.
+Agents can write code. But they can't reliably **ship** because they forget what they built yesterday, treat best practices as vibes, say "done" without evidence, and trip over each other in parallel. Decapod fixes that with over 75 validation gates that enforce the agent<->Decapod contract.
 
 Decapod is **not** a prompt pack, an agent framework, a hosted SaaS platform, a review bot, or a human workflow tool. Humans may read artifacts; agents are the operators. It's infrastructure: the environment where agent work becomes enforceable.
 

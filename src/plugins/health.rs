@@ -503,12 +503,7 @@ pub fn get_autonomy(store: &Store, actor_id: &str) -> Result<AutonomyStatus, err
 }
 
 fn now_iso() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    format!("{}Z", secs)
+    crate::core::time::now_epoch_z()
 }
 
 pub fn claim_schema() -> serde_json::Value {

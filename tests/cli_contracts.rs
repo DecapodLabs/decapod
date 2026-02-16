@@ -38,6 +38,7 @@ fn todo_help_schema_and_docs_stay_in_sync() {
         "ownerships",
         "heartbeat",
         "presence",
+        "worker-run",
         "handoff",
         "add-owner",
         "remove-owner",

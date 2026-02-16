@@ -13,6 +13,7 @@
 
 use crate::core::db;
 use crate::core::error;
+use crate::core::time;
 use crate::plugins::policy;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
@@ -147,15 +148,9 @@ impl DbBroker {
     ) -> Result<(), error::DecapodError> {
         use std::fs::OpenOptions;
         use std::io::Write;
-        use std::time::{SystemTime, UNIX_EPOCH};
-
-        let secs = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        let ts = format!("{}Z", secs);
-        let request_id = Ulid::new().to_string();
-        let event_id = Ulid::new().to_string();
+        let ts = time::now_epoch_z();
+        let request_id = time::new_event_id();
+        let event_id = time::new_event_id();
         let session_id = env::var("DECAPOD_SESSION_ID").ok();
         let correlation_id = env::var("DECAPOD_CORRELATION_ID")
             .ok()

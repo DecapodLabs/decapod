@@ -312,14 +312,7 @@ pub struct AgentPresence {
 }
 
 fn now_iso() -> String {
-    // Good enough for stable ordering and human readability; we can switch to chrono later.
-    // Use RFC3339-like UTC seconds with 'Z' suffix.
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-    format!("{}Z", secs)
+    crate::core::time::now_epoch_z()
 }
 
 fn parse_epoch_z(ts: &str) -> Option<u64> {
@@ -576,8 +569,9 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         // Operational risk zones
         conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
-        seed_default_risk_zones(conn)?;
     }
+    // Keep defaults current across upgrades; INSERT OR IGNORE is idempotent.
+    seed_default_risk_zones(conn)?;
 
     conn.execute(
         "INSERT INTO meta(key, value) VALUES('schema_version', ?1)
@@ -608,6 +602,36 @@ fn seed_default_risk_zones(conn: &Connection) -> Result<(), error::DecapodError>
             "Task handoff requires verified trust and explicit approval",
             "verified",
             1,
+        ),
+        (
+            "federation.mutate",
+            "Knowledge graph mutations require verified trust",
+            "verified",
+            0,
+        ),
+        (
+            "decisioning.mutate",
+            "Decision capture requires basic trust",
+            "basic",
+            0,
+        ),
+        (
+            "teammate.mutate",
+            "Teammate preference mutations require basic trust",
+            "basic",
+            0,
+        ),
+        (
+            "policy.control",
+            "Policy mutations require core trust and explicit approval",
+            "core",
+            1,
+        ),
+        (
+            "control.mutate",
+            "Fallback mutation zone for unclassified mutators",
+            "basic",
+            0,
         ),
     ];
 

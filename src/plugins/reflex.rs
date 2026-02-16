@@ -28,8 +28,7 @@ pub fn initialize_reflex_db(root: &Path) -> Result<(), error::DecapodError> {
 }
 
 fn now_iso() -> String {
-    let now = std::time::SystemTime::now();
-    format!("{:?}", now)
+    crate::core::time::now_epoch_z()
 }
 
 const COMPONENT_NAMES: &[&str] = &[
