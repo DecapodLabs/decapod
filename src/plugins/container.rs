@@ -87,7 +87,8 @@ pub struct RunSummary {
     pub value: serde_json::Value,
 }
 
-const CONTAINER_DISABLE_MARKER: &str = "DECAPOD_CONTAINER_RUNTIME_DISABLED=true";
+pub(crate) const CONTAINER_DISABLE_MARKER: &str = "DECAPOD_CONTAINER_RUNTIME_DISABLED=true";
+const GENERATED_SSH_KEY_PATH_FILE: &str = ".decapod/generated/container_ssh_key_path";
 
 pub fn run_container_cli(store: &Store, cli: ContainerCli) -> Result<(), error::DecapodError> {
     let summary = match cli.command {
@@ -237,7 +238,7 @@ Warning: without isolated containers, concurrent agents can step on each other."
             ));
         }
     };
-    if (push || pr) && !has_container_ssh_material() {
+    if (push || pr) && !has_container_ssh_material(&repo) {
         disable_container_runtime_override(
             &repo,
             "No SSH credentials available for container push/PR",
@@ -429,7 +430,28 @@ fn disable_container_runtime_override(
     Ok(())
 }
 
-fn has_container_ssh_material() -> bool {
+fn generated_container_ssh_key_path(repo_root: &Path) -> Option<PathBuf> {
+    let key_path_file = repo_root.join(GENERATED_SSH_KEY_PATH_FILE);
+    let raw = fs::read_to_string(key_path_file).ok()?;
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    if let Some(home) = std::env::var_os("HOME") {
+        if trimmed.starts_with("~/") {
+            return Some(PathBuf::from(home).join(trimmed.trim_start_matches("~/")));
+        }
+    }
+    Some(PathBuf::from(trimmed))
+}
+
+fn has_container_ssh_material(repo_root: &Path) -> bool {
+    if let Some(key_path) = generated_container_ssh_key_path(repo_root) {
+        if key_path.is_file() {
+            return true;
+        }
+    }
+
     let default_ssh_dir = std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".ssh"));
     let ssh_dir = std::env::var("DECAPOD_CONTAINER_SSH_DIR")
         .ok()
