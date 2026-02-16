@@ -35,6 +35,15 @@ pub struct ScaffoldOptions {
     pub all: bool,
 }
 
+pub struct ScaffoldSummary {
+    pub entrypoints_created: usize,
+    pub entrypoints_unchanged: usize,
+    pub entrypoints_preserved: usize,
+    pub config_created: usize,
+    pub config_unchanged: usize,
+    pub config_preserved: usize,
+}
+
 /// Ensure a given entry exists in the project's .gitignore file.
 /// Creates the file if it doesn't exist. Appends the entry if not already present.
 fn ensure_gitignore_entry(target_dir: &Path, entry: &str) -> Result<(), error::DecapodError> {
@@ -115,9 +124,10 @@ fn write_file(
     Ok(FileAction::Created)
 }
 
-pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error::DecapodError> {
+pub fn scaffold_project_entrypoints(
+    opts: &ScaffoldOptions,
+) -> Result<ScaffoldSummary, error::DecapodError> {
     let data_dir_rel = ".decapod/data";
-    println!("init: generating entrypoints and control-plane config");
 
     // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
     fs::create_dir_all(opts.target_dir.join(data_dir_rel)).map_err(error::DecapodError::IoError)?;
@@ -176,24 +186,15 @@ pub fn scaffold_project_entrypoints(opts: &ScaffoldOptions) -> Result<(), error:
         }
     }
 
-    println!(
-        "init: entrypoints created={}, unchanged={}, preserved={}",
-        ep_created, ep_unchanged, ep_preserved
-    );
-    println!(
-        "init: config created={}, unchanged={}, preserved={}",
-        cfg_created, cfg_unchanged, cfg_preserved
-    );
-    println!("init: control plane ready");
-
-    // Show backup instructions if .bak files were created
-    if opts.created_backups {
-        println!(
-            "init: backup files were created (*.bak); merge required content into .decapod/OVERRIDE.md"
-        );
-    }
-
     // Constitution is embedded in binary - no scaffolding needed.
     // Users customize via OVERRIDE.md (scaffolded above).
-    Ok(())
+    let _ = opts.created_backups;
+    Ok(ScaffoldSummary {
+        entrypoints_created: ep_created,
+        entrypoints_unchanged: ep_unchanged,
+        entrypoints_preserved: ep_preserved,
+        config_created: cfg_created,
+        config_unchanged: cfg_unchanged,
+        config_preserved: cfg_preserved,
+    })
 }

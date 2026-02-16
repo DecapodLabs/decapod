@@ -33,9 +33,15 @@ use crate::core::store::{Store, StoreKind};
 use crate::{db, primitives, todo};
 use regex::Regex;
 use serde_json;
+use std::cell::RefCell;
 use std::fs;
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
+
+thread_local! {
+    static VALIDATION_FAILS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+    static VALIDATION_WARNS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+}
 
 fn collect_repo_files(root: &Path, out: &mut Vec<PathBuf>) -> Result<(), error::DecapodError> {
     fn recurse(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), error::DecapodError> {
@@ -206,7 +212,7 @@ fn pass(message: &str, pass_count: &mut u32) {
 
 fn fail(message: &str, fail_count: &mut u32) {
     *fail_count += 1;
-    eprintln!("FAIL: {}", message);
+    VALIDATION_FAILS.with(|v| v.borrow_mut().push(message.to_string()));
 }
 
 fn skip(message: &str, skip_count: &mut u32) {
@@ -216,7 +222,7 @@ fn skip(message: &str, skip_count: &mut u32) {
 
 fn warn(message: &str, warn_count: &mut u32) {
     *warn_count += 1;
-    let _ = message;
+    VALIDATION_WARNS.with(|v| v.borrow_mut().push(message.to_string()));
 }
 
 fn info(message: &str) {
@@ -1494,6 +1500,8 @@ pub fn run_validation(
     decapod_dir: &Path,
     _home_dir: &Path,
 ) -> Result<(), error::DecapodError> {
+    VALIDATION_FAILS.with(|v| v.borrow_mut().clear());
+    VALIDATION_WARNS.with(|v| v.borrow_mut().clear());
     println!("validate: running methodology and integrity gates");
 
     // Directly get content from embedded assets
@@ -1545,6 +1553,26 @@ pub fn run_validation(
         "validate: summary pass={} fail={} warn={}",
         pass_count, fail_count, warn_count
     );
+
+    VALIDATION_FAILS.with(|v| {
+        let fails = v.borrow();
+        if !fails.is_empty() {
+            println!("validate: failures");
+            for msg in fails.iter() {
+                println!("  - {}", msg);
+            }
+        }
+    });
+
+    VALIDATION_WARNS.with(|v| {
+        let warns = v.borrow();
+        if !warns.is_empty() {
+            println!("validate: warnings");
+            for msg in warns.iter() {
+                println!("  - {}", msg);
+            }
+        }
+    });
 
     if fail_count > 0 {
         Err(error::DecapodError::ValidationError(format!(
