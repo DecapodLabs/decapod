@@ -30,7 +30,6 @@
 
 use crate::core::error;
 use crate::core::store::{Store, StoreKind};
-use crate::core::tui;
 use crate::{db, primitives, todo};
 use regex::Regex;
 use serde_json;
@@ -201,32 +200,27 @@ fn validate_embedded_self_contained(
 }
 
 fn pass(message: &str, pass_count: &mut u32) {
-    use colored::Colorize;
     *pass_count += 1;
-    println!("    {} {}", "●".bright_green(), message.bright_white());
+    let _ = message;
 }
 
 fn fail(message: &str, fail_count: &mut u32) {
-    use colored::Colorize;
     *fail_count += 1;
-    eprintln!("    {} {}", "●".bright_red(), message.bright_white());
+    eprintln!("FAIL: {}", message);
 }
 
 fn skip(message: &str, skip_count: &mut u32) {
-    use colored::Colorize;
     *skip_count += 1;
-    println!("    {} {}", "○".bright_yellow(), message.bright_white());
+    let _ = message;
 }
 
 fn warn(message: &str, warn_count: &mut u32) {
-    use colored::Colorize;
     *warn_count += 1;
-    println!("    {} {}", "●".bright_yellow(), message.bright_white());
+    let _ = message;
 }
 
 fn info(message: &str) {
-    use colored::Colorize;
-    println!("    {} {}", "ℹ".bright_cyan(), message.bright_black());
+    let _ = message;
 }
 
 fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
@@ -1500,25 +1494,13 @@ pub fn run_validation(
     decapod_dir: &Path,
     _home_dir: &Path,
 ) -> Result<(), error::DecapodError> {
-    use colored::Colorize;
-
-    tui::render_box(
-        "⚡ PROOF HARNESS - VALIDATION PROTOCOL",
-        "Intent-Driven Methodology Enforcement",
-        tui::BoxStyle::Magenta,
-    );
-    println!();
+    println!("validate: running methodology and integrity gates");
 
     // Directly get content from embedded assets
     let intent_content = crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
     let intent_version =
         extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
-    println!(
-        "  {} Intent Version: {}",
-        "ℹ".bright_cyan(),
-        intent_version.bright_white()
-    );
-    println!();
+    println!("validate: intent_version={}", intent_version);
 
     let mut pass_count = 0;
     let mut fail_count = 0;
@@ -1559,7 +1541,10 @@ pub fn run_validation(
     validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
     validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 
-    tui::print_summary(pass_count as usize, fail_count as usize);
+    println!(
+        "validate: summary pass={} fail={} warn={}",
+        pass_count, fail_count, warn_count
+    );
 
     if fail_count > 0 {
         Err(error::DecapodError::ValidationError(format!(

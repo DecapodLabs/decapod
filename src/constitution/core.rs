@@ -11,5 +11,4 @@ pub use crate::core::repomap;
 pub use crate::core::scaffold;
 pub use crate::core::schemas;
 pub use crate::core::store;
-pub use crate::core::tui;
 pub use crate::core::validate;
