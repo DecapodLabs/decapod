@@ -1,12 +1,6 @@
 <p align="center">
-  <video src="assets/decapod-demo.mp4" controls muted playsinline width="100%"></video>
+  <img src="assets/decapod-demo.gif" alt="Decapod demo" width="100%" />
 </p>
-
-<p align="center">
-  <a href="https://github.com/DecapodLabs/decapod/raw/master/assets/decapod-demo.mp4">Direct video link</a>
-</p>
-
-Source tape: `assets/decapod-demo.tape` (render with `./dev/render-demo-vhs.sh`)
 
 ## Quickstart
 
