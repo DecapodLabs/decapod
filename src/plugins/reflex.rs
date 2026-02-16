@@ -316,14 +316,14 @@ pub fn run_reflex_cli(store: &Store, cli: ReflexCli) {
             id,
             trigger_type,
             limit,
-        } => run_reflex_actions(root, id, trigger_type, limit),
+        } => run_reflex_actions(root, &id, &trigger_type, &limit),
         ReflexCommand::AddHeartbeatLoop {
             name,
             agent,
             max_claims,
             tags,
             dir,
-        } => add_heartbeat_loop_reflex(root, name, agent, max_claims, tags, dir),
+        } => add_heartbeat_loop_reflex(root, &name, &agent, &max_claims, &tags, &dir),
     };
     if let Err(e) = result {
         eprintln!("Error: {}", e);
@@ -331,9 +331,8 @@ pub fn run_reflex_cli(store: &Store, cli: ReflexCli) {
 }
 
 fn parse_json_config(raw: &str, field: &str) -> Result<JsonValue, error::DecapodError> {
-    serde_json::from_str(raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!("invalid {} JSON: {}", field, e))
-    })
+    serde_json::from_str(raw)
+        .map_err(|e| error::DecapodError::ValidationError(format!("invalid {} JSON: {}", field, e)))
 }
 
 fn fetch_matching_reflexes(
@@ -393,13 +392,18 @@ fn execute_reflex_action(
     match reflex.action_type.as_str() {
         "todo.heartbeat.autoclaim" => {
             let cfg = parse_json_config(&reflex.action_config, "action_config")?;
-            let default_agent = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let default_agent =
+                env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let agent = cfg
                 .get("agent")
                 .and_then(|v| v.as_str())
                 .unwrap_or(default_agent.as_str());
             let max_claims = cfg.get("max_claims").and_then(|v| v.as_u64()).unwrap_or(1);
             let max_claims_s = max_claims.to_string();
+            let decapod_bin = std::env::current_exe()
+                .map_err(error::DecapodError::IoError)?
+                .to_string_lossy()
+                .to_string();
             let args = vec![
                 "todo",
                 "heartbeat",
@@ -420,7 +424,7 @@ fn execute_reflex_action(
                 root,
                 external_action::ExternalCapability::VerificationExec,
                 "reflex.action.todo.heartbeat.autoclaim",
-                "decapod",
+                decapod_bin.as_str(),
                 &args,
                 &cwd,
             )?;

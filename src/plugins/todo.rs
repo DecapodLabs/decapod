@@ -1107,6 +1107,12 @@ fn record_heartbeat(root: &Path, agent_id: &str) -> Result<serde_json::Value, er
     }))
 }
 
+pub fn clock_in_agent_presence(store: &Store) -> Result<(), error::DecapodError> {
+    let default_agent = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+    let _ = record_heartbeat(&store.root, &default_agent)?;
+    Ok(())
+}
+
 fn list_claimable_tasks_for_agent(
     root: &Path,
     agent_id: &str,
