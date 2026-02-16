@@ -691,6 +691,7 @@ fn build_docker_spec(
             args.push(format!("{}:{}", sock, sock));
         }
     }
+    let mut ssh_mount_added = false;
     let ssh_dir = std::env::var("DECAPOD_CONTAINER_SSH_DIR")
         .ok()
         .map(PathBuf::from)
@@ -700,8 +701,13 @@ fn build_docker_spec(
             if let Some(ssh_dir_str) = ssh_dir.to_str() {
                 args.push("-v".to_string());
                 args.push(format!("{}:/tmp/decapod-ssh:ro", ssh_dir_str));
+                ssh_mount_added = true;
             }
         }
+    }
+    if ssh_mount_added {
+        args.push("-e".to_string());
+        args.push("DECAPOD_SSH_DIR=/tmp/decapod-ssh".to_string());
     }
 
     if runtime != "docker" && runtime != "podman" {
@@ -756,24 +762,36 @@ fn build_container_script(
          mkdir -p \"${HOME:-/tmp/decapod-home}\"\n\
          mkdir -p \"${HOME:-/tmp/decapod-home}/.ssh\"\n\
          chmod 700 \"${HOME:-/tmp/decapod-home}/.ssh\"\n\
+         git_safe() {\n\
+           git -c safe.directory=\"${DECAPOD_WORKSPACE:-$PWD}\" \"$@\"\n\
+         }\n\
          if command -v ssh-keyscan >/dev/null 2>&1; then\n\
            ssh-keyscan -t ed25519 github.com >> \"${HOME:-/tmp/decapod-home}/.ssh/known_hosts\" 2>/dev/null || true\n\
          fi\n\
-         export GIT_SSH_COMMAND=\"ssh -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${HOME:-/tmp/decapod-home}/.ssh/known_hosts\"\n\
-         if [ -f /tmp/decapod-ssh/id_ed25519 ]; then\n\
-           chmod 600 /tmp/decapod-ssh/id_ed25519 2>/dev/null || true\n\
-           export GIT_SSH_COMMAND=\"${GIT_SSH_COMMAND} -i /tmp/decapod-ssh/id_ed25519 -o IdentitiesOnly=yes\"\n\
+         export GIT_SSH_COMMAND=\"ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${HOME:-/tmp/decapod-home}/.ssh/known_hosts\"\n\
+         key_path=\"\"\n\
+         for candidate in \"${DECAPOD_SSH_DIR:-/tmp/decapod-ssh}/id_ed25519\" \"${DECAPOD_SSH_DIR:-/tmp/decapod-ssh}/id_rsa\" \"${DECAPOD_SSH_DIR:-/tmp/decapod-ssh}/id_ecdsa\"; do\n\
+           if [ -f \"$candidate\" ]; then\n\
+             key_path=\"$candidate\"\n\
+             break\n\
+           fi\n\
+         done\n\
+         if [ -n \"$key_path\" ]; then\n\
+           chmod 600 \"$key_path\" 2>/dev/null || true\n\
+           export GIT_SSH_COMMAND=\"${GIT_SSH_COMMAND} -i $key_path -o IdentitiesOnly=yes\"\n\
+           unset SSH_AUTH_SOCK || true\n\
          elif [ -S \"${SSH_AUTH_SOCK:-}\" ]; then\n\
            export GIT_SSH_COMMAND=\"${GIT_SSH_COMMAND} -o IdentityAgent=${SSH_AUTH_SOCK}\"\n\
          fi\n\
          if [ \"${DECAPOD_CONTAINER_DEBUG:-0}\" = \"1\" ]; then\n\
            echo \"debug: workspace=${DECAPOD_WORKSPACE:-$PWD}\" >&2\n\
+           echo \"debug: uid=$(id -u) gid=$(id -g)\" >&2\n\
            echo \"debug: ssh command=${GIT_SSH_COMMAND}\" >&2\n\
-           ls -ld /tmp/decapod-ssh /tmp/decapod-ssh/id_ed25519 2>/dev/null >&2 || true\n\
-           git remote -v >&2 || true\n\
+           echo \"debug: key_path=${key_path:-none}\" >&2\n\
+           ls -ld \"${DECAPOD_SSH_DIR:-/tmp/decapod-ssh}\" \"${DECAPOD_SSH_DIR:-/tmp/decapod-ssh}\"/id_* 2>/dev/null >&2 || true\n\
+           git_safe remote -v >&2 || true\n\
          fi\n\
          unset GIT_DIR GIT_WORK_TREE\n\
-         git config --global --add safe.directory \"${DECAPOD_WORKSPACE:-$PWD}\" || true\n\
          git config --global user.name \"${DECAPOD_GIT_USER_NAME:-Decapod Agent}\"\n\
          git config --global user.email \"${DECAPOD_GIT_USER_EMAIL:-agent@decapod.local}\"\n\
          if command -v decapod >/dev/null 2>&1; then\n\
@@ -784,23 +802,23 @@ fn build_container_script(
          fi\n",
     );
     script.push_str(&format!(
-        "git fetch --no-write-fetch-head origin {}\n",
+        "git_safe fetch --no-write-fetch-head origin {}\n",
         shell_escape(base_branch)
     ));
-    script.push_str(&format!("git checkout -B {}\n", shell_escape(branch)));
+    script.push_str(&format!("git_safe checkout -B {}\n", shell_escape(branch)));
     script.push_str(&format!(
-        "git rebase origin/{}\n",
+        "git_safe rebase origin/{}\n",
         shell_escape(base_branch)
     ));
     script.push_str(user_cmd);
     script.push('\n');
 
     script.push_str(
-        "if [ -n \"$(git status --porcelain)\" ]; then\n  git add -A\n  git commit -m \"chore: automated container updates\"\nfi\n",
+        "if [ -n \"$(git_safe status --porcelain)\" ]; then\n  git_safe add -A\n  git_safe commit -m \"chore: automated container updates\"\nfi\n",
     );
 
     if push || pr {
-        script.push_str(&format!("git push -u origin {}\n", shell_escape(branch)));
+        script.push_str(&format!("git_safe push -u origin {}\n", shell_escape(branch)));
     }
 
     if pr {
@@ -919,11 +937,11 @@ mod tests {
         assert!(joined.contains("--rm"));
         assert!(joined.contains("--cap-drop ALL"));
         assert!(joined.contains("--security-opt no-new-privileges:true"));
-        assert!(joined.contains("git fetch --no-write-fetch-head origin 'master'"));
-        assert!(joined.contains("git checkout -B 'ahr/branch'"));
-        assert!(joined.contains("git rebase origin/'master'"));
+        assert!(joined.contains("git_safe fetch --no-write-fetch-head origin 'master'"));
+        assert!(joined.contains("git_safe checkout -B 'ahr/branch'"));
+        assert!(joined.contains("git_safe rebase origin/'master'"));
         assert!(joined.contains("decapod update"));
-        assert!(joined.contains("git push -u origin 'ahr/branch'"));
+        assert!(joined.contains("git_safe push -u origin 'ahr/branch'"));
         assert!(joined.contains("gh auth status"));
         assert!(joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
     }
