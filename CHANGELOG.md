@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0](https://github.com/DecapodLabs/decapod/compare/v0.15.2...v0.16.0) - 2026-02-16
+
+### Added
+
+- *(control-plane)* stabilize broker envelope and add chaos replay gate
+
 ## [0.15.2](https://github.com/DecapodLabs/decapod/compare/v0.15.1...v0.15.2) - 2026-02-16
 
 ### Added
