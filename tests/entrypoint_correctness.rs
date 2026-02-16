@@ -234,3 +234,22 @@ fn test_agent_specific_files_defer_to_agents() {
         );
     }
 }
+
+#[test]
+fn test_root_entrypoints_match_templates() {
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
+        let root_path = repo_root.join(file);
+        let template_path = repo_root.join("templates").join(file);
+        let root_content =
+            fs::read_to_string(&root_path).unwrap_or_else(|_| panic!("Failed to read {}", file));
+        let template_content = fs::read_to_string(&template_path)
+            .unwrap_or_else(|_| panic!("Failed to read templates/{}", file));
+
+        assert_eq!(
+            root_content, template_content,
+            "Entrypoint drift detected: {} differs from templates/{}. Keep root and template in sync.",
+            file, file
+        );
+    }
+}
