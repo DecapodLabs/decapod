@@ -864,6 +864,87 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
 
                 println!();
+
+                let has_runtime = init_has_container_runtime();
+                let has_dedicated_key = init_has_dedicated_agent_key();
+                let dedicated_key_hint = "~/.ssh/decapod_agent_ed25519";
+                let github_keys_url = "https://github.com/settings/keys";
+
+                if !has_runtime {
+                    tui::render_box(
+                        "⚠ CONTAINER RUNTIME REQUIRED",
+                        "Install Docker or Podman for isolated per-agent execution",
+                        tui::BoxStyle::Warning,
+                    );
+                    println!();
+                    println!(
+                        "  {} {}",
+                        "Prompt:".bright_yellow().bold(),
+                        "Install Docker or Podman now".bright_white()
+                    );
+                    println!(
+                        "  {} {}",
+                        "Why:".bright_yellow().bold(),
+                        "Without container isolation, concurrent agents can step on each other."
+                    );
+                    println!();
+                }
+
+                if !has_dedicated_key {
+                    tui::render_box(
+                        "⚠ DEDICATED SSH KEY REQUIRED FOR CONTAINER PUSH/PR",
+                        "Use a separate local-only key for agent containers",
+                        tui::BoxStyle::Warning,
+                    );
+                    println!();
+                    println!(
+                        "  {} {}",
+                        "Prompt:".bright_yellow().bold(),
+                        "Generate dedicated SSH key now".bright_white()
+                    );
+                    println!(
+                        "  {} {}",
+                        "Command:".bright_yellow().bold(),
+                        format!(
+                            "ssh-keygen -t ed25519 -f {} -C \"decapod-agent\"",
+                            dedicated_key_hint
+                        )
+                        .bright_cyan()
+                    );
+                    println!(
+                        "  {} {}",
+                        "Then add public key in GitHub:".bright_yellow().bold(),
+                        github_keys_url.bright_cyan().underline()
+                    );
+                    println!(
+                        "  {} {}",
+                        "Note:".bright_yellow().bold(),
+                        "This key stays local on your machine and is never committed."
+                    );
+                    println!();
+                }
+
+                if !has_runtime || !has_dedicated_key {
+                    let mut reasons = Vec::new();
+                    if !has_runtime {
+                        reasons.push("missing docker/podman");
+                    }
+                    if !has_dedicated_key {
+                        reasons.push("missing dedicated ssh key (~/.ssh/decapod_agent_ed25519)");
+                    }
+                    ensure_init_container_disable_override(&target_dir, &reasons.join(", "))?;
+                    tui::render_box(
+                        "⚠ CONTAINER SUBSYSTEM DISABLED BY OVERRIDE",
+                        "Wrote .decapod/OVERRIDE.md disable marker until prerequisites are met",
+                        tui::BoxStyle::Warning,
+                    );
+                    println!(
+                        "  {} {}",
+                        "Warning:".bright_yellow().bold(),
+                        "Without isolated containers, concurrent agents can step on each other."
+                    );
+                    println!();
+                }
             }
 
             // Determine which agent files to generate based on flags
