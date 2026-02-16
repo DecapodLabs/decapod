@@ -737,6 +737,7 @@ fn validate_schema_determinism(
 
     let run_schema = || -> Result<String, error::DecapodError> {
         let out = std::process::Command::new(&exe)
+            .env("DECAPOD_BYPASS_SESSION", "1")
             .arg("data")
             .arg("schema")
             .arg("--deterministic")
