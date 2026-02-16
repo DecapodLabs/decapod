@@ -11,6 +11,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
+use std::collections::HashSet;
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
@@ -24,6 +25,12 @@ const AGENT_EVICT_TIMEOUT_SECS: u64 = 30 * 60;
 enum OutputFormat {
     Text,
     Json,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
+enum ClaimMode {
+    Exclusive,
+    Shared,
 }
 
 #[derive(Parser, Debug)]
@@ -125,6 +132,9 @@ pub enum TodoCommand {
         /// Agent identifier (defaults to environment or 'unknown').
         #[clap(long)]
         agent: Option<String>,
+        /// Claim mode: exclusive takes assignment; shared joins as secondary owner.
+        #[clap(long, value_enum, default_value = "exclusive")]
+        mode: ClaimMode,
     },
     /// Release a claimed task (makes it available for others).
     Release {
@@ -1340,12 +1350,19 @@ fn get_category_owner(
 }
 
 fn parse_owners_input(owners: &str) -> Vec<String> {
-    owners
+    let mut out = Vec::new();
+    let mut seen = HashSet::new();
+    for owner in owners
         .split(',')
         .map(str::trim)
         .filter(|s| !s.is_empty())
         .map(|s| s.to_string())
-        .collect()
+    {
+        if seen.insert(owner.clone()) {
+            out.push(owner);
+        }
+    }
+    out
 }
 
 fn upsert_task_owner(
