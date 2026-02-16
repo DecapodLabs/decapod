@@ -55,4 +55,8 @@ pub enum DecapodError {
     /// Context pack/archive error
     #[error("Context pack error: {0}")]
     ContextPackError(String),
+
+    /// Session token error (not found, invalid, expired, etc.)
+    #[error("Session error: {0}")]
+    SessionError(String),
 }

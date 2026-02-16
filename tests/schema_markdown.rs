@@ -1,9 +1,35 @@
 use std::process::Command;
+use tempfile::TempDir;
 
 #[test]
 fn schema_markdown_format_is_rendered() {
+    let tmp = TempDir::new().expect("tempdir");
+    let dir = tmp.path();
+
+    let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .current_dir(dir)
+        .args(["init", "--force"])
+        .output()
+        .expect("failed to initialize decapod workspace");
+    assert!(
+        init.status.success(),
+        "init failed: {}",
+        String::from_utf8_lossy(&init.stderr)
+    );
+
+    let session = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .current_dir(dir)
+        .args(["session", "acquire"])
+        .output()
+        .expect("failed to acquire session");
+    assert!(
+        session.status.success(),
+        "session acquire failed: {}",
+        String::from_utf8_lossy(&session.stderr)
+    );
+
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .current_dir(dir)
         .args(["data", "schema", "--format", "md", "--deterministic"])
         .output()
         .expect("failed to execute decapod");

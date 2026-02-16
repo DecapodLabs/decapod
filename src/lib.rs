@@ -91,6 +91,7 @@ use plugins::{
 
 use clap::{CommandFactory, Parser, Subcommand};
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 #[derive(Parser, Debug)]
@@ -154,6 +155,22 @@ enum InitCommand {
 }
 
 #[derive(clap::Args, Debug)]
+struct SessionCli {
+    #[clap(subcommand)]
+    command: SessionCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum SessionCommand {
+    /// Acquire a new session token (required before using other commands)
+    Acquire,
+    /// Show current session status
+    Status,
+    /// Release the current session token
+    Release,
+}
+
+#[derive(clap::Args, Debug)]
 struct SetupCli {
     #[clap(subcommand)]
     command: SetupCommand,
@@ -173,22 +190,6 @@ enum SetupCommand {
         #[clap(long)]
         uninstall: bool,
     },
-}
-
-#[derive(clap::Args, Debug)]
-struct SessionCli {
-    #[clap(subcommand)]
-    command: SessionCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum SessionCommand {
-    /// Acquire a new session token (required before using other commands)
-    Acquire,
-    /// Show current session status
-    Status,
-    /// Release the current session token
-    Release,
 }
 
 #[derive(clap::Args, Debug)]
@@ -311,6 +312,10 @@ enum Command {
     /// Configure repository (hooks, settings)
     #[clap(name = "setup")]
     Setup(SetupCli),
+
+    /// Session token management (required for agent operation)
+    #[clap(name = "session", visible_alias = "s")]
+    Session(SessionCli),
 
     /// Access methodology documentation
     #[clap(name = "docs", visible_alias = "d")]
@@ -900,6 +905,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 all: init_group.all,
             })?;
         }
+        Command::Session(session_cli) => {
+            run_session_command(session_cli)?;
+        }
         Command::Setup(setup_cli) => match setup_cli.command {
             SetupCommand::Hook {
                 commit_msg,
@@ -910,6 +918,10 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
         },
         _ => {
+            if requires_session_token(&cli.command) {
+                ensure_session_valid()?;
+            }
+
             // For other commands, ensure .decapod exists
             let project_root = decapod_root_option?;
             let decapod_root_path = project_root.join(".decapod");
@@ -968,8 +980,76 @@ pub fn run() -> Result<(), error::DecapodError> {
 fn should_auto_clock_in(command: &Command) -> bool {
     match command {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
-        Command::Version | Command::Init(_) | Command::Setup(_) => false,
+        Command::Version | Command::Init(_) | Command::Setup(_) | Command::Session(_) => false,
         _ => true,
+    }
+}
+
+fn requires_session_token(command: &Command) -> bool {
+    match command {
+        // Only bootstrap/session lifecycle + version are sessionless.
+        Command::Init(_) | Command::Session(_) | Command::Version => false,
+        _ => true,
+    }
+}
+
+fn get_session_token_path() -> Result<PathBuf, error::DecapodError> {
+    let current_dir = std::env::current_dir()?;
+    let project_root = find_decapod_project_root(&current_dir)?;
+    Ok(project_root.join(".decapod").join("session.token"))
+}
+
+fn ensure_session_valid() -> Result<(), error::DecapodError> {
+    let token_path = get_session_token_path()?;
+    if !token_path.exists() {
+        return Err(error::DecapodError::SessionError(
+            "No active session. Run 'decapod session acquire' first. Reminder: this CLI/API is not for humans.".to_string(),
+        ));
+    }
+    Ok(())
+}
+
+fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodError> {
+    match session_cli.command {
+        SessionCommand::Acquire => {
+            let token_path = get_session_token_path()?;
+            if token_path.exists() {
+                println!("Session already active. Use 'decapod session status' for details.");
+                return Ok(());
+            }
+
+            // Create session token
+            let token = ulid::Ulid::to_string(&ulid::Ulid::new());
+            std::fs::write(&token_path, &token).map_err(error::DecapodError::IoError)?;
+
+            println!("Session acquired successfully.");
+            println!("Token: {}", token);
+            println!("\nYou may now use other decapod commands.");
+            Ok(())
+        }
+        SessionCommand::Status => {
+            let token_path = get_session_token_path()?;
+            if token_path.exists() {
+                let token =
+                    std::fs::read_to_string(&token_path).map_err(error::DecapodError::IoError)?;
+                println!("Session active");
+                println!("Token: {}", token.trim());
+            } else {
+                println!("No active session");
+                println!("Run 'decapod session acquire' to start a session");
+            }
+            Ok(())
+        }
+        SessionCommand::Release => {
+            let token_path = get_session_token_path()?;
+            if token_path.exists() {
+                std::fs::remove_file(&token_path).map_err(error::DecapodError::IoError)?;
+                println!("Session released");
+            } else {
+                println!("No active session to release");
+            }
+            Ok(())
+        }
     }
 }
 
@@ -1437,64 +1517,59 @@ fn run_hook_install(
     pre_commit: bool,
     uninstall: bool,
 ) -> Result<(), error::DecapodError> {
-    use std::fs;
-    use std::io::Write;
+    let git_dir_output = std::process::Command::new("git")
+        .args(["rev-parse", "--git-dir"])
+        .output()
+        .map_err(error::DecapodError::IoError)?;
 
-    let git_dir = Path::new(".git");
-    if !git_dir.exists() {
+    if !git_dir_output.status.success() {
         return Err(error::DecapodError::ValidationError(
-            ".git directory not found. Are you in the root of the project?".into(),
+            "Not in a git repository".to_string(),
         ));
     }
 
-    let hooks_dir = git_dir.join("hooks");
+    let git_dir = String::from_utf8_lossy(&git_dir_output.stdout)
+        .trim()
+        .to_string();
+    let hooks_dir = PathBuf::from(git_dir).join("hooks");
     fs::create_dir_all(&hooks_dir).map_err(error::DecapodError::IoError)?;
 
     if uninstall {
         let commit_msg_path = hooks_dir.join("commit-msg");
         let pre_commit_path = hooks_dir.join("pre-commit");
+        let mut removed_any = false;
 
-        let mut removed = false;
         if commit_msg_path.exists() {
-            fs::remove_file(&commit_msg_path)?;
+            fs::remove_file(&commit_msg_path).map_err(error::DecapodError::IoError)?;
             println!("✓ Removed commit-msg hook");
-            removed = true;
+            removed_any = true;
         }
         if pre_commit_path.exists() {
-            fs::remove_file(&pre_commit_path)?;
+            fs::remove_file(&pre_commit_path).map_err(error::DecapodError::IoError)?;
             println!("✓ Removed pre-commit hook");
-            removed = true;
+            removed_any = true;
         }
-        if !removed {
+        if !removed_any {
             println!("No hooks found to remove");
         }
         return Ok(());
     }
 
-    // Install commit-msg hook
     if commit_msg {
         let hook_content = r#"#!/bin/sh
-# Conventional commit validation hook
-# Installed by Decapod
-
-MSG=$(cat "$1")
-REGEX="^(feat|fix|chore|ci|docs|style|refactor|perf|test)(\(.*\))?!?: .+"
-
-if ! echo "$MSG" | grep -qE "$REGEX"; then
-    echo "Error: Invalid commit message format."
-    echo "  Commit messages must follow the Conventional Commits format."
-    echo "  Example: 'feat: add login functionality'"
-    echo "  Allowed prefixes: feat, fix, chore, ci, docs, style, refactor, perf, test"
-    exit 1
+MSG_FILE="$1"
+SUBJECT="$(head -n1 "$MSG_FILE")"
+if printf '%s' "$SUBJECT" | grep -Eq '^(feat|fix|docs|style|refactor|test|chore|ci|build|perf|revert)(\([^)]+\))?: .+'; then
+  exit 0
 fi
+echo "commit-msg hook: expected conventional commit subject"
+echo "got: $SUBJECT"
+exit 1
 "#;
-
         let hook_path = hooks_dir.join("commit-msg");
         let mut file = fs::File::create(&hook_path).map_err(error::DecapodError::IoError)?;
         file.write_all(hook_content.as_bytes())
             .map_err(error::DecapodError::IoError)?;
-        drop(file);
-
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -1504,41 +1579,19 @@ fi
             perms.set_mode(0o755);
             fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
         }
-
         println!("✓ Installed commit-msg hook for conventional commits");
     }
 
-    // Install pre-commit hook (pure Rust - runs fmt and clippy)
     if pre_commit {
-        // Use a simple shell wrapper that calls cargo
         let hook_content = r#"#!/bin/sh
-# Pre-commit hook - runs cargo fmt and clippy
-# Installed by Decapod
-
-echo "Running pre-commit checks..."
-
-# Run cargo fmt
-if ! cargo fmt --all -- --check 2>/dev/null; then
-    echo "Formatting check failed. Run 'cargo fmt --all' to fix."
-    exit 1
-fi
-
-# Run cargo clippy
-if ! cargo clippy --all-targets --all-features -- -D warnings 2>/dev/null; then
-    echo "Clippy check failed."
-    exit 1
-fi
-
-echo "Pre-commit checks passed!"
-exit 0
+set -e
+cargo fmt --check
+cargo clippy --all-targets --all-features -- -D warnings
 "#;
-
         let hook_path = hooks_dir.join("pre-commit");
         let mut file = fs::File::create(&hook_path).map_err(error::DecapodError::IoError)?;
         file.write_all(hook_content.as_bytes())
             .map_err(error::DecapodError::IoError)?;
-        drop(file);
-
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -1548,7 +1601,6 @@ exit 0
             perms.set_mode(0o755);
             fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
         }
-
         println!("✓ Installed pre-commit hook (fmt + clippy)");
     }
 
