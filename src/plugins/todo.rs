@@ -10,7 +10,7 @@ use crate::plugins::teammate;
 use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
+use rusqlite::{params, types::ToSql, Connection, OptionalExtension, Result as SqlResult};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::collections::HashSet;
@@ -3498,75 +3498,71 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                 "task.worker.run" => {}
                 "task.edit" => {
                     let id = ev.task_id.clone().unwrap_or_default();
-                    let mut updates = vec!["updated_at = ?1".to_string()];
-                    let mut param_idx = 2;
-                    let mut params: Vec<Box<dyn rusqlite::ToSql>> = vec![Box::new(ev.ts.clone())];
-
                     if let Some(title) = ev.payload.get("title").and_then(|v| v.as_str()) {
-                        updates.push(format!("title = ?{}", param_idx));
-                        params.push(Box::new(title.to_string()));
-                        param_idx += 1;
+                        conn.execute(
+                            "UPDATE tasks SET title = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![title, ev.ts, id],
+                        )?;
                     }
                     if let Some(description) = ev.payload.get("description").and_then(|v| v.as_str()) {
-                        updates.push(format!("description = ?{}", param_idx));
-                        params.push(Box::new(description.to_string()));
-                        param_idx += 1;
+                        conn.execute(
+                            "UPDATE tasks SET description = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![description, ev.ts, id],
+                        )?;
                     }
                     if let Some(owner) = ev.payload.get("owner").and_then(|v| v.as_str()) {
-                        updates.push(format!("owner = ?{}", param_idx));
-                        params.push(Box::new(owner.to_string()));
-                        param_idx += 1;
+                        conn.execute(
+                            "UPDATE tasks SET owner = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![owner, ev.ts, id],
+                        )?;
                     }
                     if let Some(tags) = ev.payload.get("tags").and_then(|v| v.as_str()) {
-                        updates.push(format!("tags = ?{}", param_idx));
-                        params.push(Box::new(tags.to_string()));
-                        param_idx += 1;
+                        conn.execute(
+                            "UPDATE tasks SET tags = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![tags, ev.ts, id],
+                        )?;
                     }
                     if let Some(due) = ev.payload.get("due").and_then(|v| v.as_str()) {
-                        updates.push(format!("due = ?{}", param_idx));
-                        params.push(Box::new(due.to_string()));
-                        param_idx += 1;
+                        conn.execute(
+                            "UPDATE tasks SET due = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![due, ev.ts, id],
+                        )?;
                     }
                     if let Some(r#ref) = ev.payload.get("ref").and_then(|v| v.as_str()) {
-                        updates.push(format!("ref = ?{}", param_idx));
-                        params.push(Box::new(r#ref.to_string()));
-                        param_idx += 1;
+                        conn.execute(
+                            "UPDATE tasks SET ref = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![r#ref, ev.ts, id],
+                        )?;
                     }
                     if let Some(priority) = ev.payload.get("priority").and_then(|v| v.as_str()) {
-                        updates.push(format!("priority = ?{}", param_idx));
-                        params.push(Box::new(priority.to_string()));
-                        param_idx += 1;
+                        conn.execute(
+                            "UPDATE tasks SET priority = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![priority, ev.ts, id],
+                        )?;
                     }
                     if let Some(depends_on) = ev.payload.get("depends_on").and_then(|v| v.as_str()) {
-                        updates.push(format!("depends_on = ?{}", param_idx));
-                        params.push(Box::new(depends_on.to_string()));
-                        param_idx += 1;
+                        conn.execute(
+                            "UPDATE tasks SET depends_on = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![depends_on, ev.ts, id],
+                        )?;
                     }
                     if let Some(blocks) = ev.payload.get("blocks").and_then(|v| v.as_str()) {
-                        updates.push(format!("blocks = ?{}", param_idx));
-                        params.push(Box::new(blocks.to_string()));
-                        param_idx += 1;
+                        conn.execute(
+                            "UPDATE tasks SET blocks = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![blocks, ev.ts, id],
+                        )?;
                     }
                     if let Some(category) = ev.payload.get("category").and_then(|v| v.as_str()) {
-                        updates.push(format!("category = ?{}", param_idx));
-                        params.push(Box::new(category.to_string()));
-                        param_idx += 1;
+                        conn.execute(
+                            "UPDATE tasks SET category = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![category, ev.ts, id],
+                        )?;
                     }
                     if let Some(component) = ev.payload.get("component").and_then(|v| v.as_str()) {
-                        updates.push(format!("component = ?{}", param_idx));
-                        params.push(Box::new(component.to_string()));
-                        param_idx += 1;
-                    }
-
-                    if updates.len() > 1 {
-                        params.push(Box::new(id.clone()));
-                        let sql = format!(
-                            "UPDATE tasks SET {} WHERE id = ?{}",
-                            updates.join(", "),
-                            param_idx
-                        );
-                        let params_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|p| p.as_ref()).collect();
-                        conn.execute(&sql, params_refs.as_slice())?;
+                        conn.execute(
+                            "UPDATE tasks SET component = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![component, ev.ts, id],
+                        )?;
                     }
                 }
                 "task.claim" => {
