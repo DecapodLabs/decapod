@@ -65,6 +65,8 @@ pub enum ContainerCommand {
         keep_worktree: bool,
         #[clap(long, default_value_t = true)]
         inherit_env: bool,
+        #[clap(long, default_value_t = false)]
+        local_only: bool,
     },
 }
 
@@ -110,6 +112,7 @@ pub fn run_container_cli(store: &Store, cli: ContainerCli) -> Result<(), error::
             repo,
             keep_worktree,
             inherit_env,
+            local_only,
         } => run_container(
             store,
             &agent,
@@ -129,6 +132,7 @@ pub fn run_container_cli(store: &Store, cli: ContainerCli) -> Result<(), error::
             repo.as_deref(),
             keep_worktree,
             inherit_env,
+            local_only,
         )?,
     };
 
@@ -185,6 +189,7 @@ pub fn run_container_for_claim(
         })?),
         keep_worktree,
         true,
+        false,
     )?;
 
     Ok(summary.value)
@@ -210,6 +215,7 @@ fn run_container(
     repo_override: Option<&str>,
     keep_worktree: bool,
     inherit_env: bool,
+    local_only: bool,
 ) -> Result<RunSummary, error::DecapodError> {
     let repo = resolve_repo_path(repo_override)?;
     if container_runtime_disabled(&repo)? {
@@ -238,7 +244,14 @@ Warning: without isolated containers, concurrent agents can step on each other."
             ));
         }
     };
-    if (push || pr) && !has_container_ssh_material(&repo) {
+    if local_only && (push || pr) {
+        return Err(error::DecapodError::ValidationError(
+            "local-only mode forbids --push/--pr because remote Git operations are disabled"
+                .to_string(),
+        ));
+    }
+
+    if (push || pr) && !local_only && !has_container_ssh_material(&repo) {
         disable_container_runtime_override(
             &repo,
             "No SSH credentials available for container push/PR",
@@ -259,7 +272,7 @@ Warning: without isolated containers, concurrent agents can step on each other."
     let branch_name = branch
         .map(|s| s.to_string())
         .unwrap_or_else(|| default_branch_name(agent, task_id));
-    let workspace = prepare_workspace_clone(&repo, &branch_name, pr_base)?;
+    let workspace = prepare_workspace_clone(&repo, &branch_name, pr_base, local_only)?;
 
     let pr_title_val = pr_title
         .map(|s| s.to_string())
@@ -285,6 +298,7 @@ Warning: without isolated containers, concurrent agents can step on each other."
         cpus,
         task_id,
         inherit_env,
+        local_only,
     )?;
 
     let start = Instant::now();
@@ -296,6 +310,12 @@ Warning: without isolated containers, concurrent agents can step on each other."
     } else {
         "error"
     };
+    let mut branch_returned_to_host = false;
+    if local_only {
+        sync_workspace_branch_to_host_repo(&repo, &workspace.path, &workspace.branch)?;
+        branch_returned_to_host = true;
+    }
+
     let summary = json!({
         "ts": time::now_epoch_z(),
         "cmd": "container.run",
@@ -310,10 +330,12 @@ Warning: without isolated containers, concurrent agents can step on each other."
         "branch": workspace.branch,
         "base_branch": workspace.base_branch,
         "isolation_backend": workspace.backend,
+        "local_only": local_only,
         "task_id": task_id,
         "push": push,
         "pr": pr,
         "keep_worktree": keep_worktree,
+        "branch_returned_to_host": branch_returned_to_host,
         "exit_code": output.status.code(),
         "elapsed_seconds": elapsed,
         "stdout": String::from_utf8_lossy(&output.stdout),
@@ -686,47 +708,124 @@ fn prepare_workspace_clone(
     repo: &Path,
     branch: &str,
     base_branch: &str,
+    local_only: bool,
 ) -> Result<WorkspaceSpec, error::DecapodError> {
-    run_git(repo, &["fetch", "origin", base_branch])?;
-    let origin_url = git_output(repo, &["remote", "get-url", "origin"])?;
-
     let workspaces_root = repo.join(".decapod").join("workspaces");
     fs::create_dir_all(&workspaces_root).map_err(error::DecapodError::IoError)?;
 
     let suffix = Ulid::new().to_string().to_lowercase();
     let dir_name = format!("{}-{}", sanitize_branch_component(branch), &suffix[..8]);
     let workspace_path = workspaces_root.join(dir_name);
-    let base_ref = format!("origin/{}", base_branch);
-
     let workspace_path_str = workspace_path
         .to_str()
         .ok_or_else(|| error::DecapodError::PathError("invalid workspace path".to_string()))?;
 
-    let clone_output = Command::new("git")
-        .arg("clone")
-        .arg("--origin")
-        .arg("origin")
-        .arg("--branch")
-        .arg(base_branch)
-        .arg("--single-branch")
-        .arg(&origin_url)
-        .arg(workspace_path_str)
-        .output()
-        .map_err(error::DecapodError::IoError)?;
+    let clone_output = if local_only {
+        Command::new("git")
+            .arg("clone")
+            .arg("--local")
+            .arg("--no-hardlinks")
+            .arg(repo)
+            .arg(workspace_path_str)
+            .output()
+            .map_err(error::DecapodError::IoError)?
+    } else {
+        run_git(repo, &["fetch", "origin", base_branch])?;
+        let origin_url = git_output(repo, &["remote", "get-url", "origin"])?;
+        Command::new("git")
+            .arg("clone")
+            .arg("--origin")
+            .arg("origin")
+            .arg("--branch")
+            .arg(base_branch)
+            .arg("--single-branch")
+            .arg(&origin_url)
+            .arg(workspace_path_str)
+            .output()
+            .map_err(error::DecapodError::IoError)?
+    };
     if !clone_output.status.success() {
         return Err(error::DecapodError::ValidationError(format!(
             "git clone failed: {}",
             String::from_utf8_lossy(&clone_output.stderr).trim()
         )));
     }
-    run_git(&workspace_path, &["checkout", "-B", branch, &base_ref])?;
+
+    if local_only {
+        let local_base_ref = format!("refs/heads/{}", base_branch);
+        let remote_base_ref = format!("refs/remotes/origin/{}", base_branch);
+        if git_ref_exists(&workspace_path, &local_base_ref)? {
+            run_git(&workspace_path, &["checkout", "-B", branch, base_branch])?;
+        } else if git_ref_exists(&workspace_path, &remote_base_ref)? {
+            let from_remote = format!("origin/{}", base_branch);
+            run_git(&workspace_path, &["checkout", "-B", branch, &from_remote])?;
+        } else {
+            run_git(&workspace_path, &["checkout", "-B", branch])?;
+        }
+    } else {
+        let base_ref = format!("origin/{}", base_branch);
+        run_git(&workspace_path, &["checkout", "-B", branch, &base_ref])?;
+    }
 
     Ok(WorkspaceSpec {
         branch: branch.to_string(),
         path: workspace_path,
         base_branch: base_branch.to_string(),
-        backend: "clone".to_string(),
+        backend: if local_only {
+            "local-clone".to_string()
+        } else {
+            "clone".to_string()
+        },
     })
+}
+
+fn git_ref_exists(repo: &Path, git_ref: &str) -> Result<bool, error::DecapodError> {
+    let status = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .arg("show-ref")
+        .arg("--verify")
+        .arg("--quiet")
+        .arg(git_ref)
+        .status()
+        .map_err(error::DecapodError::IoError)?;
+    Ok(status.success())
+}
+
+fn sync_workspace_branch_to_host_repo(
+    repo: &Path,
+    workspace: &Path,
+    branch: &str,
+) -> Result<(), error::DecapodError> {
+    let branch_ref = format!("refs/heads/{}", branch);
+    if !git_ref_exists(workspace, &branch_ref)? {
+        return Err(error::DecapodError::ValidationError(format!(
+            "workspace branch '{}' does not exist; cannot sync back to host repo",
+            branch
+        )));
+    }
+
+    let workspace_str = workspace.to_str().ok_or_else(|| {
+        error::DecapodError::PathError("invalid workspace path for host sync".to_string())
+    })?;
+    let refspec = format!("+{}:{}", branch_ref, branch_ref);
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .arg("fetch")
+        .arg("--no-tags")
+        .arg(workspace_str)
+        .arg(&refspec)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if output.status.success() {
+        return Ok(());
+    }
+    Err(error::DecapodError::ValidationError(format!(
+        "failed syncing workspace branch '{}' back to host repo: {}",
+        branch,
+        String::from_utf8_lossy(&output.stderr).trim()
+    )))
 }
 
 fn cleanup_workspace_clone(workspace_path: &Path) -> Result<(), error::DecapodError> {
@@ -754,6 +853,7 @@ fn build_docker_spec(
     cpus: &str,
     task_id: Option<&str>,
     inherit_env: bool,
+    local_only: bool,
 ) -> Result<DockerSpec, error::DecapodError> {
     let decapod_dir = repo_root.join(".decapod");
     fs::create_dir_all(&decapod_dir).map_err(error::DecapodError::IoError)?;
@@ -801,6 +901,8 @@ fn build_docker_spec(
         format!("DECAPOD_PR={}", if pr { "1" } else { "0" }),
         "-e".to_string(),
         format!("DECAPOD_WORKSPACE={}", workspace_str),
+        "-e".to_string(),
+        format!("DECAPOD_LOCAL_ONLY={}", if local_only { "1" } else { "0" }),
         "-v".to_string(),
         format!("{}:{}", repo_root_str, repo_root_str),
         "-w".to_string(),
@@ -895,6 +997,7 @@ fn build_docker_spec(
         pr,
         pr_title,
         pr_body,
+        local_only,
     ));
     if env_bool("DECAPOD_CONTAINER_DEBUG", false) {
         eprintln!("debug: container args={}", args.join(" "));
@@ -925,6 +1028,7 @@ fn build_container_script(
     pr: bool,
     pr_title: &str,
     pr_body: &str,
+    local_only: bool,
 ) -> String {
     let mut script = String::from(
         "set -eu\n\
@@ -935,9 +1039,6 @@ fn build_container_script(
          git_safe() {\n\
            git -c safe.directory=\"${DECAPOD_WORKSPACE:-$PWD}\" \"$@\"\n\
          }\n\
-         if command -v ssh-keyscan >/dev/null 2>&1; then\n\
-           ssh-keyscan -t ed25519 github.com >> \"${HOME:-/tmp/decapod-home}/.ssh/known_hosts\" 2>/dev/null || true\n\
-         fi\n\
          export GIT_SSH_COMMAND=\"ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${HOME:-/tmp/decapod-home}/.ssh/known_hosts\"\n\
          key_path=\"\"\n\
          if [ -n \"${DECAPOD_SSH_KEY_PATH:-}\" ] && [ -f \"${DECAPOD_SSH_KEY_PATH}\" ]; then\n\
@@ -977,15 +1078,43 @@ fn build_container_script(
            fi\n\
          fi\n",
     );
-    script.push_str(&format!(
-        "git_safe fetch --no-write-fetch-head origin {}\n",
-        shell_escape(base_branch)
-    ));
-    script.push_str(&format!("git_safe checkout -B {}\n", shell_escape(branch)));
-    script.push_str(&format!(
-        "git_safe rebase origin/{}\n",
-        shell_escape(base_branch)
-    ));
+    if !local_only {
+        script.push_str(
+            "if command -v ssh-keyscan >/dev/null 2>&1; then\n\
+             ssh-keyscan -t ed25519 github.com >> \"${HOME:-/tmp/decapod-home}/.ssh/known_hosts\" 2>/dev/null || true\n\
+             fi\n",
+        );
+        script.push_str(&format!(
+            "git_safe fetch --no-write-fetch-head origin {}\n",
+            shell_escape(base_branch)
+        ));
+        script.push_str(&format!("git_safe checkout -B {}\n", shell_escape(branch)));
+        script.push_str(&format!(
+            "git_safe rebase origin/{}\n",
+            shell_escape(base_branch)
+        ));
+    } else {
+        let local_head_ref = shell_escape(&format!("refs/heads/{}", base_branch));
+        let remote_head_ref = shell_escape(&format!("refs/remotes/origin/{}", base_branch));
+        let base_branch_escaped = shell_escape(base_branch);
+        let branch_escaped = shell_escape(branch);
+        script.push_str(&format!(
+            "if git_safe show-ref --verify --quiet {}; then\n\
+               git_safe checkout -B {} {}\n\
+             elif git_safe show-ref --verify --quiet {}; then\n\
+               git_safe checkout -B {} origin/{}\n\
+             else\n\
+               git_safe checkout -B {}\n\
+             fi\n",
+            local_head_ref,
+            branch_escaped,
+            base_branch_escaped,
+            remote_head_ref,
+            branch_escaped,
+            base_branch_escaped,
+            branch_escaped,
+        ));
+    }
     script.push_str(user_cmd);
     script.push('\n');
 
@@ -993,14 +1122,14 @@ fn build_container_script(
         "if [ -n \"$(git_safe status --porcelain)\" ]; then\n  git_safe add -A\n  git_safe commit -m \"chore: automated container updates\"\nfi\n",
     );
 
-    if push || pr {
+    if (push || pr) && !local_only {
         script.push_str(&format!(
             "git_safe push -u origin {}\n",
             shell_escape(branch)
         ));
     }
 
-    if pr {
+    if pr && !local_only {
         script.push_str("if ! command -v gh >/dev/null 2>&1; then echo 'gh CLI required for PR creation' >&2; exit 2; fi\n");
         script.push_str("if ! gh auth status >/dev/null 2>&1; then echo 'gh auth required for PR creation (run gh auth login)' >&2; exit 2; fi\n");
         script.push_str(&format!(
@@ -1069,7 +1198,7 @@ pub fn schema() -> serde_json::Value {
         "version": "0.2.0",
         "description": "Ephemeral containerized agent execution with isolated clone workspaces and optional push/PR automation",
         "commands": [
-            { "name": "run", "parameters": ["agent", "cmd", "branch", "task_id", "push", "pr", "pr_base", "pr_title", "pr_body", "image_profile", "image", "timeout_seconds", "memory", "cpus", "repo", "keep_worktree", "inherit_env"] }
+            { "name": "run", "parameters": ["agent", "cmd", "branch", "task_id", "push", "pr", "pr_base", "pr_title", "pr_body", "image_profile", "image", "timeout_seconds", "memory", "cpus", "repo", "keep_worktree", "inherit_env", "local_only"] }
         ],
         "profiles": {
             "debian-slim": "rust:1.85",
@@ -1109,6 +1238,7 @@ mod tests {
             "2.0",
             Some("R_123"),
             false,
+            false,
         )
         .expect("spec");
 
@@ -1123,6 +1253,40 @@ mod tests {
         assert!(joined.contains("git_safe push -u origin 'ahr/branch'"));
         assert!(joined.contains("gh auth status"));
         assert!(joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
+    }
+
+    #[test]
+    fn docker_spec_local_only_avoids_remote_git_operations() {
+        let repo = PathBuf::from("/tmp/repo");
+        let spec = build_docker_spec(
+            "docker",
+            &repo,
+            &repo,
+            "rust:1.85",
+            "agent-a",
+            "cargo test -q",
+            "ahr/branch",
+            "master",
+            false,
+            false,
+            "title",
+            "body",
+            "2g",
+            "2.0",
+            Some("R_123"),
+            false,
+            true,
+        )
+        .expect("spec");
+
+        let joined = spec.args.join(" ");
+        assert!(joined.contains("DECAPOD_LOCAL_ONLY=1"));
+        assert!(!joined.contains("git_safe fetch --no-write-fetch-head origin 'master'"));
+        assert!(!joined.contains("git_safe rebase origin/'master'"));
+        assert!(!joined.contains("git_safe push -u origin 'ahr/branch'"));
+        assert!(!joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
+        assert!(!joined.contains("ssh-keyscan -t ed25519 github.com"));
+        assert!(joined.contains("git_safe checkout -B 'ahr/branch' 'master'"));
     }
 
     #[test]
