@@ -1,3 +1,4 @@
+use crate::core::assets;
 use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
@@ -61,9 +62,11 @@ pub fn run_policy_cli(store: &Store, cli: PolicyCli) -> Result<(), error::Decapo
             };
             let (level, requirements) = eval_risk(&command, path.as_deref(), &risk_map);
             let fingerprint = derive_fingerprint(&command, path.as_deref(), "global");
+            let hitl_required = human_in_loop_required(store, "global", level, is_high_risk(level));
             println!("Risk Level: {:?}", level);
             println!("Fingerprint: {}", fingerprint);
             println!("Requirements: {:?}", requirements);
+            println!("Human-in-the-loop Required: {}", hitl_required);
         }
         PolicyCommand::Approve { id, actor, scope } => {
             let approval_id = approve_action(store, &id, None, &actor, &scope)?;
@@ -112,6 +115,21 @@ pub enum RiskLevel {
     MEDIUM = 1,   // Reversible, sensitive zones
     HIGH = 2,     // Irreversible, requires approval
     CRITICAL = 3, // Irreversible, protected zones, requires explicit override
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum HitlRuleAction {
+    Enable,
+    Disable,
+}
+
+#[derive(Debug, Clone)]
+struct HitlRule {
+    action: HitlRuleAction,
+    scope: Option<String>,
+    risk_exact: Option<RiskLevel>,
+    min_risk: Option<RiskLevel>,
+    max_risk: Option<RiskLevel>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -198,6 +216,201 @@ pub fn eval_risk(
 
 pub fn is_high_risk(level: RiskLevel) -> bool {
     matches!(level, RiskLevel::HIGH | RiskLevel::CRITICAL)
+}
+
+fn parse_risk_level(raw: &str) -> Option<RiskLevel> {
+    match raw.trim().to_lowercase().as_str() {
+        "low" => Some(RiskLevel::LOW),
+        "medium" => Some(RiskLevel::MEDIUM),
+        "high" => Some(RiskLevel::HIGH),
+        "critical" => Some(RiskLevel::CRITICAL),
+        _ => None,
+    }
+}
+
+fn trim_markdown_prefix(line: &str) -> &str {
+    let trimmed = line.trim();
+    if let Some(rest) = trimmed.strip_prefix("- ") {
+        return rest.trim();
+    }
+    if let Some(rest) = trimmed.strip_prefix("* ") {
+        return rest.trim();
+    }
+    trimmed
+}
+
+fn parse_hitl_directive(line: &str) -> Option<HitlRule> {
+    let normalized = trim_markdown_prefix(line).replace('`', "");
+    let mut parts = normalized.split_whitespace();
+    let head = parts.next()?.to_uppercase();
+    let action = match head.as_str() {
+        "HITL_DISABLE" => HitlRuleAction::Disable,
+        "HITL_ENABLE" => HitlRuleAction::Enable,
+        _ => return None,
+    };
+
+    let mut scope = None;
+    let mut risk_exact = None;
+    let mut min_risk = None;
+    let mut max_risk = None;
+
+    for token in parts {
+        let Some((key, value)) = token.split_once('=') else {
+            continue;
+        };
+        let key = key.trim().to_lowercase();
+        let value = value.trim();
+        match key.as_str() {
+            "scope" => {
+                if !value.is_empty() {
+                    scope = Some(value.to_string());
+                }
+            }
+            "risk" | "risk_level" => risk_exact = parse_risk_level(value),
+            "min_risk" => min_risk = parse_risk_level(value),
+            "max_risk" => max_risk = parse_risk_level(value),
+            _ => {}
+        }
+    }
+
+    Some(HitlRule {
+        action,
+        scope,
+        risk_exact,
+        min_risk,
+        max_risk,
+    })
+}
+
+fn parse_hitl_override_rules(override_section: &str) -> Vec<HitlRule> {
+    let mut rules = Vec::new();
+
+    for line in override_section.lines() {
+        let normalized = trim_markdown_prefix(line).to_lowercase();
+        if normalized.is_empty() {
+            continue;
+        }
+
+        // Natural-language fast path for operators: `HITL: I don't want human in the loop`.
+        if normalized.starts_with("hitl:")
+            && (normalized.contains("don't want human in the loop")
+                || normalized.contains("do not want human in the loop")
+                || normalized.contains("no human in the loop"))
+        {
+            rules.push(HitlRule {
+                action: HitlRuleAction::Disable,
+                scope: None,
+                risk_exact: None,
+                min_risk: None,
+                max_risk: None,
+            });
+        }
+
+        if let Some(rule) = parse_hitl_directive(line) {
+            rules.push(rule);
+        }
+    }
+
+    rules
+}
+
+fn rule_matches(rule: &HitlRule, scope: &str, level: RiskLevel) -> bool {
+    if let Some(required_scope) = &rule.scope {
+        if required_scope != scope {
+            return false;
+        }
+    }
+    if let Some(exact) = rule.risk_exact {
+        if exact != level {
+            return false;
+        }
+    }
+    if let Some(min) = rule.min_risk {
+        if (level as u8) < (min as u8) {
+            return false;
+        }
+    }
+    if let Some(max) = rule.max_risk {
+        if (level as u8) > (max as u8) {
+            return false;
+        }
+    }
+    true
+}
+
+fn rule_specificity(rule: &HitlRule) -> usize {
+    let mut score = 0;
+    if rule.scope.is_some() {
+        score += 8;
+    }
+    if rule.risk_exact.is_some() {
+        score += 4;
+    }
+    if rule.min_risk.is_some() {
+        score += 2;
+    }
+    if rule.max_risk.is_some() {
+        score += 2;
+    }
+    score
+}
+
+fn find_repo_root_from_store(store: &Store) -> Option<PathBuf> {
+    let mut current = Some(store.root.as_path());
+    while let Some(path) = current {
+        if path.join(".decapod").join("OVERRIDE.md").exists() {
+            return Some(path.to_path_buf());
+        }
+        current = path.parent();
+    }
+    None
+}
+
+pub fn is_hitl_disabled_by_override(store: &Store, scope: &str, level: RiskLevel) -> bool {
+    let Some(repo_root) = find_repo_root_from_store(store) else {
+        return false;
+    };
+    let Some(policy_override) = assets::get_override_doc(&repo_root, "plugins/POLICY.md") else {
+        return false;
+    };
+
+    let rules = parse_hitl_override_rules(&policy_override);
+    if rules.is_empty() {
+        return false;
+    }
+
+    let mut best_match: Option<(usize, usize, HitlRuleAction)> = None;
+    for (idx, rule) in rules.iter().enumerate() {
+        if !rule_matches(rule, scope, level) {
+            continue;
+        }
+        let specificity = rule_specificity(rule);
+        let candidate = (specificity, idx, rule.action);
+        match best_match {
+            None => best_match = Some(candidate),
+            Some((best_specificity, best_idx, _)) => {
+                if specificity > best_specificity
+                    || (specificity == best_specificity && idx > best_idx)
+                {
+                    best_match = Some(candidate);
+                }
+            }
+        }
+    }
+
+    matches!(best_match, Some((_, _, HitlRuleAction::Disable)))
+}
+
+pub fn human_in_loop_required(
+    store: &Store,
+    scope: &str,
+    level: RiskLevel,
+    approval_required_by_policy: bool,
+) -> bool {
+    if !approval_required_by_policy {
+        return false;
+    }
+    !is_hitl_disabled_by_override(store, scope, level)
 }
 
 pub fn approve_action(
