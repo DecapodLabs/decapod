@@ -709,6 +709,13 @@ fn build_docker_spec(
         args.push("-e".to_string());
         args.push("DECAPOD_SSH_DIR=/tmp/decapod-ssh".to_string());
     }
+    if env_bool("DECAPOD_CONTAINER_DEBUG", false) {
+        eprintln!(
+            "debug: host ssh_dir={} ssh_mount_added={}",
+            std::env::var("DECAPOD_CONTAINER_SSH_DIR").unwrap_or_default(),
+            ssh_mount_added
+        );
+    }
 
     if runtime != "docker" && runtime != "podman" {
         return Err(error::DecapodError::ValidationError(format!(
@@ -729,6 +736,9 @@ fn build_docker_spec(
         pr_title,
         pr_body,
     ));
+    if env_bool("DECAPOD_CONTAINER_DEBUG", false) {
+        eprintln!("debug: container args={}", args.join(" "));
+    }
 
     Ok(DockerSpec {
         args,
