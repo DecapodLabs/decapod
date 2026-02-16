@@ -114,6 +114,7 @@ fn container_help_schema_and_docs_stay_in_sync() {
         "--pr-body",
         "--keep-worktree",
         "--inherit-env",
+        "--local-only",
     ] {
         assert!(
             help.contains(flag),
@@ -137,6 +138,7 @@ fn container_help_schema_and_docs_stay_in_sync() {
         "\"pr_body\"",
         "\"keep_worktree\"",
         "\"inherit_env\"",
+        "\"local_only\"",
     ] {
         assert!(
             schema_out.contains(field),
@@ -153,6 +155,7 @@ fn container_help_schema_and_docs_stay_in_sync() {
         "--task-id",
         "--pr",
         "--inherit-env",
+        "--local-only",
         "DECAPOD_CLAIM_AUTORUN",
     ] {
         assert!(
