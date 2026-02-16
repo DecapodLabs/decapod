@@ -4,7 +4,7 @@ use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use clap::{Parser, Subcommand};
-use rusqlite::params;
+use rusqlite::{OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
@@ -411,6 +411,122 @@ pub fn human_in_loop_required(
         return false;
     }
     !is_hitl_disabled_by_override(store, scope, level)
+}
+
+fn trust_level_to_int(level: &str) -> i32 {
+    match level {
+        "untrusted" => 0,
+        "basic" => 1,
+        "verified" => 2,
+        "core" => 3,
+        _ => 1,
+    }
+}
+
+pub fn is_read_only_operation(op_name: &str) -> bool {
+    let read_suffixes = [
+        ".get",
+        ".list",
+        ".search",
+        ".graph",
+        ".schema",
+        ".map",
+        ".check",
+        ".status",
+        ".summary",
+        ".targets",
+        ".presence",
+        ".ownerships",
+        ".categories",
+        ".expertise",
+    ];
+    read_suffixes.iter().any(|s| op_name.ends_with(s))
+        || op_name.ends_with(".init")
+        || op_name == "policy.check"
+        || op_name == "policy.list"
+}
+
+fn required_trust_for_operation(op_name: &str) -> &'static str {
+    if op_name.starts_with("federation.")
+        && (op_name.contains("edit")
+            || op_name.contains("supersede")
+            || op_name.contains("deprecate")
+            || op_name.contains("dispute")
+            || op_name.contains("unlink")
+            || op_name.contains("rebuild"))
+    {
+        return "verified";
+    }
+    if op_name.contains("archive")
+        || op_name.contains("delete")
+        || op_name.contains("purge")
+        || op_name.contains("rebuild")
+    {
+        return "verified";
+    }
+    "basic"
+}
+
+fn risk_level_for_operation(op_name: &str) -> RiskLevel {
+    if op_name.contains("archive")
+        || op_name.contains("delete")
+        || op_name.contains("purge")
+        || op_name.contains("rebuild")
+        || op_name.contains("supersede")
+        || op_name.contains("dispute")
+        || op_name.contains("deprecate")
+    {
+        return RiskLevel::HIGH;
+    }
+    RiskLevel::LOW
+}
+
+fn actor_trust_level_raw(root: &Path, actor: &str) -> Result<String, error::DecapodError> {
+    if actor == "decapod" || actor == "cli" || actor == "operator" {
+        return Ok("core".to_string());
+    }
+    let todo_db = root.join(schemas::TODO_DB_NAME);
+    if !todo_db.exists() {
+        return Ok("basic".to_string());
+    }
+    let conn = rusqlite::Connection::open(todo_db).map_err(error::DecapodError::RusqliteError)?;
+    let level: Option<String> = conn
+        .query_row(
+            "SELECT trust_level FROM agent_trust WHERE agent_id = ?1",
+            params![actor],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?;
+    Ok(level.unwrap_or_else(|| "basic".to_string()))
+}
+
+pub fn enforce_broker_mutation_policy(
+    root: &Path,
+    actor: &str,
+    op_name: &str,
+) -> Result<(), error::DecapodError> {
+    if is_read_only_operation(op_name) {
+        return Ok(());
+    }
+
+    let required_trust = required_trust_for_operation(op_name);
+    let actor_trust = actor_trust_level_raw(root, actor)?;
+    if trust_level_to_int(&actor_trust) < trust_level_to_int(required_trust) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "Policy gate denied for '{}': actor '{}' trust '{}' < required '{}'",
+            op_name, actor, actor_trust, required_trust
+        )));
+    }
+
+    let risk = risk_level_for_operation(op_name);
+    if !matches!(risk, RiskLevel::HIGH | RiskLevel::CRITICAL) {
+        return Ok(());
+    }
+    // For now, broker-level policy enforces trust tier for all mutators.
+    // Approval requirements remain capability-specific (external actions) or
+    // subsystem-specific (e.g., TODO risk-zone checks) to avoid policy overlap.
+    Ok(())
 }
 
 pub fn approve_action(
