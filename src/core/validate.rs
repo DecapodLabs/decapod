@@ -1268,33 +1268,40 @@ fn validate_heartbeat_invocation_gate(
 
     let lib_rs = decapod_dir.join("src").join("lib.rs");
     let todo_rs = decapod_dir.join("src").join("plugins").join("todo.rs");
-    let lib_content = fs::read_to_string(&lib_rs).unwrap_or_default();
-    let todo_content = fs::read_to_string(&todo_rs).unwrap_or_default();
+    if lib_rs.exists() && todo_rs.exists() {
+        let lib_content = fs::read_to_string(&lib_rs).unwrap_or_default();
+        let todo_content = fs::read_to_string(&todo_rs).unwrap_or_default();
 
-    let code_markers = [
-        (
-            lib_content.contains("should_auto_clock_in(&cli.command)")
-                && lib_content.contains("todo::clock_in_agent_presence(&project_store)?"),
-            "Top-level command dispatch auto-clocks heartbeat",
-        ),
-        (
-            lib_content
-                .contains("Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli)"),
-            "Decorator excludes explicit todo heartbeat to prevent duplicates",
-        ),
-        (
-            todo_content.contains("pub fn clock_in_agent_presence")
-                && todo_content.contains("record_heartbeat"),
-            "TODO plugin exposes reusable clock-in helper",
-        ),
-    ];
+        let code_markers = [
+            (
+                lib_content.contains("should_auto_clock_in(&cli.command)")
+                    && lib_content.contains("todo::clock_in_agent_presence(&project_store)?"),
+                "Top-level command dispatch auto-clocks heartbeat",
+            ),
+            (
+                lib_content
+                    .contains("Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli)"),
+                "Decorator excludes explicit todo heartbeat to prevent duplicates",
+            ),
+            (
+                todo_content.contains("pub fn clock_in_agent_presence")
+                    && todo_content.contains("record_heartbeat"),
+                "TODO plugin exposes reusable clock-in helper",
+            ),
+        ];
 
-    for (ok, msg) in code_markers {
-        if ok {
-            pass(msg, pass_count);
-        } else {
-            fail(msg, fail_count);
+        for (ok, msg) in code_markers {
+            if ok {
+                pass(msg, pass_count);
+            } else {
+                fail(msg, fail_count);
+            }
         }
+    } else {
+        skip(
+            "Heartbeat wiring source files absent; skipping code-level heartbeat checks",
+            pass_count,
+        );
     }
 
     let doc_markers = [
