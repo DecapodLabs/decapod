@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1](https://github.com/DecapodLabs/decapod/compare/v0.16.0...v0.16.1) - 2026-02-16
+
+### Added
+
+- broker enhancements
+- broker enhancements
+- broker enhancements
+- broker enhancements
+- broker enhancements
+- broker enhancements
+
+### Other
+
+- 60+ validation checks
+- validation improvement
+- Merge branch 'master' into ahr/control-plane-broker-risk-lineage
+
 ## [0.16.0](https://github.com/DecapodLabs/decapod/compare/v0.15.2...v0.16.0) - 2026-02-16
 
 ### Added
