@@ -95,9 +95,16 @@ fn db_and_broker_round_trip_and_audit() {
         .collect();
     assert!(events.iter().any(|ev| ev.status == "success"));
     assert!(events.iter().any(|ev| ev.status == "error"));
+    assert!(
+        events
+            .iter()
+            .all(|ev| ev.schema_version == "1.0.0" && !ev.request_id.is_empty())
+    );
+    assert!(events.iter().all(|ev| ev.actor == ev.actor_id));
 
     let schema = broker::schema();
     assert_eq!(schema["name"], "broker");
+    assert_eq!(schema["envelope"]["schema_version"], "1.0.0");
 }
 
 #[test]
@@ -146,6 +153,61 @@ fn broker_allows_parallel_ops_on_different_databases() {
         "expected per-db concurrency (<260ms), got {:?}",
         elapsed
     );
+}
+
+#[test]
+fn broker_envelope_carries_orchestrator_context() {
+    let tmp = tempdir().expect("tempdir");
+    let root = tmp.path();
+    let db_path = root.join("envelope.db");
+    let broker = DbBroker::new(root);
+
+    // SAFETY: test process is single-threaded for env mutations in this test.
+    unsafe {
+        std::env::set_var("DECAPOD_SESSION_ID", "sess-test");
+        std::env::set_var("DECAPOD_CORRELATION_ID", "corr-test");
+        std::env::set_var("DECAPOD_CAUSATION_ID", "cause-test");
+        std::env::set_var("DECAPOD_IDEMPOTENCY_KEY", "idem-test");
+    }
+
+    broker
+        .with_conn(
+            &db_path,
+            "agent-x",
+            Some("intent-xyz"),
+            "envelope.test",
+            |conn| {
+                conn.execute("CREATE TABLE IF NOT EXISTS t (id INTEGER)", [])
+                    .map_err(DecapodError::RusqliteError)?;
+                Ok(())
+            },
+        )
+        .expect("broker envelope write");
+
+    // SAFETY: restore process env.
+    unsafe {
+        std::env::remove_var("DECAPOD_SESSION_ID");
+        std::env::remove_var("DECAPOD_CORRELATION_ID");
+        std::env::remove_var("DECAPOD_CAUSATION_ID");
+        std::env::remove_var("DECAPOD_IDEMPOTENCY_KEY");
+    }
+
+    let audit_path = root.join("broker.events.jsonl");
+    let last_line = fs::read_to_string(audit_path)
+        .expect("read audit")
+        .lines()
+        .last()
+        .expect("at least one event")
+        .to_string();
+    let event: BrokerEvent = serde_json::from_str(&last_line).expect("valid broker event");
+
+    assert_eq!(event.schema_version, "1.0.0");
+    assert_eq!(event.session_id.as_deref(), Some("sess-test"));
+    assert_eq!(event.correlation_id.as_deref(), Some("corr-test"));
+    assert_eq!(event.causation_id.as_deref(), Some("cause-test"));
+    assert_eq!(event.idempotency_key.as_deref(), Some("idem-test"));
+    assert_eq!(event.actor_id, "agent-x");
+    assert!(!event.request_id.is_empty());
 }
 
 #[test]
