@@ -1205,8 +1205,12 @@ fn enforce_operation_policy(
             kind: crate::core::store::StoreKind::Repo,
             root: root.to_path_buf(),
         };
+        let level = policy::RiskLevel::HIGH;
+        if !policy::human_in_loop_required(&store, zone_name, level, true) {
+            return Ok(());
+        }
         policy::initialize_policy_db(root)?;
-        if !policy::check_approval(&store, zone_name, None, "global")? {
+        if !policy::check_approval(&store, zone_name, None, zone_name)? {
             return Err(error::DecapodError::ValidationError(format!(
                 "Policy gate denied for {}: missing approval",
                 zone_name
@@ -1826,8 +1830,9 @@ pub fn update_status(
         policy::RiskMap { zones: vec![] }
     };
     let (level, _) = policy::eval_risk(event_type, None, &risk_map);
-    // Modified policy::check_approval to accept &Store
-    if policy::is_high_risk(level) && !policy::check_approval(store, event_type, None, "global")? {
+    let requires_human =
+        policy::human_in_loop_required(store, "global", level, policy::is_high_risk(level));
+    if requires_human && !policy::check_approval(store, event_type, None, "global")? {
         return Err(error::DecapodError::ValidationError(format!(
             "Action '{}' on '{}' is high risk and lacks approval.",
             event_type, id
