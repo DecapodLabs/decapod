@@ -28,7 +28,7 @@ enum OutputFormat {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
-enum ClaimMode {
+pub enum ClaimMode {
     Exclusive,
     Shared,
 }
@@ -1456,6 +1456,78 @@ fn fetch_task_owners(
     Ok(out)
 }
 
+fn primary_owner_from_owners(owners: &[TaskOwner]) -> Option<String> {
+    owners
+        .iter()
+        .find(|o| o.claim_type == "primary")
+        .or_else(|| owners.first())
+        .map(|o| o.agent_id.clone())
+}
+
+fn sync_legacy_owner_column(conn: &Connection, task_id: &str) -> Result<(), error::DecapodError> {
+    let owners = fetch_task_owners(conn, task_id)?;
+    let primary_owner = primary_owner_from_owners(&owners).unwrap_or_default();
+    conn.execute(
+        "UPDATE tasks SET owner = ?1 WHERE id = ?2",
+        rusqlite::params![primary_owner, task_id],
+    )
+    .map_err(error::DecapodError::RusqliteError)?;
+    Ok(())
+}
+
+fn set_task_owners(
+    root: &Path,
+    conn: &Connection,
+    task_id: &str,
+    owners: &[String],
+    actor: &str,
+    ts: &str,
+) -> Result<(), error::DecapodError> {
+    let existing = fetch_task_owners(conn, task_id)?;
+    let existing_agents: HashSet<String> = existing.iter().map(|o| o.agent_id.clone()).collect();
+    let desired_agents: HashSet<String> = owners.iter().cloned().collect();
+
+    for removed_agent in existing_agents.difference(&desired_agents) {
+        conn.execute(
+            "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+            rusqlite::params![task_id, removed_agent],
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+        let ev = TodoEvent {
+            ts: ts.to_string(),
+            event_id: Ulid::new().to_string(),
+            event_type: "ownership.release".to_string(),
+            task_id: Some(task_id.to_string()),
+            payload: serde_json::json!({
+                "agent_id": removed_agent,
+            }),
+            actor: actor.to_string(),
+        };
+        append_event(root, &ev)?;
+        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+    }
+
+    for (idx, agent_id) in owners.iter().enumerate() {
+        let claim_type = if idx == 0 { "primary" } else { "secondary" };
+        let claim_id = upsert_task_owner(conn, task_id, agent_id, claim_type, ts)?;
+        write_ownership_claim_event(
+            root,
+            conn,
+            &OwnershipClaimRecord {
+                task_id,
+                agent_id,
+                claim_type,
+                claim_id: &claim_id,
+                actor,
+                ts,
+            },
+        )?;
+    }
+
+    sync_legacy_owner_column(conn, task_id)?;
+    Ok(())
+}
+
 pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, error::DecapodError> {
     let TodoCommand::Add {
         title,
@@ -1598,6 +1670,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 },
             )?;
         }
+        sync_legacy_owner_column(conn, &task_id)?;
         Ok(())
     })?;
 
@@ -1792,48 +1865,44 @@ fn edit_task(
         // Build update fields and track what changed
         let mut updates = vec![];
         let mut params: Vec<Box<dyn ToSql>> = vec![];
-        let mut changed_fields = vec![];
 
         if let Some(t) = title {
             updates.push("title = ?");
             params.push(Box::new(t.to_string()));
-            changed_fields.push("title");
         }
 
         if let Some(d) = description {
             updates.push("description = ?");
             params.push(Box::new(d.to_string()));
-            changed_fields.push("description");
-        }
-
-        if let Some(o) = owner {
-            updates.push("owner = ?");
-            params.push(Box::new(o.to_string()));
-            changed_fields.push("owner");
         }
 
         if let Some(c) = category {
             updates.push("category = ?");
             params.push(Box::new(c.to_string()));
-            changed_fields.push("category");
         }
 
-        if updates.is_empty() {
+        if updates.is_empty() && owner.is_none() {
             return Ok(0usize);
         }
 
-        // Always update updated_at
-        let sql = format!(
-            "UPDATE tasks SET {}, updated_at = ? WHERE id = ?",
-            updates.join(", ")
-        );
-        params.push(Box::new(ts.clone()));
-        params.push(Box::new(id.to_string()));
-
-        let changed = conn.execute(
-            &sql,
-            rusqlite::params_from_iter(params.iter().map(|p| p.as_ref())),
-        )?;
+        let changed = if updates.is_empty() {
+            conn.execute(
+                "UPDATE tasks SET updated_at = ? WHERE id = ?",
+                rusqlite::params![ts, id],
+            )?
+        } else {
+            // Always update updated_at
+            let sql = format!(
+                "UPDATE tasks SET {}, updated_at = ? WHERE id = ?",
+                updates.join(", ")
+            );
+            params.push(Box::new(ts.clone()));
+            params.push(Box::new(id.to_string()));
+            conn.execute(
+                &sql,
+                rusqlite::params_from_iter(params.iter().map(|p| p.as_ref())),
+            )?
+        };
 
         // Create edit event
         let mut payload = serde_json::Map::new();
@@ -1861,6 +1930,11 @@ fn edit_task(
         append_event(root, &ev)?;
         insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 
+        if let Some(o) = owner {
+            let owner_list = parse_owners_input(o);
+            set_task_owners(root, conn, id, &owner_list, "decapod", &ts)?;
+        }
+
         Ok(changed)
     })?;
 
@@ -1877,6 +1951,7 @@ fn claim_task(
     root: &Path,
     id: &str,
     agent_id: &str,
+    mode: ClaimMode,
 ) -> Result<serde_json::Value, error::DecapodError> {
     let ts = now_iso();
     let broker = DbBroker::new(root);
@@ -1911,29 +1986,39 @@ fn claim_task(
                     }));
                 }
                 if !assigned_to.is_empty() && assigned_to != agent_id {
-                    let claim_id = upsert_task_owner(conn, id, agent_id, "secondary", &ts)?;
-                    write_ownership_claim_event(
-                        root,
-                        conn,
-                        &OwnershipClaimRecord {
-                            task_id: id,
-                            agent_id,
-                            claim_type: "secondary",
-                            claim_id: &claim_id,
-                            actor: agent_id,
-                            ts: &ts,
-                        },
-                    )?;
+                    if mode == ClaimMode::Shared {
+                        let claim_id = upsert_task_owner(conn, id, agent_id, "secondary", &ts)?;
+                        write_ownership_claim_event(
+                            root,
+                            conn,
+                            &OwnershipClaimRecord {
+                                task_id: id,
+                                agent_id,
+                                claim_type: "secondary",
+                                claim_id: &claim_id,
+                                actor: agent_id,
+                                ts: &ts,
+                            },
+                        )?;
+                        sync_legacy_owner_column(conn, id)?;
+                        return Ok(serde_json::json!({
+                            "status": "ok",
+                            "mode": "shared",
+                            "message": format!("Task {} is assigned to {}; added {} as secondary owner", id, assigned_to, agent_id),
+                            "assigned_to": assigned_to,
+                            "claim_id": claim_id
+                        }));
+                    }
                     return Ok(serde_json::json!({
                         "status": "conflict",
+                        "mode": "exclusive",
                         "message": format!("Task {} is already claimed by {}", id, assigned_to),
-                        "resolution": "added_secondary_owner",
-                        "assigned_to": assigned_to,
-                        "claim_id": claim_id
+                        "resolution": "none",
+                        "assigned_to": assigned_to
                     }));
                 }
 
-                if !category.is_empty() {
+                if !category.is_empty() && mode == ClaimMode::Exclusive {
                     if let Some(owner) = get_category_owner(conn, &category)? {
                         if owner != agent_id {
                             if is_agent_stale(conn, &owner, &ts, AGENT_EVICT_TIMEOUT_SECS)? {
@@ -1981,6 +2066,7 @@ fn claim_task(
                 ts: &ts,
             },
         )?;
+        sync_legacy_owner_column(conn, id)?;
 
         // Create claim event
         let ev = TodoEvent {
@@ -1990,6 +2076,7 @@ fn claim_task(
             task_id: Some(id.to_string()),
             payload: serde_json::json!({
                 "assigned_to": agent_id,
+                "mode": format!("{:?}", mode).to_lowercase(),
             }),
             actor: agent_id.to_string(),
         };
@@ -1998,6 +2085,7 @@ fn claim_task(
 
         Ok(serde_json::json!({
             "status": "ok",
+            "mode": format!("{:?}", mode).to_lowercase(),
             "message": format!("Task {} claimed by {}", id, agent_id),
             "claim_id": claim_id
         }))
@@ -2171,19 +2259,22 @@ fn add_task_owner(
 
         // Check for conflict - primary owner already exists
         if claim_type == "primary" {
-            let has_primary: bool = conn
+            let existing_primary: Option<String> = conn
                 .query_row(
-                    "SELECT 1 FROM task_owners WHERE task_id = ? AND claim_type = 'primary'",
+                    "SELECT agent_id FROM task_owners WHERE task_id = ? AND claim_type = 'primary'",
                     [task_id],
-                    |_| Ok(true),
+                    |row| row.get(0),
                 )
-                .unwrap_or(false);
+                .optional()
+                .map_err(error::DecapodError::RusqliteError)?;
 
-            if has_primary {
+            if let Some(primary_agent) = existing_primary {
+                if primary_agent != agent_id {
                 return Ok(serde_json::json!({
                     "status": "conflict",
                     "message": "Task already has a primary owner. Use 'secondary' or resolve conflict."
                 }));
+                }
             }
         }
 
@@ -2251,6 +2342,7 @@ fn remove_task_owner(
         };
         append_event(root, &ev)?;
         insert_event(conn, &ev)?;
+        sync_legacy_owner_column(conn, task_id)?;
 
         Ok(serde_json::json!({
             "ts": ts,
@@ -2504,7 +2596,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
                 title: row.get(1)?,
                 description: row.get(2)?,
                 tags: row.get(3)?,
-                owner: row.get(4)?,
+                owner: primary_owner_from_owners(&owners).unwrap_or_else(|| row.get(4).unwrap_or_default()),
                 due: row.get(5)?,
                 r#ref: row.get(6)?,
                 status: row.get(7)?,
@@ -2589,7 +2681,7 @@ pub fn list_tasks(
                 title: row.get(1).map_err(error::DecapodError::RusqliteError)?,
                 description: row.get(2).map_err(error::DecapodError::RusqliteError)?,
                 tags: row.get(3).map_err(error::DecapodError::RusqliteError)?,
-                owner: row.get(4).map_err(error::DecapodError::RusqliteError)?,
+                owner: primary_owner_from_owners(&owners).unwrap_or_else(|| row.get(4).unwrap_or_default()),
                 due: row.get(5).map_err(error::DecapodError::RusqliteError)?,
                 r#ref: row.get(6).map_err(error::DecapodError::RusqliteError)?,
                 status: row.get(7).map_err(error::DecapodError::RusqliteError)?,
@@ -3023,7 +3115,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "archive", "parameters": ["id"] },
             { "name": "comment", "parameters": ["id", "comment"] },
             { "name": "edit", "parameters": ["id", "title", "description", "owner"] },
-            { "name": "claim", "parameters": ["id", "agent"] },
+            { "name": "claim", "parameters": ["id", "agent", "mode"] },
             { "name": "release", "parameters": ["id"] },
             { "name": "categories", "parameters": [] },
             { "name": "register-agent", "parameters": ["agent", "category"] },
@@ -3115,11 +3207,11 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
             owner.as_deref(),
             category.as_deref(),
         )?,
-        TodoCommand::Claim { id, agent } => {
+        TodoCommand::Claim { id, agent, mode } => {
             let default_agent =
                 env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let agent_id = agent.as_deref().unwrap_or(&default_agent);
-            claim_task(root, id, agent_id)?
+            claim_task(root, id, agent_id, *mode)?
         }
         TodoCommand::Release { id } => release_task(root, id)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,

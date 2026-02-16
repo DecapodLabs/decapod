@@ -26,7 +26,7 @@ decapod todo done --id <id>
 decapod todo archive --id <id>
 decapod todo comment --id <id> --comment "<text>"
 decapod todo edit --id <id> [--title <title>] [--description <desc>] [--owner <owner>] [--category <name>]
-decapod todo claim --id <id> [--agent <agent-id>]
+decapod todo claim --id <id> [--agent <agent-id>] [--mode exclusive|shared]
 decapod todo release --id <id>
 decapod todo rebuild
 decapod todo categories
