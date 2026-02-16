@@ -85,8 +85,8 @@ use core::{
     tui, validate,
 };
 use plugins::{
-    archive, context, cron, decide, federation, feedback, health, knowledge, policy, primitives,
-    reflex, teammate, todo, verify, watcher, workflow,
+    archive, container, context, cron, decide, federation, feedback, health, knowledge, policy,
+    primitives, reflex, teammate, todo, verify, watcher, workflow,
 };
 
 use clap::{CommandFactory, Parser, Subcommand};
@@ -151,6 +151,40 @@ enum InitCommand {
         #[clap(short, long)]
         dir: Option<PathBuf>,
     },
+}
+
+#[derive(clap::Args, Debug)]
+struct SessionCli {
+    #[clap(subcommand)]
+    command: SessionCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum SessionCommand {
+    /// Acquire a new session token (required before using other commands)
+    Acquire,
+    /// Show current session status
+    Status,
+    /// Release the current session token
+    Release,
+    },
+
+}
+
+enum SetupCommand {
+    /// Install or uninstall repository git hooks
+    Hook {
+        /// Install conventional commit message validation hook
+        #[clap(long)]
+        commit_msg: bool,
+        /// Install Rust pre-commit hook (fmt + clippy)
+        #[clap(long)]
+        pre_commit: bool,
+        /// Remove installed hooks
+        #[clap(long)]
+        uninstall: bool,
+    },
+
 }
 
 #[derive(clap::Args, Debug)]
@@ -245,6 +279,9 @@ enum AutoCommand {
 
     /// Workflow automation and discovery
     Workflow(workflow::WorkflowCli),
+
+    /// Ephemeral isolated container execution
+    Container(container::ContainerCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -1288,6 +1325,7 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("cron", cron::schema());
     schemas.insert("reflex", reflex::schema());
     schemas.insert("workflow", workflow::schema());
+    schemas.insert("container", container::schema());
     schemas.insert("health", health::health_schema());
     schemas.insert("broker", core::broker::schema());
     schemas.insert("external_action", core::external_action::schema());
@@ -1434,6 +1472,9 @@ fn run_auto_command(auto_cli: AutoCli, project_store: &Store) -> Result<(), erro
         AutoCommand::Reflex(reflex_cli) => reflex::run_reflex_cli(project_store, reflex_cli),
         AutoCommand::Workflow(workflow_cli) => {
             workflow::run_workflow_cli(project_store, workflow_cli)?
+        }
+        AutoCommand::Container(container_cli) => {
+            container::run_container_cli(project_store, container_cli)?
         }
     }
 
