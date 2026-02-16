@@ -1,8 +1,9 @@
 Output assets/decapod-demo.gif
 
 Set FontSize 20
-Set Width 2200
-Set Height 1260
+Set FontFamily "JetBrainsMono Nerd Font Mono"
+Set Width 1100
+Set Height 630
 Set Theme "Builtin Dark"
 Set Padding 24
 Set BorderRadius 8
