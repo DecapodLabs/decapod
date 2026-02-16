@@ -11,12 +11,6 @@ Set TypingSpeed 45ms
 Set Shell "zsh"
 Sleep 300ms
 
-Set TypingSpeed 120ms
-Type "decapod init"
-Enter
-Sleep 3s
-Set TypingSpeed 45ms
-
 Type 'opencode run --model opencode/minimax-m2.5-free --dir /tmp/studio "Complete the hello world todo task"
 Enter
 Sleep 60s

@@ -204,7 +204,7 @@ pub enum TodoCommand {
         #[clap(long, default_value_t = true)]
         lesson: bool,
         /// Archive tasks after completion.
-        #[clap(long, default_value_t = true)]
+        #[clap(long, default_value_t = false)]
         autoclose: bool,
     },
     /// Transfer a task between agents and record handoff artifacts.
@@ -1386,7 +1386,7 @@ fn run_worker_loop(
         }
 
         let archive_out = if autoclose {
-            Some(update_status(
+            match update_status(
                 store,
                 &task_id,
                 "archived",
@@ -1395,7 +1395,13 @@ fn run_worker_loop(
                     "reason": "worker_loop_autoclose",
                     "actor": agent_id
                 }),
-            )?)
+            ) {
+                Ok(out) => Some(out),
+                Err(e) => Some(serde_json::json!({
+                    "status": "error",
+                    "error": e.to_string(),
+                })),
+            }
         } else {
             None
         };

@@ -4,7 +4,13 @@
 
 /// Collapse newlines/extra whitespace and bound length for terminal display.
 pub fn compact_line(input: &str, max_chars: usize) -> String {
-    let collapsed = input.split_whitespace().collect::<Vec<_>>().join(" ");
+    let mut collapsed = input.split_whitespace().collect::<Vec<_>>().join(" ");
+    if let Some(idx) = collapsed.find(" (run `") {
+        collapsed.truncate(idx);
+    }
+    if let Some(idx) = collapsed.find("; run `") {
+        collapsed.truncate(idx);
+    }
     let mut chars = collapsed.chars();
     let preview: String = chars.by_ref().take(max_chars).collect();
     if chars.next().is_some() {
