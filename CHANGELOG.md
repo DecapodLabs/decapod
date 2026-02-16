@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0](https://github.com/DecapodLabs/decapod/compare/v0.16.1...v0.17.0) - 2026-02-16
+
+### Added
+
+- reflex
+- reflex
+- reflex
+- reflex
+- reflex
+
 ## [0.16.1](https://github.com/DecapodLabs/decapod/compare/v0.16.0...v0.16.1) - 2026-02-16
 
 ### Added
