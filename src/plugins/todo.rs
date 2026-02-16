@@ -3710,3 +3710,7 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
 
     Ok(())
 }
+
+pub fn is_heartbeat_command(cli: &TodoCli) -> bool {
+    matches!(cli.command, TodoCommand::Heartbeat { .. })
+}

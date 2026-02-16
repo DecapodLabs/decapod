@@ -896,6 +896,10 @@ pub fn run() -> Result<(), error::DecapodError> {
                 root: store_root.clone(),
             };
 
+            if should_auto_clock_in(&cli.command) {
+                todo::clock_in_agent_presence(&project_store)?;
+            }
+
             match cli.command {
                 Command::Validate(validate_cli) => {
                     run_validate_command(validate_cli, &project_root, &project_store)?;
@@ -917,6 +921,14 @@ pub fn run() -> Result<(), error::DecapodError> {
         }
     }
     Ok(())
+}
+
+fn should_auto_clock_in(command: &Command) -> bool {
+    match command {
+        Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
+        Command::Version | Command::Init(_) | Command::Setup(_) => false,
+        _ => true,
+    }
 }
 
 fn run_validate_command(
