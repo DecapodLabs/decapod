@@ -10,12 +10,13 @@ You (Codex/ChatGPT/OpenAI agent) are working in a Decapod-managed repository.
 
 ```bash
 cargo install decapod              # 1. Install/update to latest release
-decapod --version                   # 2. Check current version
+decapod version                   # 2. Check current version
 decapod --help                      # 3. Verify available commands
-decapod docs show core/DECAPOD.md  # 4. Refresh constitution
-decapod session acquire             # 5. Acquire session token (required for all commands)
-decapod validate                    # 6. System state
-decapod todo list                   # 7. Active work
+decapod data schema --subsystem command_registry --deterministic >/dev/null  # 4. Refresh CLI command index
+decapod docs show core/DECAPOD.md  # 5. Refresh constitution
+decapod session acquire             # 6. Acquire session token (required for all commands)
+decapod validate                    # 7. System state
+decapod todo list                   # 8. Active work
 ```
 
 **Why this matters:** The decapod binary and constitution evolve. Always install the latest release first, then verify commands and refresh your understanding of the latest contract before acting.

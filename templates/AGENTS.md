@@ -8,12 +8,13 @@
 
 ```bash
 cargo install decapod              # 1. Install/update to latest release
-decapod --version                   # 2. Check installed version
+decapod version                   # 2. Check installed version
 decapod --help                      # 3. Verify available commands
-decapod docs show core/DECAPOD.md  # 4. Refresh constitution
-decapod session acquire             # 5. Acquire session token (required for all commands)
-decapod validate                    # 6. Check system state
-decapod todo list                   # 7. See active work
+decapod data schema --subsystem command_registry --deterministic >/dev/null  # 4. Refresh CLI command index
+decapod docs show core/DECAPOD.md  # 5. Refresh constitution
+decapod session acquire             # 6. Acquire session token (required for all commands)
+decapod validate                    # 7. Check system state
+decapod todo list                   # 8. See active work
 ```
 
 **Why this is mandatory:** The decapod binary evolves. Commands change. Constitution updates. Always install the latest release first, then verify what's available and refresh your understanding before acting. Skipping this causes errors.

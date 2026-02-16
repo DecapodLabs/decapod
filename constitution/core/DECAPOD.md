@@ -60,7 +60,7 @@ Decapod is a local-first control plane for coding agents. It helps facilitate mu
 
 ```bash
 cargo install decapod              # 1. Install/update to latest release
-decapod --version                   # 2. Check installed version
+decapod version                   # 2. Check installed version
 decapod --help                      # 3. Verify available commands
 decapod docs show core/DECAPOD.md  # 4. Refresh constitution
 decapod session acquire             # 5. Acquire session token (required for all commands)
