@@ -186,6 +186,9 @@ jobs:
       - name: Initialize Decapod
         run: decapod init --force
 
+      - name: Acquire Decapod session
+        run: decapod session acquire
+
       - name: Run validation harness
         run: decapod validate
 
