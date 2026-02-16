@@ -23,7 +23,9 @@ decapod todo list                   # 8. See active work
 
 1. **Use the control plane**: All shared state and `.decapod` file access goes through `decapod` commands (never bypass)
 2. **Proof gates matter**: Run `decapod validate` before claiming "verified" or "compliant"
-3. **Interface abstraction boundary**: Preserve control-plane opacity. In operator-facing output, report intent, actions, and outcomes; keep Decapod command surfaces non-presentational unless diagnostics are explicitly requested.
+3. **TODO closeout contract**: Close tasks via `decapod todo done --id <task-id>` (and optional policy-approved `decapod todo archive --id <task-id>`); never use `decapod complete`
+4. **Interface abstraction boundary**: Preserve control-plane opacity. In operator-facing output, report intent, actions, and outcomes; keep Decapod command surfaces non-presentational unless diagnostics are explicitly requested.
+5. **Clarification gate**: Ask concise questions before ambiguous/high-risk/irreversible actions; do not guess when IDs, command surfaces, or success criteria are unclear.
 
 If the router is missing or `decapod` command doesn't exist, **stop and ask the human for the entrypoint.**
 

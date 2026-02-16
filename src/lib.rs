@@ -118,22 +118,6 @@ struct ValidateCli {
     format: String,
 }
 
-#[derive(clap::Args, Debug)]
-struct CompleteCli {
-    /// Task ID (supports `--id <ID>` or positional `<ID>`).
-    #[clap(long)]
-    id: Option<String>,
-    /// Task ID positional fallback.
-    #[clap(value_name = "ID")]
-    id_positional: Option<String>,
-    /// Capture verification artifacts and proof baseline while marking done.
-    #[clap(long)]
-    validated: bool,
-    /// File path(s) to hash for drift detection. Defaults to AGENTS.md when --validated is set.
-    #[clap(long = "artifact")]
-    artifact: Vec<String>,
-}
-
 // ===== Grouped Command Structures =====
 
 #[derive(clap::Args, Debug)]
@@ -343,10 +327,6 @@ enum Command {
     /// Track tasks and work items
     #[clap(name = "todo", visible_alias = "t")]
     Todo(todo::TodoCli),
-
-    /// Mark a task complete (compat alias for `todo done`)
-    #[clap(name = "complete")]
-    Complete(CompleteCli),
 
     /// Validate methodology compliance
     #[clap(name = "validate", visible_alias = "v")]
@@ -911,9 +891,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Version => show_version_info()?,
                 Command::Docs(docs_cli) => docs_cli::run_docs_cli(docs_cli)?,
                 Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
-                Command::Complete(complete_cli) => {
-                    run_complete_command(complete_cli, &project_store)?;
-                }
                 Command::Govern(govern_cli) => {
                     run_govern_command(govern_cli, &project_store, &store_root)?;
                 }
@@ -1029,48 +1006,6 @@ fn run_validate_command(
         _ => project_store.clone(),
     };
     validate::run_validation(&store, &decapod_root, &decapod_root)
-}
-
-fn run_complete_command(
-    complete_cli: CompleteCli,
-    project_store: &Store,
-) -> Result<(), error::DecapodError> {
-    let task_id = match (complete_cli.id, complete_cli.id_positional) {
-        (Some(a), Some(b)) if a != b => {
-            return Err(error::DecapodError::ValidationError(format!(
-                "complete received conflicting IDs (--id={} vs positional={})",
-                a, b
-            )));
-        }
-        (Some(id), _) => id,
-        (None, Some(id)) => id,
-        (None, None) => {
-            return Err(error::DecapodError::ValidationError(
-                "complete requires a task ID (use --id <ID> or positional <ID>)".to_string(),
-            ));
-        }
-    };
-
-    let out = todo::update_status(
-        project_store,
-        &task_id,
-        "done",
-        "task.done",
-        serde_json::json!({}),
-    )?;
-
-    if complete_cli.validated && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
-        let repo_root = project_store
-            .root
-            .parent()
-            .and_then(|p| p.parent())
-            .map(|p| p.to_path_buf())
-            .unwrap_or(std::env::current_dir().map_err(error::DecapodError::IoError)?);
-        verify::capture_baseline_for_todo(project_store, &repo_root, &task_id, complete_cli.artifact)?;
-    }
-
-    println!("{}", serde_json::to_string(&out).unwrap());
-    Ok(())
 }
 
 fn run_govern_command(
