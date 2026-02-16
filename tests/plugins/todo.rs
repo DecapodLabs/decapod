@@ -1,9 +1,11 @@
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
+use decapod::plugins::policy;
 use decapod::plugins::todo::{
     TodoCommand, add_task, check_trust_level, get_task, initialize_todo_db, list_tasks,
     rebuild_from_events, todo_db_path, update_status,
 };
+use rusqlite::Connection;
 use serde_json::Value;
 use std::fs;
 use std::path::Path;
@@ -143,6 +145,14 @@ fn run_cmd(repo_root: &Path, args: &[&str]) -> Value {
     serde_json::from_str(&stdout[json_start..]).expect("parse json")
 }
 
+fn run_raw(repo_root: &Path, args: &[&str]) -> std::process::Output {
+    Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .current_dir(repo_root)
+        .args(args)
+        .output()
+        .expect("run decapod")
+}
+
 #[test]
 fn test_claim_modes_and_owner_consolidation() {
     let tmp = tempdir().unwrap();
@@ -187,6 +197,16 @@ fn test_claim_modes_and_owner_consolidation() {
             "exclusive",
         ],
     );
+
+    let db = Connection::open(repo.join(".decapod/data/todo.db")).unwrap();
+    let ts = "1771202800Z";
+    db.execute(
+        "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
+         VALUES(?1, 'verified', ?2, ?2, 'test')
+         ON CONFLICT(agent_id) DO UPDATE SET trust_level='verified', updated_at=?2, granted_by='test'",
+        rusqlite::params!["agent-b", ts],
+    )
+    .unwrap();
 
     let shared = run_cmd(
         repo,
@@ -243,5 +263,259 @@ fn test_claim_modes_and_owner_consolidation() {
         !owners_after_edit
             .iter()
             .any(|o| o["agent_id"] == "agent-a" || o["agent_id"] == "agent-b")
+    );
+}
+
+#[test]
+fn test_risk_zones_and_trust_tiers_enforced() {
+    let tmp = tempdir().unwrap();
+    let repo = tmp.path();
+
+    let init = run_raw(repo, &["init", "--force"]);
+    assert!(
+        init.status.success(),
+        "init failed: {}",
+        String::from_utf8_lossy(&init.stderr)
+    );
+
+    let added = run_cmd(
+        repo,
+        &[
+            "todo",
+            "--format",
+            "json",
+            "add",
+            "Risk/trust test",
+            "--owner",
+            "agent-a",
+        ],
+    );
+    let task_id = added["id"].as_str().unwrap().to_string();
+
+    // Shared claim requires verified trust (default unknown/basic should fail).
+    let shared_fail = run_raw(
+        repo,
+        &[
+            "todo", "--format", "json", "claim", "--id", &task_id, "--agent", "agent-b", "--mode",
+            "shared",
+        ],
+    );
+    assert!(
+        !shared_fail.status.success(),
+        "shared claim should fail without verified trust"
+    );
+    assert!(String::from_utf8_lossy(&shared_fail.stderr).contains("Policy gate denied"));
+
+    // Grant verified trust to agent-b and retry shared claim.
+    let db = Connection::open(repo.join(".decapod/data/todo.db")).unwrap();
+    let ts = "1771203000Z";
+    db.execute(
+        "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
+         VALUES(?1, 'verified', ?2, ?2, 'test')
+         ON CONFLICT(agent_id) DO UPDATE SET trust_level='verified', updated_at=?2, granted_by='test'",
+        rusqlite::params!["agent-b", ts],
+    )
+    .unwrap();
+    let shared_ok = run_cmd(
+        repo,
+        &[
+            "todo", "--format", "json", "claim", "--id", &task_id, "--agent", "agent-b", "--mode",
+            "shared",
+        ],
+    );
+    assert_eq!(shared_ok["status"], "ok");
+    assert_eq!(shared_ok["result"]["mode"], "shared");
+
+    // Handoff requires verified trust and explicit approval.
+    db.execute(
+        "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
+         VALUES(?1, 'verified', ?2, ?2, 'test')
+         ON CONFLICT(agent_id) DO UPDATE SET trust_level='verified', updated_at=?2, granted_by='test'",
+        rusqlite::params!["agent-a", ts],
+    )
+    .unwrap();
+
+    let handoff_fail = run_raw(
+        repo,
+        &[
+            "todo",
+            "--format",
+            "json",
+            "handoff",
+            "--id",
+            &task_id,
+            "--to",
+            "agent-c",
+            "--from",
+            "agent-b",
+            "--summary",
+            "handoff test",
+        ],
+    );
+    assert!(
+        !handoff_fail.status.success(),
+        "handoff should fail without approval"
+    );
+
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: repo.join(".decapod/data"),
+    };
+    policy::approve_action(&store, "todo.handoff", None, "operator", "global").unwrap();
+
+    let handoff_ok = run_cmd(
+        repo,
+        &[
+            "todo",
+            "--format",
+            "json",
+            "handoff",
+            "--id",
+            &task_id,
+            "--to",
+            "agent-c",
+            "--from",
+            "agent-b",
+            "--summary",
+            "handoff test",
+        ],
+    );
+    assert_eq!(handoff_ok["status"], "ok");
+}
+
+#[test]
+fn test_ownership_rebuild_replay_parity() {
+    let tmp = tempdir().unwrap();
+    let repo = tmp.path();
+
+    let init = run_raw(repo, &["init", "--force"]);
+    assert!(
+        init.status.success(),
+        "init failed: {}",
+        String::from_utf8_lossy(&init.stderr)
+    );
+
+    let added = run_cmd(
+        repo,
+        &[
+            "todo",
+            "--format",
+            "json",
+            "add",
+            "Ownership replay parity",
+            "--owner",
+            "agent-a,agent-b",
+        ],
+    );
+    let task_id = added["id"].as_str().unwrap().to_string();
+
+    // Prepare trust gates for shared claim.
+    let db = Connection::open(repo.join(".decapod/data/todo.db")).unwrap();
+    let ts = "1771203600Z";
+    db.execute(
+        "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
+         VALUES(?1, 'verified', ?2, ?2, 'test')
+         ON CONFLICT(agent_id) DO UPDATE SET trust_level='verified', updated_at=?2, granted_by='test'",
+        rusqlite::params!["agent-c", ts],
+    )
+    .unwrap();
+
+    let _ = run_cmd(
+        repo,
+        &[
+            "todo",
+            "--format",
+            "json",
+            "claim",
+            "--id",
+            &task_id,
+            "--agent",
+            "agent-a",
+            "--mode",
+            "exclusive",
+        ],
+    );
+    let _ = run_cmd(
+        repo,
+        &[
+            "todo", "--format", "json", "claim", "--id", &task_id, "--agent", "agent-c", "--mode",
+            "shared",
+        ],
+    );
+    let _ = run_cmd(
+        repo,
+        &[
+            "todo",
+            "--format",
+            "json",
+            "remove-owner",
+            "--id",
+            &task_id,
+            "--agent",
+            "agent-b",
+        ],
+    );
+    let _ = run_cmd(
+        repo,
+        &[
+            "todo",
+            "--format",
+            "json",
+            "add-owner",
+            "--id",
+            &task_id,
+            "--agent",
+            "agent-d",
+            "--claim-type",
+            "secondary",
+        ],
+    );
+
+    let before = run_cmd(repo, &["todo", "--format", "json", "get", "--id", &task_id]);
+    let before_owner = before["item"]["owner"].as_str().unwrap().to_string();
+    let before_assigned = before["item"]["assigned_to"].as_str().unwrap().to_string();
+    let mut before_owners: Vec<String> = before["item"]["owners"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|o| {
+            format!(
+                "{}:{}",
+                o["agent_id"].as_str().unwrap(),
+                o["claim_type"].as_str().unwrap()
+            )
+        })
+        .collect();
+    before_owners.sort();
+
+    let _ = run_cmd(repo, &["todo", "--format", "json", "rebuild"]);
+    let after = run_cmd(repo, &["todo", "--format", "json", "get", "--id", &task_id]);
+    let after_owner = after["item"]["owner"].as_str().unwrap().to_string();
+    let after_assigned = after["item"]["assigned_to"].as_str().unwrap().to_string();
+    let mut after_owners: Vec<String> = after["item"]["owners"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|o| {
+            format!(
+                "{}:{}",
+                o["agent_id"].as_str().unwrap(),
+                o["claim_type"].as_str().unwrap()
+            )
+        })
+        .collect();
+    after_owners.sort();
+
+    assert_eq!(
+        before_owner, after_owner,
+        "owner mirror should survive rebuild"
+    );
+    assert_eq!(
+        before_assigned, after_assigned,
+        "assigned_to should survive rebuild"
+    );
+    assert_eq!(
+        before_owners, after_owners,
+        "ownership claim/release replay should be deterministic"
     );
 }

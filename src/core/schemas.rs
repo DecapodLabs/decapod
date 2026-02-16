@@ -47,7 +47,7 @@ pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
 /// TODO database schema version
 ///
 /// Used for migration tracking in the `meta` table
-pub const TODO_SCHEMA_VERSION: u32 = 11;
+pub const TODO_SCHEMA_VERSION: u32 = 12;
 
 /// TODO metadata table schema
 ///
