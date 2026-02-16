@@ -729,6 +729,7 @@ mod tests {
         assert!(joined.contains("git checkout -B 'ahr/branch'"));
         assert!(joined.contains("git rebase origin/'master'"));
         assert!(joined.contains("git push -u origin 'ahr/branch'"));
+        assert!(joined.contains("gh auth status"));
         assert!(joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
     }
 
