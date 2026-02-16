@@ -3889,7 +3889,13 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
         }
         TodoCommand::Archive { id, id_positional } => {
             let task_id = resolve_task_id_arg(id, id_positional, "todo archive")?;
-            update_status(store, &task_id, "archived", "task.archive", serde_json::json!({}))?
+            update_status(
+                store,
+                &task_id,
+                "archived",
+                "task.archive",
+                serde_json::json!({}),
+            )?
         }
         TodoCommand::Comment { id, comment } => comment_task(root, id, comment)?,
         TodoCommand::Edit {

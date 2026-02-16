@@ -156,7 +156,8 @@ pub fn scaffold_project_entrypoints(
     let mut ep_unchanged = 0usize;
     let mut ep_preserved = 0usize;
     for file in files_to_generate {
-        let content = assets::get_template(file).unwrap_or_else(|| panic!("Missing template: {}", file));
+        let content =
+            assets::get_template(file).unwrap_or_else(|| panic!("Missing template: {}", file));
         match write_file(opts, file, &content)? {
             FileAction::Created => ep_created += 1,
             FileAction::Unchanged => ep_unchanged += 1,
