@@ -391,4 +391,17 @@ mod tests {
         assert!(joined.contains("git checkout -B 'ahr/branch'"));
         assert!(joined.contains("git push -u origin 'ahr/branch'"));
     }
+
+    #[test]
+    fn push_without_branch_emits_explicit_error_in_script() {
+        let script = build_container_script("echo hi", None, true);
+        assert!(script.contains("push requested but --branch missing"));
+        assert!(script.contains("exit 2"));
+    }
+
+    #[test]
+    fn sanitize_name_normalizes_agent_identifiers() {
+        assert_eq!(sanitize_name("Agent_One"), "agent-one");
+        assert_eq!(sanitize_name("  team/a  "), "team-a");
+    }
 }
