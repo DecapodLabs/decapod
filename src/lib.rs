@@ -904,8 +904,10 @@ pub fn run() -> Result<(), error::DecapodError> {
             run_session_command(session_cli)?;
         }
         _ => {
-            // For other commands, require valid session token
-            ensure_session_valid()?;
+            // Session token is optional for bootstrap/validation surfaces used in CI and startup
+            if !matches!(cli.command, Command::Validate(_)) {
+                ensure_session_valid()?;
+            }
 
             // For other commands, ensure .decapod exists
             let project_root = decapod_root_option?;
@@ -980,7 +982,7 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
     let token_path = get_session_token_path()?;
     if !token_path.exists() {
         return Err(error::DecapodError::SessionError(
-            "No active session. Run 'decapod session acquire' first.".to_string(),
+            "No active session. Run 'decapod session acquire' first. Reminder: this CLI/API is not for humans.".to_string(),
         ));
     }
     Ok(())
