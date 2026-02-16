@@ -181,6 +181,23 @@ pub enum ReflexCommand {
         #[clap(long)]
         dir: Option<String>,
     },
+    /// Install a human trigger loop reflex (trigger -> task -> worker run -> lesson).
+    AddHumanTriggerLoop {
+        #[clap(long, default_value = "human-trigger-task-loop")]
+        name: String,
+        #[clap(long)]
+        agent: Option<String>,
+        #[clap(long)]
+        task_title: String,
+        #[clap(long, default_value = "medium")]
+        priority: String,
+        #[clap(long, default_value_t = 1)]
+        max_tasks: usize,
+        #[clap(long, default_value = "")]
+        tags: String,
+        #[clap(long)]
+        dir: Option<String>,
+    },
 }
 
 pub fn schema() -> serde_json::Value {
@@ -249,6 +266,17 @@ pub fn schema() -> serde_json::Value {
                     {"name": "name", "required": false, "description": "Reflex name", "default": "human-heartbeat-autoclaim"},
                     {"name": "agent", "required": false, "description": "Agent ID (defaults to DECAPOD_AGENT_ID or unknown)"},
                     {"name": "max_claims", "required": false, "description": "Maximum tasks to autoclaim per heartbeat run", "default": 1}
+                ]
+            },
+            {
+                "name": "add-human-trigger-loop",
+                "description": "Install a human trigger -> task -> worker execution -> lesson reflex",
+                "parameters": [
+                    {"name": "name", "required": false, "description": "Reflex name", "default": "human-trigger-task-loop"},
+                    {"name": "agent", "required": false, "description": "Agent ID (defaults to DECAPOD_AGENT_ID or unknown)"},
+                    {"name": "task_title", "required": true, "description": "Task title to create on trigger"},
+                    {"name": "priority", "required": false, "description": "Task priority", "default": "medium"},
+                    {"name": "max_tasks", "required": false, "description": "Worker max tasks per run", "default": 1}
                 ]
             }
         ],
@@ -324,6 +352,24 @@ pub fn run_reflex_cli(store: &Store, cli: ReflexCli) {
             tags,
             dir,
         } => add_heartbeat_loop_reflex(root, &name, &agent, &max_claims, &tags, &dir),
+        ReflexCommand::AddHumanTriggerLoop {
+            name,
+            agent,
+            task_title,
+            priority,
+            max_tasks,
+            tags,
+            dir,
+        } => add_human_trigger_loop_reflex(
+            root,
+            &name,
+            &agent,
+            &task_title,
+            &priority,
+            &max_tasks,
+            &tags,
+            &dir,
+        ),
     };
     if let Err(e) = result {
         eprintln!("Error: {}", e);
@@ -385,6 +431,40 @@ fn fetch_matching_reflexes(
     })
 }
 
+fn run_decapod_command_json(
+    root: &Path,
+    scope: &str,
+    args: &[&str],
+) -> Result<serde_json::Value, error::DecapodError> {
+    let decapod_bin = std::env::current_exe()
+        .map_err(error::DecapodError::IoError)?
+        .to_string_lossy()
+        .to_string();
+    let cwd = root
+        .parent()
+        .and_then(|p| p.parent())
+        .map(Path::to_path_buf)
+        .unwrap_or(std::env::current_dir().map_err(error::DecapodError::IoError)?);
+    let output = external_action::execute(
+        root,
+        external_action::ExternalCapability::VerificationExec,
+        scope,
+        decapod_bin.as_str(),
+        args,
+        &cwd,
+    )?;
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    let payload = serde_json::from_str::<JsonValue>(&stdout)
+        .unwrap_or_else(|_| serde_json::json!({ "raw_stdout": stdout }));
+    Ok(serde_json::json!({
+        "status": if output.status.success() { "ok" } else { "error" },
+        "exit_code": output.status.code(),
+        "payload": payload,
+        "stderr": stderr
+    }))
+}
+
 fn execute_reflex_action(
     root: &Path,
     reflex: &Reflex,
@@ -400,10 +480,6 @@ fn execute_reflex_action(
                 .unwrap_or(default_agent.as_str());
             let max_claims = cfg.get("max_claims").and_then(|v| v.as_u64()).unwrap_or(1);
             let max_claims_s = max_claims.to_string();
-            let decapod_bin = std::env::current_exe()
-                .map_err(error::DecapodError::IoError)?
-                .to_string_lossy()
-                .to_string();
             let args = vec![
                 "todo",
                 "heartbeat",
@@ -415,28 +491,78 @@ fn execute_reflex_action(
                 "--max-claims",
                 max_claims_s.as_str(),
             ];
-            let cwd = root
-                .parent()
-                .and_then(|p| p.parent())
-                .map(Path::to_path_buf)
-                .unwrap_or(std::env::current_dir().map_err(error::DecapodError::IoError)?);
-            let output = external_action::execute(
+            run_decapod_command_json(root, "reflex.action.todo.heartbeat.autoclaim", &args)
+        }
+        "todo.human.trigger.loop" => {
+            let cfg = parse_json_config(&reflex.action_config, "action_config")?;
+            let default_agent =
+                env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let agent = cfg
+                .get("agent")
+                .and_then(|v| v.as_str())
+                .unwrap_or(default_agent.as_str());
+            let task_title = cfg
+                .get("task_title")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| {
+                    error::DecapodError::ValidationError(
+                        "action_config.task_title is required".to_string(),
+                    )
+                })?;
+            let priority = cfg
+                .get("priority")
+                .and_then(|v| v.as_str())
+                .unwrap_or("medium");
+            let tags = cfg.get("tags").and_then(|v| v.as_str()).unwrap_or("");
+            let max_tasks = cfg.get("max_tasks").and_then(|v| v.as_u64()).unwrap_or(1);
+            let max_tasks_s = max_tasks.to_string();
+
+            let mut add_args = vec![
+                "todo",
+                "add",
+                "--format",
+                "json",
+                task_title,
+                "--priority",
+                priority,
+                "--owner",
+                agent,
+            ];
+            if !tags.is_empty() {
+                add_args.push("--tags");
+                add_args.push(tags);
+            }
+            let add_out =
+                run_decapod_command_json(root, "reflex.action.todo.human.add", &add_args)?;
+            let added_task_id = add_out
+                .get("payload")
+                .and_then(|p| p.get("id"))
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+
+            let mut worker_args = vec![
+                "todo",
+                "worker-run",
+                "--format",
+                "json",
+                "--agent",
+                agent,
+                "--max-tasks",
+                max_tasks_s.as_str(),
+            ];
+            if let Some(task_id) = added_task_id.as_deref() {
+                worker_args.push("--task-id");
+                worker_args.push(task_id);
+            }
+            let worker_out = run_decapod_command_json(
                 root,
-                external_action::ExternalCapability::VerificationExec,
-                "reflex.action.todo.heartbeat.autoclaim",
-                decapod_bin.as_str(),
-                &args,
-                &cwd,
+                "reflex.action.todo.human.worker_run",
+                &worker_args,
             )?;
-            let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
-            let payload = serde_json::from_str::<JsonValue>(&stdout)
-                .unwrap_or_else(|_| serde_json::json!({ "raw_stdout": stdout }));
             Ok(serde_json::json!({
-                "status": if output.status.success() { "ok" } else { "error" },
-                "exit_code": output.status.code(),
-                "payload": payload,
-                "stderr": stderr
+                "status": "ok",
+                "add_task": add_out,
+                "worker_run": worker_out
             }))
         }
         other => Err(error::DecapodError::ValidationError(format!(
@@ -517,6 +643,46 @@ fn add_heartbeat_loop_reflex(
         "human".to_string(),
         trigger_config,
         "todo.heartbeat.autoclaim".to_string(),
+        action_config,
+        "active".to_string(),
+        tags.to_string(),
+        dir.clone(),
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn add_human_trigger_loop_reflex(
+    root: &Path,
+    name: &str,
+    agent: &Option<String>,
+    task_title: &str,
+    priority: &str,
+    max_tasks: &usize,
+    tags: &str,
+    dir: &Option<String>,
+) -> Result<(), error::DecapodError> {
+    let default_agent = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+    let agent = agent.clone().unwrap_or(default_agent);
+    let trigger_config = serde_json::json!({
+        "source": "human",
+        "intent": "task_execute_learn"
+    })
+    .to_string();
+    let action_config = serde_json::json!({
+        "agent": agent,
+        "task_title": task_title,
+        "priority": priority,
+        "max_tasks": max_tasks,
+        "tags": tags
+    })
+    .to_string();
+    add_reflex(
+        root,
+        name.to_string(),
+        "Human trigger loop: create task, execute worker loop, persist lesson".to_string(),
+        "human".to_string(),
+        trigger_config,
+        "todo.human.trigger.loop".to_string(),
         action_config,
         "active".to_string(),
         tags.to_string(),
