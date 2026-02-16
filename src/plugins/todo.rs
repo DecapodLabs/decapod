@@ -9,7 +9,7 @@ use crate::plugins::teammate;
 use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
+use rusqlite::{params, types::ToSql, Connection, OptionalExtension, Result as SqlResult};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::collections::HashSet;
@@ -1805,7 +1805,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         kind: crate::core::store::StoreKind::Repo,
         root: root.to_path_buf(),
     };
-    let _ = federation::add_node(
+    if let Err(e) = federation::add_node(
         &store,
         &format!("Task: {}", title),
         "commitment",
@@ -1820,7 +1820,12 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         "repo",
         None,
         "decapod",
-    );
+    ) {
+        eprintln!("Warning: failed to create federation node: {}", e);
+    } else {
+        // Refresh derived files after adding a node
+        let _ = federation::refresh_derived_files(&store);
+    }
 
     Ok(serde_json::json!({
         "ts": ts,
@@ -1917,6 +1922,9 @@ pub fn update_status(
         if let (Ok(proof), Some(intent_id)) = (proof_result, intent_node_id) {
             let _ = federation::add_edge(store, &intent_id, &proof.id, "depends_on");
         }
+
+        // Refresh derived files after adding proof node
+        let _ = federation::refresh_derived_files(store);
     }
 
     Ok(serde_json::json!({
