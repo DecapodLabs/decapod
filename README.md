@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <code>cargo install decapod<br/>decapod init</code>
+  <code>cargo install decapod\ndecapod init</code>
 </p>
 
 <p align="center">
