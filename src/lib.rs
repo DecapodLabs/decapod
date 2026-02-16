@@ -85,8 +85,8 @@ use core::{
     tui, validate,
 };
 use plugins::{
-    archive, context, cron, decide, federation, feedback, health, knowledge, policy, reflex,
-    primitives, teammate, todo, verify, watcher, workflow,
+    archive, context, cron, decide, federation, feedback, health, knowledge, policy, primitives,
+    reflex, teammate, todo, verify, watcher, workflow,
 };
 
 use clap::{CommandFactory, Parser, Subcommand};
@@ -269,6 +269,9 @@ enum QaCommand {
         /// Check crate description matches expected
         #[clap(long)]
         crate_description: bool,
+        /// Smoke-check all discoverable command help surfaces
+        #[clap(long)]
+        commands: bool,
         /// Run all checks
         #[clap(long)]
         all: bool,
@@ -1364,7 +1367,9 @@ fn run_auto_command(auto_cli: AutoCli, project_store: &Store) -> Result<(), erro
     match auto_cli.command {
         AutoCommand::Cron(cron_cli) => cron::run_cron_cli(project_store, cron_cli)?,
         AutoCommand::Reflex(reflex_cli) => reflex::run_reflex_cli(project_store, reflex_cli),
-        AutoCommand::Workflow(workflow_cli) => workflow::run_workflow_cli(project_store, workflow_cli)?,
+        AutoCommand::Workflow(workflow_cli) => {
+            workflow::run_workflow_cli(project_store, workflow_cli)?
+        }
     }
 
     Ok(())
@@ -1381,8 +1386,9 @@ fn run_qa_command(
         }
         QaCommand::Check {
             crate_description,
+            commands,
             all,
-        } => run_check(crate_description, all)?,
+        } => run_check(crate_description, commands, all)?,
         QaCommand::Gatling(ref gatling_cli) => plugins::gatling::run_gatling_cli(gatling_cli)?,
     }
 
@@ -1516,7 +1522,11 @@ exit 0
     Ok(())
 }
 
-fn run_check(crate_description: bool, all: bool) -> Result<(), error::DecapodError> {
+fn run_check(
+    crate_description: bool,
+    commands: bool,
+    all: bool,
+) -> Result<(), error::DecapodError> {
     if crate_description || all {
         let expected = "Decapod is a Rust-built governance runtime for AI agents: repo-native state, enforced workflow, proof gates, safe coordination.";
 
@@ -1546,10 +1556,51 @@ fn run_check(crate_description: bool, all: bool) -> Result<(), error::DecapodErr
         }
     }
 
-    if all && !crate_description {
-        println!("Note: --all requires --crate-description");
+    if commands || all {
+        run_command_help_smoke()?;
+        println!("✓ Command help surfaces are valid");
     }
 
+    if all && !(crate_description || commands) {
+        println!("Note: --all enables all checks");
+    }
+
+    Ok(())
+}
+
+fn run_command_help_smoke() -> Result<(), error::DecapodError> {
+    fn walk(cmd: &clap::Command, prefix: Vec<String>, all_paths: &mut Vec<Vec<String>>) {
+        if cmd.get_name() != "help" {
+            all_paths.push(prefix.clone());
+        }
+        for sub in cmd.get_subcommands().filter(|sub| !sub.is_hide_set()) {
+            let mut next = prefix.clone();
+            next.push(sub.get_name().to_string());
+            walk(sub, next, all_paths);
+        }
+    }
+
+    let exe = std::env::current_exe().map_err(error::DecapodError::IoError)?;
+    let mut command_paths = Vec::new();
+    walk(&Cli::command(), Vec::new(), &mut command_paths);
+    command_paths.sort();
+    command_paths.dedup();
+
+    for path in command_paths {
+        let mut args = path.clone();
+        args.push("--help".to_string());
+        let output = std::process::Command::new(&exe)
+            .args(&args)
+            .output()
+            .map_err(error::DecapodError::IoError)?;
+        if !output.status.success() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "help smoke failed for `decapod {}`: {}",
+                path.join(" "),
+                String::from_utf8_lossy(&output.stderr).trim()
+            )));
+        }
+    }
     Ok(())
 }
 

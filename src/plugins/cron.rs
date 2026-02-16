@@ -378,7 +378,7 @@ fn delete_cron_job(root: &Path, id: String) -> Result<(), error::DecapodError> {
 }
 
 fn suggest_cron_jobs(root: &Path, limit: usize) -> Result<(), error::DecapodError> {
-    let tasks = todo::list_tasks(root, Some("open"), None, None, None, None, None, None)?;
+    let tasks = todo::list_tasks(root, Some("open".to_string()), None, None, None, None)?;
     let suggestions: Vec<serde_json::Value> = tasks
         .iter()
         .take(limit)

@@ -119,12 +119,7 @@ struct StaleItem {
 }
 
 fn now_iso() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    let secs = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-    format!("{}Z", secs)
+    crate::core::time::now_epoch_z()
 }
 
 fn epoch_secs(ts: &str) -> Option<i64> {

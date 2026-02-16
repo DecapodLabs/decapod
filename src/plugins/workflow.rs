@@ -51,7 +51,9 @@ pub fn run_workflow_cli(store: &Store, cli: WorkflowCli) -> Result<(), error::De
             max_tasks,
             lesson,
             autoclose,
-        } => run_workflow(store, &agent, &title, &priority, &tags, max_tasks, lesson, autoclose),
+        } => run_workflow(
+            store, &agent, &title, &priority, &tags, max_tasks, lesson, autoclose,
+        ),
         WorkflowCommand::Discover { limit } => discover(store, limit),
     }
 }
@@ -92,6 +94,7 @@ fn run_workflow(
         })?
         .to_string();
 
+    let max_tasks_s = max_tasks.to_string();
     let mut worker_args = vec![
         "todo",
         "--format",
@@ -102,7 +105,7 @@ fn run_workflow(
         "--task-id",
         &task_id,
         "--max-tasks",
-        &max_tasks.to_string(),
+        &max_tasks_s,
     ];
     if autoclose {
         worker_args.push("--autoclose");
@@ -129,7 +132,14 @@ fn run_workflow(
 }
 
 fn discover(store: &Store, limit: usize) -> Result<(), error::DecapodError> {
-    let tasks = todo::list_tasks(&store.root, Some("open"), None, None, None, None, None, None)?;
+    let tasks = todo::list_tasks(
+        &store.root,
+        Some("open".to_string()),
+        None,
+        None,
+        None,
+        None,
+    )?;
     let mut suggestions = Vec::new();
     for t in tasks.iter().take(limit) {
         let opportunity = if t.priority == "high" {
@@ -161,7 +171,10 @@ fn discover(store: &Store, limit: usize) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
-fn run_decapod_json(store_root: &Path, args: &[&str]) -> Result<serde_json::Value, error::DecapodError> {
+fn run_decapod_json(
+    store_root: &Path,
+    args: &[&str],
+) -> Result<serde_json::Value, error::DecapodError> {
     let exe = std::env::current_exe().map_err(error::DecapodError::IoError)?;
     let output = Command::new(exe)
         .current_dir(

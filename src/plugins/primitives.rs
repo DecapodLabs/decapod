@@ -111,18 +111,17 @@ pub fn export_primitives(
         fs::create_dir_all(&views_dir).map_err(error::DecapodError::IoError)?;
     }
 
-    let tasks = todo::list_tasks(&store.root, None, None, None, None, None, None, None)?;
+    let tasks = todo::list_tasks(&store.root, None, None, None, None, None)?;
     let mut files_written = 0usize;
     for t in &tasks {
         let content = render_task_markdown(t);
-        fs::write(tasks_dir.join(format!("{}.md", t.id)), content).map_err(error::DecapodError::IoError)?;
+        fs::write(tasks_dir.join(format!("{}.md", t.id)), content)
+            .map_err(error::DecapodError::IoError)?;
         files_written += 1;
     }
 
-    let memory_nodes = list_memory_nodes_by_types(
-        &store.root,
-        &["project", "decision", "lesson", "person"],
-    )?;
+    let memory_nodes =
+        list_memory_nodes_by_types(&store.root, &["project", "decision", "lesson", "person"])?;
     for node in &memory_nodes {
         let dir = match node.node_type.as_str() {
             "project" => &projects_dir,
@@ -131,8 +130,11 @@ pub fn export_primitives(
             "person" => &people_dir,
             _ => continue,
         };
-        fs::write(dir.join(format!("{}.md", node.id)), render_node_markdown(node))
-            .map_err(error::DecapodError::IoError)?;
+        fs::write(
+            dir.join(format!("{}.md", node.id)),
+            render_node_markdown(node),
+        )
+        .map_err(error::DecapodError::IoError)?;
         files_written += 1;
     }
 
@@ -226,11 +228,17 @@ fn write_views(views_dir: &Path, tasks: &[todo::Task]) -> Result<usize, error::D
     fs::write(views_dir.join("all-tasks.md"), render_all_tasks_view(tasks))
         .map_err(error::DecapodError::IoError)?;
     count += 1;
-    fs::write(views_dir.join("blocked-items.md"), render_blocked_view(tasks))
-        .map_err(error::DecapodError::IoError)?;
+    fs::write(
+        views_dir.join("blocked-items.md"),
+        render_blocked_view(tasks),
+    )
+    .map_err(error::DecapodError::IoError)?;
     count += 1;
-    fs::write(views_dir.join("by-project.md"), render_by_project_view(tasks))
-        .map_err(error::DecapodError::IoError)?;
+    fs::write(
+        views_dir.join("by-project.md"),
+        render_by_project_view(tasks),
+    )
+    .map_err(error::DecapodError::IoError)?;
     count += 1;
     fs::write(views_dir.join("by-owner.md"), render_by_owner_view(tasks))
         .map_err(error::DecapodError::IoError)?;
@@ -266,8 +274,16 @@ fn render_task_markdown(t: &todo::Task) -> String {
         t.scope,
         t.created_at,
         t.updated_at,
-        if t.description.trim().is_empty() { "-" } else { t.description.trim() },
-        if t.tags.trim().is_empty() { "-" } else { t.tags.trim() },
+        if t.description.trim().is_empty() {
+            "-"
+        } else {
+            t.description.trim()
+        },
+        if t.tags.trim().is_empty() {
+            "-"
+        } else {
+            t.tags.trim()
+        },
     )
 }
 
@@ -283,12 +299,18 @@ fn render_node_markdown(n: &MemoryNode) -> String {
         empty_dash(&n.tags),
         n.created_at,
         n.updated_at,
-        if n.body.trim().is_empty() { "-" } else { n.body.trim() },
+        if n.body.trim().is_empty() {
+            "-"
+        } else {
+            n.body.trim()
+        },
     )
 }
 
 fn render_all_tasks_view(tasks: &[todo::Task]) -> String {
-    let mut out = String::from("# All Tasks\n\n| ID | Title | Status | Priority | Owner |\n|---|---|---|---|---|\n");
+    let mut out = String::from(
+        "# All Tasks\n\n| ID | Title | Status | Priority | Owner |\n|---|---|---|---|---|\n",
+    );
     for t in tasks {
         out.push_str(&format!(
             "| {} | {} | {} | {} | {} |\n",
@@ -391,8 +413,11 @@ fn list_memory_nodes_by_types(
          FROM nodes WHERE node_type IN ({}) ORDER BY updated_at DESC",
         placeholders
     );
-    let mut stmt = conn.prepare(&sql).map_err(error::DecapodError::RusqliteError)?;
-    let params: Vec<&dyn rusqlite::ToSql> = types.iter().map(|t| t as &dyn rusqlite::ToSql).collect();
+    let mut stmt = conn
+        .prepare(&sql)
+        .map_err(error::DecapodError::RusqliteError)?;
+    let params: Vec<&dyn rusqlite::ToSql> =
+        types.iter().map(|t| t as &dyn rusqlite::ToSql).collect();
     let rows = stmt
         .query_map(rusqlite::params_from_iter(params), |row| {
             Ok(MemoryNode {
@@ -416,11 +441,7 @@ fn list_memory_nodes_by_types(
     Ok(out)
 }
 
-fn memory_node_exists(
-    root: &Path,
-    id: &str,
-    node_type: &str,
-) -> Result<bool, error::DecapodError> {
+fn memory_node_exists(root: &Path, id: &str, node_type: &str) -> Result<bool, error::DecapodError> {
     let db_path = root.join(schemas::FEDERATION_DB_NAME);
     if !db_path.exists() {
         return Ok(false);
