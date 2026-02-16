@@ -650,6 +650,7 @@ fn add_heartbeat_loop_reflex(
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 fn add_human_trigger_loop_reflex(
     root: &Path,
     name: &str,
