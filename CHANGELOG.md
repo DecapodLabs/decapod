@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0](https://github.com/DecapodLabs/decapod/compare/v0.22.0...v0.23.0) - 2026-02-16
+
+### Other
+
+- Change output filename and clean up commands
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- *(demo)* refresh decapod VHS GIF with local build
+- README uplift
+- rebake vhs demo in /tmp/studio
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+- README uplift
+
 ## [0.22.0](https://github.com/DecapodLabs/decapod/compare/v0.21.0...v0.22.0) - 2026-02-16
 
 ### Added
