@@ -19,5 +19,6 @@ Type 'opencode run --model opencode/minimax-m2.5-free --dir /tmp/studio "Complet
 Enter
 Sleep 30s
 
-Type "exit"
+Type "clear"
 Enter
+Sleep 500ms
