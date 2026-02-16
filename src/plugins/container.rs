@@ -593,12 +593,12 @@ fn build_docker_spec(
 ) -> Result<DockerSpec, error::DecapodError> {
     let decapod_dir = repo_root.join(".decapod");
     fs::create_dir_all(&decapod_dir).map_err(error::DecapodError::IoError)?;
+    let repo_root_str = repo_root
+        .to_str()
+        .ok_or_else(|| error::DecapodError::PathError("invalid repo root path".to_string()))?;
     let workspace_str = workspace
         .to_str()
         .ok_or_else(|| error::DecapodError::PathError("invalid repository path".to_string()))?;
-    let decapod_dir_str = decapod_dir
-        .to_str()
-        .ok_or_else(|| error::DecapodError::PathError("invalid .decapod path".to_string()))?;
     let container_name = format!(
         "decapod-agent-{}-{}",
         sanitize_name(agent),
@@ -635,12 +635,12 @@ fn build_docker_spec(
         format!("DECAPOD_PUSH={}", if push { "1" } else { "0" }),
         "-e".to_string(),
         format!("DECAPOD_PR={}", if pr { "1" } else { "0" }),
+        "-e".to_string(),
+        format!("DECAPOD_WORKSPACE={}", workspace_str),
         "-v".to_string(),
-        format!("{}:/workspace", workspace_str),
-        "-v".to_string(),
-        format!("{}:/workspace/.decapod", decapod_dir_str),
+        format!("{}:{}", repo_root_str, repo_root_str),
         "-w".to_string(),
-        "/workspace".to_string(),
+        workspace_str.to_string(),
     ];
 
     if inherit_env {
@@ -650,9 +650,11 @@ fn build_docker_spec(
         }
     }
 
-    if let Some((uid, gid)) = current_uid_gid() {
-        args.push("--user".to_string());
-        args.push(format!("{}:{}", uid, gid));
+    if env_bool("DECAPOD_CONTAINER_MAP_HOST_USER", false) {
+        if let Some((uid, gid)) = current_uid_gid() {
+            args.push("--user".to_string());
+            args.push(format!("{}:{}", uid, gid));
+        }
     }
 
     if let Ok(sock) = std::env::var("SSH_AUTH_SOCK") {
@@ -712,7 +714,7 @@ fn build_container_script(
 ) -> String {
     let mut script = String::from(
         "set -eu\n\
-         git config --global --add safe.directory /workspace || true\n\
+         git config --add safe.directory \"${DECAPOD_WORKSPACE:-$PWD}\" || true\n\
          git config user.name \"${DECAPOD_GIT_USER_NAME:-Decapod Agent}\"\n\
          git config user.email \"${DECAPOD_GIT_USER_EMAIL:-agent@decapod.local}\"\n\
          if command -v decapod >/dev/null 2>&1; then\n\
