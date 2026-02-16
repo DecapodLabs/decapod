@@ -4,7 +4,7 @@
 **Layer:** Operational
 **Binding:** No
 
-Container subsystem runs agent actions in ephemeral Docker/Podman containers with isolated git worktrees.
+Container subsystem runs agent actions in ephemeral Docker/Podman containers with isolated git clone workspaces.
 
 ## CLI Surface
 - `decapod auto container run --agent <id> --cmd "<command>"`
@@ -17,7 +17,7 @@ Container subsystem runs agent actions in ephemeral Docker/Podman containers wit
 
 ## Contracts
 - One container per invocation (`--rm`), then teardown.
-- Before each run, Decapod fetches `origin/<base>` (default `origin/master`) and creates an isolated worktree.
+- Before each run, Decapod fetches `origin/<base>` (default `origin/master`) and creates an isolated clone workspace under `.decapod/workspaces/`.
 - Container mounts that worktree at `/workspace`; user can remain on local `master`.
 - Container always mounts repo control-plane state at `/workspace/.decapod` so in-container build/test can run Decapod commands against shared state.
 - Decapod manages a generated Dockerfile at `.decapod/generated/Dockerfile` for `--image-profile alpine`.
@@ -48,6 +48,10 @@ Expected loop:
 - Claim autorun starts isolated container branch from `origin/master`.
 - Command exits with JSON envelope, then worktree is removed unless `--keep-worktree` is set.
 - Optional push + PR closes the ephemeral loop.
+
+## Permission Note
+- Shared `.git/worktrees` backends can fail in containerized runs with daemon/user namespace permission errors (for example, `FETCH_HEAD` lock/write failures).
+- Clone workspace isolation avoids these shared git metadata writes and is the default strategy.
 
 ## Claim Autorun
 - `todo claim` (exclusive mode) can automatically launch container execution for claimed task.
