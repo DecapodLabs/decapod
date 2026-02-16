@@ -10,9 +10,11 @@
 //! - **Version management**: Install latest via `cargo install decapod`
 
 use crate::core::error;
+use crate::core::schemas;
 use rusqlite::Connection;
 use std::fs;
 use std::path::Path;
+use ulid::Ulid;
 
 /// Current Decapod version from Cargo.toml
 pub const DECAPOD_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -42,6 +44,101 @@ pub fn all_migrations() -> Vec<Migration> {
 /// Run any pending migrations (idempotent — safe to call every startup)
 pub fn check_and_migrate(decapod_root: &Path) -> Result<(), error::DecapodError> {
     run_migrations(decapod_root)?;
+    Ok(())
+}
+
+pub fn check_and_migrate_with_backup<F>(
+    decapod_root: &Path,
+    verify: F,
+) -> Result<(), error::DecapodError>
+where
+    F: FnOnce(&Path) -> Result<(), error::DecapodError>,
+{
+    let data_root = decapod_root.join("data");
+    if !schema_upgrade_pending(&data_root)? {
+        run_migrations(decapod_root)?;
+        return Ok(());
+    }
+
+    let Some(backup_dir) = create_data_backup(&data_root)? else {
+        run_migrations(decapod_root)?;
+        verify(&data_root)?;
+        return Ok(());
+    };
+
+    let result = (|| -> Result<(), error::DecapodError> {
+        run_migrations(decapod_root)?;
+        verify(&data_root)?;
+        Ok(())
+    })();
+
+    if let Err(err) = result {
+        restore_data_backup(&data_root, &backup_dir)?;
+        let _ = fs::remove_dir_all(&backup_dir);
+        return Err(error::DecapodError::ValidationError(format!(
+            "Migration failed; restored .decapod/data backup from {}: {}",
+            backup_dir.display(),
+            err
+        )));
+    }
+
+    fs::remove_dir_all(&backup_dir).map_err(error::DecapodError::IoError)?;
+    Ok(())
+}
+
+fn schema_upgrade_pending(data_root: &Path) -> Result<bool, error::DecapodError> {
+    let todo_db = data_root.join(schemas::TODO_DB_NAME);
+    if !todo_db.exists() {
+        return Ok(false);
+    }
+    let conn = Connection::open(&todo_db).map_err(error::DecapodError::RusqliteError)?;
+    let version_res: Result<String, _> = conn.query_row(
+        "SELECT value FROM meta WHERE key = 'schema_version'",
+        [],
+        |row| row.get(0),
+    );
+    let current_version = version_res
+        .ok()
+        .and_then(|raw| raw.parse::<u32>().ok())
+        .unwrap_or(0);
+    Ok(current_version < schemas::TODO_SCHEMA_VERSION)
+}
+
+fn create_data_backup(data_root: &Path) -> Result<Option<std::path::PathBuf>, error::DecapodError> {
+    if !data_root.exists() {
+        return Ok(None);
+    }
+    let backup_dir = data_root.join(format!(
+        ".migration_backup_{}_{}",
+        DECAPOD_VERSION.replace('.', "_"),
+        Ulid::new()
+    ));
+    fs::create_dir_all(&backup_dir).map_err(error::DecapodError::IoError)?;
+
+    for entry in fs::read_dir(data_root).map_err(error::DecapodError::IoError)? {
+        let entry = entry.map_err(error::DecapodError::IoError)?;
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        let name = entry.file_name().to_string_lossy().to_string();
+        if name.ends_with(".db") || name.ends_with(".jsonl") {
+            fs::copy(&path, backup_dir.join(&name)).map_err(error::DecapodError::IoError)?;
+        }
+    }
+    Ok(Some(backup_dir))
+}
+
+fn restore_data_backup(data_root: &Path, backup_dir: &Path) -> Result<(), error::DecapodError> {
+    for entry in fs::read_dir(backup_dir).map_err(error::DecapodError::IoError)? {
+        let entry = entry.map_err(error::DecapodError::IoError)?;
+        let backup_file = entry.path();
+        if !backup_file.is_file() {
+            continue;
+        }
+        let name = entry.file_name();
+        fs::copy(&backup_file, data_root.join(name)).map_err(error::DecapodError::IoError)?;
+    }
     Ok(())
 }
 
