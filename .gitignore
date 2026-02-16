@@ -31,6 +31,7 @@ dev/
 # We never commit local sidecar state or databases
 .decapod/data
 .decapod/.stfolder
+.decapod/workspaces
 .decapod/generated/decapod.sync-conflict-20260212-224557-Y75YA6D.version
 
 # --- Environment & Secrets ---
