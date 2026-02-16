@@ -700,14 +700,14 @@ fn build_docker_spec(
         if ssh_dir.exists() {
             if let Some(ssh_dir_str) = ssh_dir.to_str() {
                 args.push("-v".to_string());
-                args.push(format!("{}:/tmp/decapod-ssh:ro", ssh_dir_str));
+                args.push(format!("{}:/decapod-ssh:ro", ssh_dir_str));
                 ssh_mount_added = true;
             }
         }
     }
     if ssh_mount_added {
         args.push("-e".to_string());
-        args.push("DECAPOD_SSH_DIR=/tmp/decapod-ssh".to_string());
+        args.push("DECAPOD_SSH_DIR=/decapod-ssh".to_string());
     }
     if env_bool("DECAPOD_CONTAINER_DEBUG", false) {
         eprintln!(
@@ -780,7 +780,7 @@ fn build_container_script(
          fi\n\
          export GIT_SSH_COMMAND=\"ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${HOME:-/tmp/decapod-home}/.ssh/known_hosts\"\n\
          key_path=\"\"\n\
-         for candidate in \"${DECAPOD_SSH_DIR:-/tmp/decapod-ssh}/id_ed25519\" \"${DECAPOD_SSH_DIR:-/tmp/decapod-ssh}/id_rsa\" \"${DECAPOD_SSH_DIR:-/tmp/decapod-ssh}/id_ecdsa\"; do\n\
+         for candidate in \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_ed25519\" \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_rsa\" \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_ecdsa\"; do\n\
            if [ -f \"$candidate\" ]; then\n\
              key_path=\"$candidate\"\n\
              break\n\
@@ -798,7 +798,7 @@ fn build_container_script(
            echo \"debug: uid=$(id -u) gid=$(id -g)\" >&2\n\
            echo \"debug: ssh command=${GIT_SSH_COMMAND}\" >&2\n\
            echo \"debug: key_path=${key_path:-none}\" >&2\n\
-           ls -ld \"${DECAPOD_SSH_DIR:-/tmp/decapod-ssh}\" \"${DECAPOD_SSH_DIR:-/tmp/decapod-ssh}\"/id_* 2>/dev/null >&2 || true\n\
+           ls -ld \"${DECAPOD_SSH_DIR:-/decapod-ssh}\" \"${DECAPOD_SSH_DIR:-/decapod-ssh}\"/id_* 2>/dev/null >&2 || true\n\
            git_safe remote -v >&2 || true\n\
          fi\n\
          unset GIT_DIR GIT_WORK_TREE\n\
