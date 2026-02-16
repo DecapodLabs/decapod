@@ -940,7 +940,13 @@ fn build_container_script(
          fi\n\
          export GIT_SSH_COMMAND=\"ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${HOME:-/tmp/decapod-home}/.ssh/known_hosts\"\n\
          key_path=\"\"\n\
+         if [ -n \"${DECAPOD_SSH_KEY_PATH:-}\" ] && [ -f \"${DECAPOD_SSH_KEY_PATH}\" ]; then\n\
+           key_path=\"${DECAPOD_SSH_KEY_PATH}\"\n\
+         fi\n\
          for candidate in \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_ed25519\" \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_rsa\" \"${DECAPOD_SSH_DIR:-/decapod-ssh}/id_ecdsa\"; do\n\
+           if [ -n \"$key_path\" ]; then\n\
+             break\n\
+           fi\n\
            if [ -f \"$candidate\" ]; then\n\
              key_path=\"$candidate\"\n\
              break\n\
