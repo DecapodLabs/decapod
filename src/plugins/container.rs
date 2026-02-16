@@ -3,6 +3,7 @@ use crate::core::store::Store;
 use crate::core::time;
 use clap::{Parser, Subcommand, ValueEnum};
 use serde_json::json;
+use std::collections::BTreeSet;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -48,7 +49,7 @@ pub enum ContainerCommand {
         pr_title: Option<String>,
         #[clap(long)]
         pr_body: Option<String>,
-        #[clap(long, value_enum, default_value = "debian-slim")]
+        #[clap(long, value_enum, default_value = "alpine")]
         image_profile: ImageProfile,
         #[clap(long)]
         image: Option<String>,
@@ -208,9 +209,7 @@ fn run_container(
 ) -> Result<RunSummary, error::DecapodError> {
     let repo = resolve_repo_path(repo_override)?;
     let docker = find_container_runtime()?;
-    let image = image_override
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| default_image_for_profile(image_profile).to_string());
+    let image = resolve_runtime_image(&docker, &repo, image_profile, image_override)?;
 
     let branch_name = branch
         .map(|s| s.to_string())
@@ -373,9 +372,83 @@ fn command_exists(cmd: &str) -> bool {
 
 fn default_image_for_profile(profile: ImageProfile) -> &'static str {
     match profile {
-        ImageProfile::DebianSlim => "rust:1.85-slim",
-        ImageProfile::Alpine => "rust:1.85-alpine",
+        ImageProfile::DebianSlim => "rust:1.85",
+        ImageProfile::Alpine => "alpine:3.20",
     }
+}
+
+fn resolve_runtime_image(
+    runtime: &str,
+    repo: &Path,
+    profile: ImageProfile,
+    image_override: Option<&str>,
+) -> Result<String, error::DecapodError> {
+    if let Some(image) = image_override {
+        return Ok(image.to_string());
+    }
+    match profile {
+        ImageProfile::DebianSlim => Ok(default_image_for_profile(profile).to_string()),
+        ImageProfile::Alpine => ensure_local_alpine_image(runtime, repo),
+    }
+}
+
+fn ensure_local_alpine_image(runtime: &str, repo: &Path) -> Result<String, error::DecapodError> {
+    let docker_dir = repo.join(".decapod").join("container");
+    fs::create_dir_all(&docker_dir).map_err(error::DecapodError::IoError)?;
+
+    let repo_slug = repo
+        .file_name()
+        .and_then(|s| s.to_str())
+        .map(sanitize_name)
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "repo".to_string());
+    let image_tag = format!("decapod-local-{}:alpine", repo_slug);
+
+    let dockerfile = docker_dir.join("Dockerfile.alpine");
+    let needs_rust = repo.join("Cargo.toml").exists();
+    let contents = render_alpine_dockerfile(needs_rust);
+    fs::write(&dockerfile, contents).map_err(error::DecapodError::IoError)?;
+
+    let output = Command::new(runtime)
+        .arg("build")
+        .arg("-f")
+        .arg(&dockerfile)
+        .arg("-t")
+        .arg(&image_tag)
+        .arg(&docker_dir)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "Failed to build local alpine image '{}'\nstdout:\n{}\nstderr:\n{}",
+            image_tag,
+            String::from_utf8_lossy(&output.stdout).trim(),
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+
+    Ok(image_tag)
+}
+
+fn render_alpine_dockerfile(needs_rust: bool) -> String {
+    let extra = std::env::var("DECAPOD_CONTAINER_APK_PACKAGES").unwrap_or_default();
+    let mut pkgs: BTreeSet<String> = BTreeSet::new();
+    for base in ["git", "openssh-client", "ca-certificates", "bash", "curl"] {
+        pkgs.insert(base.to_string());
+    }
+    for p in extra.split_whitespace().filter(|s| !s.trim().is_empty()) {
+        pkgs.insert(p.trim().to_string());
+    }
+    let pkg_line = pkgs.into_iter().collect::<Vec<_>>().join(" ");
+    let base = if needs_rust {
+        "rust:1.85-alpine"
+    } else {
+        "alpine:3.20"
+    };
+    format!(
+        "FROM {}\nRUN apk add --no-cache {}\nRUN update-ca-certificates\n",
+        base, pkg_line
+    )
 }
 
 fn current_uid_gid() -> Option<(String, String)> {
@@ -686,8 +759,8 @@ pub fn schema() -> serde_json::Value {
             { "name": "run", "parameters": ["agent", "cmd", "branch", "task_id", "push", "pr", "pr_base", "pr_title", "pr_body", "image_profile", "image", "timeout_seconds", "memory", "cpus", "repo", "keep_worktree", "inherit_env"] }
         ],
         "profiles": {
-            "debian-slim": "rust:1.85-slim",
-            "alpine": "rust:1.85-alpine"
+            "debian-slim": "rust:1.85",
+            "alpine": "local build from alpine:3.20 with project dependencies"
         },
         "safety_defaults": {
             "rm": true,
@@ -709,7 +782,7 @@ mod tests {
         let spec = build_docker_spec(
             "docker",
             &repo,
-            "rust:1.85-slim",
+            "rust:1.85",
             "agent-a",
             "cargo test -q",
             "ahr/branch",
@@ -747,5 +820,21 @@ mod tests {
     fn default_branch_name_includes_agent_and_task() {
         let branch = default_branch_name("Agent_One", Some("R_ABC-123"));
         assert_eq!(branch, "agent/agent-one/r-abc-123");
+    }
+
+    #[test]
+    fn alpine_dockerfile_includes_git_ssh_and_rust_when_needed() {
+        let content = render_alpine_dockerfile(true);
+        assert!(content.contains("FROM rust:1.85-alpine"));
+        assert!(content.contains("git"));
+        assert!(content.contains("openssh-client"));
+    }
+
+    #[test]
+    fn alpine_dockerfile_can_skip_rust_for_non_rust_projects() {
+        let content = render_alpine_dockerfile(false);
+        assert!(content.contains("FROM alpine:3.20"));
+        assert!(content.contains("git"));
+        assert!(!content.contains("rust:1.85-alpine"));
     }
 }
