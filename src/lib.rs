@@ -1156,6 +1156,7 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("reflex", reflex::schema());
     schemas.insert("health", health::health_schema());
     schemas.insert("broker", core::broker::schema());
+    schemas.insert("external_action", core::external_action::schema());
     schemas.insert("context", context::schema());
     schemas.insert("policy", policy::schema());
     schemas.insert("knowledge", knowledge::schema());

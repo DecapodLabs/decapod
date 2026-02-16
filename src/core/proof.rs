@@ -1,11 +1,11 @@
 use crate::ProofCommandCli;
+use crate::core::external_action::{self, ExternalCapability};
 use crate::core::store::Store;
 use crate::error::DecapodError;
 use crate::plugins::health;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
-use std::process::Command;
 use std::time::Instant;
 use ulid::Ulid;
 
@@ -64,19 +64,22 @@ pub struct ProofRunSummary {
 }
 
 /// Result of running a single proof
-fn run_single_proof(proof_def: &ProofDef, working_dir: &Path) -> Result<ProofResult, DecapodError> {
+fn run_single_proof(
+    proof_def: &ProofDef,
+    working_dir: &Path,
+    store_root: &Path,
+) -> Result<ProofResult, DecapodError> {
     let start_time = Instant::now();
 
-    let mut cmd = Command::new(&proof_def.command);
-
-    // Add arguments to command
-    for arg in &proof_def.args {
-        cmd.arg(arg);
-    }
-
-    let output = cmd.current_dir(working_dir).output().map_err(|e| {
-        DecapodError::ValidationError(format!("Command failed: {} - {}", proof_def.name, e))
-    })?;
+    let args: Vec<&str> = proof_def.args.iter().map(|s| s.as_str()).collect();
+    let output = external_action::execute(
+        store_root,
+        ExternalCapability::ProofExec,
+        &format!("proof.{}", proof_def.name),
+        &proof_def.command,
+        &args,
+        working_dir,
+    )?;
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -152,7 +155,7 @@ pub fn run_proofs(
     let mut failed = 0;
 
     for proof_def in &config.proof {
-        let result = run_single_proof(proof_def, decapod_dir)?;
+        let result = run_single_proof(proof_def, decapod_dir, &store.root)?;
 
         // Log event to proof.events.jsonl
         let event = ProofEvent {
