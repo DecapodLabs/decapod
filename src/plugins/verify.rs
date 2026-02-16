@@ -2,6 +2,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::store::Store;
+use crate::plugins::federation;
 use crate::plugins::todo;
 use clap::{Parser, Subcommand};
 use regex::Regex;
@@ -225,6 +226,37 @@ fn append_jsonl(path: &Path, value: &serde_json::Value) -> Result<(), error::Dec
     Ok(())
 }
 
+fn mirror_verification_to_federation(
+    store: &Store,
+    todo_id: &str,
+    title: &str,
+    body: &str,
+    tags: &str,
+) {
+    let source = format!("event:{}", todo_id);
+    let anchor = federation::find_node_by_source(store, &source)
+        .ok()
+        .flatten();
+    if let Ok(node) = federation::add_node(
+        store,
+        title,
+        "decision",
+        "notable",
+        "agent_inferred",
+        body,
+        &source,
+        tags,
+        "repo",
+        None,
+        "decapod",
+    ) {
+        if let Some(intent_or_commitment) = anchor {
+            let _ = federation::add_edge(store, &intent_or_commitment, &node.id, "depends_on");
+        }
+    }
+    let _ = federation::refresh_derived_files(store);
+}
+
 fn load_targets(
     store: &Store,
     single_id: Option<&str>,
@@ -338,6 +370,13 @@ fn persist_result(
             "verification_policy_days": verification_policy_days
         }),
     )?;
+    mirror_verification_to_federation(
+        store,
+        todo_id,
+        &format!("Verification Result: {}", todo_id),
+        &format!("Verification status={} notes={}", status, notes),
+        "proof,verification,result",
+    );
     Ok(())
 }
 
