@@ -1852,18 +1852,22 @@ fn sync_task_dependencies(
     Ok(())
 }
 
-fn backfill_task_dependencies(conn: &Connection, ts: &str) -> Result<(), error::DecapodError> {
+fn backfill_task_dependencies(conn: &Connection) -> Result<(), error::DecapodError> {
     let mut stmt = conn
-        .prepare("SELECT id, depends_on FROM tasks")
+        .prepare("SELECT id, depends_on, created_at FROM tasks")
         .map_err(error::DecapodError::RusqliteError)?;
     let rows = stmt
         .query_map([], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+            ))
         })
         .map_err(error::DecapodError::RusqliteError)?;
     for row in rows {
-        let (task_id, depends_on) = row.map_err(error::DecapodError::RusqliteError)?;
-        sync_task_dependencies(conn, &task_id, &depends_on, ts)?;
+        let (task_id, depends_on, created_at) = row.map_err(error::DecapodError::RusqliteError)?;
+        sync_task_dependencies(conn, &task_id, &depends_on, &created_at)?;
     }
     Ok(())
 }
