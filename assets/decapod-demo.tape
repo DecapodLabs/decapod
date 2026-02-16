@@ -1,4 +1,4 @@
-Output assets/decapod-demo.mp4
+Output assets/decapod-demo.gif
 
 Set FontSize 20
 Set Width 2200
@@ -13,9 +13,11 @@ Type "cd /tmp/decapod-vhs-demo"
 Enter
 Sleep 400ms
 
+Set TypingSpeed 220ms
 Type "decapod init"
 Enter
 Sleep 3s
+Set TypingSpeed 45ms
 
 Type "clear"
 Enter
