@@ -9,7 +9,7 @@ use crate::plugins::teammate;
 use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{params, types::ToSql, Connection, OptionalExtension, Result as SqlResult};
+use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::collections::HashSet;
