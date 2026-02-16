@@ -24,7 +24,7 @@ Every agent session MUST begin with:
 
 ```bash
 cargo install decapod              # 1. Install/update to latest release
-decapod --version                   # 2. Check installed version
+decapod version                   # 2. Check installed version
 decapod --help                      # 3. Verify command structure
 decapod docs show core/DECAPOD.md  # 4. Refresh constitution
 decapod validate                    # 5. Verify system state
@@ -43,7 +43,7 @@ decapod todo list                   # 6. Check active work
 - If already at the latest version, cargo will skip the build (fast no-op)
 - No version file tracking needed — just always install the latest
 
-### 2. `decapod --version`
+### 2. `decapod version`
 **Check:** What version of the binary is installed?
 
 - Confirms the install succeeded
@@ -113,7 +113,7 @@ This is not a standalone command - it's a protocol. The commands are:
 
 ```bash
 cargo install decapod
-decapod --version
+decapod version
 decapod --help
 decapod docs show core/DECAPOD.md
 decapod validate

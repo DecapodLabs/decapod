@@ -1095,7 +1095,7 @@ fn build_container_script(
          git config --global user.name \"${DECAPOD_GIT_USER_NAME:-Decapod Agent}\"\n\
          git config --global user.email \"${DECAPOD_GIT_USER_EMAIL:-agent@decapod.local}\"\n\
          if command -v decapod >/dev/null 2>&1; then\n\
-           decapod --version >/dev/null 2>&1 || true\n\
+           decapod version >/dev/null 2>&1 || true\n\
            if decapod --help 2>/dev/null | grep -qE \"(^|[[:space:]])update([[:space:]]|$)\"; then\n\
              decapod update\n\
            fi\n\
