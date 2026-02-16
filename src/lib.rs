@@ -908,18 +908,8 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
         }
-        Command::Setup(setup_cli) => match setup_cli.command {
-            SetupCommand::Hook {
-                commit_msg,
-                pre_commit,
-                uninstall,
-            } => {
-                run_hook_install(commit_msg, pre_commit, uninstall)?;
-            }
-        },
         _ => {
-            // Only init/session/version are sessionless.
-            if !matches!(cli.command, Command::Version) {
+            if requires_session_token(&cli.command) {
                 ensure_session_valid()?;
             }
 
@@ -982,6 +972,14 @@ fn should_auto_clock_in(command: &Command) -> bool {
     match command {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
         Command::Version | Command::Init(_) | Command::Setup(_) | Command::Session(_) => false,
+        _ => true,
+    }
+}
+
+fn requires_session_token(command: &Command) -> bool {
+    match command {
+        // Only bootstrap/session lifecycle + version are sessionless.
+        Command::Init(_) | Command::Session(_) | Command::Version => false,
         _ => true,
     }
 }
