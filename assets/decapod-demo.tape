@@ -15,13 +15,9 @@ Set TypingSpeed 40ms
 Set Shell "zsh"
 Sleep 300ms
 
-Type "printf '\\033[1;38;5;45mDEC\\033[0m\\033[1;38;5;51mAPOD\\033[0m \\033[38;5;213mdemo\\033[0m  |  \\033[38;5;154mopencode + minimax\\033[0m\\n'"
-Enter
-Sleep 900ms
-
 Type 'opencode run --model opencode/minimax-m2.5-free --dir /tmp/studio "Complete the hello world todo task"
 Enter
-Sleep 60s
+Sleep 40s
 
 Type "exit"
 Enter
