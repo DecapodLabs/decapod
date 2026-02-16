@@ -20,8 +20,9 @@ Container subsystem runs agent actions in ephemeral Docker/Podman containers wit
 - One container per invocation (`--rm`), then teardown.
 - Default mode fetches `origin/<base>` (default `origin/master`) and creates an isolated clone workspace in the control-plane workspace area.
 - `--local-only` mode clones from local repo state only and performs zero remote Git network operations.
-- Container mounts that workspace; user can remain on local `master`.
-- Container includes repo control-plane state so in-container build/test can run Decapod commands against shared state.
+- Container mounts only the isolated workspace plus shared host `.decapod` state volume.
+- Repo root is not mounted directly; this avoids agents contending on the same live branch/worktree mount.
+- Overlay workspace is branched from base (`master` by default), so container edits happen in isolation.
 - Decapod manages a generated Dockerfile template for `--image-profile alpine`.
 - In-container script syncs from base (`fetch` + `rebase`) in default mode, executes command, optionally commit/push/PR.
 - In `--local-only` mode, branch checkout uses local refs only and resulting branch is synced back to host repo as a local branch.
@@ -50,6 +51,7 @@ Container subsystem runs agent actions in ephemeral Docker/Podman containers wit
 Expected loop:
 - Agent claims TODO.
 - Claim autorun starts isolated container branch from `origin/master`.
+- Shared `.decapod` state remains mounted for coordination and proofs.
 - Command exits with JSON envelope, then worktree is removed unless `--keep-worktree` is set.
 - Optional push + PR closes the ephemeral loop.
 

@@ -725,7 +725,7 @@ fn prepare_workspace_clone(
         Command::new("git")
             .arg("clone")
             .arg("--local")
-            .arg("--no-hardlinks")
+            .arg("--shared")
             .arg(local_source)
             .arg(workspace_path_str)
             .output()
@@ -858,12 +858,13 @@ fn build_docker_spec(
 ) -> Result<DockerSpec, error::DecapodError> {
     let decapod_dir = repo_root.join(".decapod");
     fs::create_dir_all(&decapod_dir).map_err(error::DecapodError::IoError)?;
-    let repo_root_str = repo_root
+    let decapod_dir_str = decapod_dir
         .to_str()
-        .ok_or_else(|| error::DecapodError::PathError("invalid repo root path".to_string()))?;
+        .ok_or_else(|| error::DecapodError::PathError("invalid .decapod path".to_string()))?;
     let workspace_str = workspace
         .to_str()
         .ok_or_else(|| error::DecapodError::PathError("invalid repository path".to_string()))?;
+    let workspace_decapod_mount = format!("{}/.decapod", workspace_str);
     let container_name = format!(
         "decapod-agent-{}-{}",
         sanitize_name(agent),
@@ -905,7 +906,9 @@ fn build_docker_spec(
         "-e".to_string(),
         format!("DECAPOD_LOCAL_ONLY={}", if local_only { "1" } else { "0" }),
         "-v".to_string(),
-        format!("{}:{}", repo_root_str, repo_root_str),
+        format!("{}:{}", workspace_str, workspace_str),
+        "-v".to_string(),
+        format!("{}:{}", decapod_dir_str, workspace_decapod_mount),
         "-w".to_string(),
         workspace_str.to_string(),
     ];
@@ -1222,10 +1225,11 @@ mod tests {
     #[test]
     fn docker_spec_contains_safety_flags_and_sdlc_steps() {
         let repo = PathBuf::from("/tmp/repo");
+        let workspace = PathBuf::from("/tmp/repo/.decapod/workspaces/w1");
         let spec = build_docker_spec(
             "docker",
             &repo,
-            &repo,
+            &workspace,
             "rust:1.85",
             "agent-a",
             "cargo test -q",
@@ -1247,6 +1251,8 @@ mod tests {
         assert!(joined.contains("--rm"));
         assert!(joined.contains("--cap-drop ALL"));
         assert!(joined.contains("--security-opt no-new-privileges:true"));
+        assert!(joined.contains("-v /tmp/repo/.decapod/workspaces/w1:/tmp/repo/.decapod/workspaces/w1"));
+        assert!(joined.contains("-v /tmp/repo/.decapod:/tmp/repo/.decapod/workspaces/w1/.decapod"));
         assert!(joined.contains("git_safe fetch --no-write-fetch-head origin 'master'"));
         assert!(joined.contains("git_safe checkout -B 'ahr/branch'"));
         assert!(joined.contains("git_safe rebase origin/'master'"));
@@ -1259,10 +1265,11 @@ mod tests {
     #[test]
     fn docker_spec_local_only_avoids_remote_git_operations() {
         let repo = PathBuf::from("/tmp/repo");
+        let workspace = PathBuf::from("/tmp/repo/.decapod/workspaces/w1");
         let spec = build_docker_spec(
             "docker",
             &repo,
-            &repo,
+            &workspace,
             "rust:1.85",
             "agent-a",
             "cargo test -q",
