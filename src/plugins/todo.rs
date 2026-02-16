@@ -528,11 +528,60 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_TRUST_LEVEL, [])?;
     }
 
+    if current_version < 12 {
+        // Operational risk zones
+        conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
+        seed_default_risk_zones(conn)?;
+    }
+
     conn.execute(
         "INSERT INTO meta(key, value) VALUES('schema_version', ?1)
          ON CONFLICT(key) DO UPDATE SET value=excluded.value",
         [schemas::TODO_SCHEMA_VERSION.to_string()],
     )?;
+
+    Ok(())
+}
+
+fn seed_default_risk_zones(conn: &Connection) -> Result<(), error::DecapodError> {
+    let ts = now_iso();
+    let zones = vec![
+        (
+            "todo.claim.exclusive",
+            "Exclusive claims require basic trust",
+            "basic",
+            0,
+        ),
+        (
+            "todo.claim.shared",
+            "Shared claims require verified trust",
+            "verified",
+            0,
+        ),
+        (
+            "todo.handoff",
+            "Task handoff requires verified trust and explicit approval",
+            "verified",
+            1,
+        ),
+    ];
+
+    for (zone_name, description, required_trust_level, requires_approval) in zones {
+        conn.execute(
+            "INSERT OR IGNORE INTO risk_zones(id, zone_name, description, required_trust_level, requires_approval, created_at)
+             VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+            rusqlite::params![
+                Ulid::new().to_string(),
+                zone_name,
+                description,
+                required_trust_level,
+                requires_approval,
+                ts
+            ],
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    }
 
     Ok(())
 }
@@ -1114,6 +1163,57 @@ fn trust_level_to_int(level: &str) -> i32 {
         "core" => 3,
         _ => 1,
     }
+}
+
+fn get_risk_zone_policy(
+    conn: &Connection,
+    zone_name: &str,
+) -> Result<Option<(String, bool)>, error::DecapodError> {
+    conn.query_row(
+        "SELECT required_trust_level, requires_approval FROM risk_zones WHERE zone_name = ?1",
+        rusqlite::params![zone_name],
+        |row| {
+            let required_trust: String = row.get(0)?;
+            let requires_approval: i64 = row.get(1)?;
+            Ok((required_trust, requires_approval != 0))
+        },
+    )
+    .optional()
+    .map_err(error::DecapodError::RusqliteError)
+}
+
+fn enforce_operation_policy(
+    root: &Path,
+    conn: &Connection,
+    zone_name: &str,
+    agent_id: &str,
+) -> Result<(), error::DecapodError> {
+    let Some((required_trust, requires_approval)) = get_risk_zone_policy(conn, zone_name)? else {
+        return Ok(());
+    };
+
+    let current_level = get_agent_trust_level(conn, agent_id)?;
+    if trust_level_to_int(&current_level) < trust_level_to_int(&required_trust) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "Policy gate denied for {}: agent '{}' trust '{}' < required '{}'",
+            zone_name, agent_id, current_level, required_trust
+        )));
+    }
+
+    if requires_approval {
+        let store = Store {
+            kind: crate::core::store::StoreKind::Repo,
+            root: root.to_path_buf(),
+        };
+        policy::initialize_policy_db(root)?;
+        if !policy::check_approval(&store, zone_name, None, "global")? {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Policy gate denied for {}: missing approval",
+                zone_name
+            )));
+        }
+    }
+    Ok(())
 }
 
 pub fn check_trust_level(
@@ -1960,6 +2060,12 @@ fn claim_task(
     let result = broker.with_conn(&db_path, "decapod", None, "todo.claim", |conn| {
         ensure_schema(conn)?;
         touch_agent_presence(conn, agent_id, &ts)?;
+        let claim_zone = if mode == ClaimMode::Shared {
+            "todo.claim.shared"
+        } else {
+            "todo.claim.exclusive"
+        };
+        enforce_operation_policy(root, conn, claim_zone, agent_id)?;
 
         // Check if task exists and is not already claimed
         let current: Option<(String, String, String)> = conn
@@ -2115,6 +2221,8 @@ fn handoff_task(
 
     let result = broker.with_conn(&db_path, "decapod", None, "todo.handoff", |conn| {
         ensure_schema(conn)?;
+        let acting_agent = from.unwrap_or("unknown");
+        enforce_operation_policy(root, conn, "todo.handoff", acting_agent)?;
         touch_agent_presence(conn, to, &ts)?;
 
         let current: Option<(String, String, String)> = conn
