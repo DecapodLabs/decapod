@@ -87,6 +87,8 @@ pub struct RunSummary {
     pub value: serde_json::Value,
 }
 
+const CONTAINER_DISABLE_MARKER: &str = "DECAPOD_CONTAINER_RUNTIME_DISABLED=true";
+
 pub fn run_container_cli(store: &Store, cli: ContainerCli) -> Result<(), error::DecapodError> {
     let summary = match cli.command {
         ContainerCommand::Run {
@@ -209,7 +211,48 @@ fn run_container(
     inherit_env: bool,
 ) -> Result<RunSummary, error::DecapodError> {
     let repo = resolve_repo_path(repo_override)?;
-    let docker = find_container_runtime()?;
+    if container_runtime_disabled(&repo)? {
+        return Err(error::DecapodError::ValidationError(
+            "Container subsystem is disabled by .decapod/OVERRIDE.md. \
+Remove the disable marker after installing Docker/Podman and configuring a dedicated local SSH key. \
+Warning: running without isolated containers means concurrent agents can step on each other."
+                .to_string(),
+        ));
+    }
+
+    let docker = match find_container_runtime() {
+        Ok(runtime) => runtime,
+        Err(_) => {
+            disable_container_runtime_override(
+                &repo,
+                "No docker/podman runtime found",
+                "Install Docker or Podman first, then re-run the task.",
+            )?;
+            return Err(error::DecapodError::ValidationError(
+                "No container runtime found (docker/podman).\n\
+Please install Docker or Podman.\n\
+I also wrote .decapod/OVERRIDE.md with container runtime disabled so agent runs stay safe by default.\n\
+Warning: without isolated containers, concurrent agents can step on each other."
+                    .to_string(),
+            ));
+        }
+    };
+    if (push || pr) && !has_container_ssh_material() {
+        disable_container_runtime_override(
+            &repo,
+            "No SSH credentials available for container push/PR",
+            "Create a dedicated SSH key for container agents and keep it local (never committed).",
+        )?;
+        return Err(error::DecapodError::ValidationError(
+            "Push/PR requested but no container SSH credentials were found.\n\
+Please create a separate SSH key for agent containers (it remains local and is never committed to GitHub), \
+or provide an SSH agent socket.\n\
+I also wrote .decapod/OVERRIDE.md with container runtime disabled until this is configured.\n\
+Warning: without isolated containers, concurrent agents can step on each other."
+                .to_string(),
+        ));
+    }
+
     let image = resolve_runtime_image(&docker, &repo, image_profile, image_override)?;
 
     let branch_name = branch
@@ -337,6 +380,83 @@ fn resolve_repo_path(repo_override: Option<&str>) -> Result<PathBuf, error::Deca
         std::env::current_dir().map_err(error::DecapodError::IoError)?
     };
     base.canonicalize().map_err(error::DecapodError::IoError)
+}
+
+fn override_file_path(repo_root: &Path) -> PathBuf {
+    repo_root.join(".decapod").join("OVERRIDE.md")
+}
+
+fn container_runtime_disabled(repo_root: &Path) -> Result<bool, error::DecapodError> {
+    let path = override_file_path(repo_root);
+    if !path.exists() {
+        return Ok(false);
+    }
+    let content = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
+    Ok(content.contains(CONTAINER_DISABLE_MARKER))
+}
+
+fn disable_container_runtime_override(
+    repo_root: &Path,
+    reason: &str,
+    remediation: &str,
+) -> Result<(), error::DecapodError> {
+    let path = override_file_path(repo_root);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    }
+    let mut content = if path.exists() {
+        fs::read_to_string(&path).map_err(error::DecapodError::IoError)?
+    } else {
+        String::new()
+    };
+    if content.contains(CONTAINER_DISABLE_MARKER) {
+        return Ok(());
+    }
+    if !content.ends_with('\n') && !content.is_empty() {
+        content.push('\n');
+    }
+    content.push_str(
+        "\n### plugins/CONTAINER.md\n\
+## Runtime Guard Override (auto-generated)\n\
+",
+    );
+    content.push_str(CONTAINER_DISABLE_MARKER);
+    content.push('\n');
+    content.push_str(&format!("reason: {}\n", reason));
+    content.push_str(&format!("remediation: {}\n", remediation));
+    content.push_str("warning: disabling isolated containers increases risk of concurrent agents stepping on each other.\n");
+    fs::write(path, content).map_err(error::DecapodError::IoError)?;
+    Ok(())
+}
+
+fn has_container_ssh_material() -> bool {
+    let default_ssh_dir = std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".ssh"));
+    let ssh_dir = std::env::var("DECAPOD_CONTAINER_SSH_DIR")
+        .ok()
+        .map(PathBuf::from)
+        .or(default_ssh_dir);
+    let has_key = ssh_dir
+        .as_ref()
+        .map(|dir| {
+            [
+                "id_ed25519",
+                "id_ed25519_sk",
+                "id_rsa",
+                "id_ecdsa",
+                "id_ecdsa_sk",
+            ]
+            .iter()
+            .any(|name| dir.join(name).is_file())
+        })
+        .unwrap_or(false);
+    if has_key {
+        return true;
+    }
+    std::env::var("SSH_AUTH_SOCK")
+        .ok()
+        .map(PathBuf::from)
+        .map(|sock| sock.exists())
+        .unwrap_or(false)
 }
 
 fn repo_root_from_store(store: &Store) -> Result<PathBuf, error::DecapodError> {
@@ -1008,5 +1128,22 @@ mod tests {
         assert!(content.contains("nodejs"));
         assert!(content.contains("python3"));
         assert!(content.contains("go"));
+    }
+
+    #[test]
+    fn disable_override_marks_container_runtime_disabled() {
+        let root = std::env::temp_dir().join(format!(
+            "decapod-container-override-{}",
+            Ulid::new().to_string().to_lowercase()
+        ));
+        fs::create_dir_all(&root).expect("mkdir");
+        disable_container_runtime_override(&root, "test-reason", "test-remediation")
+            .expect("write");
+        let override_path = root.join(".decapod").join("OVERRIDE.md");
+        let content = fs::read_to_string(&override_path).expect("override");
+        assert!(content.contains(CONTAINER_DISABLE_MARKER));
+        assert!(content.contains("warning: disabling isolated containers"));
+        assert!(container_runtime_disabled(&root).expect("disabled check"));
+        let _ = fs::remove_dir_all(root);
     }
 }
