@@ -52,6 +52,18 @@ fn setup_workspace() -> (TempDir, PathBuf) {
         .expect("decapod init");
     assert!(out.status.success(), "decapod init --force failed");
 
+    let session = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["session", "acquire"])
+        .current_dir(&dir)
+        .output()
+        .expect("decapod session acquire");
+    assert!(
+        session.status.success(),
+        "decapod session acquire failed:\n{}\n{}",
+        String::from_utf8_lossy(&session.stdout),
+        String::from_utf8_lossy(&session.stderr)
+    );
+
     (tmp, dir)
 }
 
