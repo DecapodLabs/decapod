@@ -23,3 +23,5 @@
 ## Final Sign-off
 - Status: READY
 - Decision: Recommended for promotion. Lineage gates are now green.
+- Timestamp: 2026-02-16T12:58:37Z
+- Provenance: `F_01KHK80HCN9YEXBAYXYQCSTJGS` (Decision: Task R_01KHJY765XBP8WQGKTH6MA6361 completed)
