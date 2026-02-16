@@ -154,25 +154,19 @@ enum InitCommand {
 }
 
 #[derive(clap::Args, Debug)]
-struct SetupCli {
+struct SessionCli {
     #[clap(subcommand)]
-    command: SetupCommand,
+    command: SessionCommand,
 }
 
 #[derive(Subcommand, Debug)]
-enum SetupCommand {
-    /// Git hooks for commit validation
-    Hook {
-        /// Install commit-msg hook for conventional commits
-        #[clap(long, default_value = "true")]
-        commit_msg: bool,
-        /// Install pre-commit hook (fmt, clippy)
-        #[clap(long)]
-        pre_commit: bool,
-        /// Uninstall hooks
-        #[clap(long)]
-        uninstall: bool,
-    },
+enum SessionCommand {
+    /// Acquire a new session token (required before using other commands)
+    Acquire,
+    /// Show current session status
+    Status,
+    /// Release the current session token
+    Release,
 }
 
 #[derive(clap::Args, Debug)]
@@ -289,9 +283,9 @@ enum Command {
     #[clap(name = "init", visible_alias = "i")]
     Init(InitGroupCli),
 
-    /// Configure repository (hooks, settings)
-    #[clap(name = "setup")]
-    Setup(SetupCli),
+    /// Session token management (required for agent operation)
+    #[clap(name = "session", visible_alias = "s")]
+    Session(SessionCli),
 
     /// Access methodology documentation
     #[clap(name = "docs", visible_alias = "d")]
@@ -881,16 +875,13 @@ pub fn run() -> Result<(), error::DecapodError> {
                 all: init_group.all,
             })?;
         }
-        Command::Setup(setup_cli) => match setup_cli.command {
-            SetupCommand::Hook {
-                commit_msg,
-                pre_commit,
-                uninstall,
-            } => {
-                run_hook_install(commit_msg, pre_commit, uninstall)?;
-            }
-        },
+        Command::Session(session_cli) => {
+            run_session_command(session_cli)?;
+        }
         _ => {
+            // For other commands, require valid session token
+            ensure_session_valid()?;
+
             // For other commands, ensure .decapod exists
             let project_root = decapod_root_option?;
             let decapod_root_path = project_root.join(".decapod");
@@ -949,8 +940,68 @@ pub fn run() -> Result<(), error::DecapodError> {
 fn should_auto_clock_in(command: &Command) -> bool {
     match command {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
-        Command::Version | Command::Init(_) | Command::Setup(_) => false,
+        Command::Version | Command::Init(_) | Command::Session(_) => false,
         _ => true,
+    }
+}
+
+fn get_session_token_path() -> Result<PathBuf, error::DecapodError> {
+    let current_dir = std::env::current_dir()?;
+    let project_root = find_decapod_project_root(&current_dir)?;
+    Ok(project_root.join(".decapod").join("session.token"))
+}
+
+fn ensure_session_valid() -> Result<(), error::DecapodError> {
+    let token_path = get_session_token_path()?;
+    if !token_path.exists() {
+        return Err(error::DecapodError::SessionError(
+            "No active session. Run 'decapod session acquire' first.".to_string(),
+        ));
+    }
+    Ok(())
+}
+
+fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodError> {
+    match session_cli.command {
+        SessionCommand::Acquire => {
+            let token_path = get_session_token_path()?;
+            if token_path.exists() {
+                println!("Session already active. Use 'decapod session status' for details.");
+                return Ok(());
+            }
+
+            // Create session token
+            let token = ulid::Ulid::to_string(&ulid::Ulid::new());
+            std::fs::write(&token_path, &token).map_err(error::DecapodError::IoError)?;
+
+            println!("Session acquired successfully.");
+            println!("Token: {}", token);
+            println!("\nYou may now use other decapod commands.");
+            Ok(())
+        }
+        SessionCommand::Status => {
+            let token_path = get_session_token_path()?;
+            if token_path.exists() {
+                let token =
+                    std::fs::read_to_string(&token_path).map_err(error::DecapodError::IoError)?;
+                println!("Session active");
+                println!("Token: {}", token.trim());
+            } else {
+                println!("No active session");
+                println!("Run 'decapod session acquire' to start a session");
+            }
+            Ok(())
+        }
+        SessionCommand::Release => {
+            let token_path = get_session_token_path()?;
+            if token_path.exists() {
+                std::fs::remove_file(&token_path).map_err(error::DecapodError::IoError)?;
+                println!("Session released");
+            } else {
+                println!("No active session to release");
+            }
+            Ok(())
+        }
     }
 }
 
