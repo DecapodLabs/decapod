@@ -3,6 +3,7 @@ use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::schemas; // Import the new schemas module
 use crate::core::store::Store;
+use crate::plugins::container;
 use crate::plugins::federation;
 use crate::plugins::knowledge;
 use crate::plugins::teammate;
@@ -1829,6 +1830,13 @@ fn parse_dependency_ids(depends_on: &str) -> Vec<String> {
     out
 }
 
+fn env_bool(name: &str, default_value: bool) -> bool {
+    match env::var(name) {
+        Ok(v) => matches!(v.to_ascii_lowercase().as_str(), "1" | "true" | "yes" | "on"),
+        Err(_) => default_value,
+    }
+}
+
 fn sync_task_dependencies(
     conn: &Connection,
     task_id: &str,
@@ -3496,9 +3504,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                             rusqlite::params![title, ev.ts, id],
                         )?;
                     }
-                    if let Some(description) =
-                        ev.payload.get("description").and_then(|v| v.as_str())
-                    {
+                    if let Some(description) = ev.payload.get("description").and_then(|v| v.as_str()) {
                         conn.execute(
                             "UPDATE tasks SET description = ?1, updated_at = ?2 WHERE id = ?3",
                             rusqlite::params![description, ev.ts, id],
@@ -3508,6 +3514,54 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         conn.execute(
                             "UPDATE tasks SET owner = ?1, updated_at = ?2 WHERE id = ?3",
                             rusqlite::params![owner, ev.ts, id],
+                        )?;
+                    }
+                    if let Some(tags) = ev.payload.get("tags").and_then(|v| v.as_str()) {
+                        conn.execute(
+                            "UPDATE tasks SET tags = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![tags, ev.ts, id],
+                        )?;
+                    }
+                    if let Some(due) = ev.payload.get("due").and_then(|v| v.as_str()) {
+                        conn.execute(
+                            "UPDATE tasks SET due = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![due, ev.ts, id],
+                        )?;
+                    }
+                    if let Some(r#ref) = ev.payload.get("ref").and_then(|v| v.as_str()) {
+                        conn.execute(
+                            "UPDATE tasks SET ref = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![r#ref, ev.ts, id],
+                        )?;
+                    }
+                    if let Some(priority) = ev.payload.get("priority").and_then(|v| v.as_str()) {
+                        conn.execute(
+                            "UPDATE tasks SET priority = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![priority, ev.ts, id],
+                        )?;
+                    }
+                    if let Some(depends_on) = ev.payload.get("depends_on").and_then(|v| v.as_str()) {
+                        conn.execute(
+                            "UPDATE tasks SET depends_on = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![depends_on, ev.ts, id],
+                        )?;
+                    }
+                    if let Some(blocks) = ev.payload.get("blocks").and_then(|v| v.as_str()) {
+                        conn.execute(
+                            "UPDATE tasks SET blocks = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![blocks, ev.ts, id],
+                        )?;
+                    }
+                    if let Some(category) = ev.payload.get("category").and_then(|v| v.as_str()) {
+                        conn.execute(
+                            "UPDATE tasks SET category = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![category, ev.ts, id],
+                        )?;
+                    }
+                    if let Some(component) = ev.payload.get("component").and_then(|v| v.as_str()) {
+                        conn.execute(
+                            "UPDATE tasks SET component = ?1, updated_at = ?2 WHERE id = ?3",
+                            rusqlite::params![component, ev.ts, id],
                         )?;
                     }
                 }
@@ -3799,7 +3853,35 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
             let default_agent =
                 env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let agent_id = agent.as_deref().unwrap_or(&default_agent);
-            claim_task(root, id, agent_id, *mode)?
+            let mut out = claim_task(root, id, agent_id, *mode)?;
+            let status = out
+                .get("status")
+                .and_then(|v| v.as_str())
+                .unwrap_or("error");
+            let in_container = env_bool("DECAPOD_CONTAINER", false);
+            let autorun_enabled = env_bool("DECAPOD_CLAIM_AUTORUN", true);
+
+            if *mode == ClaimMode::Exclusive && status == "ok" && !in_container && autorun_enabled {
+                let task_title = get_task(root, id)?
+                    .map(|t| t.title)
+                    .unwrap_or_else(|| id.to_string());
+                let launch =
+                    match container::run_container_for_claim(store, agent_id, id, &task_title) {
+                        Ok(result) => serde_json::json!({
+                            "status": "ok",
+                            "result": result
+                        }),
+                        Err(err) => serde_json::json!({
+                            "status": "error",
+                            "error": err.to_string()
+                        }),
+                    };
+                if let Some(obj) = out.as_object_mut() {
+                    obj.insert("container".to_string(), launch);
+                }
+            }
+
+            out
         }
         TodoCommand::Release { id } => release_task(root, id)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,

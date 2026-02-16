@@ -99,3 +99,66 @@ fn todo_help_schema_and_docs_stay_in_sync() {
         "plugins/TODO.md references removed command: decapod todo schema"
     );
 }
+
+#[test]
+fn container_help_schema_and_docs_stay_in_sync() {
+    let help = run_decapod(&["auto", "container", "run", "--help"]);
+    for flag in [
+        "--agent",
+        "--cmd",
+        "--task-id",
+        "--push",
+        "--pr",
+        "--pr-base",
+        "--pr-title",
+        "--pr-body",
+        "--keep-worktree",
+        "--inherit-env",
+    ] {
+        assert!(
+            help.contains(flag),
+            "container run --help missing flag: {}",
+            flag
+        );
+    }
+
+    let schema_out = run_decapod(&[
+        "data",
+        "schema",
+        "--subsystem",
+        "container",
+        "--deterministic",
+    ]);
+    for field in [
+        "\"task_id\"",
+        "\"pr\"",
+        "\"pr_base\"",
+        "\"pr_title\"",
+        "\"pr_body\"",
+        "\"keep_worktree\"",
+        "\"inherit_env\"",
+    ] {
+        assert!(
+            schema_out.contains(field),
+            "container schema missing field: {}",
+            field
+        );
+    }
+
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let docs = fs::read_to_string(repo_root.join("constitution/plugins/CONTAINER.md"))
+        .expect("read CONTAINER plugin docs");
+    for snippet in [
+        "decapod auto container run",
+        "--task-id",
+        "--pr",
+        "--inherit-env",
+        "DECAPOD_CLAIM_AUTORUN",
+    ] {
+        assert!(
+            docs.contains(snippet),
+            "plugins/CONTAINER.md missing content: {}",
+            snippet
+        );
+    }
+}

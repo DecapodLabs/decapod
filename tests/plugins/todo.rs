@@ -384,6 +384,54 @@ fn test_risk_zones_and_trust_tiers_enforced() {
 }
 
 #[test]
+fn test_claim_includes_container_result_when_autorun_enabled() {
+    let tmp = tempdir().unwrap();
+    let repo = tmp.path();
+    bootstrap_repo(repo);
+
+    let added = run_cmd(
+        repo,
+        &[
+            "todo",
+            "--format",
+            "json",
+            "add",
+            "Claim autorun envelope test",
+            "--owner",
+            "agent-a",
+        ],
+    );
+    let task_id = added["id"].as_str().unwrap().to_string();
+
+    let claimed = run_cmd(
+        repo,
+        &[
+            "todo",
+            "--format",
+            "json",
+            "claim",
+            "--id",
+            &task_id,
+            "--agent",
+            "agent-a",
+            "--mode",
+            "exclusive",
+        ],
+    );
+    assert_eq!(claimed["status"], "ok");
+    assert!(
+        claimed.get("container").is_some(),
+        "claim response should include container launch result"
+    );
+    let container_status = claimed["container"]["status"].as_str().unwrap_or("");
+    assert!(
+        container_status == "ok" || container_status == "error",
+        "container status should be ok/error, got '{}'",
+        container_status
+    );
+}
+
+#[test]
 fn test_ownership_rebuild_replay_parity() {
     let tmp = tempdir().unwrap();
     let repo = tmp.path();
