@@ -90,6 +90,15 @@ pub enum TodoCommand {
         #[clap(long)]
         id: String,
     },
+    /// Show a task by ID (compat alias for get).
+    Show {
+        /// Task ID (supports `--id <ID>` or positional `<ID>`).
+        #[clap(long)]
+        id: Option<String>,
+        /// Task ID positional fallback.
+        #[clap(value_name = "ID")]
+        id_positional: Option<String>,
+    },
     /// Mark a task done.
     Done {
         /// Task ID (supports `--id <ID>` or positional `<ID>`).
@@ -3759,6 +3768,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "add", "parameters": ["title", "tags", "owner", "due", "ref", "dir", "priority", "depends_on", "blocks", "parent"] },
             { "name": "list", "parameters": ["status", "scope", "tags", "title_search", "dir"] },
             { "name": "get", "parameters": ["id"] },
+            { "name": "show", "parameters": ["id"] },
             { "name": "done", "parameters": ["id", "validated", "artifact"] },
             { "name": "archive", "parameters": ["id"] },
             { "name": "comment", "parameters": ["id", "comment"] },
@@ -3839,6 +3849,17 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
         }
         TodoCommand::Get { id } => {
             let t = get_task(root, id)?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.get",
+                "status": if t.is_some() { "ok" } else { "not_found" },
+                "root": root.to_string_lossy(),
+                "item": t,
+            })
+        }
+        TodoCommand::Show { id, id_positional } => {
+            let task_id = resolve_task_id_arg(id, id_positional, "todo show")?;
+            let t = get_task(root, &task_id)?;
             serde_json::json!({
                 "ts": now_iso(),
                 "cmd": "todo.get",

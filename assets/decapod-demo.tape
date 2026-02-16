@@ -11,13 +11,13 @@ Set Margin 20
 Set MarginFill "#0b1020"
 Set WindowBar Colorful
 Set Framerate 30
-Set TypingSpeed 40ms
+Set TypingSpeed 30ms
 Set Shell "zsh"
 Sleep 300ms
 
 Type 'opencode run --model opencode/minimax-m2.5-free --dir /tmp/studio "Complete the hello world todo task"
 Enter
-Sleep 40s
+Sleep 30s
 
 Type "exit"
 Enter
