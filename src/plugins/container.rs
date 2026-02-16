@@ -691,8 +691,11 @@ fn build_docker_spec(
             args.push(format!("{}:{}", sock, sock));
         }
     }
-    if let Some(home) = std::env::var_os("HOME") {
-        let ssh_dir = PathBuf::from(home).join(".ssh");
+    let ssh_dir = std::env::var("DECAPOD_CONTAINER_SSH_DIR")
+        .ok()
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".ssh")));
+    if let Some(ssh_dir) = ssh_dir {
         if ssh_dir.exists() {
             if let Some(ssh_dir_str) = ssh_dir.to_str() {
                 args.push("-v".to_string());
@@ -762,6 +765,12 @@ fn build_container_script(
            export GIT_SSH_COMMAND=\"${GIT_SSH_COMMAND} -i /tmp/decapod-ssh/id_ed25519 -o IdentitiesOnly=yes\"\n\
          elif [ -S \"${SSH_AUTH_SOCK:-}\" ]; then\n\
            export GIT_SSH_COMMAND=\"${GIT_SSH_COMMAND} -o IdentityAgent=${SSH_AUTH_SOCK}\"\n\
+         fi\n\
+         if [ \"${DECAPOD_CONTAINER_DEBUG:-0}\" = \"1\" ]; then\n\
+           echo \"debug: workspace=${DECAPOD_WORKSPACE:-$PWD}\" >&2\n\
+           echo \"debug: ssh command=${GIT_SSH_COMMAND}\" >&2\n\
+           ls -ld /tmp/decapod-ssh /tmp/decapod-ssh/id_ed25519 2>/dev/null >&2 || true\n\
+           git remote -v >&2 || true\n\
          fi\n\
          unset GIT_DIR GIT_WORK_TREE\n\
          git config --global --add safe.directory \"${DECAPOD_WORKSPACE:-$PWD}\" || true\n\
