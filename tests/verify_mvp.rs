@@ -43,6 +43,13 @@ fn verify_mvp_pass_fail_unknown_flow() {
         String::from_utf8_lossy(&init.stderr)
     );
 
+    let session = run_cmd(repo, &["session", "acquire"]);
+    assert!(
+        session.status.success(),
+        "session acquire failed: {}",
+        String::from_utf8_lossy(&session.stderr)
+    );
+
     let add = run_cmd(
         repo,
         &[

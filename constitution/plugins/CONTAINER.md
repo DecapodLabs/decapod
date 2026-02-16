@@ -10,7 +10,7 @@ Container subsystem runs agent actions in ephemeral Docker/Podman containers wit
 - `decapod auto container run --agent <id> --cmd "<command>"`
 - Optional: `--branch <name> --push`
 - Optional runtime profile: `--image-profile debian-slim|alpine`
-- Optional hard overrides: `--image`, `--memory`, `--cpus`, `--timeout-seconds`, `--repo`
+- Optional hard overrides: `--image`, `--memory`, `--cpus`, `--timeout-seconds` (default `1800`), `--repo`
 - `decapod data schema --subsystem container`
 
 ## Contracts
