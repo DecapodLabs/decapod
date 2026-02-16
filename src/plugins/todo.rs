@@ -92,8 +92,12 @@ pub enum TodoCommand {
     },
     /// Mark a task done.
     Done {
+        /// Task ID (supports `--id <ID>` or positional `<ID>`).
         #[clap(long)]
-        id: String,
+        id: Option<String>,
+        /// Task ID positional fallback.
+        #[clap(value_name = "ID")]
+        id_positional: Option<String>,
         /// Capture verification artifacts and proof baseline while marking done.
         #[clap(long)]
         validated: bool,
@@ -103,8 +107,12 @@ pub enum TodoCommand {
     },
     /// Archive a task (keeps audit trail).
     Archive {
+        /// Task ID (supports `--id <ID>` or positional `<ID>`).
         #[clap(long)]
-        id: String,
+        id: Option<String>,
+        /// Task ID positional fallback.
+        #[clap(value_name = "ID")]
+        id_positional: Option<String>,
     },
     /// Add a comment to a task (audit-only event).
     Comment {
@@ -3777,6 +3785,25 @@ pub fn schema() -> serde_json::Value {
     })
 }
 
+fn resolve_task_id_arg(
+    id_flag: &Option<String>,
+    id_positional: &Option<String>,
+    command: &str,
+) -> Result<String, error::DecapodError> {
+    match (id_flag.as_deref(), id_positional.as_deref()) {
+        (Some(a), Some(b)) if a != b => Err(error::DecapodError::ValidationError(format!(
+            "{} received conflicting IDs (--id={} vs positional={})",
+            command, a, b
+        ))),
+        (Some(id), _) => Ok(id.to_string()),
+        (None, Some(id)) => Ok(id.to_string()),
+        (None, None) => Err(error::DecapodError::ValidationError(format!(
+            "{} requires a task ID (use --id <ID> or positional <ID>)",
+            command
+        ))),
+    }
+}
+
 pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodError> {
     let root = &store.root;
     let out = match &cli.command {
@@ -3816,10 +3843,12 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
         }
         TodoCommand::Done {
             id,
+            id_positional,
             validated,
             artifact,
         } => {
-            let out = update_status(store, id, "done", "task.done", serde_json::json!({}))?;
+            let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
+            let out = update_status(store, &task_id, "done", "task.done", serde_json::json!({}))?;
             if *validated && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
                 let repo_root = store
                     .root
@@ -3827,12 +3856,13 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                     .and_then(|p| p.parent())
                     .map(|p| p.to_path_buf())
                     .unwrap_or(std::env::current_dir().map_err(error::DecapodError::IoError)?);
-                verify::capture_baseline_for_todo(store, &repo_root, id, artifact.clone())?;
+                verify::capture_baseline_for_todo(store, &repo_root, &task_id, artifact.clone())?;
             }
             out
         }
-        TodoCommand::Archive { id } => {
-            update_status(store, id, "archived", "task.archive", serde_json::json!({}))?
+        TodoCommand::Archive { id, id_positional } => {
+            let task_id = resolve_task_id_arg(id, id_positional, "todo archive")?;
+            update_status(store, &task_id, "archived", "task.archive", serde_json::json!({}))?
         }
         TodoCommand::Comment { id, comment } => comment_task(root, id, comment)?,
         TodoCommand::Edit {

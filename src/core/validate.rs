@@ -29,6 +29,7 @@
 //! - Tooling validation gate (formatting, linting, type checking)
 
 use crate::core::error;
+use crate::core::output;
 use crate::core::store::{Store, StoreKind};
 use crate::{db, primitives, todo};
 use regex::Regex;
@@ -1523,7 +1524,7 @@ pub fn run_validation(
 ) -> Result<(), error::DecapodError> {
     VALIDATION_FAILS.with(|v| v.borrow_mut().clear());
     VALIDATION_WARNS.with(|v| v.borrow_mut().clear());
-    println!("validate: running methodology and integrity gates");
+    println!("validate: running");
 
     // Directly get content from embedded assets
     let intent_content = crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
@@ -1570,35 +1571,39 @@ pub fn run_validation(
     validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
     validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 
+    let fail_total = VALIDATION_FAILS.with(|v| v.borrow().len() as u32).max(fail_count);
+    let warn_total = VALIDATION_WARNS.with(|v| v.borrow().len() as u32).max(warn_count);
     println!(
         "validate: summary pass={} fail={} warn={}",
-        pass_count, fail_count, warn_count
+        pass_count, fail_total, warn_total
     );
 
     VALIDATION_FAILS.with(|v| {
         let fails = v.borrow();
         if !fails.is_empty() {
-            println!("validate: failures");
-            for msg in fails.iter() {
-                println!("  - {}", msg);
-            }
+            println!(
+                "validate: failures {}: {}",
+                fails.len(),
+                output::preview_messages(&fails, 2, 110)
+            );
         }
     });
 
     VALIDATION_WARNS.with(|v| {
         let warns = v.borrow();
         if !warns.is_empty() {
-            println!("validate: warnings");
-            for msg in warns.iter() {
-                println!("  - {}", msg);
-            }
+            println!(
+                "validate: warnings {}: {}",
+                warns.len(),
+                output::preview_messages(&warns, 2, 110)
+            );
         }
     });
 
-    if fail_count > 0 {
+    if fail_total > 0 {
         Err(error::DecapodError::ValidationError(format!(
             "{} test(s) failed.",
-            fail_count
+            fail_total
         )))
     } else {
         Ok(())

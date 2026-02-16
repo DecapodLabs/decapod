@@ -81,6 +81,7 @@ pub mod plugins;
 
 use core::{
     db, docs_cli, error, migration, proof, repomap, scaffold,
+    output,
     store::{Store, StoreKind},
     validate,
 };
@@ -795,49 +796,45 @@ pub fn run() -> Result<(), error::DecapodError> {
                 all: init_group.all,
             })?;
 
-            println!("init: summary");
+            let target_display = setup_decapod_root
+                .parent()
+                .unwrap_or(current_dir.as_path())
+                .display()
+                .to_string();
             println!(
-                "  target={}",
-                setup_decapod_root
-                    .parent()
-                    .unwrap_or(current_dir.as_path())
-                    .display()
+                "init: ok target={} mode={}",
+                target_display,
+                if init_group.dry_run { "dry-run" } else { "apply" }
             );
-            if init_group.dry_run {
-                println!("  mode=dry-run");
-            } else {
-                println!("  databases created={}, preserved={}", db_created, db_preserved);
+            if !init_group.dry_run {
                 println!(
-                    "  event_logs created={}, preserved={}",
-                    events_created, events_preserved
-                );
-                println!(
-                    "  generated created={}, preserved={}",
-                    generated_created, generated_preserved
+                    "init: store db+{}={} events+{}={} generated+{}={}",
+                    db_created,
+                    db_preserved,
+                    events_created,
+                    events_preserved,
+                    usize::from(generated_created),
+                    usize::from(generated_preserved)
                 );
             }
             println!(
-                "  entrypoints created={}, unchanged={}, preserved={}",
+                "init: files entry+{}={}~{} cfg+{}={}~{} backups={}",
                 scaffold_summary.entrypoints_created,
                 scaffold_summary.entrypoints_unchanged,
-                scaffold_summary.entrypoints_preserved
-            );
-            println!(
-                "  config created={}, unchanged={}, preserved={}",
+                scaffold_summary.entrypoints_preserved,
                 scaffold_summary.config_created,
                 scaffold_summary.config_unchanged,
-                scaffold_summary.config_preserved
+                scaffold_summary.config_preserved,
+                backup_count
             );
-            if backup_count > 0 {
-                println!("  backups created={}", backup_count);
-            }
             if !init_warnings.is_empty() {
-                println!("  warnings={}", init_warnings.len());
-                for warning in init_warnings {
-                    println!("    - {}", warning);
-                }
+                println!(
+                    "init: warnings {}: {}",
+                    init_warnings.len(),
+                    output::preview_messages(&init_warnings, 2, 120)
+                );
             }
-            println!("  status=ready");
+            println!("init: status=ready");
         }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;

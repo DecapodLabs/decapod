@@ -36,6 +36,7 @@ pub mod docs_cli;
 pub mod error;
 pub mod external_action;
 pub mod migration;
+pub mod output;
 pub mod proof;
 pub mod repomap;
 pub mod scaffold;
