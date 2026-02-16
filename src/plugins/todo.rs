@@ -9,7 +9,7 @@ use crate::plugins::teammate;
 use crate::plugins::verify;
 use crate::policy;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
+use rusqlite::{params, types::ToSql, Connection, OptionalExtension, Result as SqlResult};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::collections::HashSet;
@@ -3046,6 +3046,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     } else if !owner.is_empty() {
                         let _ = upsert_task_owner(conn, &id, &owner, "primary", &ev.ts)?;
                     }
+                    sync_legacy_owner_column(conn, &id)?;
                 }
                 "task.done" => {
                     let id = ev.task_id.clone().unwrap_or_default();
