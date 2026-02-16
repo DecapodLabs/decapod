@@ -23,6 +23,11 @@ fn run_decapod(temp_dir: &PathBuf, args: &[&str]) -> (bool, String) {
     (output.status.success(), combined)
 }
 
+fn acquire_session(temp_path: &PathBuf) {
+    let (success, output) = run_decapod(temp_path, &["session", "acquire"]);
+    assert!(success, "decapod session acquire should succeed. Output:\n{}", output);
+}
+
 #[test]
 fn test_init_creates_all_entrypoints() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -58,6 +63,7 @@ fn test_validate_passes_after_init() {
     // Run decapod init
     let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
     assert!(success, "decapod init should succeed");
+    acquire_session(&temp_path);
 
     // Run decapod validate
     let (success, output) = run_decapod(&temp_path, &["validate"]);
@@ -162,6 +168,7 @@ fn test_validate_fails_on_missing_invariant() {
     // Run decapod init
     let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
     assert!(success, "decapod init should succeed");
+    acquire_session(&temp_path);
 
     // Tamper with AGENTS.md - remove canonical router reference
     let agents_path = temp_path.join("AGENTS.md");
@@ -192,6 +199,7 @@ fn test_validate_fails_on_bloated_entrypoint() {
     // Run decapod init
     let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
     assert!(success, "decapod init should succeed");
+    acquire_session(&temp_path);
 
     // Bloat CLAUDE.md beyond 50 lines
     let claude_path = temp_path.join("CLAUDE.md");
