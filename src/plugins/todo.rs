@@ -1210,7 +1210,7 @@ fn enforce_operation_policy(
             return Ok(());
         }
         policy::initialize_policy_db(root)?;
-        if !policy::check_approval(&store, zone_name, None, zone_name)? {
+        if !policy::check_approval(&store, zone_name, None, "global")? {
             return Err(error::DecapodError::ValidationError(format!(
                 "Policy gate denied for {}: missing approval",
                 zone_name
