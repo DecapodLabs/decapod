@@ -17,6 +17,7 @@ use crate::plugins::policy;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
 use ulid::Ulid;
@@ -41,12 +42,33 @@ pub struct DbBroker {
 /// appended to `broker.events.jsonl` for full mutation audit trail.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BrokerEvent {
+    /// Envelope schema version for machine consumers.
+    #[serde(default = "default_broker_schema_version")]
+    pub schema_version: String,
+    /// Request identifier used by orchestrators and adapters.
+    #[serde(default)]
+    pub request_id: String,
     /// ISO 8601 timestamp (seconds since epoch + 'Z')
     pub ts: String,
     /// Unique event identifier (ULID)
     pub event_id: String,
     /// Actor who initiated the operation (e.g., "cli", "agent", "watcher")
     pub actor: String,
+    /// Canonical actor identifier (same as actor for now; explicit for envelope stability).
+    #[serde(default)]
+    pub actor_id: String,
+    /// Optional runtime session identifier for multi-call workflows.
+    #[serde(default)]
+    pub session_id: Option<String>,
+    /// Correlation ID for grouping related operations.
+    #[serde(default)]
+    pub correlation_id: Option<String>,
+    /// Causation ID that links this event to a parent event/request.
+    #[serde(default)]
+    pub causation_id: Option<String>,
+    /// Optional idempotency key set by orchestrator/runtime.
+    #[serde(default)]
+    pub idempotency_key: Option<String>,
     /// Optional reference to an intent or session ID
     pub intent_ref: Option<String>,
     /// Operation name (e.g., "todo.add", "health.record")
@@ -132,11 +154,26 @@ impl DbBroker {
             .unwrap_or_default()
             .as_secs();
         let ts = format!("{}Z", secs);
+        let request_id = Ulid::new().to_string();
+        let event_id = Ulid::new().to_string();
+        let session_id = env::var("DECAPOD_SESSION_ID").ok();
+        let correlation_id = env::var("DECAPOD_CORRELATION_ID")
+            .ok()
+            .or_else(|| intent_ref.map(|s| s.to_string()));
+        let causation_id = env::var("DECAPOD_CAUSATION_ID").ok();
+        let idempotency_key = env::var("DECAPOD_IDEMPOTENCY_KEY").ok();
 
         let ev = BrokerEvent {
+            schema_version: default_broker_schema_version(),
+            request_id,
             ts,
-            event_id: Ulid::new().to_string(),
+            event_id,
             actor: actor.to_string(),
+            actor_id: actor.to_string(),
+            session_id,
+            correlation_id,
+            causation_id,
+            idempotency_key,
             intent_ref: intent_ref.map(|s| s.to_string()),
             op: op.to_string(),
             db_id: db_id.to_string(),
@@ -189,6 +226,29 @@ pub fn schema() -> serde_json::Value {
         "commands": [
             { "name": "audit", "description": "Show the mutation audit log" }
         ],
+        "envelope": {
+            "schema_version": "1.0.0",
+            "fields": [
+                "schema_version",
+                "request_id",
+                "event_id",
+                "ts",
+                "actor",
+                "actor_id",
+                "session_id",
+                "correlation_id",
+                "causation_id",
+                "idempotency_key",
+                "intent_ref",
+                "op",
+                "db_id",
+                "status"
+            ]
+        },
         "storage": ["broker.events.jsonl"]
     })
+}
+
+fn default_broker_schema_version() -> String {
+    "1.0.0".to_string()
 }
