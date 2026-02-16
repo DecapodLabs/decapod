@@ -897,8 +897,22 @@ pub fn run() -> Result<(), error::DecapodError> {
             store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
 
-            // Check for version changes and run migrations if needed
-            migration::check_and_migrate(&decapod_root_path)?;
+            // Check for version/schema changes and run protected migrations if needed.
+            // Backups are auto-created in .decapod/data only when schema upgrades are pending.
+            migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
+                todo::initialize_todo_db(data_root)?;
+                db::initialize_knowledge_db(data_root)?;
+                cron::initialize_cron_db(data_root)?;
+                reflex::initialize_reflex_db(data_root)?;
+                health::initialize_health_db(data_root)?;
+                policy::initialize_policy_db(data_root)?;
+                archive::initialize_archive_db(data_root)?;
+                feedback::initialize_feedback_db(data_root)?;
+                teammate::initialize_teammate_db(data_root)?;
+                federation::initialize_federation_db(data_root)?;
+                decide::initialize_decide_db(data_root)?;
+                Ok(())
+            })?;
 
             let project_store = Store {
                 kind: StoreKind::Repo,
