@@ -1270,7 +1270,9 @@ mod tests {
         assert!(joined.contains("--rm"));
         assert!(joined.contains("--cap-drop ALL"));
         assert!(joined.contains("--security-opt no-new-privileges:true"));
-        assert!(joined.contains("-v /tmp/repo/.decapod/workspaces/w1:/tmp/repo/.decapod/workspaces/w1"));
+        assert!(
+            joined.contains("-v /tmp/repo/.decapod/workspaces/w1:/tmp/repo/.decapod/workspaces/w1")
+        );
         assert!(joined.contains("-v /tmp/repo/.decapod:/tmp/repo/.decapod/workspaces/w1/.decapod"));
         assert!(joined.contains("git_safe fetch --no-write-fetch-head origin 'master'"));
         assert!(joined.contains("git_safe checkout -B 'ahr/branch'"));
