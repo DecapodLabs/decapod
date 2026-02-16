@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.5](https://github.com/DecapodLabs/decapod/compare/v0.19.4...v0.19.5) - 2026-02-16
+
+### Added
+
+- gitainer envs
+
+## [0.19.4](https://github.com/DecapodLabs/decapod/compare/v0.19.3...v0.19.4) - 2026-02-16
+
+### Added
+
+- gitainer envs
+- gitainer envs
+- gitainer envs
+
+## [0.19.3](https://github.com/DecapodLabs/decapod/compare/v0.19.2...v0.19.3) - 2026-02-16
+
+### Added
+
+- task dependencies
+
+## [0.19.2](https://github.com/DecapodLabs/decapod/compare/v0.19.1...v0.19.2) - 2026-02-16
+
+### Added
+
+- task dependencies
+- task dependencies
+- task dependencies
+- task dependencies
+
 ## [0.19.1](https://github.com/DecapodLabs/decapod/compare/v0.19.0...v0.19.1) - 2026-02-16
 
 ### Added

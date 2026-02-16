@@ -40,6 +40,7 @@ This is the single source of truth for Decapod subsystem status.
 | cron | `decapod auto cron` | implemented | REAL | `plugins/CRON.md` | `decapod data schema --subsystem cron` |
 | reflex | `decapod auto reflex` | implemented | REAL | `plugins/REFLEX.md` | `decapod data schema --subsystem reflex` |
 | workflow | `decapod auto workflow` | implemented | REAL | `plugins/REFLEX.md` | `decapod data schema --subsystem workflow` |
+| container | `decapod auto container` | implemented | REAL | `plugins/CONTAINER.md` | `decapod data schema --subsystem container` |
 | federation | `decapod data federation` | implemented | REAL | `plugins/FEDERATION.md` | `decapod data schema --subsystem federation` |
 | primitives | `decapod data primitives` | implemented | REAL | `plugins/TODO.md` | `decapod data primitives validate` |
 | decide | `decapod decide` | implemented | REAL | `plugins/DECIDE.md` | `decapod data schema --subsystem decide` |
@@ -96,4 +97,5 @@ Documentation should point to replacement surfaces, not deprecated command group
 - `plugins/EMERGENCY_PROTOCOL.md` - Emergency protocols
 - `plugins/FEDERATION.md` - Federation (governed agent memory)
 - `plugins/DECIDE.md` - Architecture decision prompting
+- `plugins/CONTAINER.md` - Ephemeral isolated container execution
 - `plugins/DB_BROKER.md` - Database broker (SPEC)
