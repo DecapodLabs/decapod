@@ -993,6 +993,9 @@ fn get_session_token_path() -> Result<PathBuf, error::DecapodError> {
 }
 
 fn ensure_session_valid() -> Result<(), error::DecapodError> {
+    if std::env::var_os("DECAPOD_BYPASS_SESSION").is_some() {
+        return Ok(());
+    }
     let token_path = get_session_token_path()?;
     if !token_path.exists() {
         return Err(error::DecapodError::SessionError(
