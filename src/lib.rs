@@ -358,6 +358,42 @@ enum Command {
     /// Architecture decision prompting
     #[clap(name = "decide")]
     Decide(decide::DecideCli),
+
+    /// Agent orchestration and lifecycle
+    #[clap(name = "agent")]
+    Agent(AgentCli),
+
+    /// Execute arbitrary commands under governance
+    #[clap(name = "exec")]
+    Exec(ExecCli),
+
+    /// Governed filesystem operations
+    #[clap(name = "fs")]
+    Fs(core::fs_cli::FsCli),
+}
+
+#[derive(clap::Args, Debug)]
+struct AgentCli {
+    #[clap(subcommand)]
+    command: AgentCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum AgentCommand {
+    /// Flash the agent with the constitution and produce a verifiable startup receipt.
+    Init,
+    /// Show the current agent startup status and receipt.
+    Status,
+}
+
+#[derive(clap::Args, Debug)]
+struct ExecCli {
+    /// The intent/reason for running this command.
+    #[clap(long, short)]
+    intent: String,
+    /// The command and arguments to execute.
+    #[clap(trailing_var_arg = true)]
+    command: Vec<String>,
 }
 
 #[derive(clap::Args, Debug)]
@@ -910,6 +946,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Auto(auto_cli) => run_auto_command(auto_cli, &project_store)?,
                 Command::Qa(qa_cli) => run_qa_command(qa_cli, &project_store, &project_root)?,
                 Command::Decide(decide_cli) => decide::run_decide_cli(&project_store, decide_cli)?,
+                Command::Agent(agent_cli) => run_agent_command(agent_cli, &project_root)?,
+                Command::Exec(exec_cli) => run_exec_command(exec_cli, &project_store)?,
+                Command::Fs(fs_cli) => core::fs_cli::run_fs_cli(fs_cli, &project_store, &project_root)?,
                 _ => unreachable!(),
             }
         }
@@ -1676,6 +1715,112 @@ fn run_qa_command(
             all,
         } => run_check(crate_description, commands, all)?,
         QaCommand::Gatling(ref gatling_cli) => plugins::gatling::run_gatling_cli(gatling_cli)?,
+    }
+
+    Ok(())
+}
+
+fn run_agent_command(cli: AgentCli, project_root: &Path) -> Result<(), error::DecapodError> {
+    match cli.command {
+        AgentCommand::Init => {
+            let agent_id = current_agent_id();
+            let receipt_path = project_root.join(".decapod").join("generated").join("agent_init.json");
+            
+            // 1. Print Flash Primer (Context Capsule)
+            println!("\n=== DECAPOD AGENT FLASH (Context Capsule) ===");
+            println!("Identity: {}", agent_id);
+            println!("Role:     Foreman (You interact via Decapod)");
+            println!("Kernel:   Decapod (The Factory)");
+            println!("Router:   core/DECAPOD.md");
+            println!("Law:      constitution/");
+            println!("\nCORE PROTOCOL:");
+            println!("1. Start at router: `decapod docs show core/DECAPOD.md` before acting.");
+            println!("2. Use control plane: Mutations must happen via `decapod` commands.");
+            println!("3. Pass validation: `decapod validate` MUST pass before claiming 'done'.");
+            println!("4. Record proofs: Record executable evidence of successful work.");
+            println!("\nBypassing the control plane results in unverified, unsafe work.");
+            println!("=============================================\n");
+
+            // 2. Generate Receipt
+            let head = std::process::Command::new("git")
+                .args(["rev-parse", "HEAD"])
+                .current_dir(project_root)
+                .output()
+                .ok()
+                .and_then(|o| if o.status.success() { Some(String::from_utf8_lossy(&o.stdout).trim().to_string()) } else { None })
+                .unwrap_or_else(|| "unknown".to_string());
+
+            let branch = std::process::Command::new("git")
+                .args(["branch", "--show-current"])
+                .current_dir(project_root)
+                .output()
+                .ok()
+                .and_then(|o| if o.status.success() { Some(String::from_utf8_lossy(&o.stdout).trim().to_string()) } else { None })
+                .unwrap_or_else(|| "unknown".to_string());
+
+            let receipt = serde_json::json!({
+                "agent_id": agent_id,
+                "ts": now_epoch_secs(),
+                "git_head": head,
+                "git_branch": branch,
+                "decapod_version": migration::DECAPOD_VERSION,
+                "router_path": "core/DECAPOD.md",
+                "status": "flashed"
+            });
+
+            fs::create_dir_all(receipt_path.parent().unwrap()).map_err(error::DecapodError::IoError)?;
+            fs::write(&receipt_path, serde_json::to_string_pretty(&receipt).unwrap()).map_err(error::DecapodError::IoError)?;
+            
+            println!("✓ Agent init receipt written to .decapod/generated/agent_init.json");
+            Ok(())
+        }
+        AgentCommand::Status => {
+            let receipt_path = project_root.join(".decapod").join("generated").join("agent_init.json");
+            if receipt_path.exists() {
+                let content = fs::read_to_string(receipt_path).map_err(error::DecapodError::IoError)?;
+                println!("{}", content);
+            } else {
+                println!("No agent init receipt found. Run `decapod agent init` first.");
+            }
+            Ok(())
+        }
+    }
+}
+
+fn run_exec_command(cli: ExecCli, store: &Store) -> Result<(), error::DecapodError> {
+    if cli.command.is_empty() {
+        return Err(error::DecapodError::ValidationError("No command provided to exec".to_string()));
+    }
+
+    let agent_id = current_agent_id();
+    println!("exec: agent={} intent='{}' cmd='{}'", agent_id, cli.intent, cli.command.join(" "));
+    
+    let docs = core::governance_map::related_docs("exec");
+    println!("Governed by: {}", docs.join(", "));
+
+    let start_ts = now_epoch_secs();
+    let status = std::process::Command::new(&cli.command[0])
+        .args(&cli.command[1..])
+        .status()
+        .map_err(error::DecapodError::IoError)?;
+    let end_ts = now_epoch_secs();
+
+    // Record to broker
+    let event = serde_json::json!({
+        "op": "exec",
+        "actor": agent_id,
+        "intent": cli.intent,
+        "command": cli.command,
+        "exit_code": status.code(),
+        "ts_start": start_ts,
+        "ts_end": end_ts,
+        "elapsed": end_ts - start_ts,
+    });
+
+    core::broker::log_event(&store.root, event)?;
+
+    if !status.success() {
+        return Err(error::DecapodError::ValidationError(format!("Command failed with exit code: {:?}", status.code())));
     }
 
     Ok(())

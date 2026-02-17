@@ -1,0 +1,9 @@
+{
+  "agent_id": "gemini",
+  "decapod_version": "0.25.0",
+  "git_branch": "agents/codex/R_01KHNC9RCP8DFKJGFT2T76CTFN",
+  "git_head": "b0a6fac7c5ceed595d40afda709c99dfeb61adf1",
+  "router_path": "core/DECAPOD.md",
+  "status": "flashed",
+  "ts": 1771325483
+}

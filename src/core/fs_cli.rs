@@ -39,6 +39,17 @@ pub fn run_fs_cli(
     store: &Store,
     project_root: &std::path::Path,
 ) -> Result<(), error::DecapodError> {
+    match &cli.command {
+        FsCommand::Write { .. } => {
+            let docs = crate::core::governance_map::related_docs("fs.write");
+            println!("Governed by: {}", docs.join(", "));
+        }
+        FsCommand::Read { .. } => {
+            let docs = crate::core::governance_map::related_docs("fs.read");
+            println!("Governed by: {}", docs.join(", "));
+        }
+    }
+
     match cli.command {
         FsCommand::Write { path, content } => {
             let target_path = project_root.join(&path);

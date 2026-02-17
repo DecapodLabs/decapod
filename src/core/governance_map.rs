@@ -71,6 +71,24 @@ pub fn get_governance_map() -> BTreeMap<&'static str, Vec<&'static str>> {
             "interfaces/CONTROL_PLANE.md",
         ],
     );
+    m.insert(
+        "fs",
+        vec![
+            "interfaces/STORE_MODEL.md",
+            "specs/SYSTEM.md#weights-and-balances",
+        ],
+    );
+    m.insert(
+        "fs.write",
+        vec![
+            "interfaces/STORE_MODEL.md#mutation-rules",
+            "core/DECAPOD.md#weights-and-balances",
+        ],
+    );
+    m.insert(
+        "fs.read",
+        vec!["interfaces/STORE_MODEL.md#access-patterns"],
+    );
 
     m.insert(
         "data.schema",
