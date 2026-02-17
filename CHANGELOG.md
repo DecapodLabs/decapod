@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.1](https://github.com/DecapodLabs/decapod/compare/v0.25.0...v0.25.1) - 2026-02-17
+
+### Other
+
+- update Cargo.lock dependencies
+
 ## [0.25.0](https://github.com/DecapodLabs/decapod/compare/v0.24.0...v0.25.0) - 2026-02-17
 
 ### Added
