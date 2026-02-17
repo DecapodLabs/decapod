@@ -166,6 +166,7 @@ jobs:
     env:
       DECAPOD_AGENT_ID: ${{ github.actor }}
       DECAPOD_CONTAINER: 1
+      DECAPOD_SESSION_PASSWORD: ${{ secrets.DECAPOD_SESSION_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
         with:
