@@ -36,6 +36,15 @@ This is a registered claim: (claim: claim.doc.decapod_is_router_only).
 
 Change control for key documents is outlined in: `specs/AMENDMENTS.md`.
 
+### 0.1. Entrypoint Hierarchy
+
+1. **Bootstrap**: `AGENTS.md` (and variants) — Shim to load the environment.
+2. **Router**: `core/DECAPOD.md` (this file) — Index of all subsystems.
+3. **Law**: The `constitution/` directory — Binding contracts.
+4. **Interface**: The `decapod` CLI — The active surface.
+
+Agents MUST NOT treat `AGENTS.md` as policy. It is a shell script disguised as markdown.
+
 ---
 
 ## 1. What Decapod Is (Core Function)
