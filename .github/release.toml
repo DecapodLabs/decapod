@@ -10,6 +10,8 @@ changelog_path = "CHANGELOG.md"
 git_tag_name = "v{{ version }}"
 # Release PR labels
 pr_labels = ["release"]
+# Decapod sessions are runtime-generated and ignored; allow transient dirt if present.
+allow_dirty = [".decapod/generated/sessions/codex.json"]
 
 # Semantic versioning based on conventional commits:
 # - feat: minor version bump
