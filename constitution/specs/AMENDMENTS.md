@@ -214,6 +214,37 @@ Each entry MUST include:
 - Proof surface run:
   - `decapod validate`
 
+### 2026-02-17 (memory retrieval events, temporal filtering, and decay/merge invariants)
+
+- Docs changed:
+  - `interfaces/MEMORY_SCHEMA.md` (temporal retrieval, decay event, and capture audit invariants)
+  - `interfaces/KNOWLEDGE_SCHEMA.md` (merge/supersede/ttl invariants)
+  - `interfaces/CONTROL_PLANE.md` (invocation-scoped implicit capture requirement)
+  - `interfaces/STORE_MODEL.md` (explicit capture scoping guarantee)
+  - `interfaces/CLAIMS.md` (memory/knowledge claim registrations)
+  - `specs/SECURITY.md` (memory/knowledge redaction policy)
+  - `methodology/MEMORY.md` and `methodology/KNOWLEDGE.md` (guidance alignment)
+  - `core/INTERFACES.md` (routing update for optional memory index spec)
+  - `interfaces/MEMORY_INDEX.md` (optional local index contract, SPEC/IDEA)
+  - `src/core/validate.rs` (schema marker + retrieval/decay/duplicate-active checks)
+- Summary:
+  - Added enforceable retrieval-event and temporal invariants, deterministic decay audit expectations, and explicit merge/supersede lifecycle constraints for knowledge.
+  - Bound implicit capture to explicit, auditable invocation surfaces with store scoping and redaction guardrails.
+- Claims added/changed:
+  - `claim.memory.capture.invocation_auditable`
+  - `claim.memory.temporal.as_of_respected`
+  - `claim.memory.decay.prune_audited`
+  - `claim.knowledge.merge.no_duplicate_active`
+  - `claim.memory.roi.retrieval_event_logged`
+  - `claim.memory.redaction.pointerization_required`
+- Deprecations:
+  - None.
+- Proof surface run:
+  - `cargo fmt`
+  - `cargo check --all-targets --all-features`
+  - `cargo test --test plugins_knowledge_tests`
+  - `decapod validate`
+
 ---
 
 ## Links

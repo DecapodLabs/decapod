@@ -22,6 +22,8 @@ Memory exists to reduce repeated effort and improve decision quality across sess
 2. Prefer links to TODO/knowledge/proof artifacts.
 3. Keep confidence explicit when uncertain.
 4. Prune low-value entries regularly.
+5. Capture can be automatic once enabled, but never invisible: every capture must leave an auditable event.
+6. Do not store raw secrets; use redacted text or pointers.
 
 ---
 
@@ -30,6 +32,8 @@ Memory exists to reduce repeated effort and improve decision quality across sess
 1. Retrieve only what is relevant to the active task.
 2. Treat low-confidence memory as a hypothesis.
 3. Verify before promoting conclusions.
+4. Use explicit time boundaries (`as_of`, recency windows) when historical drift matters.
+5. Record retrieval feedback outcomes (`helped|neutral|hurt|unknown`) to measure memory ROI.
 
 ---
 

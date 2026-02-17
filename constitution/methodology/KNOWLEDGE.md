@@ -25,6 +25,8 @@ Use knowledge entries to preserve context that improves future execution:
 2. Tag entries for discoverability.
 3. Mark stale or superseded entries quickly.
 4. Link actionable items to TODO IDs.
+5. Use merge keys for recurring topics to avoid duplicate active records.
+6. When replacing an entry, prefer explicit supersede linkage over overwrite.
 
 ---
 

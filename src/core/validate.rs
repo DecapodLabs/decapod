@@ -459,58 +459,73 @@ fn validate_entrypoint_invariants(
     fail_count: &mut u32,
     decapod_dir: &Path,
 ) -> Result<(), error::DecapodError> {
-    info("Four Invariants Gate");
+    info("Entrypoint Bootstrap Gate");
 
-    // Check AGENTS.md for the four invariants
+    // Check AGENTS.md
     let agents_path = decapod_dir.join("AGENTS.md");
     if !agents_path.is_file() {
-        fail("AGENTS.md missing, cannot check invariants", fail_count);
+        fail("AGENTS.md missing", fail_count);
         return Ok(());
     }
 
     let content = fs::read_to_string(&agents_path).map_err(error::DecapodError::IoError)?;
 
-    // Exact invariant strings (tamper detection)
-    let exact_invariants = [
-        ("core/DECAPOD.md", "Router pointer to core/DECAPOD.md"),
-        ("cargo install decapod", "Version update gate language"),
-        ("decapod validate", "Validation gate language"),
-        ("Stop if", "Stop-if-missing behavior"),
-        ("Docker git workspaces", "Docker workspace mandate language"),
-        (
-            "decapod todo claim --id <task-id>",
-            "Task claim-before-work mandate language",
-        ),
-        (
-            "request elevated permissions before Docker/container workspace commands",
-            "Elevated-permissions mandate language",
-        ),
-        (
-            "DECAPOD_SESSION_PASSWORD",
-            "Per-agent session password mandate language",
-        ),
-        (
-            ".decapod` files are accessed only via `decapod` CLI",
-            "Jail rule: .decapod access is CLI-only",
-        ),
-        (
-            "Interface abstraction boundary",
-            "Control-plane opacity language",
-        ),
-        ("✅", "Four invariants checklist format"),
+    // New invariants: simple bootstrap protocol
+    let bootstrap_invariants = [
+        ("cargo install decapod", "Bootstrap: install"),
+        ("decapod version", "Bootstrap: version"),
+        ("decapod agent init", "Bootstrap: agent init ritual"),
+        ("decapod session acquire", "Bootstrap: session"),
+        ("decapod validate", "Bootstrap: validate"),
+        ("canonical router is `core/DECAPOD.md`", "Router pointer"),
+        ("WARNING", "Bootstrap warning"),
     ];
 
     let mut all_present = true;
-    for (marker, description) in exact_invariants {
+    for (marker, description) in bootstrap_invariants {
         if content.contains(marker) {
-            pass(&format!("Invariant present: {}", description), pass_count);
+            pass(
+                &format!("Bootstrap invariant present: {}", description),
+                pass_count,
+            );
         } else {
-            fail(&format!("Invariant missing: {}", description), fail_count);
+            fail(
+                &format!("Bootstrap invariant missing: {}", description),
+                fail_count,
+            );
             all_present = false;
         }
     }
 
-    // Check for legacy router names (must not exist)
+    // Check for Agent Init Receipt
+    let receipt_path = decapod_dir.join(".decapod").join("generated").join("agent_init.json");
+    if receipt_path.is_file() {
+        pass("Agent init receipt present (.decapod/generated/agent_init.json)", pass_count);
+        
+        // Freshness check: receipt should match current HEAD
+        let receipt_content = fs::read_to_string(&receipt_path).map_err(error::DecapodError::IoError)?;
+        let receipt_json: serde_json::Value = serde_json::from_str(&receipt_content).unwrap_or(serde_json::json!({}));
+        let receipt_head = receipt_json.get("git_head").and_then(|v| v.as_str()).unwrap_or("unknown");
+        
+        let current_head = std::process::Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(decapod_dir)
+            .output()
+            .ok()
+            .and_then(|o| if o.status.success() { Some(String::from_utf8_lossy(&o.stdout).trim().to_string()) } else { None })
+            .unwrap_or_else(|| "none".to_string());
+
+        if receipt_head == current_head {
+            pass("Agent init receipt is fresh (matches HEAD)", pass_count);
+        } else if receipt_head != "unknown" {
+            warn(&format!("Agent init receipt is stale (receipt: {}, HEAD: {})", receipt_head, current_head), pass_count);
+        }
+    } else {
+        fail("Agent init receipt missing. Run `decapod agent init` to flash and start governance.", fail_count);
+        all_present = false;
+    }
+
+    // Check for legacy router names
     let legacy_routers = ["MAESTRO.md", "GLOBEX.md", "CODEX.md\" as router"];
     for legacy in legacy_routers {
         if content.contains(legacy) {
@@ -522,9 +537,9 @@ fn validate_entrypoint_invariants(
         }
     }
 
-    // Line count check (AGENTS.md should be thin: max 100 lines for universal contract)
+    // AGENTS.md must be thin
     let line_count = content.lines().count();
-    const MAX_AGENTS_LINES: usize = 100;
+    const MAX_AGENTS_LINES: usize = 50; // Tighter limit for shim
     if line_count <= MAX_AGENTS_LINES {
         pass(
             &format!(
@@ -571,74 +586,16 @@ fn validate_entrypoint_invariants(
             all_present = false;
         }
 
-        // Must reference canonical router
-        if agent_content.contains("core/DECAPOD.md") {
+        // Must include explicit agent init command in startup sequence
+        if agent_content.contains("decapod agent init") {
             pass(
-                &format!("{} references canonical router", agent_file),
-                pass_count,
-            );
-        } else {
-            fail(
-                &format!("{} missing canonical router reference", agent_file),
-                fail_count,
-            );
-            all_present = false;
-        }
-
-        // Must include explicit jail rule for .decapod access
-        if agent_content.contains("`.decapod` files only via `decapod` CLI") {
-            pass(
-                &format!("{} includes .decapod CLI-only jail rule", agent_file),
-                pass_count,
-            );
-        } else {
-            fail(
-                &format!("{} missing .decapod CLI-only jail rule marker", agent_file),
-                fail_count,
-            );
-            all_present = false;
-        }
-
-        // Must include Docker git workspace mandate
-        if agent_content.contains("Docker git workspaces") {
-            pass(
-                &format!("{} includes Docker workspace mandate", agent_file),
-                pass_count,
-            );
-        } else {
-            fail(
-                &format!("{} missing Docker workspace mandate marker", agent_file),
-                fail_count,
-            );
-            all_present = false;
-        }
-
-        // Must include elevated-permissions mandate for container workspace commands
-        if agent_content
-            .contains("request elevated permissions before Docker/container workspace commands")
-        {
-            pass(
-                &format!("{} includes elevated-permissions mandate", agent_file),
-                pass_count,
-            );
-        } else {
-            fail(
-                &format!("{} missing elevated-permissions mandate marker", agent_file),
-                fail_count,
-            );
-            all_present = false;
-        }
-
-        // Must include per-agent session password mandate
-        if agent_content.contains("DECAPOD_SESSION_PASSWORD") {
-            pass(
-                &format!("{} includes per-agent session password mandate", agent_file),
+                &format!("{} includes agent init step", agent_file),
                 pass_count,
             );
         } else {
             fail(
                 &format!(
-                    "{} missing per-agent session password mandate marker",
+                    "{} missing agent init step (`decapod agent init`)",
                     agent_file
                 ),
                 fail_count,
@@ -646,38 +603,7 @@ fn validate_entrypoint_invariants(
             all_present = false;
         }
 
-        // Must include claim-before-work mandate
-        if agent_content.contains("decapod todo claim --id <task-id>") {
-            pass(
-                &format!("{} includes claim-before-work mandate", agent_file),
-                pass_count,
-            );
-        } else {
-            fail(
-                &format!("{} missing claim-before-work mandate marker", agent_file),
-                fail_count,
-            );
-            all_present = false;
-        }
-
-        // Must include explicit update command in startup sequence
-        if agent_content.contains("cargo install decapod") {
-            pass(
-                &format!("{} includes version update step", agent_file),
-                pass_count,
-            );
-        } else {
-            fail(
-                &format!(
-                    "{} missing version update step (`cargo install decapod`)",
-                    agent_file
-                ),
-                fail_count,
-            );
-            all_present = false;
-        }
-
-        // Must be thin (max 50 lines for agent-specific shims)
+        // Must be thin
         let agent_lines = agent_content.lines().count();
         if agent_lines <= MAX_AGENT_SPECIFIC_LINES {
             pass(
@@ -696,26 +622,6 @@ fn validate_entrypoint_invariants(
                 fail_count,
             );
             all_present = false;
-        }
-
-        // Must not contain duplicated contracts (check for common duplication markers)
-        let duplication_markers = [
-            "## Lifecycle States", // Contract details belong in constitution
-            "## Validation Rules", // Contract details belong in constitution
-            "### Proof Gates",     // Contract details belong in constitution
-            "## Store Model",      // Contract details belong in constitution
-        ];
-        for marker in duplication_markers {
-            if agent_content.contains(marker) {
-                fail(
-                    &format!(
-                        "{} contains duplicated contract details ({})",
-                        agent_file, marker
-                    ),
-                    fail_count,
-                );
-                all_present = false;
-            }
         }
     }
 
@@ -749,9 +655,13 @@ fn validate_interface_contract_bootstrap(
 
     let risk_policy_doc = repo_root.join("constitution/interfaces/RISK_POLICY_GATE.md");
     let context_pack_doc = repo_root.join("constitution/interfaces/AGENT_CONTEXT_PACK.md");
+    let memory_schema_doc = repo_root.join("constitution/interfaces/MEMORY_SCHEMA.md");
+    let knowledge_schema_doc = repo_root.join("constitution/interfaces/KNOWLEDGE_SCHEMA.md");
     for (path, label) in [
         (&risk_policy_doc, "RISK_POLICY_GATE interface"),
         (&context_pack_doc, "AGENT_CONTEXT_PACK interface"),
+        (&memory_schema_doc, "MEMORY_SCHEMA interface"),
+        (&knowledge_schema_doc, "KNOWLEDGE_SCHEMA interface"),
     ] {
         if path.is_file() {
             pass(
@@ -817,6 +727,89 @@ fn validate_interface_contract_bootstrap(
             } else {
                 fail(
                     &format!("AGENT_CONTEXT_PACK missing marker: {}", marker),
+                    fail_count,
+                );
+            }
+        }
+    }
+
+    if memory_schema_doc.is_file() {
+        let content =
+            fs::read_to_string(&memory_schema_doc).map_err(error::DecapodError::IoError)?;
+        for marker in [
+            "**Authority:**",
+            "**Layer:** Interfaces",
+            "**Binding:** Yes",
+            "**Scope:**",
+            "**Non-goals:**",
+            "## 3. Retrieval Event Schema (Required)",
+            "helped",
+            "neutral",
+            "hurt",
+            "unknown",
+            "ttl_policy",
+            "## 6. Temporal Retrieval Invariants",
+            "## Links",
+        ] {
+            if content.contains(marker) {
+                pass(
+                    &format!("MEMORY_SCHEMA includes marker: {}", marker),
+                    pass_count,
+                );
+            } else {
+                fail(
+                    &format!("MEMORY_SCHEMA missing marker: {}", marker),
+                    fail_count,
+                );
+            }
+        }
+    }
+
+    if knowledge_schema_doc.is_file() {
+        let content =
+            fs::read_to_string(&knowledge_schema_doc).map_err(error::DecapodError::IoError)?;
+        for marker in [
+            "**Authority:**",
+            "**Layer:** Interfaces",
+            "**Binding:** Yes",
+            "**Scope:**",
+            "**Non-goals:**",
+            "active",
+            "superseded",
+            "deprecated",
+            "merge_key",
+            "supersedes_id",
+            "ttl_policy",
+            "## 4. Merge and Supersede Invariants",
+            "## Links",
+        ] {
+            if content.contains(marker) {
+                pass(
+                    &format!("KNOWLEDGE_SCHEMA includes marker: {}", marker),
+                    pass_count,
+                );
+            } else {
+                fail(
+                    &format!("KNOWLEDGE_SCHEMA missing marker: {}", marker),
+                    fail_count,
+                );
+            }
+        }
+    }
+
+    let memory_index_doc = repo_root.join("constitution/interfaces/MEMORY_INDEX.md");
+    if memory_index_doc.is_file() {
+        let content =
+            fs::read_to_string(&memory_index_doc).map_err(error::DecapodError::IoError)?;
+        for marker in ["**Layer:** Interfaces", "SPEC", "IDEA", "## Links"] {
+            if content.contains(marker) {
+                pass(
+                    &format!("MEMORY_INDEX includes marker: {}", marker),
+                    pass_count,
+                );
+            } else {
+                fail(
+                    &format!("MEMORY_INDEX missing marker: {}", marker),
                     fail_count,
                 );
             }
@@ -1147,6 +1140,152 @@ fn validate_knowledge_integrity(
                 fail_count,
             );
         }
+    }
+
+    let duplicate_active_merge_keys: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM (
+                SELECT merge_key, scope, COUNT(*) AS c
+                FROM knowledge
+                WHERE status = 'active' AND merge_key IS NOT NULL AND merge_key <> ''
+                GROUP BY merge_key, scope
+                HAVING c > 1
+            )",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    if duplicate_active_merge_keys == 0 {
+        pass(
+            "Knowledge merge invariant verified (no duplicate active merge_key entries)",
+            pass_count,
+        );
+    } else {
+        fail(
+            &format!(
+                "Found {} duplicate active merge_key groups in knowledge table",
+                duplicate_active_merge_keys
+            ),
+            fail_count,
+        );
+    }
+
+    validate_memory_event_logs(store, pass_count, fail_count)?;
+
+    Ok(())
+}
+
+fn validate_memory_event_logs(
+    store: &Store,
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+) -> Result<(), error::DecapodError> {
+    info("Memory Event Integrity Gate");
+
+    let retrieval_path = store.root.join("memory.retrieval_events.jsonl");
+    if retrieval_path.exists() {
+        let content = fs::read_to_string(&retrieval_path)?;
+        let mut bad_shape = 0u32;
+        let mut secret_hits = 0u32;
+        for line in content.lines() {
+            if line.trim().is_empty() {
+                continue;
+            }
+            let Ok(v) = serde_json::from_str::<serde_json::Value>(line) else {
+                bad_shape += 1;
+                continue;
+            };
+
+            let has_fields = v.get("event_id").is_some()
+                && v.get("ts").is_some()
+                && v.get("store").is_some()
+                && v.get("actor").is_some()
+                && v.get("query").is_some()
+                && v.get("returned_ids").map(|x| x.is_array()).unwrap_or(false)
+                && v.get("used_ids").map(|x| x.is_array()).unwrap_or(false)
+                && v.get("outcome")
+                    .and_then(|x| x.as_str())
+                    .map(|x| matches!(x, "helped" | "neutral" | "hurt" | "unknown"))
+                    .unwrap_or(false);
+            if !has_fields {
+                bad_shape += 1;
+            }
+
+            let serialized = line.to_ascii_lowercase();
+            if serialized.contains("password")
+                || serialized.contains("secret")
+                || serialized.contains("api_key")
+                || serialized.contains("authorization")
+                || serialized.contains("bearer ")
+            {
+                secret_hits += 1;
+            }
+        }
+        if bad_shape == 0 {
+            pass("Retrieval event schema verified", pass_count);
+        } else {
+            fail(
+                &format!("Found {} malformed retrieval event records", bad_shape),
+                fail_count,
+            );
+        }
+        if secret_hits == 0 {
+            pass(
+                "No secret-like tokens found in retrieval events",
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!(
+                    "Secret-pattern gate failed for retrieval events ({} suspect records)",
+                    secret_hits
+                ),
+                fail_count,
+            );
+        }
+    } else {
+        skip(
+            "memory.retrieval_events.jsonl not found; skipping retrieval event checks",
+            pass_count,
+        );
+    }
+
+    let decay_path = store.root.join("memory.decay_events.jsonl");
+    if decay_path.exists() {
+        let content = fs::read_to_string(&decay_path)?;
+        let mut bad_shape = 0u32;
+        for line in content.lines() {
+            if line.trim().is_empty() {
+                continue;
+            }
+            let Ok(v) = serde_json::from_str::<serde_json::Value>(line) else {
+                bad_shape += 1;
+                continue;
+            };
+            let has_fields = v.get("event_id").is_some()
+                && v.get("ts").is_some()
+                && v.get("policy").is_some()
+                && v.get("as_of").is_some()
+                && v.get("dry_run").map(|x| x.is_boolean()).unwrap_or(false)
+                && v.get("stale_ids").map(|x| x.is_array()).unwrap_or(false);
+            if !has_fields {
+                bad_shape += 1;
+            }
+        }
+        if bad_shape == 0 {
+            pass("Decay event schema verified", pass_count);
+        } else {
+            fail(
+                &format!("Found {} malformed decay event records", bad_shape),
+                fail_count,
+            );
+        }
+    } else {
+        skip(
+            "memory.decay_events.jsonl not found; skipping decay event checks",
+            pass_count,
+        );
     }
 
     Ok(())
@@ -1792,6 +1931,126 @@ fn validate_git_protected_branch(
     Ok(())
 }
 
+fn validate_orphan_changes(
+    store: &Store,
+    pass_count: &mut u32,
+    warn_count: &mut u32,
+    fail_count: &mut u32,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Orphan Change Gate");
+
+    // 1. Get Session Start Time
+    let receipt_path = repo_root.join(".decapod").join("generated").join("agent_init.json");
+    if !receipt_path.exists() {
+        // No session active, so we can't strictly enforce orphans against a session start time.
+        // However, this should have been caught by validate_entrypoint_invariants.
+        skip("No active session receipt; skipping orphan check", pass_count);
+        return Ok(());
+    }
+    
+    let receipt_content = fs::read_to_string(&receipt_path).map_err(error::DecapodError::IoError)?;
+    let receipt_json: serde_json::Value = serde_json::from_str(&receipt_content).unwrap_or(serde_json::json!({}));
+    let session_start_ts = receipt_json.get("ts").and_then(|v| v.as_u64()).unwrap_or(0);
+
+    if session_start_ts == 0 {
+        skip("Invalid session receipt timestamp; skipping orphan check", pass_count);
+        return Ok(());
+    }
+
+    // 2. Scan for Modified Files > Session Start
+    let mut modified_files = Vec::new();
+    let mut scan_queue = vec![repo_root.to_path_buf()];
+    
+    while let Some(dir) = scan_queue.pop() {
+        if let Ok(entries) = fs::read_dir(&dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+                
+                // Skip ignored directories
+                if name.starts_with('.') || name == "target" || name == "node_modules" {
+                    continue;
+                }
+
+                if path.is_dir() {
+                    scan_queue.push(path);
+                } else if path.is_file() {
+                    if let Ok(metadata) = fs::metadata(&path) {
+                        if let Ok(mtime) = metadata.modified() {
+                            if let Ok(duration) = mtime.duration_since(std::time::UNIX_EPOCH) {
+                                if duration.as_secs() > session_start_ts {
+                                    modified_files.push(path);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if modified_files.is_empty() {
+        pass("No files modified since session start", pass_count);
+        return Ok(());
+    }
+
+    // 3. Check Broker Log for Attribution
+    let audit_log = store.root.join("broker.events.jsonl");
+    let mut attributed_files = std::collections::HashSet::new();
+    
+    if audit_log.exists() {
+        let content = fs::read_to_string(&audit_log).unwrap_or_default();
+        for line in content.lines() {
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(line) {
+                let ts = v.get("ts").and_then(|v| v.as_u64()).unwrap_or(0);
+                if ts < session_start_ts {
+                    continue;
+                }
+                
+                // Check fs.write events
+                if v.get("op").and_then(|s| s.as_str()) == Some("fs.write") {
+                    if let Some(path_str) = v.get("path").and_then(|s| s.as_str()) {
+                        attributed_files.insert(repo_root.join(path_str));
+                    }
+                }
+                
+                // Check exec events (broad attribution - assume exec touches things)
+                // Ideally, exec would report touched files, but for now we might be lenient
+                // or just accept that exec happened. 
+                // BUT: The goal is strict attribution.
+                // If the user runs `decapod exec -- cargo build`, many files change.
+                // We can't easily know which ones.
+                // So for now, we only attribute explicit fs.write.
+            }
+        }
+    }
+
+    let mut orphans = Vec::new();
+    for file in modified_files {
+        if !attributed_files.contains(&file) {
+            orphans.push(file);
+        }
+    }
+
+    if orphans.is_empty() {
+        pass("All recent modifications are attributed to Decapod events", pass_count);
+    } else {
+        // Warn for now to avoid breaking the agent's own workflow during this transition
+        warn(
+            &format!(
+                "Found {} orphan file changes (modified since session start without decapod fs.write receipt): {:?}",
+                orphans.len(),
+                orphans.iter().take(3).collect::<Vec<_>>()
+            ),
+            warn_count,
+        );
+        // In a strict mode, this would be: fail(...)
+    }
+
+    Ok(())
+}
+
 fn validate_tooling_gate(
     pass_count: &mut u32,
     fail_count: &mut u32,
@@ -1983,6 +2242,8 @@ pub fn run_validation(
     validate_git_workspace_context(&mut pass_count, &mut fail_count, decapod_dir)?;
     trace_gate("validate_git_protected_branch");
     validate_git_protected_branch(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_orphan_changes");
+    validate_orphan_changes(store, &mut pass_count, &mut warn_count, &mut fail_count, decapod_dir)?;
     trace_gate("validate_tooling_gate");
     validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 

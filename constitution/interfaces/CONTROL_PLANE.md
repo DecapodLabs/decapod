@@ -28,6 +28,7 @@ Golden rules:
 6. Preserve control-plane opacity at the operator interface: communicate intent/actions/outcomes, not command-surface mechanics, unless diagnostics are explicitly requested.
 7. Liveness must be maintained through invocation heartbeat: each Decapod command invocation should refresh agent presence.
 8. Session access must be bound to agent identity plus ephemeral password (`DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`) for command authorization (claim: `claim.session.agent_password_required`).
+9. Implicit capture is allowed only as invocation-driven, explicit opt-in per store behavior; every capture must emit an auditable event (claim: `claim.memory.capture.invocation_auditable`).
 
 This is how you get determinism, auditability, and eventually policy.
 

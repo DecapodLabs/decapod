@@ -45,6 +45,7 @@ All guarantees here are registered in `interfaces/CLAIMS.md`.
 - no auto-seeding (claim: claim.store.no_auto_seeding): repo store content must never appear in the user store automatically
 - explicit store selection (claim: claim.store.explicit_store_selection): `--store` is the preferred selector; `--root` is an escape hatch and must be treated as dangerous
 - `.decapod` CLI-only access (claim: claim.store.decapod_cli_only): agents must not read/write `<repo>/.decapod/*` directly; use `decapod` commands
+- capture scoping (claim: claim.memory.capture.invocation_auditable): automatic capture behavior must be explicitly enabled per store and remain auditable
 
 ---
 
