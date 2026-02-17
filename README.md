@@ -17,39 +17,46 @@
 
 ---
 
-> Local-first. Repo-native. Built to make autonomous coding work auditable and enforceable.
+> Local-first. Repo-native. Built to turn agent output from "probably fine" into verifiable delivery.
 
 ## What Is Decapod
 
-Decapod gives coding agents a consistent way to operate inside a repository.
-It provides a stable CLI/RPC interface, workflow guardrails, and validation gates so work is verifiable before completion.
+Decapod is an execution contract for coding agents.
+It standardizes how agents operate in a repository, enforces workflow boundaries, and requires evidence before completion is accepted.
 
-Decapod is not a hosted service and not tied to a single model provider. It runs locally in your repo.
+Not a hosted control plane. Not locked to one model vendor. It runs in your repo, on your infrastructure.
+
+## What It Replaces
+
+- Narrative completion claims with explicit pass/fail gates.
+- Ad-hoc agent behavior with consistent operational contracts.
+- Fragile one-agent flows with repeatable multi-agent coordination patterns.
+- "Trust the summary" with auditable delivery signals.
 
 ## Assurance Model
 
 Decapod is built around three outcomes for agent execution:
 
-- `Advisory`: practical guidance toward the next correct move.
-- `Interlock`: explicit constraints that block unsafe or non-compliant flow.
-- `Attestation`: structured evidence that work actually satisfies completion criteria.
+- `Advisory`: route the agent toward the highest-leverage next action.
+- `Interlock`: block unsafe, out-of-policy, or out-of-sequence execution.
+- `Attestation`: produce structured evidence that completion criteria were actually met.
 
-You can think of it as a runtime contract for moving from intent to implementation with fewer silent failure modes.
+This is how intent survives contact with automation: guide, constrain, verify.
 
 ## Why Teams Use It
 
-- Standardizes how agents interact with a codebase.
-- Keeps execution local and auditable.
-- Reduces "done" claims without evidence.
-- Supports parallel work with safer branch/workspace patterns.
+- Agents follow one contract instead of inventing workflow per session.
+- Quality gates are part of execution, not an afterthought.
+- Repo policy stays enforceable as autonomy increases.
+- Teams can scale parallel agent work without losing control.
 
 ## Capability Highlights
 
-- Guided project understanding through interview-style prompting.
-- Standards-aware execution that respects project conventions and policy.
-- Workspace safety checks for parallel agent operation.
-- Validation and completion gates that produce auditable outcomes.
-- Machine-readable RPC surface for multi-agent orchestration.
+- Guided project understanding via structured prompts.
+- Standards-aware execution aligned to project expectations.
+- Workspace safety for isolated implementation flow.
+- Validation/completion gates with explicit outcomes.
+- Machine-readable RPC interface for orchestration and tooling integration.
 
 ## Quick Start
 
