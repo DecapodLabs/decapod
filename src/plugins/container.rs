@@ -243,12 +243,6 @@ Warning: without isolated containers, concurrent agents can step on each other."
             ));
         }
     };
-    if push || pr {
-        return Err(error::DecapodError::ValidationError(
-            "Container runs are local-workspace-only. --push/--pr are disabled; fold branch locally, then push from host repo if needed."
-                .to_string(),
-        ));
-    }
 
     let image = resolve_runtime_image(&docker, &repo, image_profile, image_override)?;
 
@@ -913,7 +907,7 @@ fn build_container_script(user_cmd: &str, branch: &str, base_branch: &str) -> St
     script.push('\n');
 
     script.push_str(
-        "if [ -n \"$(git_safe status --porcelain)\" ]; then\n  git_safe add -A\n  git_safe commit -m \"chore: automated container updates\"\nfi\n",
+        "if [ -n \"$(git_safe status --porcelain)\" ]; then\n  git_safe add -A\n  git_safe commit -m \"chore: automated container updates\"\n  git_safe push -u origin HEAD\nfi\n",
     );
 
     script
@@ -1025,7 +1019,7 @@ mod tests {
         assert!(!joined.contains("git_safe fetch --no-write-fetch-head origin 'master'"));
         assert!(!joined.contains("git_safe rebase origin/'master'"));
         assert!(joined.contains("decapod update"));
-        assert!(!joined.contains("git_safe push -u origin 'ahr/branch'"));
+        assert!(joined.contains("git_safe push -u origin HEAD"));
         assert!(!joined.contains("gh auth status"));
         assert!(!joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
     }

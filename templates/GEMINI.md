@@ -21,6 +21,8 @@ Required constraints:
 - See `AGENTS.md` for full policy.
 - `core/DECAPOD.md` is the router.
 - `.decapod` files only via `decapod` CLI.
+- Git-tracked implementation must run in Docker git workspaces (not host worktree edits).
+- Claim tasks before substantive work: `decapod todo claim --id <task-id>`.
 - Keep operator output semantic (intent/actions/outcomes) unless diagnostics are requested.
 
 Four invariants:
