@@ -3743,6 +3743,9 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         rusqlite::params![agent_id, ev.ts],
                     )?;
                 }
+                "agent.session.cleanup" => {
+                    // No-op for rebuild - session cleanup is audit-only
+                }
                 "ownership.claim" => {
                     let task_id = ev.task_id.clone().unwrap_or_default();
                     let agent_id = ev.payload.get("agent_id").and_then(|v| v.as_str()).unwrap_or(&ev.actor);
