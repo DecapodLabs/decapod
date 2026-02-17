@@ -28,6 +28,7 @@ fn setup_workspace() -> (TempDir, PathBuf) {
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["init", "--force"])
         .current_dir(&dir)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("decapod init");
     assert!(out.status.success(), "decapod init --force failed");
@@ -35,6 +36,7 @@ fn setup_workspace() -> (TempDir, PathBuf) {
     let session = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["session", "acquire"])
         .current_dir(&dir)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("decapod session acquire");
     assert!(
@@ -51,6 +53,7 @@ fn run(dir: &PathBuf, args: &[&str]) -> (bool, String) {
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(args)
         .current_dir(dir)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("failed to run decapod");
     let combined = format!(

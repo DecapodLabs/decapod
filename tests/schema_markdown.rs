@@ -9,6 +9,7 @@ fn schema_markdown_format_is_rendered() {
     let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(dir)
         .args(["init", "--force"])
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("failed to initialize decapod workspace");
     assert!(
@@ -20,6 +21,7 @@ fn schema_markdown_format_is_rendered() {
     let session = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(dir)
         .args(["session", "acquire"])
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("failed to acquire session");
     assert!(
@@ -31,6 +33,7 @@ fn schema_markdown_format_is_rendered() {
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(dir)
         .args(["data", "schema", "--format", "md", "--deterministic"])
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("failed to execute decapod");
 
