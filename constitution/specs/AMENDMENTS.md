@@ -148,6 +148,38 @@ Each entry MUST include:
 - Proof surface run:
   - `decapod validate` (attempted in repo store; currently fails due `RusqliteError(SystemIoFailure, "disk I/O error")`)
 
+### 2026-02-17 (task-claim governance)
+
+- Docs changed:
+  - `interfaces/CONTROL_PLANE.md` (added claim-before-work requirement in golden rules and standard sequence)
+  - `interfaces/CLAIMS.md` (registered `claim.todo.claim_before_work`)
+  - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md` (entrypoint reminder)
+  - `templates/AGENTS.md`, `templates/CLAUDE.md`, `templates/GEMINI.md`, `templates/CODEX.md` (template-source reminder)
+- Summary:
+  - Codified a task-claim gate: agents must claim TODO work before substantive implementation.
+- Claims added/changed:
+  - `claim.todo.claim_before_work`
+- Deprecations:
+  - None.
+- Proof surface run:
+  - `decapod validate`
+
+### 2026-02-17 (container workspace mandate)
+
+- Docs changed:
+  - `specs/GIT.md` (added binding container-workspace execution requirement)
+  - `interfaces/CLAIMS.md` (registered `claim.git.container_workspace_required`)
+  - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md` (entrypoint mandate)
+  - `templates/AGENTS.md`, `templates/CLAUDE.md`, `templates/GEMINI.md`, `templates/CODEX.md` (template-source mandate)
+- Summary:
+  - Established a binding rule that git-tracked implementation work must occur in Docker-isolated git workspaces.
+- Claims added/changed:
+  - `claim.git.container_workspace_required`
+- Deprecations:
+  - None.
+- Proof surface run:
+  - `decapod validate`
+
 ---
 
 ## Links

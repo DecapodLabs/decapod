@@ -21,11 +21,13 @@ The binary and constitution evolve. Always refresh before acting.
 
 After startup:
 1. Use `decapod` as the control plane; `.decapod` files are accessed only via `decapod` CLI.
-2. Run `decapod validate` before claiming verified/compliant.
-3. Close work via `decapod todo done --id <task-id>` (and optional approved `todo archive`); never use `decapod complete`.
-4. Preserve Interface abstraction boundary: communicate intent/actions/outcomes by default.
-5. Ask concise clarification questions for ambiguous/high-risk/irreversible actions.
-6. Before mutation, verify active command surfaces via `decapod data schema`.
+2. Run git-tracked implementation only in Docker git workspaces (not host worktree edits).
+3. Claim work before substantive implementation: `decapod todo claim --id <task-id>`.
+4. Run `decapod validate` before claiming verified/compliant.
+5. Close work via `decapod todo done --id <task-id>` (and optional approved `todo archive`); never use `decapod complete`.
+6. Preserve Interface abstraction boundary: communicate intent/actions/outcomes by default.
+7. Ask concise clarification questions for ambiguous/high-risk/irreversible actions.
+8. Before mutation, verify active command surfaces via `decapod data schema`.
 
 If the router is missing or `decapod` is unavailable: Stop if uncertain and ask the human for the entrypoint.
 

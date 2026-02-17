@@ -61,6 +61,8 @@ Columns:
 | claim.memory.distill_proof_required | `memory.md` must be produced by deterministic distillation with a named proof surface. | `interfaces/AGENT_CONTEXT_PACK.md` | not_enforced | planned: deterministic distill proof check | SPEC pending distill command/proof surface. |
 | claim.context_pack.security_scoped_loading | Sensitive context-pack memory is scope-gated and not auto-loaded into broad shared contexts. | `interfaces/AGENT_CONTEXT_PACK.md` | not_enforced | planned: scoped-load policy checks | SPEC pending runtime loader policy enforcement. |
 | claim.context_pack.correction_loop_governed | Corrections must be persisted through control-plane artifacts and proofed, not mental notes. | `interfaces/AGENT_CONTEXT_PACK.md` | not_enforced | planned: correction-to-proof audit gate | SPEC pending end-to-end trace enforcement. |
+| claim.todo.claim_before_work | Agents must claim a TODO before substantive implementation work on that task. | `interfaces/CONTROL_PLANE.md` | partially_enforced | `decapod todo claim` ownership records + procedural review | Enforced by process today; future validate gate may enforce ownership-before-mutation traces. |
+| claim.git.container_workspace_required | Git-tracked implementation work must execute in Docker-isolated git workspaces, not direct host worktree edits. | `specs/GIT.md` | not_enforced | planned: workspace-origin policy checks | Binding requirement; enforcement surface pending. |
 
 ---
 
