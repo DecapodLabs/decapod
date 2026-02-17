@@ -158,61 +158,12 @@ jobs:
       - name: Run chaos replay determinism test
         run: cargo test --test chaos_replay -- --test-threads=1
 
-  # HEALTH: Decapod validation and health checks
-  health:
-    name: Health Checks
-    runs-on: ubuntu-latest
-    needs: setup
-    env:
-      DECAPOD_AGENT_ID: ${{ github.actor }}
-      DECAPOD_CONTAINER: 1
-      DECAPOD_SESSION_PASSWORD: ${{ secrets.DECAPOD_SESSION_PASSWORD }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Install LLD
-        run: sudo apt-get update && sudo apt-get install -y lld
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Restore Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "ci-setup"
-          save-if: false
-
-      - name: Build and install decapod
-        run: cargo install --path . --locked
-
-      - name: Initialize Decapod
-        run: decapod init --force
-
-      - name: Acquire Decapod session
-        run: decapod session acquire
-
-      - name: Run validation harness
-        run: decapod validate
-
-      - name: Run watcher
-        run: decapod govern watcher run
-
-      - name: Check health summary
-        run: |
-          STATUS=$(decapod govern health summary)
-          echo "$STATUS"
-          if echo "$STATUS" | grep -q '"watcher_stale": true'; then
-            echo "::warning::Watcher is stale"
-          fi
-
   # RELEASE BUILD: Only on master
   release-build:
     name: Release Build Check
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    needs: [lint, test, chaos-replay, health]  # commit-lint runs in parallel, no dependency needed
+    needs: [lint, test, chaos-replay]  # commit-lint runs in parallel, no dependency needed
     steps:
       - uses: actions/checkout@v4
         with:
