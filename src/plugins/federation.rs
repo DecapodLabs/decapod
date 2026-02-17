@@ -1935,11 +1935,54 @@ pub fn validate_federation(
             }
 
             let tmp_conn = crate::core::db::db_connect(&tmp_db.to_string_lossy())?;
-            tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_META)?;
-            tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES)?;
-            tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES)?;
-            tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES)?;
-            tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS)?;
+            tmp_conn
+                .execute("PRAGMA temp_store=MEMORY;", [])
+                .map_err(error::DecapodError::RusqliteError)?;
+            tmp_conn
+                .execute_batch(schemas::FEDERATION_DB_SCHEMA_META)
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "federation.validate rebuild schema failed (meta) for {}: {}",
+                        tmp_db.display(),
+                        e
+                    ))
+                })?;
+            tmp_conn
+                .execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES)
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "federation.validate rebuild schema failed (nodes) for {}: {}",
+                        tmp_db.display(),
+                        e
+                    ))
+                })?;
+            tmp_conn
+                .execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES)
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "federation.validate rebuild schema failed (sources) for {}: {}",
+                        tmp_db.display(),
+                        e
+                    ))
+                })?;
+            tmp_conn
+                .execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES)
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "federation.validate rebuild schema failed (edges) for {}: {}",
+                        tmp_db.display(),
+                        e
+                    ))
+                })?;
+            tmp_conn
+                .execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS)
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "federation.validate rebuild schema failed (events) for {}: {}",
+                        tmp_db.display(),
+                        e
+                    ))
+                })?;
 
             let file = fs::File::open(&events_path).map_err(error::DecapodError::IoError)?;
             let reader = BufReader::new(file);
