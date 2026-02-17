@@ -27,6 +27,8 @@ AI coding agents can write code fast. Shipping it safely is the hard part.
 
 Decapod gives agents a consistent operational contract: guided execution, enforceable boundaries, and auditable completion signals. It replaces "looks done" with explicit outcomes.
 
+Decapod is architecture-agnostic software. It is not a Linux kernel binding and is not coupled to a specific OS or CPU architecture.
+
 ## Assurance Model
 
 Decapod is built around three execution outcomes:
@@ -35,7 +37,7 @@ Decapod is built around three execution outcomes:
 - `Interlock`: hard stops for unsafe or out-of-policy flow.
 - `Attestation`: structured evidence that completion criteria were met.
 
-## Architecture Model
+## Operating Model
 
 ```text
 Human Intent
