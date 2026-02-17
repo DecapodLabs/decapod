@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.3](https://github.com/DecapodLabs/decapod/compare/v0.25.2...v0.25.3) - 2026-02-17
+
+### Other
+
+- *(readme)* clarify platform-agnostic operating model
+- *(readme)* add high-level ascii architecture model
+- *(readme)* sharpen positioning and differentiate value
+- *(readme)* hint assurance model and capability surface
+- *(readme)* remove demo gif and tighten public positioning
+
 ## [0.25.2](https://github.com/DecapodLabs/decapod/compare/v0.25.1...v0.25.2) - 2026-02-17
 
 ### Added
