@@ -33,6 +33,7 @@ pub mod assets;
 pub mod assurance;
 pub mod broker;
 pub mod db;
+pub mod docs;
 pub mod docs_cli;
 pub mod error;
 pub mod external_action;

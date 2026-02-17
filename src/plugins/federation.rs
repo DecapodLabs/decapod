@@ -255,7 +255,7 @@ fn now_ts() -> String {
     format!("{}Z", secs)
 }
 
-fn federation_db_path(root: &Path) -> PathBuf {
+pub fn federation_db_path(root: &Path) -> PathBuf {
     root.join(schemas::FEDERATION_DB_NAME)
 }
 

@@ -15,6 +15,7 @@
 //!
 //! Use `decapod rpc` for programmatic access. The CLI subcommands are for human convenience.
 
+use crate::core::docs::DocFragment;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
 use std::collections::HashMap;
@@ -51,6 +52,9 @@ pub struct RpcResponse {
     /// Context capsule with relevant documentation slices
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context_capsule: Option<ContextCapsule>,
+    /// Result of the operation
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<serde_json::Value>,
     /// Allowed next operations
     pub allowed_next_ops: Vec<AllowedOp>,
     /// Blockers preventing progress
@@ -77,22 +81,24 @@ pub struct Receipt {
     pub op: String,
     /// Timestamp (ISO 8601)
     pub timestamp: String,
-    /// Content hash of the operation
-    pub hash: String,
+    /// Content hash of inputs
+    pub inputs_hash: String,
+    /// Content hash of outputs
+    pub outputs_hash: String,
     /// Paths touched by the operation
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub touched_paths: Vec<String>,
     /// Governing anchors (rules that governed this operation)
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub governing_anchors: Vec<String>,
-    /// Changes made
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub changes: Option<serde_json::Value>,
 }
 
 /// Context capsule containing relevant documentation
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ContextCapsule {
+    /// Relevant fragments from the constitution/authority docs
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fragments: Vec<DocFragment>,
     /// Relevant spec slices
     #[serde(skip_serializing_if = "Option::is_none")]
     pub spec: Option<String>,
@@ -292,6 +298,48 @@ pub fn generate_capabilities() -> CapabilitiesReport {
         version: env!("CARGO_PKG_VERSION").to_string(),
         capabilities: vec![
             Capability {
+                name: "daemonless".to_string(),
+                description: "Decapod never runs in the background; it is invoked by agents".to_string(),
+                stability: "stable".to_string(),
+                cost: "none".to_string(),
+            },
+            Capability {
+                name: "deterministic".to_string(),
+                description: "Same inputs produce identical outputs given fixed repo state".to_string(),
+                stability: "stable".to_string(),
+                cost: "none".to_string(),
+            },
+            Capability {
+                name: "context.resolve".to_string(),
+                description: "Resolve relevant constitution/authority fragments for an operation".to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "schema.get".to_string(),
+                description: "Get authoritative JSON schemas for entities".to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "store.upsert".to_string(),
+                description: "Deterministic storage for decisions/knowledge/todos".to_string(),
+                stability: "stable".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "store.query".to_string(),
+                description: "Retrieve canonical entities deterministically".to_string(),
+                stability: "stable".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "validate.run".to_string(),
+                description: "Run deterministic validation gates".to_string(),
+                stability: "stable".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
                 name: "workspace.ensure".to_string(),
                 description: "Create or enter an isolated agent workspace".to_string(),
                 stability: "stable".to_string(),
@@ -301,72 +349,6 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 name: "workspace.status".to_string(),
                 description: "Check current workspace and branch status".to_string(),
                 stability: "stable".to_string(),
-                cost: "low".to_string(),
-            },
-            Capability {
-                name: "workspace.publish".to_string(),
-                description: "Produce a merge-ready patch/PR bundle".to_string(),
-                stability: "stable".to_string(),
-                cost: "medium".to_string(),
-            },
-            Capability {
-                name: "scaffold.next_question".to_string(),
-                description: "Get the next best question for spec/architecture interview"
-                    .to_string(),
-                stability: "beta".to_string(),
-                cost: "low".to_string(),
-            },
-            Capability {
-                name: "scaffold.apply_answer".to_string(),
-                description: "Apply an answer to the interview state".to_string(),
-                stability: "beta".to_string(),
-                cost: "low".to_string(),
-            },
-            Capability {
-                name: "scaffold.generate_artifacts".to_string(),
-                description: "Generate spec/architecture/security/ops docs from interview"
-                    .to_string(),
-                stability: "beta".to_string(),
-                cost: "medium".to_string(),
-            },
-            Capability {
-                name: "standards.resolve".to_string(),
-                description: "Resolve industry defaults + override.md into resolved standards"
-                    .to_string(),
-                stability: "stable".to_string(),
-                cost: "low".to_string(),
-            },
-            Capability {
-                name: "todo.claim".to_string(),
-                description: "Claim a task from the backlog".to_string(),
-                stability: "stable".to_string(),
-                cost: "low".to_string(),
-            },
-            Capability {
-                name: "todo.done".to_string(),
-                description: "Mark claimed work as done".to_string(),
-                stability: "stable".to_string(),
-                cost: "low".to_string(),
-            },
-            Capability {
-                name: "validate".to_string(),
-                description: "Run authoritative validation gates".to_string(),
-                stability: "stable".to_string(),
-                cost: "medium".to_string(),
-            },
-            Capability {
-                name: "mentor.obligations".to_string(),
-                description: "Get obligations pointing to prior decisions, specs, and todos"
-                    .to_string(),
-                stability: "beta".to_string(),
-                cost: "low".to_string(),
-            },
-            Capability {
-                name: "assurance.evaluate".to_string(),
-                description:
-                    "Evaluate action safety via advisory, interlock, and attestation primitives"
-                        .to_string(),
-                stability: "beta".to_string(),
                 cost: "low".to_string(),
             },
         ],
@@ -382,22 +364,9 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 ],
             },
             SubsystemInfo {
-                name: "workspace".to_string(),
+                name: "knowledge".to_string(),
                 status: "active".to_string(),
-                ops: vec![
-                    "ensure".to_string(),
-                    "status".to_string(),
-                    "publish".to_string(),
-                ],
-            },
-            SubsystemInfo {
-                name: "interview".to_string(),
-                status: "active".to_string(),
-                ops: vec![
-                    "next_question".to_string(),
-                    "apply_answer".to_string(),
-                    "generate_artifacts".to_string(),
-                ],
+                ops: vec!["add".to_string(), "search".to_string()],
             },
             SubsystemInfo {
                 name: "federation".to_string(),
@@ -439,13 +408,16 @@ pub fn generate_capabilities() -> CapabilitiesReport {
 pub fn success_response(
     request_id: String,
     op: String,
+    params: serde_json::Value,
+    result: Option<serde_json::Value>,
     touched_paths: Vec<String>,
     context_capsule: Option<ContextCapsule>,
     allowed_next_ops: Vec<AllowedOp>,
 ) -> RpcResponse {
     let timestamp = chrono::Utc::now().to_rfc3339();
-    let hash_input = format!("{}:{}:{}", op, timestamp, request_id);
-    let hash = format!("{:x}", sha2::Sha256::digest(hash_input));
+    
+    let inputs_hash = format!("{:x}", sha2::Sha256::digest(serde_json::to_string(&params).unwrap_or_default()));
+    let outputs_hash = format!("{:x}", sha2::Sha256::digest(serde_json::to_string(&result).unwrap_or_default()));
 
     RpcResponse {
         id: request_id,
@@ -453,12 +425,13 @@ pub fn success_response(
         receipt: Receipt {
             op,
             timestamp,
-            hash,
+            inputs_hash,
+            outputs_hash,
             touched_paths,
             governing_anchors: vec!["core:workspace_protection".to_string()],
-            changes: None,
         },
         context_capsule,
+        result,
         allowed_next_ops,
         blocked_by: vec![],
         interlock: None,
@@ -472,13 +445,14 @@ pub fn success_response(
 pub fn error_response(
     request_id: String,
     op: String,
+    params: serde_json::Value,
     code: String,
     message: String,
     blocker: Option<Blocker>,
 ) -> RpcResponse {
     let timestamp = chrono::Utc::now().to_rfc3339();
-    let hash_input = format!("{}:{}:{}", op, timestamp, request_id);
-    let hash = format!("{:x}", sha2::Sha256::digest(hash_input));
+    let inputs_hash = format!("{:x}", sha2::Sha256::digest(serde_json::to_string(&params).unwrap_or_default()));
+    let outputs_hash = format!("{:x}", sha2::Sha256::digest("error"));
 
     let blocked_by = if let Some(b) = blocker {
         vec![b]
@@ -492,12 +466,13 @@ pub fn error_response(
         receipt: Receipt {
             op,
             timestamp,
-            hash,
+            inputs_hash,
+            outputs_hash,
             touched_paths: vec![],
             governing_anchors: vec![],
-            changes: None,
         },
         context_capsule: None,
+        result: None,
         allowed_next_ops: vec![AllowedOp {
             op: "agent.init".to_string(),
             reason: "Session may be invalid or expired".to_string(),
