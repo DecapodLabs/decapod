@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.8](https://github.com/DecapodLabs/decapod/compare/v0.23.7...v0.23.8) - 2026-02-17
+
+### Fixed
+
+- add agent.session.cleanup event handler in todo rebuild
+
 ## [0.23.7](https://github.com/DecapodLabs/decapod/compare/v0.23.6...v0.23.7) - 2026-02-17
 
 ### Other
