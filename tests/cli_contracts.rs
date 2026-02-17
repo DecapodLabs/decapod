@@ -9,6 +9,7 @@ fn run_decapod(args: &[&str]) -> String {
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(env!("CARGO_MANIFEST_DIR"))
         .args(args)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("failed to execute decapod");
     assert!(

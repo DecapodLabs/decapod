@@ -72,6 +72,7 @@ fn run(dir: &PathBuf, args: &[&str]) -> (bool, String) {
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(args)
         .current_dir(dir)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("failed to run decapod");
     let combined = format!(

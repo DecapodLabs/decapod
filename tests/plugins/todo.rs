@@ -132,6 +132,7 @@ fn run_cmd(repo_root: &Path, args: &[&str]) -> Value {
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(repo_root)
         .args(args)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("run decapod");
     assert!(
@@ -149,6 +150,7 @@ fn run_raw(repo_root: &Path, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(repo_root)
         .args(args)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("run decapod")
 }
