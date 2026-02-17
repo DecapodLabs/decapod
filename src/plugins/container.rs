@@ -303,8 +303,8 @@ Warning: without isolated containers, concurrent agents can step on each other."
             &repo,
             &workspace.branch,
             &workspace.base_branch,
-            pr_title.as_deref(),
-            pr_body.as_deref(),
+            pr_title,
+            pr_body,
         )?;
     }
 
