@@ -2,6 +2,15 @@
 
 **This is a Decapod-managed repository.**
 
+## MANDATORY: Docker + Git Workspace Path
+
+**⚠️ CRITICAL REQUIREMENT:** All agent work MUST execute within the Docker container workspace environment with git workspace path isolation. This is MANDATORY and REQUIRED for any time an agent modifies any files which are source controlled with git.
+
+- Work MUST run inside the designated container workspace
+- Git operations MUST use the isolated workspace path (not the host repo)
+- Branch creation, commits, and pushes MUST occur from within the container
+- Never modify git-controlled files directly on the host - always use the container workflow
+
 ## Required Protocol
 
 **⚠️ MANDATORY START SEQUENCE - Run these EVERY session before ANY work:**

@@ -230,8 +230,14 @@ fn info(message: &str) {
     let _ = message;
 }
 
+fn trace_gate(name: &str) {
+    if std::env::var("DECAPOD_VALIDATE_TRACE").ok().as_deref() == Some("1") {
+        println!("validate: trace {}", name);
+    }
+}
+
 fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let count: i64 = conn
         .query_row("SELECT COUNT(*) FROM tasks", [], |row| row.get(0))
         .map_err(error::DecapodError::RusqliteError)?;
@@ -239,7 +245,7 @@ fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
 }
 
 fn fetch_tasks_fingerprint(db_path: &Path) -> Result<String, error::DecapodError> {
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let mut stmt = conn
         .prepare("SELECT id,title,status,updated_at,dir_path,scope,priority FROM tasks ORDER BY id")
         .map_err(error::DecapodError::RusqliteError)?;
@@ -679,7 +685,11 @@ fn validate_interface_contract_bootstrap(
     if risk_policy_doc.is_file() {
         let content = fs::read_to_string(&risk_policy_doc).map_err(error::DecapodError::IoError)?;
         for marker in [
+            "**Authority:**",
+            "**Layer:** Interfaces",
             "**Binding:** Yes",
+            "**Scope:**",
+            "**Non-goals:**",
             "## 3. Current-Head SHA Discipline",
             "## 6. Browser Evidence Manifest (UI/Critical Flows)",
             "## 8. Truth Labels and Upgrade Path",
@@ -703,7 +713,11 @@ fn validate_interface_contract_bootstrap(
         let content =
             fs::read_to_string(&context_pack_doc).map_err(error::DecapodError::IoError)?;
         for marker in [
+            "**Authority:**",
+            "**Layer:** Interfaces",
             "**Binding:** Yes",
+            "**Scope:**",
+            "**Non-goals:**",
             "## 2. Deterministic Load Order",
             "## 3. Mutation Authority",
             "## 4. Memory Distillation Contract",
@@ -903,7 +917,7 @@ fn validate_health_cache_integrity(
         return Ok(());
     }
 
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
 
     // Check if any health_cache entries exist without corresponding proof_events
     let orphaned: i64 = conn.query_row(
@@ -983,7 +997,7 @@ fn validate_policy_integrity(
         return Ok(());
     }
 
-    let _conn = db::db_connect(&db_path.to_string_lossy())?;
+    let _conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
 
     let audit_log = store.root.join("broker.events.jsonl");
     if audit_log.exists() {
@@ -1030,7 +1044,7 @@ fn validate_knowledge_integrity(
         return Ok(());
     }
 
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
 
     let missing_provenance: i64 = conn
         .query_row(
@@ -1128,7 +1142,7 @@ fn validate_lineage_hard_gate(
         }
     }
 
-    let conn = db::db_connect(&federation_db.to_string_lossy())?;
+    let conn = db::db_connect_for_validate(&federation_db.to_string_lossy())?;
     let mut violations = Vec::new();
 
     for task_id in add_candidates {
@@ -1647,38 +1661,65 @@ pub fn run_validation(
     // Store validations
     match store.kind {
         StoreKind::User => {
+            trace_gate("validate_user_store_blank_slate");
             validate_user_store_blank_slate(&mut pass_count, &mut fail_count)?;
         }
         StoreKind::Repo => {
+            trace_gate("validate_repo_store_dogfood");
             validate_repo_store_dogfood(store, &mut pass_count, &mut fail_count, decapod_dir)?;
         }
     }
 
+    trace_gate("validate_repo_map");
     validate_repo_map(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_no_legacy_namespaces");
     validate_no_legacy_namespaces(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_embedded_self_contained");
     validate_embedded_self_contained(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_docs_templates_bucket");
     validate_docs_templates_bucket(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_entrypoint_invariants");
     validate_entrypoint_invariants(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_interface_contract_bootstrap");
     validate_interface_contract_bootstrap(&mut pass_count, &mut fail_count, decapod_dir)?;
     println!("validate: gate Four Invariants Gate");
+    trace_gate("validate_health_purity");
     validate_health_purity(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_project_scoped_state");
     validate_project_scoped_state(store, &mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_schema_determinism");
     validate_schema_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_health_cache_integrity");
     validate_health_cache_integrity(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_risk_map");
     validate_risk_map(store, &mut pass_count, &mut warn_count)?;
+    trace_gate("validate_risk_map_violations");
     validate_risk_map_violations(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_policy_integrity");
     validate_policy_integrity(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_knowledge_integrity");
     validate_knowledge_integrity(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_lineage_hard_gate");
     validate_lineage_hard_gate(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_repomap_determinism");
     validate_repomap_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_watcher_audit");
     validate_watcher_audit(store, &mut pass_count, &mut warn_count)?;
+    trace_gate("validate_watcher_purity");
     validate_watcher_purity(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_archive_integrity");
     validate_archive_integrity(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_control_plane_contract");
     validate_control_plane_contract(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_canon_mutation");
     validate_canon_mutation(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_heartbeat_invocation_gate");
     validate_heartbeat_invocation_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_markdown_primitives_roundtrip_gate");
     validate_markdown_primitives_roundtrip_gate(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_federation_gates");
     validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_tooling_gate");
     validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 
     let fail_total = VALIDATION_FAILS
