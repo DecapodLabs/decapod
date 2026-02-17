@@ -21,7 +21,7 @@ Minimum contract sections:
 - `docsDriftRules` (required doc updates for control-plane changes)
 - `evidenceRequirements` (risk tier/path class -> evidence manifest requirements)
 
-Template reference: `contracts/risk-policy.example.json`.
+Template reference: section `## 10. Contract Example (JSON)`.
 
 ---
 
@@ -114,6 +114,69 @@ Planned (not yet enforced):
 
 ---
 
+## 10. Contract Example (JSON)
+
+```json
+{
+  "version": "1",
+  "riskTierRules": {
+    "high": [
+      "app/api/legal-chat/**",
+      "lib/tools/**",
+      "db/schema.ts"
+    ],
+    "medium": [
+      "app/ui/**",
+      "apps/web/**"
+    ],
+    "low": [
+      "**"
+    ]
+  },
+  "mergePolicy": {
+    "high": {
+      "requiredChecks": [
+        "risk-policy-gate",
+        "code-review-agent",
+        "harness-smoke",
+        "browser-evidence-verify",
+        "ci-pipeline"
+      ]
+    },
+    "medium": {
+      "requiredChecks": [
+        "risk-policy-gate",
+        "code-review-agent",
+        "ci-pipeline"
+      ]
+    },
+    "low": {
+      "requiredChecks": [
+        "risk-policy-gate",
+        "ci-pipeline"
+      ]
+    }
+  },
+  "docsDriftRules": {
+    "controlPlaneTouchedRequires": [
+      "constitution/interfaces/RISK_POLICY_GATE.md",
+      "constitution/interfaces/CLAIMS.md"
+    ]
+  },
+  "evidenceRequirements": {
+    "uiOrCriticalFlowChanged": {
+      "requireManifest": true,
+      "requiredChecks": [
+        "browser-evidence-capture",
+        "browser-evidence-verify"
+      ]
+    }
+  }
+}
+```
+
+---
+
 ## Links
 
 ### Core Router
@@ -130,4 +193,4 @@ Planned (not yet enforced):
 - `interfaces/AGENT_CONTEXT_PACK.md` - Agent context pack contract
 
 ### Machine Contracts
-- `contracts/risk-policy.example.json` - Example risk-policy contract template
+- `interfaces/RISK_POLICY_GATE.md` - Inline JSON contract example (§10)
