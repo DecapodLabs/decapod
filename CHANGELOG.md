@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.4](https://github.com/DecapodLabs/decapod/compare/v0.25.3...v0.25.4) - 2026-02-17
+
+### Other
+
+- *(init)* make init instant by deferring DB setup to runtime
+
 ## [0.25.3](https://github.com/DecapodLabs/decapod/compare/v0.25.2...v0.25.3) - 2026-02-17
 
 ### Other
