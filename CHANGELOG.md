@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0](https://github.com/DecapodLabs/decapod/compare/v0.24.0...v0.25.0) - 2026-02-17
+
+### Added
+
+- *(governance)* add weights and balances enforcement
+
+### Other
+
+- remove health check job
+- add DECAPOD_SESSION_PASSWORD env var for health check
+- add DECAPOD_CONTAINER=1 for GitHub Actions health check
+
 ## [0.24.0](https://github.com/DecapodLabs/decapod/compare/v0.23.10...v0.24.0) - 2026-02-17
 
 ### Other
