@@ -67,7 +67,10 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
     match cli.command {
         DocsCommand::Related { path } => {
             let docs = crate::core::governance_map::related_docs(&path);
-            println!("Constitution documents related to `decapod {}`:", path.replace('.', " "));
+            println!(
+                "Constitution documents related to `decapod {}`:",
+                path.replace('.', " ")
+            );
             for doc in docs {
                 println!("- {}", doc);
             }

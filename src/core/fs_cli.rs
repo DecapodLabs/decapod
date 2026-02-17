@@ -34,15 +34,20 @@ pub enum FsCommand {
     },
 }
 
-pub fn run_fs_cli(cli: FsCli, store: &Store, project_root: &std::path::Path) -> Result<(), error::DecapodError> {
+pub fn run_fs_cli(
+    cli: FsCli,
+    store: &Store,
+    project_root: &std::path::Path,
+) -> Result<(), error::DecapodError> {
     match cli.command {
         FsCommand::Write { path, content } => {
             let target_path = project_root.join(&path);
-            
+
             // Security check: simple path traversal prevention
             if !target_path.starts_with(project_root) {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "Path must be within project root: {}", path.display()
+                    "Path must be within project root: {}",
+                    path.display()
                 )));
             }
 
@@ -50,7 +55,9 @@ pub fn run_fs_cli(cli: FsCli, store: &Store, project_root: &std::path::Path) -> 
                 Some(c) => c,
                 None => {
                     let mut buffer = String::new();
-                    std::io::stdin().read_to_string(&mut buffer).map_err(error::DecapodError::IoError)?;
+                    std::io::stdin()
+                        .read_to_string(&mut buffer)
+                        .map_err(error::DecapodError::IoError)?;
                     buffer
                 }
             };
@@ -68,7 +75,8 @@ pub fn run_fs_cli(cli: FsCli, store: &Store, project_root: &std::path::Path) -> 
             fs::write(&target_path, &data).map_err(error::DecapodError::IoError)?;
 
             // Log to broker
-            let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let agent_id =
+                std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let event = serde_json::json!({
                 "op": "fs.write",
                 "actor": agent_id,
@@ -79,18 +87,27 @@ pub fn run_fs_cli(cli: FsCli, store: &Store, project_root: &std::path::Path) -> 
             });
             crate::core::broker::log_event(&store.root, event)?;
 
-            println!("✓ Wrote {} bytes to {} (hash: {})", data.len(), path.display(), &hash[0..8]);
+            println!(
+                "✓ Wrote {} bytes to {} (hash: {})",
+                data.len(),
+                path.display(),
+                &hash[0..8]
+            );
             Ok(())
         }
         FsCommand::Read { path } => {
             let target_path = project_root.join(&path);
-             if !target_path.starts_with(project_root) {
+            if !target_path.starts_with(project_root) {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "Path must be within project root: {}", path.display()
+                    "Path must be within project root: {}",
+                    path.display()
                 )));
             }
             if !target_path.exists() {
-                return Err(error::DecapodError::NotFound(format!("File not found: {}", path.display())));
+                return Err(error::DecapodError::NotFound(format!(
+                    "File not found: {}",
+                    path.display()
+                )));
             }
             let content = fs::read_to_string(&target_path).map_err(error::DecapodError::IoError)?;
             print!("{}", content);
