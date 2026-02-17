@@ -171,6 +171,6 @@ For this project, we use a 5-level priority system:
 ### plugins/AUTOUPDATE.md
 ### plugins/CONTAINER.md
 ## Runtime Guard Override (auto-generated)
-DECAPOD_CONTAINER_RUNTIME_DISABLED=true
-reason: missing dedicated ssh key (see .decapod/generated/container_ssh_key_path)
+DECAPOD_CONTAINER_RUNTIME_DISABLED=false
+reason: enabled for cli-routing task
 warning: disabling isolated containers increases risk of concurrent agents stepping on each other.
