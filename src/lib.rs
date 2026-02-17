@@ -80,7 +80,7 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs_cli, error, migration, proof, repomap, scaffold,
+    db, docs, docs_cli, error, migration, proof, repomap, scaffold,
     store::{Store, StoreKind},
     validate,
 };
@@ -905,6 +905,12 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "workspace.ensure"
             | "assurance.evaluate"
             | "mentor.obligations"
+            | "context.resolve"
+            | "schema.get"
+            | "store.upsert"
+            | "store.query"
+            | "validate.run"
+            | "standards.resolve"
     )
 }
 
@@ -927,6 +933,21 @@ fn enforce_worktree_requirement_for_rpc(
     )))
 }
 
+fn rpc_op_bypasses_session(op: &str) -> bool {
+    matches!(
+        op,
+        "agent.init"
+            | "context.resolve"
+            | "schema.get"
+            | "store.upsert"
+            | "store.query"
+            | "validate.run"
+            | "workspace.status"
+            | "workspace.ensure"
+            | "standards.resolve"
+    )
+}
+
 fn requires_session_token(command: &Command) -> bool {
     match command {
         // Bootstrap/session lifecycle + version + capabilities are sessionless.
@@ -936,6 +957,14 @@ fn requires_session_token(command: &Command) -> bool {
         Command::Data(DataCli {
             command: DataCommand::Schema(_),
         }) => false,
+        Command::Rpc(rpc_cli) => {
+            if let Some(ref op) = rpc_cli.op {
+                !rpc_op_bypasses_session(op)
+            } else {
+                // If op is not provided via flag, we'll check it after parsing JSON in run_rpc_command
+                false 
+            }
+        }
         _ => true,
     }
 }
@@ -2025,6 +2054,10 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 
     enforce_worktree_requirement_for_rpc(&request.op, project_root)?;
 
+    if !rpc_op_bypasses_session(&request.op) {
+        ensure_session_valid()?;
+    }
+
     let response = match request.op.as_str() {
         "agent.init" => {
             // Session initialization with receipt
@@ -2033,6 +2066,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 
             let context_capsule = if workspace_status.can_work {
                 Some(ContextCapsule {
+                    fragments: vec![],
                     spec: Some("Agent initialized successfully".to_string()),
                     architecture: None,
                     security: None,
@@ -2057,8 +2091,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             };
 
             let mut response =
-                success_response(request.id, request.op, vec![], context_capsule, allowed_ops);
-            response.receipt.changes = Some(serde_json::json!({
+                success_response(request.id, request.op, request.params.clone(), None, vec![], context_capsule, allowed_ops);
+            response.result = Some(serde_json::json!({
                 "environment_context": {
                     "repo_root": project_root.to_string_lossy(),
                     "workspace_path": project_root.to_string_lossy(),
@@ -2079,11 +2113,13 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let mut response = success_response(
                 request.id.clone(),
                 request.op.clone(),
+                request.params.clone(),
+                None,
                 vec![],
                 None,
                 allowed_ops,
             );
-            response.receipt.changes = Some(serde_json::json!({
+            response.result = Some(serde_json::json!({
                 "git_branch": status.git.current_branch,
                 "git_is_protected": status.git.is_protected,
                 "in_container": status.container.in_container,
@@ -2114,6 +2150,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             success_response(
                 request.id,
                 request.op,
+                request.params.clone(),
+                None,
                 vec![format!(".git/refs/heads/{}", status.git.current_branch)],
                 None,
                 allowed_ops,
@@ -2135,6 +2173,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             success_response(
                 request.id,
                 request.op,
+                request.params.clone(),
+                None,
                 vec![],
                 None,
                 vec![AllowedOp {
@@ -2143,6 +2183,378 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     required_params: vec![],
                 }],
             )
+        }
+        "context.resolve" => {
+            let params = &request.params;
+            let op = params.get("op").and_then(|v| v.as_str());
+            let touched_paths = params.get("touched_paths").and_then(|v| v.as_array());
+            let intent_tags = params.get("intent_tags").and_then(|v| v.as_array());
+            let _limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(5);
+
+            let mut fragments = Vec::new();
+
+            // Deterministic relevance mapping
+            if let Some(o) = op {
+                match o {
+                    "workspace.ensure" | "workspace.status" => {
+                        if let Some(f) = docs::get_fragment(project_root, "core/DECAPOD.md", Some("workspaces")) {
+                            fragments.push(f);
+                        }
+                    },
+                    "validate" => {
+                        if let Some(f) = docs::get_fragment(project_root, "core/DECAPOD.md", Some("validation")) {
+                            fragments.push(f);
+                        }
+                    },
+                    _ => {}
+                }
+            }
+
+            if let Some(paths) = touched_paths {
+                for p in paths.iter().filter_map(|v| v.as_str()) {
+                    if p.contains("rpc") {
+                        if let Some(f) = docs::get_fragment(project_root, "interfaces/CONTROL_PLANE.md", None) {
+                            fragments.push(f);
+                        }
+                    }
+                }
+            }
+
+            if let Some(tags) = intent_tags {
+                for t in tags.iter().filter_map(|v| v.as_str()) {
+                    if t == "security" {
+                        if let Some(f) = docs::get_fragment(project_root, "specs/SECURITY.md", None) {
+                            fragments.push(f);
+                        }
+                    }
+                }
+            }
+
+            fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
+            fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
+            fragments.truncate(5);
+
+            let result = serde_json::json!({
+                "fragments": fragments
+            });
+
+            success_response(
+                request.id,
+                request.op,
+                request.params.clone(),
+                Some(result),
+                vec![],
+                Some(ContextCapsule {
+                    fragments,
+                    spec: None,
+                    architecture: None,
+                    security: None,
+                    standards: None,
+                }),
+                vec![]
+            )
+        }
+        "schema.get" => {
+            let params = &request.params;
+            let entity = params.get("entity").and_then(|v| v.as_str());
+            match entity {
+                Some("todo") => success_response(
+                    request.id,
+                    request.op,
+                    request.params.clone(),
+                    Some(serde_json::json!({
+                        "schema_version": "v1",
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "title": { "type": "string" },
+                                "description": { "type": "string" },
+                                "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+                                "tags": { "type": "string" }
+                            },
+                            "required": ["title"]
+                        }
+                    })),
+                    vec![],
+                    None,
+                    vec![]
+                ),
+                Some("knowledge") => success_response(
+                    request.id,
+                    request.op,
+                    request.params.clone(),
+                    Some(serde_json::json!({
+                        "schema_version": "v1",
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string" },
+                                "title": { "type": "string" },
+                                "text": { "type": "string" },
+                                "provenance": { "type": "string" }
+                            },
+                            "required": ["id", "title", "text", "provenance"]
+                        }
+                    })),
+                    vec![],
+                    None,
+                    vec![]
+                ),
+                Some("decision") => success_response(
+                    request.id,
+                    request.op,
+                    request.params.clone(),
+                    Some(serde_json::json!({
+                        "schema_version": "v1",
+                        "json_schema": {
+                            "type": "object",
+                            "properties": {
+                                "title": { "type": "string" },
+                                "rationale": { "type": "string" },
+                                "options": { "type": "array", "items": { "type": "string" } },
+                                "chosen": { "type": "string" }
+                            },
+                            "required": ["title", "rationale", "chosen"]
+                        }
+                    })),
+                    vec![],
+                    None,
+                    vec![]
+                ),
+                _ => error_response(
+                    request.id,
+                    request.op,
+                    request.params.clone(),
+                    "invalid_entity".to_string(),
+                    format!("Invalid or missing entity: {:?}", entity),
+                    None
+                ),
+            }
+        }
+        "store.upsert" => {
+            let params = &request.params;
+            let entity = params.get("entity").and_then(|v| v.as_str());
+            let payload = params.get("payload");
+            let _provenance = params.get("provenance");
+
+            match entity {
+                Some("todo") => {
+                    let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let description = payload.and_then(|p| p.get("description")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let priority = payload.and_then(|p| p.get("priority")).and_then(|v| v.as_str()).unwrap_or("medium").to_string();
+                    let tags = payload.and_then(|p| p.get("tags")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+
+                    let args = todo::TodoCommand::Add {
+                        title,
+                        description,
+                        priority,
+                        tags,
+                        owner: "".to_string(),
+                        due: None,
+                        r#ref: "".to_string(),
+                        dir: None,
+                        depends_on: "".to_string(),
+                        blocks: "".to_string(),
+                        parent: None,
+                    };
+                    let project_store = Store {
+                        kind: StoreKind::Repo,
+                        root: project_root.join(".decapod").join("data"),
+                    };
+                    let res = todo::add_task(&project_store.root, &args)?;
+                    success_response(
+                        request.id,
+                        request.op,
+                        request.params.clone(),
+                        Some(serde_json::json!({
+                            "id": res.get("id"),
+                            "stored": true
+                        })),
+                        vec![],
+                        None,
+                        vec![]
+                    )
+                },
+                Some("knowledge") => {
+                    let id = payload.and_then(|p| p.get("id")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let text = payload.and_then(|p| p.get("text")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let provenance = payload.and_then(|p| p.get("provenance")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+
+                    let project_store = Store {
+                        kind: StoreKind::Repo,
+                        root: project_root.join(".decapod").join("data"),
+                    };
+                    knowledge::add_knowledge(&project_store, &id, &title, &text, &provenance, None)?;
+                    success_response(
+                        request.id,
+                        request.op,
+                        request.params.clone(),
+                        Some(serde_json::json!({
+                            "id": id,
+                            "stored": true
+                        })),
+                        vec![],
+                        None,
+                        vec![]
+                    )
+                },
+                Some("decision") => {
+                    // Decisions land in federation for now as a common store
+                    let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let rationale = payload.and_then(|p| p.get("rationale")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let chosen = payload.and_then(|p| p.get("chosen")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    
+                    let project_store = Store {
+                        kind: StoreKind::Repo,
+                        root: project_root.join(".decapod").join("data"),
+                    };
+                    let content = format!("Decision: {}\nRationale: {}", chosen, rationale);
+                    let node_id = federation::add_node(
+                        &project_store,
+                        &title,
+                        "decision",
+                        "notable",
+                        "agent_inferred",
+                        &content,
+                        "rpc:store.upsert",
+                        "",
+                        "repo",
+                        None,
+                        "agent"
+                    )?;
+                    success_response(
+                        request.id,
+                        request.op,
+                        request.params.clone(),
+                        Some(serde_json::json!({
+                            "id": node_id,
+                            "stored": true
+                        })),
+                        vec![],
+                        None,
+                        vec![]
+                    )
+                },
+                _ => error_response(
+                    request.id,
+                    request.op,
+                    request.params.clone(),
+                    "invalid_entity".to_string(),
+                    format!("Invalid or missing entity: {:?}", entity),
+                    None
+                ),
+            }
+        }
+        "store.query" => {
+            let params = &request.params;
+            let entity = params.get("entity").and_then(|v| v.as_str());
+            let query = params.get("query");
+
+            match entity {
+                Some("todo") => {
+                    let status = query.and_then(|q| q.get("status")).and_then(|v| v.as_str()).map(|s| s.to_string());
+                    let project_store = Store {
+                        kind: StoreKind::Repo,
+                        root: project_root.join(".decapod").join("data"),
+                    };
+                    let tasks = todo::list_tasks(&project_store.root, status, None, None, None, None)?;
+                    success_response(
+                        request.id,
+                        request.op,
+                        request.params.clone(),
+                        Some(serde_json::json!({
+                            "items": tasks,
+                            "next_page": null
+                        })),
+                        vec![],
+                        None,
+                        vec![]
+                    )
+                },
+                Some("knowledge") => {
+                    let text = query.and_then(|q| q.get("text")).and_then(|v| v.as_str()).unwrap_or("");
+                    let project_store = Store {
+                        kind: StoreKind::Repo,
+                        root: project_root.join(".decapod").join("data"),
+                    };
+                    let entries = knowledge::search_knowledge(&project_store, text)?;
+                    success_response(
+                        request.id,
+                        request.op,
+                        request.params.clone(),
+                        Some(serde_json::json!({
+                            "items": entries,
+                            "next_page": null
+                        })),
+                        vec![],
+                        None,
+                        vec![]
+                    )
+                },
+                Some("decision") => {
+                    let project_store = Store {
+                        kind: StoreKind::Repo,
+                        root: project_root.join(".decapod").join("data"),
+                    };
+                    let nodes = plugins::federation_ext::list_nodes(&project_store.root, Some("decision".to_string()), None, None, None)?;
+                    success_response(
+                        request.id,
+                        request.op,
+                        request.params.clone(),
+                        Some(serde_json::json!({
+                            "items": nodes,
+                            "next_page": null
+                        })),
+                        vec![],
+                        None,
+                        vec![]
+                    )
+                },
+                _ => error_response(
+                    request.id,
+                    request.op,
+                    request.params.clone(),
+                    "invalid_entity".to_string(),
+                    format!("Invalid or missing entity: {:?}", entity),
+                    None
+                ),
+            }
+        }
+        "validate.run" => {
+            let project_store = Store {
+                kind: StoreKind::Repo,
+                root: project_root.join(".decapod").join("data"),
+            };
+            
+            // We need to capture the output of validate::run_validation
+            // For now, we'll just run it and return a simple success result
+            // as it currently prints to stdout and manages thread-local state.
+            let res = validate::run_validation(&project_store, project_root, project_root);
+            
+            match res {
+                Ok(_) => {
+                    success_response(
+                        request.id,
+                        request.op,
+                        request.params.clone(),
+                        Some(serde_json::json!({ "success": true })),
+                        vec![],
+                        None,
+                        vec![]
+                    )
+                },
+                Err(e) => {
+                    error_response(
+                        request.id,
+                        request.op,
+                        request.params.clone(),
+                        "validation_failed".to_string(),
+                        e.to_string(),
+                        None
+                    )
+                }
+            }
         }
         "scaffold.next_question" => {
             let project_name = request
@@ -2158,6 +2570,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let mut response = success_response(
                 request.id,
                 request.op,
+                request.params.clone(),
+                None,
                 vec![],
                 None,
                 vec![AllowedOp {
@@ -2168,12 +2582,12 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             );
 
             if let Some(q) = question {
-                response.receipt.changes = Some(serde_json::json!({
+                response.result = Some(serde_json::json!({
                     "interview_id": interview.id,
                     "question": q,
                 }));
             } else {
-                response.receipt.changes = Some(serde_json::json!({
+                response.result = Some(serde_json::json!({
                     "interview_id": interview.id,
                     "complete": true,
                 }));
@@ -2189,7 +2603,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 .ok_or_else(|| {
                     error::DecapodError::ValidationError("question_id required".to_string())
                 })?;
-            let value = request.params.get("value").cloned().ok_or_else(|| {
+            let value = request.params.clone().get("value").cloned().ok_or_else(|| {
                 error::DecapodError::ValidationError("value required".to_string())
             })?;
 
@@ -2201,6 +2615,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let mut response = success_response(
                 request.id,
                 request.op,
+                request.params.clone(),
+                None,
                 vec![],
                 None,
                 vec![AllowedOp {
@@ -2218,7 +2634,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 }],
             );
 
-            response.receipt.changes = Some(serde_json::json!({
+            response.result = Some(serde_json::json!({
                 "answers_count": interview.answers.len(),
                 "is_complete": interview.is_complete,
             }));
@@ -2239,6 +2655,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             success_response(
                 request.id,
                 request.op,
+                request.params.clone(),
+                None,
                 touched_paths,
                 None,
                 vec![AllowedOp {
@@ -2261,6 +2679,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             }
 
             let context_capsule = ContextCapsule {
+                fragments: vec![],
                 spec: None,
                 architecture: None,
                 security: None,
@@ -2270,6 +2689,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             success_response(
                 request.id,
                 request.op,
+                request.params.clone(),
+                None,
                 vec![],
                 Some(context_capsule),
                 vec![],
@@ -2326,6 +2747,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let obligations = engine.compute_obligations(&ctx)?;
 
             let context_capsule = ContextCapsule {
+                fragments: vec![],
                 spec: None,
                 architecture: None,
                 security: None,
@@ -2335,6 +2757,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let mut response = success_response(
                 request.id,
                 request.op,
+                request.params.clone(),
+                None,
                 vec![],
                 Some(context_capsule),
                 vec![AllowedOp {
@@ -2344,7 +2768,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 }],
             );
 
-            response.receipt.changes = Some(serde_json::json!({
+            response.result = Some(serde_json::json!({
                 "obligations": obligations,
             }));
 
@@ -2394,7 +2818,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     .get("phase")
                     .cloned()
                     .and_then(|v| serde_json::from_value(v).ok()),
-                time_budget_s: request.params.get("time_budget_s").and_then(|v| v.as_u64()),
+                time_budget_s: request.params.clone().get("time_budget_s").and_then(|v| v.as_u64()),
             };
 
             let engine = AssuranceEngine::new(project_root);
@@ -2402,6 +2826,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let mut response = success_response(
                 request.id,
                 request.op,
+                request.params.clone(),
+                None,
                 input.touched_paths.clone(),
                 None,
                 if let Some(interlock) = &evaluated.interlock {
@@ -2425,7 +2851,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             response.interlock = evaluated.interlock.clone();
             response.advisory = Some(evaluated.advisory.clone());
             response.attestation = Some(evaluated.attestation.clone());
-            response.receipt.changes = Some(serde_json::json!({
+            response.result = Some(serde_json::json!({
                 "assurance_evaluated": true,
                 "interlock_code": evaluated.interlock.as_ref().map(|i| i.code.clone()),
             }));
@@ -2447,6 +2873,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         _ => error_response(
             request.id,
             request.op.clone(),
+            request.params.clone(),
             "unknown_op".to_string(),
             format!("Unknown operation: {}", request.op),
             None,
