@@ -80,7 +80,7 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs_cli, error, migration, output, proof, repomap, scaffold, schemas,
+    db, docs_cli, error, migration, proof, repomap, scaffold,
     store::{Store, StoreKind},
     validate,
 };
@@ -95,8 +95,6 @@ use sha2::{Digest, Sha256};
 use std::fs;
 use std::io::Read;
 use std::io::Write;
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -705,55 +703,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
             }
 
-            // Create .decapod/data for init
-            let setup_store_root = setup_decapod_root.join("data");
-            if !init_group.dry_run {
-                std::fs::create_dir_all(&setup_store_root).map_err(error::DecapodError::IoError)?;
-            }
-
-            // `--dry-run` should not perform any mutations.
-            let mut db_created = 0usize;
-            let mut db_preserved = 0usize;
-            let mut init_warnings: Vec<String> = Vec::new();
-            if !init_group.dry_run {
-                // Create schema-only, empty databases without broker/audit side effects.
-                // Runtime commands can perform additional idempotent migrations as needed.
-                (db_created, db_preserved) =
-                    init_bootstrap_schema_only_databases(&setup_store_root)?;
-
-                write_init_container_ssh_key_path(&target_dir)?;
-                let has_runtime = init_has_container_runtime();
-                let dedicated_key_hint = init_container_ssh_key_hint(&target_dir);
-                let has_dedicated_key = init_has_dedicated_agent_key(&target_dir);
-
-                if !has_runtime {
-                    init_warnings.push(
-                        "container runtime missing (install Docker or Podman for isolated execution)"
-                            .to_string(),
-                    );
-                }
-
-                if !has_dedicated_key {
-                    init_warnings.push(format!(
-                        "missing dedicated SSH key ({})",
-                        dedicated_key_hint
-                    ));
-                }
-
-                if !has_runtime || !has_dedicated_key {
-                    let mut reasons = Vec::new();
-                    if !has_runtime {
-                        reasons.push("missing docker/podman");
-                    }
-                    if !has_dedicated_key {
-                        reasons.push("missing dedicated ssh key (see .decapod/generated/container_ssh_key_path)");
-                    }
-                    ensure_init_container_disable_override(&target_dir, &reasons.join(", "))?;
-                    init_warnings.push(
-                        "container subsystem disabled until prerequisites are met".to_string(),
-                    );
-                }
-            }
+            // Databases are created lazily on first use by runtime commands.
+            // Init only generates the project structure files for speed.
 
             // Determine which agent files to generate based on flags
             // Individual flags override existing files list
@@ -809,12 +760,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                     "apply"
                 }
             );
-            if !init_group.dry_run {
-                println!(
-                    "init: store db+{}={} mode=schema-only-empty",
-                    db_created, db_preserved
-                );
-            }
             println!(
                 "init: files entry+{}={}~{} cfg+{}={}~{} backups={}",
                 scaffold_summary.entrypoints_created,
@@ -825,13 +770,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                 scaffold_summary.config_preserved,
                 backup_count
             );
-            if !init_warnings.is_empty() {
-                println!(
-                    "init: warnings {}: {}",
-                    init_warnings.len(),
-                    output::preview_messages(&init_warnings, 2, 120)
-                );
-            }
             println!("init: status=ready");
         }
         Command::Session(session_cli) => {
@@ -987,164 +925,6 @@ fn enforce_worktree_requirement_for_rpc(
         "RPC op '{}' requires isolated git worktree; current checkout is not a worktree (branch='{}'). Run `decapod workspace ensure --branch agent/<id>/<topic>` and execute from the reported worktree path.",
         op, status.git.current_branch
     )))
-}
-
-fn init_create_schema_only_db(
-    db_path: &Path,
-    statements: &[&str],
-) -> Result<(), error::DecapodError> {
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
-    for stmt in statements {
-        conn.execute_batch(stmt)?;
-    }
-    Ok(())
-}
-
-fn init_create_todo_schema_only_db(db_path: &Path) -> Result<(), error::DecapodError> {
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
-    for stmt in [
-        schemas::TODO_DB_SCHEMA_META,
-        schemas::TODO_DB_SCHEMA_TASKS,
-        schemas::TODO_DB_SCHEMA_TASK_EVENTS,
-        schemas::TODO_DB_SCHEMA_INDEX_STATUS,
-        schemas::TODO_DB_SCHEMA_INDEX_SCOPE,
-        schemas::TODO_DB_SCHEMA_INDEX_DIR,
-        schemas::TODO_DB_SCHEMA_INDEX_EVENTS_TASK,
-        schemas::TODO_DB_SCHEMA_TASK_VERIFICATION,
-        schemas::TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS,
-        schemas::TODO_DB_SCHEMA_CATEGORIES,
-        schemas::TODO_DB_SCHEMA_INDEX_CATEGORY_NAME,
-        schemas::TODO_DB_SCHEMA_AGENT_CATEGORY_CLAIMS,
-        schemas::TODO_DB_SCHEMA_INDEX_AGENT_CATEGORY_AGENT,
-        schemas::TODO_DB_SCHEMA_AGENT_PRESENCE,
-        schemas::TODO_DB_SCHEMA_INDEX_AGENT_PRESENCE_LAST_SEEN,
-        schemas::TODO_DB_SCHEMA_AGENT_TRUST,
-        schemas::TODO_DB_SCHEMA_INDEX_AGENT_TRUST_LEVEL,
-        schemas::TODO_DB_SCHEMA_RISK_ZONES,
-        schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME,
-        schemas::TODO_DB_SCHEMA_TASK_OWNERS,
-        schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK,
-        schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES,
-        schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK,
-        schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON,
-        schemas::TODO_DB_SCHEMA_AGENT_EXPERTISE,
-        schemas::TODO_DB_SCHEMA_INDEX_AGENT_EXPERTISE_AGENT,
-    ] {
-        conn.execute_batch(stmt)?;
-    }
-    Ok(())
-}
-
-fn init_create_teammate_schema_only_db(db_path: &Path) -> Result<(), error::DecapodError> {
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
-    for stmt in [
-        teammate::TEAMMATE_DB_SCHEMA_PREFERENCES,
-        teammate::TEAMMATE_DB_SCHEMA_SKILLS,
-        teammate::TEAMMATE_DB_SCHEMA_PATTERNS,
-        teammate::TEAMMATE_DB_SCHEMA_OBSERVATIONS,
-        teammate::TEAMMATE_DB_SCHEMA_CONSOLIDATIONS,
-        teammate::TEAMMATE_DB_SCHEMA_AGENT_PROMPTS,
-        teammate::TEAMMATE_DB_SCHEMA_INDEX_PREF_CATEGORY,
-        teammate::TEAMMATE_DB_SCHEMA_INDEX_PREF_KEY,
-        teammate::TEAMMATE_DB_SCHEMA_INDEX_PREF_ACCESS,
-        teammate::TEAMMATE_DB_SCHEMA_INDEX_SKILL_NAME,
-        teammate::TEAMMATE_DB_SCHEMA_INDEX_PATTERN_CATEGORY,
-        teammate::TEAMMATE_DB_SCHEMA_INDEX_OBS_PROCESSED,
-        teammate::TEAMMATE_DB_SCHEMA_INDEX_PROMPT_CONTEXT,
-    ] {
-        conn.execute_batch(stmt)?;
-    }
-    Ok(())
-}
-
-fn init_bootstrap_schema_only_databases(
-    store_root: &Path,
-) -> Result<(usize, usize), error::DecapodError> {
-    let mut db_created = 0usize;
-    let mut db_preserved = 0usize;
-
-    let dbs = [
-        ("todo.db", store_root.join("todo.db")),
-        ("knowledge.db", store_root.join("knowledge.db")),
-        ("cron.db", store_root.join("cron.db")),
-        ("reflex.db", store_root.join("reflex.db")),
-        ("health.db", store_root.join("health.db")),
-        ("policy.db", store_root.join("policy.db")),
-        ("archive.db", store_root.join("archive.db")),
-        ("feedback.db", store_root.join("feedback.db")),
-        ("teammate.db", store_root.join("teammate.db")),
-        ("federation.db", store_root.join("federation.db")),
-        ("decisions.db", store_root.join("decisions.db")),
-    ];
-
-    for (db_name, db_path) in dbs {
-        if db_path.exists() {
-            db_preserved += 1;
-            continue;
-        }
-        match db_name {
-            "todo.db" => init_create_todo_schema_only_db(&db_path)?,
-            "knowledge.db" => {
-                init_create_schema_only_db(&db_path, &[schemas::KNOWLEDGE_DB_SCHEMA])?
-            }
-            "cron.db" => init_create_schema_only_db(&db_path, &[schemas::CRON_DB_SCHEMA])?,
-            "reflex.db" => init_create_schema_only_db(&db_path, &[schemas::REFLEX_DB_SCHEMA])?,
-            "health.db" => init_create_schema_only_db(
-                &db_path,
-                &[
-                    schemas::HEALTH_DB_SCHEMA_CLAIMS,
-                    schemas::HEALTH_DB_SCHEMA_PROOF_EVENTS,
-                    schemas::HEALTH_DB_SCHEMA_HEALTH_CACHE,
-                ],
-            )?,
-            "policy.db" => init_create_schema_only_db(
-                &db_path,
-                &[
-                    schemas::POLICY_DB_SCHEMA_APPROVALS,
-                    schemas::POLICY_DB_SCHEMA_INDEX,
-                ],
-            )?,
-            "archive.db" => init_create_schema_only_db(&db_path, &[schemas::ARCHIVE_DB_SCHEMA])?,
-            "feedback.db" => init_create_schema_only_db(&db_path, &[schemas::FEEDBACK_DB_SCHEMA])?,
-            "teammate.db" => init_create_teammate_schema_only_db(&db_path)?,
-            "federation.db" => init_create_schema_only_db(
-                &db_path,
-                &[
-                    schemas::FEDERATION_DB_SCHEMA_META,
-                    schemas::FEDERATION_DB_SCHEMA_NODES,
-                    schemas::FEDERATION_DB_SCHEMA_SOURCES,
-                    schemas::FEDERATION_DB_SCHEMA_EDGES,
-                    schemas::FEDERATION_DB_SCHEMA_EVENTS,
-                    schemas::FEDERATION_DB_INDEX_NODES_TYPE,
-                    schemas::FEDERATION_DB_INDEX_NODES_STATUS,
-                    schemas::FEDERATION_DB_INDEX_NODES_SCOPE,
-                    schemas::FEDERATION_DB_INDEX_NODES_PRIORITY,
-                    schemas::FEDERATION_DB_INDEX_NODES_UPDATED,
-                    schemas::FEDERATION_DB_INDEX_SOURCES_NODE,
-                    schemas::FEDERATION_DB_INDEX_EDGES_SOURCE,
-                    schemas::FEDERATION_DB_INDEX_EDGES_TARGET,
-                    schemas::FEDERATION_DB_INDEX_EDGES_TYPE,
-                    schemas::FEDERATION_DB_INDEX_EVENTS_NODE,
-                ],
-            )?,
-            "decisions.db" => init_create_schema_only_db(
-                &db_path,
-                &[
-                    schemas::DECIDE_DB_SCHEMA_META,
-                    schemas::DECIDE_DB_SCHEMA_SESSIONS,
-                    schemas::DECIDE_DB_SCHEMA_DECISIONS,
-                    schemas::DECIDE_DB_INDEX_DECISIONS_SESSION,
-                    schemas::DECIDE_DB_INDEX_DECISIONS_TREE,
-                    schemas::DECIDE_DB_INDEX_SESSIONS_TREE,
-                    schemas::DECIDE_DB_INDEX_SESSIONS_STATUS,
-                ],
-            )?,
-            _ => unreachable!(),
-        }
-        db_created += 1;
-    }
-
-    Ok((db_created, db_preserved))
 }
 
 fn requires_session_token(command: &Command) -> bool {
@@ -2117,144 +1897,6 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
                 String::from_utf8_lossy(&output.stderr).trim()
             )));
         }
-    }
-    Ok(())
-}
-
-fn init_has_container_runtime() -> bool {
-    command_exists("docker") || command_exists("podman")
-}
-
-fn init_container_ssh_key_hint(target_dir: &Path) -> String {
-    let path_file = target_dir
-        .join(".decapod")
-        .join("generated")
-        .join("container_ssh_key_path");
-    fs::read_to_string(path_file)
-        .ok()
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| "~/.ssh/decapod_agent_ed25519".to_string())
-}
-
-fn init_has_dedicated_agent_key(target_dir: &Path) -> bool {
-    let hint = init_container_ssh_key_hint(target_dir);
-    let key = if let Some(home) = std::env::var_os("HOME") {
-        if hint.starts_with("~/") {
-            PathBuf::from(home).join(hint.trim_start_matches("~/"))
-        } else {
-            PathBuf::from(hint)
-        }
-    } else {
-        PathBuf::from(hint)
-    };
-    key.is_file() && key.with_extension("pub").is_file()
-}
-
-fn command_exists(name: &str) -> bool {
-    if name.contains(std::path::MAIN_SEPARATOR) {
-        return is_executable_path(Path::new(name));
-    }
-
-    let Some(paths) = std::env::var_os("PATH") else {
-        return false;
-    };
-
-    for dir in std::env::split_paths(&paths) {
-        let candidate = dir.join(name);
-        if is_executable_path(&candidate) {
-            return true;
-        }
-
-        #[cfg(windows)]
-        {
-            let from_pathext = std::env::var_os("PATHEXT")
-                .map(|v| {
-                    v.to_string_lossy()
-                        .split(';')
-                        .map(|s| s.trim().to_string())
-                        .filter(|s| !s.is_empty())
-                        .collect::<Vec<String>>()
-                })
-                .unwrap_or_else(|| {
-                    vec![".EXE".to_string(), ".CMD".to_string(), ".BAT".to_string()]
-                });
-
-            for ext in from_pathext {
-                let with_ext = candidate.with_extension(ext.trim_start_matches('.'));
-                if is_executable_path(&with_ext) {
-                    return true;
-                }
-            }
-        }
-    }
-
-    false
-}
-
-fn is_executable_path(path: &Path) -> bool {
-    let Ok(meta) = fs::metadata(path) else {
-        return false;
-    };
-    if !meta.is_file() {
-        return false;
-    }
-
-    #[cfg(unix)]
-    {
-        meta.permissions().mode() & 0o111 != 0
-    }
-    #[cfg(not(unix))]
-    {
-        true
-    }
-}
-
-fn ensure_init_container_disable_override(
-    target_dir: &Path,
-    reason: &str,
-) -> Result<(), error::DecapodError> {
-    let override_path = target_dir.join(".decapod").join("OVERRIDE.md");
-    let existing = if override_path.exists() {
-        fs::read_to_string(&override_path).map_err(error::DecapodError::IoError)?
-    } else {
-        String::new()
-    };
-    if existing.contains(container::CONTAINER_DISABLE_MARKER) {
-        return Ok(());
-    }
-    if let Some(parent) = override_path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
-    }
-    let mut file = fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&override_path)
-        .map_err(error::DecapodError::IoError)?;
-    if !existing.ends_with('\n') && !existing.is_empty() {
-        writeln!(file).map_err(error::DecapodError::IoError)?;
-    }
-    writeln!(file, "### plugins/CONTAINER.md").map_err(error::DecapodError::IoError)?;
-    writeln!(file, "## Runtime Guard Override (auto-generated)")
-        .map_err(error::DecapodError::IoError)?;
-    writeln!(file, "{}", container::CONTAINER_DISABLE_MARKER)
-        .map_err(error::DecapodError::IoError)?;
-    writeln!(file, "reason: {}", reason).map_err(error::DecapodError::IoError)?;
-    writeln!(
-        file,
-        "warning: disabling isolated containers increases risk of concurrent agents stepping on each other."
-    )
-    .map_err(error::DecapodError::IoError)?;
-    Ok(())
-}
-
-fn write_init_container_ssh_key_path(target_dir: &Path) -> Result<(), error::DecapodError> {
-    let generated_dir = target_dir.join(".decapod").join("generated");
-    fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
-    let path_file = generated_dir.join("container_ssh_key_path");
-    if !path_file.exists() {
-        fs::write(&path_file, "~/.ssh/decapod_agent_ed25519\n")
-            .map_err(error::DecapodError::IoError)?;
     }
     Ok(())
 }
