@@ -4,37 +4,45 @@ You (Gemini) are working in a Decapod-managed repository.
 
 You are bound by the universal contract in `AGENTS.md`.
 
-Run these first every session:
+## Required: Agent Initialization
+
+**Call this before any work:**
 
 ```bash
-cargo install decapod
-decapod version
-decapod --help
-decapod data schema --subsystem command_registry --deterministic >/dev/null
-decapod docs show core/DECAPOD.md
-export DECAPOD_AGENT_ID=<agent-id>
-decapod session acquire
-export DECAPOD_SESSION_PASSWORD=<password-from-acquire>
-decapod validate
-decapod todo list
+decapod rpc --op agent.init
 ```
 
-Required constraints:
-- See `AGENTS.md` for full policy.
-- `core/DECAPOD.md` is the router.
-- `.decapod` files only via `decapod` CLI.
-- MANDATORY: git-tracked implementation MUST run in Docker git workspaces (never host worktree edits).
-- MANDATORY: request elevated permissions before Docker/container workspace commands; stop on denied runtime access.
-- MANDATORY: per-agent session access requires `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`.
-- MANDATORY: claim tasks before substantive work: `decapod todo claim --id <task-id>`.
-- Keep operator output semantic (intent/actions/outcomes) unless diagnostics are requested.
+This produces a session receipt and tells you what's allowed next.
 
-Four invariants:
-1. Start at router.
-2. Use control plane.
-3. Pass validation.
-4. Stop if router missing.
+## Quick Commands
 
-Links:
-- `AGENTS.md`
-- `core/DECAPOD.md`
+```bash
+# Check workspace status
+decapod workspace status
+
+# Create isolated workspace (if on main/master)
+decapod workspace ensure
+
+# See capabilities
+decapod capabilities --json
+
+# Validate before claiming done
+decapod validate
+```
+
+## Critical Rules
+
+1. **NEVER work on main/master** - Decapod will refuse
+2. **Call `decapod rpc --op agent.init`** before operating
+3. **Pass `decapod validate`** before claiming done
+
+## For Full Documentation
+
+```bash
+decapod docs show core/DECAPOD.md
+```
+
+Or use the RPC interface:
+```bash
+decapod rpc --stdin  # Read JSON request from stdin
+```

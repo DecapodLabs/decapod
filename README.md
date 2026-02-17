@@ -1,97 +1,146 @@
-<p align="center">🦀</p>
-<p align="center">
-  <img src="assets/decapod-demo.gif" alt="Decapod demo" width="66%" />
-</p>
+# Decapod
 
-<p align="center">
-  <code>cargo install decapod && decapod init</code>
-</p>
+**Decapod is an assurance interface agents talk to: ADVISORY + INTERLOCK + ATTESTATION.**
 
-<p align="center">
-  <strong>Decapod</strong> is a governance runtime for AI coding agents. Local-first, repo-native, built in Rust. AI agents can write code, but they don’t reliably ship: they blur memory with instruction, skip the boring checks, and confidently declare “done” without evidence. <strong>Decapod</strong> turns that into something you can trust by making completion falsifiable and boundaries enforceable—so autonomy scales from one agent to many without turning your repo into vibes.
-  <br>
-  <sub>Named for the ten-legged crustaceans: hardened exoskeleton, distributed nervous system, no central brain. They coordinate anyway.</sub>
-</p>
+The human interfaces ONLY with the agent as the UX. The agent calls Decapod.
 
-<p align="center">
-  <a href="https://github.com/DecapodLabs/decapod/actions"><img alt="CI" src="https://github.com/DecapodLabs/decapod/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://crates.io/crates/decapod"><img alt="crates.io" src="https://img.shields.io/crates/v/decapod.svg"></a>
-  <a href="https://github.com/DecapodLabs/decapod/blob/master/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-</p>
+## What Decapod Really Is
 
----
+Decapod helps agents:
+1. **Build what the human intends** - Through interview-driven spec generation
+2. **Follow the rules the human intends** - Through resolved standards and guardrails
+3. **Produce the quality the human intends** - Through validation gates and receipts
 
-## What Is Decapod
+## Agents Are the Buyer
 
-Like Docker gives containers a standard runtime, Decapod gives agents a standard operating environment. Install it once, and any agent enters through the same repo contract: governed state, enforced workflow, proof gates, and coordination for parallel work.
+Agents don't browse. They query. Decapod provides a structured JSON-RPC interface that agents route to for:
 
-It replaces “trust me” with enforcement. Validation gates prevent agents from skipping checks, drifting from the repo’s rules, or declaring completion without executable evidence—so outcomes are verifiable, not narrated.
+- **Next-best question** for the human (spec/architecture interview)
+- **Resolved repo standards** (industry defaults + override.md)
+- **Drift detection** (prevent contradictions to declared decisions)
+- **Proofed "done"** (validate gates + receipts)
+- **Safe workspace behavior** (agents cannot touch main)
 
-Decapod isn’t an agent framework or a SaaS layer. It’s repo-side infrastructure: humans can read the artifacts, but the operators are agents, and the repo’s rules are what hold.
+## Quick Start
 
-## How It Works
+```bash
+# Install Decapod
+cargo install decapod
 
-Decapod is a tool for agents, not for humans. After `decapod init` is present in a repo, agents operate inside the governed environment. Two things set it apart from orchestration frameworks: an **embedded constitution** and **coordination primitives**.
+# Initialize in a repo
+decapod init
 
-### Embedded Constitution
-
-Every Decapod binary ships with a compiled-in methodology: binding contracts, authority chains, proof doctrine, and architectural guidance — 40+ documents covering specs, interfaces, architecture, and plugins. Agents don't receive tips; they receive contracts.
-
-`decapod init` generates thin entrypoints (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md`) that point agents into the constitution. Every agent, regardless of provider, enters through the same contract and follows the same authority ladder:
-
-**Intent > Architecture > Implementation > Proof**
-
-Projects customize behavior through `.decapod/OVERRIDE.md` — extend or adjust any contract without forking the constitution.
-
-### Coordination Primitives
-
-Agents operating in the same repo share durable infrastructure:
-
-- **Architecture decision prompting** — When starting a new project, `decapod decide` walks agents through curated engineering questions (runtime, framework, orchestration, database, etc.) with only the best options. Decisions are stored in SQLite and cross-linked into the knowledge graph as a durable Architecture Decision Record.
-- **Proof ledger + knowledge graph** — Decisions, conventions, and proof events survive sessions and model switches. Stored in `.decapod/data/` as SQLite + append-only event logs, forming a repo-native knowledge graph of intent → change → proof.
-- **Proof gates** — `decapod validate` is authoritative. If it fails, the change is not complete, regardless of summary confidence.
-- **Shared backlog** — A brokered task system with audit trails. Agents claim work, record transitions, and archive completions. No duplicate effort, no lost context.
-- **Policy boundaries** — Trust tiers, risk zones, and approval gates. Governance that scales with autonomy.
-- **Event sourcing** — Every state mutation goes through a broker that records who did what, when, and why. State can be deterministically rebuilt from events.
+# Agent workflow
+decapod rpc --op agent.init          # Required: get session receipt
+decapod workspace status             # Check if safe to work
+decapod workspace ensure             # Create isolated branch if needed
+decapod validate                     # Validate before claiming done
+```
 
 ## Architecture
 
 ```
-your-project/
-├── AGENTS.md              Agent universal contract (generated)
-├── CLAUDE.md              Claude entrypoint (generated)
-├── GEMINI.md              Gemini entrypoint (generated)
-├── CODEX.md               Codex entrypoint (generated)
-└── .decapod/
-    ├── data/              State: SQLite DBs + event logs
-    ├── generated/         Derived artifacts (auto-managed)
-    ├── OVERRIDE.md        Project-specific constitution overrides
-    └── README.md          Control plane documentation
+repo/
+├── AGENTS.md              # Agent entrypoint (thin shim)
+├── CLAUDE.md              # Claude entrypoint (thin shim)
+├── .decapod/
+│   ├── data/              # State: SQLite + event logs
+│   │   ├── todo.db
+│   │   ├── federation.db
+│   │   └── *.events.jsonl
+│   ├── OVERRIDE.md        # Project-specific overrides
+│   └── README.md
+└── docs/                  # Generated by interview engine
+    ├── spec.md
+    ├── architecture.md
+    ├── security.md
+    ├── ops.md
+    └── decisions/
+        └── ADR-*.md
 ```
 
-Agents interact through the CLI control surface. Direct mutation of `.decapod/data/` violates the control-plane contract.
+## Key Capabilities
 
-## Security
+### Workspace Enforcement (Non-Negotiable)
 
-See [`SECURITY.md`](SECURITY.md). Agents must handle credentials securely — never log, never commit, always rotate. Violations are constitutional breaches.
-
-## Contributing
-
-Decapod is built with Decapod. To develop:
+Agents **cannot** work on main/master. Decapod enforces this programmatically:
 
 ```bash
-git clone https://github.com/DecapodLabs/decapod
-cd decapod
-cargo build
-cargo test
-decapod validate
+$ decapod validate
+❌ VALIDATION FAILED: Workspace Protection Gate
+   Error: You are on protected branch 'main'
+   Hint: Run 'decapod workspace ensure' to create an isolated workspace
 ```
 
-## Support
+### RPC Interface
 
-- [File an issue](https://github.com/DecapodLabs/decapod/issues)
-- [Support on Ko-fi](https://ko-fi.com/decapodlabs)
+Agents query Decapod programmatically:
+
+```bash
+$ decapod rpc --op agent.init
+{
+  "success": true,
+  "receipt": { "op": "agent.init", "hash": "...", "timestamp": "..." },
+  "allowed_next_ops": [
+    { "op": "workspace.ensure", "reason": "Create isolated workspace" }
+  ],
+  "blocked_by": []
+}
+```
+
+### Interview Engine
+
+Generate industry-grade docs through structured Q&A:
+
+```bash
+decapod rpc --op scaffold.next_question   # Get next question
+decapod rpc --op scaffold.apply_answer    # Provide answer
+decapod rpc --op scaffold.generate_artifacts  # Generate docs
+```
+
+### Standards Resolution
+
+Decapod resolves standards from industry defaults + project overrides:
+
+```bash
+decapod rpc --op standards.resolve
+```
+
+### Capabilities Discovery
+
+Agents discover what's available:
+
+```bash
+decapod capabilities --json
+```
+
+## Response Envelope
+
+Every RPC response includes:
+
+- **receipt**: What happened, hashes, touched paths, governing anchors
+- **context_capsule**: Minimal relevant spec/arch/security/standards slices
+- **allowed_next_ops**: Contract for what to do next
+- **blocked_by**: Missing answers/proofs preventing progress
+- **interlock**: Binding enforcement with stable code + unblock path
+- **advisory**: Non-binding reconciliations + deterministic verification plan
+- **attestation**: Structured evidence record suitable for local trace export
+
+## Subsystems
+
+- **todo**: Task tracking with event sourcing (preserved from v0.25)
+- **workspace**: Branch protection and isolation (new)
+- **interview**: Spec/architecture generation (new)
+- **federation**: Knowledge graph with provenance (preserved)
+- **container**: Docker + git workspaces (preserved, enhanced)
+- **validate**: Authoritative completion gates (enhanced)
+
+## Hard Constraints
+
+- **Single Rust binary/library** - No daemon requirement
+- **Local-first, repo-native** - Everything auditable on disk
+- **Deterministic > vibes** - Summarizes canon text, never decides what is binding
 
 ## License
 
-MIT. See [LICENSE](LICENSE) for details.
+MIT
