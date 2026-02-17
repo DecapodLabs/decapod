@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0](https://github.com/DecapodLabs/decapod/compare/v0.23.10...v0.24.0) - 2026-02-17
+
+### Other
+
+- *(release)* set release-plz allow_dirty to boolean
+- *(release)* allow runtime session dirt in release-plz
+
 ## [0.23.10](https://github.com/DecapodLabs/decapod/compare/v0.23.9...v0.23.10) - 2026-02-17
 
 ### Other
