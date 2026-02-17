@@ -163,6 +163,9 @@ jobs:
     name: Health Checks
     runs-on: ubuntu-latest
     needs: setup
+    env:
+      DECAPOD_AGENT_ID: ${{ github.actor }}
+      DECAPOD_CONTAINER: 1
     steps:
       - uses: actions/checkout@v4
         with:
