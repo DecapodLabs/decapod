@@ -214,7 +214,7 @@ fn run_container(
     repo_override: Option<&str>,
     keep_worktree: bool,
     inherit_env: bool,
-    _local_only: bool,
+    local_only: bool,
 ) -> Result<RunSummary, error::DecapodError> {
     let repo = resolve_repo_path(repo_override)?;
     if container_runtime_disabled(&repo)? {
@@ -244,6 +244,8 @@ Warning: without isolated containers, concurrent agents can step on each other."
         }
     };
 
+    ensure_container_runtime_access(&docker)?;
+
     let image = resolve_runtime_image(&docker, &repo, image_profile, image_override)?;
 
     let branch_name = branch
@@ -264,6 +266,7 @@ Warning: without isolated containers, concurrent agents can step on each other."
         cpus,
         task_id,
         inherit_env,
+        local_only,
     )?;
 
     let start = Instant::now();
@@ -298,6 +301,10 @@ Warning: without isolated containers, concurrent agents can step on each other."
     sync_workspace_branch_to_host_repo(&repo, &workspace.path, &workspace.branch)?;
     let branch_returned_to_host = true;
 
+    if push {
+        push_branch_to_origin(&repo, &workspace.branch)?;
+    }
+
     if pr {
         create_gh_pr(
             &repo,
@@ -322,7 +329,7 @@ Warning: without isolated containers, concurrent agents can step on each other."
         "branch": workspace.branch,
         "base_branch": workspace.base_branch,
         "isolation_backend": workspace.backend,
-        "local_only": true,
+        "local_only": local_only,
         "task_id": task_id,
         "push": push,
         "pr": pr,
@@ -467,6 +474,72 @@ fn find_container_runtime() -> Result<String, error::DecapodError> {
     Err(error::DecapodError::NotFound(
         "No container runtime found (docker/podman)".to_string(),
     ))
+}
+
+fn ensure_container_runtime_access(runtime: &str) -> Result<(), error::DecapodError> {
+    let output = Command::new(runtime)
+        .arg("info")
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if output.status.success() {
+        return Ok(());
+    }
+
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let combined = format!("{}\n{}", stderr, stdout).to_lowercase();
+    let uid = current_uid_gid()
+        .map(|(u, g)| format!("uid={}, gid={}", u, g))
+        .unwrap_or_else(|| "uid/gid unavailable".to_string());
+    let docker_host = std::env::var("DOCKER_HOST").unwrap_or_else(|_| "<unset>".to_string());
+    let xdg_runtime_dir =
+        std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "<unset>".to_string());
+
+    let remediation = if combined.contains("permission denied")
+        || combined.contains("got permission denied")
+        || combined.contains("operation not permitted")
+    {
+        "Container runtime access denied. Re-run with elevated permissions, or grant this user runtime access and restart the shell."
+    } else if combined.contains("cannot connect")
+        || combined.contains("is the docker daemon running")
+        || combined.contains("connection refused")
+        || combined.contains("no such file or directory")
+    {
+        "Container runtime is installed but unavailable. Start the Docker/Podman daemon (or user service), then retry."
+    } else {
+        "Runtime preflight failed. Verify Docker/Podman daemon availability and user permissions, then retry."
+    };
+
+    Err(error::DecapodError::ValidationError(format!(
+        "Container runtime preflight failed.\n\
+runtime: {}\n\
+probe: `{}`\n\
+{}\n\
+context: {}, DOCKER_HOST={}, XDG_RUNTIME_DIR={}\n\
+stderr:\n{}\n\
+stdout:\n{}",
+        runtime, "info", remediation, uid, docker_host, xdg_runtime_dir, stderr, stdout
+    )))
+}
+
+fn push_branch_to_origin(repo: &Path, branch: &str) -> Result<(), error::DecapodError> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .arg("push")
+        .arg("-u")
+        .arg("origin")
+        .arg(branch)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if output.status.success() {
+        return Ok(());
+    }
+    Err(error::DecapodError::ValidationError(format!(
+        "host push failed for branch '{}': {}",
+        branch,
+        String::from_utf8_lossy(&output.stderr).trim()
+    )))
 }
 
 fn command_exists(cmd: &str) -> bool {
@@ -804,6 +877,7 @@ fn build_docker_spec(
     cpus: &str,
     task_id: Option<&str>,
     inherit_env: bool,
+    local_only: bool,
 ) -> Result<DockerSpec, error::DecapodError> {
     let decapod_dir = repo_root.join(".decapod");
     fs::create_dir_all(&decapod_dir).map_err(error::DecapodError::IoError)?;
@@ -890,7 +964,12 @@ fn build_docker_spec(
     args.push(image.to_string());
     args.push("/bin/sh".to_string());
     args.push("-lc".to_string());
-    args.push(build_container_script(user_cmd, branch, base_branch));
+    args.push(build_container_script(
+        user_cmd,
+        branch,
+        base_branch,
+        local_only,
+    ));
     if env_bool("DECAPOD_CONTAINER_DEBUG", false) {
         eprintln!("debug: container args={}", args.join(" "));
     }
@@ -913,7 +992,12 @@ fn inherited_env_vars() -> BTreeMap<String, String> {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn build_container_script(user_cmd: &str, branch: &str, base_branch: &str) -> String {
+fn build_container_script(
+    user_cmd: &str,
+    branch: &str,
+    base_branch: &str,
+    local_only: bool,
+) -> String {
     let mut script = String::from(
         "set -eu\n\
          cd \"${DECAPOD_WORKSPACE:-$PWD}\"\n\
@@ -961,8 +1045,13 @@ fn build_container_script(user_cmd: &str, branch: &str, base_branch: &str) -> St
     script.push('\n');
 
     script.push_str(
-        "if [ -n \"$(git_safe status --porcelain)\" ]; then\n  git_safe add -A\n  git_safe commit -m \"chore: automated container updates\"\n  git_safe push -u origin HEAD\nfi\n",
+        "if [ -n \"$(git_safe status --porcelain)\" ]; then\n  git_safe add -A\n  git_safe commit -m \"chore: automated container updates\"\nfi\n",
     );
+    if !local_only {
+        script.push_str(
+            "if [ \"${DECAPOD_CONTAINER_DEBUG:-0}\" = \"1\" ]; then\n  echo \"debug: host control-plane handles push/PR after foldback\" >&2\nfi\n",
+        );
+    }
 
     script
 }
@@ -1057,6 +1146,7 @@ mod tests {
             "2.0",
             Some("R_123"),
             false,
+            false,
         )
         .expect("spec");
 
@@ -1073,7 +1163,7 @@ mod tests {
         assert!(!joined.contains("git_safe fetch --no-write-fetch-head origin 'master'"));
         assert!(!joined.contains("git_safe rebase origin/'master'"));
         assert!(joined.contains("decapod update"));
-        assert!(joined.contains("git_safe push -u origin HEAD"));
+        assert!(!joined.contains("git_safe push -u origin HEAD"));
         assert!(!joined.contains("gh auth status"));
         assert!(!joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
     }
@@ -1095,6 +1185,7 @@ mod tests {
             "2.0",
             Some("R_123"),
             false,
+            true,
         )
         .expect("spec");
 
@@ -1102,7 +1193,7 @@ mod tests {
         assert!(joined.contains("DECAPOD_LOCAL_ONLY=1"));
         assert!(!joined.contains("git_safe fetch --no-write-fetch-head origin 'master'"));
         assert!(!joined.contains("git_safe rebase origin/'master'"));
-        assert!(!joined.contains("git_safe push -u origin 'ahr/branch'"));
+        assert!(!joined.contains("git_safe push -u origin"));
         assert!(!joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
         assert!(!joined.contains("ssh-keyscan -t ed25519 github.com"));
         assert!(joined.contains("git_safe checkout -B 'ahr/branch' 'master'"));

@@ -476,6 +476,19 @@ fn validate_entrypoint_invariants(
         ("cargo install decapod", "Version update gate language"),
         ("decapod validate", "Validation gate language"),
         ("Stop if", "Stop-if-missing behavior"),
+        ("Docker git workspaces", "Docker workspace mandate language"),
+        (
+            "decapod todo claim --id <task-id>",
+            "Task claim-before-work mandate language",
+        ),
+        (
+            "request elevated permissions before Docker/container workspace commands",
+            "Elevated-permissions mandate language",
+        ),
+        (
+            "DECAPOD_SESSION_PASSWORD",
+            "Per-agent session password mandate language",
+        ),
         (
             ".decapod` files are accessed only via `decapod` CLI",
             "Jail rule: .decapod access is CLI-only",
@@ -581,6 +594,67 @@ fn validate_entrypoint_invariants(
         } else {
             fail(
                 &format!("{} missing .decapod CLI-only jail rule marker", agent_file),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must include Docker git workspace mandate
+        if agent_content.contains("Docker git workspaces") {
+            pass(
+                &format!("{} includes Docker workspace mandate", agent_file),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!("{} missing Docker workspace mandate marker", agent_file),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must include elevated-permissions mandate for container workspace commands
+        if agent_content
+            .contains("request elevated permissions before Docker/container workspace commands")
+        {
+            pass(
+                &format!("{} includes elevated-permissions mandate", agent_file),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!("{} missing elevated-permissions mandate marker", agent_file),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must include per-agent session password mandate
+        if agent_content.contains("DECAPOD_SESSION_PASSWORD") {
+            pass(
+                &format!("{} includes per-agent session password mandate", agent_file),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!(
+                    "{} missing per-agent session password mandate marker",
+                    agent_file
+                ),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must include claim-before-work mandate
+        if agent_content.contains("decapod todo claim --id <task-id>") {
+            pass(
+                &format!("{} includes claim-before-work mandate", agent_file),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!("{} missing claim-before-work mandate marker", agent_file),
                 fail_count,
             );
             all_present = false;

@@ -4,8 +4,6 @@ You (Codex/ChatGPT/OpenAI agent) are working in a Decapod-managed repository.
 
 **You are bound by the universal agent contract:** See `AGENTS.md` for the complete protocol.
 
-## Quick Start
-
 **MANDATORY FIRST STEPS** - Run these EVERY session:
 
 ```bash
@@ -14,20 +12,23 @@ decapod version                   # 2. Check current version
 decapod --help                      # 3. Verify available commands
 decapod data schema --subsystem command_registry --deterministic >/dev/null  # 4. Refresh CLI command index
 decapod docs show core/DECAPOD.md  # 5. Refresh constitution
-decapod session acquire             # 6. Acquire session token (required for all commands)
-decapod validate                    # 7. System state
-decapod todo list                   # 8. Active work
+export DECAPOD_AGENT_ID=<agent-id> # 6. Set agent identity
+decapod session acquire             # 7. Acquire per-agent session credentials
+export DECAPOD_SESSION_PASSWORD=<password-from-acquire>  # 8. Bind password to this session
+decapod validate                    # 9. System state
+decapod todo list                   # 10. Active work
 ```
 
 **Why this matters:** The decapod binary and constitution evolve. Always install the latest release first, then verify commands and refresh your understanding of the latest contract before acting.
 
-## Codex-Specific Notes
-
+## Notes
 - You excel at code completion - but still read architecture first
 - You have strong pattern matching - use it to follow existing code style
 - You may have tool use or function calling - use it for `decapod` commands
-- Git-tracked implementation must run in Docker git workspaces (not host worktree edits)
-- Claim tasks before substantive work: `decapod todo claim --id <task-id>`
+- MANDATORY: git-tracked implementation MUST run in Docker git workspaces (never host worktree edits)
+- MANDATORY: request elevated permissions before Docker/container workspace commands; stop on denied runtime access
+- MANDATORY: per-agent session access requires `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`
+- MANDATORY: claim tasks before substantive work: `decapod todo claim --id <task-id>`
 - Apply control-plane opacity: keep operator-facing output semantic (intent/actions/outcomes), not command-surface oriented
 
 ## The Contract

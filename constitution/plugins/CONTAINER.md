@@ -29,6 +29,7 @@ Container subsystem runs agent actions in ephemeral Docker/Podman containers wit
 - Local environment is inherited by default (`--inherit-env`) for non-Git-network runtime context.
 - Safety defaults: cap-drop all, no-new-privileges, pids limit, tmpfs `/tmp`.
 - Runtime selection auto-detects `docker` first, then `podman`.
+- Runtime access is preflight-validated (`docker|podman info`) before workspace/image steps; permission or daemon failures return actionable diagnostics.
 - Host UID/GID mapping is on by default (`DECAPOD_CONTAINER_MAP_HOST_USER=true`) so file ownership stays writable on host.
 - Generated image expansion policy:
 - Start from minimal Alpine.

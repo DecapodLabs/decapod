@@ -31,6 +31,7 @@ All git-tracked implementation work MUST execute in Docker-isolated git workspac
 Required:
 - Use container workspace flows for branch creation, commits, and pushes.
 - Keep host repo usage to orchestration/inspection unless explicitly authorized.
+- Container runtime permission preflight MUST succeed before workspace execution; on denied access, re-run with elevated permissions instead of bypassing container mode (claim: `claim.git.container_runtime_preflight_required`).
 
 Violation of this boundary is a git workflow contract breach.
 

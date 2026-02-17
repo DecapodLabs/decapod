@@ -142,6 +142,7 @@ Agents require verifiable identities. This identity must be:
 - Heartbeat verification (agent must prove liveness)
 - Automatic credential rotation within sessions
 - Hard eviction after timeout (no zombie agents)
+- Access binding MUST require `agent_id + ephemeral_password` per active session; stale-session cleanup MUST revoke assignments for expired agents (claim: `claim.session.agent_password_required`).
 
 **The Zombie Problem:** An agent that runs forever with the same credentials is a sitting target. Every minute an agent runs without verification is a minute an attacker can hijack it.
 

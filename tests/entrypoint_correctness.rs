@@ -5,7 +5,7 @@
 
 use std::fs;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Output};
 use tempfile::TempDir;
 
 /// Helper to run decapod command in a temp directory
@@ -23,6 +23,34 @@ fn run_decapod(temp_dir: &PathBuf, args: &[&str]) -> (bool, String) {
     (output.status.success(), combined)
 }
 
+fn run_decapod_with_env(
+    temp_dir: &PathBuf,
+    args: &[&str],
+    envs: &[(&str, &str)],
+) -> (bool, String) {
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    cmd.current_dir(temp_dir).args(args);
+    for (k, v) in envs {
+        cmd.env(k, v);
+    }
+    let output = cmd.output().expect("Failed to execute decapod");
+
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+    let combined = format!("{}\n{}", stdout, stderr);
+
+    (output.status.success(), combined)
+}
+
+fn run_raw(temp_dir: &PathBuf, args: &[&str], envs: &[(&str, &str)]) -> Output {
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    cmd.current_dir(temp_dir).args(args);
+    for (k, v) in envs {
+        cmd.env(k, v);
+    }
+    cmd.output().expect("Failed to execute decapod")
+}
+
 fn acquire_session(temp_path: &PathBuf) {
     let (success, output) = run_decapod(temp_path, &["session", "acquire"]);
     assert!(
@@ -30,6 +58,15 @@ fn acquire_session(temp_path: &PathBuf) {
         "decapod session acquire should succeed. Output:\n{}",
         output
     );
+}
+
+fn extract_password(output: &str) -> Option<String> {
+    for line in output.lines() {
+        if let Some(rest) = line.strip_prefix("Password: ") {
+            return Some(rest.trim().to_string());
+        }
+    }
+    None
 }
 
 #[test]
@@ -81,6 +118,173 @@ fn test_validate_passes_after_init() {
     assert!(
         output.contains("Four Invariants Gate"),
         "Validation should check Four Invariants Gate"
+    );
+}
+
+#[test]
+fn test_agent_session_requires_password() {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let temp_path = temp_dir.path().to_path_buf();
+
+    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(success, "decapod init should succeed");
+
+    let (success, acquire_out) = run_decapod_with_env(
+        &temp_path,
+        &["session", "acquire"],
+        &[("DECAPOD_AGENT_ID", "agent-secure")],
+    );
+    assert!(success, "session acquire should succeed: {}", acquire_out);
+    let password = extract_password(&acquire_out).expect("acquire output should include password");
+
+    let (ok_missing, out_missing) = run_decapod_with_env(
+        &temp_path,
+        &["validate"],
+        &[("DECAPOD_AGENT_ID", "agent-secure")],
+    );
+    assert!(
+        !ok_missing,
+        "validate should fail without DECAPOD_SESSION_PASSWORD: {}",
+        out_missing
+    );
+    assert!(
+        out_missing.contains("Missing DECAPOD_SESSION_PASSWORD"),
+        "missing password error should be explicit: {}",
+        out_missing
+    );
+
+    let (ok_wrong, out_wrong) = run_decapod_with_env(
+        &temp_path,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "agent-secure"),
+            ("DECAPOD_SESSION_PASSWORD", "wrong"),
+        ],
+    );
+    assert!(
+        !ok_wrong,
+        "validate should fail with wrong password: {}",
+        out_wrong
+    );
+    assert!(
+        out_wrong.contains("Invalid DECAPOD_SESSION_PASSWORD"),
+        "wrong password error should be explicit: {}",
+        out_wrong
+    );
+
+    let (ok_good, out_good) = run_decapod_with_env(
+        &temp_path,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "agent-secure"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+        ],
+    );
+    assert!(
+        ok_good,
+        "validate should pass with correct agent+password: {}",
+        out_good
+    );
+}
+
+#[test]
+fn test_expired_session_releases_assigned_tasks() {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let temp_path = temp_dir.path().to_path_buf();
+
+    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(success, "decapod init should succeed");
+
+    let (success, acquire_out) = run_decapod_with_env(
+        &temp_path,
+        &["session", "acquire"],
+        &[("DECAPOD_AGENT_ID", "agent-expire")],
+    );
+    assert!(success, "session acquire should succeed: {}", acquire_out);
+    let password = extract_password(&acquire_out).expect("acquire output should include password");
+    let auth_env = [
+        ("DECAPOD_AGENT_ID", "agent-expire"),
+        ("DECAPOD_SESSION_PASSWORD", password.as_str()),
+    ];
+
+    let add_out = run_raw(
+        &temp_path,
+        &["todo", "--format", "json", "add", "session cleanup target"],
+        &auth_env,
+    );
+    assert!(
+        add_out.status.success(),
+        "todo add should succeed: {}",
+        String::from_utf8_lossy(&add_out.stderr)
+    );
+    let add_json: serde_json::Value =
+        serde_json::from_slice(&add_out.stdout).expect("todo add should return json");
+    let task_id = add_json["id"]
+        .as_str()
+        .expect("todo add json should include id")
+        .to_string();
+
+    let claim_out = run_raw(
+        &temp_path,
+        &["todo", "--format", "json", "claim", "--id", &task_id],
+        &auth_env,
+    );
+    assert!(
+        claim_out.status.success(),
+        "todo claim should succeed: {}",
+        String::from_utf8_lossy(&claim_out.stderr)
+    );
+
+    let session_path = temp_path
+        .join(".decapod")
+        .join("generated")
+        .join("sessions")
+        .join("agent-expire.json");
+    let mut session_json: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&session_path).expect("session file"))
+            .expect("session json");
+    session_json["expires_at_epoch_secs"] = serde_json::json!(0);
+    fs::write(
+        &session_path,
+        serde_json::to_string_pretty(&session_json).expect("serialize"),
+    )
+    .expect("write expired session");
+
+    let status_out = run_raw(
+        &temp_path,
+        &["session", "status"],
+        &[("DECAPOD_AGENT_ID", "agent-expire")],
+    );
+    assert!(
+        status_out.status.success(),
+        "session status should run cleanup: {}",
+        String::from_utf8_lossy(&status_out.stderr)
+    );
+
+    let (ok_unknown_acquire, out_unknown_acquire) =
+        run_decapod(&temp_path, &["session", "acquire"]);
+    assert!(
+        ok_unknown_acquire,
+        "unknown session acquire should succeed: {}",
+        out_unknown_acquire
+    );
+
+    let get_out = run_raw(
+        &temp_path,
+        &["todo", "--format", "json", "get", "--id", &task_id],
+        &[],
+    );
+    assert!(
+        get_out.status.success(),
+        "todo get should succeed: {}",
+        String::from_utf8_lossy(&get_out.stderr)
+    );
+    let get_json: serde_json::Value =
+        serde_json::from_slice(&get_out.stdout).expect("todo get should return json");
+    assert_eq!(
+        get_json["task"]["assigned_to"].as_str().unwrap_or(""),
+        "",
+        "expired session cleanup should unassign task"
     );
 }
 
