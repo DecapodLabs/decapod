@@ -508,20 +508,22 @@ fn zone_policy_from_todo(
     if !todo_db.exists() {
         return Ok(None);
     }
-    let conn = rusqlite::Connection::open(todo_db).map_err(error::DecapodError::RusqliteError)?;
-    let res = conn
-        .query_row(
-            "SELECT required_trust_level, requires_approval FROM risk_zones WHERE zone_name = ?1",
-            params![zone_name],
-            |row| {
-                let trust: String = row.get(0)?;
-                let requires_approval: i64 = row.get(1)?;
-                Ok((trust, requires_approval != 0))
-            },
-        )
-        .optional()
-        .map_err(error::DecapodError::RusqliteError)?;
-    Ok(res)
+    let broker = DbBroker::new(root);
+    broker.with_conn(&todo_db, "policy", None, "policy.zone.get", |conn| {
+        let res = conn
+            .query_row(
+                "SELECT required_trust_level, requires_approval FROM risk_zones WHERE zone_name = ?1",
+                params![zone_name],
+                |row| {
+                    let trust: String = row.get(0)?;
+                    let requires_approval: i64 = row.get(1)?;
+                    Ok((trust, requires_approval != 0))
+                },
+            )
+            .optional()
+            .map_err(error::DecapodError::RusqliteError)?;
+        Ok(res)
+    })
 }
 
 fn actor_trust_level_raw(root: &Path, actor: &str) -> Result<String, error::DecapodError> {
@@ -532,16 +534,18 @@ fn actor_trust_level_raw(root: &Path, actor: &str) -> Result<String, error::Deca
     if !todo_db.exists() {
         return Ok("basic".to_string());
     }
-    let conn = rusqlite::Connection::open(todo_db).map_err(error::DecapodError::RusqliteError)?;
-    let level: Option<String> = conn
-        .query_row(
-            "SELECT trust_level FROM agent_trust WHERE agent_id = ?1",
-            params![actor],
-            |row| row.get(0),
-        )
-        .optional()
-        .map_err(error::DecapodError::RusqliteError)?;
-    Ok(level.unwrap_or_else(|| "basic".to_string()))
+    let broker = DbBroker::new(root);
+    broker.with_conn(&todo_db, "policy", None, "policy.trust.get", |conn| {
+        let level: Option<String> = conn
+            .query_row(
+                "SELECT trust_level FROM agent_trust WHERE agent_id = ?1",
+                params![actor],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(error::DecapodError::RusqliteError)?;
+        Ok(level.unwrap_or_else(|| "basic".to_string()))
+    })
 }
 
 pub fn enforce_broker_mutation_policy(
