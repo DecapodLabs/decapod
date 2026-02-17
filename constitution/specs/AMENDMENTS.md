@@ -123,7 +123,7 @@ Each entry MUST include:
   - `interfaces/AGENT_CONTEXT_PACK.md` (introduced)
   - `interfaces/CLAIMS.md` (claims added for risk-policy and context-pack contracts)
   - `core/INTERFACES.md` (registry routing updated)
-  - `contracts/risk-policy.example.json` (introduced machine-readable template)
+  - `interfaces/RISK_POLICY_GATE.md` (§10 includes machine-readable template example)
   - `src/core/validate.rs` (presence/structure gate for new interfaces and template)
 - Summary:
   - Added binding interface contracts for deterministic PR risk-policy gating and Decapod-native agent context-pack governance.
