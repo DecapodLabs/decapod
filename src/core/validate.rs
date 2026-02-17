@@ -1608,6 +1608,190 @@ fn validate_markdown_primitives_roundtrip_gate(
 
 /// Validates that tooling requirements are satisfied.
 /// This gate ensures formatting, linting, and type checking pass before promotion.
+fn validate_git_workspace_context(
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Git Workspace Context Gate");
+
+    // Allow bypass for testing/CI environments
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        skip(
+            "Git workspace gates skipped (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
+            pass_count,
+        );
+        return Ok(());
+    }
+
+    let signals_container = [
+        (
+            std::env::var("DECAPOD_CONTAINER").ok().as_deref() == Some("1"),
+            "DECAPOD_CONTAINER=1",
+        ),
+        (repo_root.join(".dockerenv").exists(), ".dockerenv marker"),
+        (
+            repo_root.join(".devcontainer").exists(),
+            ".devcontainer marker",
+        ),
+        (
+            std::env::var("DOCKER_CONTAINER").is_ok(),
+            "DOCKER_CONTAINER env",
+        ),
+    ];
+
+    let in_container = signals_container.iter().any(|(signal, _)| *signal);
+
+    if in_container {
+        let reasons: Vec<&str> = signals_container
+            .iter()
+            .filter(|(signal, _)| *signal)
+            .map(|(_, name)| *name)
+            .collect();
+        pass(
+            &format!(
+                "Running in container workspace (signals: {})",
+                reasons.join(", ")
+            ),
+            pass_count,
+        );
+    } else {
+        fail(
+            "Not running in container workspace - git-tracked work must execute in Docker-isolated workspace (claim.git.container_workspace_required)",
+            fail_count,
+        );
+    }
+
+    let git_dir = repo_root.join(".git");
+    let is_worktree = git_dir.is_file() && {
+        let content = fs::read_to_string(&git_dir).unwrap_or_default();
+        content.contains("gitdir:")
+    };
+
+    if is_worktree {
+        pass("Running in git worktree (isolated branch)", pass_count);
+    } else if in_container {
+        pass(
+            "Container workspace detected (worktree check informational)",
+            pass_count,
+        );
+    } else {
+        fail(
+            "Not running in isolated git worktree - must use container workspace for implementation work",
+            fail_count,
+        );
+    }
+
+    Ok(())
+}
+
+fn validate_git_protected_branch(
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Git Protected Branch Gate");
+
+    // Allow bypass for testing/CI environments
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        skip(
+            "Git protected branch gate skipped (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
+            pass_count,
+        );
+        return Ok(());
+    }
+
+    let protected_patterns = ["master", "main", "production", "stable"];
+
+    let current_branch = {
+        let output = std::process::Command::new("git")
+            .args(["rev-parse", "--abbrev-ref", "HEAD"])
+            .current_dir(repo_root)
+            .output();
+        output
+            .ok()
+            .and_then(|o| {
+                if o.status.success() {
+                    Some(String::from_utf8_lossy(&o.stdout).trim().to_string())
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_else(|| "unknown".to_string())
+    };
+
+    let is_protected = protected_patterns
+        .iter()
+        .any(|p| current_branch == *p || current_branch.starts_with("release/"));
+
+    if is_protected {
+        fail(
+            &format!(
+                "Currently on protected branch '{}' - implementation work must happen in working branch, not directly on protected refs (claim.git.no_direct_main_push)",
+                current_branch
+            ),
+            fail_count,
+        );
+    } else {
+        pass(
+            &format!("On working branch '{}' (not protected)", current_branch),
+            pass_count,
+        );
+    }
+
+    let has_remote = std::process::Command::new("git")
+        .args(["remote", "get-url", "origin"])
+        .current_dir(repo_root)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    if has_remote {
+        let ahead_behind = std::process::Command::new("git")
+            .args(["rev-list", "--left-right", "--count", "HEAD...origin/HEAD"])
+            .current_dir(repo_root)
+            .output();
+
+        if let Ok(out) = ahead_behind {
+            if out.status.success() {
+                let counts = String::from_utf8_lossy(&out.stdout);
+                let parts: Vec<&str> = counts.split_whitespace().collect();
+                if parts.len() >= 2 {
+                    let ahead: u32 = parts[0].parse().unwrap_or(0);
+                    if ahead > 0 {
+                        let output = std::process::Command::new("git")
+                            .args(["rev-list", "--format=%s", "-n1", "HEAD"])
+                            .current_dir(repo_root)
+                            .output();
+                        let commit_msg = output
+                            .ok()
+                            .and_then(|o| {
+                                if o.status.success() {
+                                    Some(String::from_utf8_lossy(&o.stdout).trim().to_string())
+                                } else {
+                                    None
+                                }
+                            })
+                            .unwrap_or_else(|| "unknown".to_string());
+
+                        fail(
+                            &format!(
+                                "Protected branch has {} unpushed commit(s) - direct push to protected branch detected (commit: {})",
+                                ahead, commit_msg
+                            ),
+                            fail_count,
+                        );
+                    } else {
+                        pass("No unpushed commits to protected branches", pass_count);
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn validate_tooling_gate(
     pass_count: &mut u32,
     fail_count: &mut u32,
@@ -1795,6 +1979,10 @@ pub fn run_validation(
     validate_markdown_primitives_roundtrip_gate(store, &mut pass_count, &mut fail_count)?;
     trace_gate("validate_federation_gates");
     validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_git_workspace_context");
+    validate_git_workspace_context(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_git_protected_branch");
+    validate_git_protected_branch(&mut pass_count, &mut fail_count, decapod_dir)?;
     trace_gate("validate_tooling_gate");
     validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 
