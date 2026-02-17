@@ -23,6 +23,8 @@ This registry defines the canonical binding interface surfaces.
 | `interfaces/KNOWLEDGE_SCHEMA.md` | Knowledge schema + invariants | Yes |
 | `interfaces/MEMORY_SCHEMA.md` | Memory schema + retrieval-event contract | Yes |
 | `interfaces/DEMANDS_SCHEMA.md` | User-demand schema + precedence rules | Yes |
+| `interfaces/RISK_POLICY_GATE.md` | Deterministic PR risk-policy gate semantics | Yes |
+| `interfaces/AGENT_CONTEXT_PACK.md` | Agent context-pack layout and mutation contract | Yes |
 
 ---
 
@@ -32,6 +34,8 @@ This registry defines the canonical binding interface surfaces.
 - Knowledge structure and validation: `interfaces/KNOWLEDGE_SCHEMA.md`
 - Memory structure and retrieval-event semantics: `interfaces/MEMORY_SCHEMA.md`
 - User demand typing and precedence: `interfaces/DEMANDS_SCHEMA.md`
+- Deterministic PR risk policy and evidence discipline: `interfaces/RISK_POLICY_GATE.md`
+- Agent memory/context pack semantics: `interfaces/AGENT_CONTEXT_PACK.md`
 
 ---
 
@@ -59,6 +63,8 @@ This registry defines the canonical binding interface surfaces.
 - `interfaces/STORE_MODEL.md` - Store semantics
 - `interfaces/GLOSSARY.md` - Term definitions
 - `interfaces/TESTING.md` - Testing contract
+- `interfaces/RISK_POLICY_GATE.md` - Deterministic PR risk-policy gate
+- `interfaces/AGENT_CONTEXT_PACK.md` - Agent context-pack contract
 
 ### Operations (Plugins Layer)
 - `plugins/TODO.md` - Work tracking
