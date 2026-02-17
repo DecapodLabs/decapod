@@ -13,6 +13,14 @@ pub fn now_epoch_z() -> String {
     format!("{}Z", secs)
 }
 
+pub fn now_epoch_secs() -> u64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
+
 pub fn new_event_id() -> String {
     Ulid::new().to_string()
 }

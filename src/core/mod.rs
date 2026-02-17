@@ -35,6 +35,8 @@ pub mod db;
 pub mod docs_cli;
 pub mod error;
 pub mod external_action;
+pub mod fs_cli;
+pub mod governance_map;
 pub mod migration;
 pub mod output;
 pub mod proof;

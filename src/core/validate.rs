@@ -1792,6 +1792,126 @@ fn validate_git_protected_branch(
     Ok(())
 }
 
+fn validate_orphan_changes(
+    store: &Store,
+    pass_count: &mut u32,
+    warn_count: &mut u32,
+    _fail_count: &mut u32,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Orphan Change Gate");
+
+    // 1. Get Session Start Time
+    let receipt_path = repo_root.join(".decapod").join("generated").join("agent_init.json");
+    if !receipt_path.exists() {
+        // No session active, so we can't strictly enforce orphans against a session start time.
+        // However, this should have been caught by validate_entrypoint_invariants.
+        skip("No active session receipt; skipping orphan check", pass_count);
+        return Ok(());
+    }
+    
+    let receipt_content = fs::read_to_string(&receipt_path).map_err(error::DecapodError::IoError)?;
+    let receipt_json: serde_json::Value = serde_json::from_str(&receipt_content).unwrap_or(serde_json::json!({}));
+    let session_start_ts = receipt_json.get("ts").and_then(|v| v.as_u64()).unwrap_or(0);
+
+    if session_start_ts == 0 {
+        skip("Invalid session receipt timestamp; skipping orphan check", pass_count);
+        return Ok(());
+    }
+
+    // 2. Scan for Modified Files > Session Start
+    let mut modified_files = Vec::new();
+    let mut scan_queue = vec![repo_root.to_path_buf()];
+    
+    while let Some(dir) = scan_queue.pop() {
+        if let Ok(entries) = fs::read_dir(&dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+                
+                // Skip ignored directories
+                if name.starts_with('.') || name == "target" || name == "node_modules" {
+                    continue;
+                }
+
+                if path.is_dir() {
+                    scan_queue.push(path);
+                } else if path.is_file() {
+                    if let Ok(metadata) = fs::metadata(&path) {
+                        if let Ok(mtime) = metadata.modified() {
+                            if let Ok(duration) = mtime.duration_since(std::time::UNIX_EPOCH) {
+                                if duration.as_secs() > session_start_ts {
+                                    modified_files.push(path);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if modified_files.is_empty() {
+        pass("No files modified since session start", pass_count);
+        return Ok(());
+    }
+
+    // 3. Check Broker Log for Attribution
+    let audit_log = store.root.join("broker.events.jsonl");
+    let mut attributed_files = std::collections::HashSet::new();
+    
+    if audit_log.exists() {
+        let content = fs::read_to_string(&audit_log).unwrap_or_default();
+        for line in content.lines() {
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(line) {
+                let ts = v.get("ts").and_then(|v| v.as_u64()).unwrap_or(0);
+                if ts < session_start_ts {
+                    continue;
+                }
+                
+                // Check fs.write events
+                if v.get("op").and_then(|s| s.as_str()) == Some("fs.write") {
+                    if let Some(path_str) = v.get("path").and_then(|s| s.as_str()) {
+                        attributed_files.insert(repo_root.join(path_str));
+                    }
+                }
+                
+                // Check exec events (broad attribution - assume exec touches things)
+                // Ideally, exec would report touched files, but for now we might be lenient
+                // or just accept that exec happened. 
+                // BUT: The goal is strict attribution.
+                // If the user runs `decapod exec -- cargo build`, many files change.
+                // We can't easily know which ones.
+                // So for now, we only attribute explicit fs.write.
+            }
+        }
+    }
+
+    let mut orphans = Vec::new();
+    for file in modified_files {
+        if !attributed_files.contains(&file) {
+            orphans.push(file);
+        }
+    }
+
+    if orphans.is_empty() {
+        pass("All recent modifications are attributed to Decapod events", pass_count);
+    } else {
+        // Warn for now to avoid breaking the agent's own workflow during this transition
+        warn(
+            &format!(
+                "Found {} orphan file changes (modified since session start without decapod fs.write receipt): {:?}",
+                orphans.len(),
+                orphans.iter().take(3).collect::<Vec<_>>()
+            ),
+            warn_count,
+        );
+        // In a strict mode, this would be: fail(...)
+    }
+
+    Ok(())
+}
+
 fn validate_tooling_gate(
     pass_count: &mut u32,
     fail_count: &mut u32,

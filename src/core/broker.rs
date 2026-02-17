@@ -317,3 +317,33 @@ pub fn schema() -> serde_json::Value {
 fn default_broker_schema_version() -> String {
     "1.0.0".to_string()
 }
+
+/// Standalone event logger for non-DB operations (fs, exec, etc.)
+pub fn log_event(store_root: &Path, event: JsonValue) -> Result<(), error::DecapodError> {
+    use std::fs::OpenOptions;
+    use std::io::Write;
+
+    let audit_log_path = store_root.join("broker.events.jsonl");
+    let audit_lock = get_audit_lock();
+    let _audit_guard = audit_lock
+        .lock()
+        .map_err(|_| error::DecapodError::ValidationError("Audit lock poisoned".into()))?;
+
+    let mut f = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&audit_log_path)
+        .map_err(error::DecapodError::IoError)?;
+
+    // Ensure timestamp is present if missing
+    let mut final_event = event;
+    if final_event.get("ts").is_none() {
+        if let Some(obj) = final_event.as_object_mut() {
+            obj.insert("ts".to_string(), serde_json::json!(time::now_epoch_secs()));
+        }
+    }
+
+    writeln!(f, "{}", serde_json::to_string(&final_event).unwrap())
+        .map_err(error::DecapodError::IoError)?;
+    Ok(())
+}

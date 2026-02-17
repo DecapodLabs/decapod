@@ -55,10 +55,24 @@ pub enum DocsCommand {
         #[clap(long, short)]
         force: bool,
     },
+    /// Show constitution documents related to a specific command.
+    Related {
+        /// Command path (e.g. "todo.add")
+        #[clap(value_parser)]
+        path: String,
+    },
 }
 
 pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
     match cli.command {
+        DocsCommand::Related { path } => {
+            let docs = crate::core::governance_map::related_docs(&path);
+            println!("Constitution documents related to `decapod {}`:", path.replace('.', " "));
+            for doc in docs {
+                println!("- {}", doc);
+            }
+            Ok(())
+        }
         DocsCommand::List => {
             let docs = assets::list_docs();
             println!("Embedded Decapod Methodology Docs:");
@@ -246,6 +260,10 @@ pub fn schema() -> serde_json::Value {
                         "description": "Force re-cache even if unchanged"
                     }
                 }
+            },
+            "related": {
+                "type": "string",
+                "description": "Show constitution documents related to a specific command"
             }
         }
     })
