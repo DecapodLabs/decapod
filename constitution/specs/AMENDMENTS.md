@@ -180,6 +180,40 @@ Each entry MUST include:
 - Proof surface run:
   - `decapod validate`
 
+### 2026-02-17 (container runtime preflight + elevated remediation)
+
+- Docs changed:
+  - `specs/GIT.md` (added binding runtime-access preflight and elevated-permission remediation requirement for container workspace flows)
+  - `interfaces/CLAIMS.md` (registered `claim.git.container_runtime_preflight_required`)
+  - `plugins/CONTAINER.md` (documented runtime-access preflight behavior)
+  - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md` (entrypoint mandate)
+  - `templates/AGENTS.md`, `templates/CLAUDE.md`, `templates/GEMINI.md`, `templates/CODEX.md` (template-source mandate)
+- Summary:
+  - Codified and implemented runtime-access preflight so container workspace runs fail fast with actionable elevated-permission guidance instead of ambiguous downstream git errors.
+- Claims added/changed:
+  - `claim.git.container_runtime_preflight_required`
+- Deprecations:
+  - None.
+- Proof surface run:
+  - `decapod validate`
+
+### 2026-02-17 (agent+password session binding and stale-session eviction)
+
+- Docs changed:
+  - `specs/SECURITY.md` (bound session lifecycle to `agent_id + ephemeral_password` and stale-session assignment eviction)
+  - `interfaces/CONTROL_PLANE.md` (added control-plane session authorization rule)
+  - `interfaces/CLAIMS.md` (registered `claim.session.agent_password_required`)
+  - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md` (entrypoint start-sequence credential export requirement)
+  - `templates/AGENTS.md`, `templates/CLAUDE.md`, `templates/GEMINI.md`, `templates/CODEX.md` (template-source requirement)
+- Summary:
+  - Introduced per-agent, ephemeral password-bound sessions and stale-session cleanup semantics that revoke active assignments when sessions expire.
+- Claims added/changed:
+  - `claim.session.agent_password_required`
+- Deprecations:
+  - None.
+- Proof surface run:
+  - `decapod validate`
+
 ---
 
 ## Links

@@ -64,9 +64,11 @@ decapod version                     # 2. Check installed version
 decapod --help                      # 3. Verify available commands
 decapod data schema --subsystem command_registry --deterministic >/dev/null  # 4. Refresh CLI command index
 decapod docs show core/DECAPOD.md   # 5. Refresh constitution
-decapod session acquire             # 6. Acquire session token (required for all commands)
-decapod validate                    # 7. Check system state
-decapod todo list                   # 8. See active work
+export DECAPOD_AGENT_ID=<agent-id>  # 6. Bind this session to one agent identity
+decapod session acquire             # 7. Acquire per-agent token+password credentials
+export DECAPOD_SESSION_PASSWORD=<password-from-acquire>  # 8. Bind ephemeral password
+decapod validate                    # 9. Check system state
+decapod todo list                   # 10. See active work
 ```
 
 **Why this is non-negotiable:**

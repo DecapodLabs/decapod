@@ -1183,6 +1183,115 @@ pub fn clock_in_agent_presence(store: &Store) -> Result<(), error::DecapodError>
     Ok(())
 }
 
+pub fn cleanup_stale_agent_assignments(
+    root: &Path,
+    stale_agents: &[String],
+    reason: &str,
+) -> Result<usize, error::DecapodError> {
+    if stale_agents.is_empty() {
+        return Ok(0);
+    }
+
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+    let ts = now_iso();
+
+    broker.with_conn(&db_path, "decapod", None, "todo.session.cleanup", |conn| {
+        ensure_schema(conn)?;
+        let mut released_count = 0usize;
+
+        for agent_id in stale_agents {
+            let mut task_ids = Vec::new();
+            {
+                let mut stmt = conn
+                    .prepare(
+                        "SELECT id FROM tasks
+                             WHERE assigned_to = ?1
+                               AND status NOT IN ('done', 'archived')",
+                    )
+                    .map_err(error::DecapodError::RusqliteError)?;
+                let rows = stmt
+                    .query_map(rusqlite::params![agent_id], |row| row.get::<_, String>(0))
+                    .map_err(error::DecapodError::RusqliteError)?;
+                for row in rows {
+                    task_ids.push(row.map_err(error::DecapodError::RusqliteError)?);
+                }
+            }
+
+            for task_id in task_ids {
+                let changed = conn
+                    .execute(
+                        "UPDATE tasks
+                             SET assigned_to = '', assigned_at = NULL, updated_at = ?1
+                             WHERE id = ?2
+                               AND assigned_to = ?3
+                               AND status NOT IN ('done', 'archived')",
+                        rusqlite::params![ts, task_id, agent_id],
+                    )
+                    .map_err(error::DecapodError::RusqliteError)?;
+                if changed > 0 {
+                    conn.execute(
+                        "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
+                        rusqlite::params![task_id, agent_id],
+                    )
+                    .map_err(error::DecapodError::RusqliteError)?;
+                    sync_legacy_owner_column(conn, &task_id)?;
+                    released_count += changed as usize;
+
+                    let ev = TodoEvent {
+                        ts: ts.clone(),
+                        event_id: Ulid::new().to_string(),
+                        event_type: "task.release".to_string(),
+                        task_id: Some(task_id.clone()),
+                        payload: serde_json::json!({
+                            "assigned_to": "",
+                            "previous_assignee": agent_id,
+                            "reason": reason,
+                        }),
+                        actor: "decapod".to_string(),
+                    };
+                    append_event(root, &ev)?;
+                    insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+                }
+            }
+
+            conn.execute(
+                "DELETE FROM task_owners WHERE agent_id = ?1",
+                rusqlite::params![agent_id],
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+            conn.execute(
+                "DELETE FROM agent_category_claims WHERE agent_id = ?1",
+                rusqlite::params![agent_id],
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+            conn.execute(
+                "UPDATE agent_presence
+                     SET status = 'expired', updated_at = ?1
+                     WHERE agent_id = ?2",
+                rusqlite::params![ts, agent_id],
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+
+            let ev = TodoEvent {
+                ts: ts.clone(),
+                event_id: Ulid::new().to_string(),
+                event_type: "agent.session.cleanup".to_string(),
+                task_id: None,
+                payload: serde_json::json!({
+                    "agent_id": agent_id,
+                    "reason": reason,
+                }),
+                actor: "decapod".to_string(),
+            };
+            append_event(root, &ev)?;
+            insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+        }
+
+        Ok(released_count)
+    })
+}
+
 fn list_claimable_tasks_for_agent(
     root: &Path,
     agent_id: &str,
