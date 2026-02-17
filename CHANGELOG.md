@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.4](https://github.com/DecapodLabs/decapod/compare/v0.23.3...v0.23.4) - 2026-02-17
+
+### Added
+
+- persist worktrees, auto-push branch, create PR after container
+
+### Fixed
+
+- remove needless as_deref calls
+
 ## [0.23.3](https://github.com/DecapodLabs/decapod/compare/v0.23.2...v0.23.3) - 2026-02-17
 
 ### Added
