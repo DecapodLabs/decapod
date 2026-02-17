@@ -1145,9 +1145,21 @@ fn validate_lineage_hard_gate(
     }
 
     let conn = db::db_connect_for_validate(&federation_db.to_string_lossy())?;
+    let todo_db = store.root.join("todo.db");
+    let todo_conn = db::db_connect_for_validate(&todo_db.to_string_lossy())?;
     let mut violations = Vec::new();
 
     for task_id in add_candidates {
+        let exists: i64 = todo_conn
+            .query_row(
+                "SELECT COUNT(*) FROM tasks WHERE id = ?1",
+                rusqlite::params![task_id.clone()],
+                |row| row.get(0),
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        if exists == 0 {
+            continue;
+        }
         let source = format!("event:{}", task_id);
         let commitment_count: i64 = conn
             .query_row(
@@ -1165,6 +1177,16 @@ fn validate_lineage_hard_gate(
     }
 
     for task_id in done_candidates {
+        let exists: i64 = todo_conn
+            .query_row(
+                "SELECT COUNT(*) FROM tasks WHERE id = ?1",
+                rusqlite::params![task_id.clone()],
+                |row| row.get(0),
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        if exists == 0 {
+            continue;
+        }
         let source = format!("event:{}", task_id);
         let commitment_count: i64 = conn
             .query_row(

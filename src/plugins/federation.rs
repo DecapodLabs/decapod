@@ -489,7 +489,7 @@ fn read_node_full(conn: &Connection, id: &str) -> Result<FederationNode, error::
 
 pub fn initialize_federation_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = federation_db_path(root);
-    let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
+    let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
 
     conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_META)?;
     conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES)?;

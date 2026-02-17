@@ -12,7 +12,7 @@ This interface defines the Decapod-native context pack for persistent agent memo
 
 ## 1. Canonical Layout
 
-`(Truth: SPEC)` Context-pack files MUST live under `.decapod/` surfaces and not as extra root entrypoints (claim: `claim.context_pack.canonical_layout`).
+`(Truth: SPEC)` Context-pack files MUST live under `.decapod/` directory surfaces and not as extra root entrypoints (claim: `claim.context_pack.canonical_layout`).
 
 Required layout:
 - `.decapod/context/soul.md`
