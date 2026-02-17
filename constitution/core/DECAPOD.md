@@ -275,6 +275,68 @@ All agents operating in this workspace MUST adhere to the following:
 
 ---
 
+## 6. Weights & Balances (Enforcement Architecture)
+
+Decapod enforces its contracts through a three-layered governance model:
+
+### 6.1. Routing ≠ Authorization
+
+- **Routing** decides *where* a request goes (`decapod docs show`, `decapod validate`, etc.)
+- **Policy** decides *whether* an action is allowed (risk evaluation for git push, etc.)
+- **Proof** decides *whether* completion is valid (validation gates, test passes, etc.)
+
+This separation prevents a single component from bypassing checks.
+
+### 6.2. Enforcement Surfaces (Binding Claims)
+
+| Claim | Proof Surface | Consequence |
+|-------|---------------|-------------|
+| `claim.git.container_workspace_required` | `decapod validate` (Git Workspace Context Gate) | FAIL: not running in container workspace |
+| `claim.git.no_direct_main_push` | `decapod validate` (Git Protected Branch Gate) | FAIL: direct work on protected branches |
+| `claim.git.container_runtime_preflight_required` | Container runtime preflight | ERROR with elevated-permission remediation |
+
+### 6.3. Policy Gates (Authorization)
+
+For high-risk Git operations, agents MUST consult policy:
+
+```bash
+# Evaluate risk before git push
+decapod govern policy eval --command "git.push" --target origin/main
+```
+
+Policy returns: `DENY` | `REQUIRE_APPROVAL_EVENT` | `ALLOW_WITH_PROOF`
+
+### 6.4. Watcher Auditing (Detection)
+
+The watcher subsystem provides retrospective detection:
+
+- `check_protected_branches`: Detects commits on protected branches
+- Records violations to `watcher.events.jsonl`
+- Violations trigger autonomy reduction
+
+### 6.5. Autonomy Penalties (Consequences)
+
+Constitution violations affect agent autonomy tier:
+
+| Violations | Tier | Operations Allowed |
+|------------|------|-------------------|
+| 0 | Verified/Core | Full autonomy |
+| 1-2 | Verified | Verified operations only |
+| 3+ | Untrusted | Human-only, no agent autonomy |
+
+Run `decapod govern health autonomy --id <agent>` to check current tier.
+
+### 6.6. Red Lines (Hard Blocks)
+
+The following will ALWAYS cause validation failure:
+
+1. Working directly on host git worktree (must use container workspace)
+2. Commits/pushes to master/main/production/stable/release/*
+3. Bypassing CLI for shared-state mutations
+4. Claiming completion without passing `decapod validate`
+
+---
+
 ## Links
 
 ### Phase 1: Authority (Constitution)

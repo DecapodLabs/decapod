@@ -12,6 +12,7 @@ pub struct Watchlist {
     pub check_repo_dirty: bool,
     pub check_proof_slas: bool,
     pub check_archives: bool,
+    pub check_protected_branches: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -20,6 +21,15 @@ pub struct WatcherReport {
     pub repo_dirty: Option<bool>,
     pub stale_claims: Vec<String>,
     pub missing_archives: Vec<String>,
+    pub protected_branch_violations: Vec<ProtectedBranchViolation>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ProtectedBranchViolation {
+    pub branch: String,
+    pub violation_type: String,
+    pub commit_hash: Option<String>,
+    pub message: String,
 }
 
 pub fn watcher_events_path(root: &Path) -> PathBuf {
@@ -40,7 +50,83 @@ pub fn run_watcher(store: &Store) -> Result<WatcherReport, error::DecapodError> 
         repo_dirty: None,
         stale_claims: Vec::new(),
         missing_archives: Vec::new(),
+        protected_branch_violations: Vec::new(),
     };
+
+    if watchlist.check_protected_branches {
+        let repo_root = store
+            .root
+            .parent()
+            .and_then(|p| p.parent())
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| store.root.clone());
+
+        let protected = ["master", "main", "production", "stable"];
+
+        // Check current branch
+        let output = external_action::execute(
+            &store.root,
+            ExternalCapability::VcsRead,
+            "watcher.current_branch",
+            "git",
+            &["rev-parse", "--abbrev-ref", "HEAD"],
+            &repo_root,
+        );
+        if let Ok(out) = output {
+            let current_branch = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            let is_protected = protected.iter().any(|p| current_branch == *p)
+                || current_branch.starts_with("release/");
+            if is_protected {
+                report.protected_branch_violations.push(ProtectedBranchViolation {
+                    branch: current_branch.clone(),
+                    violation_type: "current_on_protected".to_string(),
+                    commit_hash: None,
+                    message: format!("Watcher detected work on protected branch '{}' - implementation must use working branch", current_branch),
+                });
+            }
+        }
+
+        // Check for unpushed commits to protected branches
+        let output = external_action::execute(
+            &store.root,
+            ExternalCapability::VcsRead,
+            "watcher.ahead_behind",
+            "git",
+            &["rev-list", "--left-right", "--count", "HEAD...origin/HEAD"],
+            &repo_root,
+        );
+        if let Ok(out) = output {
+            let counts = String::from_utf8_lossy(&out.stdout);
+            let parts: Vec<&str> = counts.split_whitespace().collect();
+            if parts.len() >= 2 {
+                let ahead: u32 = parts[0].parse().unwrap_or(0);
+                if ahead > 0 {
+                    let commit_output = external_action::execute(
+                        &store.root,
+                        ExternalCapability::VcsRead,
+                        "watcher.last_commit",
+                        "git",
+                        &["rev-list", "--format=%H", "-n1", "HEAD"],
+                        &repo_root,
+                    );
+                    let commit_hash = commit_output
+                        .ok()
+                        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string());
+                    report
+                        .protected_branch_violations
+                        .push(ProtectedBranchViolation {
+                            branch: "origin/HEAD".to_string(),
+                            violation_type: "unpushed_to_protected".to_string(),
+                            commit_hash,
+                            message: format!(
+                                "Watcher detected {} unpushed commit(s) to protected branch",
+                                ahead
+                            ),
+                        });
+                }
+            }
+        }
+    }
 
     if watchlist.check_repo_dirty {
         let repo_root = store
@@ -94,6 +180,7 @@ fn default_watchlist() -> Watchlist {
         check_repo_dirty: true,
         check_proof_slas: true,
         check_archives: true,
+        check_protected_branches: true,
     }
 }
 

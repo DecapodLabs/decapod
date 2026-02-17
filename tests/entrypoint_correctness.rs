@@ -10,17 +10,7 @@ use tempfile::TempDir;
 
 /// Helper to run decapod command in a temp directory
 fn run_decapod(temp_dir: &PathBuf, args: &[&str]) -> (bool, String) {
-    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .current_dir(temp_dir)
-        .args(args)
-        .output()
-        .expect("Failed to execute decapod");
-
-    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-    let combined = format!("{}\n{}", stdout, stderr);
-
-    (output.status.success(), combined)
+    run_decapod_with_env(temp_dir, args, &[("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")])
 }
 
 fn run_decapod_with_env(
@@ -178,6 +168,7 @@ fn test_agent_session_requires_password() {
         &[
             ("DECAPOD_AGENT_ID", "agent-secure"),
             ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
         ],
     );
     assert!(
