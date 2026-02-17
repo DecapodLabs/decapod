@@ -121,6 +121,53 @@ struct ValidateCli {
     format: String,
 }
 
+#[derive(clap::Args, Debug)]
+struct CapabilitiesCli {
+    /// Output format: 'json' or 'text'.
+    #[clap(long, default_value = "text")]
+    format: String,
+}
+
+#[derive(clap::Args, Debug)]
+struct WorkspaceCli {
+    #[clap(subcommand)]
+    command: WorkspaceCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum WorkspaceCommand {
+    /// Ensure an isolated workspace exists (create if needed)
+    Ensure {
+        /// Branch name (auto-generated if not provided)
+        #[clap(long)]
+        branch: Option<String>,
+    },
+    /// Show current workspace status
+    Status,
+    /// Publish workspace changes as a patch/PR bundle
+    Publish {
+        /// Title for the change
+        #[clap(long)]
+        title: Option<String>,
+        /// Description for the change
+        #[clap(long)]
+        description: Option<String>,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+struct RpcCli {
+    /// Operation to perform
+    #[clap(long)]
+    op: Option<String>,
+    /// JSON parameters
+    #[clap(long)]
+    params: Option<String>,
+    /// Read request from stdin instead of command line
+    #[clap(long)]
+    stdin: bool,
+}
+
 // ===== Grouped Command Structures =====
 
 #[derive(clap::Args, Debug)]
@@ -358,6 +405,18 @@ enum Command {
     /// Architecture decision prompting
     #[clap(name = "decide")]
     Decide(decide::DecideCli),
+
+    /// Agent workspace management
+    #[clap(name = "workspace", visible_alias = "w")]
+    Workspace(WorkspaceCli),
+
+    /// Structured JSON-RPC interface for agents
+    #[clap(name = "rpc")]
+    Rpc(RpcCli),
+
+    /// Show Decapod capabilities (for agent discovery)
+    #[clap(name = "capabilities")]
+    Capabilities(CapabilitiesCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -910,6 +969,15 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Auto(auto_cli) => run_auto_command(auto_cli, &project_store)?,
                 Command::Qa(qa_cli) => run_qa_command(qa_cli, &project_store, &project_root)?,
                 Command::Decide(decide_cli) => decide::run_decide_cli(&project_store, decide_cli)?,
+                Command::Workspace(workspace_cli) => {
+                    run_workspace_command(workspace_cli, &project_root)?;
+                }
+                Command::Rpc(rpc_cli) => {
+                    run_rpc_command(rpc_cli, &project_root)?;
+                }
+                Command::Capabilities(cap_cli) => {
+                    run_capabilities_command(cap_cli)?;
+                }
                 _ => unreachable!(),
             }
         }
@@ -927,8 +995,10 @@ fn should_auto_clock_in(command: &Command) -> bool {
 
 fn requires_session_token(command: &Command) -> bool {
     match command {
-        // Only bootstrap/session lifecycle + version are sessionless.
-        Command::Init(_) | Command::Session(_) | Command::Version => false,
+        // Bootstrap/session lifecycle + version + capabilities are sessionless.
+        Command::Init(_) | Command::Session(_) | Command::Version | Command::Capabilities(_) => {
+            false
+        }
         Command::Data(DataCli {
             command: DataCommand::Schema(_),
         }) => false,
@@ -1227,6 +1297,40 @@ fn run_validate_command(
     project_root: &Path,
     project_store: &Store,
 ) -> Result<(), error::DecapodError> {
+    use crate::core::workspace;
+
+    // FIRST: Check workspace enforcement (non-negotiable)
+    let workspace_status = workspace::get_workspace_status(project_root)?;
+
+    if !workspace_status.can_work {
+        let blocker = workspace_status
+            .blockers
+            .first()
+            .expect("Workspace should have a blocker if can_work is false");
+
+        let response = serde_json::json!({
+            "success": false,
+            "gate": "workspace_protection",
+            "error": blocker.message,
+            "resolve_hint": blocker.resolve_hint,
+            "branch": workspace_status.git.current_branch,
+            "is_protected": workspace_status.git.is_protected,
+            "in_container": workspace_status.container.in_container,
+        });
+
+        if validate_cli.format == "json" {
+            println!("{}", serde_json::to_string_pretty(&response).unwrap());
+        } else {
+            eprintln!("❌ VALIDATION FAILED: Workspace Protection Gate");
+            eprintln!("   Error: {}", blocker.message);
+            eprintln!("   Hint: {}", blocker.resolve_hint);
+        }
+
+        return Err(error::DecapodError::ValidationError(
+            "Workspace protection gate failed".to_string(),
+        ));
+    }
+
     let decapod_root = project_root.to_path_buf();
     let store = match validate_cli.store.as_str() {
         "user" => {
@@ -1241,6 +1345,7 @@ fn run_validate_command(
         }
         _ => project_store.clone(),
     };
+
     validate::run_validation(&store, &decapod_root, &decapod_root)
 }
 
@@ -1965,6 +2070,610 @@ fn show_version_info() -> Result<(), error::DecapodError> {
         "Update:".bright_white(),
         "cargo install decapod".bright_cyan()
     );
+
+    Ok(())
+}
+
+/// Run workspace command
+fn run_workspace_command(
+    cli: WorkspaceCli,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
+    use crate::core::workspace;
+
+    match cli.command {
+        WorkspaceCommand::Ensure { branch } => {
+            let agent_id =
+                std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let config = branch.map(|b| workspace::WorkspaceConfig {
+                base_image: "rust:1.75-slim".to_string(),
+                branch: b,
+                use_container: true,
+                resources: workspace::ContainerResources::default(),
+            });
+            let status = workspace::ensure_workspace(project_root, config, &agent_id)?;
+
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": if status.can_work { "ok" } else { "pending" },
+                    "branch": status.git.current_branch,
+                    "is_protected": status.git.is_protected,
+                    "can_work": status.can_work,
+                    "in_container": status.container.in_container,
+                    "docker_available": status.container.docker_available,
+                    "worktree_path": status.git.worktree_path,
+                    "required_actions": status.required_actions,
+                })
+            );
+        }
+        WorkspaceCommand::Status => {
+            let status = workspace::get_workspace_status(project_root)?;
+
+            println!(
+                "{}",
+                serde_json::json!({
+                    "can_work": status.can_work,
+                    "git_branch": status.git.current_branch,
+                    "git_is_protected": status.git.is_protected,
+                    "git_has_local_mods": status.git.has_local_mods,
+                    "in_container": status.container.in_container,
+                    "container_image": status.container.image,
+                    "docker_available": status.container.docker_available,
+                    "dockerfile_hash": status.container.dockerfile_hash,
+                    "blockers": status.blockers.len(),
+                    "required_actions": status.required_actions,
+                })
+            );
+        }
+        WorkspaceCommand::Publish {
+            title: _,
+            description: _,
+        } => {
+            // TODO: Implement container-based publish
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "error",
+                    "message": "Publish not yet implemented in new workspace system"
+                })
+            );
+        }
+    }
+
+    Ok(())
+}
+
+/// Run RPC command
+fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::DecapodError> {
+    use crate::core::assurance::{AssuranceEngine, AssuranceEvaluateInput};
+    use crate::core::interview;
+    use crate::core::mentor;
+    use crate::core::rpc::*;
+    use crate::core::standards;
+    use crate::core::workspace;
+
+    let request: RpcRequest = if cli.stdin {
+        let mut buffer = String::new();
+        std::io::stdin()
+            .read_to_string(&mut buffer)
+            .map_err(|e| error::DecapodError::IoError(e))?;
+        serde_json::from_str(&buffer)
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid JSON: {}", e)))?
+    } else {
+        let op = cli.op.ok_or_else(|| {
+            error::DecapodError::ValidationError("Operation required".to_string())
+        })?;
+        let params = cli
+            .params
+            .as_ref()
+            .and_then(|p| serde_json::from_str(p).ok())
+            .unwrap_or(serde_json::json!({}));
+
+        RpcRequest {
+            op,
+            params,
+            id: default_request_id(),
+            session: None,
+        }
+    };
+
+    let response = match request.op.as_str() {
+        "agent.init" => {
+            // Session initialization with receipt
+            let workspace_status = workspace::get_workspace_status(project_root)?;
+            let allowed_ops = workspace::get_allowed_ops(&workspace_status);
+
+            let context_capsule = if workspace_status.can_work {
+                Some(ContextCapsule {
+                    spec: Some("Agent initialized successfully".to_string()),
+                    architecture: None,
+                    security: None,
+                    standards: Some({
+                        let resolved = standards::resolve_standards(project_root)?;
+                        let mut map = std::collections::HashMap::new();
+                        map.insert(
+                            "project_name".to_string(),
+                            serde_json::json!(resolved.project_name),
+                        );
+                        map
+                    }),
+                })
+            } else {
+                None
+            };
+
+            let _blocked_by = if !workspace_status.can_work {
+                workspace_status.blockers.clone()
+            } else {
+                vec![]
+            };
+
+            let mut response =
+                success_response(request.id, request.op, vec![], context_capsule, allowed_ops);
+            response.receipt.changes = Some(serde_json::json!({
+                "environment_context": {
+                    "repo_root": project_root.to_string_lossy(),
+                    "workspace_path": project_root.to_string_lossy(),
+                    "tool_summary": {
+                        "docker_available": workspace_status.container.docker_available,
+                        "in_container": workspace_status.container.in_container,
+                    },
+                    "done_means": "decapod validate passes"
+                }
+            }));
+            response
+        }
+        "workspace.status" => {
+            let status = workspace::get_workspace_status(project_root)?;
+            let blocked_by = status.blockers.clone();
+            let allowed_ops = workspace::get_allowed_ops(&status);
+
+            let mut response = success_response(
+                request.id.clone(),
+                request.op.clone(),
+                vec![],
+                None,
+                allowed_ops,
+            );
+            response.receipt.changes = Some(serde_json::json!({
+                "git_branch": status.git.current_branch,
+                "git_is_protected": status.git.is_protected,
+                "in_container": status.container.in_container,
+                "can_work": status.can_work,
+            }));
+            response.blocked_by = blocked_by;
+            response
+        }
+        "workspace.ensure" => {
+            let agent_id =
+                std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let branch = request
+                .params
+                .get("branch")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+
+            let config = branch.map(|b| workspace::WorkspaceConfig {
+                base_image: "rust:1.75-slim".to_string(),
+                branch: b,
+                use_container: true,
+                resources: workspace::ContainerResources::default(),
+            });
+
+            let status = workspace::ensure_workspace(project_root, config, &agent_id)?;
+            let allowed_ops = workspace::get_allowed_ops(&status);
+
+            success_response(
+                request.id,
+                request.op,
+                vec![format!(".git/refs/heads/{}", status.git.current_branch)],
+                None,
+                allowed_ops,
+            )
+        }
+        "workspace.publish" => {
+            // TODO: Implement container-based publish
+            let _title = request
+                .params
+                .get("title")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+            let _description = request
+                .params
+                .get("description")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+
+            success_response(
+                request.id,
+                request.op,
+                vec![],
+                None,
+                vec![AllowedOp {
+                    op: "validate".to_string(),
+                    reason: "Publish complete - run validation".to_string(),
+                    required_params: vec![],
+                }],
+            )
+        }
+        "scaffold.next_question" => {
+            let project_name = request
+                .params
+                .get("project_name")
+                .and_then(|v| v.as_str())
+                .unwrap_or("Untitled")
+                .to_string();
+
+            let interview = interview::init_interview(project_name);
+            let question = interview::next_question(&interview);
+
+            let mut response = success_response(
+                request.id,
+                request.op,
+                vec![],
+                None,
+                vec![AllowedOp {
+                    op: "scaffold.apply_answer".to_string(),
+                    reason: "Provide answer to continue interview".to_string(),
+                    required_params: vec!["question_id".to_string(), "value".to_string()],
+                }],
+            );
+
+            if let Some(q) = question {
+                response.receipt.changes = Some(serde_json::json!({
+                    "interview_id": interview.id,
+                    "question": q,
+                }));
+            } else {
+                response.receipt.changes = Some(serde_json::json!({
+                    "interview_id": interview.id,
+                    "complete": true,
+                }));
+            }
+
+            response
+        }
+        "scaffold.apply_answer" => {
+            let question_id = request
+                .params
+                .get("question_id")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| {
+                    error::DecapodError::ValidationError("question_id required".to_string())
+                })?;
+            let value = request.params.get("value").cloned().ok_or_else(|| {
+                error::DecapodError::ValidationError("value required".to_string())
+            })?;
+
+            let mut interview = interview::init_interview("project".to_string());
+            interview::apply_answer(&mut interview, question_id, value)?;
+
+            let next_q = interview::next_question(&interview);
+
+            let mut response = success_response(
+                request.id,
+                request.op,
+                vec![],
+                None,
+                vec![AllowedOp {
+                    op: if next_q.is_some() {
+                        "scaffold.next_question".to_string()
+                    } else {
+                        "scaffold.generate_artifacts".to_string()
+                    },
+                    reason: if next_q.is_some() {
+                        "Continue interview".to_string()
+                    } else {
+                        "Interview complete - generate artifacts".to_string()
+                    },
+                    required_params: vec![],
+                }],
+            );
+
+            response.receipt.changes = Some(serde_json::json!({
+                "answers_count": interview.answers.len(),
+                "is_complete": interview.is_complete,
+            }));
+
+            response
+        }
+        "scaffold.generate_artifacts" => {
+            let interview = interview::init_interview("project".to_string());
+            let output_dir = project_root.to_path_buf();
+
+            let artifacts = interview::generate_artifacts(&interview, &output_dir)?;
+
+            let touched_paths: Vec<String> = artifacts
+                .iter()
+                .map(|a| a.path.to_string_lossy().to_string())
+                .collect();
+
+            success_response(
+                request.id,
+                request.op,
+                touched_paths,
+                None,
+                vec![AllowedOp {
+                    op: "validate".to_string(),
+                    reason: "Artifacts generated - validate before claiming done".to_string(),
+                    required_params: vec![],
+                }],
+            )
+        }
+        "standards.resolve" => {
+            let resolved = standards::resolve_standards(project_root)?;
+
+            let mut standards_map = std::collections::HashMap::new();
+            standards_map.insert(
+                "project_name".to_string(),
+                serde_json::json!(resolved.project_name),
+            );
+            for (k, v) in &resolved.standards {
+                standards_map.insert(k.clone(), v.clone());
+            }
+
+            let context_capsule = ContextCapsule {
+                spec: None,
+                architecture: None,
+                security: None,
+                standards: Some(standards_map),
+            };
+
+            success_response(
+                request.id,
+                request.op,
+                vec![],
+                Some(context_capsule),
+                vec![],
+            )
+        }
+        "mentor.obligations" => {
+            use crate::core::mentor::{MentorEngine, ObligationsContext};
+
+            let engine = MentorEngine::new(project_root);
+            let ctx = ObligationsContext {
+                op: request
+                    .params
+                    .get("op")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown")
+                    .to_string(),
+                params: request
+                    .params
+                    .get("params")
+                    .cloned()
+                    .unwrap_or(serde_json::json!({})),
+                touched_paths: request
+                    .params
+                    .get("touched_paths")
+                    .and_then(|v| v.as_array())
+                    .map(|arr| {
+                        arr.iter()
+                            .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                            .collect()
+                    })
+                    .unwrap_or_default(),
+                diff_summary: request
+                    .params
+                    .get("diff_summary")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string()),
+                project_profile_id: request
+                    .params
+                    .get("project_profile_id")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string()),
+                session_id: request
+                    .params
+                    .get("session_id")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string()),
+                high_risk: request
+                    .params
+                    .get("high_risk")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false),
+            };
+
+            let obligations = engine.compute_obligations(&ctx)?;
+
+            let context_capsule = ContextCapsule {
+                spec: None,
+                architecture: None,
+                security: None,
+                standards: None,
+            };
+
+            let mut response = success_response(
+                request.id,
+                request.op,
+                vec![],
+                Some(context_capsule),
+                vec![AllowedOp {
+                    op: "mentor.obligations".to_string(),
+                    reason: "Obligations computed - review must list before proceeding".to_string(),
+                    required_params: vec![],
+                }],
+            );
+
+            response.receipt.changes = Some(serde_json::json!({
+                "obligations": obligations,
+            }));
+
+            // Add blockers for contradictions
+            if !obligations.contradictions.is_empty() {
+                response.blocked_by =
+                    mentor::contradictions_to_blockers(&obligations.contradictions);
+            }
+
+            response
+        }
+        "assurance.evaluate" => {
+            let input = AssuranceEvaluateInput {
+                op: request
+                    .params
+                    .get("op")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown")
+                    .to_string(),
+                params: request
+                    .params
+                    .get("params")
+                    .cloned()
+                    .unwrap_or(serde_json::json!({})),
+                touched_paths: request
+                    .params
+                    .get("touched_paths")
+                    .and_then(|v| v.as_array())
+                    .map(|arr| {
+                        arr.iter()
+                            .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                            .collect()
+                    })
+                    .unwrap_or_default(),
+                diff_summary: request
+                    .params
+                    .get("diff_summary")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string()),
+                session_id: request
+                    .params
+                    .get("session_id")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string()),
+                phase: request
+                    .params
+                    .get("phase")
+                    .cloned()
+                    .and_then(|v| serde_json::from_value(v).ok()),
+                time_budget_s: request.params.get("time_budget_s").and_then(|v| v.as_u64()),
+            };
+
+            let engine = AssuranceEngine::new(project_root);
+            let evaluated = engine.evaluate(&input)?;
+            let mut response = success_response(
+                request.id,
+                request.op,
+                input.touched_paths.clone(),
+                None,
+                if let Some(interlock) = &evaluated.interlock {
+                    interlock
+                        .unblock_ops
+                        .iter()
+                        .map(|op| AllowedOp {
+                            op: op.clone(),
+                            reason: format!("Unblock path for {}", interlock.code),
+                            required_params: vec![],
+                        })
+                        .collect()
+                } else {
+                    vec![AllowedOp {
+                        op: "assurance.evaluate".to_string(),
+                        reason: "Re-evaluate after meaningful context changes".to_string(),
+                        required_params: vec![],
+                    }]
+                },
+            );
+            response.interlock = evaluated.interlock.clone();
+            response.advisory = Some(evaluated.advisory.clone());
+            response.attestation = Some(evaluated.attestation.clone());
+            response.receipt.changes = Some(serde_json::json!({
+                "assurance_evaluated": true,
+                "interlock_code": evaluated.interlock.as_ref().map(|i| i.code.clone()),
+            }));
+            if let Some(interlock) = evaluated.interlock {
+                response.blocked_by = vec![Blocker {
+                    kind: match interlock.code.as_str() {
+                        "workspace_required" => BlockerKind::WorkspaceRequired,
+                        "verification_required" => BlockerKind::MissingProof,
+                        "store_boundary_violation" => BlockerKind::Unauthorized,
+                        "decision_required" => BlockerKind::MissingAnswer,
+                        _ => BlockerKind::ValidationFailed,
+                    },
+                    message: interlock.code,
+                    resolve_hint: interlock.message,
+                }];
+            }
+            response
+        }
+        _ => error_response(
+            request.id,
+            request.op.clone(),
+            "unknown_op".to_string(),
+            format!("Unknown operation: {}", request.op),
+            None,
+        ),
+    };
+
+    println!("{}", serde_json::to_string_pretty(&response).unwrap());
+    Ok(())
+}
+
+/// Run capabilities command
+fn run_capabilities_command(cli: CapabilitiesCli) -> Result<(), error::DecapodError> {
+    use crate::core::rpc::generate_capabilities;
+
+    let report = generate_capabilities();
+
+    match cli.format.as_str() {
+        "json" => {
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
+        }
+        _ => {
+            println!("Decapod {}", report.version);
+            println!("==================\n");
+
+            println!("Capabilities:");
+            for cap in &report.capabilities {
+                println!("  {} [{}] - {}", cap.name, cap.stability, cap.description);
+            }
+
+            println!("\nSubsystems:");
+            for sub in &report.subsystems {
+                println!("  {} [{}]", sub.name, sub.status);
+                println!("    Ops: {}", sub.ops.join(", "));
+            }
+
+            println!("\nWorkspace:");
+            println!(
+                "  Enforcement: {}",
+                if report.workspace.enforcement_available {
+                    "available"
+                } else {
+                    "unavailable"
+                }
+            );
+            println!(
+                "  Docker: {}",
+                if report.workspace.docker_available {
+                    "available"
+                } else {
+                    "unavailable"
+                }
+            );
+            println!(
+                "  Protected: {}",
+                report.workspace.protected_patterns.join(", ")
+            );
+
+            println!("\nInterview:");
+            println!(
+                "  Available: {}",
+                if report.interview.available {
+                    "yes"
+                } else {
+                    "no"
+                }
+            );
+            println!(
+                "  Artifacts: {}",
+                report.interview.artifact_types.join(", ")
+            );
+            println!("\nInterlocks:");
+            println!("  Codes: {}", report.interlock_codes.join(", "));
+        }
+    }
 
     Ok(())
 }
