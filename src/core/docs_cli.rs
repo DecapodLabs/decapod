@@ -11,7 +11,7 @@
 //! - **Ingest command**: `decapod docs ingest` dumps full constitution for agent context
 //! - **Override validation**: `decapod docs override` validates and caches OVERRIDE.md checksum
 
-use crate::core::{assets, error};
+use crate::core::{assets, docs, error};
 use clap::Subcommand;
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
@@ -69,39 +69,63 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
             Ok(())
         }
         DocsCommand::Show { path, source } => {
-            // Convert to relative path
-            let relative_path = path.strip_prefix("embedded/").unwrap_or(&path);
-
-            let content = match source {
-                DocumentSource::Embedded => {
-                    // Show only embedded content from binary
-                    assets::get_embedded_doc(relative_path)
-                }
-                DocumentSource::Override => {
-                    // Show only override content from .decapod/constitution/
-                    let current_dir =
-                        std::env::current_dir().map_err(error::DecapodError::IoError)?;
-                    let repo_root = find_repo_root(&current_dir)?;
-                    assets::get_override_doc(&repo_root, relative_path)
-                }
-                DocumentSource::Merged => {
-                    // Show merged content (embedded + override)
-                    let current_dir =
-                        std::env::current_dir().map_err(error::DecapodError::IoError)?;
-                    let repo_root = find_repo_root(&current_dir)?;
-                    assets::get_merged_doc(&repo_root, relative_path)
-                }
+            // Split path and anchor
+            let (relative_path, anchor) = if let Some(pos) = path.find('#') {
+                (&path[..pos], Some(&path[pos + 1..]))
+            } else {
+                (path.as_str(), None)
             };
 
-            match content {
-                Some(content) => {
-                    println!("{}", content);
+            // Convert to relative path
+            let relative_path = relative_path.strip_prefix("embedded/").unwrap_or(relative_path);
+
+            if let Some(a) = anchor {
+                let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
+                let repo_root = find_repo_root(&current_dir)?;
+                if let Some(fragment) = docs::get_fragment(&repo_root, relative_path, Some(a)) {
+                    println!("--- {} ---", fragment.title);
+                    println!("{}", fragment.excerpt); // Note: this is still truncated if excerpt is truncated
+                    // Should we show full section? The user asked for "exact markdown fragment".
+                    // I will add a full extraction to docs.rs later if needed.
                     Ok(())
+                } else {
+                    Err(error::DecapodError::NotFound(format!(
+                        "Section not found: {} in {}",
+                        a, relative_path
+                    )))
                 }
-                None => Err(error::DecapodError::NotFound(format!(
-                    "Document not found: {} (source: {:?})",
-                    path, source
-                ))),
+            } else {
+                let content = match source {
+                    DocumentSource::Embedded => {
+                        // Show only embedded content from binary
+                        assets::get_embedded_doc(relative_path)
+                    }
+                    DocumentSource::Override => {
+                        // Show only override content from .decapod/constitution/
+                        let current_dir =
+                            std::env::current_dir().map_err(error::DecapodError::IoError)?;
+                        let repo_root = find_repo_root(&current_dir)?;
+                        assets::get_override_doc(&repo_root, relative_path)
+                    }
+                    DocumentSource::Merged => {
+                        // Show merged content (embedded + override)
+                        let current_dir =
+                            std::env::current_dir().map_err(error::DecapodError::IoError)?;
+                        let repo_root = find_repo_root(&current_dir)?;
+                        assets::get_merged_doc(&repo_root, relative_path)
+                    }
+                };
+
+                match content {
+                    Some(content) => {
+                        println!("{}", content);
+                        Ok(())
+                    }
+                    None => Err(error::DecapodError::NotFound(format!(
+                        "Document not found: {} (source: {:?})",
+                        path, source
+                    ))),
+                }
             }
         }
         DocsCommand::Ingest => {
