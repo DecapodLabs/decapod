@@ -116,6 +116,38 @@ Each entry MUST include:
 - Proof surface run:
   - `decapod validate` (expected; record exact store(s) when run)
 
+### 2026-02-17
+
+- Docs changed:
+  - `interfaces/RISK_POLICY_GATE.md` (introduced)
+  - `interfaces/AGENT_CONTEXT_PACK.md` (introduced)
+  - `interfaces/CLAIMS.md` (claims added for risk-policy and context-pack contracts)
+  - `core/INTERFACES.md` (registry routing updated)
+  - `contracts/risk-policy.example.json` (introduced machine-readable template)
+  - `src/core/validate.rs` (presence/structure gate for new interfaces and template)
+- Summary:
+  - Added binding interface contracts for deterministic PR risk-policy gating and Decapod-native agent context-pack governance.
+  - Registered new SPEC claims and added minimal loud-fail validation for required contract artifacts and section markers.
+- Claims added/changed:
+  - `claim.risk_policy.single_contract_source`
+  - `claim.risk_policy.preflight_before_fanout`
+  - `claim.review.sha_freshness_required`
+  - `claim.review.single_rerun_writer`
+  - `claim.review.remediation_loop_reenters_policy`
+  - `claim.evidence.manifest_required_for_ui`
+  - `claim.harness.incident_to_case_loop`
+  - `claim.context_pack.canonical_layout`
+  - `claim.context_pack.deterministic_load_order`
+  - `claim.context_pack.mutation_authority_rules`
+  - `claim.memory.append_only_logs`
+  - `claim.memory.distill_proof_required`
+  - `claim.context_pack.security_scoped_loading`
+  - `claim.context_pack.correction_loop_governed`
+- Deprecations:
+  - None.
+- Proof surface run:
+  - `decapod validate` (attempted in repo store; currently fails due `RusqliteError(SystemIoFailure, "disk I/O error")`)
+
 ---
 
 ## Links

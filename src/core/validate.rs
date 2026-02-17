@@ -647,6 +647,117 @@ fn validate_entrypoint_invariants(
     Ok(())
 }
 
+fn validate_interface_contract_bootstrap(
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Interface Contract Bootstrap Gate");
+
+    let risk_policy_doc = repo_root.join("constitution/interfaces/RISK_POLICY_GATE.md");
+    let context_pack_doc = repo_root.join("constitution/interfaces/AGENT_CONTEXT_PACK.md");
+    let risk_policy_example = repo_root.join("constitution/contracts/risk-policy.example.json");
+
+    for (path, label) in [
+        (&risk_policy_doc, "RISK_POLICY_GATE interface"),
+        (&context_pack_doc, "AGENT_CONTEXT_PACK interface"),
+        (&risk_policy_example, "risk-policy contract template"),
+    ] {
+        if path.is_file() {
+            pass(
+                &format!("{} present at {}", label, path.display()),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!("{} missing at {}", label, path.display()),
+                fail_count,
+            );
+        }
+    }
+
+    if risk_policy_doc.is_file() {
+        let content = fs::read_to_string(&risk_policy_doc).map_err(error::DecapodError::IoError)?;
+        for marker in [
+            "**Binding:** Yes",
+            "## 3. Current-Head SHA Discipline",
+            "## 6. Browser Evidence Manifest (UI/Critical Flows)",
+            "## 8. Truth Labels and Upgrade Path",
+            "## Links",
+        ] {
+            if content.contains(marker) {
+                pass(
+                    &format!("RISK_POLICY_GATE includes marker: {}", marker),
+                    pass_count,
+                );
+            } else {
+                fail(
+                    &format!("RISK_POLICY_GATE missing marker: {}", marker),
+                    fail_count,
+                );
+            }
+        }
+    }
+
+    if context_pack_doc.is_file() {
+        let content =
+            fs::read_to_string(&context_pack_doc).map_err(error::DecapodError::IoError)?;
+        for marker in [
+            "**Binding:** Yes",
+            "## 2. Deterministic Load Order",
+            "## 3. Mutation Authority",
+            "## 4. Memory Distillation Contract",
+            "## 8. Truth Labels and Upgrade Path",
+            "## Links",
+        ] {
+            if content.contains(marker) {
+                pass(
+                    &format!("AGENT_CONTEXT_PACK includes marker: {}", marker),
+                    pass_count,
+                );
+            } else {
+                fail(
+                    &format!("AGENT_CONTEXT_PACK missing marker: {}", marker),
+                    fail_count,
+                );
+            }
+        }
+    }
+
+    if risk_policy_example.is_file() {
+        let raw = fs::read_to_string(&risk_policy_example).map_err(error::DecapodError::IoError)?;
+        let parsed: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "risk-policy template JSON parse failed: {}",
+                e
+            ))
+        })?;
+        let required_top_level = [
+            "version",
+            "riskTierRules",
+            "mergePolicy",
+            "docsDriftRules",
+            "evidenceRequirements",
+        ];
+
+        for key in required_top_level {
+            if parsed.get(key).is_some() {
+                pass(
+                    &format!("risk-policy template includes key: {}", key),
+                    pass_count,
+                );
+            } else {
+                fail(
+                    &format!("risk-policy template missing key: {}", key),
+                    fail_count,
+                );
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn extract_md_version(content: &str) -> Option<String> {
     for line in content.lines() {
         let line = line.trim();
@@ -1548,6 +1659,7 @@ pub fn run_validation(
     validate_embedded_self_contained(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_docs_templates_bucket(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_entrypoint_invariants(&mut pass_count, &mut fail_count, decapod_dir)?;
+    validate_interface_contract_bootstrap(&mut pass_count, &mut fail_count, decapod_dir)?;
     println!("validate: gate Four Invariants Gate");
     validate_health_purity(&mut pass_count, &mut fail_count, decapod_dir)?;
     validate_project_scoped_state(store, &mut pass_count, &mut fail_count, decapod_dir)?;
