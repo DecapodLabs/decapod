@@ -90,10 +90,14 @@ use plugins::{
 };
 
 use clap::{CommandFactory, Parser, Subcommand};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::fs;
+use std::io::Read;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command as ProcessCommand;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -932,50 +936,267 @@ fn requires_session_token(command: &Command) -> bool {
     }
 }
 
-fn get_session_token_path() -> Result<PathBuf, error::DecapodError> {
-    let current_dir = std::env::current_dir()?;
-    let project_root = find_decapod_project_root(&current_dir)?;
-    Ok(project_root
+#[derive(Debug, Serialize, Deserialize)]
+struct AgentSessionRecord {
+    agent_id: String,
+    token: String,
+    password_hash: String,
+    issued_at_epoch_secs: u64,
+    expires_at_epoch_secs: u64,
+}
+
+fn now_epoch_secs() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
+fn session_ttl_secs() -> u64 {
+    std::env::var("DECAPOD_SESSION_TTL_SECS")
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+        .filter(|v| *v > 0)
+        .unwrap_or(3600)
+}
+
+fn current_agent_id() -> String {
+    std::env::var("DECAPOD_AGENT_ID")
+        .ok()
+        .map(|v| v.trim().to_string())
+        .filter(|v| !v.is_empty())
+        .unwrap_or_else(|| "unknown".to_string())
+}
+
+fn sanitize_agent_component(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for ch in s.chars() {
+        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
+            out.push(ch.to_ascii_lowercase());
+        } else {
+            out.push('-');
+        }
+    }
+    out.trim_matches('-').to_string()
+}
+
+fn sessions_dir(project_root: &Path) -> PathBuf {
+    project_root
         .join(".decapod")
         .join("generated")
-        .join("session.token"))
+        .join("sessions")
+}
+
+fn session_file_for_agent(project_root: &Path, agent_id: &str) -> PathBuf {
+    sessions_dir(project_root).join(format!("{}.json", sanitize_agent_component(agent_id)))
+}
+
+fn hash_password(password: &str, token: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(token.as_bytes());
+    hasher.update(b":");
+    hasher.update(password.as_bytes());
+    let digest = hasher.finalize();
+    let mut out = String::with_capacity(digest.len() * 2);
+    for b in digest {
+        out.push_str(&format!("{:02x}", b));
+    }
+    out
+}
+
+fn generate_ephemeral_password() -> Result<String, error::DecapodError> {
+    let mut buf = vec![0u8; 24];
+    let mut urandom = fs::File::open("/dev/urandom").map_err(error::DecapodError::IoError)?;
+    urandom
+        .read_exact(&mut buf)
+        .map_err(error::DecapodError::IoError)?;
+    let mut out = String::with_capacity(buf.len() * 2);
+    for b in buf {
+        out.push_str(&format!("{:02x}", b));
+    }
+    Ok(out)
+}
+
+fn read_agent_session(
+    project_root: &Path,
+    agent_id: &str,
+) -> Result<Option<AgentSessionRecord>, error::DecapodError> {
+    let path = session_file_for_agent(project_root, agent_id);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+    let rec: AgentSessionRecord = serde_json::from_str(&raw)
+        .map_err(|e| error::DecapodError::SessionError(format!("invalid session file: {}", e)))?;
+    Ok(Some(rec))
+}
+
+fn write_agent_session(
+    project_root: &Path,
+    rec: &AgentSessionRecord,
+) -> Result<(), error::DecapodError> {
+    let dir = sessions_dir(project_root);
+    fs::create_dir_all(&dir).map_err(error::DecapodError::IoError)?;
+    let path = session_file_for_agent(project_root, &rec.agent_id);
+    let body = serde_json::to_string_pretty(rec)
+        .map_err(|e| error::DecapodError::SessionError(format!("session encode error: {}", e)))?;
+    fs::write(&path, body).map_err(error::DecapodError::IoError)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&path)
+            .map_err(error::DecapodError::IoError)?
+            .permissions();
+        perms.set_mode(0o600);
+        fs::set_permissions(&path, perms).map_err(error::DecapodError::IoError)?;
+    }
+    Ok(())
+}
+
+fn cleanup_expired_sessions(
+    project_root: &Path,
+    store_root: &Path,
+) -> Result<Vec<String>, error::DecapodError> {
+    let dir = sessions_dir(project_root);
+    if !dir.exists() {
+        return Ok(Vec::new());
+    }
+    let now = now_epoch_secs();
+    let mut expired_agents = Vec::new();
+    for entry in fs::read_dir(&dir).map_err(error::DecapodError::IoError)? {
+        let entry = entry.map_err(error::DecapodError::IoError)?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("json") {
+            continue;
+        }
+        let raw = match fs::read_to_string(&path) {
+            Ok(v) => v,
+            Err(_) => {
+                let _ = fs::remove_file(&path);
+                continue;
+            }
+        };
+        let rec: AgentSessionRecord = match serde_json::from_str(&raw) {
+            Ok(v) => v,
+            Err(_) => {
+                let _ = fs::remove_file(&path);
+                continue;
+            }
+        };
+        if rec.expires_at_epoch_secs <= now {
+            let _ = fs::remove_file(&path);
+            expired_agents.push(rec.agent_id);
+        }
+    }
+
+    if !expired_agents.is_empty() {
+        todo::cleanup_stale_agent_assignments(store_root, &expired_agents, "session.expired")?;
+    }
+
+    Ok(expired_agents)
 }
 
 fn ensure_session_valid() -> Result<(), error::DecapodError> {
-    let token_path = get_session_token_path()?;
-    if !token_path.exists() {
+    let current_dir = std::env::current_dir()?;
+    let project_root = find_decapod_project_root(&current_dir)?;
+    let store_root = project_root.join(".decapod").join("data");
+    fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
+    let _ = cleanup_expired_sessions(&project_root, &store_root)?;
+
+    let agent_id = current_agent_id();
+    let session = read_agent_session(&project_root, &agent_id)?;
+    let Some(session) = session else {
+        return Err(error::DecapodError::SessionError(format!(
+            "No active session for agent '{}'. Run 'decapod session acquire' first. Reminder: this CLI/API is not for humans.",
+            agent_id
+        )));
+    };
+
+    if session.expires_at_epoch_secs <= now_epoch_secs() {
+        let _ = fs::remove_file(session_file_for_agent(&project_root, &agent_id));
+        let _ = todo::cleanup_stale_agent_assignments(
+            &store_root,
+            std::slice::from_ref(&agent_id),
+            "session.expired",
+        );
+        return Err(error::DecapodError::SessionError(format!(
+            "Session expired for agent '{}'. Run 'decapod session acquire' to rotate credentials.",
+            agent_id
+        )));
+    }
+
+    if agent_id == "unknown" {
+        return Ok(());
+    }
+
+    let supplied_password = std::env::var("DECAPOD_SESSION_PASSWORD").map_err(|_| {
+        error::DecapodError::SessionError(
+            "Missing DECAPOD_SESSION_PASSWORD. Agent+password is required for session access."
+                .to_string(),
+        )
+    })?;
+    let supplied_hash = hash_password(&supplied_password, &session.token);
+    if supplied_hash != session.password_hash {
         return Err(error::DecapodError::SessionError(
-            "No active session. Run 'decapod session acquire' first. Reminder: this CLI/API is not for humans.".to_string(),
+            "Invalid DECAPOD_SESSION_PASSWORD for current agent session.".to_string(),
         ));
     }
     Ok(())
 }
 
 fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodError> {
+    let current_dir = std::env::current_dir()?;
+    let project_root = find_decapod_project_root(&current_dir)?;
+    let store_root = project_root.join(".decapod").join("data");
+    fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
+    let _ = cleanup_expired_sessions(&project_root, &store_root)?;
+
     match session_cli.command {
         SessionCommand::Acquire => {
-            let token_path = get_session_token_path()?;
-            if token_path.exists() {
-                println!("Session already active. Use 'decapod session status' for details.");
+            let agent_id = current_agent_id();
+            if let Some(existing) = read_agent_session(&project_root, &agent_id)?
+                && existing.expires_at_epoch_secs > now_epoch_secs()
+            {
+                println!(
+                    "Session already active for agent '{}'. Use 'decapod session status' for details.",
+                    agent_id
+                );
                 return Ok(());
             }
 
-            // Create session token
+            let issued = now_epoch_secs();
+            let expires = issued.saturating_add(session_ttl_secs());
             let token = ulid::Ulid::to_string(&ulid::Ulid::new());
-            std::fs::write(&token_path, &token).map_err(error::DecapodError::IoError)?;
+            let password = generate_ephemeral_password()?;
+            let rec = AgentSessionRecord {
+                agent_id: agent_id.clone(),
+                token: token.clone(),
+                password_hash: hash_password(&password, &token),
+                issued_at_epoch_secs: issued,
+                expires_at_epoch_secs: expires,
+            };
+            write_agent_session(&project_root, &rec)?;
 
             println!("Session acquired successfully.");
+            println!("Agent: {}", agent_id);
             println!("Token: {}", token);
+            println!("Password: {}", password);
+            println!("ExpiresAtEpoch: {}", expires);
+            println!(
+                "Export before running other commands: DECAPOD_AGENT_ID='{}' and DECAPOD_SESSION_PASSWORD='<password>'",
+                rec.agent_id
+            );
             println!("\nYou may now use other decapod commands.");
             Ok(())
         }
         SessionCommand::Status => {
-            let token_path = get_session_token_path()?;
-            if token_path.exists() {
-                let token =
-                    std::fs::read_to_string(&token_path).map_err(error::DecapodError::IoError)?;
+            let agent_id = current_agent_id();
+            if let Some(session) = read_agent_session(&project_root, &agent_id)? {
                 println!("Session active");
-                println!("Token: {}", token.trim());
+                println!("Agent: {}", session.agent_id);
+                println!("Token: {}", session.token);
+                println!("IssuedAtEpoch: {}", session.issued_at_epoch_secs);
+                println!("ExpiresAtEpoch: {}", session.expires_at_epoch_secs);
             } else {
                 println!("No active session");
                 println!("Run 'decapod session acquire' to start a session");
@@ -983,9 +1204,15 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
             Ok(())
         }
         SessionCommand::Release => {
-            let token_path = get_session_token_path()?;
-            if token_path.exists() {
-                std::fs::remove_file(&token_path).map_err(error::DecapodError::IoError)?;
+            let agent_id = current_agent_id();
+            let session_path = session_file_for_agent(&project_root, &agent_id);
+            if session_path.exists() {
+                std::fs::remove_file(&session_path).map_err(error::DecapodError::IoError)?;
+                let _ = todo::cleanup_stale_agent_assignments(
+                    &store_root,
+                    std::slice::from_ref(&agent_id),
+                    "session.release",
+                );
                 println!("Session released");
             } else {
                 println!("No active session to release");

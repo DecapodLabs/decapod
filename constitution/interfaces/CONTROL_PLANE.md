@@ -27,6 +27,7 @@ Golden rules:
 5. If the command surface is missing, the work is to add the surface, not to bypass it.
 6. Preserve control-plane opacity at the operator interface: communicate intent/actions/outcomes, not command-surface mechanics, unless diagnostics are explicitly requested.
 7. Liveness must be maintained through invocation heartbeat: each Decapod command invocation should refresh agent presence.
+8. Session access must be bound to agent identity plus ephemeral password (`DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`) for command authorization (claim: `claim.session.agent_password_required`).
 
 This is how you get determinism, auditability, and eventually policy.
 
