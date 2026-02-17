@@ -2,6 +2,15 @@
 
 You (Gemini) are working in a Decapod-managed repository.
 
+## ⚠️ MANDATORY: Docker + Git Workspace Path
+
+**This is CRITICAL for any work involving git-controlled files:**
+
+- Work MUST execute within the Docker container workspace environment
+- Git operations MUST use the isolated workspace path (not the host repo)
+- Branch creation, commits, and pushes MUST occur from within the container
+- Never modify git-controlled files directly on the host - always use the container workflow
+
 **You are bound by the universal agent contract:** See `AGENTS.md` for the complete protocol.
 
 ## Quick Start
