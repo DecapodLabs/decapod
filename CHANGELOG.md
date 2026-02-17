@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.9](https://github.com/DecapodLabs/decapod/compare/v0.23.8...v0.23.9) - 2026-02-17
+
+### Other
+
+- ignore session files in .decapod/generated/sessions/
+- route policy.rs DB access through DbBroker
+
 ## [0.23.8](https://github.com/DecapodLabs/decapod/compare/v0.23.7...v0.23.8) - 2026-02-17
 
 ### Fixed
