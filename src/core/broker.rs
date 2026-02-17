@@ -17,10 +17,12 @@ use crate::core::time;
 use crate::plugins::policy;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock};
+use std::time::{Duration, Instant};
 use ulid::Ulid;
 
 /// Database broker providing serialized access to Decapod state.
@@ -35,6 +37,12 @@ use ulid::Ulid;
 /// bypasses audit trails and violates the control plane contract.
 pub struct DbBroker {
     audit_log_path: PathBuf,
+}
+
+#[derive(Clone)]
+struct CacheEntry {
+    value: JsonValue,
+    expires_at: Instant,
 }
 
 /// Audit event for a brokered database operation.
@@ -190,6 +198,63 @@ impl DbBroker {
             .map_err(error::DecapodError::IoError)?;
         Ok(())
     }
+
+    fn cache_compound_key(db_path: &Path, scope: &str, key: &str) -> String {
+        format!("{}::{}::{}", db_path.to_string_lossy(), scope, key)
+    }
+
+    pub fn cache_get_json(db_path: &Path, scope: &str, key: &str) -> Option<JsonValue> {
+        let compound = Self::cache_compound_key(db_path, scope, key);
+        let cache = broker_read_cache();
+        let mut map = cache.lock().ok()?;
+        if let Some(entry) = map.get(&compound) {
+            if entry.expires_at > Instant::now() {
+                return Some(entry.value.clone());
+            }
+        }
+        map.remove(&compound);
+        None
+    }
+
+    pub fn cache_put_json(
+        db_path: &Path,
+        scope: &str,
+        key: &str,
+        value: JsonValue,
+        ttl_secs: u64,
+    ) -> Result<(), error::DecapodError> {
+        let compound = Self::cache_compound_key(db_path, scope, key);
+        let expires_at = Instant::now()
+            .checked_add(Duration::from_secs(ttl_secs.max(1)))
+            .unwrap_or_else(Instant::now);
+        let mut map = broker_read_cache().lock().map_err(|_| {
+            error::DecapodError::ValidationError("broker read cache lock poisoned".to_string())
+        })?;
+        map.insert(compound, CacheEntry { value, expires_at });
+        Ok(())
+    }
+
+    pub fn cache_invalidate_scope(db_path: &Path, scope: &str) -> Result<(), error::DecapodError> {
+        let prefix = format!("{}::{}::", db_path.to_string_lossy(), scope);
+        let mut map = broker_read_cache().lock().map_err(|_| {
+            error::DecapodError::ValidationError("broker read cache lock poisoned".to_string())
+        })?;
+        map.retain(|k, _| !k.starts_with(&prefix));
+        Ok(())
+    }
+
+    pub fn cache_invalidate_key(
+        db_path: &Path,
+        scope: &str,
+        key: &str,
+    ) -> Result<(), error::DecapodError> {
+        let compound = Self::cache_compound_key(db_path, scope, key);
+        let mut map = broker_read_cache().lock().map_err(|_| {
+            error::DecapodError::ValidationError("broker read cache lock poisoned".to_string())
+        })?;
+        map.remove(&compound);
+        Ok(())
+    }
 }
 
 fn db_lock_map() -> &'static Mutex<HashMap<PathBuf, Arc<Mutex<()>>>> {
@@ -211,6 +276,11 @@ fn get_db_lock(db_path: &Path) -> Result<Arc<Mutex<()>>, error::DecapodError> {
 fn get_audit_lock() -> &'static Mutex<()> {
     static AUDIT_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
     AUDIT_LOCK.get_or_init(|| Mutex::new(()))
+}
+
+fn broker_read_cache() -> &'static Mutex<HashMap<String, CacheEntry>> {
+    static READ_CACHE: OnceLock<Mutex<HashMap<String, CacheEntry>>> = OnceLock::new();
+    READ_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 pub fn schema() -> serde_json::Value {
