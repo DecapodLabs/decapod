@@ -30,17 +30,23 @@
 //! 4. **Respect store semantics**: User = blank slate, Repo = event-sourced
 
 pub mod assets;
+pub mod assurance;
 pub mod broker;
 pub mod db;
 pub mod docs_cli;
 pub mod error;
 pub mod external_action;
+pub mod interview;
+pub mod mentor;
 pub mod migration;
 pub mod output;
 pub mod proof;
 pub mod repomap;
+pub mod rpc;
 pub mod scaffold;
 pub mod schemas;
+pub mod standards;
 pub mod store;
 pub mod time;
 pub mod validate;
+pub mod workspace;

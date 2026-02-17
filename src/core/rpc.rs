@@ -1,0 +1,516 @@
+//! Decapod RPC Interface
+//!
+//! This module implements the agent-native JSON-RPC interface for Decapod.
+//! Agents communicate with Decapod via structured JSON messages over stdin/stdout.
+//!
+//! # Standard Response Envelope
+//!
+//! Every RPC response returns:
+//! - `receipt`: What happened, hashes, touched paths, governing anchors
+//! - `context_capsule`: Minimal relevant spec/arch/security/standards slices
+//! - `allowed_next_ops`: Contract for what to do next
+//! - `blocked_by`: Missing answers/proofs
+//!
+//! # For AI Agents
+//!
+//! Use `decapod rpc` for programmatic access. The CLI subcommands are for human convenience.
+
+use serde::{Deserialize, Serialize};
+use sha2::Digest;
+use std::collections::HashMap;
+
+/// Standard RPC request envelope
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RpcRequest {
+    /// Operation to perform
+    pub op: String,
+    /// Operation parameters
+    #[serde(default)]
+    pub params: serde_json::Value,
+    /// Request ID for correlation
+    #[serde(default = "default_request_id")]
+    pub id: String,
+    /// Session token (optional, can use env var)
+    #[serde(default)]
+    pub session: Option<String>,
+}
+
+pub fn default_request_id() -> String {
+    ulid::Ulid::new().to_string()
+}
+
+/// Standard RPC response envelope
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RpcResponse {
+    /// Request ID for correlation
+    pub id: String,
+    /// Whether the operation succeeded
+    pub success: bool,
+    /// Receipt of what happened
+    pub receipt: Receipt,
+    /// Context capsule with relevant documentation slices
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context_capsule: Option<ContextCapsule>,
+    /// Allowed next operations
+    pub allowed_next_ops: Vec<AllowedOp>,
+    /// Blockers preventing progress
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub blocked_by: Vec<Blocker>,
+    /// Binding enforcement interlock
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub interlock: Option<Interlock>,
+    /// Non-binding advisory guidance
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub advisory: Option<Advisory>,
+    /// Structured evidence for this operation
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attestation: Option<Attestation>,
+    /// Error details (if success is false)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<RpcError>,
+}
+
+/// Receipt documenting what happened
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Receipt {
+    /// Operation performed
+    pub op: String,
+    /// Timestamp (ISO 8601)
+    pub timestamp: String,
+    /// Content hash of the operation
+    pub hash: String,
+    /// Paths touched by the operation
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub touched_paths: Vec<String>,
+    /// Governing anchors (rules that governed this operation)
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub governing_anchors: Vec<String>,
+    /// Changes made
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub changes: Option<serde_json::Value>,
+}
+
+/// Context capsule containing relevant documentation
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ContextCapsule {
+    /// Relevant spec slices
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spec: Option<String>,
+    /// Relevant architecture slices
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub architecture: Option<String>,
+    /// Relevant security slices
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub security: Option<String>,
+    /// Resolved standards applicable to this operation
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub standards: Option<HashMap<String, serde_json::Value>>,
+}
+
+/// Allowed next operation
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AllowedOp {
+    /// Operation name
+    pub op: String,
+    /// Why this is allowed
+    pub reason: String,
+    /// Required parameters
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub required_params: Vec<String>,
+}
+
+/// Blocker preventing operation completion
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Blocker {
+    /// Blocker type
+    pub kind: BlockerKind,
+    /// Human-readable description
+    pub message: String,
+    /// How to resolve
+    pub resolve_hint: String,
+}
+
+/// Types of blockers
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BlockerKind {
+    MissingAnswer,
+    MissingProof,
+    Unauthorized,
+    Conflict,
+    ValidationFailed,
+    WorkspaceRequired,
+    ProtectedBranch,
+}
+
+/// RPC error details
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RpcError {
+    /// Error code
+    pub code: String,
+    /// Error message
+    pub message: String,
+    /// Additional context
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub details: Option<serde_json::Value>,
+}
+
+/// Capabilities report for agent discovery
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct CapabilitiesReport {
+    /// Decapod version
+    pub version: String,
+    /// Capabilities offered
+    pub capabilities: Vec<Capability>,
+    /// Subsystems available
+    pub subsystems: Vec<SubsystemInfo>,
+    /// Workspace features
+    pub workspace: WorkspaceCapabilities,
+    /// Interview features
+    pub interview: InterviewCapabilities,
+    /// Stable interlock codes exposed by the assurance harness
+    pub interlock_codes: Vec<String>,
+}
+
+/// Individual capability
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Capability {
+    /// Capability name
+    pub name: String,
+    /// Description
+    pub description: String,
+    /// Stability: stable, beta, alpha
+    pub stability: String,
+    /// Cost metric (relative)
+    pub cost: String,
+}
+
+/// Subsystem information
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SubsystemInfo {
+    /// Subsystem name
+    pub name: String,
+    /// Status: active, deprecated
+    pub status: String,
+    /// Operations supported
+    pub ops: Vec<String>,
+}
+
+/// Workspace capabilities
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct WorkspaceCapabilities {
+    /// Whether workspace enforcement is available
+    pub enforcement_available: bool,
+    /// Whether docker execution is available
+    pub docker_available: bool,
+    /// Protected branch patterns
+    pub protected_patterns: Vec<String>,
+}
+
+/// Interview capabilities
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct InterviewCapabilities {
+    /// Whether interview engine is available
+    pub available: bool,
+    /// Artifact types that can be generated
+    pub artifact_types: Vec<String>,
+    /// Standards resolution available
+    pub standards_resolution: bool,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Interlock {
+    pub code: String,
+    pub message: String,
+    pub unblock_ops: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub evidence: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct EvidenceRef {
+    pub source: String,
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hash: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ReconciliationPointer {
+    pub kind: String,
+    pub r#ref: String,
+    pub title: String,
+    pub why_short: String,
+    pub evidence: EvidenceRef,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ReconciliationSets {
+    pub must: Vec<ReconciliationPointer>,
+    pub recommended: Vec<ReconciliationPointer>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct VerificationPlan {
+    pub required: Vec<String>,
+    pub checklist: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct LoopSignal {
+    pub code: String,
+    pub message: String,
+    pub suggested_redirect_ops: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Advisory {
+    pub reconciliations: ReconciliationSets,
+    pub verification_plan: VerificationPlan,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub loop_signal: Option<LoopSignal>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Attestation {
+    pub id: String,
+    pub op: String,
+    pub timestamp: String,
+    pub input_hash: String,
+    pub touched_paths: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub interlock_code: Option<String>,
+    pub outcome: String,
+    pub trace_path: String,
+}
+
+/// Generate capabilities report
+pub fn generate_capabilities() -> CapabilitiesReport {
+    CapabilitiesReport {
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        capabilities: vec![
+            Capability {
+                name: "workspace.ensure".to_string(),
+                description: "Create or enter an isolated agent workspace".to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "workspace.status".to_string(),
+                description: "Check current workspace and branch status".to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "workspace.publish".to_string(),
+                description: "Produce a merge-ready patch/PR bundle".to_string(),
+                stability: "stable".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "scaffold.next_question".to_string(),
+                description: "Get the next best question for spec/architecture interview"
+                    .to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "scaffold.apply_answer".to_string(),
+                description: "Apply an answer to the interview state".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "scaffold.generate_artifacts".to_string(),
+                description: "Generate spec/architecture/security/ops docs from interview"
+                    .to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "standards.resolve".to_string(),
+                description: "Resolve industry defaults + override.md into resolved standards"
+                    .to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "todo.claim".to_string(),
+                description: "Claim a task from the backlog".to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "todo.done".to_string(),
+                description: "Mark claimed work as done".to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "validate".to_string(),
+                description: "Run authoritative validation gates".to_string(),
+                stability: "stable".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "mentor.obligations".to_string(),
+                description: "Get obligations pointing to prior decisions, specs, and todos"
+                    .to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "assurance.evaluate".to_string(),
+                description:
+                    "Evaluate action safety via advisory, interlock, and attestation primitives"
+                        .to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+        ],
+        subsystems: vec![
+            SubsystemInfo {
+                name: "todo".to_string(),
+                status: "active".to_string(),
+                ops: vec![
+                    "add".to_string(),
+                    "claim".to_string(),
+                    "done".to_string(),
+                    "list".to_string(),
+                ],
+            },
+            SubsystemInfo {
+                name: "workspace".to_string(),
+                status: "active".to_string(),
+                ops: vec![
+                    "ensure".to_string(),
+                    "status".to_string(),
+                    "publish".to_string(),
+                ],
+            },
+            SubsystemInfo {
+                name: "interview".to_string(),
+                status: "active".to_string(),
+                ops: vec![
+                    "next_question".to_string(),
+                    "apply_answer".to_string(),
+                    "generate_artifacts".to_string(),
+                ],
+            },
+            SubsystemInfo {
+                name: "federation".to_string(),
+                status: "active".to_string(),
+                ops: vec!["add".to_string(), "get".to_string(), "graph".to_string()],
+            },
+        ],
+        workspace: WorkspaceCapabilities {
+            enforcement_available: true,
+            docker_available: std::env::var("DECAPOD_CONTAINER_RUNTIME_DISABLED").is_err(),
+            protected_patterns: vec![
+                "main".to_string(),
+                "master".to_string(),
+                "production".to_string(),
+                "release/*".to_string(),
+            ],
+        },
+        interview: InterviewCapabilities {
+            available: true,
+            artifact_types: vec![
+                "spec".to_string(),
+                "architecture".to_string(),
+                "security".to_string(),
+                "ops".to_string(),
+                "adr".to_string(),
+            ],
+            standards_resolution: true,
+        },
+        interlock_codes: vec![
+            "workspace_required".to_string(),
+            "verification_required".to_string(),
+            "store_boundary_violation".to_string(),
+            "decision_required".to_string(),
+        ],
+    }
+}
+
+/// Create a successful response
+pub fn success_response(
+    request_id: String,
+    op: String,
+    touched_paths: Vec<String>,
+    context_capsule: Option<ContextCapsule>,
+    allowed_next_ops: Vec<AllowedOp>,
+) -> RpcResponse {
+    let timestamp = chrono::Utc::now().to_rfc3339();
+    let hash_input = format!("{}:{}:{}", op, timestamp, request_id);
+    let hash = format!("{:x}", sha2::Sha256::digest(hash_input));
+
+    RpcResponse {
+        id: request_id,
+        success: true,
+        receipt: Receipt {
+            op,
+            timestamp,
+            hash,
+            touched_paths,
+            governing_anchors: vec!["core:workspace_protection".to_string()],
+            changes: None,
+        },
+        context_capsule,
+        allowed_next_ops,
+        blocked_by: vec![],
+        interlock: None,
+        advisory: None,
+        attestation: None,
+        error: None,
+    }
+}
+
+/// Create an error response
+pub fn error_response(
+    request_id: String,
+    op: String,
+    code: String,
+    message: String,
+    blocker: Option<Blocker>,
+) -> RpcResponse {
+    let timestamp = chrono::Utc::now().to_rfc3339();
+    let hash_input = format!("{}:{}:{}", op, timestamp, request_id);
+    let hash = format!("{:x}", sha2::Sha256::digest(hash_input));
+
+    let blocked_by = if let Some(b) = blocker {
+        vec![b]
+    } else {
+        vec![]
+    };
+
+    RpcResponse {
+        id: request_id,
+        success: false,
+        receipt: Receipt {
+            op,
+            timestamp,
+            hash,
+            touched_paths: vec![],
+            governing_anchors: vec![],
+            changes: None,
+        },
+        context_capsule: None,
+        allowed_next_ops: vec![AllowedOp {
+            op: "agent.init".to_string(),
+            reason: "Session may be invalid or expired".to_string(),
+            required_params: vec![],
+        }],
+        blocked_by,
+        interlock: None,
+        advisory: None,
+        attestation: None,
+        error: Some(RpcError {
+            code,
+            message,
+            details: None,
+        }),
+    }
+}
