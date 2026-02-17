@@ -156,7 +156,7 @@ pub fn run_container_for_claim(
 
     let push = env_bool("DECAPOD_CLAIM_PUSH", false);
     let pr = env_bool("DECAPOD_CLAIM_PR", false);
-    let keep_worktree = env_bool("DECAPOD_CLAIM_KEEP_WORKTREE", false);
+    let keep_worktree = env_bool("DECAPOD_CLAIM_KEEP_WORKTREE", true);
     let pr_title = std::env::var("DECAPOD_CLAIM_PR_TITLE")
         .ok()
         .or_else(|| Some(format!("{} [{}]", task_title, task_id)));
@@ -204,8 +204,8 @@ fn run_container(
     push: bool,
     pr: bool,
     pr_base: &str,
-    _pr_title: Option<&str>,
-    _pr_body: Option<&str>,
+    pr_title: Option<&str>,
+    pr_body: Option<&str>,
     image_profile: ImageProfile,
     image_override: Option<&str>,
     timeout_seconds: u64,
@@ -297,6 +297,16 @@ Warning: without isolated containers, concurrent agents can step on each other."
     };
     sync_workspace_branch_to_host_repo(&repo, &workspace.path, &workspace.branch)?;
     let branch_returned_to_host = true;
+
+    if pr {
+        create_gh_pr(
+            &repo,
+            &workspace.branch,
+            &workspace.base_branch,
+            pr_title.as_deref(),
+            pr_body.as_deref(),
+        )?;
+    }
 
     let summary = json!({
         "ts": time::now_epoch_z(),
@@ -724,6 +734,50 @@ fn sync_workspace_branch_to_host_repo(
     }
     Err(error::DecapodError::ValidationError(format!(
         "failed syncing workspace branch '{}' back to host repo: {}",
+        branch,
+        String::from_utf8_lossy(&output.stderr).trim()
+    )))
+}
+
+fn create_gh_pr(
+    repo: &Path,
+    branch: &str,
+    base_branch: &str,
+    title: Option<&str>,
+    body: Option<&str>,
+) -> Result<(), error::DecapodError> {
+    let repo_str = repo.to_str().ok_or_else(|| {
+        error::DecapodError::PathError("invalid repo path for PR creation".to_string())
+    })?;
+
+    let title_arg = title
+        .map(String::from)
+        .unwrap_or_else(|| format!("Agent PR: {}", branch));
+    let body_arg = body
+        .map(String::from)
+        .unwrap_or_else(|| "Created by Decapod agent container workflow".to_string());
+
+    let output = Command::new("gh")
+        .arg("pr")
+        .arg("create")
+        .arg("--base")
+        .arg(base_branch)
+        .arg("--head")
+        .arg(branch)
+        .arg("--title")
+        .arg(&title_arg)
+        .arg("--body")
+        .arg(&body_arg)
+        .arg("--repo")
+        .arg(repo_str)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+
+    if output.status.success() {
+        return Ok(());
+    }
+    Err(error::DecapodError::ValidationError(format!(
+        "failed creating PR for branch '{}': {}",
         branch,
         String::from_utf8_lossy(&output.stderr).trim()
     )))
