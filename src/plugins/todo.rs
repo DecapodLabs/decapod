@@ -21,6 +21,8 @@ use std::path::{Path, PathBuf};
 use ulid::Ulid;
 
 const AGENT_EVICT_TIMEOUT_SECS: u64 = 30 * 60;
+const CLAIM_STATUS_CACHE_SCOPE: &str = "todo.claim.status";
+const CLAIM_STATUS_CACHE_TTL_SECS: u64 = 15;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
 enum OutputFormat {
@@ -153,6 +155,11 @@ pub enum TodoCommand {
         /// Claim mode: exclusive takes assignment; shared joins as secondary owner.
         #[clap(long, value_enum, default_value = "exclusive")]
         mode: ClaimMode,
+    },
+    /// Read claim status for a task (cache-first).
+    ClaimStatus {
+        #[clap(long)]
+        id: String,
     },
     /// Release a claimed task (makes it available for others).
     Release {
@@ -2429,6 +2436,10 @@ pub fn update_status(
         Ok(changed)
     })?;
 
+    if changed > 0 {
+        let _ = DbBroker::cache_invalidate_key(&db_path, CLAIM_STATUS_CACHE_SCOPE, id);
+    }
+
     // Create a lifecycle-change node for every successful task status transition.
     if changed > 0 {
         let source = format!("event:{}", id);
@@ -2654,6 +2665,103 @@ fn edit_task(
     }))
 }
 
+fn cache_put_claim_status(
+    db_path: &Path,
+    id: &str,
+    status: &str,
+    assigned_to: &str,
+    updated_at: &str,
+) {
+    let _ = DbBroker::cache_put_json(
+        db_path,
+        CLAIM_STATUS_CACHE_SCOPE,
+        id,
+        serde_json::json!({
+            "status": status,
+            "assigned_to": assigned_to,
+            "updated_at": updated_at,
+        }),
+        CLAIM_STATUS_CACHE_TTL_SECS,
+    );
+}
+
+fn cache_get_claim_status(db_path: &Path, id: &str) -> Option<(String, String, String)> {
+    let value = DbBroker::cache_get_json(db_path, CLAIM_STATUS_CACHE_SCOPE, id)?;
+    Some((
+        value.get("status")?.as_str()?.to_string(),
+        value
+            .get("assigned_to")
+            .and_then(|v| v.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        value
+            .get("updated_at")
+            .and_then(|v| v.as_str())
+            .unwrap_or_default()
+            .to_string(),
+    ))
+}
+
+fn claim_status(root: &Path, id: &str) -> Result<serde_json::Value, error::DecapodError> {
+    let ts = now_iso();
+    let db_path = todo_db_path(root);
+    if let Some((status, assigned_to, updated_at)) = cache_get_claim_status(&db_path, id) {
+        let exists = !status.is_empty();
+        return Ok(serde_json::json!({
+            "ts": ts,
+            "cmd": "todo.claim-status",
+            "status": if exists { "ok" } else { "not_found" },
+            "source": "cache",
+            "root": root.to_string_lossy(),
+            "id": id,
+            "claim_status": {
+                "task_status": status,
+                "assigned_to": assigned_to,
+                "updated_at": updated_at
+            }
+        }));
+    }
+
+    let broker = DbBroker::new(root);
+    let result = broker.with_conn(&db_path, "decapod", None, "todo.claim.status", |conn| {
+        ensure_schema(conn)?;
+        let row: Option<(String, String, String)> = conn
+            .query_row(
+                "SELECT status, assigned_to, updated_at FROM tasks WHERE id = ?1",
+                rusqlite::params![id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .optional()
+            .map_err(error::DecapodError::RusqliteError)?;
+        Ok(row)
+    })?;
+    if let Some((status, assigned_to, updated_at)) = result {
+        cache_put_claim_status(&db_path, id, &status, &assigned_to, &updated_at);
+        return Ok(serde_json::json!({
+            "ts": ts,
+            "cmd": "todo.claim-status",
+            "status": "ok",
+            "source": "db",
+            "root": root.to_string_lossy(),
+            "id": id,
+            "claim_status": {
+                "task_status": status,
+                "assigned_to": assigned_to,
+                "updated_at": updated_at
+            }
+        }));
+    }
+
+    Ok(serde_json::json!({
+        "ts": ts,
+        "cmd": "todo.claim-status",
+        "status": "not_found",
+        "source": "db",
+        "root": root.to_string_lossy(),
+        "id": id
+    }))
+}
+
 fn claim_task(
     root: &Path,
     id: &str,
@@ -2663,6 +2771,31 @@ fn claim_task(
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
+
+    if mode == ClaimMode::Exclusive
+        && let Some((status, assigned_to, updated_at)) = cache_get_claim_status(&db_path, id)
+        && status != "done"
+        && status != "archived"
+        && !assigned_to.is_empty()
+        && assigned_to != agent_id
+    {
+        return Ok(serde_json::json!({
+            "ts": ts,
+            "cmd": "todo.claim",
+            "status": "conflict",
+            "root": root.to_string_lossy(),
+            "id": id,
+            "result": {
+                "status": "conflict",
+                "mode": "exclusive",
+                "resolution": "none",
+                "assigned_to": assigned_to,
+                "message": format!("Task {} is already claimed by {} (cache)", id, assigned_to),
+                "cached": true,
+                "updated_at": updated_at
+            }
+        }));
+    }
 
     let result = broker.with_conn(&db_path, "decapod", None, "todo.claim", |conn| {
         ensure_schema(conn)?;
@@ -2759,12 +2892,54 @@ fn claim_task(
             }
         }
 
-        // Claim the task
-        conn.execute(
-            "UPDATE tasks SET assigned_to = ?, assigned_at = ?, updated_at = ? WHERE id = ?",
-            [agent_id, &ts, &ts, id],
-        )
-        .map_err(error::DecapodError::RusqliteError)?;
+        // Claim the task atomically to avoid read-then-write races across agents.
+        if mode == ClaimMode::Exclusive {
+            let changed = conn
+                .execute(
+                    "UPDATE tasks
+                     SET assigned_to = ?1, assigned_at = ?2, updated_at = ?2
+                     WHERE id = ?3
+                       AND status NOT IN ('done', 'archived')
+                       AND (assigned_to = '' OR assigned_to = ?1)",
+                    rusqlite::params![agent_id, ts, id],
+                )
+                .map_err(error::DecapodError::RusqliteError)?;
+            if changed == 0 {
+                let current: Option<(String, String)> = conn
+                    .query_row(
+                        "SELECT status, assigned_to FROM tasks WHERE id = ?1",
+                        rusqlite::params![id],
+                        |row| Ok((row.get(0)?, row.get(1)?)),
+                    )
+                    .optional()
+                    .map_err(error::DecapodError::RusqliteError)?;
+                return Ok(match current {
+                    None => serde_json::json!({
+                        "status": "not_found",
+                        "message": format!("Task {} not found", id)
+                    }),
+                    Some((status, _assignee)) if status == "done" || status == "archived" => {
+                        serde_json::json!({
+                            "status": "error",
+                            "message": format!("Task {} is already {}", id, status)
+                        })
+                    }
+                    Some((_status, assignee)) => serde_json::json!({
+                        "status": "conflict",
+                        "mode": "exclusive",
+                        "message": format!("Task {} is already claimed by {}", id, assignee),
+                        "resolution": "none",
+                        "assigned_to": assignee
+                    }),
+                });
+            }
+        } else {
+            conn.execute(
+                "UPDATE tasks SET assigned_to = ?, assigned_at = ?, updated_at = ? WHERE id = ?",
+                [agent_id, &ts, &ts, id],
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        }
 
         let claim_id = upsert_task_owner(conn, id, agent_id, "primary", &ts)?;
         write_ownership_claim_event(
@@ -2803,6 +2978,20 @@ fn claim_task(
             "claim_id": claim_id
         }))
     })?;
+
+    if result.get("status").and_then(|v| v.as_str()) == Some("ok") {
+        let assigned_to = result
+            .get("assigned_to")
+            .and_then(|v| v.as_str())
+            .unwrap_or(agent_id);
+        cache_put_claim_status(&db_path, id, "open", assigned_to, &ts);
+    } else if result.get("status").and_then(|v| v.as_str()) == Some("conflict") {
+        let assigned_to = result
+            .get("assigned_to")
+            .and_then(|v| v.as_str())
+            .unwrap_or_default();
+        cache_put_claim_status(&db_path, id, "open", assigned_to, &ts);
+    }
 
     Ok(serde_json::json!({
         "ts": ts,
@@ -2909,6 +3098,14 @@ fn handoff_task(
     })?;
 
     let (status_result, event_id): (serde_json::Value, String) = result;
+    if status_result
+        .get("status")
+        .and_then(|v| v.as_str())
+        .is_some_and(|s| s == "ok")
+    {
+        let db_path = todo_db_path(root);
+        cache_put_claim_status(&db_path, id, "open", to, &ts);
+    }
     let mut reconcile_result = serde_json::json!({
         "status": "skipped",
         "reason": "handoff_not_ok"
@@ -3284,6 +3481,10 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
             "message": format!("Task {} released", id)
         }))
     })?;
+
+    if result.get("status").and_then(|v| v.as_str()) == Some("ok") {
+        cache_put_claim_status(&db_path, id, "open", "", &ts);
+    }
 
     Ok(serde_json::json!({
         "ts": ts,
@@ -3886,6 +4087,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "comment", "parameters": ["id", "comment"] },
             { "name": "edit", "parameters": ["id", "title", "description", "owner", "category"] },
             { "name": "claim", "parameters": ["id", "agent", "mode"] },
+            { "name": "claim-status", "parameters": ["id"] },
             { "name": "release", "parameters": ["id"] },
             { "name": "categories", "parameters": [] },
             { "name": "register-agent", "parameters": ["agent", "category"] },
@@ -4058,6 +4260,7 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
 
             out
         }
+        TodoCommand::ClaimStatus { id } => claim_status(root, id)?,
         TodoCommand::Release { id } => release_task(root, id)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,
         TodoCommand::Categories => {
