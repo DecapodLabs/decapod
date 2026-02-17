@@ -173,6 +173,8 @@ fn validate_embedded_self_contained(
                     line.contains("OVERRIDE.md") || // OVERRIDE.md file references
                     line.contains("Location:") || // Location descriptions
                     line.contains("primarily contain") || // Directory descriptions
+                    line.contains(".decapod/context/") || // Context pack canonical layout
+                    line.contains(".decapod/memory/") || // Context pack canonical layout
                     line.contains("intended as")
                             // Template descriptions
                         )

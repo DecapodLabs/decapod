@@ -935,7 +935,10 @@ fn requires_session_token(command: &Command) -> bool {
 fn get_session_token_path() -> Result<PathBuf, error::DecapodError> {
     let current_dir = std::env::current_dir()?;
     let project_root = find_decapod_project_root(&current_dir)?;
-    Ok(project_root.join(".decapod").join("session.token"))
+    Ok(project_root
+        .join(".decapod")
+        .join("generated")
+        .join("session.token"))
 }
 
 fn ensure_session_valid() -> Result<(), error::DecapodError> {
