@@ -662,6 +662,17 @@ fn validate_interface_contract_bootstrap(
 ) -> Result<(), error::DecapodError> {
     info("Interface Contract Bootstrap Gate");
 
+    // This gate applies to the decapod repository where constitution/* is present.
+    // Project repos initialized by `decapod init` should not fail on missing embedded docs.
+    let constitution_dir = repo_root.join("constitution");
+    if !constitution_dir.exists() {
+        skip(
+            "No constitution/ directory found (project repo); skipping interface bootstrap checks",
+            pass_count,
+        );
+        return Ok(());
+    }
+
     let risk_policy_doc = repo_root.join("constitution/interfaces/RISK_POLICY_GATE.md");
     let context_pack_doc = repo_root.join("constitution/interfaces/AGENT_CONTEXT_PACK.md");
     let risk_policy_example = repo_root.join("constitution/contracts/risk-policy.example.json");
