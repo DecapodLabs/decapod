@@ -26,6 +26,8 @@ decapod todo list                   # 8. Active work
 - You excel at code completion - but still read architecture first
 - You have strong pattern matching - use it to follow existing code style
 - You may have tool use or function calling - use it for `decapod` commands
+- Git-tracked implementation must run in Docker git workspaces (not host worktree edits)
+- Claim tasks before substantive work: `decapod todo claim --id <task-id>`
 - Apply control-plane opacity: keep operator-facing output semantic (intent/actions/outcomes), not command-surface oriented
 
 ## The Contract
