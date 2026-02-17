@@ -159,29 +159,31 @@ fn validate_embedded_self_contained(
 
         // Check for .decapod/ references that aren't documenting override behavior
         if content.contains(".decapod/") {
-            // Allow legitimate override documentation patterns
-            let lines_with_legitimate_refs = content
-                .lines()
-                .filter(|line| {
-                    line.contains(".decapod/")
-                        && (
-                            line.contains("<repo>") ||  // Path documentation like `<repo>/.decapod/project`
-                    line.contains("store:") ||  // Store documentation
-                    line.contains("directory") || // Directory explanations
-                    line.contains("override") || // Override instructions (lowercase)
-                    line.contains("Override") || // Override instructions (capitalized)
-                    line.contains("OVERRIDE.md") || // OVERRIDE.md file references
-                    line.contains("Location:") || // Location descriptions
-                    line.contains("primarily contain") || // Directory descriptions
-                    line.contains("intended as")
-                            // Template descriptions
-                        )
-                })
-                .count();
+            // Allow legitimate documentation patterns, counting legitimate references (not just lines).
+            let mut legitimate_ref_count = 0usize;
+            for line in content.lines() {
+                let refs_on_line = line.matches(".decapod/").count();
+                if refs_on_line == 0 {
+                    continue;
+                }
+                let is_legitimate_line = line.contains("<repo>")
+                    || line.contains("store:")
+                    || line.contains("directory")
+                    || line.contains("override")
+                    || line.contains("Override")
+                    || line.contains("OVERRIDE.md")
+                    || line.contains("Location:")
+                    || line.contains("primarily contain")
+                    || line.contains(".decapod/context/")
+                    || line.contains(".decapod/memory/")
+                    || line.contains("intended as");
+                if is_legitimate_line {
+                    legitimate_ref_count += refs_on_line;
+                }
+            }
 
-            // If there are .decapod/ references but none are legitimate documentation, flag it
             let total_decapod_refs = content.matches(".decapod/").count();
-            if total_decapod_refs > lines_with_legitimate_refs {
+            if total_decapod_refs > legitimate_ref_count {
                 offenders.push(path);
             }
         }
@@ -230,8 +232,14 @@ fn info(message: &str) {
     let _ = message;
 }
 
+fn trace_gate(name: &str) {
+    if std::env::var("DECAPOD_VALIDATE_TRACE").ok().as_deref() == Some("1") {
+        println!("validate: trace {}", name);
+    }
+}
+
 fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let count: i64 = conn
         .query_row("SELECT COUNT(*) FROM tasks", [], |row| row.get(0))
         .map_err(error::DecapodError::RusqliteError)?;
@@ -239,7 +247,7 @@ fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
 }
 
 fn fetch_tasks_fingerprint(db_path: &Path) -> Result<String, error::DecapodError> {
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let mut stmt = conn
         .prepare("SELECT id,title,status,updated_at,dir_path,scope,priority FROM tasks ORDER BY id")
         .map_err(error::DecapodError::RusqliteError)?;
@@ -647,6 +655,136 @@ fn validate_entrypoint_invariants(
     Ok(())
 }
 
+fn validate_interface_contract_bootstrap(
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Interface Contract Bootstrap Gate");
+
+    // This gate applies to the decapod repository where constitution/* is present.
+    // Project repos initialized by `decapod init` should not fail on missing embedded docs.
+    let constitution_dir = repo_root.join("constitution");
+    if !constitution_dir.exists() {
+        skip(
+            "No constitution/ directory found (project repo); skipping interface bootstrap checks",
+            pass_count,
+        );
+        return Ok(());
+    }
+
+    let risk_policy_doc = repo_root.join("constitution/interfaces/RISK_POLICY_GATE.md");
+    let context_pack_doc = repo_root.join("constitution/interfaces/AGENT_CONTEXT_PACK.md");
+    let risk_policy_example = repo_root.join("constitution/contracts/risk-policy.example.json");
+
+    for (path, label) in [
+        (&risk_policy_doc, "RISK_POLICY_GATE interface"),
+        (&context_pack_doc, "AGENT_CONTEXT_PACK interface"),
+        (&risk_policy_example, "risk-policy contract template"),
+    ] {
+        if path.is_file() {
+            pass(
+                &format!("{} present at {}", label, path.display()),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!("{} missing at {}", label, path.display()),
+                fail_count,
+            );
+        }
+    }
+
+    if risk_policy_doc.is_file() {
+        let content = fs::read_to_string(&risk_policy_doc).map_err(error::DecapodError::IoError)?;
+        for marker in [
+            "**Authority:**",
+            "**Layer:** Interfaces",
+            "**Binding:** Yes",
+            "**Scope:**",
+            "**Non-goals:**",
+            "## 3. Current-Head SHA Discipline",
+            "## 6. Browser Evidence Manifest (UI/Critical Flows)",
+            "## 8. Truth Labels and Upgrade Path",
+            "## Links",
+        ] {
+            if content.contains(marker) {
+                pass(
+                    &format!("RISK_POLICY_GATE includes marker: {}", marker),
+                    pass_count,
+                );
+            } else {
+                fail(
+                    &format!("RISK_POLICY_GATE missing marker: {}", marker),
+                    fail_count,
+                );
+            }
+        }
+    }
+
+    if context_pack_doc.is_file() {
+        let content =
+            fs::read_to_string(&context_pack_doc).map_err(error::DecapodError::IoError)?;
+        for marker in [
+            "**Authority:**",
+            "**Layer:** Interfaces",
+            "**Binding:** Yes",
+            "**Scope:**",
+            "**Non-goals:**",
+            "## 2. Deterministic Load Order",
+            "## 3. Mutation Authority",
+            "## 4. Memory Distillation Contract",
+            "## 8. Truth Labels and Upgrade Path",
+            "## Links",
+        ] {
+            if content.contains(marker) {
+                pass(
+                    &format!("AGENT_CONTEXT_PACK includes marker: {}", marker),
+                    pass_count,
+                );
+            } else {
+                fail(
+                    &format!("AGENT_CONTEXT_PACK missing marker: {}", marker),
+                    fail_count,
+                );
+            }
+        }
+    }
+
+    if risk_policy_example.is_file() {
+        let raw = fs::read_to_string(&risk_policy_example).map_err(error::DecapodError::IoError)?;
+        let parsed: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "risk-policy template JSON parse failed: {}",
+                e
+            ))
+        })?;
+        let required_top_level = [
+            "version",
+            "riskTierRules",
+            "mergePolicy",
+            "docsDriftRules",
+            "evidenceRequirements",
+        ];
+
+        for key in required_top_level {
+            if parsed.get(key).is_some() {
+                pass(
+                    &format!("risk-policy template includes key: {}", key),
+                    pass_count,
+                );
+            } else {
+                fail(
+                    &format!("risk-policy template missing key: {}", key),
+                    fail_count,
+                );
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn extract_md_version(content: &str) -> Option<String> {
     for line in content.lines() {
         let line = line.trim();
@@ -792,7 +930,7 @@ fn validate_health_cache_integrity(
         return Ok(());
     }
 
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
 
     // Check if any health_cache entries exist without corresponding proof_events
     let orphaned: i64 = conn.query_row(
@@ -872,7 +1010,7 @@ fn validate_policy_integrity(
         return Ok(());
     }
 
-    let _conn = db::db_connect(&db_path.to_string_lossy())?;
+    let _conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
 
     let audit_log = store.root.join("broker.events.jsonl");
     if audit_log.exists() {
@@ -919,7 +1057,7 @@ fn validate_knowledge_integrity(
         return Ok(());
     }
 
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
 
     let missing_provenance: i64 = conn
         .query_row(
@@ -1017,10 +1155,22 @@ fn validate_lineage_hard_gate(
         }
     }
 
-    let conn = db::db_connect(&federation_db.to_string_lossy())?;
+    let conn = db::db_connect_for_validate(&federation_db.to_string_lossy())?;
+    let todo_db = store.root.join("todo.db");
+    let todo_conn = db::db_connect_for_validate(&todo_db.to_string_lossy())?;
     let mut violations = Vec::new();
 
     for task_id in add_candidates {
+        let exists: i64 = todo_conn
+            .query_row(
+                "SELECT COUNT(*) FROM tasks WHERE id = ?1",
+                rusqlite::params![task_id.clone()],
+                |row| row.get(0),
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        if exists == 0 {
+            continue;
+        }
         let source = format!("event:{}", task_id);
         let commitment_count: i64 = conn
             .query_row(
@@ -1038,6 +1188,16 @@ fn validate_lineage_hard_gate(
     }
 
     for task_id in done_candidates {
+        let exists: i64 = todo_conn
+            .query_row(
+                "SELECT COUNT(*) FROM tasks WHERE id = ?1",
+                rusqlite::params![task_id.clone()],
+                |row| row.get(0),
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        if exists == 0 {
+            continue;
+        }
         let source = format!("event:{}", task_id);
         let commitment_count: i64 = conn
             .query_row(
@@ -1536,37 +1696,65 @@ pub fn run_validation(
     // Store validations
     match store.kind {
         StoreKind::User => {
+            trace_gate("validate_user_store_blank_slate");
             validate_user_store_blank_slate(&mut pass_count, &mut fail_count)?;
         }
         StoreKind::Repo => {
+            trace_gate("validate_repo_store_dogfood");
             validate_repo_store_dogfood(store, &mut pass_count, &mut fail_count, decapod_dir)?;
         }
     }
 
+    trace_gate("validate_repo_map");
     validate_repo_map(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_no_legacy_namespaces");
     validate_no_legacy_namespaces(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_embedded_self_contained");
     validate_embedded_self_contained(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_docs_templates_bucket");
     validate_docs_templates_bucket(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_entrypoint_invariants");
     validate_entrypoint_invariants(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_interface_contract_bootstrap");
+    validate_interface_contract_bootstrap(&mut pass_count, &mut fail_count, decapod_dir)?;
     println!("validate: gate Four Invariants Gate");
+    trace_gate("validate_health_purity");
     validate_health_purity(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_project_scoped_state");
     validate_project_scoped_state(store, &mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_schema_determinism");
     validate_schema_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_health_cache_integrity");
     validate_health_cache_integrity(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_risk_map");
     validate_risk_map(store, &mut pass_count, &mut warn_count)?;
+    trace_gate("validate_risk_map_violations");
     validate_risk_map_violations(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_policy_integrity");
     validate_policy_integrity(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_knowledge_integrity");
     validate_knowledge_integrity(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_lineage_hard_gate");
     validate_lineage_hard_gate(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_repomap_determinism");
     validate_repomap_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_watcher_audit");
     validate_watcher_audit(store, &mut pass_count, &mut warn_count)?;
+    trace_gate("validate_watcher_purity");
     validate_watcher_purity(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_archive_integrity");
     validate_archive_integrity(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_control_plane_contract");
     validate_control_plane_contract(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_canon_mutation");
     validate_canon_mutation(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_heartbeat_invocation_gate");
     validate_heartbeat_invocation_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_markdown_primitives_roundtrip_gate");
     validate_markdown_primitives_roundtrip_gate(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_federation_gates");
     validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
+    trace_gate("validate_tooling_gate");
     validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 
     let fail_total = VALIDATION_FAILS

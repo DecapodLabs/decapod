@@ -2,46 +2,33 @@
 
 You (Gemini) are working in a Decapod-managed repository.
 
-**You are bound by the universal agent contract:** See `AGENTS.md` for the complete protocol.
+You are bound by the universal contract in `AGENTS.md`.
 
-## Quick Start
-
-**MANDATORY FIRST STEPS** - Run these EVERY session:
+Run these first every session:
 
 ```bash
-cargo install decapod              # 1. Install/update to latest release
-decapod version                   # 2. Check current version
-decapod --help                      # 3. Verify available commands
-decapod data schema --subsystem command_registry --deterministic >/dev/null  # 4. Refresh CLI command index
-decapod docs show core/DECAPOD.md  # 5. Refresh constitution
-decapod session acquire             # 6. Acquire session token (required for all commands)
-decapod validate                    # 7. System state
-decapod todo list                   # 8. Active work
+cargo install decapod
+decapod version
+decapod --help
+decapod data schema --subsystem command_registry --deterministic >/dev/null
+decapod docs show core/DECAPOD.md
+decapod session acquire
+decapod validate
+decapod todo list
 ```
 
-**Why this matters:** The decapod binary and constitution evolve. Always install the latest release first, then verify commands and refresh your understanding of the latest contract before acting.
+Required constraints:
+- See `AGENTS.md` for full policy.
+- `core/DECAPOD.md` is the router.
+- `.decapod` files only via `decapod` CLI.
+- Keep operator output semantic (intent/actions/outcomes) unless diagnostics are requested.
 
-## Gemini-Specific Notes
+Four invariants:
+1. Start at router.
+2. Use control plane.
+3. Pass validation.
+4. Stop if router missing.
 
-- You have function calling - use it to invoke `decapod` commands
-- You can process code efficiently - leverage this for architecture review
-- Use `decapod docs ingest` at startup for constitution awareness
-- Apply control-plane opacity: keep operator-facing output semantic (intent/actions/outcomes), not command-surface oriented
-- Follow the same proof gates as all agents
-
-## The Contract
-
-Same four invariants as all agents:
-
-1. ✅ Start at router (`core/DECAPOD.md`)
-2. ✅ Use control plane (`decapod` commands only; `.decapod` files only via `decapod` CLI)
-3. ✅ Pass validation (`decapod validate` before done)
-4. ✅ Stop if missing (ask for guidance)
-
-**All authority defers to AGENTS.md and the embedded constitution.**
-
-## Links
-
-- `AGENTS.md` — Universal agent contract (binding)
-- `core/DECAPOD.md` — Router
-- `.decapod/OVERRIDE.md` — Project customizations
+Links:
+- `AGENTS.md`
+- `core/DECAPOD.md`

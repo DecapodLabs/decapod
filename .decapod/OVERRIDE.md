@@ -146,32 +146,6 @@ For this project, we use a 5-level priority system:
 
 ### plugins/POLICY.md
 
-## Human-in-the-Loop Override (Project)
-
-Use this section to disable approval gates when a human explicitly opts out.
-
-Rules supported by Decapod policy enforcement:
-- `HITL: I don't want human in the loop` -> disables all human approval gates globally.
-- `HITL_DISABLE scope=<scope>` -> disables gates only for a specific scope.
-- `HITL_DISABLE min_risk=<level> max_risk=<level>` -> disables gates for a risk window.
-- `HITL_DISABLE scope=<scope> min_risk=<level> max_risk=<level>` -> layered disable by scope + risk.
-- `HITL_ENABLE ...` -> re-enable a narrower scope/risk after a broader disable.
-
-Risk levels:
-- `low`
-- `medium`
-- `high`
-- `critical`
-
-Recommended pattern:
-- keep `critical` protected
-- disable only the minimum scope needed
-
-Example:
-- `HITL_DISABLE min_risk=high max_risk=high`
-- `HITL_DISABLE scope=todo.claim.shared min_risk=high max_risk=critical`
-- `HITL_ENABLE scope=todo.handoff risk=critical`
-
 ### plugins/WATCHER.md
 
 ### plugins/KNOWLEDGE.md
