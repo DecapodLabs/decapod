@@ -30,8 +30,24 @@ pub const KNOWLEDGE_DB_SCHEMA: &str = "
         created_at TEXT NOT NULL,
         updated_at TEXT,
         dir_path TEXT NOT NULL,
-        scope TEXT NOT NULL
+        scope TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        merge_key TEXT DEFAULT '',
+        supersedes_id TEXT,
+        ttl_policy TEXT NOT NULL DEFAULT 'persistent',
+        expires_ts TEXT
     )
+";
+pub const KNOWLEDGE_DB_INDEX_STATUS: &str =
+    "CREATE INDEX IF NOT EXISTS idx_knowledge_status ON knowledge(status)";
+pub const KNOWLEDGE_DB_INDEX_CREATED: &str =
+    "CREATE INDEX IF NOT EXISTS idx_knowledge_created_at ON knowledge(created_at)";
+pub const KNOWLEDGE_DB_INDEX_MERGE_KEY: &str =
+    "CREATE INDEX IF NOT EXISTS idx_knowledge_merge_key ON knowledge(merge_key)";
+pub const KNOWLEDGE_DB_INDEX_ACTIVE_MERGE_SCOPE: &str = "
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_knowledge_active_merge_scope
+    ON knowledge(merge_key, scope)
+    WHERE status = 'active' AND merge_key <> ''
 ";
 
 // --- TODO ---

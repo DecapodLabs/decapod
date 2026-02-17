@@ -77,6 +77,10 @@ name = "plugins_decide_tests"
 path = "tests/plugins/decide.rs"
 
 [[test]]
+name = "plugins_knowledge_tests"
+path = "tests/plugins/knowledge.rs"
+
+[[test]]
 name = "gatling"
 path = "tests/gatling.rs"
 

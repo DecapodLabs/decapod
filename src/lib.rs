@@ -392,11 +392,48 @@ enum KnowledgeCommand {
         provenance: String,
         #[clap(long)]
         claim_id: Option<String>,
+        #[clap(long)]
+        merge_key: Option<String>,
+        #[clap(long, default_value = "reject", value_parser = ["merge", "supersede", "reject"])]
+        on_conflict: String,
+        #[clap(long, default_value = "active", value_parser = ["active", "superseded", "deprecated", "stale"])]
+        status: String,
+        #[clap(long, default_value = "persistent", value_parser = ["ephemeral", "decay", "persistent"])]
+        ttl_policy: String,
+        #[clap(long)]
+        expires_ts: Option<String>,
     },
     /// Search project knowledge
     Search {
         #[clap(long)]
         query: String,
+        #[clap(long)]
+        as_of: Option<String>,
+        #[clap(long)]
+        window_days: Option<u32>,
+        #[clap(long, default_value = "recency_desc", value_parser = ["recency_desc", "recency_decay"])]
+        rank: String,
+    },
+    /// Log retrieval feedback outcome for ROI tracking
+    #[clap(name = "retrieval-log")]
+    RetrievalLog {
+        #[clap(long)]
+        query: String,
+        #[clap(long, value_delimiter = ',')]
+        returned_ids: Vec<String>,
+        #[clap(long, value_delimiter = ',')]
+        used_ids: Vec<String>,
+        #[clap(long, value_parser = ["helped", "neutral", "hurt", "unknown"])]
+        outcome: String,
+    },
+    /// Apply deterministic TTL decay policy
+    Decay {
+        #[clap(long, default_value = "default")]
+        policy: String,
+        #[clap(long)]
+        as_of: Option<String>,
+        #[clap(long)]
+        dry_run: bool,
     },
 }
 
@@ -1318,20 +1355,83 @@ fn run_data_command(
                     text,
                     provenance,
                     claim_id,
+                    merge_key,
+                    on_conflict,
+                    status,
+                    ttl_policy,
+                    expires_ts,
                 } => {
-                    knowledge::add_knowledge(
+                    let conflict_policy = knowledge::parse_conflict_policy(&on_conflict)?;
+                    let result = knowledge::add_knowledge(
                         project_store,
-                        &id,
-                        &title,
-                        &text,
-                        &provenance,
-                        claim_id.as_deref(),
+                        knowledge::AddKnowledgeParams {
+                            id: &id,
+                            title: &title,
+                            content: &text,
+                            provenance: &provenance,
+                            claim_id: claim_id.as_deref(),
+                            merge_key: merge_key.as_deref(),
+                            conflict_policy,
+                            status: &status,
+                            ttl_policy: &ttl_policy,
+                            expires_ts: expires_ts.as_deref(),
+                        },
                     )?;
-                    println!("Knowledge entry added: {}", id);
+                    println!(
+                        "Knowledge entry action={} id={} superseded={:?}",
+                        result.action, result.id, result.superseded_ids
+                    );
                 }
-                KnowledgeCommand::Search { query } => {
-                    let results = knowledge::search_knowledge(project_store, &query)?;
+                KnowledgeCommand::Search {
+                    query,
+                    as_of,
+                    window_days,
+                    rank,
+                } => {
+                    let results = knowledge::search_knowledge(
+                        project_store,
+                        &query,
+                        knowledge::SearchOptions {
+                            as_of: as_of.as_deref(),
+                            window_days,
+                            rank: &rank,
+                        },
+                    )?;
                     println!("{}", serde_json::to_string_pretty(&results).unwrap());
+                }
+                KnowledgeCommand::RetrievalLog {
+                    query,
+                    returned_ids,
+                    used_ids,
+                    outcome,
+                } => {
+                    let actor =
+                        std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+                    let result = knowledge::log_retrieval_feedback(
+                        project_store,
+                        &actor,
+                        &query,
+                        &returned_ids,
+                        &used_ids,
+                        &outcome,
+                    )?;
+                    println!(
+                        "Retrieval feedback logged: {} ({})",
+                        result.event_id, result.file
+                    );
+                }
+                KnowledgeCommand::Decay {
+                    policy,
+                    as_of,
+                    dry_run,
+                } => {
+                    let result = knowledge::decay_knowledge(
+                        project_store,
+                        &policy,
+                        as_of.as_deref(),
+                        dry_run,
+                    )?;
+                    println!("{}", serde_json::to_string_pretty(&result).unwrap());
                 }
             }
         }

@@ -205,9 +205,43 @@ pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(root);
     broker.with_conn(&db_path, "decapod", None, "knowledge.init", |conn| {
         conn.execute(schemas::KNOWLEDGE_DB_SCHEMA, [])?;
+        ensure_knowledge_columns(conn)?;
+        conn.execute(schemas::KNOWLEDGE_DB_INDEX_STATUS, [])?;
+        conn.execute(schemas::KNOWLEDGE_DB_INDEX_CREATED, [])?;
+        conn.execute(schemas::KNOWLEDGE_DB_INDEX_MERGE_KEY, [])?;
+        conn.execute(schemas::KNOWLEDGE_DB_INDEX_ACTIVE_MERGE_SCOPE, [])?;
         Ok(())
     })?;
 
+    Ok(())
+}
+
+fn ensure_knowledge_columns(conn: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
+    let mut stmt = conn.prepare("PRAGMA table_info(knowledge)")?;
+    let cols_iter = stmt.query_map([], |row| row.get::<_, String>(1))?;
+    let mut cols = std::collections::HashSet::new();
+    for c in cols_iter {
+        cols.insert(c?);
+    }
+
+    let add_col = |name: &str, sql_type: &str, default_expr: &str| -> Result<(), rusqlite::Error> {
+        if !cols.contains(name) {
+            conn.execute(
+                &format!(
+                    "ALTER TABLE knowledge ADD COLUMN {} {} DEFAULT {}",
+                    name, sql_type, default_expr
+                ),
+                [],
+            )?;
+        }
+        Ok(())
+    };
+
+    add_col("status", "TEXT NOT NULL", "'active'")?;
+    add_col("merge_key", "TEXT", "''")?;
+    add_col("supersedes_id", "TEXT", "NULL")?;
+    add_col("ttl_policy", "TEXT NOT NULL", "'persistent'")?;
+    add_col("expires_ts", "TEXT", "NULL")?;
     Ok(())
 }
 

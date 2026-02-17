@@ -1,9 +1,10 @@
+use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
 use crate::plugins::todo;
 use clap::{Parser, Subcommand};
-use rusqlite::{Connection, params};
+use rusqlite::params;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -404,41 +405,45 @@ fn list_memory_nodes_by_types(
     if !db_path.exists() {
         return Ok(Vec::new());
     }
-    let conn = Connection::open(db_path).map_err(error::DecapodError::RusqliteError)?;
-    let placeholders = std::iter::repeat_n("?", types.len())
-        .collect::<Vec<_>>()
-        .join(", ");
-    let sql = format!(
-        "SELECT id, node_type, title, status, priority, body, tags, created_at, updated_at
-         FROM nodes WHERE node_type IN ({}) ORDER BY updated_at DESC",
-        placeholders
-    );
-    let mut stmt = conn
-        .prepare(&sql)
-        .map_err(error::DecapodError::RusqliteError)?;
-    let params: Vec<&dyn rusqlite::ToSql> =
-        types.iter().map(|t| t as &dyn rusqlite::ToSql).collect();
-    let rows = stmt
-        .query_map(rusqlite::params_from_iter(params), |row| {
-            Ok(MemoryNode {
-                id: row.get(0)?,
-                node_type: row.get(1)?,
-                title: row.get(2)?,
-                status: row.get(3)?,
-                priority: row.get(4)?,
-                body: row.get(5)?,
-                tags: row.get(6)?,
-                created_at: row.get(7)?,
-                updated_at: row.get(8)?,
-            })
-        })
-        .map_err(error::DecapodError::RusqliteError)?;
+    let broker = DbBroker::new(root);
+    broker.with_conn(
+        &db_path,
+        "primitives",
+        None,
+        "primitives.list_nodes",
+        |conn| {
+            let placeholders = std::iter::repeat_n("?", types.len())
+                .collect::<Vec<_>>()
+                .join(", ");
+            let sql = format!(
+                "SELECT id, node_type, title, status, priority, body, tags, created_at, updated_at
+             FROM nodes WHERE node_type IN ({}) ORDER BY updated_at DESC",
+                placeholders
+            );
+            let mut stmt = conn.prepare(&sql)?;
+            let params: Vec<&dyn rusqlite::ToSql> =
+                types.iter().map(|t| t as &dyn rusqlite::ToSql).collect();
+            let rows = stmt.query_map(rusqlite::params_from_iter(params), |row| {
+                Ok(MemoryNode {
+                    id: row.get(0)?,
+                    node_type: row.get(1)?,
+                    title: row.get(2)?,
+                    status: row.get(3)?,
+                    priority: row.get(4)?,
+                    body: row.get(5)?,
+                    tags: row.get(6)?,
+                    created_at: row.get(7)?,
+                    updated_at: row.get(8)?,
+                })
+            })?;
 
-    let mut out = Vec::new();
-    for row in rows {
-        out.push(row.map_err(error::DecapodError::RusqliteError)?);
-    }
-    Ok(out)
+            let mut out = Vec::new();
+            for row in rows {
+                out.push(row?);
+            }
+            Ok(out)
+        },
+    )
 }
 
 fn memory_node_exists(root: &Path, id: &str, node_type: &str) -> Result<bool, error::DecapodError> {
@@ -446,15 +451,21 @@ fn memory_node_exists(root: &Path, id: &str, node_type: &str) -> Result<bool, er
     if !db_path.exists() {
         return Ok(false);
     }
-    let conn = Connection::open(db_path).map_err(error::DecapodError::RusqliteError)?;
-    let count: i64 = conn
-        .query_row(
-            "SELECT COUNT(*) FROM nodes WHERE id = ?1 AND node_type = ?2",
-            params![id, node_type],
-            |row| row.get(0),
-        )
-        .map_err(error::DecapodError::RusqliteError)?;
-    Ok(count > 0)
+    let broker = DbBroker::new(root);
+    broker.with_conn(
+        &db_path,
+        "primitives",
+        None,
+        "primitives.node_exists",
+        |conn| {
+            let count: i64 = conn.query_row(
+                "SELECT COUNT(*) FROM nodes WHERE id = ?1 AND node_type = ?2",
+                params![id, node_type],
+                |row| row.get(0),
+            )?;
+            Ok(count > 0)
+        },
+    )
 }
 
 fn extract_kv(raw: &str, key: &str) -> Option<String> {

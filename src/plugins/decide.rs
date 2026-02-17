@@ -6,6 +6,7 @@ use crate::plugins::federation;
 use clap::{Parser, Subcommand};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
 
@@ -850,15 +851,20 @@ fn decide_db_path(root: &Path) -> PathBuf {
 
 pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = decide_db_path(root);
-    let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
+    let parent_dir = db_path.parent().unwrap();
+    fs::create_dir_all(parent_dir).map_err(error::DecapodError::IoError)?;
 
-    conn.execute_batch(schemas::DECIDE_DB_SCHEMA_META)?;
-    conn.execute_batch(schemas::DECIDE_DB_SCHEMA_SESSIONS)?;
-    conn.execute_batch(schemas::DECIDE_DB_SCHEMA_DECISIONS)?;
-    conn.execute_batch(schemas::DECIDE_DB_INDEX_DECISIONS_SESSION)?;
-    conn.execute_batch(schemas::DECIDE_DB_INDEX_DECISIONS_TREE)?;
-    conn.execute_batch(schemas::DECIDE_DB_INDEX_SESSIONS_TREE)?;
-    conn.execute_batch(schemas::DECIDE_DB_INDEX_SESSIONS_STATUS)?;
+    let broker = DbBroker::new(root);
+    broker.with_conn(&db_path, "decide", None, "decide.init", |conn| {
+        conn.execute_batch(schemas::DECIDE_DB_SCHEMA_META)?;
+        conn.execute_batch(schemas::DECIDE_DB_SCHEMA_SESSIONS)?;
+        conn.execute_batch(schemas::DECIDE_DB_SCHEMA_DECISIONS)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_DECISIONS_SESSION)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_DECISIONS_TREE)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_SESSIONS_TREE)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_SESSIONS_STATUS)?;
+        Ok(())
+    })?;
 
     Ok(())
 }
