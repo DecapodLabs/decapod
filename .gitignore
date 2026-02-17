@@ -49,3 +49,4 @@ dev/
 debug/
 out.log
 err.log
+.decapod/generated/sessions/
