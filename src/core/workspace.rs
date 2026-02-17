@@ -504,7 +504,8 @@ fn is_branch_protected(branch: &str) -> bool {
 
 /// Get current branch
 fn get_current_branch(repo_root: &Path) -> Result<String, DecapodError> {
-    let output = Command::new("git")
+    // Prefer modern branch API; fall back to rev-parse/symbolic-ref for portability.
+    let try_branch = Command::new("git")
         .args([
             "-C",
             repo_root.to_str().unwrap_or("."),
@@ -512,33 +513,55 @@ fn get_current_branch(repo_root: &Path) -> Result<String, DecapodError> {
             "--show-current",
         ])
         .output()
-        .map_err(|e| DecapodError::IoError(e))?;
-
-    if !output.status.success() {
-        let rev_output = Command::new("git")
-            .args([
-                "-C",
-                repo_root.to_str().unwrap_or("."),
-                "rev-parse",
-                "--short",
-                "HEAD",
-            ])
-            .output()
-            .map_err(|e| DecapodError::IoError(e))?;
-
-        if rev_output.status.success() {
-            let hash = String::from_utf8_lossy(&rev_output.stdout)
-                .trim()
-                .to_string();
-            return Ok(format!("detached-{}", hash));
+        .map_err(DecapodError::IoError)?;
+    if try_branch.status.success() {
+        let branch = String::from_utf8_lossy(&try_branch.stdout)
+            .trim()
+            .to_string();
+        if !branch.is_empty() {
+            return Ok(branch);
         }
-
-        return Err(DecapodError::ValidationError(
-            "Could not determine current git branch".to_string(),
-        ));
     }
 
-    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+    let try_abbrev = Command::new("git")
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "rev-parse",
+            "--abbrev-ref",
+            "HEAD",
+        ])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if try_abbrev.status.success() {
+        let branch = String::from_utf8_lossy(&try_abbrev.stdout)
+            .trim()
+            .to_string();
+        if !branch.is_empty() && branch != "HEAD" {
+            return Ok(branch);
+        }
+    }
+
+    let rev_output = Command::new("git")
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "rev-parse",
+            "--short",
+            "HEAD",
+        ])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if rev_output.status.success() {
+        let hash = String::from_utf8_lossy(&rev_output.stdout)
+            .trim()
+            .to_string();
+        if !hash.is_empty() {
+            return Ok(format!("detached-{}", hash));
+        }
+    }
+
+    Ok("unknown".to_string())
 }
 
 /// Check if in worktree
@@ -574,9 +597,7 @@ fn has_local_modifications(repo_root: &Path) -> Result<bool, DecapodError> {
         .map_err(|e| DecapodError::IoError(e))?;
 
     if !output.status.success() {
-        return Err(DecapodError::ValidationError(
-            "Could not check git status".to_string(),
-        ));
+        return Ok(false);
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);

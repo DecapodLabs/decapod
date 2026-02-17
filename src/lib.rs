@@ -80,7 +80,7 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs_cli, error, migration, output, proof, repomap, scaffold,
+    db, docs_cli, error, migration, output, proof, repomap, scaffold, schemas,
     store::{Store, StoreKind},
     validate,
 };
@@ -95,8 +95,9 @@ use sha2::{Digest, Sha256};
 use std::fs;
 use std::io::Read;
 use std::io::Write;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
-use std::process::Command as ProcessCommand;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Parser, Debug)]
@@ -713,78 +714,12 @@ pub fn run() -> Result<(), error::DecapodError> {
             // `--dry-run` should not perform any mutations.
             let mut db_created = 0usize;
             let mut db_preserved = 0usize;
-            let mut events_created = 0usize;
-            let mut events_preserved = 0usize;
-            let mut generated_created = false;
-            let mut generated_preserved = false;
             let mut init_warnings: Vec<String> = Vec::new();
             if !init_group.dry_run {
-                // Initialize all store DBs in the resolved store root (preserve existing)
-                let dbs = [
-                    ("todo.db", setup_store_root.join("todo.db")),
-                    ("knowledge.db", setup_store_root.join("knowledge.db")),
-                    ("cron.db", setup_store_root.join("cron.db")),
-                    ("reflex.db", setup_store_root.join("reflex.db")),
-                    ("health.db", setup_store_root.join("health.db")),
-                    ("policy.db", setup_store_root.join("policy.db")),
-                    ("archive.db", setup_store_root.join("archive.db")),
-                    ("feedback.db", setup_store_root.join("feedback.db")),
-                    ("teammate.db", setup_store_root.join("teammate.db")),
-                    ("federation.db", setup_store_root.join("federation.db")),
-                    ("decisions.db", setup_store_root.join("decisions.db")),
-                ];
-
-                for (db_name, db_path) in dbs {
-                    if db_path.exists() {
-                        db_preserved += 1;
-                    } else {
-                        match db_name {
-                            "todo.db" => todo::initialize_todo_db(&setup_store_root)?,
-                            "knowledge.db" => db::initialize_knowledge_db(&setup_store_root)?,
-                            "cron.db" => cron::initialize_cron_db(&setup_store_root)?,
-                            "reflex.db" => reflex::initialize_reflex_db(&setup_store_root)?,
-                            "health.db" => health::initialize_health_db(&setup_store_root)?,
-                            "policy.db" => policy::initialize_policy_db(&setup_store_root)?,
-                            "archive.db" => archive::initialize_archive_db(&setup_store_root)?,
-                            "feedback.db" => feedback::initialize_feedback_db(&setup_store_root)?,
-                            "teammate.db" => teammate::initialize_teammate_db(&setup_store_root)?,
-                            "federation.db" => {
-                                federation::initialize_federation_db(&setup_store_root)?
-                            }
-                            "decisions.db" => decide::initialize_decide_db(&setup_store_root)?,
-                            _ => unreachable!(),
-                        }
-                        db_created += 1;
-                    }
-                }
-
-                // Create empty todo events file for validation (preserve existing)
-                let events_path = setup_store_root.join("todo.events.jsonl");
-                if events_path.exists() {
-                    events_preserved += 1;
-                } else {
-                    std::fs::write(&events_path, "").map_err(error::DecapodError::IoError)?;
-                    events_created += 1;
-                }
-
-                // Create empty federation events file (preserve existing)
-                let fed_events_path = setup_store_root.join("federation.events.jsonl");
-                if fed_events_path.exists() {
-                    events_preserved += 1;
-                } else {
-                    std::fs::write(&fed_events_path, "").map_err(error::DecapodError::IoError)?;
-                    events_created += 1;
-                }
-
-                // Create generated directory for derived files (checksums, caches, etc.)
-                let generated_dir = setup_decapod_root.join("generated");
-                if generated_dir.exists() {
-                    generated_preserved = true;
-                } else {
-                    std::fs::create_dir_all(&generated_dir)
-                        .map_err(error::DecapodError::IoError)?;
-                    generated_created = true;
-                }
+                // Create schema-only, empty databases without broker/audit side effects.
+                // Runtime commands can perform additional idempotent migrations as needed.
+                (db_created, db_preserved) =
+                    init_bootstrap_schema_only_databases(&setup_store_root)?;
 
                 write_init_container_ssh_key_path(&target_dir)?;
                 let has_runtime = init_has_container_runtime();
@@ -876,13 +811,8 @@ pub fn run() -> Result<(), error::DecapodError> {
             );
             if !init_group.dry_run {
                 println!(
-                    "init: store db+{}={} events+{}={} generated+{}={}",
-                    db_created,
-                    db_preserved,
-                    events_created,
-                    events_preserved,
-                    usize::from(generated_created),
-                    usize::from(generated_preserved)
+                    "init: store db+{}={} mode=schema-only-empty",
+                    db_created, db_preserved
                 );
             }
             println!(
@@ -917,12 +847,14 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
         },
         _ => {
+            let project_root = decapod_root_option?;
+            enforce_worktree_requirement(&cli.command, &project_root)?;
+
             if requires_session_token(&cli.command) {
                 ensure_session_valid()?;
             }
 
             // For other commands, ensure .decapod exists
-            let project_root = decapod_root_option?;
             let decapod_root_path = project_root.join(".decapod");
             store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
@@ -991,6 +923,228 @@ fn should_auto_clock_in(command: &Command) -> bool {
         Command::Version | Command::Init(_) | Command::Setup(_) | Command::Session(_) => false,
         _ => true,
     }
+}
+
+fn command_requires_worktree(command: &Command) -> bool {
+    match command {
+        Command::Init(_)
+        | Command::Setup(_)
+        | Command::Session(_)
+        | Command::Version
+        | Command::Workspace(_)
+        | Command::Capabilities(_)
+        | Command::Docs(_) => false,
+        Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
+        Command::Rpc(_) => false,
+        _ => true,
+    }
+}
+
+fn enforce_worktree_requirement(
+    command: &Command,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
+    if !command_requires_worktree(command) {
+        return Ok(());
+    }
+
+    let status = crate::core::workspace::get_workspace_status(project_root)?;
+    if status.git.in_worktree {
+        return Ok(());
+    }
+
+    Err(error::DecapodError::ValidationError(format!(
+        "Command requires isolated git worktree; current checkout is not a worktree (branch='{}'). Run `decapod workspace ensure --branch agent/<id>/<topic>` and execute from the reported worktree path.",
+        status.git.current_branch
+    )))
+}
+
+fn rpc_op_requires_worktree(op: &str) -> bool {
+    !matches!(
+        op,
+        "agent.init"
+            | "workspace.status"
+            | "workspace.ensure"
+            | "assurance.evaluate"
+            | "mentor.obligations"
+    )
+}
+
+fn enforce_worktree_requirement_for_rpc(
+    op: &str,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
+    if !rpc_op_requires_worktree(op) {
+        return Ok(());
+    }
+
+    let status = crate::core::workspace::get_workspace_status(project_root)?;
+    if status.git.in_worktree {
+        return Ok(());
+    }
+
+    Err(error::DecapodError::ValidationError(format!(
+        "RPC op '{}' requires isolated git worktree; current checkout is not a worktree (branch='{}'). Run `decapod workspace ensure --branch agent/<id>/<topic>` and execute from the reported worktree path.",
+        op, status.git.current_branch
+    )))
+}
+
+fn init_create_schema_only_db(
+    db_path: &Path,
+    statements: &[&str],
+) -> Result<(), error::DecapodError> {
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    for stmt in statements {
+        conn.execute_batch(stmt)?;
+    }
+    Ok(())
+}
+
+fn init_create_todo_schema_only_db(db_path: &Path) -> Result<(), error::DecapodError> {
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    for stmt in [
+        schemas::TODO_DB_SCHEMA_META,
+        schemas::TODO_DB_SCHEMA_TASKS,
+        schemas::TODO_DB_SCHEMA_TASK_EVENTS,
+        schemas::TODO_DB_SCHEMA_INDEX_STATUS,
+        schemas::TODO_DB_SCHEMA_INDEX_SCOPE,
+        schemas::TODO_DB_SCHEMA_INDEX_DIR,
+        schemas::TODO_DB_SCHEMA_INDEX_EVENTS_TASK,
+        schemas::TODO_DB_SCHEMA_TASK_VERIFICATION,
+        schemas::TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS,
+        schemas::TODO_DB_SCHEMA_CATEGORIES,
+        schemas::TODO_DB_SCHEMA_INDEX_CATEGORY_NAME,
+        schemas::TODO_DB_SCHEMA_AGENT_CATEGORY_CLAIMS,
+        schemas::TODO_DB_SCHEMA_INDEX_AGENT_CATEGORY_AGENT,
+        schemas::TODO_DB_SCHEMA_AGENT_PRESENCE,
+        schemas::TODO_DB_SCHEMA_INDEX_AGENT_PRESENCE_LAST_SEEN,
+        schemas::TODO_DB_SCHEMA_AGENT_TRUST,
+        schemas::TODO_DB_SCHEMA_INDEX_AGENT_TRUST_LEVEL,
+        schemas::TODO_DB_SCHEMA_RISK_ZONES,
+        schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME,
+        schemas::TODO_DB_SCHEMA_TASK_OWNERS,
+        schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK,
+        schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES,
+        schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK,
+        schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON,
+        schemas::TODO_DB_SCHEMA_AGENT_EXPERTISE,
+        schemas::TODO_DB_SCHEMA_INDEX_AGENT_EXPERTISE_AGENT,
+    ] {
+        conn.execute_batch(stmt)?;
+    }
+    Ok(())
+}
+
+fn init_create_teammate_schema_only_db(db_path: &Path) -> Result<(), error::DecapodError> {
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    for stmt in [
+        teammate::TEAMMATE_DB_SCHEMA_PREFERENCES,
+        teammate::TEAMMATE_DB_SCHEMA_SKILLS,
+        teammate::TEAMMATE_DB_SCHEMA_PATTERNS,
+        teammate::TEAMMATE_DB_SCHEMA_OBSERVATIONS,
+        teammate::TEAMMATE_DB_SCHEMA_CONSOLIDATIONS,
+        teammate::TEAMMATE_DB_SCHEMA_AGENT_PROMPTS,
+        teammate::TEAMMATE_DB_SCHEMA_INDEX_PREF_CATEGORY,
+        teammate::TEAMMATE_DB_SCHEMA_INDEX_PREF_KEY,
+        teammate::TEAMMATE_DB_SCHEMA_INDEX_PREF_ACCESS,
+        teammate::TEAMMATE_DB_SCHEMA_INDEX_SKILL_NAME,
+        teammate::TEAMMATE_DB_SCHEMA_INDEX_PATTERN_CATEGORY,
+        teammate::TEAMMATE_DB_SCHEMA_INDEX_OBS_PROCESSED,
+        teammate::TEAMMATE_DB_SCHEMA_INDEX_PROMPT_CONTEXT,
+    ] {
+        conn.execute_batch(stmt)?;
+    }
+    Ok(())
+}
+
+fn init_bootstrap_schema_only_databases(
+    store_root: &Path,
+) -> Result<(usize, usize), error::DecapodError> {
+    let mut db_created = 0usize;
+    let mut db_preserved = 0usize;
+
+    let dbs = [
+        ("todo.db", store_root.join("todo.db")),
+        ("knowledge.db", store_root.join("knowledge.db")),
+        ("cron.db", store_root.join("cron.db")),
+        ("reflex.db", store_root.join("reflex.db")),
+        ("health.db", store_root.join("health.db")),
+        ("policy.db", store_root.join("policy.db")),
+        ("archive.db", store_root.join("archive.db")),
+        ("feedback.db", store_root.join("feedback.db")),
+        ("teammate.db", store_root.join("teammate.db")),
+        ("federation.db", store_root.join("federation.db")),
+        ("decisions.db", store_root.join("decisions.db")),
+    ];
+
+    for (db_name, db_path) in dbs {
+        if db_path.exists() {
+            db_preserved += 1;
+            continue;
+        }
+        match db_name {
+            "todo.db" => init_create_todo_schema_only_db(&db_path)?,
+            "knowledge.db" => {
+                init_create_schema_only_db(&db_path, &[schemas::KNOWLEDGE_DB_SCHEMA])?
+            }
+            "cron.db" => init_create_schema_only_db(&db_path, &[schemas::CRON_DB_SCHEMA])?,
+            "reflex.db" => init_create_schema_only_db(&db_path, &[schemas::REFLEX_DB_SCHEMA])?,
+            "health.db" => init_create_schema_only_db(
+                &db_path,
+                &[
+                    schemas::HEALTH_DB_SCHEMA_CLAIMS,
+                    schemas::HEALTH_DB_SCHEMA_PROOF_EVENTS,
+                    schemas::HEALTH_DB_SCHEMA_HEALTH_CACHE,
+                ],
+            )?,
+            "policy.db" => init_create_schema_only_db(
+                &db_path,
+                &[
+                    schemas::POLICY_DB_SCHEMA_APPROVALS,
+                    schemas::POLICY_DB_SCHEMA_INDEX,
+                ],
+            )?,
+            "archive.db" => init_create_schema_only_db(&db_path, &[schemas::ARCHIVE_DB_SCHEMA])?,
+            "feedback.db" => init_create_schema_only_db(&db_path, &[schemas::FEEDBACK_DB_SCHEMA])?,
+            "teammate.db" => init_create_teammate_schema_only_db(&db_path)?,
+            "federation.db" => init_create_schema_only_db(
+                &db_path,
+                &[
+                    schemas::FEDERATION_DB_SCHEMA_META,
+                    schemas::FEDERATION_DB_SCHEMA_NODES,
+                    schemas::FEDERATION_DB_SCHEMA_SOURCES,
+                    schemas::FEDERATION_DB_SCHEMA_EDGES,
+                    schemas::FEDERATION_DB_SCHEMA_EVENTS,
+                    schemas::FEDERATION_DB_INDEX_NODES_TYPE,
+                    schemas::FEDERATION_DB_INDEX_NODES_STATUS,
+                    schemas::FEDERATION_DB_INDEX_NODES_SCOPE,
+                    schemas::FEDERATION_DB_INDEX_NODES_PRIORITY,
+                    schemas::FEDERATION_DB_INDEX_NODES_UPDATED,
+                    schemas::FEDERATION_DB_INDEX_SOURCES_NODE,
+                    schemas::FEDERATION_DB_INDEX_EDGES_SOURCE,
+                    schemas::FEDERATION_DB_INDEX_EDGES_TARGET,
+                    schemas::FEDERATION_DB_INDEX_EDGES_TYPE,
+                    schemas::FEDERATION_DB_INDEX_EVENTS_NODE,
+                ],
+            )?,
+            "decisions.db" => init_create_schema_only_db(
+                &db_path,
+                &[
+                    schemas::DECIDE_DB_SCHEMA_META,
+                    schemas::DECIDE_DB_SCHEMA_SESSIONS,
+                    schemas::DECIDE_DB_SCHEMA_DECISIONS,
+                    schemas::DECIDE_DB_INDEX_DECISIONS_SESSION,
+                    schemas::DECIDE_DB_INDEX_DECISIONS_TREE,
+                    schemas::DECIDE_DB_INDEX_SESSIONS_TREE,
+                    schemas::DECIDE_DB_INDEX_SESSIONS_STATUS,
+                ],
+            )?,
+            _ => unreachable!(),
+        }
+        db_created += 1;
+    }
+
+    Ok((db_created, db_preserved))
 }
 
 fn requires_session_token(command: &Command) -> bool {
@@ -1998,13 +2152,62 @@ fn init_has_dedicated_agent_key(target_dir: &Path) -> bool {
 }
 
 fn command_exists(name: &str) -> bool {
-    ProcessCommand::new(name)
-        .arg("--version")
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false)
+    if name.contains(std::path::MAIN_SEPARATOR) {
+        return is_executable_path(Path::new(name));
+    }
+
+    let Some(paths) = std::env::var_os("PATH") else {
+        return false;
+    };
+
+    for dir in std::env::split_paths(&paths) {
+        let candidate = dir.join(name);
+        if is_executable_path(&candidate) {
+            return true;
+        }
+
+        #[cfg(windows)]
+        {
+            let from_pathext = std::env::var_os("PATHEXT")
+                .map(|v| {
+                    v.to_string_lossy()
+                        .split(';')
+                        .map(|s| s.trim().to_string())
+                        .filter(|s| !s.is_empty())
+                        .collect::<Vec<String>>()
+                })
+                .unwrap_or_else(|| {
+                    vec![".EXE".to_string(), ".CMD".to_string(), ".BAT".to_string()]
+                });
+
+            for ext in from_pathext {
+                let with_ext = candidate.with_extension(ext.trim_start_matches('.'));
+                if is_executable_path(&with_ext) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    false
+}
+
+fn is_executable_path(path: &Path) -> bool {
+    let Ok(meta) = fs::metadata(path) else {
+        return false;
+    };
+    if !meta.is_file() {
+        return false;
+    }
+
+    #[cfg(unix)]
+    {
+        meta.permissions().mode() & 0o111 != 0
+    }
+    #[cfg(not(unix))]
+    {
+        true
+    }
 }
 
 fn ensure_init_container_disable_override(
@@ -2177,6 +2380,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             session: None,
         }
     };
+
+    enforce_worktree_requirement_for_rpc(&request.op, project_root)?;
 
     let response = match request.op.as_str() {
         "agent.init" => {
