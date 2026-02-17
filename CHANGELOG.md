@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.2](https://github.com/DecapodLabs/decapod/compare/v0.25.1...v0.25.2) - 2026-02-17
+
+### Added
+
+- *(init)* bootstrap schema-only stores and enforce workspace isolation
+
+### Other
+
+- release v0.25.1
+
 ## [0.25.1](https://github.com/DecapodLabs/decapod/compare/v0.25.0...v0.25.1) - 2026-02-17
 
 ### Added
