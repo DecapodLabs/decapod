@@ -159,31 +159,31 @@ fn validate_embedded_self_contained(
 
         // Check for .decapod/ references that aren't documenting override behavior
         if content.contains(".decapod/") {
-            // Allow legitimate override documentation patterns
-            let lines_with_legitimate_refs = content
-                .lines()
-                .filter(|line| {
-                    line.contains(".decapod/")
-                        && (
-                            line.contains("<repo>") ||  // Path documentation like `<repo>/.decapod/project`
-                    line.contains("store:") ||  // Store documentation
-                    line.contains("directory") || // Directory explanations
-                    line.contains("override") || // Override instructions (lowercase)
-                    line.contains("Override") || // Override instructions (capitalized)
-                    line.contains("OVERRIDE.md") || // OVERRIDE.md file references
-                    line.contains("Location:") || // Location descriptions
-                    line.contains("primarily contain") || // Directory descriptions
-                    line.contains(".decapod/context/") || // Context pack canonical layout
-                    line.contains(".decapod/memory/") || // Context pack canonical layout
-                    line.contains("intended as")
-                            // Template descriptions
-                        )
-                })
-                .count();
+            // Allow legitimate documentation patterns, counting legitimate references (not just lines).
+            let mut legitimate_ref_count = 0usize;
+            for line in content.lines() {
+                let refs_on_line = line.matches(".decapod/").count();
+                if refs_on_line == 0 {
+                    continue;
+                }
+                let is_legitimate_line = line.contains("<repo>")
+                    || line.contains("store:")
+                    || line.contains("directory")
+                    || line.contains("override")
+                    || line.contains("Override")
+                    || line.contains("OVERRIDE.md")
+                    || line.contains("Location:")
+                    || line.contains("primarily contain")
+                    || line.contains(".decapod/context/")
+                    || line.contains(".decapod/memory/")
+                    || line.contains("intended as");
+                if is_legitimate_line {
+                    legitimate_ref_count += refs_on_line;
+                }
+            }
 
-            // If there are .decapod/ references but none are legitimate documentation, flag it
             let total_decapod_refs = content.matches(".decapod/").count();
-            if total_decapod_refs > lines_with_legitimate_refs {
+            if total_decapod_refs > legitimate_ref_count {
                 offenders.push(path);
             }
         }
