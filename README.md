@@ -26,12 +26,30 @@ It provides a stable CLI/RPC interface, workflow guardrails, and validation gate
 
 Decapod is not a hosted service and not tied to a single model provider. It runs locally in your repo.
 
+## Assurance Model
+
+Decapod is built around three outcomes for agent execution:
+
+- `Advisory`: practical guidance toward the next correct move.
+- `Interlock`: explicit constraints that block unsafe or non-compliant flow.
+- `Attestation`: structured evidence that work actually satisfies completion criteria.
+
+You can think of it as a runtime contract for moving from intent to implementation with fewer silent failure modes.
+
 ## Why Teams Use It
 
 - Standardizes how agents interact with a codebase.
 - Keeps execution local and auditable.
 - Reduces "done" claims without evidence.
 - Supports parallel work with safer branch/workspace patterns.
+
+## Capability Highlights
+
+- Guided project understanding through interview-style prompting.
+- Standards-aware execution that respects project conventions and policy.
+- Workspace safety checks for parallel agent operation.
+- Validation and completion gates that produce auditable outcomes.
+- Machine-readable RPC surface for multi-agent orchestration.
 
 ## Quick Start
 
