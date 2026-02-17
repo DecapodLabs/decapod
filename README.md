@@ -27,6 +27,11 @@ AI coding agents can write code fast. Shipping it safely is the hard part.
 
 Decapod gives agents a consistent operational contract: guided execution, enforceable boundaries, and auditable completion signals. It replaces "looks done" with explicit outcomes.
 
+Decapod is **invoked by agents; it never runs in the background**. It is a single executable binary that provides deterministic primitives:
+- Retrieve **canon (constitution .md fragments)** as context.
+- Provide authoritative schemas for **structured state** (todos, knowledge, decisions).
+- Run deterministic **validation/proof gates** to decide when work is truly done.
+
 Decapod is architecture-agnostic software. It is not a Linux kernel binding and is not coupled to a specific OS or CPU architecture.
 
 ## Assurance Model
