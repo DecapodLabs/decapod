@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <strong>Decapod</strong> is a governance runtime for AI coding agents. Local-first, repo-native, built in Rust.
+  <strong>Decapod</strong> is a governance runtime for AI coding agents. Local-first, repo-native, built in Rust. AI agents can write code, but they don’t reliably ship: they blur memory with instruction, skip the boring checks, and confidently declare “done” without evidence. <strong>Decapod</strong> turns that into something you can trust by making completion falsifiable and boundaries enforceable—so autonomy scales from one agent to many without turning your repo into vibes.
   <br>
   <sub>Named for the ten-legged crustaceans: hardened exoskeleton, distributed nervous system, no central brain. They coordinate anyway.</sub>
 </p>
@@ -23,11 +23,11 @@
 
 ## What Is Decapod
 
-Like Docker is a runtime for containers, Decapod is a runtime for agents. You set it up once, then agents operate inside a governed environment with persistent state, enforced methodology, proof gates, and coordination primitives.
+Like Docker gives containers a standard runtime, Decapod gives agents a standard operating environment. Install it once, and any agent enters through the same repo contract: governed state, enforced workflow, proof gates, and coordination for parallel work.
 
-Agents can write code. But they can't reliably **ship** because they forget what they built yesterday, treat best practices as vibes, say "done" without evidence, and trip over each other in parallel. Decapod fixes that with **over 100 validation gates** that enforce the agent<->Decapod contract.
+It replaces “trust me” with enforcement. Validation gates prevent agents from skipping checks, drifting from the repo’s rules, or declaring completion without executable evidence—so outcomes are verifiable, not narrated.
 
-Decapod is **not** a prompt pack, an agent framework, a hosted SaaS platform, a review bot, or a human workflow tool. Humans may read artifacts; agents are the operators. It's infrastructure: the environment where agent work becomes enforceable.
+Decapod isn’t an agent framework or a SaaS layer. It’s repo-side infrastructure: humans can read the artifacts, but the operators are agents, and the repo’s rules are what hold.
 
 ## How It Works
 
