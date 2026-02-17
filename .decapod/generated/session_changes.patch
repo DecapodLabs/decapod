@@ -1,0 +1,1377 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index 2d5ae3f..d524429 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -12,7 +12,9 @@ decapod version
+ decapod --help
+ decapod data schema --subsystem command_registry --deterministic >/dev/null
+ decapod docs show core/DECAPOD.md
++export DECAPOD_AGENT_ID=<agent-id>
+ decapod session acquire
++export DECAPOD_SESSION_PASSWORD=<password-from-acquire>
+ decapod validate
+ decapod todo list
+ ```
+@@ -21,13 +23,15 @@ The binary and constitution evolve. Always refresh before acting.
+ 
+ After startup:
+ 1. Use `decapod` as the control plane; `.decapod` files are accessed only via `decapod` CLI.
+-2. Run git-tracked implementation only in Docker git workspaces (not host worktree edits).
+-3. Claim work before substantive implementation: `decapod todo claim --id <task-id>`.
+-4. Run `decapod validate` before claiming verified/compliant.
+-5. Close work via `decapod todo done --id <task-id>` (and optional approved `todo archive`); never use `decapod complete`.
+-6. Preserve Interface abstraction boundary: communicate intent/actions/outcomes by default.
+-7. Ask concise clarification questions for ambiguous/high-risk/irreversible actions.
+-8. Before mutation, verify active command surfaces via `decapod data schema`.
++2. MANDATORY: git-tracked implementation MUST run only in Docker git workspaces (never host worktree edits).
++3. MANDATORY: request elevated permissions before Docker/container workspace commands; do not proceed on denied runtime access.
++4. MANDATORY: per-agent session access requires `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`.
++5. MANDATORY: claim work before substantive implementation: `decapod todo claim --id <task-id>`.
++6. Run `decapod validate` before claiming verified/compliant.
++7. Close work via `decapod todo done --id <task-id>` (and optional approved `todo archive`); never use `decapod complete`.
++8. Preserve Interface abstraction boundary: communicate intent/actions/outcomes by default.
++9. Ask concise clarification questions for ambiguous/high-risk/irreversible actions.
++10. Before mutation, verify active command surfaces via `decapod data schema`.
+ 
+ If the router is missing or `decapod` is unavailable: Stop if uncertain and ask the human for the entrypoint.
+ 
+diff --git a/CLAUDE.md b/CLAUDE.md
+index e8315b3..06490ee 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -12,7 +12,9 @@ decapod version
+ decapod --help
+ decapod data schema --subsystem command_registry --deterministic >/dev/null
+ decapod docs show core/DECAPOD.md
++export DECAPOD_AGENT_ID=<agent-id>
+ decapod session acquire
++export DECAPOD_SESSION_PASSWORD=<password-from-acquire>
+ decapod validate
+ decapod todo list
+ ```
+@@ -21,8 +23,10 @@ Required constraints:
+ - See `AGENTS.md` for full policy.
+ - `core/DECAPOD.md` is the router.
+ - `.decapod` files only via `decapod` CLI.
+-- Git-tracked implementation must run in Docker git workspaces (not host worktree edits).
+-- Claim tasks before substantive work: `decapod todo claim --id <task-id>`.
++- MANDATORY: git-tracked implementation MUST run in Docker git workspaces (never host worktree edits).
++- MANDATORY: request elevated permissions before Docker/container workspace commands; stop on denied runtime access.
++- MANDATORY: per-agent session access requires `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`.
++- MANDATORY: claim tasks before substantive work: `decapod todo claim --id <task-id>`.
+ - Keep operator output semantic (intent/actions/outcomes) unless diagnostics are requested.
+ 
+ Four invariants:
+diff --git a/CODEX.md b/CODEX.md
+index 6868502..47caec2 100644
+--- a/CODEX.md
++++ b/CODEX.md
+@@ -4,8 +4,6 @@ You (Codex/ChatGPT/OpenAI agent) are working in a Decapod-managed repository.
+ 
+ **You are bound by the universal agent contract:** See `AGENTS.md` for the complete protocol.
+ 
+-## Quick Start
+-
+ **MANDATORY FIRST STEPS** - Run these EVERY session:
+ 
+ ```bash
+@@ -14,20 +12,23 @@ decapod version                   # 2. Check current version
+ decapod --help                      # 3. Verify available commands
+ decapod data schema --subsystem command_registry --deterministic >/dev/null  # 4. Refresh CLI command index
+ decapod docs show core/DECAPOD.md  # 5. Refresh constitution
+-decapod session acquire             # 6. Acquire session token (required for all commands)
+-decapod validate                    # 7. System state
+-decapod todo list                   # 8. Active work
++export DECAPOD_AGENT_ID=<agent-id> # 6. Set agent identity
++decapod session acquire             # 7. Acquire per-agent session credentials
++export DECAPOD_SESSION_PASSWORD=<password-from-acquire>  # 8. Bind password to this session
++decapod validate                    # 9. System state
++decapod todo list                   # 10. Active work
+ ```
+ 
+ **Why this matters:** The decapod binary and constitution evolve. Always install the latest release first, then verify commands and refresh your understanding of the latest contract before acting.
+ 
+-## Codex-Specific Notes
+-
++## Notes
+ - You excel at code completion - but still read architecture first
+ - You have strong pattern matching - use it to follow existing code style
+ - You may have tool use or function calling - use it for `decapod` commands
+-- Git-tracked implementation must run in Docker git workspaces (not host worktree edits)
+-- Claim tasks before substantive work: `decapod todo claim --id <task-id>`
++- MANDATORY: git-tracked implementation MUST run in Docker git workspaces (never host worktree edits)
++- MANDATORY: request elevated permissions before Docker/container workspace commands; stop on denied runtime access
++- MANDATORY: per-agent session access requires `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`
++- MANDATORY: claim tasks before substantive work: `decapod todo claim --id <task-id>`
+ - Apply control-plane opacity: keep operator-facing output semantic (intent/actions/outcomes), not command-surface oriented
+ 
+ ## The Contract
+diff --git a/GEMINI.md b/GEMINI.md
+index 005afe4..51e91e7 100644
+--- a/GEMINI.md
++++ b/GEMINI.md
+@@ -12,7 +12,9 @@ decapod version
+ decapod --help
+ decapod data schema --subsystem command_registry --deterministic >/dev/null
+ decapod docs show core/DECAPOD.md
++export DECAPOD_AGENT_ID=<agent-id>
+ decapod session acquire
++export DECAPOD_SESSION_PASSWORD=<password-from-acquire>
+ decapod validate
+ decapod todo list
+ ```
+@@ -21,8 +23,10 @@ Required constraints:
+ - See `AGENTS.md` for full policy.
+ - `core/DECAPOD.md` is the router.
+ - `.decapod` files only via `decapod` CLI.
+-- Git-tracked implementation must run in Docker git workspaces (not host worktree edits).
+-- Claim tasks before substantive work: `decapod todo claim --id <task-id>`.
++- MANDATORY: git-tracked implementation MUST run in Docker git workspaces (never host worktree edits).
++- MANDATORY: request elevated permissions before Docker/container workspace commands; stop on denied runtime access.
++- MANDATORY: per-agent session access requires `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`.
++- MANDATORY: claim tasks before substantive work: `decapod todo claim --id <task-id>`.
+ - Keep operator output semantic (intent/actions/outcomes) unless diagnostics are requested.
+ 
+ Four invariants:
+diff --git a/constitution/core/DECAPOD.md b/constitution/core/DECAPOD.md
+index f2a5e52..cbfd33b 100644
+--- a/constitution/core/DECAPOD.md
++++ b/constitution/core/DECAPOD.md
+@@ -64,9 +64,11 @@ decapod version                     # 2. Check installed version
+ decapod --help                      # 3. Verify available commands
+ decapod data schema --subsystem command_registry --deterministic >/dev/null  # 4. Refresh CLI command index
+ decapod docs show core/DECAPOD.md   # 5. Refresh constitution
+-decapod session acquire             # 6. Acquire session token (required for all commands)
+-decapod validate                    # 7. Check system state
+-decapod todo list                   # 8. See active work
++export DECAPOD_AGENT_ID=<agent-id>  # 6. Bind this session to one agent identity
++decapod session acquire             # 7. Acquire per-agent token+password credentials
++export DECAPOD_SESSION_PASSWORD=<password-from-acquire>  # 8. Bind ephemeral password
++decapod validate                    # 9. Check system state
++decapod todo list                   # 10. See active work
+ ```
+ 
+ **Why this is non-negotiable:**
+diff --git a/constitution/interfaces/CLAIMS.md b/constitution/interfaces/CLAIMS.md
+index 04428c8..a298014 100644
+--- a/constitution/interfaces/CLAIMS.md
++++ b/constitution/interfaces/CLAIMS.md
+@@ -63,6 +63,8 @@ Columns:
+ | claim.context_pack.correction_loop_governed | Corrections must be persisted through control-plane artifacts and proofed, not mental notes. | `interfaces/AGENT_CONTEXT_PACK.md` | not_enforced | planned: correction-to-proof audit gate | SPEC pending end-to-end trace enforcement. |
+ | claim.todo.claim_before_work | Agents must claim a TODO before substantive implementation work on that task. | `interfaces/CONTROL_PLANE.md` | partially_enforced | `decapod todo claim` ownership records + procedural review | Enforced by process today; future validate gate may enforce ownership-before-mutation traces. |
+ | claim.git.container_workspace_required | Git-tracked implementation work must execute in Docker-isolated git workspaces, not direct host worktree edits. | `specs/GIT.md` | not_enforced | planned: workspace-origin policy checks | Binding requirement; enforcement surface pending. |
++| claim.git.container_runtime_preflight_required | Container workspace runs must pass runtime-access preflight and fail loudly with elevated-permission remediation when access is denied. | `specs/GIT.md` | partially_enforced | `container.run` runtime `info` preflight + permission-aware error diagnostics | Enforced in container runtime preflight; broader policy-level enforcement remains future work. |
++| claim.session.agent_password_required | Session access requires agent identity plus an ephemeral per-session password; expired sessions trigger cleanup and assignment eviction. | `specs/SECURITY.md` | partially_enforced | `session.acquire` credential issuance + `ensure_session_valid` password check + stale-session cleanup hook | Enforced for active command auth path; stronger cryptographic hardening may be added later. |
+ 
+ ---
+ 
+diff --git a/constitution/interfaces/CONTROL_PLANE.md b/constitution/interfaces/CONTROL_PLANE.md
+index b8fc488..88ed1b0 100644
+--- a/constitution/interfaces/CONTROL_PLANE.md
++++ b/constitution/interfaces/CONTROL_PLANE.md
+@@ -27,6 +27,7 @@ Golden rules:
+ 5. If the command surface is missing, the work is to add the surface, not to bypass it.
+ 6. Preserve control-plane opacity at the operator interface: communicate intent/actions/outcomes, not command-surface mechanics, unless diagnostics are explicitly requested.
+ 7. Liveness must be maintained through invocation heartbeat: each Decapod command invocation should refresh agent presence.
++8. Session access must be bound to agent identity plus ephemeral password (`DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`) for command authorization (claim: `claim.session.agent_password_required`).
+ 
+ This is how you get determinism, auditability, and eventually policy.
+ 
+diff --git a/constitution/plugins/CONTAINER.md b/constitution/plugins/CONTAINER.md
+index eaf1040..b064820 100644
+--- a/constitution/plugins/CONTAINER.md
++++ b/constitution/plugins/CONTAINER.md
+@@ -29,6 +29,7 @@ Container subsystem runs agent actions in ephemeral Docker/Podman containers wit
+ - Local environment is inherited by default (`--inherit-env`) for non-Git-network runtime context.
+ - Safety defaults: cap-drop all, no-new-privileges, pids limit, tmpfs `/tmp`.
+ - Runtime selection auto-detects `docker` first, then `podman`.
++- Runtime access is preflight-validated (`docker|podman info`) before workspace/image steps; permission or daemon failures return actionable diagnostics.
+ - Host UID/GID mapping is on by default (`DECAPOD_CONTAINER_MAP_HOST_USER=true`) so file ownership stays writable on host.
+ - Generated image expansion policy:
+ - Start from minimal Alpine.
+diff --git a/constitution/specs/AMENDMENTS.md b/constitution/specs/AMENDMENTS.md
+index 0a11405..c08efcb 100644
+--- a/constitution/specs/AMENDMENTS.md
++++ b/constitution/specs/AMENDMENTS.md
+@@ -180,6 +180,40 @@ Each entry MUST include:
+ - Proof surface run:
+   - `decapod validate`
+ 
++### 2026-02-17 (container runtime preflight + elevated remediation)
++
++- Docs changed:
++  - `specs/GIT.md` (added binding runtime-access preflight and elevated-permission remediation requirement for container workspace flows)
++  - `interfaces/CLAIMS.md` (registered `claim.git.container_runtime_preflight_required`)
++  - `plugins/CONTAINER.md` (documented runtime-access preflight behavior)
++  - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md` (entrypoint mandate)
++  - `templates/AGENTS.md`, `templates/CLAUDE.md`, `templates/GEMINI.md`, `templates/CODEX.md` (template-source mandate)
++- Summary:
++  - Codified and implemented runtime-access preflight so container workspace runs fail fast with actionable elevated-permission guidance instead of ambiguous downstream git errors.
++- Claims added/changed:
++  - `claim.git.container_runtime_preflight_required`
++- Deprecations:
++  - None.
++- Proof surface run:
++  - `decapod validate`
++
++### 2026-02-17 (agent+password session binding and stale-session eviction)
++
++- Docs changed:
++  - `specs/SECURITY.md` (bound session lifecycle to `agent_id + ephemeral_password` and stale-session assignment eviction)
++  - `interfaces/CONTROL_PLANE.md` (added control-plane session authorization rule)
++  - `interfaces/CLAIMS.md` (registered `claim.session.agent_password_required`)
++  - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md` (entrypoint start-sequence credential export requirement)
++  - `templates/AGENTS.md`, `templates/CLAUDE.md`, `templates/GEMINI.md`, `templates/CODEX.md` (template-source requirement)
++- Summary:
++  - Introduced per-agent, ephemeral password-bound sessions and stale-session cleanup semantics that revoke active assignments when sessions expire.
++- Claims added/changed:
++  - `claim.session.agent_password_required`
++- Deprecations:
++  - None.
++- Proof surface run:
++  - `decapod validate`
++
+ ---
+ 
+ ## Links
+diff --git a/constitution/specs/GIT.md b/constitution/specs/GIT.md
+index c2c70c9..937782b 100644
+--- a/constitution/specs/GIT.md
++++ b/constitution/specs/GIT.md
+@@ -31,6 +31,7 @@ All git-tracked implementation work MUST execute in Docker-isolated git workspac
+ Required:
+ - Use container workspace flows for branch creation, commits, and pushes.
+ - Keep host repo usage to orchestration/inspection unless explicitly authorized.
++- Container runtime permission preflight MUST succeed before workspace execution; on denied access, re-run with elevated permissions instead of bypassing container mode (claim: `claim.git.container_runtime_preflight_required`).
+ 
+ Violation of this boundary is a git workflow contract breach.
+ 
+diff --git a/constitution/specs/SECURITY.md b/constitution/specs/SECURITY.md
+index 0a1e8c3..9a0da7e 100644
+--- a/constitution/specs/SECURITY.md
++++ b/constitution/specs/SECURITY.md
+@@ -142,6 +142,7 @@ Agents require verifiable identities. This identity must be:
+ - Heartbeat verification (agent must prove liveness)
+ - Automatic credential rotation within sessions
+ - Hard eviction after timeout (no zombie agents)
++- Access binding MUST require `agent_id + ephemeral_password` per active session; stale-session cleanup MUST revoke assignments for expired agents (claim: `claim.session.agent_password_required`).
+ 
+ **The Zombie Problem:** An agent that runs forever with the same credentials is a sitting target. Every minute an agent runs without verification is a minute an attacker can hijack it.
+ 
+diff --git a/src/core/validate.rs b/src/core/validate.rs
+index 30f182a..0ca1348 100644
+--- a/src/core/validate.rs
++++ b/src/core/validate.rs
+@@ -476,6 +476,19 @@ fn validate_entrypoint_invariants(
+         ("cargo install decapod", "Version update gate language"),
+         ("decapod validate", "Validation gate language"),
+         ("Stop if", "Stop-if-missing behavior"),
++        ("Docker git workspaces", "Docker workspace mandate language"),
++        (
++            "decapod todo claim --id <task-id>",
++            "Task claim-before-work mandate language",
++        ),
++        (
++            "request elevated permissions before Docker/container workspace commands",
++            "Elevated-permissions mandate language",
++        ),
++        (
++            "DECAPOD_SESSION_PASSWORD",
++            "Per-agent session password mandate language",
++        ),
+         (
+             ".decapod` files are accessed only via `decapod` CLI",
+             "Jail rule: .decapod access is CLI-only",
+@@ -586,6 +599,67 @@ fn validate_entrypoint_invariants(
+             all_present = false;
+         }
+ 
++        // Must include Docker git workspace mandate
++        if agent_content.contains("Docker git workspaces") {
++            pass(
++                &format!("{} includes Docker workspace mandate", agent_file),
++                pass_count,
++            );
++        } else {
++            fail(
++                &format!("{} missing Docker workspace mandate marker", agent_file),
++                fail_count,
++            );
++            all_present = false;
++        }
++
++        // Must include elevated-permissions mandate for container workspace commands
++        if agent_content
++            .contains("request elevated permissions before Docker/container workspace commands")
++        {
++            pass(
++                &format!("{} includes elevated-permissions mandate", agent_file),
++                pass_count,
++            );
++        } else {
++            fail(
++                &format!("{} missing elevated-permissions mandate marker", agent_file),
++                fail_count,
++            );
++            all_present = false;
++        }
++
++        // Must include per-agent session password mandate
++        if agent_content.contains("DECAPOD_SESSION_PASSWORD") {
++            pass(
++                &format!("{} includes per-agent session password mandate", agent_file),
++                pass_count,
++            );
++        } else {
++            fail(
++                &format!(
++                    "{} missing per-agent session password mandate marker",
++                    agent_file
++                ),
++                fail_count,
++            );
++            all_present = false;
++        }
++
++        // Must include claim-before-work mandate
++        if agent_content.contains("decapod todo claim --id <task-id>") {
++            pass(
++                &format!("{} includes claim-before-work mandate", agent_file),
++                pass_count,
++            );
++        } else {
++            fail(
++                &format!("{} missing claim-before-work mandate marker", agent_file),
++                fail_count,
++            );
++            all_present = false;
++        }
++
+         // Must include explicit update command in startup sequence
+         if agent_content.contains("cargo install decapod") {
+             pass(
+diff --git a/src/lib.rs b/src/lib.rs
+index 4bcc399..aa0c2b0 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -90,10 +90,14 @@ use plugins::{
+ };
+ 
+ use clap::{CommandFactory, Parser, Subcommand};
++use serde::{Deserialize, Serialize};
++use sha2::{Digest, Sha256};
+ use std::fs;
++use std::io::Read;
+ use std::io::Write;
+ use std::path::{Path, PathBuf};
+ use std::process::Command as ProcessCommand;
++use std::time::{SystemTime, UNIX_EPOCH};
+ 
+ #[derive(Parser, Debug)]
+ #[clap(
+@@ -932,50 +936,267 @@ fn requires_session_token(command: &Command) -> bool {
+     }
+ }
+ 
+-fn get_session_token_path() -> Result<PathBuf, error::DecapodError> {
+-    let current_dir = std::env::current_dir()?;
+-    let project_root = find_decapod_project_root(&current_dir)?;
+-    Ok(project_root
++#[derive(Debug, Serialize, Deserialize)]
++struct AgentSessionRecord {
++    agent_id: String,
++    token: String,
++    password_hash: String,
++    issued_at_epoch_secs: u64,
++    expires_at_epoch_secs: u64,
++}
++
++fn now_epoch_secs() -> u64 {
++    SystemTime::now()
++        .duration_since(UNIX_EPOCH)
++        .map(|d| d.as_secs())
++        .unwrap_or(0)
++}
++
++fn session_ttl_secs() -> u64 {
++    std::env::var("DECAPOD_SESSION_TTL_SECS")
++        .ok()
++        .and_then(|v| v.parse::<u64>().ok())
++        .filter(|v| *v > 0)
++        .unwrap_or(3600)
++}
++
++fn current_agent_id() -> String {
++    std::env::var("DECAPOD_AGENT_ID")
++        .ok()
++        .map(|v| v.trim().to_string())
++        .filter(|v| !v.is_empty())
++        .unwrap_or_else(|| "unknown".to_string())
++}
++
++fn sanitize_agent_component(s: &str) -> String {
++    let mut out = String::with_capacity(s.len());
++    for ch in s.chars() {
++        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
++            out.push(ch.to_ascii_lowercase());
++        } else {
++            out.push('-');
++        }
++    }
++    out.trim_matches('-').to_string()
++}
++
++fn sessions_dir(project_root: &Path) -> PathBuf {
++    project_root
+         .join(".decapod")
+         .join("generated")
+-        .join("session.token"))
++        .join("sessions")
++}
++
++fn session_file_for_agent(project_root: &Path, agent_id: &str) -> PathBuf {
++    sessions_dir(project_root).join(format!("{}.json", sanitize_agent_component(agent_id)))
++}
++
++fn hash_password(password: &str, token: &str) -> String {
++    let mut hasher = Sha256::new();
++    hasher.update(token.as_bytes());
++    hasher.update(b":");
++    hasher.update(password.as_bytes());
++    let digest = hasher.finalize();
++    let mut out = String::with_capacity(digest.len() * 2);
++    for b in digest {
++        out.push_str(&format!("{:02x}", b));
++    }
++    out
++}
++
++fn generate_ephemeral_password() -> Result<String, error::DecapodError> {
++    let mut buf = vec![0u8; 24];
++    let mut urandom = fs::File::open("/dev/urandom").map_err(error::DecapodError::IoError)?;
++    urandom
++        .read_exact(&mut buf)
++        .map_err(error::DecapodError::IoError)?;
++    let mut out = String::with_capacity(buf.len() * 2);
++    for b in buf {
++        out.push_str(&format!("{:02x}", b));
++    }
++    Ok(out)
++}
++
++fn read_agent_session(
++    project_root: &Path,
++    agent_id: &str,
++) -> Result<Option<AgentSessionRecord>, error::DecapodError> {
++    let path = session_file_for_agent(project_root, agent_id);
++    if !path.exists() {
++        return Ok(None);
++    }
++    let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
++    let rec: AgentSessionRecord = serde_json::from_str(&raw)
++        .map_err(|e| error::DecapodError::SessionError(format!("invalid session file: {}", e)))?;
++    Ok(Some(rec))
++}
++
++fn write_agent_session(
++    project_root: &Path,
++    rec: &AgentSessionRecord,
++) -> Result<(), error::DecapodError> {
++    let dir = sessions_dir(project_root);
++    fs::create_dir_all(&dir).map_err(error::DecapodError::IoError)?;
++    let path = session_file_for_agent(project_root, &rec.agent_id);
++    let body = serde_json::to_string_pretty(rec)
++        .map_err(|e| error::DecapodError::SessionError(format!("session encode error: {}", e)))?;
++    fs::write(&path, body).map_err(error::DecapodError::IoError)?;
++    #[cfg(unix)]
++    {
++        use std::os::unix::fs::PermissionsExt;
++        let mut perms = fs::metadata(&path)
++            .map_err(error::DecapodError::IoError)?
++            .permissions();
++        perms.set_mode(0o600);
++        fs::set_permissions(&path, perms).map_err(error::DecapodError::IoError)?;
++    }
++    Ok(())
++}
++
++fn cleanup_expired_sessions(
++    project_root: &Path,
++    store_root: &Path,
++) -> Result<Vec<String>, error::DecapodError> {
++    let dir = sessions_dir(project_root);
++    if !dir.exists() {
++        return Ok(Vec::new());
++    }
++    let now = now_epoch_secs();
++    let mut expired_agents = Vec::new();
++    for entry in fs::read_dir(&dir).map_err(error::DecapodError::IoError)? {
++        let entry = entry.map_err(error::DecapodError::IoError)?;
++        let path = entry.path();
++        if path.extension().and_then(|s| s.to_str()) != Some("json") {
++            continue;
++        }
++        let raw = match fs::read_to_string(&path) {
++            Ok(v) => v,
++            Err(_) => {
++                let _ = fs::remove_file(&path);
++                continue;
++            }
++        };
++        let rec: AgentSessionRecord = match serde_json::from_str(&raw) {
++            Ok(v) => v,
++            Err(_) => {
++                let _ = fs::remove_file(&path);
++                continue;
++            }
++        };
++        if rec.expires_at_epoch_secs <= now {
++            let _ = fs::remove_file(&path);
++            expired_agents.push(rec.agent_id);
++        }
++    }
++
++    if !expired_agents.is_empty() {
++        todo::cleanup_stale_agent_assignments(store_root, &expired_agents, "session.expired")?;
++    }
++
++    Ok(expired_agents)
+ }
+ 
+ fn ensure_session_valid() -> Result<(), error::DecapodError> {
+-    let token_path = get_session_token_path()?;
+-    if !token_path.exists() {
++    let current_dir = std::env::current_dir()?;
++    let project_root = find_decapod_project_root(&current_dir)?;
++    let store_root = project_root.join(".decapod").join("data");
++    fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
++    let _ = cleanup_expired_sessions(&project_root, &store_root)?;
++
++    let agent_id = current_agent_id();
++    let session = read_agent_session(&project_root, &agent_id)?;
++    let Some(session) = session else {
++        return Err(error::DecapodError::SessionError(format!(
++            "No active session for agent '{}'. Run 'decapod session acquire' first. Reminder: this CLI/API is not for humans.",
++            agent_id
++        )));
++    };
++
++    if session.expires_at_epoch_secs <= now_epoch_secs() {
++        let _ = fs::remove_file(session_file_for_agent(&project_root, &agent_id));
++        let _ = todo::cleanup_stale_agent_assignments(
++            &store_root,
++            std::slice::from_ref(&agent_id),
++            "session.expired",
++        );
++        return Err(error::DecapodError::SessionError(format!(
++            "Session expired for agent '{}'. Run 'decapod session acquire' to rotate credentials.",
++            agent_id
++        )));
++    }
++
++    if agent_id == "unknown" {
++        return Ok(());
++    }
++
++    let supplied_password = std::env::var("DECAPOD_SESSION_PASSWORD").map_err(|_| {
++        error::DecapodError::SessionError(
++            "Missing DECAPOD_SESSION_PASSWORD. Agent+password is required for session access."
++                .to_string(),
++        )
++    })?;
++    let supplied_hash = hash_password(&supplied_password, &session.token);
++    if supplied_hash != session.password_hash {
+         return Err(error::DecapodError::SessionError(
+-            "No active session. Run 'decapod session acquire' first. Reminder: this CLI/API is not for humans.".to_string(),
++            "Invalid DECAPOD_SESSION_PASSWORD for current agent session.".to_string(),
+         ));
+     }
+     Ok(())
+ }
+ 
+ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodError> {
++    let current_dir = std::env::current_dir()?;
++    let project_root = find_decapod_project_root(&current_dir)?;
++    let store_root = project_root.join(".decapod").join("data");
++    fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
++    let _ = cleanup_expired_sessions(&project_root, &store_root)?;
++
+     match session_cli.command {
+         SessionCommand::Acquire => {
+-            let token_path = get_session_token_path()?;
+-            if token_path.exists() {
+-                println!("Session already active. Use 'decapod session status' for details.");
++            let agent_id = current_agent_id();
++            if let Some(existing) = read_agent_session(&project_root, &agent_id)?
++                && existing.expires_at_epoch_secs > now_epoch_secs()
++            {
++                println!(
++                    "Session already active for agent '{}'. Use 'decapod session status' for details.",
++                    agent_id
++                );
+                 return Ok(());
+             }
+ 
+-            // Create session token
++            let issued = now_epoch_secs();
++            let expires = issued.saturating_add(session_ttl_secs());
+             let token = ulid::Ulid::to_string(&ulid::Ulid::new());
+-            std::fs::write(&token_path, &token).map_err(error::DecapodError::IoError)?;
++            let password = generate_ephemeral_password()?;
++            let rec = AgentSessionRecord {
++                agent_id: agent_id.clone(),
++                token: token.clone(),
++                password_hash: hash_password(&password, &token),
++                issued_at_epoch_secs: issued,
++                expires_at_epoch_secs: expires,
++            };
++            write_agent_session(&project_root, &rec)?;
+ 
+             println!("Session acquired successfully.");
++            println!("Agent: {}", agent_id);
+             println!("Token: {}", token);
++            println!("Password: {}", password);
++            println!("ExpiresAtEpoch: {}", expires);
++            println!(
++                "Export before running other commands: DECAPOD_AGENT_ID='{}' and DECAPOD_SESSION_PASSWORD='<password>'",
++                rec.agent_id
++            );
+             println!("\nYou may now use other decapod commands.");
+             Ok(())
+         }
+         SessionCommand::Status => {
+-            let token_path = get_session_token_path()?;
+-            if token_path.exists() {
+-                let token =
+-                    std::fs::read_to_string(&token_path).map_err(error::DecapodError::IoError)?;
++            let agent_id = current_agent_id();
++            if let Some(session) = read_agent_session(&project_root, &agent_id)? {
+                 println!("Session active");
+-                println!("Token: {}", token.trim());
++                println!("Agent: {}", session.agent_id);
++                println!("Token: {}", session.token);
++                println!("IssuedAtEpoch: {}", session.issued_at_epoch_secs);
++                println!("ExpiresAtEpoch: {}", session.expires_at_epoch_secs);
+             } else {
+                 println!("No active session");
+                 println!("Run 'decapod session acquire' to start a session");
+@@ -983,9 +1204,15 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
+             Ok(())
+         }
+         SessionCommand::Release => {
+-            let token_path = get_session_token_path()?;
+-            if token_path.exists() {
+-                std::fs::remove_file(&token_path).map_err(error::DecapodError::IoError)?;
++            let agent_id = current_agent_id();
++            let session_path = session_file_for_agent(&project_root, &agent_id);
++            if session_path.exists() {
++                std::fs::remove_file(&session_path).map_err(error::DecapodError::IoError)?;
++                let _ = todo::cleanup_stale_agent_assignments(
++                    &store_root,
++                    std::slice::from_ref(&agent_id),
++                    "session.release",
++                );
+                 println!("Session released");
+             } else {
+                 println!("No active session to release");
+diff --git a/src/plugins/container.rs b/src/plugins/container.rs
+index 7a19971..f790121 100644
+--- a/src/plugins/container.rs
++++ b/src/plugins/container.rs
+@@ -214,7 +214,7 @@ fn run_container(
+     repo_override: Option<&str>,
+     keep_worktree: bool,
+     inherit_env: bool,
+-    _local_only: bool,
++    local_only: bool,
+ ) -> Result<RunSummary, error::DecapodError> {
+     let repo = resolve_repo_path(repo_override)?;
+     if container_runtime_disabled(&repo)? {
+@@ -244,6 +244,8 @@ Warning: without isolated containers, concurrent agents can step on each other."
+         }
+     };
+ 
++    ensure_container_runtime_access(&docker)?;
++
+     let image = resolve_runtime_image(&docker, &repo, image_profile, image_override)?;
+ 
+     let branch_name = branch
+@@ -264,6 +266,7 @@ Warning: without isolated containers, concurrent agents can step on each other."
+         cpus,
+         task_id,
+         inherit_env,
++        local_only,
+     )?;
+ 
+     let start = Instant::now();
+@@ -298,6 +301,10 @@ Warning: without isolated containers, concurrent agents can step on each other."
+     sync_workspace_branch_to_host_repo(&repo, &workspace.path, &workspace.branch)?;
+     let branch_returned_to_host = true;
+ 
++    if push {
++        push_branch_to_origin(&repo, &workspace.branch)?;
++    }
++
+     if pr {
+         create_gh_pr(
+             &repo,
+@@ -322,7 +329,7 @@ Warning: without isolated containers, concurrent agents can step on each other."
+         "branch": workspace.branch,
+         "base_branch": workspace.base_branch,
+         "isolation_backend": workspace.backend,
+-        "local_only": true,
++        "local_only": local_only,
+         "task_id": task_id,
+         "push": push,
+         "pr": pr,
+@@ -469,6 +476,72 @@ fn find_container_runtime() -> Result<String, error::DecapodError> {
+     ))
+ }
+ 
++fn ensure_container_runtime_access(runtime: &str) -> Result<(), error::DecapodError> {
++    let output = Command::new(runtime)
++        .arg("info")
++        .output()
++        .map_err(error::DecapodError::IoError)?;
++    if output.status.success() {
++        return Ok(());
++    }
++
++    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
++    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
++    let combined = format!("{}\n{}", stderr, stdout).to_lowercase();
++    let uid = current_uid_gid()
++        .map(|(u, g)| format!("uid={}, gid={}", u, g))
++        .unwrap_or_else(|| "uid/gid unavailable".to_string());
++    let docker_host = std::env::var("DOCKER_HOST").unwrap_or_else(|_| "<unset>".to_string());
++    let xdg_runtime_dir =
++        std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "<unset>".to_string());
++
++    let remediation = if combined.contains("permission denied")
++        || combined.contains("got permission denied")
++        || combined.contains("operation not permitted")
++    {
++        "Container runtime access denied. Re-run with elevated permissions, or grant this user runtime access and restart the shell."
++    } else if combined.contains("cannot connect")
++        || combined.contains("is the docker daemon running")
++        || combined.contains("connection refused")
++        || combined.contains("no such file or directory")
++    {
++        "Container runtime is installed but unavailable. Start the Docker/Podman daemon (or user service), then retry."
++    } else {
++        "Runtime preflight failed. Verify Docker/Podman daemon availability and user permissions, then retry."
++    };
++
++    Err(error::DecapodError::ValidationError(format!(
++        "Container runtime preflight failed.\n\
++runtime: {}\n\
++probe: `{}`\n\
++{}\n\
++context: {}, DOCKER_HOST={}, XDG_RUNTIME_DIR={}\n\
++stderr:\n{}\n\
++stdout:\n{}",
++        runtime, "info", remediation, uid, docker_host, xdg_runtime_dir, stderr, stdout
++    )))
++}
++
++fn push_branch_to_origin(repo: &Path, branch: &str) -> Result<(), error::DecapodError> {
++    let output = Command::new("git")
++        .arg("-C")
++        .arg(repo)
++        .arg("push")
++        .arg("-u")
++        .arg("origin")
++        .arg(branch)
++        .output()
++        .map_err(error::DecapodError::IoError)?;
++    if output.status.success() {
++        return Ok(());
++    }
++    Err(error::DecapodError::ValidationError(format!(
++        "host push failed for branch '{}': {}",
++        branch,
++        String::from_utf8_lossy(&output.stderr).trim()
++    )))
++}
++
+ fn command_exists(cmd: &str) -> bool {
+     Command::new(cmd)
+         .arg("--version")
+@@ -804,6 +877,7 @@ fn build_docker_spec(
+     cpus: &str,
+     task_id: Option<&str>,
+     inherit_env: bool,
++    local_only: bool,
+ ) -> Result<DockerSpec, error::DecapodError> {
+     let decapod_dir = repo_root.join(".decapod");
+     fs::create_dir_all(&decapod_dir).map_err(error::DecapodError::IoError)?;
+@@ -890,7 +964,12 @@ fn build_docker_spec(
+     args.push(image.to_string());
+     args.push("/bin/sh".to_string());
+     args.push("-lc".to_string());
+-    args.push(build_container_script(user_cmd, branch, base_branch));
++    args.push(build_container_script(
++        user_cmd,
++        branch,
++        base_branch,
++        local_only,
++    ));
+     if env_bool("DECAPOD_CONTAINER_DEBUG", false) {
+         eprintln!("debug: container args={}", args.join(" "));
+     }
+@@ -913,7 +992,12 @@ fn inherited_env_vars() -> BTreeMap<String, String> {
+ }
+ 
+ #[allow(clippy::too_many_arguments)]
+-fn build_container_script(user_cmd: &str, branch: &str, base_branch: &str) -> String {
++fn build_container_script(
++    user_cmd: &str,
++    branch: &str,
++    base_branch: &str,
++    local_only: bool,
++) -> String {
+     let mut script = String::from(
+         "set -eu\n\
+          cd \"${DECAPOD_WORKSPACE:-$PWD}\"\n\
+@@ -961,8 +1045,13 @@ fn build_container_script(user_cmd: &str, branch: &str, base_branch: &str) -> St
+     script.push('\n');
+ 
+     script.push_str(
+-        "if [ -n \"$(git_safe status --porcelain)\" ]; then\n  git_safe add -A\n  git_safe commit -m \"chore: automated container updates\"\n  git_safe push -u origin HEAD\nfi\n",
++        "if [ -n \"$(git_safe status --porcelain)\" ]; then\n  git_safe add -A\n  git_safe commit -m \"chore: automated container updates\"\nfi\n",
+     );
++    if !local_only {
++        script.push_str(
++            "if [ \"${DECAPOD_CONTAINER_DEBUG:-0}\" = \"1\" ]; then\n  echo \"debug: host control-plane handles push/PR after foldback\" >&2\nfi\n",
++        );
++    }
+ 
+     script
+ }
+@@ -1057,6 +1146,7 @@ mod tests {
+             "2.0",
+             Some("R_123"),
+             false,
++            false,
+         )
+         .expect("spec");
+ 
+@@ -1073,7 +1163,7 @@ mod tests {
+         assert!(!joined.contains("git_safe fetch --no-write-fetch-head origin 'master'"));
+         assert!(!joined.contains("git_safe rebase origin/'master'"));
+         assert!(joined.contains("decapod update"));
+-        assert!(joined.contains("git_safe push -u origin HEAD"));
++        assert!(!joined.contains("git_safe push -u origin HEAD"));
+         assert!(!joined.contains("gh auth status"));
+         assert!(!joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
+     }
+@@ -1095,6 +1185,7 @@ mod tests {
+             "2.0",
+             Some("R_123"),
+             false,
++            true,
+         )
+         .expect("spec");
+ 
+@@ -1102,7 +1193,7 @@ mod tests {
+         assert!(joined.contains("DECAPOD_LOCAL_ONLY=1"));
+         assert!(!joined.contains("git_safe fetch --no-write-fetch-head origin 'master'"));
+         assert!(!joined.contains("git_safe rebase origin/'master'"));
+-        assert!(!joined.contains("git_safe push -u origin 'ahr/branch'"));
++        assert!(!joined.contains("git_safe push -u origin"));
+         assert!(!joined.contains("gh pr create --base 'master' --head 'ahr/branch'"));
+         assert!(!joined.contains("ssh-keyscan -t ed25519 github.com"));
+         assert!(joined.contains("git_safe checkout -B 'ahr/branch' 'master'"));
+diff --git a/src/plugins/todo.rs b/src/plugins/todo.rs
+index ce3f37e..f53caa6 100644
+--- a/src/plugins/todo.rs
++++ b/src/plugins/todo.rs
+@@ -1183,6 +1183,115 @@ pub fn clock_in_agent_presence(store: &Store) -> Result<(), error::DecapodError>
+     Ok(())
+ }
+ 
++pub fn cleanup_stale_agent_assignments(
++    root: &Path,
++    stale_agents: &[String],
++    reason: &str,
++) -> Result<usize, error::DecapodError> {
++    if stale_agents.is_empty() {
++        return Ok(0);
++    }
++
++    let broker = DbBroker::new(root);
++    let db_path = todo_db_path(root);
++    let ts = now_iso();
++
++    broker.with_conn(&db_path, "decapod", None, "todo.session.cleanup", |conn| {
++        ensure_schema(conn)?;
++        let mut released_count = 0usize;
++
++        for agent_id in stale_agents {
++            let mut task_ids = Vec::new();
++            {
++                let mut stmt = conn
++                    .prepare(
++                        "SELECT id FROM tasks
++                             WHERE assigned_to = ?1
++                               AND status NOT IN ('done', 'archived')",
++                    )
++                    .map_err(error::DecapodError::RusqliteError)?;
++                let rows = stmt
++                    .query_map(rusqlite::params![agent_id], |row| row.get::<_, String>(0))
++                    .map_err(error::DecapodError::RusqliteError)?;
++                for row in rows {
++                    task_ids.push(row.map_err(error::DecapodError::RusqliteError)?);
++                }
++            }
++
++            for task_id in task_ids {
++                let changed = conn
++                    .execute(
++                        "UPDATE tasks
++                             SET assigned_to = '', assigned_at = NULL, updated_at = ?1
++                             WHERE id = ?2
++                               AND assigned_to = ?3
++                               AND status NOT IN ('done', 'archived')",
++                        rusqlite::params![ts, task_id, agent_id],
++                    )
++                    .map_err(error::DecapodError::RusqliteError)?;
++                if changed > 0 {
++                    conn.execute(
++                        "DELETE FROM task_owners WHERE task_id = ?1 AND agent_id = ?2",
++                        rusqlite::params![task_id, agent_id],
++                    )
++                    .map_err(error::DecapodError::RusqliteError)?;
++                    sync_legacy_owner_column(conn, &task_id)?;
++                    released_count += changed as usize;
++
++                    let ev = TodoEvent {
++                        ts: ts.clone(),
++                        event_id: Ulid::new().to_string(),
++                        event_type: "task.release".to_string(),
++                        task_id: Some(task_id.clone()),
++                        payload: serde_json::json!({
++                            "assigned_to": "",
++                            "previous_assignee": agent_id,
++                            "reason": reason,
++                        }),
++                        actor: "decapod".to_string(),
++                    };
++                    append_event(root, &ev)?;
++                    insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
++                }
++            }
++
++            conn.execute(
++                "DELETE FROM task_owners WHERE agent_id = ?1",
++                rusqlite::params![agent_id],
++            )
++            .map_err(error::DecapodError::RusqliteError)?;
++            conn.execute(
++                "DELETE FROM agent_category_claims WHERE agent_id = ?1",
++                rusqlite::params![agent_id],
++            )
++            .map_err(error::DecapodError::RusqliteError)?;
++            conn.execute(
++                "UPDATE agent_presence
++                     SET status = 'expired', updated_at = ?1
++                     WHERE agent_id = ?2",
++                rusqlite::params![ts, agent_id],
++            )
++            .map_err(error::DecapodError::RusqliteError)?;
++
++            let ev = TodoEvent {
++                ts: ts.clone(),
++                event_id: Ulid::new().to_string(),
++                event_type: "agent.session.cleanup".to_string(),
++                task_id: None,
++                payload: serde_json::json!({
++                    "agent_id": agent_id,
++                    "reason": reason,
++                }),
++                actor: "decapod".to_string(),
++            };
++            append_event(root, &ev)?;
++            insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
++        }
++
++        Ok(released_count)
++    })
++}
++
+ fn list_claimable_tasks_for_agent(
+     root: &Path,
+     agent_id: &str,
+diff --git a/templates/AGENTS.md b/templates/AGENTS.md
+index 2d5ae3f..d524429 100644
+--- a/templates/AGENTS.md
++++ b/templates/AGENTS.md
+@@ -12,7 +12,9 @@ decapod version
+ decapod --help
+ decapod data schema --subsystem command_registry --deterministic >/dev/null
+ decapod docs show core/DECAPOD.md
++export DECAPOD_AGENT_ID=<agent-id>
+ decapod session acquire
++export DECAPOD_SESSION_PASSWORD=<password-from-acquire>
+ decapod validate
+ decapod todo list
+ ```
+@@ -21,13 +23,15 @@ The binary and constitution evolve. Always refresh before acting.
+ 
+ After startup:
+ 1. Use `decapod` as the control plane; `.decapod` files are accessed only via `decapod` CLI.
+-2. Run git-tracked implementation only in Docker git workspaces (not host worktree edits).
+-3. Claim work before substantive implementation: `decapod todo claim --id <task-id>`.
+-4. Run `decapod validate` before claiming verified/compliant.
+-5. Close work via `decapod todo done --id <task-id>` (and optional approved `todo archive`); never use `decapod complete`.
+-6. Preserve Interface abstraction boundary: communicate intent/actions/outcomes by default.
+-7. Ask concise clarification questions for ambiguous/high-risk/irreversible actions.
+-8. Before mutation, verify active command surfaces via `decapod data schema`.
++2. MANDATORY: git-tracked implementation MUST run only in Docker git workspaces (never host worktree edits).
++3. MANDATORY: request elevated permissions before Docker/container workspace commands; do not proceed on denied runtime access.
++4. MANDATORY: per-agent session access requires `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`.
++5. MANDATORY: claim work before substantive implementation: `decapod todo claim --id <task-id>`.
++6. Run `decapod validate` before claiming verified/compliant.
++7. Close work via `decapod todo done --id <task-id>` (and optional approved `todo archive`); never use `decapod complete`.
++8. Preserve Interface abstraction boundary: communicate intent/actions/outcomes by default.
++9. Ask concise clarification questions for ambiguous/high-risk/irreversible actions.
++10. Before mutation, verify active command surfaces via `decapod data schema`.
+ 
+ If the router is missing or `decapod` is unavailable: Stop if uncertain and ask the human for the entrypoint.
+ 
+diff --git a/templates/CLAUDE.md b/templates/CLAUDE.md
+index e8315b3..06490ee 100644
+--- a/templates/CLAUDE.md
++++ b/templates/CLAUDE.md
+@@ -12,7 +12,9 @@ decapod version
+ decapod --help
+ decapod data schema --subsystem command_registry --deterministic >/dev/null
+ decapod docs show core/DECAPOD.md
++export DECAPOD_AGENT_ID=<agent-id>
+ decapod session acquire
++export DECAPOD_SESSION_PASSWORD=<password-from-acquire>
+ decapod validate
+ decapod todo list
+ ```
+@@ -21,8 +23,10 @@ Required constraints:
+ - See `AGENTS.md` for full policy.
+ - `core/DECAPOD.md` is the router.
+ - `.decapod` files only via `decapod` CLI.
+-- Git-tracked implementation must run in Docker git workspaces (not host worktree edits).
+-- Claim tasks before substantive work: `decapod todo claim --id <task-id>`.
++- MANDATORY: git-tracked implementation MUST run in Docker git workspaces (never host worktree edits).
++- MANDATORY: request elevated permissions before Docker/container workspace commands; stop on denied runtime access.
++- MANDATORY: per-agent session access requires `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`.
++- MANDATORY: claim tasks before substantive work: `decapod todo claim --id <task-id>`.
+ - Keep operator output semantic (intent/actions/outcomes) unless diagnostics are requested.
+ 
+ Four invariants:
+diff --git a/templates/CODEX.md b/templates/CODEX.md
+index 6868502..47caec2 100644
+--- a/templates/CODEX.md
++++ b/templates/CODEX.md
+@@ -4,8 +4,6 @@ You (Codex/ChatGPT/OpenAI agent) are working in a Decapod-managed repository.
+ 
+ **You are bound by the universal agent contract:** See `AGENTS.md` for the complete protocol.
+ 
+-## Quick Start
+-
+ **MANDATORY FIRST STEPS** - Run these EVERY session:
+ 
+ ```bash
+@@ -14,20 +12,23 @@ decapod version                   # 2. Check current version
+ decapod --help                      # 3. Verify available commands
+ decapod data schema --subsystem command_registry --deterministic >/dev/null  # 4. Refresh CLI command index
+ decapod docs show core/DECAPOD.md  # 5. Refresh constitution
+-decapod session acquire             # 6. Acquire session token (required for all commands)
+-decapod validate                    # 7. System state
+-decapod todo list                   # 8. Active work
++export DECAPOD_AGENT_ID=<agent-id> # 6. Set agent identity
++decapod session acquire             # 7. Acquire per-agent session credentials
++export DECAPOD_SESSION_PASSWORD=<password-from-acquire>  # 8. Bind password to this session
++decapod validate                    # 9. System state
++decapod todo list                   # 10. Active work
+ ```
+ 
+ **Why this matters:** The decapod binary and constitution evolve. Always install the latest release first, then verify commands and refresh your understanding of the latest contract before acting.
+ 
+-## Codex-Specific Notes
+-
++## Notes
+ - You excel at code completion - but still read architecture first
+ - You have strong pattern matching - use it to follow existing code style
+ - You may have tool use or function calling - use it for `decapod` commands
+-- Git-tracked implementation must run in Docker git workspaces (not host worktree edits)
+-- Claim tasks before substantive work: `decapod todo claim --id <task-id>`
++- MANDATORY: git-tracked implementation MUST run in Docker git workspaces (never host worktree edits)
++- MANDATORY: request elevated permissions before Docker/container workspace commands; stop on denied runtime access
++- MANDATORY: per-agent session access requires `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`
++- MANDATORY: claim tasks before substantive work: `decapod todo claim --id <task-id>`
+ - Apply control-plane opacity: keep operator-facing output semantic (intent/actions/outcomes), not command-surface oriented
+ 
+ ## The Contract
+diff --git a/templates/GEMINI.md b/templates/GEMINI.md
+index 005afe4..51e91e7 100644
+--- a/templates/GEMINI.md
++++ b/templates/GEMINI.md
+@@ -12,7 +12,9 @@ decapod version
+ decapod --help
+ decapod data schema --subsystem command_registry --deterministic >/dev/null
+ decapod docs show core/DECAPOD.md
++export DECAPOD_AGENT_ID=<agent-id>
+ decapod session acquire
++export DECAPOD_SESSION_PASSWORD=<password-from-acquire>
+ decapod validate
+ decapod todo list
+ ```
+@@ -21,8 +23,10 @@ Required constraints:
+ - See `AGENTS.md` for full policy.
+ - `core/DECAPOD.md` is the router.
+ - `.decapod` files only via `decapod` CLI.
+-- Git-tracked implementation must run in Docker git workspaces (not host worktree edits).
+-- Claim tasks before substantive work: `decapod todo claim --id <task-id>`.
++- MANDATORY: git-tracked implementation MUST run in Docker git workspaces (never host worktree edits).
++- MANDATORY: request elevated permissions before Docker/container workspace commands; stop on denied runtime access.
++- MANDATORY: per-agent session access requires `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`.
++- MANDATORY: claim tasks before substantive work: `decapod todo claim --id <task-id>`.
+ - Keep operator output semantic (intent/actions/outcomes) unless diagnostics are requested.
+ 
+ Four invariants:
+diff --git a/tests/entrypoint_correctness.rs b/tests/entrypoint_correctness.rs
+index 1d30ede..64ff91b 100644
+--- a/tests/entrypoint_correctness.rs
++++ b/tests/entrypoint_correctness.rs
+@@ -5,7 +5,7 @@
+ 
+ use std::fs;
+ use std::path::PathBuf;
+-use std::process::Command;
++use std::process::{Command, Output};
+ use tempfile::TempDir;
+ 
+ /// Helper to run decapod command in a temp directory
+@@ -23,6 +23,34 @@ fn run_decapod(temp_dir: &PathBuf, args: &[&str]) -> (bool, String) {
+     (output.status.success(), combined)
+ }
+ 
++fn run_decapod_with_env(
++    temp_dir: &PathBuf,
++    args: &[&str],
++    envs: &[(&str, &str)],
++) -> (bool, String) {
++    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
++    cmd.current_dir(temp_dir).args(args);
++    for (k, v) in envs {
++        cmd.env(k, v);
++    }
++    let output = cmd.output().expect("Failed to execute decapod");
++
++    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
++    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
++    let combined = format!("{}\n{}", stdout, stderr);
++
++    (output.status.success(), combined)
++}
++
++fn run_raw(temp_dir: &PathBuf, args: &[&str], envs: &[(&str, &str)]) -> Output {
++    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
++    cmd.current_dir(temp_dir).args(args);
++    for (k, v) in envs {
++        cmd.env(k, v);
++    }
++    cmd.output().expect("Failed to execute decapod")
++}
++
+ fn acquire_session(temp_path: &PathBuf) {
+     let (success, output) = run_decapod(temp_path, &["session", "acquire"]);
+     assert!(
+@@ -32,6 +60,15 @@ fn acquire_session(temp_path: &PathBuf) {
+     );
+ }
+ 
++fn extract_password(output: &str) -> Option<String> {
++    for line in output.lines() {
++        if let Some(rest) = line.strip_prefix("Password: ") {
++            return Some(rest.trim().to_string());
++        }
++    }
++    None
++}
++
+ #[test]
+ fn test_init_creates_all_entrypoints() {
+     let temp_dir = TempDir::new().expect("Failed to create temp dir");
+@@ -84,6 +121,173 @@ fn test_validate_passes_after_init() {
+     );
+ }
+ 
++#[test]
++fn test_agent_session_requires_password() {
++    let temp_dir = TempDir::new().expect("Failed to create temp dir");
++    let temp_path = temp_dir.path().to_path_buf();
++
++    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
++    assert!(success, "decapod init should succeed");
++
++    let (success, acquire_out) = run_decapod_with_env(
++        &temp_path,
++        &["session", "acquire"],
++        &[("DECAPOD_AGENT_ID", "agent-secure")],
++    );
++    assert!(success, "session acquire should succeed: {}", acquire_out);
++    let password = extract_password(&acquire_out).expect("acquire output should include password");
++
++    let (ok_missing, out_missing) = run_decapod_with_env(
++        &temp_path,
++        &["validate"],
++        &[("DECAPOD_AGENT_ID", "agent-secure")],
++    );
++    assert!(
++        !ok_missing,
++        "validate should fail without DECAPOD_SESSION_PASSWORD: {}",
++        out_missing
++    );
++    assert!(
++        out_missing.contains("Missing DECAPOD_SESSION_PASSWORD"),
++        "missing password error should be explicit: {}",
++        out_missing
++    );
++
++    let (ok_wrong, out_wrong) = run_decapod_with_env(
++        &temp_path,
++        &["validate"],
++        &[
++            ("DECAPOD_AGENT_ID", "agent-secure"),
++            ("DECAPOD_SESSION_PASSWORD", "wrong"),
++        ],
++    );
++    assert!(
++        !ok_wrong,
++        "validate should fail with wrong password: {}",
++        out_wrong
++    );
++    assert!(
++        out_wrong.contains("Invalid DECAPOD_SESSION_PASSWORD"),
++        "wrong password error should be explicit: {}",
++        out_wrong
++    );
++
++    let (ok_good, out_good) = run_decapod_with_env(
++        &temp_path,
++        &["validate"],
++        &[
++            ("DECAPOD_AGENT_ID", "agent-secure"),
++            ("DECAPOD_SESSION_PASSWORD", &password),
++        ],
++    );
++    assert!(
++        ok_good,
++        "validate should pass with correct agent+password: {}",
++        out_good
++    );
++}
++
++#[test]
++fn test_expired_session_releases_assigned_tasks() {
++    let temp_dir = TempDir::new().expect("Failed to create temp dir");
++    let temp_path = temp_dir.path().to_path_buf();
++
++    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
++    assert!(success, "decapod init should succeed");
++
++    let (success, acquire_out) = run_decapod_with_env(
++        &temp_path,
++        &["session", "acquire"],
++        &[("DECAPOD_AGENT_ID", "agent-expire")],
++    );
++    assert!(success, "session acquire should succeed: {}", acquire_out);
++    let password = extract_password(&acquire_out).expect("acquire output should include password");
++    let auth_env = [
++        ("DECAPOD_AGENT_ID", "agent-expire"),
++        ("DECAPOD_SESSION_PASSWORD", password.as_str()),
++    ];
++
++    let add_out = run_raw(
++        &temp_path,
++        &["todo", "--format", "json", "add", "session cleanup target"],
++        &auth_env,
++    );
++    assert!(
++        add_out.status.success(),
++        "todo add should succeed: {}",
++        String::from_utf8_lossy(&add_out.stderr)
++    );
++    let add_json: serde_json::Value =
++        serde_json::from_slice(&add_out.stdout).expect("todo add should return json");
++    let task_id = add_json["id"]
++        .as_str()
++        .expect("todo add json should include id")
++        .to_string();
++
++    let claim_out = run_raw(
++        &temp_path,
++        &["todo", "--format", "json", "claim", "--id", &task_id],
++        &auth_env,
++    );
++    assert!(
++        claim_out.status.success(),
++        "todo claim should succeed: {}",
++        String::from_utf8_lossy(&claim_out.stderr)
++    );
++
++    let session_path = temp_path
++        .join(".decapod")
++        .join("generated")
++        .join("sessions")
++        .join("agent-expire.json");
++    let mut session_json: serde_json::Value =
++        serde_json::from_str(&fs::read_to_string(&session_path).expect("session file"))
++            .expect("session json");
++    session_json["expires_at_epoch_secs"] = serde_json::json!(0);
++    fs::write(
++        &session_path,
++        serde_json::to_string_pretty(&session_json).expect("serialize"),
++    )
++    .expect("write expired session");
++
++    let status_out = run_raw(
++        &temp_path,
++        &["session", "status"],
++        &[("DECAPOD_AGENT_ID", "agent-expire")],
++    );
++    assert!(
++        status_out.status.success(),
++        "session status should run cleanup: {}",
++        String::from_utf8_lossy(&status_out.stderr)
++    );
++
++    let (ok_unknown_acquire, out_unknown_acquire) =
++        run_decapod(&temp_path, &["session", "acquire"]);
++    assert!(
++        ok_unknown_acquire,
++        "unknown session acquire should succeed: {}",
++        out_unknown_acquire
++    );
++
++    let get_out = run_raw(
++        &temp_path,
++        &["todo", "--format", "json", "get", "--id", &task_id],
++        &[],
++    );
++    assert!(
++        get_out.status.success(),
++        "todo get should succeed: {}",
++        String::from_utf8_lossy(&get_out.stderr)
++    );
++    let get_json: serde_json::Value =
++        serde_json::from_slice(&get_out.stdout).expect("todo get should return json");
++    assert_eq!(
++        get_json["task"]["assigned_to"].as_str().unwrap_or(""),
++        "",
++        "expired session cleanup should unassign task"
++    );
++}
++
+ #[test]
+ fn test_entrypoints_are_thin() {
+     let temp_dir = TempDir::new().expect("Failed to create temp dir");
