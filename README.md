@@ -6,7 +6,11 @@
 
 <p align="center">
   <strong>Decapod</strong><br />
-  Governance Runtime for AI Coding Agents
+  The governance runtime for AI coding agents.
+</p>
+
+<p align="center">
+  Local-first, repo-native, and built for verifiable delivery.
 </p>
 
 <p align="center">
@@ -17,75 +21,47 @@
 
 ---
 
-> Local-first. Repo-native. Built to turn agent output from "probably fine" into verifiable delivery.
+## Why Decapod
 
-## What Is Decapod
+AI coding agents can write code fast. Shipping it safely is the hard part.
 
-Decapod is an execution contract for coding agents.
-It standardizes how agents operate in a repository, enforces workflow boundaries, and requires evidence before completion is accepted.
-
-Not a hosted control plane. Not locked to one model vendor. It runs in your repo, on your infrastructure.
-
-## What It Replaces
-
-- Narrative completion claims with explicit pass/fail gates.
-- Ad-hoc agent behavior with consistent operational contracts.
-- Fragile one-agent flows with repeatable multi-agent coordination patterns.
-- "Trust the summary" with auditable delivery signals.
+Decapod gives agents a consistent operational contract: guided execution, enforceable boundaries, and auditable completion signals. It replaces "looks done" with explicit outcomes.
 
 ## Assurance Model
 
-Decapod is built around three outcomes for agent execution:
+Decapod is built around three execution outcomes:
 
-- `Advisory`: route the agent toward the highest-leverage next action.
-- `Interlock`: block unsafe, out-of-policy, or out-of-sequence execution.
-- `Attestation`: produce structured evidence that completion criteria were actually met.
+- `Advisory`: guidance toward the next high-value move.
+- `Interlock`: hard stops for unsafe or out-of-policy flow.
+- `Attestation`: structured evidence that completion criteria were met.
 
-This is how intent survives contact with automation: guide, constrain, verify.
+## Architecture Model
 
-## Why Teams Use It
+```text
+Human Intent
+    |
+    v
+AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
+                         |    |    |
+                         |    |    +-- Interlock (enforced boundaries)
+                         |    +------- Advisory (guided execution)
+                         +------------ Attestation (verifiable outcomes)
+```
 
-- Agents follow one contract instead of inventing workflow per session.
-- Quality gates are part of execution, not an afterthought.
-- Repo policy stays enforceable as autonomy increases.
-- Teams can scale parallel agent work without losing control.
+## Features
 
-## Capability Highlights
-
-- Guided project understanding via structured prompts.
-- Standards-aware execution aligned to project expectations.
+- Agent-native CLI and RPC surface for deterministic operation.
+- Guided project understanding through structured prompting.
+- Standards-aware execution aligned with project policy.
 - Workspace safety for isolated implementation flow.
-- Validation/completion gates with explicit outcomes.
-- Machine-readable RPC interface for orchestration and tooling integration.
+- Validation and completion gates with explicit pass/fail outcomes.
+- Multi-agent-ready orchestration surface for tooling integrations.
 
-## Quick Start
+## Getting Started
 
-```bash
-# Install
-cargo install decapod
+Install Decapod with Cargo, initialize it in your repository, and let your agent operate through the Decapod contract instead of direct ad-hoc repo mutation.
 
-# Initialize in your repository
-decapod init
-
-# Inspect available commands
-decapod --help
-
-# Inspect machine-readable capability surface
-decapod capabilities --json
-```
-
-## Typical Agent Flow
-
-```bash
-# Confirm workspace status
-decapod workspace status
-
-# Ensure isolated workspace when needed
-decapod workspace ensure
-
-# Validate before completion
-decapod validate
-```
+For command details and full usage, use `decapod --help`.
 
 ## Contributing
 
@@ -97,7 +73,7 @@ cargo test
 decapod validate
 ```
 
-See also:
+## Documentation
 
 - Development guide: `CONTRIBUTING.md`
 - Security policy: `SECURITY.md`
