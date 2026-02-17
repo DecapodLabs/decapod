@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0](https://github.com/DecapodLabs/decapod/compare/v0.25.5...v0.26.0) - 2026-02-17
+
+### Added
+
+- implement deterministic agent-facing RPC interface
+
 ## [0.25.5](https://github.com/DecapodLabs/decapod/compare/v0.25.4...v0.25.5) - 2026-02-17
 
 ### Other
