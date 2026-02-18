@@ -15,8 +15,10 @@ pub struct KnowledgeEntry {
     pub created_at: String,
 }
 
+use crate::core::schemas;
+
 pub fn knowledge_db_path(root: &Path) -> PathBuf {
-    root.join("knowledge.db")
+    root.join(schemas::MEMORY_DB_NAME)
 }
 
 pub fn add_knowledge(

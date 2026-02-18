@@ -328,7 +328,7 @@ pub struct SimilarityGroup {
 // ============================================================================
 
 pub fn teammate_db_path(root: &Path) -> PathBuf {
-    root.join(TEAMMATE_DB_NAME)
+    root.join(crate::core::schemas::MEMORY_DB_NAME)
 }
 
 fn now_iso() -> String {
