@@ -105,7 +105,7 @@ impl AssuranceEngine {
                 evidence: crate::core::rpc::EvidenceRef {
                     source: "workspace".to_string(),
                     id: workspace_status.git.current_branch.clone(),
-                    hash: workspace_status.container.dockerfile_hash.clone(),
+                    hash: None,
                 },
             },
         );

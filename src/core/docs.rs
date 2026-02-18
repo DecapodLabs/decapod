@@ -44,6 +44,7 @@ pub fn get_bindings(_repo_root: &Path) -> Bindings {
 
     let mut mandates = std::collections::HashMap::new();
     mandates.insert("agent.init".to_string(), vec!["mandatory-init".to_string()]);
+    mandates.insert("workspace.ensure".to_string(), vec!["isolated-worktree".to_string()]);
     mandates.insert("any".to_string(), vec!["no-master".to_string(), "validate-before-done".to_string()]);
 
     Bindings { ops, paths, tags, mandates }
@@ -81,6 +82,12 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
             severity: "required".to_string(),
             fragment: get_fragment(repo_root, "core/DECAPOD.md", Some("Validation (must pass before claiming done)"))?,
             check_tag: "gate.validation.pass".to_string(),
+        }),
+        "isolated-worktree" => Some(Mandate {
+            id: id.to_string(),
+            severity: "required".to_string(),
+            fragment: get_fragment(repo_root, "core/DECAPOD.md", Some("Workspace Rules (Non-Negotiable)"))?,
+            check_tag: "gate.worktree.isolated".to_string(),
         }),
         _ => None
     }
