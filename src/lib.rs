@@ -140,6 +140,9 @@ enum WorkspaceCommand {
         /// Branch name (auto-generated if not provided)
         #[clap(long)]
         branch: Option<String>,
+        /// Use a container for the workspace
+        #[clap(long)]
+        container: bool,
     },
     /// Show current workspace status
     Status,
@@ -2233,13 +2236,17 @@ fn run_workspace_command(
     use crate::core::workspace;
 
     match cli.command {
-        WorkspaceCommand::Ensure { branch } => {
+        WorkspaceCommand::Ensure { branch, container } => {
             let agent_id =
                 std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let config = branch.map(|b| workspace::WorkspaceConfig {
                 branch: b,
-                use_container: true,
-                base_image: Some("rust:1.75-slim".to_string()),
+                use_container: container,
+                base_image: if container {
+                    Some("rust:1.75-slim".to_string())
+                } else {
+                    None
+                },
             });
             let status = workspace::ensure_workspace(project_root, config, &agent_id)?;
 
@@ -2275,16 +2282,16 @@ fn run_workspace_command(
                 })
             );
         }
-        WorkspaceCommand::Publish {
-            title: _,
-            description: _,
-        } => {
-            // TODO: Implement container-based publish
+        WorkspaceCommand::Publish { title, description } => {
+            let result = workspace::publish_workspace(project_root, title, description)?;
             println!(
                 "{}",
                 serde_json::json!({
-                    "status": "error",
-                    "message": "Publish not yet implemented in new workspace system"
+                    "status": "ok",
+                    "branch": result.branch,
+                    "commit_hash": result.commit_hash,
+                    "remote_url": result.remote_url,
+                    "pr_url": result.pr_url,
                 })
             );
         }
@@ -2511,24 +2518,30 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             )
         }
         "workspace.publish" => {
-            // TODO: Implement container-based publish
-            let _title = request
+            let title = request
                 .params
                 .get("title")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string());
-            let _description = request
+            let description = request
                 .params
                 .get("description")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string());
 
+            let result = workspace::publish_workspace(project_root, title, description)?;
+
             success_response(
                 request.id.clone(),
                 request.op.clone(),
                 request.params.clone(),
-                None,
-                vec![],
+                Some(serde_json::json!({
+                    "branch": result.branch,
+                    "commit_hash": result.commit_hash,
+                    "remote_url": result.remote_url,
+                    "pr_url": result.pr_url,
+                })),
+                vec![format!(".git/refs/heads/{}", result.branch)],
                 None,
                 vec![AllowedOp {
                     op: "validate".to_string(),
