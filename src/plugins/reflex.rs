@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use ulid::Ulid;
 
 fn reflex_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::REFLEX_DB_NAME)
+    root.join(schemas::AUTOMATION_DB_NAME)
 }
 
 pub fn initialize_reflex_db(root: &Path) -> Result<(), error::DecapodError> {

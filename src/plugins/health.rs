@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use ulid::Ulid;
 
 pub fn health_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::HEALTH_DB_NAME)
+    root.join(schemas::GOVERNANCE_DB_NAME)
 }
 
 pub fn initialize_health_db(root: &Path) -> Result<(), error::DecapodError> {
