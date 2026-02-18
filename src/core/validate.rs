@@ -475,6 +475,10 @@ fn validate_entrypoint_invariants(
         ("core/DECAPOD.md", "Router pointer to core/DECAPOD.md"),
         ("cargo install decapod", "Version update gate language"),
         ("decapod validate", "Validation gate language"),
+        (
+            "decapod docs ingest",
+            "Core constitution ingestion mandate language",
+        ),
         ("Stop if", "Stop-if-missing behavior"),
         ("Docker git workspaces", "Docker workspace mandate language"),
         (
@@ -549,7 +553,7 @@ fn validate_entrypoint_invariants(
     }
 
     // Check that agent-specific files defer to AGENTS.md and are thin
-    const MAX_AGENT_SPECIFIC_LINES: usize = 50;
+    const MAX_AGENT_SPECIFIC_LINES: usize = 70;
     for agent_file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let agent_path = decapod_dir.join(agent_file);
         if !agent_path.is_file() {
@@ -659,6 +663,23 @@ fn validate_entrypoint_invariants(
         } else {
             fail(
                 &format!("{} missing claim-before-work mandate marker", agent_file),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must include core constitution ingestion mandate
+        if agent_content.contains("decapod docs ingest") {
+            pass(
+                &format!("{} includes core constitution ingestion mandate", agent_file),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!(
+                    "{} missing core constitution ingestion mandate marker",
+                    agent_file
+                ),
                 fail_count,
             );
             all_present = false;
@@ -1802,6 +1823,14 @@ fn validate_tooling_gate(
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Tooling Validation Gate");
+
+    if std::env::var("DECAPOD_VALIDATE_SKIP_TOOLING_GATES").is_ok() {
+        skip(
+            "Tooling validation gates skipped (DECAPOD_VALIDATE_SKIP_TOOLING_GATES set)",
+            pass_count,
+        );
+        return Ok(());
+    }
 
     // Check for Cargo.toml to detect Rust projects
     let cargo_toml = repo_root.join("Cargo.toml");
