@@ -2,20 +2,58 @@ use std::process::{Command, Stdio};
 use std::io::Write;
 use serde_json::Value;
 
-fn run_rpc(request: Value) -> Value {
-    let mut child = Command::new("cargo")
-        .args(["run", "--", "rpc", "--stdin"])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect("Failed to spawn cargo run");
+fn run_rpc(request: serde_json::Value) -> serde_json::Value {
+    // We need a stable agent ID and session for enforcement
+    let agent_id = "test-agent-rpc";
+    
+    // Ensure we are on a non-protected branch for tests
+    let _ = Command::new("git")
+        .args(["checkout", "-b", "feat/test-rpc-suite"])
+        .output();
+
+    // Ensure we have a session
+    let _ = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["session", "acquire"])
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .output();
+
+    // Claim a dummy task to satisfy mandatory todo
+    let task_add = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["todo", "add", "RPC Test Task", "--owner", agent_id, "--format", "json"])
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .output()
+        .expect("todo add");
+    
+    if let Ok(val) = serde_json::from_slice::<serde_json::Value>(&task_add.stdout) {
+        if let Some(id) = val["id"].as_str() {
+            let _ = Command::new(env!("CARGO_BIN_EXE_decapod"))
+                .args(["todo", "claim", "--id", id, "--agent", agent_id])
+                .env("DECAPOD_AGENT_ID", agent_id)
+                .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+                .output();
+        }
+    }
+    
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    cmd.args(["rpc", "--stdin"])
+       .env("DECAPOD_AGENT_ID", agent_id)
+       .stdin(Stdio::piped())
+       .stdout(Stdio::piped());
+
+    let mut child = cmd.spawn().expect("Failed to spawn decapod rpc");
 
     let mut stdin = child.stdin.take().expect("Failed to open stdin");
     stdin.write_all(serde_json::to_string(&request).unwrap().as_bytes()).expect("Failed to write to stdin");
     drop(stdin);
 
     let output = child.wait_with_output().expect("Failed to read stdout");
-    serde_json::from_slice(&output.stdout).expect("Failed to parse JSON response")
+    let response: serde_json::Value = serde_json::from_slice(&output.stdout).expect("Failed to parse JSON response");
+    if response["success"] == false {
+        eprintln!("RPC Error: {}", serde_json::to_string_pretty(&response).unwrap());
+    }
+    response
 }
 
 #[test]
