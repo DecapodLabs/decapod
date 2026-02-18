@@ -1,6 +1,6 @@
 [package]
 name = "decapod"
-version = "0.28.8"
+version = "0.28.9"
 edition = "2024"
 rust-version = "1.85"
 description = "Decapod is a Rust-built governance runtime for AI agents: repo-native state, enforced workflow, proof gates, safe coordination."
