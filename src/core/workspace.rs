@@ -160,10 +160,13 @@ pub fn ensure_workspace(
     config: Option<WorkspaceConfig>,
     agent_id: &str,
 ) -> Result<WorkspaceStatus, DecapodError> {
-    let status = get_workspace_status(repo_root)?;
+    let mut status = get_workspace_status(repo_root)?;
 
-    // If we're already on a valid working branch, we're good
-    if status.can_work && !status.git.is_protected {
+    // If config is provided, check if we need to upgrade context (e.g. add container)
+    let upgrade_container = config.as_ref().map(|c| c.use_container).unwrap_or(false);
+
+    // If we're already on a valid working branch AND no upgrade needed, we're good
+    if status.can_work && !status.git.is_protected && (!upgrade_container || status.container.in_container) {
         return Ok(status);
     }
 
@@ -179,8 +182,38 @@ pub fn ensure_workspace(
         }
     });
 
-    // Create git worktree
-    let worktree_path = create_worktree(repo_root, &config.branch, agent_id)?;
+    // 1. Ensure git worktree
+    let worktree_path = if status.git.in_worktree {
+        repo_root.to_path_buf()
+    } else {
+        create_worktree(repo_root, &config.branch, agent_id)?
+    };
+
+    // 2. Ensure container (if requested)
+    if config.use_container {
+        ensure_dockerfile(&worktree_path)?;
+        let image_tag = format!(
+            "decapod-workspace:{}-{}",
+            sanitize_agent_id(agent_id),
+            config.branch.replace('/', "-")
+        );
+        build_workspace_image(&worktree_path, &image_tag)?;
+        
+        // Return blocker telling agent to enter container
+        // We re-read status but override the blocker/container info
+        status = get_workspace_status(&worktree_path)?;
+        status.blockers.push(Blocker {
+            kind: BlockerKind::WorkspaceRequired,
+            message: "Container environment prepared.".to_string(),
+            resolve_hint: format!(
+                "cd {} && docker run -it -v $(pwd):/workspace {} bash",
+                worktree_path.display(),
+                image_tag
+            ),
+        });
+        status.required_actions.push("Enter containerized workspace".to_string());
+        return Ok(status);
+    }
 
     // Re-check status in the new worktree
     get_workspace_status(&worktree_path)
@@ -244,6 +277,69 @@ fn create_worktree(
     }
 
     Ok(worktree_path)
+}
+
+/// Ensure Dockerfile exists in workspace
+fn ensure_dockerfile(workspace_path: &Path) -> Result<(), DecapodError> {
+    let dockerfile_path = workspace_path.join("Dockerfile");
+
+    if dockerfile_path.exists() {
+        return Ok(());
+    }
+
+    // Generate standard Decapod workspace Dockerfile
+    let dockerfile_content = r#"# Decapod Workspace Dockerfile
+# Auto-generated for reproducible agent environments
+
+FROM rust:1.75-slim
+
+# Install essential tools
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install decapod
+RUN cargo install decapod
+
+# Set up workspace
+WORKDIR /workspace
+ENV DECAPOD_IN_CONTAINER=true
+ENV DECAPOD_WORKSPACE_IMAGE=decapod-workspace
+
+# Default command
+CMD ["/bin/bash"]
+"#;
+
+    std::fs::write(&dockerfile_path, dockerfile_content).map_err(|e| DecapodError::IoError(e))?;
+
+    Ok(())
+}
+
+/// Build workspace container image
+fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), DecapodError> {
+    let output = Command::new("docker")
+        .args([
+            "build",
+            "-t",
+            image_tag,
+            workspace_path.to_str().unwrap_or("."),
+        ])
+        .output()
+        .map_err(|e| DecapodError::IoError(e))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(DecapodError::ValidationError(format!(
+            "Failed to build container image: {}",
+            stderr
+        )));
+    }
+
+    Ok(())
 }
 
 fn get_main_repo_root(current_dir: &Path) -> Result<PathBuf, DecapodError> {
