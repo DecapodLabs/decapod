@@ -820,17 +820,24 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Check for version/schema changes and run protected migrations if needed.
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
             migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
+                // Bin 4: Transactional (TODO)
                 todo::initialize_todo_db(data_root)?;
-                db::initialize_knowledge_db(data_root)?;
-                cron::initialize_cron_db(data_root)?;
-                reflex::initialize_reflex_db(data_root)?;
+                
+                // Bin 1: Governance
                 health::initialize_health_db(data_root)?;
                 policy::initialize_policy_db(data_root)?;
-                archive::initialize_archive_db(data_root)?;
                 feedback::initialize_feedback_db(data_root)?;
+                archive::initialize_archive_db(data_root)?;
+
+                // Bin 2: Memory
+                db::initialize_knowledge_db(data_root)?;
                 teammate::initialize_teammate_db(data_root)?;
                 federation::initialize_federation_db(data_root)?;
                 decide::initialize_decide_db(data_root)?;
+
+                // Bin 3: Automation
+                cron::initialize_cron_db(data_root)?;
+                reflex::initialize_reflex_db(data_root)?;
                 Ok(())
             })?;
 
@@ -2427,6 +2434,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         kind: StoreKind::Repo,
                         root: project_root.join(".decapod").join("data"),
                     };
+                    db::initialize_knowledge_db(&project_store.root)?;
                     knowledge::add_knowledge(&project_store, &id, &title, &text, &provenance, None)?;
                     success_response(
                         request.id.clone(),
@@ -2520,6 +2528,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         kind: StoreKind::Repo,
                         root: project_root.join(".decapod").join("data"),
                     };
+                    db::initialize_knowledge_db(&project_store.root)?;
                     let entries = knowledge::search_knowledge(&project_store, text)?;
                     success_response(
                         request.id.clone(),

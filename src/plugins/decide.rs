@@ -845,14 +845,14 @@ fn now_ts() -> String {
 }
 
 fn decide_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::DECIDE_DB_NAME)
+    root.join(schemas::MEMORY_DB_NAME)
 }
 
 pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = decide_db_path(root);
     let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
 
-    conn.execute_batch(schemas::DECIDE_DB_SCHEMA_META)?;
+    conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
     conn.execute_batch(schemas::DECIDE_DB_SCHEMA_SESSIONS)?;
     conn.execute_batch(schemas::DECIDE_DB_SCHEMA_DECISIONS)?;
     conn.execute_batch(schemas::DECIDE_DB_INDEX_DECISIONS_SESSION)?;

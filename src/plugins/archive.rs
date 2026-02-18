@@ -18,7 +18,7 @@ pub struct ArchiveEntry {
 }
 
 pub fn archive_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::ARCHIVE_DB_NAME)
+    root.join(schemas::GOVERNANCE_DB_NAME)
 }
 
 pub fn initialize_archive_db(root: &Path) -> Result<(), error::DecapodError> {
