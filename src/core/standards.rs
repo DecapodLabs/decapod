@@ -127,7 +127,7 @@ fn read_override_file(project_root: &Path) -> Option<HashMap<String, StandardVal
         let trimmed = line.trim();
 
         // Section header
-        if trimmed.starts_with("## ") {
+        if let Some(stripped) = trimmed.strip_prefix("## ") {
             // Save previous section if any
             if let Some(section) = current_section.take() {
                 if !section_content.is_empty() {
@@ -135,7 +135,7 @@ fn read_override_file(project_root: &Path) -> Option<HashMap<String, StandardVal
                 }
             }
 
-            current_section = Some(trimmed[3..].trim().to_lowercase().replace(" ", "_"));
+            current_section = Some(stripped.trim().to_lowercase().replace(" ", "_"));
             section_content = serde_json::Map::new();
         }
 
@@ -146,7 +146,7 @@ fn read_override_file(project_root: &Path) -> Option<HashMap<String, StandardVal
 
             // Try to parse as JSON, otherwise use as string
             let parsed_value = serde_json::from_str::<serde_json::Value>(&value)
-                .unwrap_or_else(|_| serde_json::Value::String(value));
+                .unwrap_or(serde_json::Value::String(value));
 
             section_content.insert(key, parsed_value);
         }

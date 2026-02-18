@@ -300,7 +300,7 @@ pub fn next_question(state: &InterviewState) -> Option<Question> {
     // Find first unanswered question in current or next sections
     for section in &SECTIONS[current_section_idx..] {
         for question in &all_questions {
-            if &question.section == *section && !state.answers.contains_key(&question.id) {
+            if question.section == *section && !state.answers.contains_key(&question.id) {
                 return Some(question.clone());
             }
         }
@@ -356,19 +356,16 @@ pub fn generate_artifacts(
     state: &InterviewState,
     output_dir: &Path,
 ) -> Result<Vec<Artifact>, DecapodError> {
-    let mut artifacts = vec![];
-
-    // Generate spec.md
-    artifacts.push(generate_spec(state, output_dir)?);
-
-    // Generate architecture.md
-    artifacts.push(generate_architecture(state, output_dir)?);
-
-    // Generate security.md
-    artifacts.push(generate_security(state, output_dir)?);
-
-    // Generate ops.md
-    artifacts.push(generate_ops(state, output_dir)?);
+    let mut artifacts = vec![
+        // Generate spec.md
+        generate_spec(state, output_dir)?,
+        // Generate architecture.md
+        generate_architecture(state, output_dir)?,
+        // Generate security.md
+        generate_security(state, output_dir)?,
+        // Generate ops.md
+        generate_ops(state, output_dir)?,
+    ];
 
     // Generate ADR if significant decisions
     if has_significant_decisions(state) {
@@ -664,10 +661,10 @@ fn has_significant_decisions(state: &InterviewState) -> bool {
 
 /// Get an answer value as string
 fn get_answer(state: &InterviewState, question_id: &str) -> Option<String> {
-    state.answers.get(question_id).and_then(|a| match &a.value {
-        serde_json::Value::String(s) => Some(s.clone()),
-        serde_json::Value::Bool(b) => Some(b.to_string()),
-        _ => Some(a.value.to_string()),
+    state.answers.get(question_id).map(|a| match &a.value {
+        serde_json::Value::String(s) => s.clone(),
+        serde_json::Value::Bool(b) => b.to_string(),
+        _ => a.value.to_string(),
     })
 }
 

@@ -1,7 +1,7 @@
 use crate::core::assets;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::Path;
-use serde::{Deserialize, Serialize};
 
 /// A fragment of a constitution or authority document.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,9 +32,18 @@ pub struct Bindings {
 
 pub fn get_bindings(_repo_root: &Path) -> Bindings {
     let mut ops = std::collections::HashMap::new();
-    ops.insert("workspace.ensure".to_string(), "core/DECAPOD.md#workspaces".to_string());
-    ops.insert("workspace.status".to_string(), "core/DECAPOD.md#workspaces".to_string());
-    ops.insert("validate".to_string(), "core/DECAPOD.md#validation".to_string());
+    ops.insert(
+        "workspace.ensure".to_string(),
+        "core/DECAPOD.md#workspaces".to_string(),
+    );
+    ops.insert(
+        "workspace.status".to_string(),
+        "core/DECAPOD.md#workspaces".to_string(),
+    );
+    ops.insert(
+        "validate".to_string(),
+        "core/DECAPOD.md#validation".to_string(),
+    );
 
     let mut paths = std::collections::HashMap::new();
     paths.insert("rpc".to_string(), "interfaces/CONTROL_PLANE.md".to_string());
@@ -43,11 +52,25 @@ pub fn get_bindings(_repo_root: &Path) -> Bindings {
     tags.insert("security".to_string(), "specs/SECURITY.md".to_string());
 
     let mut mandates = std::collections::HashMap::new();
-    mandates.insert("agent.init".to_string(), vec!["mandatory-init".to_string(), "mandatory-todo".to_string()]);
-    mandates.insert("workspace.ensure".to_string(), vec!["isolated-worktree".to_string()]);
-    mandates.insert("any".to_string(), vec!["no-master".to_string(), "validate-before-done".to_string()]);
+    mandates.insert(
+        "agent.init".to_string(),
+        vec!["mandatory-init".to_string(), "mandatory-todo".to_string()],
+    );
+    mandates.insert(
+        "workspace.ensure".to_string(),
+        vec!["isolated-worktree".to_string()],
+    );
+    mandates.insert(
+        "any".to_string(),
+        vec!["no-master".to_string(), "validate-before-done".to_string()],
+    );
 
-    Bindings { ops, paths, tags, mandates }
+    Bindings {
+        ops,
+        paths,
+        tags,
+        mandates,
+    }
 }
 
 /// Resolve formal mandates for a given operation.
@@ -58,7 +81,8 @@ pub fn resolve_mandates(repo_root: &Path, op: &str) -> Vec<Mandate> {
         mandate_ids.extend(specific.clone());
     }
 
-    mandate_ids.into_iter()
+    mandate_ids
+        .into_iter()
         .filter_map(|id| get_mandate_by_id(repo_root, &id))
         .collect()
 }
@@ -68,13 +92,21 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
         "no-master" => Some(Mandate {
             id: id.to_string(),
             severity: "non-negotiable".to_string(),
-            fragment: get_fragment(repo_root, "core/DECAPOD.md", Some("Workspace Rules (Non-Negotiable)"))?,
+            fragment: get_fragment(
+                repo_root,
+                "core/DECAPOD.md",
+                Some("Workspace Rules (Non-Negotiable)"),
+            )?,
             check_tag: "gate.worktree.no_master".to_string(),
         }),
         "mandatory-init" => Some(Mandate {
             id: id.to_string(),
             severity: "non-negotiable".to_string(),
-            fragment: get_fragment(repo_root, "core/DECAPOD.md", Some("For Agents: Quick Start"))?,
+            fragment: get_fragment(
+                repo_root,
+                "core/DECAPOD.md",
+                Some("For Agents: Quick Start"),
+            )?,
             check_tag: "gate.session.active".to_string(),
         }),
         "mandatory-todo" => Some(Mandate {
@@ -86,16 +118,24 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
         "validate-before-done" => Some(Mandate {
             id: id.to_string(),
             severity: "required".to_string(),
-            fragment: get_fragment(repo_root, "core/DECAPOD.md", Some("Validation (must pass before claiming done)"))?,
+            fragment: get_fragment(
+                repo_root,
+                "core/DECAPOD.md",
+                Some("Validation (must pass before claiming done)"),
+            )?,
             check_tag: "gate.validation.pass".to_string(),
         }),
         "isolated-worktree" => Some(Mandate {
             id: id.to_string(),
             severity: "required".to_string(),
-            fragment: get_fragment(repo_root, "core/DECAPOD.md", Some("Workspace Rules (Non-Negotiable)"))?,
+            fragment: get_fragment(
+                repo_root,
+                "core/DECAPOD.md",
+                Some("Workspace Rules (Non-Negotiable)"),
+            )?,
             check_tag: "gate.worktree.isolated".to_string(),
         }),
-        _ => None
+        _ => None,
     }
 }
 
@@ -103,11 +143,16 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
 /// If anchor is None, returns the whole file.
 pub fn get_fragment(repo_root: &Path, path: &str, anchor: Option<&str>) -> Option<DocFragment> {
     let content = assets::get_merged_doc(repo_root, path)?;
-    
+
     let (fragment_content, title) = if let Some(a) = anchor {
         extract_section(&content, a)?
     } else {
-        let title = content.lines().next().unwrap_or("Untitled").trim_start_matches("# ").to_string();
+        let title = content
+            .lines()
+            .next()
+            .unwrap_or("Untitled")
+            .trim_start_matches("# ")
+            .to_string();
         (content.clone(), title)
     };
 
@@ -115,7 +160,11 @@ pub fn get_fragment(repo_root: &Path, path: &str, anchor: Option<&str>) -> Optio
     hasher.update(fragment_content.as_bytes());
     let hash = format!("{:x}", hasher.finalize());
 
-    let excerpt = fragment_content.lines().take(10).collect::<Vec<_>>().join("\n");
+    let excerpt = fragment_content
+        .lines()
+        .take(10)
+        .collect::<Vec<_>>()
+        .join("\n");
     let excerpt = if excerpt.len() > 500 {
         format!("{}...", &excerpt[..497])
     } else {
@@ -124,7 +173,11 @@ pub fn get_fragment(repo_root: &Path, path: &str, anchor: Option<&str>) -> Optio
 
     Some(DocFragment {
         kind: "constitution".to_string(),
-        r#ref: if let Some(a) = anchor { format!("{}#{}", path, a) } else { path.to_string() },
+        r#ref: if let Some(a) = anchor {
+            format!("{}#{}", path, a)
+        } else {
+            path.to_string()
+        },
         title,
         excerpt,
         hash,
@@ -133,13 +186,13 @@ pub fn get_fragment(repo_root: &Path, path: &str, anchor: Option<&str>) -> Optio
 
 fn extract_section(content: &str, anchor: &str) -> Option<(String, String)> {
     let slug = anchor.to_lowercase().replace(' ', "-");
-    let mut lines = content.lines();
+    let lines = content.lines();
     let mut section_lines = Vec::new();
     let mut in_section = false;
     let mut section_title = String::new();
     let mut section_level = 0;
 
-    while let Some(line) = lines.next() {
+    for line in lines {
         if line.starts_with('#') {
             let level = line.chars().take_while(|&c| c == '#').count();
             let title = line.trim_start_matches('#').trim();

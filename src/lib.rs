@@ -1003,7 +1003,6 @@ fn requires_session_token(command: &Command) -> bool {
         Command::Init(_)
         | Command::Session(_)
         | Command::Version
-        | Command::Validate(_)
         | Command::Docs(_)
         | Command::Capabilities(_)
         | Command::Trace(_) => false,
@@ -2307,7 +2306,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         let mut buffer = String::new();
         std::io::stdin()
             .read_to_string(&mut buffer)
-            .map_err(|e| error::DecapodError::IoError(e))?;
+            .map_err(error::DecapodError::IoError)?;
         serde_json::from_str(&buffer)
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid JSON: {}", e)))?
     } else {
