@@ -32,6 +32,8 @@ Decapod is **invoked by agents; it never runs in the background**. It is a singl
 - Provide authoritative schemas for **structured state** (todos, knowledge, decisions).
 - Run deterministic **validation/proof gates** to decide when work is truly done.
 
+Traces are stored locally in `.decapod/data/traces.jsonl`. Bindings are introspectable via `context.bindings`.
+
 Decapod is architecture-agnostic software. It is not a Linux kernel binding and is not coupled to a specific OS or CPU architecture.
 
 ## Assurance Model
