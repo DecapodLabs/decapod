@@ -811,11 +811,10 @@ pub fn run() -> Result<(), error::DecapodError> {
         },
         _ => {
             let project_root = decapod_root_option?;
-            enforce_worktree_requirement(&cli.command, &project_root)?;
-
             if requires_session_token(&cli.command) {
                 ensure_session_valid()?;
             }
+            enforce_worktree_requirement(&cli.command, &project_root)?;
 
             // For other commands, ensure .decapod exists
             let decapod_root_path = project_root.join(".decapod");

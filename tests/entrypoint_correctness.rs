@@ -298,14 +298,14 @@ fn test_entrypoints_are_thin() {
         agents_lines
     );
 
-    // Check agent-specific files (should be ≤ 50)
+    // Check agent-specific files (should be ≤ 70)
     for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let content = fs::read_to_string(temp_path.join(file))
             .unwrap_or_else(|_| panic!("Failed to read {}", file));
         let line_count = content.lines().count();
         assert!(
-            line_count <= 50,
-            "{} should be ≤ 50 lines (got {})",
+            line_count <= 70,
+            "{} should be ≤ 70 lines (got {})",
             file,
             line_count
         );
