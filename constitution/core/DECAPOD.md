@@ -42,7 +42,7 @@ decapod rpc --op scaffold.generate_artifacts
 decapod validate
 
 # Capabilities discovery
-decapod capabilities --json
+decapod capabilities --format json
 ```
 
 ## Workspace Rules (Non-Negotiable)
