@@ -15,7 +15,7 @@
 //!
 //! Use `decapod rpc` for programmatic access. The CLI subcommands are for human convenience.
 
-use crate::core::docs::DocFragment;
+use crate::core::docs::{DocFragment, Mandate};
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
 use std::collections::HashMap;
@@ -49,6 +49,9 @@ pub struct RpcResponse {
     pub success: bool,
     /// Receipt of what happened
     pub receipt: Receipt,
+    /// Mandates governing this specific operation
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub mandates: Vec<Mandate>,
     /// Context capsule with relevant documentation slices
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context_capsule: Option<ContextCapsule>,
@@ -413,6 +416,7 @@ pub fn success_response(
     touched_paths: Vec<String>,
     context_capsule: Option<ContextCapsule>,
     allowed_next_ops: Vec<AllowedOp>,
+    mandates: Vec<Mandate>,
 ) -> RpcResponse {
     let timestamp = chrono::Utc::now().to_rfc3339();
     
@@ -428,8 +432,9 @@ pub fn success_response(
             inputs_hash,
             outputs_hash,
             touched_paths,
-            governing_anchors: vec!["core:workspace_protection".to_string()],
+            governing_anchors: mandates.iter().map(|m| m.fragment.r#ref.clone()).collect(),
         },
+        mandates,
         context_capsule,
         result,
         allowed_next_ops,
@@ -449,6 +454,7 @@ pub fn error_response(
     code: String,
     message: String,
     blocker: Option<Blocker>,
+    mandates: Vec<Mandate>,
 ) -> RpcResponse {
     let timestamp = chrono::Utc::now().to_rfc3339();
     let inputs_hash = format!("{:x}", sha2::Sha256::digest(serde_json::to_string(&params).unwrap_or_default()));
@@ -469,8 +475,9 @@ pub fn error_response(
             inputs_hash,
             outputs_hash,
             touched_paths: vec![],
-            governing_anchors: vec![],
+            governing_anchors: mandates.iter().map(|m| m.fragment.r#ref.clone()).collect(),
         },
+        mandates,
         context_capsule: None,
         result: None,
         allowed_next_ops: vec![AllowedOp {

@@ -1899,6 +1899,43 @@ fn validate_tooling_gate(
     Ok(())
 }
 
+/// Evaluates a set of mandates and returns any active blockers.
+pub fn evaluate_mandates(
+    project_root: &Path,
+    _store: &Store,
+    mandates: &[crate::core::docs::Mandate],
+) -> Vec<crate::core::rpc::Blocker> {
+    use crate::core::rpc::{Blocker, BlockerKind};
+    let mut blockers = Vec::new();
+
+    for mandate in mandates {
+        match mandate.check_tag.as_str() {
+            "gate.worktree.no_master" => {
+                let status = crate::core::workspace::get_workspace_status(project_root);
+                if let Ok(s) = status {
+                    if s.git.is_protected {
+                        blockers.push(Blocker {
+                            kind: BlockerKind::ProtectedBranch,
+                            message: format!("Mandate Violation: {}", mandate.fragment.title),
+                            resolve_hint: "Run `decapod workspace ensure` to create a working branch.".to_string(),
+                        });
+                    }
+                }
+            }
+            "gate.session.active" => {
+                // This is usually handled by the RPC kernel session check, 
+                // but we can add a blocker if we want more detail.
+            }
+            "gate.validation.pass" => {
+                // Future: check a 'last_validated' marker in the store
+            }
+            _ => {}
+        }
+    }
+
+    blockers
+}
+
 pub fn run_validation(
     store: &Store,
     decapod_dir: &Path,
