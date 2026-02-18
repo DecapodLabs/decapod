@@ -1998,10 +1998,9 @@ fn run_workspace_command(
             let agent_id =
                 std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let config = branch.map(|b| workspace::WorkspaceConfig {
-                base_image: "rust:1.75-slim".to_string(),
                 branch: b,
                 use_container: true,
-                resources: workspace::ContainerResources::default(),
+                base_image: Some("rust:1.75-slim".to_string()),
             });
             let status = workspace::ensure_workspace(project_root, config, &agent_id)?;
 
@@ -2032,7 +2031,6 @@ fn run_workspace_command(
                     "in_container": status.container.in_container,
                     "container_image": status.container.image,
                     "docker_available": status.container.docker_available,
-                    "dockerfile_hash": status.container.dockerfile_hash,
                     "blockers": status.blockers.len(),
                     "required_actions": status.required_actions,
                 })
@@ -2104,12 +2102,13 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
     let mandates = docs::resolve_mandates(project_root, &request.op);
     let mandate_blockers = validate::evaluate_mandates(project_root, &project_store, &mandates);
 
-    // If any non-negotiable mandate is blocked, we fail the entire operation immediately
-    let critical_blocker = mandate_blockers.iter().find(|b| {
-        mandates.iter().any(|m| m.severity == "non-negotiable" && m.fragment.title.contains(&b.message))
+    // If any mandate is blocked, we fail the operation
+    let blocked_mandate = mandates.iter().find(|m| {
+        mandate_blockers.iter().any(|b| b.message.contains(&m.fragment.title))
     });
 
-    if let Some(blocker) = critical_blocker {
+    if let Some(mandate) = blocked_mandate {
+        let blocker = mandate_blockers.iter().find(|b| b.message.contains(&mandate.fragment.title)).unwrap();
         let response = error_response(
             request.id.clone(),
             request.op.clone(),
@@ -2204,10 +2203,9 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 .map(|s| s.to_string());
 
             let config = branch.map(|b| workspace::WorkspaceConfig {
-                base_image: "rust:1.75-slim".to_string(),
                 branch: b,
-                use_container: true,
-                resources: workspace::ContainerResources::default(),
+                use_container: false,
+                base_image: None,
             });
 
             let status = workspace::ensure_workspace(project_root, config, &agent_id)?;

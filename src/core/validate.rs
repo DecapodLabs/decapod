@@ -1922,6 +1922,18 @@ pub fn evaluate_mandates(
                     }
                 }
             }
+            "gate.worktree.isolated" => {
+                let status = crate::core::workspace::get_workspace_status(project_root);
+                if let Ok(s) = status {
+                    if !s.git.in_worktree {
+                        blockers.push(Blocker {
+                            kind: BlockerKind::WorkspaceRequired,
+                            message: format!("Mandate Violation: {}", mandate.fragment.title),
+                            resolve_hint: "Run `decapod workspace ensure` to create an isolated git worktree.".to_string(),
+                        });
+                    }
+                }
+            }
             "gate.session.active" => {
                 // This is usually handled by the RPC kernel session check, 
                 // but we can add a blocker if we want more detail.
