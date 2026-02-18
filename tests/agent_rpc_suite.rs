@@ -1,7 +1,16 @@
 use std::io::Write;
 use std::process::{Command, Stdio};
+use std::sync::{Mutex, OnceLock};
+
+static RUN_RPC_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 fn run_rpc(request: serde_json::Value) -> serde_json::Value {
+    let lock = RUN_RPC_LOCK.get_or_init(|| Mutex::new(()));
+    let _guard = match lock.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+
     // We need a stable agent ID and session for enforcement
     let agent_id = "unknown";
 
@@ -9,6 +18,31 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
     let _ = Command::new("git")
         .args(["checkout", "-b", "feat/test-rpc-suite"])
         .output();
+
+    let validate_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["validate"])
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .env("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1")
+        .output()
+        .expect("validate");
+    assert!(
+        validate_out.status.success(),
+        "validate failed:\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&validate_out.stdout),
+        String::from_utf8_lossy(&validate_out.stderr)
+    );
+
+    let ingest_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["docs", "ingest"])
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .output()
+        .expect("docs ingest");
+    assert!(
+        ingest_out.status.success(),
+        "docs ingest failed: {}",
+        String::from_utf8_lossy(&ingest_out.stderr)
+    );
 
     // Ensure we have a session
     let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
