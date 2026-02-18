@@ -2096,6 +2096,33 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         ensure_session_valid()?;
     }
 
+    let project_store = Store {
+        kind: StoreKind::Repo,
+        root: project_root.join(".decapod").join("data"),
+    };
+
+    let mandates = docs::resolve_mandates(project_root, &request.op);
+    let mandate_blockers = validate::evaluate_mandates(project_root, &project_store, &mandates);
+
+    // If any non-negotiable mandate is blocked, we fail the entire operation immediately
+    let critical_blocker = mandate_blockers.iter().find(|b| {
+        mandates.iter().any(|m| m.severity == "non-negotiable" && m.fragment.title.contains(&b.message))
+    });
+
+    if let Some(blocker) = critical_blocker {
+        let response = error_response(
+            request.id.clone(),
+            request.op.clone(),
+            request.params.clone(),
+            "mandate_violation".to_string(),
+            blocker.message.clone(),
+            Some(blocker.clone()),
+            mandates
+        );
+        println!("{}", serde_json::to_string_pretty(&response).unwrap());
+        return Ok(());
+    }
+
     let response = match request.op.as_str() {
         "agent.init" => {
             // Session initialization with receipt
@@ -2129,7 +2156,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             };
 
             let mut response =
-                success_response(request.id.clone(), request.op.clone(), request.params.clone(), None, vec![], context_capsule, allowed_ops);
+                success_response(request.id.clone(), request.op.clone(), request.params.clone(), None, vec![], context_capsule, allowed_ops, mandates.clone());
             response.result = Some(serde_json::json!({
                 "environment_context": {
                     "repo_root": project_root.to_string_lossy(),
@@ -2156,6 +2183,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 vec![],
                 None,
                 allowed_ops,
+                mandates.clone(),
             );
             response.result = Some(serde_json::json!({
                 "git_branch": status.git.current_branch,
@@ -2193,6 +2221,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 vec![format!(".git/refs/heads/{}", status.git.current_branch)],
                 None,
                 allowed_ops,
+                mandates.clone(),
             )
         }
         "workspace.publish" => {
@@ -2220,6 +2249,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     reason: "Publish complete - run validation".to_string(),
                     required_params: vec![],
                 }],
+                mandates.clone(),
             )
         }
         "context.resolve" => {
@@ -2230,7 +2260,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let _limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(5);
 
             let mut fragments = Vec::new();
-            let bindings = docs::get_bindings();
+            let bindings = docs::get_bindings(project_root);
 
             // Deterministic relevance mapping
             if let Some(o) = op {
@@ -2293,11 +2323,12 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     security: None,
                     standards: None,
                 }),
-                vec![]
+                vec![],
+                mandates.clone(),
             )
         }
         "context.bindings" => {
-            let bindings = docs::get_bindings();
+            let bindings = docs::get_bindings(project_root);
             success_response(
                 request.id.clone(),
                 request.op.clone(),
@@ -2305,7 +2336,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 Some(serde_json::to_value(bindings).unwrap()),
                 vec![],
                 None,
-                vec![]
+                vec![],
+                mandates.clone(),
             )
         }
         "schema.get" => {
@@ -2331,7 +2363,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     })),
                     vec![],
                     None,
-                    vec![]
+                    vec![],
+                    mandates.clone()
                 ),
                 Some("knowledge") => success_response(
                     request.id.clone(),
@@ -2352,7 +2385,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     })),
                     vec![],
                     None,
-                    vec![]
+                    vec![],
+                    mandates.clone()
                 ),
                 Some("decision") => success_response(
                     request.id.clone(),
@@ -2373,7 +2407,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     })),
                     vec![],
                     None,
-                    vec![]
+                    vec![],
+                    mandates.clone()
                 ),
                 _ => error_response(
                     request.id.clone(),
@@ -2381,7 +2416,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     request.params.clone(),
                     "invalid_entity".to_string(),
                     format!("Invalid or missing entity: {:?}", entity),
-                    None
+                    None,
+                    mandates.clone(),
                 ),
             }
         }
@@ -2411,10 +2447,6 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         blocks: "".to_string(),
                         parent: None,
                     };
-                    let project_store = Store {
-                        kind: StoreKind::Repo,
-                        root: project_root.join(".decapod").join("data"),
-                    };
                     let res = todo::add_task(&project_store.root, &args)?;
                     success_response(
                         request.id.clone(),
@@ -2426,7 +2458,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         })),
                         vec![],
                         None,
-                        vec![]
+                        vec![],
+                        mandates.clone()
                     )
                 },
                 Some("knowledge") => {
@@ -2435,10 +2468,6 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     let text = payload.and_then(|p| p.get("text")).and_then(|v| v.as_str()).unwrap_or("").to_string();
                     let provenance = payload.and_then(|p| p.get("provenance")).and_then(|v| v.as_str()).unwrap_or("").to_string();
 
-                    let project_store = Store {
-                        kind: StoreKind::Repo,
-                        root: project_root.join(".decapod").join("data"),
-                    };
                     db::initialize_knowledge_db(&project_store.root)?;
                     knowledge::add_knowledge(&project_store, &id, &title, &text, &provenance, None)?;
                     success_response(
@@ -2451,7 +2480,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         })),
                         vec![],
                         None,
-                        vec![]
+                        vec![],
+                        mandates.clone()
                     )
                 },
                 Some("decision") => {
@@ -2460,10 +2490,6 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     let rationale = payload.and_then(|p| p.get("rationale")).and_then(|v| v.as_str()).unwrap_or("").to_string();
                     let chosen = payload.and_then(|p| p.get("chosen")).and_then(|v| v.as_str()).unwrap_or("").to_string();
                     
-                    let project_store = Store {
-                        kind: StoreKind::Repo,
-                        root: project_root.join(".decapod").join("data"),
-                    };
                     let content = format!("Decision: {}\nRationale: {}", chosen, rationale);
                     let node_id = federation::add_node(
                         &project_store,
@@ -2488,7 +2514,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         })),
                         vec![],
                         None,
-                        vec![]
+                        vec![],
+                        mandates.clone()
                     )
                 },
                 _ => error_response(
@@ -2497,7 +2524,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     request.params.clone(),
                     "invalid_entity".to_string(),
                     format!("Invalid or missing entity: {:?}", entity),
-                    None
+                    None,
+                    mandates.clone(),
                 ),
             }
         }
@@ -2509,10 +2537,6 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             match entity {
                 Some("todo") => {
                     let status = query.and_then(|q| q.get("status")).and_then(|v| v.as_str()).map(|s| s.to_string());
-                    let project_store = Store {
-                        kind: StoreKind::Repo,
-                        root: project_root.join(".decapod").join("data"),
-                    };
                     let tasks = todo::list_tasks(&project_store.root, status, None, None, None, None)?;
                     success_response(
                         request.id.clone(),
@@ -2524,15 +2548,12 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         })),
                         vec![],
                         None,
-                        vec![]
+                        vec![],
+                        mandates.clone()
                     )
                 },
                 Some("knowledge") => {
                     let text = query.and_then(|q| q.get("text")).and_then(|v| v.as_str()).unwrap_or("");
-                    let project_store = Store {
-                        kind: StoreKind::Repo,
-                        root: project_root.join(".decapod").join("data"),
-                    };
                     db::initialize_knowledge_db(&project_store.root)?;
                     let entries = knowledge::search_knowledge(&project_store, text)?;
                     success_response(
@@ -2545,14 +2566,11 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         })),
                         vec![],
                         None,
-                        vec![]
+                        vec![],
+                        mandates.clone()
                     )
                 },
                 Some("decision") => {
-                    let project_store = Store {
-                        kind: StoreKind::Repo,
-                        root: project_root.join(".decapod").join("data"),
-                    };
                     let nodes = plugins::federation_ext::list_nodes(&project_store.root, Some("decision".to_string()), None, None, None)?;
                     success_response(
                         request.id.clone(),
@@ -2564,7 +2582,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         })),
                         vec![],
                         None,
-                        vec![]
+                        vec![],
+                        mandates.clone()
                     )
                 },
                 _ => error_response(
@@ -2573,7 +2592,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     request.params.clone(),
                     "invalid_entity".to_string(),
                     format!("Invalid or missing entity: {:?}", entity),
-                    None
+                    None,
+                    mandates.clone(),
                 ),
             }
         }
@@ -2597,7 +2617,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         Some(serde_json::json!({ "success": true })),
                         vec![],
                         None,
-                        vec![]
+                        vec![],
+                        mandates.clone()
                     )
                 },
                 Err(e) => {
@@ -2607,7 +2628,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         request.params.clone(),
                         "validation_failed".to_string(),
                         e.to_string(),
-                        None
+                        None,
+                        mandates.clone()
                     )
                 }
             }
@@ -2635,6 +2657,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     reason: "Provide answer to continue interview".to_string(),
                     required_params: vec!["question_id".to_string(), "value".to_string()],
                 }],
+                mandates.clone(),
             );
 
             if let Some(q) = question {
@@ -2688,6 +2711,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     },
                     required_params: vec![],
                 }],
+                mandates.clone(),
             );
 
             response.result = Some(serde_json::json!({
@@ -2720,6 +2744,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     reason: "Artifacts generated - validate before claiming done".to_string(),
                     required_params: vec![],
                 }],
+                mandates.clone(),
             )
         }
         "standards.resolve" => {
@@ -2750,6 +2775,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 vec![],
                 Some(context_capsule),
                 vec![],
+                mandates.clone(),
             )
         }
         "mentor.obligations" => {
@@ -2822,6 +2848,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     reason: "Obligations computed - review must list before proceeding".to_string(),
                     required_params: vec![],
                 }],
+                mandates.clone(),
             );
 
             response.result = Some(serde_json::json!({
@@ -2903,6 +2930,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         required_params: vec![],
                     }]
                 },
+                mandates.clone(),
             );
             response.interlock = evaluated.interlock.clone();
             response.advisory = Some(evaluated.advisory.clone());
@@ -2933,6 +2961,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             "unknown_op".to_string(),
             format!("Unknown operation: {}", request.op),
             None,
+            mandates.clone(),
         ),
     };
 
