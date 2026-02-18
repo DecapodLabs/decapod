@@ -1,57 +1,71 @@
-use std::process::{Command, Stdio};
 use std::io::Write;
-use serde_json::Value;
+use std::process::{Command, Stdio};
 
 fn run_rpc(request: serde_json::Value) -> serde_json::Value {
     // We need a stable agent ID and session for enforcement
-    let agent_id = "test-agent-rpc";
-    
+    let agent_id = "unknown";
+
     // Ensure we are on a non-protected branch for tests
     let _ = Command::new("git")
         .args(["checkout", "-b", "feat/test-rpc-suite"])
         .output();
 
     // Ensure we have a session
-    let _ = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["session", "acquire"])
         .env("DECAPOD_AGENT_ID", agent_id)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
-        .output();
-
-    // Claim a dummy task to satisfy mandatory todo
-    let task_add = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["todo", "add", "RPC Test Task", "--owner", agent_id, "--format", "json"])
-        .env("DECAPOD_AGENT_ID", agent_id)
-        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
-        .expect("todo add");
-    
-    if let Ok(val) = serde_json::from_slice::<serde_json::Value>(&task_add.stdout) {
-        if let Some(id) = val["id"].as_str() {
-            let _ = Command::new(env!("CARGO_BIN_EXE_decapod"))
-                .args(["todo", "claim", "--id", id, "--agent", agent_id])
-                .env("DECAPOD_AGENT_ID", agent_id)
-                .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
-                .output();
-        }
-    }
-    
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
-    cmd.args(["rpc", "--stdin"])
-       .env("DECAPOD_AGENT_ID", agent_id)
-       .stdin(Stdio::piped())
-       .stdout(Stdio::piped());
+        .expect("session acquire");
+    let session_stdout = String::from_utf8_lossy(&session_out.stdout);
+    let session_password = session_stdout
+        .lines()
+        .find_map(|line| {
+            line.strip_prefix("Password: ")
+                .map(|v| v.trim().to_string())
+        })
+        .unwrap_or_else(|| "test".to_string());
 
-    let mut child = cmd.spawn().expect("Failed to spawn decapod rpc");
+    let run_rpc_once = |req: &serde_json::Value| -> serde_json::Value {
+        let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+        cmd.args(["rpc", "--stdin"])
+            .env("DECAPOD_AGENT_ID", agent_id)
+            .env("DECAPOD_SESSION_PASSWORD", &session_password)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped());
 
-    let mut stdin = child.stdin.take().expect("Failed to open stdin");
-    stdin.write_all(serde_json::to_string(&request).unwrap().as_bytes()).expect("Failed to write to stdin");
-    drop(stdin);
+        let mut child = cmd.spawn().expect("Failed to spawn decapod rpc");
+        let mut stdin = child.stdin.take().expect("Failed to open stdin");
+        stdin
+            .write_all(serde_json::to_string(req).unwrap().as_bytes())
+            .expect("Failed to write to stdin");
+        drop(stdin);
 
-    let output = child.wait_with_output().expect("Failed to read stdout");
-    let response: serde_json::Value = serde_json::from_slice(&output.stdout).expect("Failed to parse JSON response");
+        let output = child.wait_with_output().expect("Failed to read stdout");
+        serde_json::from_slice(&output.stdout).expect("Failed to parse JSON response")
+    };
+
+    // Mandatory constitutional-awareness bootstrap sequence.
+    let init_res = run_rpc_once(&serde_json::json!({ "op": "agent.init", "params": {} }));
+    assert!(
+        init_res["success"].as_bool().unwrap(),
+        "agent.init failed: {}",
+        init_res
+    );
+
+    let ctx_res = run_rpc_once(&serde_json::json!({ "op": "context.resolve", "params": {} }));
+    assert!(
+        ctx_res["success"].as_bool().unwrap(),
+        "context.resolve failed: {}",
+        ctx_res
+    );
+
+    let response = run_rpc_once(&request);
     if response["success"] == false {
-        eprintln!("RPC Error: {}", serde_json::to_string_pretty(&response).unwrap());
+        eprintln!(
+            "RPC Error: {}",
+            serde_json::to_string_pretty(&response).unwrap()
+        );
     }
     response
 }
@@ -73,7 +87,7 @@ fn test_rpc_context_resolve_determinism() {
 
     assert_eq!(res1["result"], res2["result"]);
     assert!(res1["success"].as_bool().unwrap());
-    
+
     let fragments = res1["result"]["fragments"].as_array().unwrap();
     assert!(!fragments.is_empty());
 }
@@ -151,7 +165,7 @@ fn test_rpc_trace_and_redaction() {
 
     let output = child.wait_with_output().expect("Failed to read stdout");
     let trace_line = String::from_utf8_lossy(&output.stdout);
-    
+
     assert!(trace_line.contains(&secret_id));
     assert!(trace_line.contains("[REDACTED]"));
     assert!(!trace_line.contains("supersecretpassword"));
