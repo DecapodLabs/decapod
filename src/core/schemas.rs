@@ -234,10 +234,14 @@ pub const FEDERATION_DB_INDEX_EVENTS_NODE: &str = MEMORY_DB_INDEX_EVENTS_NODE;
 pub const DECIDE_DB_NAME: &str = "decisions.db";
 pub const DECIDE_SCHEMA_VERSION: u32 = 1;
 pub const DECIDE_DB_SCHEMA_META: &str = MEMORY_DB_SCHEMA_META;
-pub const DECIDE_DB_INDEX_DECISIONS_SESSION: &str = "CREATE INDEX IF NOT EXISTS idx_decisions_session ON decisions(session_id)";
-pub const DECIDE_DB_INDEX_DECISIONS_TREE: &str = "CREATE INDEX IF NOT EXISTS idx_decisions_tree ON decisions(tree_id)";
-pub const DECIDE_DB_INDEX_SESSIONS_TREE: &str = "CREATE INDEX IF NOT EXISTS idx_sessions_tree ON sessions(tree_id)";
-pub const DECIDE_DB_INDEX_SESSIONS_STATUS: &str = "CREATE INDEX IF NOT EXISTS idx_sessions_status ON sessions(status)";
+pub const DECIDE_DB_INDEX_DECISIONS_SESSION: &str =
+    "CREATE INDEX IF NOT EXISTS idx_decisions_session ON decisions(session_id)";
+pub const DECIDE_DB_INDEX_DECISIONS_TREE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_decisions_tree ON decisions(tree_id)";
+pub const DECIDE_DB_INDEX_SESSIONS_TREE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_sessions_tree ON sessions(tree_id)";
+pub const DECIDE_DB_INDEX_SESSIONS_STATUS: &str =
+    "CREATE INDEX IF NOT EXISTS idx_sessions_status ON sessions(status)";
 
 // --- 3. Automation Bin ---
 pub const AUTOMATION_DB_NAME: &str = "automation.db";

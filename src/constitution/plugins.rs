@@ -1,5 +1,6 @@
 //! Plugin subsystem mappings for constitution-aligned navigation.
 
+pub use crate::core::todo;
 pub use crate::plugins::archive;
 pub use crate::plugins::context;
 pub use crate::plugins::cron;
@@ -11,7 +12,6 @@ pub use crate::plugins::knowledge;
 pub use crate::plugins::policy;
 pub use crate::plugins::reflex;
 pub use crate::plugins::teammate;
-pub use crate::core::todo;
 pub use crate::plugins::trust;
 pub use crate::plugins::verify;
 pub use crate::plugins::watcher;

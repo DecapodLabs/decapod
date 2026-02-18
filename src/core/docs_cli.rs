@@ -82,7 +82,9 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             };
 
             // Convert to relative path
-            let relative_path = relative_path.strip_prefix("embedded/").unwrap_or(relative_path);
+            let relative_path = relative_path
+                .strip_prefix("embedded/")
+                .unwrap_or(relative_path);
 
             if let Some(a) = anchor {
                 let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
