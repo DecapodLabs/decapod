@@ -1,44 +1,24 @@
 # OVERRIDE.md - Project-Specific Decapod Overrides
 
-**Canonical:** OVERRIDE.md
-**Authority:** override
-**Layer:** Project
+> **IMPORTANT:** For detailed usage instructions and examples, see [README.md](README.md).
+
+**Canonical:** OVERRIDE.md  
+**Authority:** override  
+**Layer:** Project  
 **Binding:** Yes (overrides embedded constitution)
 
 ---
 
 ## Summary
 
-This file allows you to override or extend Decapod's embedded constitution for project-specific needs.
+This file is your project-local override layer for Decapod's embedded constitution.
 
-The embedded constitution (read-only, shipped with Decapod) provides the base methodology. This file lets you customize behavior without forking Decapod. Overrides are applied at runtime when agents read the constitution via `decapod docs show`.
+The embedded constitution (shipped with Decapod) is read-only baseline policy.  
+`OVERRIDE.md` is where you add project-specific behavior without forking Decapod.
 
-**Keep overrides minimal** - only add what's truly specific to your project.
+Overrides are resolved at runtime via `decapod docs show`.
 
----
-
-## How to Use
-
-1. Find the component section below (Core, Specs, Interfaces, Methodology, Plugins, or Architecture)
-2. Scroll to the specific component you want to override (e.g., `### plugins/TODO.md`)
-3. Write your override content under that heading
-4. Use markdown formatting for your overrides
-5. Commit this file to version control
-
-**Example:**
-
-```markdown
-### plugins/TODO.md
-
-## Priority Levels (Project Override)
-
-For this project, we use a 5-level priority system:
-- **critical**: Production down, blocking release
-- **high**: Sprint commitment, must complete this iteration
-- **medium**: Backlog, next sprint candidate
-- **low**: Nice-to-have, future consideration
-- **idea**: Exploration, needs refinement before actionable
-```
+Keep overrides minimal and explicit.
 
 ---
 
@@ -101,10 +81,6 @@ For this project, we use a 5-level priority system:
 ### methodology/KNOWLEDGE.md
 
 ### methodology/MEMORY.md
-
-### methodology/TESTING.md
-
-### methodology/CI_CD.md
 
 ---
 
