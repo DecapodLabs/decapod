@@ -9,16 +9,22 @@ You MUST internalize and contextualize Decapod before your first tool use. When 
 **Initialization sequence (MANDATORY):**
 
 ```bash
-# 1. Acquire per-agent session credentials
+# 1. Validate first (authoritative gate)
+decapod validate
+
+# 2. Ingest constitution core docs
+decapod docs ingest
+
+# 3. Acquire per-agent session credentials
 decapod session acquire
 
-# 2. Establish session receipt and constitutional mandates
+# 4. Establish session receipt and constitutional mandates
 decapod rpc --op agent.init
 
-# 3. Resolve constitutional context before mutating state
+# 5. Resolve constitutional context before mutating state
 decapod rpc --op context.resolve
 
-# 4. Claim your task (if not already claimed)
+# 6. Claim your task (if not already claimed)
 decapod todo claim --id <task-id>
 ```
 
@@ -32,10 +38,11 @@ decapod todo claim --id <task-id>
 ## Critical Rules
 
 1. NEVER work on main/master - Decapod will refuse.
-2. Call `decapod rpc --op agent.init` before any other operation.
+2. Start by running `decapod validate`.
 3. Create and claim a todo: `decapod todo claim --id <task-id>`.
-4. Worktree branch and directory must include your claimed `todo_id` (task- or task-group scoped).
-5. Pass `decapod validate` before claiming done.
+4. Ingest `constitution/core/*.md` via `decapod docs ingest` before mutating operations.
+5. Worktree branch and directory must include your claimed `todo_id` (task- or task-group scoped).
+6. Pass `decapod validate` before claiming done.
 
 ## Safety Invariants
 
