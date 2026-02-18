@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.7](https://github.com/DecapodLabs/decapod/compare/v0.28.6...v0.28.7) - 2026-02-18
+
+### Fixed
+
+- *(ci)* restore session-first gating and thin-file threshold alignment
+- *(ci)* stabilize rpc suite and ensure schema init on startup
+- *(tests)* harden schema bootstrap and parallel trace assertions
+- resolve -D warnings failures blocking tests
+
+### Other
+
+- Merge branch 'master' into agent/codex/r-01khqw3kvtbtpzmchtq7s9azmn
+- *(gitignore)* ignore generated awareness artifacts
+- *(constitution)* add testing and ci/cd methodology guides
+
 ## [0.28.6](https://github.com/DecapodLabs/decapod/compare/v0.28.5...v0.28.6) - 2026-02-18
 
 ### Other
