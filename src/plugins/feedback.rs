@@ -16,7 +16,7 @@ pub struct FeedbackEntry {
 }
 
 pub fn feedback_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::FEEDBACK_DB_NAME)
+    root.join(schemas::GOVERNANCE_DB_NAME)
 }
 
 pub fn initialize_feedback_db(root: &Path) -> Result<(), error::DecapodError> {

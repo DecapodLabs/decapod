@@ -194,7 +194,7 @@ fn format_db_open_diagnostics(db_path: &Path, stage: &str, err: &rusqlite::Error
 }
 
 pub fn knowledge_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::KNOWLEDGE_DB_NAME)
+    root.join(schemas::MEMORY_DB_NAME)
 }
 
 pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -204,7 +204,21 @@ pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
 
     let broker = DbBroker::new(root);
     broker.with_conn(&db_path, "decapod", None, "knowledge.init", |conn| {
-        conn.execute(schemas::KNOWLEDGE_DB_SCHEMA, [])?;
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
+        conn.execute_batch(schemas::KNOWLEDGE_DB_SCHEMA)?;
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODES)?;
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EDGES)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_TYPE)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_STATUS)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_SCOPE)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_PRIORITY)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_UPDATED)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_SOURCES_NODE)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_SOURCE)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_TARGET)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_TYPE)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_EVENTS_NODE)?;
         Ok(())
     })?;
 
@@ -212,7 +226,7 @@ pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
 }
 
 pub fn decide_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::DECIDE_DB_NAME)
+    root.join(schemas::MEMORY_DB_NAME)
 }
 
 pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -222,13 +236,13 @@ pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
 
     let broker = DbBroker::new(root);
     broker.with_conn(&db_path, "decapod", None, "decide.init", |conn| {
-        conn.execute(schemas::DECIDE_DB_SCHEMA_META, [])?;
-        conn.execute(schemas::DECIDE_DB_SCHEMA_SESSIONS, [])?;
-        conn.execute(schemas::DECIDE_DB_SCHEMA_DECISIONS, [])?;
-        conn.execute(schemas::DECIDE_DB_INDEX_DECISIONS_SESSION, [])?;
-        conn.execute(schemas::DECIDE_DB_INDEX_DECISIONS_TREE, [])?;
-        conn.execute(schemas::DECIDE_DB_INDEX_SESSIONS_TREE, [])?;
-        conn.execute(schemas::DECIDE_DB_INDEX_SESSIONS_STATUS, [])?;
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
+        conn.execute_batch(schemas::DECIDE_DB_SCHEMA_SESSIONS)?;
+        conn.execute_batch(schemas::DECIDE_DB_SCHEMA_DECISIONS)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_DECISIONS_SESSION)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_DECISIONS_TREE)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_SESSIONS_TREE)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_SESSIONS_STATUS)?;
         Ok(())
     })?;
 

@@ -155,7 +155,7 @@ pub struct RiskMap {
 }
 
 pub fn policy_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::POLICY_DB_NAME)
+    root.join(schemas::GOVERNANCE_DB_NAME)
 }
 
 pub fn initialize_policy_db(root: &Path) -> Result<(), error::DecapodError> {

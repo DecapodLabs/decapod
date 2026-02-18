@@ -38,6 +38,11 @@ pub fn all_migrations() -> Vec<Migration> {
             description: "Reconstruct todo event log from database state",
             up: migrate_reconstruct_todo_events,
         },
+        Migration {
+            target_version: "0.27.0",
+            description: "Consolidate fragmented databases into core bins",
+            up: migrate_consolidate_databases,
+        },
     ]
 }
 
@@ -278,5 +283,97 @@ fn migrate_schema_change(decapod_root: &Path) -> Result<(), error::DecapodError>
             .map_err(error::DecapodError::RusqliteError)?;
     }
 
+    Ok(())
+}
+
+fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    let data_root = decapod_root.join("data");
+    if !data_root.exists() {
+        return Ok(());
+    }
+
+    // 1. Consolidate Governance Bin (health, policy, feedback, archive)
+    let gov_path = data_root.join(schemas::GOVERNANCE_DB_NAME);
+    let mut gov_conn = Connection::open(&gov_path).map_err(error::DecapodError::RusqliteError)?;
+    gov_conn.execute_batch(schemas::HEALTH_DB_SCHEMA_CLAIMS)?;
+    gov_conn.execute_batch(schemas::HEALTH_DB_SCHEMA_PROOF_EVENTS)?;
+    gov_conn.execute_batch(schemas::HEALTH_DB_SCHEMA_HEALTH_CACHE)?;
+    gov_conn.execute_batch(schemas::POLICY_DB_SCHEMA_APPROVALS)?;
+    gov_conn.execute_batch(schemas::POLICY_DB_SCHEMA_INDEX)?;
+    gov_conn.execute_batch(schemas::FEEDBACK_DB_SCHEMA)?;
+    gov_conn.execute_batch(schemas::ARCHIVE_DB_SCHEMA)?;
+
+    migrate_table(&data_root, "health.db", &gov_conn, "claims")?;
+    migrate_table(&data_root, "health.db", &gov_conn, "proof_events")?;
+    migrate_table(&data_root, "health.db", &gov_conn, "health_cache")?;
+    migrate_table(&data_root, "policy.db", &gov_conn, "approvals")?;
+    migrate_table(&data_root, "feedback.db", &gov_conn, "feedback")?;
+    migrate_table(&data_root, "archive.db", &gov_conn, "archives")?;
+
+    // 2. Consolidate Memory Bin (knowledge, federation, decisions, teammate)
+    let mem_path = data_root.join(schemas::MEMORY_DB_NAME);
+    let mut mem_conn = Connection::open(&mem_path).map_err(error::DecapodError::RusqliteError)?;
+    mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
+    mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODES)?;
+    mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
+    mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EDGES)?;
+    mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EVENTS)?;
+
+    migrate_table(&data_root, "federation.db", &mem_conn, "nodes")?;
+    migrate_table(&data_root, "federation.db", &mem_conn, "sources")?;
+    migrate_table(&data_root, "federation.db", &mem_conn, "edges")?;
+    migrate_table(&data_root, "federation.db", &mem_conn, "federation_events")?;
+    
+    // Legacy knowledge to nodes migration (simplified)
+    let knowledge_db = data_root.join("knowledge.db");
+    if knowledge_db.exists() {
+        let k_conn = Connection::open(&knowledge_db).map_err(error::DecapodError::RusqliteError)?;
+        let mut stmt = k_conn.prepare("SELECT id, title, content, provenance, created_at FROM knowledge")?;
+        let rows = stmt.query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, String>(4)?))
+        })?;
+        for r in rows {
+            let (id, title, content, prov, ts) = r?;
+            mem_conn.execute("INSERT OR IGNORE INTO nodes(id, node_type, title, body, created_at, updated_at, dir_path, scope) VALUES(?1, 'observation', ?2, ?3, ?4, ?4, '', 'repo')", rusqlite::params![id, title, content, ts])?;
+            mem_conn.execute("INSERT OR IGNORE INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)", rusqlite::params![Ulid::new().to_string(), id, prov, ts])?;
+        }
+    }
+
+    // 3. Consolidate Automation Bin (cron, reflex)
+    let auto_path = data_root.join(schemas::AUTOMATION_DB_NAME);
+    let mut auto_conn = Connection::open(&auto_path).map_err(error::DecapodError::RusqliteError)?;
+    auto_conn.execute_batch(schemas::CRON_DB_SCHEMA)?;
+    auto_conn.execute_batch(schemas::REFLEX_DB_SCHEMA)?;
+
+    migrate_table(&data_root, "cron.db", &auto_conn, "cron_jobs")?;
+    migrate_table(&data_root, "reflex.db", &auto_conn, "reflexes")?;
+
+    // Cleanup legacy files (optional, maybe keep for safety during beta)
+    let legacy = ["health.db", "policy.db", "feedback.db", "archive.db", "knowledge.db", "federation.db", "decisions.db", "teammate.db", "cron.db", "reflex.db"];
+    for f in legacy {
+        let p = data_root.join(f);
+        if p.exists() {
+            let _ = fs::rename(&p, data_root.join(format!("{}.bak", f)));
+        }
+    }
+
+    Ok(())
+}
+
+fn migrate_table(data_root: &Path, source_db: &str, target_conn: &Connection, table: &str) -> Result<(), error::DecapodError> {
+    let source_path = data_root.join(source_db);
+    if !source_path.exists() {
+        return Ok(());
+    }
+
+    target_conn.execute(&format!("ATTACH DATABASE '{}' AS source", source_path.to_string_lossy()), [])
+        .map_err(error::DecapodError::RusqliteError)?;
+    
+    let res = target_conn.execute(&format!("INSERT OR IGNORE INTO main.{} SELECT * FROM source.{}", table, table), []);
+    
+    target_conn.execute("DETACH DATABASE source", [])
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    res.map_err(error::DecapodError::RusqliteError)?;
     Ok(())
 }
