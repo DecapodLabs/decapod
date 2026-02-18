@@ -1,9 +1,0 @@
-{
-  "agent_id": "unknown",
-  "session_token": "01KHQSAVYH2ZE06QZTFXX59AHD",
-  "initialized_at_epoch_secs": 1771399148,
-  "context_resolved_at_epoch_secs": null,
-  "source_ops": [
-    "agent.init"
-  ]
-}
