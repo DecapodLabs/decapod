@@ -47,8 +47,24 @@ decapod capabilities --json
 ## Workspace Rules (Non-Negotiable)
 
 1. **Agents MUST NOT work on main/master** - Decapod validates and refuses
-2. **Use `decapod workspace ensure`** to create an isolated branch
-3. **Validate before claiming done** - `decapod validate` is the gate
+2. **Use `decapod workspace ensure`** to create an isolated worktree
+3. **Use on-demand containers** for build/test execution (clean env)
+4. **Validate before claiming done** - `decapod validate` is the gate
+
+## Worktree + On-Demand Sandbox
+
+Decapod enforces a two-tier isolation model:
+
+1.  **Git Worktree (Default):**
+    - All file modifications happen here.
+    - Provides concurrency (multiple agents on different branches).
+    - Prevents pollution of the main checkout.
+
+2.  **On-Demand Sandbox (Container):**
+    - Call `decapod workspace ensure --container` to instantiate.
+    - Maps the *current* worktree into a clean Docker/OCI env.
+    - **REQUIRED** for: `cargo build`, `npm install`, `pytest`, etc.
+    - Ensures build reproducibility and environment hygiene.
 
 ## Response Envelope
 
