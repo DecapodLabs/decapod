@@ -411,6 +411,7 @@ pub fn generate_capabilities() -> CapabilitiesReport {
 }
 
 /// Create a successful response
+#[allow(clippy::too_many_arguments)]
 pub fn success_response(
     request_id: String,
     op: String,
