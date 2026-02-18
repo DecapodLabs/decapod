@@ -8,7 +8,7 @@ use crate::plugins::federation;
 use crate::plugins::knowledge;
 use crate::plugins::teammate;
 use crate::plugins::verify;
-use crate::policy;
+use crate::plugins::policy;
 use clap::{Parser, Subcommand, ValueEnum};
 use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use serde::{Deserialize, Serialize};

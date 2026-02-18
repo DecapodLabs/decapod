@@ -11,7 +11,7 @@ pub use crate::plugins::knowledge;
 pub use crate::plugins::policy;
 pub use crate::plugins::reflex;
 pub use crate::plugins::teammate;
-pub use crate::plugins::todo;
+pub use crate::core::todo;
 pub use crate::plugins::trust;
 pub use crate::plugins::verify;
 pub use crate::plugins::watcher;

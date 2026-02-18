@@ -82,11 +82,11 @@ pub mod plugins;
 use core::{
     db, docs, docs_cli, error, migration, proof, repomap, scaffold,
     store::{Store, StoreKind},
-    trace, validate,
+    todo, trace, validate,
 };
 use plugins::{
     archive, container, context, cron, decide, federation, feedback, health, knowledge, policy,
-    primitives, reflex, teammate, todo, verify, watcher, workflow,
+    primitives, reflex, teammate, verify, watcher, workflow,
 };
 
 use clap::{CommandFactory, Parser, Subcommand};
