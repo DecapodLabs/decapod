@@ -723,6 +723,11 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
             }
 
+            // Blend legacy agent entrypoints into OVERRIDE.md
+            if !init_group.dry_run {
+                scaffold::blend_legacy_entrypoints(&target_dir)?;
+            }
+
             // Databases are created lazily on first use by runtime commands.
             // Init only generates the project structure files for speed.
 
