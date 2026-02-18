@@ -1003,7 +1003,6 @@ fn requires_session_token(command: &Command) -> bool {
         Command::Init(_)
         | Command::Session(_)
         | Command::Version
-        | Command::Validate(_)
         | Command::Docs(_)
         | Command::Capabilities(_)
         | Command::Trace(_) => false,
