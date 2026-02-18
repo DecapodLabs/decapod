@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.3](https://github.com/DecapodLabs/decapod/compare/v0.26.2...v0.26.3) - 2026-02-18
+
+### Added
+
+- automate database normalization and entrypoint blending
+
 ## [0.26.2](https://github.com/DecapodLabs/decapod/compare/v0.26.1...v0.26.2) - 2026-02-18
 
 ### Added
