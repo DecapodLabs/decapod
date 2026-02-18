@@ -20,10 +20,6 @@
   <a href="https://ko-fi.com/decapodlabs"><img alt="Ko-fi" src="https://img.shields.io/badge/Support-Ko--fi-ff5f5f?logo=ko-fi&logoColor=white"></a>
 </p>
 
-<p align="center">
-  ☕ Like Decapod? <a href="https://ko-fi.com/decapodlabs"><strong>Buy us a coffee on Ko-fi</strong></a> 💙
-</p>
-
 ---
 
 ## Why Decapod 🧠
@@ -36,10 +32,17 @@ Decapod is **invoked by agents; it never runs in the background**. It is a singl
 - Retrieve **canon (constitution .md fragments)** as context.
 - Provide authoritative schemas for **structured state** (todos, knowledge, decisions).
 - Run deterministic **validation/proof gates** to decide when work is truly done.
+  Example gate: *forbid direct pushes to protected branches* — fails if the agent has unpushed commits on main.
 
-Traces are stored locally in `.decapod/data/traces.jsonl`. Bindings are introspectable via `context.bindings`.
+AGENTS.md stays tiny (entrypoint). OVERRIDE.md handles local exceptions. Everything else is pulled just-in-time.
 
-Decapod is architecture-agnostic software. It is not a Linux kernel binding and is not coupled to a specific OS or CPU architecture.
+Traces: `.decapod/data/traces.jsonl`. Bindings: `context.bindings`. Architecture-agnostic (not coupled to a specific OS or CPU).
+
+Recent independent research confirms this design direction: [Evaluating AGENTS.md](https://arxiv.org/pdf/2602.11988) (Gloaguen et al., ETH SRI, 2026; [AgentBench repo](https://github.com/eth-sri/agentbench)) found that LLM-generated context files tend to reduce agent performance while increasing cost by over 20 %; human-written minimal requirements can help slightly. Decapod was built independently and without knowledge of ETH SRI's AgentBench research or this paper.
+
+<p align="center">
+  ☕ Like Decapod? <a href="https://ko-fi.com/decapodlabs"><strong>Buy us a coffee on Ko-fi</strong></a> 💙
+</p>
 
 ## Assurance Model ✅
 
@@ -73,9 +76,13 @@ AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
 
 ## Getting Started 🚀
 
-Install Decapod with Cargo, initialize it in your repository, and let your agent operate through the Decapod contract instead of direct ad-hoc repo mutation.
+```
+cargo install decapod
+decapod init
+```
 
-For command details and full usage, use `decapod --help`.
+Then use your agents as normal. Decapod works on your behalf from inside the agent.
+Override defaults in `.decapod/OVERRIDE.md`.
 
 ## Contributing 🤝
 
