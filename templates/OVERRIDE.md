@@ -102,6 +102,10 @@ For this project, we use a 5-level priority system:
 
 ### methodology/MEMORY.md
 
+### methodology/TESTING.md
+
+### methodology/CI_CD.md
+
 ---
 
 ## Architecture Overrides (Domain Patterns)
