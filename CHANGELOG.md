@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.5](https://github.com/DecapodLabs/decapod/compare/v0.28.4...v0.28.5) - 2026-02-18
+
+### Other
+
+- *(readme)* add Ko-fi callout, emoji polish, and linked file refs
+
 ## [0.28.4](https://github.com/DecapodLabs/decapod/compare/v0.28.3...v0.28.4) - 2026-02-18
 
 ### Other
