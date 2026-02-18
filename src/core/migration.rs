@@ -348,12 +348,20 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
     migrate_table(&data_root, "cron.db", &auto_conn, "cron_jobs")?;
     migrate_table(&data_root, "reflex.db", &auto_conn, "reflexes")?;
 
-    // Cleanup legacy files (optional, maybe keep for safety during beta)
-    let legacy = ["health.db", "policy.db", "feedback.db", "archive.db", "knowledge.db", "federation.db", "decisions.db", "teammate.db", "cron.db", "reflex.db"];
+    // Cleanup legacy and backup files
+    let legacy = [
+        "health.db", "policy.db", "feedback.db", "archive.db", 
+        "knowledge.db", "federation.db", "decisions.db", "teammate.db", 
+        "cron.db", "reflex.db"
+    ];
     for f in legacy {
         let p = data_root.join(f);
         if p.exists() {
-            let _ = fs::rename(&p, data_root.join(format!("{}.bak", f)));
+            let _ = fs::remove_file(&p);
+        }
+        let bak = data_root.join(format!("{}.bak", f));
+        if bak.exists() {
+            let _ = fs::remove_file(&bak);
         }
     }
 
