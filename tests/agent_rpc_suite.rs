@@ -155,7 +155,7 @@ fn test_rpc_trace_and_redaction() {
     let _res = run_rpc(request);
 
     // Export traces to verify
-    let mut child = Command::new("cargo")
+    let child = Command::new("cargo")
         .args(["run", "--", "trace", "export", "--last", "1"])
         .env("DECAPOD_SESSION_PASSWORD", "test") // Dummy
         .env("DECAPOD_AGENT_ID", "test") // Dummy
