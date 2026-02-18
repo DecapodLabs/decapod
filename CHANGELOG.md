@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0](https://github.com/DecapodLabs/decapod/compare/v0.27.0...v0.28.0) - 2026-02-18
+
+### Added
+
+- implement on-demand container sandboxing for worktrees
+- enable agent-invoked git worktrees and isolation mandates
+
 ## [0.27.0](https://github.com/DecapodLabs/decapod/compare/v0.26.3...v0.27.0) - 2026-02-18
 
 ### Added
