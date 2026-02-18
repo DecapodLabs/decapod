@@ -85,7 +85,7 @@ Then use your agents as normal. Decapod works on your behalf from inside the age
 
 Learn more about the [embedded constitution](constitution/core/DECAPOD.md).
 
-Override constsitution defaults with plain English in `.decapod/OVERRIDE.md`.
+Override constitution defaults with plain English in `.decapod/OVERRIDE.md`.
 
 ## Contributing 🤝
 
