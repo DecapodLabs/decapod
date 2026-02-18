@@ -367,7 +367,7 @@ ENV DECAPOD_WORKSPACE_IMAGE=decapod-workspace
 CMD ["/bin/bash"]
 "#;
 
-    std::fs::write(&dockerfile_path, dockerfile_content).map_err(|e| DecapodError::IoError(e))?;
+    std::fs::write(&dockerfile_path, dockerfile_content).map_err(DecapodError::IoError)?;
 
     Ok(())
 }
@@ -382,7 +382,7 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
             workspace_path.to_str().unwrap_or("."),
         ])
         .output()
-        .map_err(|e| DecapodError::IoError(e))?;
+        .map_err(DecapodError::IoError)?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -447,8 +447,7 @@ fn get_repo_root(start_dir: &Path) -> Result<PathBuf, DecapodError> {
 fn is_branch_protected(branch: &str) -> bool {
     let branch_lower = branch.to_lowercase();
     for pattern in PROTECTED_PATTERNS {
-        if pattern.ends_with("/*") {
-            let prefix = &pattern[..pattern.len() - 2];
+        if let Some(prefix) = pattern.strip_suffix("/*") {
             if branch_lower.starts_with(prefix) {
                 return true;
             }

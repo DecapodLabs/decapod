@@ -671,7 +671,10 @@ fn validate_entrypoint_invariants(
         // Must include core constitution ingestion mandate
         if agent_content.contains("decapod docs ingest") {
             pass(
-                &format!("{} includes core constitution ingestion mandate", agent_file),
+                &format!(
+                    "{} includes core constitution ingestion mandate",
+                    agent_file
+                ),
                 pass_count,
             );
         } else {
