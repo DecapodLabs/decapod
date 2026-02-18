@@ -1,6 +1,6 @@
 use crate::core::error;
 use crate::core::store::Store;
-use crate::plugins::todo;
+use crate::core::todo;
 use clap::{Parser, Subcommand};
 use std::path::Path;
 use std::process::Command;

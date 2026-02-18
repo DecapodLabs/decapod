@@ -2,7 +2,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
-use crate::plugins::todo;
+use crate::core::todo;
 use clap::{Parser, Subcommand};
 use rusqlite::{Result as SqlResult, types::ToSql};
 use serde::{Deserialize, Serialize};

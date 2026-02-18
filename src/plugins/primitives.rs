@@ -1,7 +1,7 @@
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
-use crate::plugins::todo;
+use crate::core::todo;
 use clap::{Parser, Subcommand};
 use rusqlite::{Connection, params};
 use std::collections::BTreeMap;
