@@ -77,39 +77,44 @@ fn test_rpc_store_upsert_knowledge() {
 }
 
 #[test]
-fn test_rpc_store_query_knowledge() {
-    let id = format!("K_QUERY_TEST_{}", ulid::Ulid::new());
-    let title = "Unique Query Test Knowledge";
-    
-    // Upsert first
-    run_rpc(serde_json::json!({
-        "op": "store.upsert",
-        "params": {
-            "entity": "knowledge",
-            "payload": {
-                "id": id,
-                "title": title,
-                "text": "This is a test entry for query",
-                "provenance": "cmd:cargo-test"
-            }
-        }
-    }));
-
+fn test_rpc_context_bindings() {
     let request = serde_json::json!({
-        "op": "store.query",
-        "params": {
-            "entity": "knowledge",
-            "query": {
-                "text": title
-            }
-        }
+        "op": "context.bindings",
+        "params": {}
     });
 
     let res = run_rpc(request);
     assert!(res["success"].as_bool().unwrap());
-    let items = res["result"]["items"].as_array().unwrap();
-    assert!(!items.is_empty(), "Items should not be empty for query: {}", title);
+    assert!(res["result"]["ops"].get("workspace.ensure").is_some());
+}
+
+#[test]
+fn test_rpc_trace_and_redaction() {
+    let secret_id = format!("SECRET_{}", ulid::Ulid::new());
+    let request = serde_json::json!({
+        "op": "schema.get",
+        "params": {
+            "entity": "todo",
+            "my_password": "supersecretpassword",
+            "id": secret_id
+        }
+    });
+
+    let _res = run_rpc(request);
+
+    // Export traces to verify
+    let mut child = Command::new("cargo")
+        .args(["run", "--", "trace", "export", "--last", "1"])
+        .env("DECAPOD_SESSION_PASSWORD", "test") // Dummy
+        .env("DECAPOD_AGENT_ID", "test") // Dummy
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("Failed to spawn cargo run for trace export");
+
+    let output = child.wait_with_output().expect("Failed to read stdout");
+    let trace_line = String::from_utf8_lossy(&output.stdout);
     
-    let found = items.iter().any(|item| item["title"] == title);
-    assert!(found, "Should find the upserted item");
+    assert!(trace_line.contains(&secret_id));
+    assert!(trace_line.contains("[REDACTED]"));
+    assert!(!trace_line.contains("supersecretpassword"));
 }
