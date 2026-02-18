@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.1](https://github.com/DecapodLabs/decapod/compare/v0.28.0...v0.28.1) - 2026-02-18
+
+### Added
+
+- enforce worktree path and add to .gitignore
+
 ## [0.28.0](https://github.com/DecapodLabs/decapod/compare/v0.27.0...v0.28.0) - 2026-02-18
 
 ### Added
