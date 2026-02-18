@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.12](https://github.com/DecapodLabs/decapod/compare/v0.28.11...v0.28.12) - 2026-02-18
+
+### Fixed
+
+- *(workspace)* implement publish and wire --container flag for constitution parity
+
 ## [0.28.11](https://github.com/DecapodLabs/decapod/compare/v0.28.10...v0.28.11) - 2026-02-18
 
 ### Other
