@@ -49,5 +49,6 @@ pub mod schemas;
 pub mod standards;
 pub mod store;
 pub mod time;
+pub mod trace;
 pub mod validate;
 pub mod workspace;

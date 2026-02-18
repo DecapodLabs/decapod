@@ -1,15 +1,38 @@
 use crate::core::assets;
 use sha2::{Digest, Sha256};
 use std::path::Path;
+use serde::{Deserialize, Serialize};
 
 /// A fragment of a constitution or authority document.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DocFragment {
     pub kind: String,
     pub r#ref: String,
     pub title: String,
     pub excerpt: String,
     pub hash: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Bindings {
+    pub ops: std::collections::HashMap<String, String>,
+    pub paths: std::collections::HashMap<String, String>,
+    pub tags: std::collections::HashMap<String, String>,
+}
+
+pub fn get_bindings() -> Bindings {
+    let mut ops = std::collections::HashMap::new();
+    ops.insert("workspace.ensure".to_string(), "core/DECAPOD.md#workspaces".to_string());
+    ops.insert("workspace.status".to_string(), "core/DECAPOD.md#workspaces".to_string());
+    ops.insert("validate".to_string(), "core/DECAPOD.md#validation".to_string());
+
+    let mut paths = std::collections::HashMap::new();
+    paths.insert("rpc".to_string(), "interfaces/CONTROL_PLANE.md".to_string());
+
+    let mut tags = std::collections::HashMap::new();
+    tags.insert("security".to_string(), "specs/SECURITY.md".to_string());
+
+    Bindings { ops, paths, tags }
 }
 
 /// Extract a markdown fragment by anchor (heading).
