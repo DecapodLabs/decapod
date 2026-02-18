@@ -1,6 +1,6 @@
-use std::process::{Command, Stdio};
-use std::io::Write;
 use serde_json::Value;
+use std::io::Write;
+use std::process::{Command, Stdio};
 use tempfile::TempDir;
 
 fn setup_workspace() -> (TempDir, std::path::PathBuf, String) {
@@ -62,13 +62,17 @@ fn setup_workspace() -> (TempDir, std::path::PathBuf, String) {
         .current_dir(&dir)
         .output()
         .expect("decapod session acquire");
-    
+
     if !session.status.success() {
-        panic!("decapod session acquire failed: {}", String::from_utf8_lossy(&session.stderr));
+        panic!(
+            "decapod session acquire failed: {}",
+            String::from_utf8_lossy(&session.stderr)
+        );
     }
-    
+
     let stdout = String::from_utf8_lossy(&session.stdout);
-    let password = stdout.lines()
+    let password = stdout
+        .lines()
         .find(|l| l.starts_with("Password: "))
         .expect("Password not found in output")
         .strip_prefix("Password: ")
@@ -90,7 +94,9 @@ fn run_rpc(dir: &std::path::Path, request: Value, agent_id: &str) -> Value {
         .expect("Failed to spawn decapod rpc");
 
     let mut stdin = child.stdin.take().expect("Failed to open stdin");
-    stdin.write_all(serde_json::to_string(&request).unwrap().as_bytes()).expect("Failed to write to stdin");
+    stdin
+        .write_all(serde_json::to_string(&request).unwrap().as_bytes())
+        .expect("Failed to write to stdin");
     drop(stdin);
 
     let output = child.wait_with_output().expect("Failed to read stdout");
@@ -100,6 +106,59 @@ fn run_rpc(dir: &std::path::Path, request: Value, agent_id: &str) -> Value {
         panic!("RPC failed: {}", String::from_utf8_lossy(&output.stderr));
     }
     serde_json::from_slice(&output.stdout).expect("Failed to parse JSON response")
+}
+
+fn sanitize_todo_component(todo_id: &str) -> String {
+    todo_id
+        .to_lowercase()
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || c == '-' || c == '_' {
+                c
+            } else {
+                '-'
+            }
+        })
+        .collect::<String>()
+}
+
+fn add_and_claim_task(
+    dir: &std::path::Path,
+    agent_id: &str,
+    password: &str,
+    title: &str,
+) -> String {
+    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args([
+            "todo", "add", title, "--owner", agent_id, "--format", "json",
+        ])
+        .current_dir(dir)
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_SESSION_PASSWORD", password)
+        .output()
+        .expect("todo add");
+    assert!(
+        out.status.success(),
+        "todo add failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let add_json: serde_json::Value =
+        serde_json::from_slice(&out.stdout).expect("parse todo add json");
+    let task_id = add_json["id"].as_str().expect("task id").to_string();
+
+    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["todo", "claim", "--id", &task_id, "--agent", agent_id])
+        .current_dir(dir)
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_SESSION_PASSWORD", password)
+        .output()
+        .expect("todo claim");
+    assert!(
+        out.status.success(),
+        "todo claim failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    task_id
 }
 
 #[test]
@@ -115,29 +174,47 @@ fn test_mandatory_todo_enforcement() {
 
     let res = run_rpc(&dir, request.clone(), agent_id);
     // It should FAIL because of mandatory todo
-    assert!(!res["success"].as_bool().unwrap(), "agent.init should fail when no tasks exist");
-    
+    assert!(
+        !res["success"].as_bool().unwrap(),
+        "agent.init should fail when no tasks exist"
+    );
+
     // Check error message
     let error = res["error"]["message"].as_str().unwrap();
-    assert!(error.contains("Mandate Violation"), "Error should be mandate violation");
-    
+    assert!(
+        error.contains("Mandate Violation"),
+        "Error should be mandate violation"
+    );
+
     let hint = res["blocked_by"][0]["resolve_hint"].as_str().unwrap();
-    assert!(hint.contains("create and claim a `todo`"), "Hint should mention todo");
+    assert!(
+        hint.contains("create and claim a `todo`"),
+        "Hint should mention todo"
+    );
 
     // 2. Add a task for this agent
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["todo", "add", "Test Task", "--owner", agent_id, "--format", "json"])
+        .args([
+            "todo",
+            "add",
+            "Test Task",
+            "--owner",
+            agent_id,
+            "--format",
+            "json",
+        ])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", agent_id)
         .env("DECAPOD_SESSION_PASSWORD", &password)
         .output()
         .expect("todo add");
-    
+
     if !out.status.success() {
         panic!("todo add failed: {}", String::from_utf8_lossy(&out.stderr));
     }
-    
-    let add_json: serde_json::Value = serde_json::from_slice(&out.stdout).expect("parse todo add json");
+
+    let add_json: serde_json::Value =
+        serde_json::from_slice(&out.stdout).expect("parse todo add json");
     let task_id = add_json["id"].as_str().expect("task id").to_string();
 
     // 3. Claim the task
@@ -148,9 +225,12 @@ fn test_mandatory_todo_enforcement() {
         .env("DECAPOD_SESSION_PASSWORD", &password)
         .output()
         .expect("todo claim");
-        
+
     if !out.status.success() {
-        panic!("todo claim failed: {}", String::from_utf8_lossy(&out.stderr));
+        panic!(
+            "todo claim failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
     }
 
     println!("Task ID: {}", task_id);
@@ -162,25 +242,97 @@ fn test_mandatory_todo_enforcement() {
         .env("DECAPOD_SESSION_PASSWORD", &password)
         .output()
         .expect("todo get");
-    println!("Task state stdout: {}", String::from_utf8_lossy(&out.stdout));
-    println!("Task state stderr: {}", String::from_utf8_lossy(&out.stderr));
+    println!(
+        "Task state stdout: {}",
+        String::from_utf8_lossy(&out.stdout)
+    );
+    println!(
+        "Task state stderr: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 
     // 4. Run agent.init again
     let res2 = run_rpc(&dir, request.clone(), agent_id);
     if !res2["success"].as_bool().unwrap() {
-        println!("agent.init failed. Response: {}", serde_json::to_string_pretty(&res2).unwrap());
+        println!(
+            "agent.init failed. Response: {}",
+            serde_json::to_string_pretty(&res2).unwrap()
+        );
     }
-    assert!(res2["success"].as_bool().unwrap(), "agent.init should succeed after claiming task");
-    
+    assert!(
+        res2["success"].as_bool().unwrap(),
+        "agent.init should succeed after claiming task"
+    );
+
     // Check allowed_next_ops
     let ops2 = res2["allowed_next_ops"].as_array().unwrap();
     // todo.add should NOT be mandatory (or maybe not even listed as high priority)
     // Actually allowed_next_ops usually returns standard ops.
     // My code only inserts if EMPTY.
     // So "MANDATORY" reason should be gone.
-    
+
     if let Some(op) = ops2.iter().find(|op| op["op"] == "todo.add") {
         let reason = op["reason"].as_str().unwrap_or("");
-        assert!(!reason.contains("MANDATORY"), "todo.add should NOT be mandatory when task exists");
+        assert!(
+            !reason.contains("MANDATORY"),
+            "todo.add should NOT be mandatory when task exists"
+        );
     }
+}
+
+#[test]
+fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
+    let (_tmp, dir, password) = setup_workspace();
+    let agent_id = "test-agent-enforce";
+
+    let no_todo = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["workspace", "ensure"])
+        .current_dir(&dir)
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .output()
+        .expect("workspace ensure");
+    assert!(
+        !no_todo.status.success(),
+        "workspace ensure should fail without claimed todo"
+    );
+    let no_todo_stderr = String::from_utf8_lossy(&no_todo.stderr);
+    assert!(
+        no_todo_stderr.contains("Claim a todo first"),
+        "expected todo claim guidance, got: {}",
+        no_todo_stderr
+    );
+
+    let task_id = add_and_claim_task(&dir, agent_id, &password, "Workspace Scoped Task");
+    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["workspace", "ensure"])
+        .current_dir(&dir)
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .output()
+        .expect("workspace ensure");
+    assert!(
+        out.status.success(),
+        "workspace ensure failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let json: serde_json::Value =
+        serde_json::from_slice(&out.stdout).expect("workspace ensure json");
+    let branch = json["branch"].as_str().expect("branch");
+    let worktree_path = json["worktree_path"].as_str().expect("worktree_path");
+    let sanitized_todo = sanitize_todo_component(&task_id);
+
+    assert!(
+        branch.contains(&task_id) || branch.contains(&sanitized_todo),
+        "branch '{}' must contain todo id '{}'",
+        branch,
+        task_id
+    );
+    assert!(
+        worktree_path.contains(&task_id) || worktree_path.contains(&sanitized_todo),
+        "worktree path '{}' must contain todo id '{}'",
+        worktree_path,
+        task_id
+    );
 }

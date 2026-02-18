@@ -827,7 +827,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
                 // Bin 4: Transactional (TODO)
                 todo::initialize_todo_db(data_root)?;
-                
+
                 // Bin 1: Governance
                 health::initialize_health_db(data_root)?;
                 policy::initialize_policy_db(data_root)?;
@@ -996,9 +996,11 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
 fn requires_session_token(command: &Command) -> bool {
     match command {
         // Bootstrap/session lifecycle + version + capabilities are sessionless.
-        Command::Init(_) | Command::Session(_) | Command::Version | Command::Capabilities(_) | Command::Trace(_) => {
-            false
-        }
+        Command::Init(_)
+        | Command::Session(_)
+        | Command::Version
+        | Command::Capabilities(_)
+        | Command::Trace(_) => false,
         Command::Data(DataCli {
             command: DataCommand::Schema(_),
         }) => false,
@@ -1007,7 +1009,7 @@ fn requires_session_token(command: &Command) -> bool {
                 !rpc_op_bypasses_session(op)
             } else {
                 // If op is not provided via flag, we'll check it after parsing JSON in run_rpc_command
-                false 
+                false
             }
         }
         _ => true,
@@ -1021,6 +1023,15 @@ struct AgentSessionRecord {
     password_hash: String,
     issued_at_epoch_secs: u64,
     expires_at_epoch_secs: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ConstitutionalAwarenessRecord {
+    agent_id: String,
+    session_token: Option<String>,
+    initialized_at_epoch_secs: u64,
+    context_resolved_at_epoch_secs: Option<u64>,
+    source_ops: Vec<String>,
 }
 
 fn now_epoch_secs() -> u64 {
@@ -1067,6 +1078,17 @@ fn sessions_dir(project_root: &Path) -> PathBuf {
 
 fn session_file_for_agent(project_root: &Path, agent_id: &str) -> PathBuf {
     sessions_dir(project_root).join(format!("{}.json", sanitize_agent_component(agent_id)))
+}
+
+fn awareness_dir(project_root: &Path) -> PathBuf {
+    project_root
+        .join(".decapod")
+        .join("generated")
+        .join("awareness")
+}
+
+fn awareness_file_for_agent(project_root: &Path, agent_id: &str) -> PathBuf {
+    awareness_dir(project_root).join(format!("{}.json", sanitize_agent_component(agent_id)))
 }
 
 fn hash_password(password: &str, token: &str) -> String {
@@ -1131,6 +1153,86 @@ fn write_agent_session(
     Ok(())
 }
 
+fn clear_agent_awareness(project_root: &Path, agent_id: &str) -> Result<(), error::DecapodError> {
+    let path = awareness_file_for_agent(project_root, agent_id);
+    if path.exists() {
+        fs::remove_file(path).map_err(error::DecapodError::IoError)?;
+    }
+    Ok(())
+}
+
+fn read_awareness_record(
+    project_root: &Path,
+    agent_id: &str,
+) -> Result<Option<ConstitutionalAwarenessRecord>, error::DecapodError> {
+    let path = awareness_file_for_agent(project_root, agent_id);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let raw = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
+    let rec: ConstitutionalAwarenessRecord = serde_json::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "invalid constitutional awareness record: {}",
+            e
+        ))
+    })?;
+    Ok(Some(rec))
+}
+
+fn write_awareness_record(
+    project_root: &Path,
+    rec: &ConstitutionalAwarenessRecord,
+) -> Result<(), error::DecapodError> {
+    let dir = awareness_dir(project_root);
+    fs::create_dir_all(&dir).map_err(error::DecapodError::IoError)?;
+    let path = awareness_file_for_agent(project_root, &rec.agent_id);
+    let body = serde_json::to_string_pretty(rec).map_err(|e| {
+        error::DecapodError::ValidationError(format!("awareness encode error: {}", e))
+    })?;
+    fs::write(&path, body).map_err(error::DecapodError::IoError)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&path)
+            .map_err(error::DecapodError::IoError)?
+            .permissions();
+        perms.set_mode(0o600);
+        fs::set_permissions(&path, perms).map_err(error::DecapodError::IoError)?;
+    }
+    Ok(())
+}
+
+fn mark_constitution_initialized(project_root: &Path) -> Result<(), error::DecapodError> {
+    let agent_id = current_agent_id();
+    let session_token = read_agent_session(project_root, &agent_id)?.map(|s| s.token);
+    let now = now_epoch_secs();
+    let rec = ConstitutionalAwarenessRecord {
+        agent_id,
+        session_token,
+        initialized_at_epoch_secs: now,
+        context_resolved_at_epoch_secs: None,
+        source_ops: vec!["agent.init".to_string()],
+    };
+    write_awareness_record(project_root, &rec)
+}
+
+fn mark_constitution_context_resolved(project_root: &Path) -> Result<(), error::DecapodError> {
+    let agent_id = current_agent_id();
+    let mut rec =
+        read_awareness_record(project_root, &agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
+            agent_id: agent_id.clone(),
+            session_token: read_agent_session(project_root, &agent_id)?.map(|s| s.token),
+            initialized_at_epoch_secs: now_epoch_secs(),
+            context_resolved_at_epoch_secs: None,
+            source_ops: Vec::new(),
+        });
+    rec.context_resolved_at_epoch_secs = Some(now_epoch_secs());
+    if !rec.source_ops.iter().any(|op| op == "context.resolve") {
+        rec.source_ops.push("context.resolve".to_string());
+    }
+    write_awareness_record(project_root, &rec)
+}
+
 fn cleanup_expired_sessions(
     project_root: &Path,
     store_root: &Path,
@@ -1169,6 +1271,9 @@ fn cleanup_expired_sessions(
 
     if !expired_agents.is_empty() {
         todo::cleanup_stale_agent_assignments(store_root, &expired_agents, "session.expired")?;
+        for agent_id in &expired_agents {
+            let _ = clear_agent_awareness(project_root, agent_id);
+        }
     }
 
     Ok(expired_agents)
@@ -1254,6 +1359,7 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
                 expires_at_epoch_secs: expires,
             };
             write_agent_session(&project_root, &rec)?;
+            clear_agent_awareness(&project_root, &agent_id)?;
 
             println!("Session acquired successfully.");
             println!("Agent: {}", agent_id);
@@ -1286,6 +1392,7 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
             let session_path = session_file_for_agent(&project_root, &agent_id);
             if session_path.exists() {
                 std::fs::remove_file(&session_path).map_err(error::DecapodError::IoError)?;
+                clear_agent_awareness(&project_root, &agent_id)?;
                 let _ = todo::cleanup_stale_agent_assignments(
                     &store_root,
                     std::slice::from_ref(&agent_id),
@@ -1359,6 +1466,52 @@ fn run_validate_command(
     };
 
     validate::run_validation(&store, &decapod_root, &decapod_root)
+}
+
+fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {
+    matches!(
+        op,
+        "workspace.publish"
+            | "store.upsert"
+            | "scaffold.apply_answer"
+            | "scaffold.generate_artifacts"
+    )
+}
+
+fn enforce_constitutional_awareness_for_rpc(
+    op: &str,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
+    if !rpc_op_requires_constitutional_awareness(op) {
+        return Ok(());
+    }
+
+    let agent_id = current_agent_id();
+    let rec = read_awareness_record(project_root, &agent_id)?;
+    let Some(rec) = rec else {
+        return Err(error::DecapodError::ValidationError(
+            "Constitutional awareness required before mutating operations. Run `decapod session acquire`, `decapod rpc --op agent.init`, then `decapod rpc --op context.resolve`."
+                .to_string(),
+        ));
+    };
+
+    if rec.context_resolved_at_epoch_secs.is_none() {
+        return Err(error::DecapodError::ValidationError(
+            "Constitutional awareness incomplete: `context.resolve` has not been executed after initialization. Run `decapod rpc --op context.resolve`."
+                .to_string(),
+        ));
+    }
+
+    if let Some(session) = read_agent_session(project_root, &agent_id)?
+        && rec.session_token.as_deref() != Some(session.token.as_str())
+    {
+        return Err(error::DecapodError::ValidationError(
+            "Constitutional awareness is stale for the active session. Re-run `decapod rpc --op agent.init` and `decapod rpc --op context.resolve`."
+                .to_string(),
+        ));
+    }
+
+    Ok(())
 }
 
 fn run_govern_command(
@@ -2104,6 +2257,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
     if !rpc_op_bypasses_session(&request.op) {
         ensure_session_valid()?;
     }
+    enforce_constitutional_awareness_for_rpc(&request.op, project_root)?;
 
     let project_store = Store {
         kind: StoreKind::Repo,
@@ -2115,11 +2269,16 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 
     // If any mandate is blocked, we fail the operation
     let blocked_mandate = mandates.iter().find(|m| {
-        mandate_blockers.iter().any(|b| b.message.contains(&m.fragment.title))
+        mandate_blockers
+            .iter()
+            .any(|b| b.message.contains(&m.fragment.title))
     });
 
     if let Some(mandate) = blocked_mandate {
-        let blocker = mandate_blockers.iter().find(|b| b.message.contains(&mandate.fragment.title)).unwrap();
+        let blocker = mandate_blockers
+            .iter()
+            .find(|b| b.message.contains(&mandate.fragment.title))
+            .unwrap();
         let response = error_response(
             request.id.clone(),
             request.op.clone(),
@@ -2127,7 +2286,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             "mandate_violation".to_string(),
             blocker.message.clone(),
             Some(blocker.clone()),
-            mandates
+            mandates,
         );
         println!("{}", serde_json::to_string_pretty(&response).unwrap());
         return Ok(());
@@ -2142,20 +2301,33 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             // Add mandatory todo ops if no active tasks
             let agent_id = current_agent_id();
             if agent_id != "unknown" {
-                if let Ok(mut tasks) = todo::list_tasks(&project_store.root, Some("open".to_string()), None, None, None, None) {
+                if let Ok(mut tasks) = todo::list_tasks(
+                    &project_store.root,
+                    Some("open".to_string()),
+                    None,
+                    None,
+                    None,
+                    None,
+                ) {
                     tasks.retain(|t| t.assigned_to == agent_id);
                     if tasks.is_empty() {
-                        allowed_ops.insert(0, AllowedOp {
-                            op: "todo.add".to_string(),
-                            reason: "MANDATORY: Create a task for your work".to_string(),
-                            required_params: vec!["title".to_string()],
-                        });
+                        allowed_ops.insert(
+                            0,
+                            AllowedOp {
+                                op: "todo.add".to_string(),
+                                reason: "MANDATORY: Create a task for your work".to_string(),
+                                required_params: vec!["title".to_string()],
+                            },
+                        );
                     } else if tasks.iter().any(|t| t.assigned_to.is_empty()) {
-                        allowed_ops.insert(0, AllowedOp {
-                            op: "todo.claim".to_string(),
-                            reason: "MANDATORY: Claim your assigned task".to_string(),
-                            required_params: vec!["id".to_string()],
-                        });
+                        allowed_ops.insert(
+                            0,
+                            AllowedOp {
+                                op: "todo.claim".to_string(),
+                                reason: "MANDATORY: Claim your assigned task".to_string(),
+                                required_params: vec!["id".to_string()],
+                            },
+                        );
                     }
                 }
             }
@@ -2186,8 +2358,16 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 vec![]
             };
 
-            let mut response =
-                success_response(request.id.clone(), request.op.clone(), request.params.clone(), None, vec![], context_capsule, allowed_ops, mandates.clone());
+            let mut response = success_response(
+                request.id.clone(),
+                request.op.clone(),
+                request.params.clone(),
+                None,
+                vec![],
+                context_capsule,
+                allowed_ops,
+                mandates.clone(),
+            );
             response.result = Some(serde_json::json!({
                 "environment_context": {
                     "repo_root": project_root.to_string_lossy(),
@@ -2199,6 +2379,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     "done_means": "decapod validate passes"
                 }
             }));
+            mark_constitution_initialized(project_root)?;
             response
         }
         "workspace.status" => {
@@ -2339,6 +2520,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let result = serde_json::json!({
                 "fragments": fragments
             });
+            mark_constitution_context_resolved(project_root)?;
 
             success_response(
                 request.id.clone(),
@@ -2394,7 +2576,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     vec![],
                     None,
                     vec![],
-                    mandates.clone()
+                    mandates.clone(),
                 ),
                 Some("knowledge") => success_response(
                     request.id.clone(),
@@ -2416,7 +2598,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     vec![],
                     None,
                     vec![],
-                    mandates.clone()
+                    mandates.clone(),
                 ),
                 Some("decision") => success_response(
                     request.id.clone(),
@@ -2438,7 +2620,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     vec![],
                     None,
                     vec![],
-                    mandates.clone()
+                    mandates.clone(),
                 ),
                 _ => error_response(
                     request.id.clone(),
@@ -2459,10 +2641,26 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 
             match entity {
                 Some("todo") => {
-                    let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    let description = payload.and_then(|p| p.get("description")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    let priority = payload.and_then(|p| p.get("priority")).and_then(|v| v.as_str()).unwrap_or("medium").to_string();
-                    let tags = payload.and_then(|p| p.get("tags")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let title = payload
+                        .and_then(|p| p.get("title"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let description = payload
+                        .and_then(|p| p.get("description"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let priority = payload
+                        .and_then(|p| p.get("priority"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("medium")
+                        .to_string();
+                    let tags = payload
+                        .and_then(|p| p.get("tags"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
 
                     let args = todo::TodoCommand::Add {
                         title,
@@ -2489,17 +2687,40 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         vec![],
                         None,
                         vec![],
-                        mandates.clone()
+                        mandates.clone(),
                     )
-                },
+                }
                 Some("knowledge") => {
-                    let id = payload.and_then(|p| p.get("id")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    let text = payload.and_then(|p| p.get("text")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    let provenance = payload.and_then(|p| p.get("provenance")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                    let id = payload
+                        .and_then(|p| p.get("id"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let title = payload
+                        .and_then(|p| p.get("title"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let text = payload
+                        .and_then(|p| p.get("text"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let provenance = payload
+                        .and_then(|p| p.get("provenance"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
 
                     db::initialize_knowledge_db(&project_store.root)?;
-                    knowledge::add_knowledge(&project_store, &id, &title, &text, &provenance, None)?;
+                    knowledge::add_knowledge(
+                        &project_store,
+                        &id,
+                        &title,
+                        &text,
+                        &provenance,
+                        None,
+                    )?;
                     success_response(
                         request.id.clone(),
                         request.op.clone(),
@@ -2511,15 +2732,27 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         vec![],
                         None,
                         vec![],
-                        mandates.clone()
+                        mandates.clone(),
                     )
-                },
+                }
                 Some("decision") => {
                     // Decisions land in federation for now as a common store
-                    let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    let rationale = payload.and_then(|p| p.get("rationale")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    let chosen = payload.and_then(|p| p.get("chosen")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    
+                    let title = payload
+                        .and_then(|p| p.get("title"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let rationale = payload
+                        .and_then(|p| p.get("rationale"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let chosen = payload
+                        .and_then(|p| p.get("chosen"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+
                     let content = format!("Decision: {}\nRationale: {}", chosen, rationale);
                     let node_id = federation::add_node(
                         &project_store,
@@ -2532,7 +2765,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         "",
                         "repo",
                         None,
-                        "agent"
+                        "agent",
                     )?;
                     success_response(
                         request.id.clone(),
@@ -2545,9 +2778,9 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         vec![],
                         None,
                         vec![],
-                        mandates.clone()
+                        mandates.clone(),
                     )
-                },
+                }
                 _ => error_response(
                     request.id.clone(),
                     request.op.clone(),
@@ -2566,8 +2799,12 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 
             match entity {
                 Some("todo") => {
-                    let status = query.and_then(|q| q.get("status")).and_then(|v| v.as_str()).map(|s| s.to_string());
-                    let tasks = todo::list_tasks(&project_store.root, status, None, None, None, None)?;
+                    let status = query
+                        .and_then(|q| q.get("status"))
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string());
+                    let tasks =
+                        todo::list_tasks(&project_store.root, status, None, None, None, None)?;
                     success_response(
                         request.id.clone(),
                         request.op.clone(),
@@ -2579,11 +2816,14 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         vec![],
                         None,
                         vec![],
-                        mandates.clone()
+                        mandates.clone(),
                     )
-                },
+                }
                 Some("knowledge") => {
-                    let text = query.and_then(|q| q.get("text")).and_then(|v| v.as_str()).unwrap_or("");
+                    let text = query
+                        .and_then(|q| q.get("text"))
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
                     db::initialize_knowledge_db(&project_store.root)?;
                     let entries = knowledge::search_knowledge(&project_store, text)?;
                     success_response(
@@ -2597,11 +2837,17 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         vec![],
                         None,
                         vec![],
-                        mandates.clone()
+                        mandates.clone(),
                     )
-                },
+                }
                 Some("decision") => {
-                    let nodes = plugins::federation_ext::list_nodes(&project_store.root, Some("decision".to_string()), None, None, None)?;
+                    let nodes = plugins::federation_ext::list_nodes(
+                        &project_store.root,
+                        Some("decision".to_string()),
+                        None,
+                        None,
+                        None,
+                    )?;
                     success_response(
                         request.id.clone(),
                         request.op.clone(),
@@ -2613,9 +2859,9 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         vec![],
                         None,
                         vec![],
-                        mandates.clone()
+                        mandates.clone(),
                     )
-                },
+                }
                 _ => error_response(
                     request.id.clone(),
                     request.op.clone(),
@@ -2632,36 +2878,32 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 kind: StoreKind::Repo,
                 root: project_root.join(".decapod").join("data"),
             };
-            
+
             // We need to capture the output of validate::run_validation
             // For now, we'll just run it and return a simple success result
             // as it currently prints to stdout and manages thread-local state.
             let res = validate::run_validation(&project_store, project_root, project_root);
-            
+
             match res {
-                Ok(_) => {
-                    success_response(
-                        request.id.clone(),
-                        request.op.clone(),
-                        request.params.clone(),
-                        Some(serde_json::json!({ "success": true })),
-                        vec![],
-                        None,
-                        vec![],
-                        mandates.clone()
-                    )
-                },
-                Err(e) => {
-                    error_response(
-                        request.id.clone(),
-                        request.op.clone(),
-                        request.params.clone(),
-                        "validation_failed".to_string(),
-                        e.to_string(),
-                        None,
-                        mandates.clone()
-                    )
-                }
+                Ok(_) => success_response(
+                    request.id.clone(),
+                    request.op.clone(),
+                    request.params.clone(),
+                    Some(serde_json::json!({ "success": true })),
+                    vec![],
+                    None,
+                    vec![],
+                    mandates.clone(),
+                ),
+                Err(e) => error_response(
+                    request.id.clone(),
+                    request.op.clone(),
+                    request.params.clone(),
+                    "validation_failed".to_string(),
+                    e.to_string(),
+                    None,
+                    mandates.clone(),
+                ),
             }
         }
         "scaffold.next_question" => {
@@ -2712,9 +2954,14 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 .ok_or_else(|| {
                     error::DecapodError::ValidationError("question_id required".to_string())
                 })?;
-            let value = request.params.clone().get("value").cloned().ok_or_else(|| {
-                error::DecapodError::ValidationError("value required".to_string())
-            })?;
+            let value = request
+                .params
+                .clone()
+                .get("value")
+                .cloned()
+                .ok_or_else(|| {
+                    error::DecapodError::ValidationError("value required".to_string())
+                })?;
 
             let mut interview = interview::init_interview("project".to_string());
             interview::apply_answer(&mut interview, question_id, value)?;
@@ -2931,7 +3178,11 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     .get("phase")
                     .cloned()
                     .and_then(|v| serde_json::from_value(v).ok()),
-                time_budget_s: request.params.clone().get("time_budget_s").and_then(|v| v.as_u64()),
+                time_budget_s: request
+                    .params
+                    .clone()
+                    .get("time_budget_s")
+                    .and_then(|v| v.as_u64()),
             };
 
             let engine = AssuranceEngine::new(project_root);

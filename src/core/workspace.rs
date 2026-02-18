@@ -13,6 +13,7 @@
 
 use crate::core::error::DecapodError;
 use crate::core::rpc::{AllowedOp, Blocker, BlockerKind};
+use crate::core::todo;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -74,7 +75,14 @@ pub struct WorkspaceConfig {
 }
 
 /// Protected branch patterns
-const PROTECTED_PATTERNS: &[&str] = &["main", "master", "production", "stable", "release/*", "hotfix/*"];
+const PROTECTED_PATTERNS: &[&str] = &[
+    "main",
+    "master",
+    "production",
+    "stable",
+    "release/*",
+    "hotfix/*",
+];
 
 /// Get workspace status
 pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, DecapodError> {
@@ -89,7 +97,7 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
         blockers.push(Blocker {
             kind: BlockerKind::ProtectedBranch,
             message: format!("Currently on protected branch '{}'. Decapod prohibits implementation work on protected refs.", git.current_branch),
-            resolve_hint: "Run `decapod workspace ensure --branch agent/<topic>` to create an isolated worktree.".to_string(),
+            resolve_hint: "Run `decapod todo claim --id <task-id>` then `decapod workspace ensure` to create a todo-scoped isolated worktree.".to_string(),
         });
         required_actions.push("Switch to working branch".to_string());
     }
@@ -116,7 +124,7 @@ fn check_git_status(repo_root: &Path) -> Result<GitStatus, DecapodError> {
     let is_protected = is_branch_protected(&current_branch);
     let in_worktree = is_worktree(repo_root)?;
     let has_local_mods = has_local_modifications(repo_root)?;
-    
+
     // Check if this is the main repository by seeing if .git is a directory
     let is_main_repo = repo_root.join(".git").is_dir();
 
@@ -124,18 +132,23 @@ fn check_git_status(repo_root: &Path) -> Result<GitStatus, DecapodError> {
         current_branch,
         is_protected,
         in_worktree,
-        worktree_path: if in_worktree { Some(repo_root.to_path_buf()) } else { None },
+        worktree_path: if in_worktree {
+            Some(repo_root.to_path_buf())
+        } else {
+            None
+        },
         is_main_repo,
         has_local_mods,
     })
 }
 
 fn check_container_status(_repo_root: &Path) -> Result<ContainerStatus, DecapodError> {
-    let in_container = Path::new("/.dockerenv").exists()
-        || std::env::var("CONTAINER_ID").is_ok();
+    let in_container = Path::new("/.dockerenv").exists() || std::env::var("CONTAINER_ID").is_ok();
 
     let container_id = if in_container {
-        std::fs::read_to_string("/etc/hostname").ok().map(|s| s.trim().to_string())
+        std::fs::read_to_string("/etc/hostname")
+            .ok()
+            .map(|s| s.trim().to_string())
     } else {
         None
     };
@@ -161,32 +174,68 @@ pub fn ensure_workspace(
     agent_id: &str,
 ) -> Result<WorkspaceStatus, DecapodError> {
     let mut status = get_workspace_status(repo_root)?;
+    let assigned_task_ids = get_assigned_open_task_ids(repo_root, agent_id)?;
+    if assigned_task_ids.is_empty() {
+        return Err(DecapodError::ValidationError(format!(
+            "No claimed/open todo assigned to agent '{}'. Claim a todo first with `decapod todo claim --id <task-id>` before spawning a worktree.",
+            agent_id
+        )));
+    }
 
     // If config is provided, check if we need to upgrade context (e.g. add container)
     let upgrade_container = config.as_ref().map(|c| c.use_container).unwrap_or(false);
 
-    // If we're already on a valid working branch AND no upgrade needed, we're good
-    if status.can_work && !status.git.is_protected && (!upgrade_container || status.container.in_container) {
+    // If we're already in a valid worktree, on todo-scoped branch, and no upgrade needed, we're good.
+    if status.git.in_worktree
+        && !branch_contains_any_todo_id(&status.git.current_branch, &assigned_task_ids)
+    {
+        return Err(DecapodError::ValidationError(format!(
+            "Current worktree branch '{}' is not todo-scoped. Branch must include one of assigned todo IDs: {}.",
+            status.git.current_branch,
+            assigned_task_ids.join(", ")
+        )));
+    }
+
+    if status.can_work
+        && status.git.in_worktree
+        && !status.git.is_protected
+        && (!upgrade_container || status.container.in_container)
+    {
         return Ok(status);
     }
 
-    let config = config.unwrap_or_else(|| {
+    let todo_scope = build_todo_scope_component(&assigned_task_ids);
+    let config = if let Some(cfg) = config {
+        if !branch_contains_any_todo_id(&cfg.branch, &assigned_task_ids) {
+            return Err(DecapodError::ValidationError(format!(
+                "Requested branch '{}' must include an assigned todo ID (one of: {}).",
+                cfg.branch,
+                assigned_task_ids.join(", ")
+            )));
+        }
+        cfg
+    } else {
         let ts = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
         WorkspaceConfig {
-            branch: format!("agent/{}/task-{}", sanitize_agent_id(agent_id), ts),
+            branch: format!(
+                "agent/{}/{}-{}",
+                sanitize_agent_id(agent_id),
+                todo_scope,
+                ts
+            ),
             use_container: false,
             base_image: None,
         }
-    });
+    };
 
     // 1. Ensure git worktree
     let worktree_path = if status.git.in_worktree {
         repo_root.to_path_buf()
     } else {
-        create_worktree(repo_root, &config.branch, agent_id)?
+        create_worktree(repo_root, &config.branch, agent_id, &todo_scope)?
     };
 
     // 2. Ensure container (if requested)
@@ -198,7 +247,7 @@ pub fn ensure_workspace(
             config.branch.replace('/', "-")
         );
         build_workspace_image(&worktree_path, &image_tag)?;
-        
+
         // Return blocker telling agent to enter container
         // We re-read status but override the blocker/container info
         status = get_workspace_status(&worktree_path)?;
@@ -211,7 +260,9 @@ pub fn ensure_workspace(
                 image_tag
             ),
         });
-        status.required_actions.push("Enter containerized workspace".to_string());
+        status
+            .required_actions
+            .push("Enter containerized workspace".to_string());
         return Ok(status);
     }
 
@@ -223,14 +274,16 @@ fn create_worktree(
     repo_root: &Path,
     branch: &str,
     agent_id: &str,
+    todo_scope: &str,
 ) -> Result<PathBuf, DecapodError> {
     let main_repo = get_main_repo_root(repo_root)?;
     let workspaces_dir = main_repo.join(".decapod").join("workspaces");
     std::fs::create_dir_all(&workspaces_dir).map_err(DecapodError::IoError)?;
 
     let worktree_name = format!(
-        "{}-{}",
+        "{}-{}-{}",
         sanitize_agent_id(agent_id),
+        todo_scope,
         branch.replace('/', "-")
     );
     let worktree_path = workspaces_dir.join(&worktree_name);
@@ -360,7 +413,7 @@ fn get_main_repo_root(current_dir: &Path) -> Result<PathBuf, DecapodError> {
 
     let common_dir = String::from_utf8_lossy(&output.stdout).trim().to_string();
     let common_path = Path::new(&common_dir);
-    
+
     // If common_dir is ".git", then current_dir IS the main repo
     if common_dir == ".git" {
         return get_repo_root(current_dir);
@@ -381,10 +434,14 @@ fn get_repo_root(start_dir: &Path) -> Result<PathBuf, DecapodError> {
         .map_err(DecapodError::IoError)?;
 
     if !output.status.success() {
-        return Err(DecapodError::ValidationError("Not in a git repository".to_string()));
+        return Err(DecapodError::ValidationError(
+            "Not in a git repository".to_string(),
+        ));
     }
 
-    Ok(PathBuf::from(String::from_utf8_lossy(&output.stdout).trim()))
+    Ok(PathBuf::from(
+        String::from_utf8_lossy(&output.stdout).trim(),
+    ))
 }
 
 fn is_branch_protected(branch: &str) -> bool {
@@ -404,25 +461,44 @@ fn is_branch_protected(branch: &str) -> bool {
 
 fn get_current_branch(repo_root: &Path) -> Result<String, DecapodError> {
     let output = Command::new("git")
-        .args(["-C", repo_root.to_str().unwrap_or("."), "branch", "--show-current"])
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "branch",
+            "--show-current",
+        ])
         .output()
         .map_err(DecapodError::IoError)?;
-    
+
     let branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
     if branch.is_empty() {
         // Fallback for detached HEAD
         let output = Command::new("git")
-            .args(["-C", repo_root.to_str().unwrap_or("."), "rev-parse", "--short", "HEAD"])
+            .args([
+                "-C",
+                repo_root.to_str().unwrap_or("."),
+                "rev-parse",
+                "--short",
+                "HEAD",
+            ])
             .output()
             .map_err(DecapodError::IoError)?;
-        return Ok(format!("detached-{}", String::from_utf8_lossy(&output.stdout).trim()));
+        return Ok(format!(
+            "detached-{}",
+            String::from_utf8_lossy(&output.stdout).trim()
+        ));
     }
     Ok(branch)
 }
 
 fn is_worktree(repo_root: &Path) -> Result<bool, DecapodError> {
     let output = Command::new("git")
-        .args(["-C", repo_root.to_str().unwrap_or("."), "rev-parse", "--git-dir"])
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "rev-parse",
+            "--git-dir",
+        ])
         .output()
         .map_err(DecapodError::IoError)?;
 
@@ -433,7 +509,12 @@ fn is_worktree(repo_root: &Path) -> Result<bool, DecapodError> {
 
 fn has_local_modifications(repo_root: &Path) -> Result<bool, DecapodError> {
     let output = Command::new("git")
-        .args(["-C", repo_root.to_str().unwrap_or("."), "status", "--porcelain"])
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "status",
+            "--porcelain",
+        ])
         .output()
         .map_err(DecapodError::IoError)?;
 
@@ -447,6 +528,56 @@ fn sanitize_agent_id(agent_id: &str) -> String {
         .replace("--", "-")
         .trim_matches('-')
         .to_string()
+}
+
+fn sanitize_todo_component(todo_id: &str) -> String {
+    todo_id
+        .to_lowercase()
+        .replace(|c: char| !c.is_alphanumeric() && c != '-' && c != '_', "-")
+        .replace("--", "-")
+        .trim_matches('-')
+        .to_string()
+}
+
+fn build_todo_scope_component(todo_ids: &[String]) -> String {
+    if todo_ids.is_empty() {
+        return "todo-unassigned".to_string();
+    }
+    let head = sanitize_todo_component(&todo_ids[0]);
+    if todo_ids.len() == 1 {
+        return format!("todo-{}", head);
+    }
+    format!("todo-{}-plus-{}", head, todo_ids.len() - 1)
+}
+
+fn branch_contains_any_todo_id(branch: &str, todo_ids: &[String]) -> bool {
+    let branch_lower = branch.to_lowercase();
+    todo_ids.iter().any(|id| {
+        let id_lower = id.to_lowercase();
+        let id_sanitized = sanitize_todo_component(id);
+        branch_lower.contains(&id_lower) || branch_lower.contains(&id_sanitized)
+    })
+}
+
+fn get_assigned_open_task_ids(
+    repo_root: &Path,
+    agent_id: &str,
+) -> Result<Vec<String>, DecapodError> {
+    let main_repo = get_main_repo_root(repo_root)?;
+    let store_root = main_repo.join(".decapod").join("data");
+    let mut tasks = todo::list_tasks(
+        &store_root,
+        Some("open".to_string()),
+        None,
+        None,
+        None,
+        None,
+    )?;
+    tasks.retain(|t| t.assigned_to == agent_id);
+    let mut ids: Vec<String> = tasks.into_iter().map(|t| t.id).collect();
+    ids.sort();
+    ids.dedup();
+    Ok(ids)
 }
 
 pub fn get_allowed_ops(status: &WorkspaceStatus) -> Vec<AllowedOp> {
