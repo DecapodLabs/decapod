@@ -120,6 +120,6 @@ fn test_health_db_init() {
 
     initialize_health_db(&store.root).unwrap();
 
-    let db_path = store.root.join("health.db");
+    let db_path = store.root.join("governance.db");
     assert!(db_path.exists());
 }

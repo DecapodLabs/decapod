@@ -46,6 +46,13 @@ fn setup_workspace() -> (TempDir, PathBuf) {
         String::from_utf8_lossy(&session.stderr)
     );
 
+    // Warm up the TODO DB to avoid migration race conditions in threads
+    let _ = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["todo", "list"])
+        .current_dir(&dir)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .output();
+
     (tmp, dir)
 }
 

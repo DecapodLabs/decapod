@@ -1,4 +1,4 @@
-use decapod::plugins::todo;
+use decapod::core::todo;
 use regex::Regex;
 use std::collections::HashSet;
 use std::fs;

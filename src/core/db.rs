@@ -209,6 +209,7 @@ pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
         conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODES)?;
         conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
         conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EDGES)?;
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EVENTS)?;
         conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_TYPE)?;
         conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_STATUS)?;
         conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_SCOPE)?;

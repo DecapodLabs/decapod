@@ -194,7 +194,9 @@ impl DbBroker {
             .open(&self.audit_log_path)
             .map_err(error::DecapodError::IoError)?;
 
-        writeln!(f, "{}", serde_json::to_string(&ev).unwrap())
+        let mut line = serde_json::to_string(&ev).unwrap();
+        line.push('\n');
+        f.write_all(line.as_bytes())
             .map_err(error::DecapodError::IoError)?;
         Ok(())
     }

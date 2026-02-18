@@ -490,7 +490,7 @@ fn validate_entrypoint_invariants(
             "Per-agent session password mandate language",
         ),
         (
-            ".decapod` files are accessed only via `decapod` CLI",
+            ".decapod files are accessed only via decapod CLI",
             "Jail rule: .decapod access is CLI-only",
         ),
         (
@@ -586,7 +586,7 @@ fn validate_entrypoint_invariants(
         }
 
         // Must include explicit jail rule for .decapod access
-        if agent_content.contains("`.decapod` files only via `decapod` CLI") {
+        if agent_content.contains(".decapod files are accessed only via decapod CLI") {
             pass(
                 &format!("{} includes .decapod CLI-only jail rule", agent_file),
                 pass_count,
@@ -1902,7 +1902,7 @@ fn validate_tooling_gate(
 /// Evaluates a set of mandates and returns any active blockers.
 pub fn evaluate_mandates(
     project_root: &Path,
-    _store: &Store,
+    store: &Store,
     mandates: &[crate::core::docs::Mandate],
 ) -> Vec<crate::core::rpc::Blocker> {
     use crate::core::rpc::{Blocker, BlockerKind};
@@ -1937,6 +1937,29 @@ pub fn evaluate_mandates(
             "gate.session.active" => {
                 // This is usually handled by the RPC kernel session check, 
                 // but we can add a blocker if we want more detail.
+            }
+            "gate.todo.active_task" => {
+                let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+                if agent_id != "unknown" {
+                    let mut active_tasks = crate::core::todo::list_tasks(&store.root, Some("open".to_string()), None, None, None, None);
+                    if let Ok(ref mut tasks) = active_tasks {
+                        let pre_filter_count = tasks.len();
+                        let debug_info = if !tasks.is_empty() {
+                            format!("First task assigned to: '{}', My ID: '{}'", tasks[0].assigned_to, agent_id)
+                        } else {
+                            format!("No tasks found. My ID: '{}', Root: '{}'", agent_id, project_root.display())
+                        };
+                        
+                        tasks.retain(|t| t.assigned_to == agent_id);
+                        if tasks.is_empty() {
+                            blockers.push(Blocker {
+                                kind: BlockerKind::MissingProof,
+                                message: format!("Mandate Violation: {} (Pre-filter: {}, {})", mandate.fragment.title, pre_filter_count, debug_info),
+                                resolve_hint: "You MUST create and claim a `todo` before starting work. Run `decapod todo add \"...\"` then `decapod todo claim --id <id>`.".to_string(),
+                            });
+                        }
+                    }
+                }
             }
             "gate.validation.pass" => {
                 // Future: check a 'last_validated' marker in the store

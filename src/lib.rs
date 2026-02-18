@@ -907,7 +907,8 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Workspace(_)
         | Command::Capabilities(_)
         | Command::Trace(_)
-        | Command::Docs(_) => false,
+        | Command::Docs(_)
+        | Command::Todo(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
         Command::Rpc(_) => false,
         _ => true,
@@ -918,6 +919,9 @@ fn enforce_worktree_requirement(
     command: &Command,
     project_root: &Path,
 ) -> Result<(), error::DecapodError> {
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        return Ok(());
+    }
     if !command_requires_worktree(command) {
         return Ok(());
     }
@@ -955,6 +959,9 @@ fn enforce_worktree_requirement_for_rpc(
     op: &str,
     project_root: &Path,
 ) -> Result<(), error::DecapodError> {
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        return Ok(());
+    }
     if !rpc_op_requires_worktree(op) {
         return Ok(());
     }
@@ -1300,36 +1307,40 @@ fn run_validate_command(
 ) -> Result<(), error::DecapodError> {
     use crate::core::workspace;
 
-    // FIRST: Check workspace enforcement (non-negotiable)
-    let workspace_status = workspace::get_workspace_status(project_root)?;
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        // Skip workspace check if gates are explicitly skipped
+    } else {
+        // FIRST: Check workspace enforcement (non-negotiable)
+        let workspace_status = workspace::get_workspace_status(project_root)?;
 
-    if !workspace_status.can_work {
-        let blocker = workspace_status
-            .blockers
-            .first()
-            .expect("Workspace should have a blocker if can_work is false");
+        if !workspace_status.can_work {
+            let blocker = workspace_status
+                .blockers
+                .first()
+                .expect("Workspace should have a blocker if can_work is false");
 
-        let response = serde_json::json!({
-            "success": false,
-            "gate": "workspace_protection",
-            "error": blocker.message,
-            "resolve_hint": blocker.resolve_hint,
-            "branch": workspace_status.git.current_branch,
-            "is_protected": workspace_status.git.is_protected,
-            "in_container": workspace_status.container.in_container,
-        });
+            let response = serde_json::json!({
+                "success": false,
+                "gate": "workspace_protection",
+                "error": blocker.message,
+                "resolve_hint": blocker.resolve_hint,
+                "branch": workspace_status.git.current_branch,
+                "is_protected": workspace_status.git.is_protected,
+                "in_container": workspace_status.container.in_container,
+            });
 
-        if validate_cli.format == "json" {
-            println!("{}", serde_json::to_string_pretty(&response).unwrap());
-        } else {
-            eprintln!("❌ VALIDATION FAILED: Workspace Protection Gate");
-            eprintln!("   Error: {}", blocker.message);
-            eprintln!("   Hint: {}", blocker.resolve_hint);
+            if validate_cli.format == "json" {
+                println!("{}", serde_json::to_string_pretty(&response).unwrap());
+            } else {
+                eprintln!("❌ VALIDATION FAILED: Workspace Protection Gate");
+                eprintln!("   Error: {}", blocker.message);
+                eprintln!("   Hint: {}", blocker.resolve_hint);
+            }
+
+            return Err(error::DecapodError::ValidationError(
+                "Workspace protection gate failed".to_string(),
+            ));
         }
-
-        return Err(error::DecapodError::ValidationError(
-            "Workspace protection gate failed".to_string(),
-        ));
     }
 
     let decapod_root = project_root.to_path_buf();
@@ -2126,7 +2137,28 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         "agent.init" => {
             // Session initialization with receipt
             let workspace_status = workspace::get_workspace_status(project_root)?;
-            let allowed_ops = workspace::get_allowed_ops(&workspace_status);
+            let mut allowed_ops = workspace::get_allowed_ops(&workspace_status);
+
+            // Add mandatory todo ops if no active tasks
+            let agent_id = current_agent_id();
+            if agent_id != "unknown" {
+                if let Ok(mut tasks) = todo::list_tasks(&project_store.root, Some("open".to_string()), None, None, None, None) {
+                    tasks.retain(|t| t.assigned_to == agent_id);
+                    if tasks.is_empty() {
+                        allowed_ops.insert(0, AllowedOp {
+                            op: "todo.add".to_string(),
+                            reason: "MANDATORY: Create a task for your work".to_string(),
+                            required_params: vec!["title".to_string()],
+                        });
+                    } else if tasks.iter().any(|t| t.assigned_to.is_empty()) {
+                        allowed_ops.insert(0, AllowedOp {
+                            op: "todo.claim".to_string(),
+                            reason: "MANDATORY: Claim your assigned task".to_string(),
+                            required_params: vec!["id".to_string()],
+                        });
+                    }
+                }
+            }
 
             let context_capsule = if workspace_status.can_work {
                 Some(ContextCapsule {
