@@ -76,6 +76,8 @@ embedded_docs! {
     "methodology/SOUL.md" => EMBEDDED_METHODOLOGY_SOUL,
     "methodology/KNOWLEDGE.md" => EMBEDDED_METHODOLOGY_KNOWLEDGE,
     "methodology/MEMORY.md" => EMBEDDED_METHODOLOGY_MEMORY,
+    "methodology/TESTING.md" => EMBEDDED_METHODOLOGY_TESTING,
+    "methodology/CI_CD.md" => EMBEDDED_METHODOLOGY_CI_CD,
 
     // Architecture: Domain patterns
     "architecture/DATA.md" => EMBEDDED_ARCHITECTURE_DATA,
