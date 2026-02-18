@@ -352,7 +352,7 @@ dependencies = [
 
 [[package]]
 name = "decapod"
-version = "0.26.3"
+version = "0.27.0"
 dependencies = [
  "anyhow",
  "chrono",
