@@ -76,16 +76,13 @@ AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
 
 ## Getting Started 🚀
 
-Install Decapod with Cargo, initialize it in your repository, and let your agent operate through the Decapod contract instead of direct ad-hoc repo mutation.
-
-```text
-$ decapod validate
-  ✅ constitution/core    PASS
-  ✅ workspace isolation  PASS
-  ❌ uncommitted changes  FAIL — 2 files modified outside worktree
+```
+cargo install decapod
+decapod init
 ```
 
-For command details and full usage, use `decapod --help`.
+Then use your agents as normal. Decapod works on your behalf from inside the agent.
+Override defaults in `.decapod/OVERRIDE.md`.
 
 ## Contributing 🤝
 
