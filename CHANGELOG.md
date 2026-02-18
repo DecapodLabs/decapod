@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.8](https://github.com/DecapodLabs/decapod/compare/v0.28.7...v0.28.8) - 2026-02-18
+
+### Fixed
+
+- *(clippy)* resolve denied lint violations
+- *(tests)* acquire session before validate in rpc suite
+- *(validate)* require session password before worktree gate
+
+### Other
+
+- *(fmt)* apply rustfmt-normalized ordering and wrapping
+
 ## [0.28.7](https://github.com/DecapodLabs/decapod/compare/v0.28.6...v0.28.7) - 2026-02-18
 
 ### Fixed
