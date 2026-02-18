@@ -82,7 +82,10 @@ decapod init
 ```
 
 Then use your agents as normal. Decapod works on your behalf from inside the agent.
-Override defaults in `.decapod/OVERRIDE.md`.
+
+Learn more about the [embedded constitution](constitution/core/DECAPOD.md).
+
+Override constsitution defaults with plain English in `.decapod/OVERRIDE.md`.
 
 ## Contributing 🤝
 
