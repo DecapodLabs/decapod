@@ -497,6 +497,10 @@ fn validate_entrypoint_invariants(
             "Interface abstraction boundary",
             "Control-plane opacity language",
         ),
+        (
+            "Strict Dependency: You are strictly bound to the Decapod control plane",
+            "Agent dependency enforcement language",
+        ),
         ("✅", "Four invariants checklist format"),
     ];
 
