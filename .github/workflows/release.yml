@@ -4,6 +4,16 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Release workflow mode"
+        required: false
+        default: "full"
+        type: choice
+        options:
+          - full
+          - release-pr-only
 
 permissions:
   contents: write
@@ -94,7 +104,7 @@ jobs:
   release-publish:
     name: Release & Publish
     runs-on: ubuntu-latest
-    if: github.repository == 'DecapodLabs/decapod'
+    if: github.repository == 'DecapodLabs/decapod' && (github.event_name != 'workflow_dispatch' || github.event.inputs.mode != 'release-pr-only')
     environment: release
     concurrency:
       group: release-publish

@@ -860,7 +860,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                     run_validate_command(validate_cli, &project_root, &project_store)?;
                 }
                 Command::Version => show_version_info()?,
-                Command::Docs(docs_cli) => docs_cli::run_docs_cli(docs_cli)?,
+                Command::Docs(docs_cli) => {
+                    let result = docs_cli::run_docs_cli(docs_cli)?;
+                    if result.ingested_core_constitution {
+                        mark_core_constitution_ingested(&project_root)?;
+                    }
+                }
                 Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
                 Command::Govern(govern_cli) => {
                     run_govern_command(govern_cli, &project_store, &store_root)?;
@@ -999,6 +1004,8 @@ fn requires_session_token(command: &Command) -> bool {
         Command::Init(_)
         | Command::Session(_)
         | Command::Version
+        | Command::Validate(_)
+        | Command::Docs(_)
         | Command::Capabilities(_)
         | Command::Trace(_) => false,
         Command::Data(DataCli {
@@ -1030,6 +1037,8 @@ struct ConstitutionalAwarenessRecord {
     agent_id: String,
     session_token: Option<String>,
     initialized_at_epoch_secs: u64,
+    validated_at_epoch_secs: Option<u64>,
+    core_constitution_ingested_at_epoch_secs: Option<u64>,
     context_resolved_at_epoch_secs: Option<u64>,
     source_ops: Vec<String>,
 }
@@ -1206,12 +1215,24 @@ fn mark_constitution_initialized(project_root: &Path) -> Result<(), error::Decap
     let agent_id = current_agent_id();
     let session_token = read_agent_session(project_root, &agent_id)?.map(|s| s.token);
     let now = now_epoch_secs();
+    let existing = read_awareness_record(project_root, &agent_id)?;
+    let mut source_ops = existing
+        .as_ref()
+        .map(|r| r.source_ops.clone())
+        .unwrap_or_default();
+    if !source_ops.iter().any(|op| op == "agent.init") {
+        source_ops.push("agent.init".to_string());
+    }
     let rec = ConstitutionalAwarenessRecord {
         agent_id,
         session_token,
         initialized_at_epoch_secs: now,
-        context_resolved_at_epoch_secs: None,
-        source_ops: vec!["agent.init".to_string()],
+        validated_at_epoch_secs: existing.as_ref().and_then(|r| r.validated_at_epoch_secs),
+        core_constitution_ingested_at_epoch_secs: existing
+            .as_ref()
+            .and_then(|r| r.core_constitution_ingested_at_epoch_secs),
+        context_resolved_at_epoch_secs: existing.and_then(|r| r.context_resolved_at_epoch_secs),
+        source_ops,
     };
     write_awareness_record(project_root, &rec)
 }
@@ -1223,12 +1244,52 @@ fn mark_constitution_context_resolved(project_root: &Path) -> Result<(), error::
             agent_id: agent_id.clone(),
             session_token: read_agent_session(project_root, &agent_id)?.map(|s| s.token),
             initialized_at_epoch_secs: now_epoch_secs(),
+            validated_at_epoch_secs: None,
+            core_constitution_ingested_at_epoch_secs: None,
             context_resolved_at_epoch_secs: None,
             source_ops: Vec::new(),
         });
     rec.context_resolved_at_epoch_secs = Some(now_epoch_secs());
     if !rec.source_ops.iter().any(|op| op == "context.resolve") {
         rec.source_ops.push("context.resolve".to_string());
+    }
+    write_awareness_record(project_root, &rec)
+}
+
+fn mark_validation_completed(project_root: &Path) -> Result<(), error::DecapodError> {
+    let agent_id = current_agent_id();
+    let mut rec =
+        read_awareness_record(project_root, &agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
+            agent_id: agent_id.clone(),
+            session_token: read_agent_session(project_root, &agent_id)?.map(|s| s.token),
+            initialized_at_epoch_secs: now_epoch_secs(),
+            validated_at_epoch_secs: None,
+            core_constitution_ingested_at_epoch_secs: None,
+            context_resolved_at_epoch_secs: None,
+            source_ops: Vec::new(),
+        });
+    rec.validated_at_epoch_secs = Some(now_epoch_secs());
+    if !rec.source_ops.iter().any(|op| op == "validate") {
+        rec.source_ops.push("validate".to_string());
+    }
+    write_awareness_record(project_root, &rec)
+}
+
+fn mark_core_constitution_ingested(project_root: &Path) -> Result<(), error::DecapodError> {
+    let agent_id = current_agent_id();
+    let mut rec =
+        read_awareness_record(project_root, &agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
+            agent_id: agent_id.clone(),
+            session_token: read_agent_session(project_root, &agent_id)?.map(|s| s.token),
+            initialized_at_epoch_secs: now_epoch_secs(),
+            validated_at_epoch_secs: None,
+            core_constitution_ingested_at_epoch_secs: None,
+            context_resolved_at_epoch_secs: None,
+            source_ops: Vec::new(),
+        });
+    rec.core_constitution_ingested_at_epoch_secs = Some(now_epoch_secs());
+    if !rec.source_ops.iter().any(|op| op == "docs.ingest") {
+        rec.source_ops.push("docs.ingest".to_string());
     }
     write_awareness_record(project_root, &rec)
 }
@@ -1465,7 +1526,9 @@ fn run_validate_command(
         _ => project_store.clone(),
     };
 
-    validate::run_validation(&store, &decapod_root, &decapod_root)
+    validate::run_validation(&store, &decapod_root, &decapod_root)?;
+    mark_validation_completed(project_root)?;
+    Ok(())
 }
 
 fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {
@@ -1490,10 +1553,24 @@ fn enforce_constitutional_awareness_for_rpc(
     let rec = read_awareness_record(project_root, &agent_id)?;
     let Some(rec) = rec else {
         return Err(error::DecapodError::ValidationError(
-            "Constitutional awareness required before mutating operations. Run `decapod session acquire`, `decapod rpc --op agent.init`, then `decapod rpc --op context.resolve`."
+            "Constitutional awareness required before mutating operations. Run `decapod validate`, then `decapod docs ingest`, then `decapod session acquire`, `decapod rpc --op agent.init`, and `decapod rpc --op context.resolve`."
                 .to_string(),
         ));
     };
+
+    if rec.validated_at_epoch_secs.is_none() {
+        return Err(error::DecapodError::ValidationError(
+            "Constitutional awareness incomplete: `decapod validate` has not completed for this agent context. Run `decapod validate` first."
+                .to_string(),
+        ));
+    }
+
+    if rec.core_constitution_ingested_at_epoch_secs.is_none() {
+        return Err(error::DecapodError::ValidationError(
+            "Constitutional awareness incomplete: core constitution ingestion missing. Run `decapod docs ingest` to ingest `constitution/core/*.md` before mutating operations."
+                .to_string(),
+        ));
+    }
 
     if rec.context_resolved_at_epoch_secs.is_none() {
         return Err(error::DecapodError::ValidationError(
