@@ -6,9 +6,9 @@ use crate::core::store::Store;
 use crate::plugins::container;
 use crate::plugins::federation;
 use crate::plugins::knowledge;
+use crate::plugins::policy;
 use crate::plugins::teammate;
 use crate::plugins::verify;
-use crate::plugins::policy;
 use clap::{Parser, Subcommand, ValueEnum};
 use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use serde::{Deserialize, Serialize};
@@ -515,6 +515,14 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         .and_then(|s| s.parse::<u32>().ok())
         .unwrap_or(0);
 
+    // Always enforce critical additive tables/indexes even when schema_version is current.
+    // Cached CI databases can carry stale meta while missing newer tables.
+    conn.execute(schemas::TODO_DB_SCHEMA_AGENT_TRUST, [])?;
+    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_TRUST_LEVEL, [])?;
+    conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
+    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
+    seed_default_risk_zones(conn)?;
+
     if current_version >= schemas::TODO_SCHEMA_VERSION {
         return Ok(());
     }
@@ -605,9 +613,6 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
         backfill_task_dependencies(conn)?;
     }
-    // Keep defaults current across upgrades; INSERT OR IGNORE is idempotent.
-    seed_default_risk_zones(conn)?;
-
     conn.execute(
         "INSERT INTO meta(key, value) VALUES('schema_version', ?1)
          ON CONFLICT(key) DO UPDATE SET value=excluded.value",

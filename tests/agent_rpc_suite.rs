@@ -1,7 +1,16 @@
 use std::io::Write;
 use std::process::{Command, Stdio};
+use std::sync::{Mutex, OnceLock};
+
+static RUN_RPC_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 fn run_rpc(request: serde_json::Value) -> serde_json::Value {
+    let lock = RUN_RPC_LOCK.get_or_init(|| Mutex::new(()));
+    let _guard = match lock.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+
     // We need a stable agent ID and session for enforcement
     let agent_id = "unknown";
 
@@ -19,7 +28,8 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
         .expect("validate");
     assert!(
         validate_out.status.success(),
-        "validate failed: {}",
+        "validate failed:\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&validate_out.stdout),
         String::from_utf8_lossy(&validate_out.stderr)
     );
 
@@ -214,8 +224,8 @@ fn test_rpc_trace_and_redaction() {
     let _res = run_rpc(request);
 
     // Export traces to verify
-    let mut child = Command::new("cargo")
-        .args(["run", "--", "trace", "export", "--last", "1"])
+    let child = Command::new("cargo")
+        .args(["run", "--", "trace", "export", "--last", "50"])
         .env("DECAPOD_SESSION_PASSWORD", "test") // Dummy
         .env("DECAPOD_AGENT_ID", "test") // Dummy
         .stdout(Stdio::piped())
