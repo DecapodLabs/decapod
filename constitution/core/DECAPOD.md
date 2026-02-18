@@ -21,6 +21,7 @@ This produces a session receipt and tells you what's allowed next.
 - **Deterministic**: Same inputs produce same outputs
 - **Agent-native**: Designed for programmatic access via `decapod rpc`
 - **Workspace-enforced**: You cannot work on main/master - Decapod refuses
+- **Liveness-aware**: Requires **invocation heartbeat** for continuous presence tracking
 
 ## Key Commands
 

@@ -43,7 +43,7 @@ pub fn get_bindings(_repo_root: &Path) -> Bindings {
     tags.insert("security".to_string(), "specs/SECURITY.md".to_string());
 
     let mut mandates = std::collections::HashMap::new();
-    mandates.insert("agent.init".to_string(), vec!["mandatory-init".to_string()]);
+    mandates.insert("agent.init".to_string(), vec!["mandatory-init".to_string(), "mandatory-todo".to_string()]);
     mandates.insert("workspace.ensure".to_string(), vec!["isolated-worktree".to_string()]);
     mandates.insert("any".to_string(), vec!["no-master".to_string(), "validate-before-done".to_string()]);
 
@@ -76,6 +76,12 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
             severity: "non-negotiable".to_string(),
             fragment: get_fragment(repo_root, "core/DECAPOD.md", Some("For Agents: Quick Start"))?,
             check_tag: "gate.session.active".to_string(),
+        }),
+        "mandatory-todo" => Some(Mandate {
+            id: id.to_string(),
+            severity: "required".to_string(),
+            fragment: get_fragment(repo_root, "core/DECAPOD.md", Some("Subsystems"))?, // We'll link to todo section
+            check_tag: "gate.todo.active_task".to_string(),
         }),
         "validate-before-done" => Some(Mandate {
             id: id.to_string(),

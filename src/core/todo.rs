@@ -1789,7 +1789,10 @@ fn append_event(root: &Path, ev: &TodoEvent) -> Result<(), error::DecapodError> 
         .append(true)
         .open(&path)
         .map_err(error::DecapodError::IoError)?;
-    writeln!(f, "{}", serde_json::to_string(ev).unwrap()).map_err(error::DecapodError::IoError)?;
+    let mut line = serde_json::to_string(ev).unwrap();
+    line.push('\n');
+    f.write_all(line.as_bytes())
+        .map_err(error::DecapodError::IoError)?;
     Ok(())
 }
 
