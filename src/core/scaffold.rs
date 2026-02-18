@@ -135,6 +135,7 @@ pub fn scaffold_project_entrypoints(
     // Ensure .decapod/data is in .gitignore (sqlite databases should not be version controlled)
     if !opts.dry_run {
         ensure_gitignore_entry(&opts.target_dir, ".decapod/data")?;
+        ensure_gitignore_entry(&opts.target_dir, ".decapod/workspaces")?;
     }
 
     // Determine which agent files to generate
