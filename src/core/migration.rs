@@ -294,7 +294,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
 
     // 1. Consolidate Governance Bin (health, policy, feedback, archive)
     let gov_path = data_root.join(schemas::GOVERNANCE_DB_NAME);
-    let mut gov_conn = Connection::open(&gov_path).map_err(error::DecapodError::RusqliteError)?;
+    let gov_conn = Connection::open(&gov_path).map_err(error::DecapodError::RusqliteError)?;
     gov_conn.execute_batch(schemas::HEALTH_DB_SCHEMA_CLAIMS)?;
     gov_conn.execute_batch(schemas::HEALTH_DB_SCHEMA_PROOF_EVENTS)?;
     gov_conn.execute_batch(schemas::HEALTH_DB_SCHEMA_HEALTH_CACHE)?;
@@ -312,7 +312,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
 
     // 2. Consolidate Memory Bin (knowledge, federation, decisions, teammate)
     let mem_path = data_root.join(schemas::MEMORY_DB_NAME);
-    let mut mem_conn = Connection::open(&mem_path).map_err(error::DecapodError::RusqliteError)?;
+    let mem_conn = Connection::open(&mem_path).map_err(error::DecapodError::RusqliteError)?;
     mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
     mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODES)?;
     mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
@@ -341,7 +341,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
 
     // 3. Consolidate Automation Bin (cron, reflex)
     let auto_path = data_root.join(schemas::AUTOMATION_DB_NAME);
-    let mut auto_conn = Connection::open(&auto_path).map_err(error::DecapodError::RusqliteError)?;
+    let auto_conn = Connection::open(&auto_path).map_err(error::DecapodError::RusqliteError)?;
     auto_conn.execute_batch(schemas::CRON_DB_SCHEMA)?;
     auto_conn.execute_batch(schemas::REFLEX_DB_SCHEMA)?;
 

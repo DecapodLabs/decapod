@@ -139,11 +139,6 @@ enum CandidateSource {
         status: String,
         category: Option<String>,
     },
-    Container {
-        item: String,
-        exists: bool,
-        path: PathBuf,
-    },
 }
 
 /// Mentor engine for computing obligations
@@ -589,23 +584,6 @@ impl MentorEngine {
                     }
                 }
             }
-            CandidateSource::Container {
-                item,
-                exists,
-                path: _,
-            } => {
-                // Container obligations are high priority (Silicon Valley hygiene)
-                if *exists {
-                    score += 0.95;
-                } else {
-                    score += 0.90;
-                }
-
-                // Boost for certain critical items
-                if item == "Dockerfile" {
-                    score += 0.05;
-                }
-            }
         }
 
         // Cap at 1.0
@@ -795,46 +773,6 @@ impl MentorEngine {
                         source: ".decapod/data".to_string(),
                         id: id.clone(),
                         hash: None,
-                        timestamp: None,
-                    },
-                    relevance_score: score,
-                }
-            }
-            CandidateSource::Container { item, exists, path } => {
-                let (title, why) = if *exists {
-                    (
-                        format!("{} exists - Containerization Required", item),
-                        "Silicon Valley hygiene: Work must be containerized".to_string(),
-                    )
-                } else {
-                    (
-                        format!("{} missing - Create for containerization", item),
-                        format!(
-                            "Silicon Valley hygiene: {} required before proceeding",
-                            item
-                        ),
-                    )
-                };
-
-                let content = if *exists {
-                    std::fs::read_to_string(path).unwrap_or_default()
-                } else {
-                    String::new()
-                };
-
-                Obligation {
-                    kind: ObligationKind::Container,
-                    ref_path: path.to_string_lossy().to_string(),
-                    title,
-                    why_short: why,
-                    evidence: Evidence {
-                        source: "workspace".to_string(),
-                        id: item.clone(),
-                        hash: if *exists {
-                            Some(self.compute_hash(&content))
-                        } else {
-                            None
-                        },
                         timestamp: None,
                     },
                     relevance_score: score,
