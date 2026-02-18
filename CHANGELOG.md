@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1](https://github.com/DecapodLabs/decapod/compare/v0.26.0...v0.26.1) - 2026-02-18
+
+### Added
+
+- implement local trace sink and binding transparency
+
 ## [0.26.0](https://github.com/DecapodLabs/decapod/compare/v0.25.5...v0.26.0) - 2026-02-17
 
 ### Added
