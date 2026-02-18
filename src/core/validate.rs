@@ -1803,6 +1803,14 @@ fn validate_tooling_gate(
 ) -> Result<(), error::DecapodError> {
     info("Tooling Validation Gate");
 
+    if std::env::var("DECAPOD_VALIDATE_SKIP_TOOLING_GATES").is_ok() {
+        skip(
+            "Tooling validation gates skipped (DECAPOD_VALIDATE_SKIP_TOOLING_GATES set)",
+            pass_count,
+        );
+        return Ok(());
+    }
+
     // Check for Cargo.toml to detect Rust projects
     let cargo_toml = repo_root.join("Cargo.toml");
     if !cargo_toml.exists() {
@@ -1921,7 +1929,9 @@ pub fn evaluate_mandates(
                         blockers.push(Blocker {
                             kind: BlockerKind::ProtectedBranch,
                             message: format!("Mandate Violation: {}", mandate.fragment.title),
-                            resolve_hint: "Run `decapod workspace ensure` to create a working branch.".to_string(),
+                            resolve_hint:
+                                "Run `decapod workspace ensure` to create a working branch."
+                                    .to_string(),
                         });
                     }
                 }
@@ -1933,27 +1943,44 @@ pub fn evaluate_mandates(
                         blockers.push(Blocker {
                             kind: BlockerKind::WorkspaceRequired,
                             message: format!("Mandate Violation: {}", mandate.fragment.title),
-                            resolve_hint: "Run `decapod workspace ensure` to create an isolated git worktree.".to_string(),
+                            resolve_hint:
+                                "Run `decapod workspace ensure` to create an isolated git worktree."
+                                    .to_string(),
                         });
                     }
                 }
             }
             "gate.session.active" => {
-                // This is usually handled by the RPC kernel session check, 
+                // This is usually handled by the RPC kernel session check,
                 // but we can add a blocker if we want more detail.
             }
             "gate.todo.active_task" => {
-                let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+                let agent_id =
+                    std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
                 if agent_id != "unknown" {
-                    let mut active_tasks = crate::core::todo::list_tasks(&store.root, Some("open".to_string()), None, None, None, None);
+                    let mut active_tasks = crate::core::todo::list_tasks(
+                        &store.root,
+                        Some("open".to_string()),
+                        None,
+                        None,
+                        None,
+                        None,
+                    );
                     if let Ok(ref mut tasks) = active_tasks {
                         let pre_filter_count = tasks.len();
                         let debug_info = if !tasks.is_empty() {
-                            format!("First task assigned to: '{}', My ID: '{}'", tasks[0].assigned_to, agent_id)
+                            format!(
+                                "First task assigned to: '{}', My ID: '{}'",
+                                tasks[0].assigned_to, agent_id
+                            )
                         } else {
-                            format!("No tasks found. My ID: '{}', Root: '{}'", agent_id, project_root.display())
+                            format!(
+                                "No tasks found. My ID: '{}', Root: '{}'",
+                                agent_id,
+                                project_root.display()
+                            )
                         };
-                        
+
                         tasks.retain(|t| t.assigned_to == agent_id);
                         if tasks.is_empty() {
                             blockers.push(Blocker {
