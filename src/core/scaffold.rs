@@ -187,9 +187,11 @@ pub fn scaffold_project_entrypoints(
         }
     }
 
-    // Constitution is embedded in binary - no scaffolding needed.
-    // Users customize via OVERRIDE.md (scaffolded above).
-    let _ = opts.created_backups;
+    // Blend legacy agent files if they existed before init
+    if !opts.dry_run {
+        blend_legacy_entrypoints(&opts.target_dir)?;
+    }
+
     Ok(ScaffoldSummary {
         entrypoints_created: ep_created,
         entrypoints_unchanged: ep_unchanged,
@@ -198,4 +200,40 @@ pub fn scaffold_project_entrypoints(
         config_unchanged: cfg_unchanged,
         config_preserved: cfg_preserved,
     })
+}
+
+/// Automatically blends content from non-Decapod AGENT.md/CLAUDE.md/GEMINI.md backups
+/// into .decapod/OVERRIDE.md and deletes the backups.
+pub fn blend_legacy_entrypoints(target_dir: &Path) -> Result<(), error::DecapodError> {
+    let override_path = target_dir.join(".decapod/OVERRIDE.md");
+    let mut overrides_added = false;
+    let mut content_to_add = String::new();
+
+    for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
+        let bak_path = target_dir.join(format!("{}.bak", file));
+        if bak_path.exists() {
+            if let Ok(bak_content) = fs::read_to_string(&bak_path) {
+                // Only add if not empty
+                let trimmed = bak_content.trim();
+                if !trimmed.is_empty() {
+                    content_to_add.push_str(&format!(
+                        "\n\n### Blended from Legacy {} Entrypoint\n\n{}\n",
+                        file.replace(".md", ""),
+                        trimmed
+                    ));
+                    overrides_added = true;
+                }
+            }
+            // Delete backup file after blending (or if empty)
+            let _ = fs::remove_file(&bak_path);
+        }
+    }
+
+    if overrides_added && override_path.exists() {
+        let mut existing = fs::read_to_string(&override_path).unwrap_or_default();
+        existing.push_str(&content_to_add);
+        fs::write(&override_path, existing).map_err(error::DecapodError::IoError)?;
+    }
+
+    Ok(())
 }
