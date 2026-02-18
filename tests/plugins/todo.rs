@@ -1,10 +1,10 @@
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
-use decapod::plugins::policy;
 use decapod::core::todo::{
     TodoCommand, add_task, check_trust_level, get_task, initialize_todo_db, list_tasks,
     rebuild_from_events, todo_db_path, update_status,
 };
+use decapod::plugins::policy;
 use rusqlite::Connection;
 use serde_json::Value;
 use std::fs;
