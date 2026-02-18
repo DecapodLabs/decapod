@@ -156,7 +156,7 @@ fn test_rpc_trace_and_redaction() {
 
     // Export traces to verify
     let child = Command::new("cargo")
-        .args(["run", "--", "trace", "export", "--last", "1"])
+        .args(["run", "--", "trace", "export", "--last", "50"])
         .env("DECAPOD_SESSION_PASSWORD", "test") // Dummy
         .env("DECAPOD_AGENT_ID", "test") // Dummy
         .stdout(Stdio::piped())
