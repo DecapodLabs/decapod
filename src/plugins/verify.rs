@@ -3,7 +3,7 @@ use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::store::Store;
 use crate::plugins::federation;
-use crate::plugins::todo;
+use crate::core::todo;
 use clap::{Parser, Subcommand};
 use regex::Regex;
 use rusqlite::OptionalExtension;
