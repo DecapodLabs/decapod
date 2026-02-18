@@ -187,6 +187,133 @@ fn completion_phase_requires_verification_proofs() {
 }
 
 #[test]
+fn advisory_contains_intent_focused_prompts() {
+    let tmp = tempdir().expect("temp");
+    init_repo(tmp.path(), "feature/x");
+    seed_docs(tmp.path());
+    let engine = AssuranceEngine::new(tmp.path());
+    let out = engine
+        .evaluate(&AssuranceEvaluateInput {
+            op: "build".to_string(),
+            params: serde_json::json!({"auth_provider":"oauth"}),
+            touched_paths: vec!["src/lib.rs".to_string()],
+            diff_summary: None,
+            session_id: None,
+            phase: Some(AssurancePhase::Build),
+            time_budget_s: None,
+        })
+        .expect("eval");
+
+    assert!(
+        !out.advisory.intent_prompts.is_empty(),
+        "intent_prompts should be populated"
+    );
+    assert!(
+        out.advisory
+            .intent_prompts
+            .iter()
+            .any(|p| p.to_lowercase().contains("user")),
+        "expected at least one prompt explicitly referencing user intent/outcome"
+    );
+    let plan = out
+        .advisory
+        .intent_execution_plan
+        .as_ref()
+        .expect("intent execution plan should be present");
+    assert!(
+        !plan.one_shot_todos.is_empty(),
+        "one-shot todo decomposition should be present"
+    );
+}
+
+#[test]
+fn intent_execution_plan_links_dependencies_to_assigned_task() {
+    let tmp = tempdir().expect("temp");
+    init_repo(tmp.path(), "feature/x");
+    seed_docs(tmp.path());
+    let engine = AssuranceEngine::new(tmp.path());
+    let out = engine
+        .evaluate(&AssuranceEvaluateInput {
+            op: "build".to_string(),
+            params: serde_json::json!({
+                "user_intent": "Ship reliable auth refresh handling",
+                "assigned_task_id": "R_ABC123"
+            }),
+            touched_paths: vec!["src/auth/refresh.rs".to_string()],
+            diff_summary: Some("refresh token handling".to_string()),
+            session_id: None,
+            phase: Some(AssurancePhase::Build),
+            time_budget_s: None,
+        })
+        .expect("eval");
+
+    let plan = out
+        .advisory
+        .intent_execution_plan
+        .as_ref()
+        .expect("intent execution plan should be present");
+    assert_eq!(plan.assigned_task_id.as_deref(), Some("R_ABC123"));
+    assert_eq!(plan.mission, "Ship reliable auth refresh handling");
+
+    let complete = plan
+        .one_shot_todos
+        .iter()
+        .find(|t| t.id == "oneshot.complete-R_ABC123")
+        .expect("completion todo should be present");
+    assert!(
+        !complete.depends_on.is_empty(),
+        "completion todo should depend on prior one-shot todos"
+    );
+}
+
+#[test]
+fn advisory_includes_strategy_outline_for_intent_driven_architecture() {
+    let tmp = tempdir().expect("temp");
+    init_repo(tmp.path(), "feature/x");
+    seed_docs(tmp.path());
+    let engine = AssuranceEngine::new(tmp.path());
+    let out = engine
+        .evaluate(&AssuranceEvaluateInput {
+            op: "plan".to_string(),
+            params: serde_json::json!({
+                "user_intent": "Deliver a reliable B2B billing platform",
+                "database": "postgres",
+                "framework": "rails"
+            }),
+            touched_paths: vec!["src/billing/mod.rs".to_string()],
+            diff_summary: Some("billing architecture planning".to_string()),
+            session_id: None,
+            phase: Some(AssurancePhase::Plan),
+            time_budget_s: None,
+        })
+        .expect("eval");
+
+    let outline = out
+        .advisory
+        .strategy_outline
+        .as_ref()
+        .expect("strategy outline should be present");
+    assert!(
+        !outline.required_facts.is_empty(),
+        "required fact-finding prompts should be present"
+    );
+    assert!(
+        outline
+            .decision_checks
+            .iter()
+            .any(|d| d.area == "database" && d.current_suggestion.as_deref() == Some("postgres")),
+        "database decision check should carry current suggestion"
+    );
+    assert!(
+        outline
+            .quality_bar
+            .iter()
+            .any(|q| q.to_lowercase().contains("production-grade")),
+        "quality bar should include production-grade requirement"
+    );
+}
+
+#[test]
 fn protected_branch_or_workspace_state_triggers_workspace_interlock() {
     let tmp = tempdir().expect("temp");
     init_repo(tmp.path(), "master");
@@ -206,5 +333,48 @@ fn protected_branch_or_workspace_state_triggers_workspace_interlock() {
     assert_eq!(
         out.interlock.as_ref().map(|i| i.code.as_str()),
         Some("workspace_required")
+    );
+}
+
+#[test]
+fn plan_and_build_require_explicit_user_intent() {
+    let tmp = tempdir().expect("temp");
+    init_repo(tmp.path(), "feature/x");
+    seed_docs(tmp.path());
+    let engine = AssuranceEngine::new(tmp.path());
+
+    let plan_no_intent = engine
+        .evaluate(&AssuranceEvaluateInput {
+            op: "plan".to_string(),
+            params: serde_json::json!({}),
+            touched_paths: vec!["src/lib.rs".to_string()],
+            diff_summary: None,
+            session_id: None,
+            phase: Some(AssurancePhase::Plan),
+            time_budget_s: None,
+        })
+        .expect("eval");
+    assert_eq!(
+        plan_no_intent.interlock.as_ref().map(|i| i.code.as_str()),
+        Some("intent_required")
+    );
+
+    let build_with_intent = engine
+        .evaluate(&AssuranceEvaluateInput {
+            op: "build".to_string(),
+            params: serde_json::json!({"user_intent":"Ship robust auth flow"}),
+            touched_paths: vec!["src/auth/mod.rs".to_string()],
+            diff_summary: None,
+            session_id: None,
+            phase: Some(AssurancePhase::Build),
+            time_budget_s: None,
+        })
+        .expect("eval");
+    assert_ne!(
+        build_with_intent
+            .interlock
+            .as_ref()
+            .map(|i| i.code.as_str()),
+        Some("intent_required")
     );
 }

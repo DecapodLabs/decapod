@@ -1,6 +1,9 @@
 use crate::core::error::DecapodError;
 use crate::core::mentor::{MentorEngine, Obligation, ObligationKind, ObligationsContext};
-use crate::core::rpc::{Advisory, Attestation, Interlock, LoopSignal, ReconciliationPointer};
+use crate::core::rpc::{
+    Advisory, Attestation, IntentExecutionPlan, Interlock, LoopSignal, OneShotTodo,
+    ReconciliationPointer, StrategyOutline, TechDecisionCheck,
+};
 use crate::core::workspace;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -13,6 +16,7 @@ pub const INTERLOCK_WORKSPACE_REQUIRED: &str = "workspace_required";
 pub const INTERLOCK_VERIFICATION_REQUIRED: &str = "verification_required";
 pub const INTERLOCK_STORE_BOUNDARY_VIOLATION: &str = "store_boundary_violation";
 pub const INTERLOCK_DECISION_REQUIRED: &str = "decision_required";
+pub const INTERLOCK_INTENT_REQUIRED: &str = "intent_required";
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -151,6 +155,14 @@ impl AssuranceEngine {
         let advisory = Advisory {
             reconciliations: crate::core::rpc::ReconciliationSets { must, recommended },
             verification_plan,
+            intent_prompts: self.build_intent_prompts(
+                input,
+                interlock.as_ref(),
+                &obligations,
+                loop_signal.as_ref(),
+            ),
+            intent_execution_plan: Some(self.build_intent_execution_plan(input)),
+            strategy_outline: Some(self.build_strategy_outline(input)),
             loop_signal,
             notes: Some(env_notes),
         };
@@ -235,6 +247,29 @@ impl AssuranceEngine {
             });
         }
 
+        if self.requires_user_intent(input) && !self.has_user_intent(input) {
+            return Some(Interlock {
+                code: INTERLOCK_INTENT_REQUIRED.to_string(),
+                message: "User intent is missing for plan/build work. Ask the user: 1) What pain are we solving first? 2) What desired outcome proves success? 3) What constraints are non-negotiable? 4) What quality bar defines industry-grade output?"
+                    .to_string(),
+                unblock_ops: vec![
+                    "mentor.obligations".to_string(),
+                    "scaffold.next_question".to_string(),
+                    "assurance.evaluate".to_string(),
+                ],
+                evidence: Some(serde_json::json!({
+                    "required_fields_any_of": ["user_intent", "mission", "goal", "idea"],
+                    "suggested_questions": [
+                        "What user pain is highest priority?",
+                        "What concrete outcome will make this successful?",
+                        "What constraints are non-negotiable?",
+                        "What quality bar should this meet?"
+                    ],
+                    "op": input.op
+                })),
+            });
+        }
+
         None
     }
 
@@ -263,6 +298,27 @@ impl AssuranceEngine {
         matches!(input.phase, Some(AssurancePhase::Complete))
             || input.op.contains("complete")
             || input.op == "todo.done"
+    }
+
+    fn requires_user_intent(&self, input: &AssuranceEvaluateInput) -> bool {
+        if matches!(
+            input.phase,
+            Some(AssurancePhase::Plan) | Some(AssurancePhase::Build)
+        ) {
+            return true;
+        }
+        matches!(input.op.as_str(), "plan" | "build")
+    }
+
+    fn has_user_intent(&self, input: &AssuranceEvaluateInput) -> bool {
+        ["user_intent", "mission", "goal", "idea"].iter().any(|k| {
+            input
+                .params
+                .get(k)
+                .and_then(|v| v.as_str())
+                .map(|s| !s.trim().is_empty())
+                .unwrap_or(false)
+        })
     }
 
     fn has_completion_proofs(&self, input: &AssuranceEvaluateInput) -> bool {
@@ -398,6 +454,268 @@ impl AssuranceEngine {
         file.write_all(b"\n").map_err(DecapodError::IoError)?;
 
         Ok(attestation)
+    }
+
+    fn build_intent_prompts(
+        &self,
+        input: &AssuranceEvaluateInput,
+        interlock: Option<&Interlock>,
+        obligations: &crate::core::mentor::Obligations,
+        loop_signal: Option<&LoopSignal>,
+    ) -> Vec<String> {
+        let mut prompts = vec![
+            format!(
+                "What is the user's desired outcome for '{}' in one sentence, and what evidence will prove it?",
+                input.op
+            ),
+            "What is the smallest next action that advances user intent without increasing risk?"
+                .to_string(),
+        ];
+
+        if !obligations.must.is_empty() {
+            prompts.push(format!(
+                "Which MUST obligation will you satisfy first, and how does that directly support the user's goal? (must_count={})",
+                obligations.must.len()
+            ));
+        }
+
+        match input.phase {
+            Some(AssurancePhase::Plan) => prompts.push(
+                "Before implementation, restate the user's intent and name the acceptance criteria in concrete terms."
+                    .to_string(),
+            ),
+            Some(AssurancePhase::Build) => prompts.push(
+                "While implementing, check that each file change maps to user intent; remove work that does not move the outcome."
+                    .to_string(),
+            ),
+            Some(AssurancePhase::Verify) => prompts.push(
+                "During verification, compare observed behavior against the user's requested outcome, not just command exit status."
+                    .to_string(),
+            ),
+            Some(AssurancePhase::Complete) => prompts.push(
+                "At completion, provide proof that the final state matches user intent and identify any remaining gaps."
+                    .to_string(),
+            ),
+            None => {}
+        }
+
+        if let Some(interlock) = interlock {
+            prompts.push(format!(
+                "Interlock '{}' is active. What exact unblock action should run next to restore progress toward user intent?",
+                interlock.code
+            ));
+        }
+
+        if let Some(loop_signal) = loop_signal {
+            prompts.push(format!(
+                "Loop signal '{}' detected. What alternative approach better serves the same user outcome?",
+                loop_signal.code
+            ));
+        }
+
+        prompts.truncate(6);
+        prompts
+    }
+
+    fn build_strategy_outline(&self, input: &AssuranceEvaluateInput) -> StrategyOutline {
+        let mut required_facts = vec![
+            "What user pain is highest priority to solve first?".to_string(),
+            "What concrete user outcome defines success for this iteration?".to_string(),
+            "What constraints are non-negotiable (time, budget, compliance, deployment)?"
+                .to_string(),
+            "What performance/reliability/security targets are required?".to_string(),
+        ];
+
+        if input.params.get("database").is_some() || input.params.get("db").is_some() {
+            required_facts.push(
+                "What workload characteristics justify this database choice (consistency, query shape, scale, ops)?"
+                    .to_string(),
+            );
+        }
+        if input.params.get("framework").is_some() {
+            required_facts.push(
+                "Does the requested framework maximize delivery speed and maintainability for this mission?"
+                    .to_string(),
+            );
+        }
+
+        let current_db = input
+            .params
+            .get("database")
+            .or_else(|| input.params.get("db"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+        let current_framework = input
+            .params
+            .get("framework")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        let decision_checks = vec![
+            TechDecisionCheck {
+                area: "database".to_string(),
+                current_suggestion: current_db,
+                alternatives_to_evaluate: vec![
+                    "postgres".to_string(),
+                    "sqlite".to_string(),
+                    "mysql".to_string(),
+                    "document-db".to_string(),
+                ],
+                decide_by: "Select the option that best satisfies data model, consistency, operations, and cost constraints from user intent.".to_string(),
+            },
+            TechDecisionCheck {
+                area: "framework".to_string(),
+                current_suggestion: current_framework,
+                alternatives_to_evaluate: vec![
+                    "minimal-framework".to_string(),
+                    "full-stack-framework".to_string(),
+                    "no-framework".to_string(),
+                ],
+                decide_by: "Choose the framework that minimizes risk and maximizes speed-to-correctness for the user's mission.".to_string(),
+            },
+            TechDecisionCheck {
+                area: "architecture-shape".to_string(),
+                current_suggestion: None,
+                alternatives_to_evaluate: vec![
+                    "monolith".to_string(),
+                    "modular-monolith".to_string(),
+                    "service-oriented".to_string(),
+                ],
+                decide_by: "Pick the simplest architecture that still meets the mission and scaling constraints.".to_string(),
+            },
+        ];
+
+        let quality_bar = vec![
+            "Output must directly map every major design decision to user pain/intent.".to_string(),
+            "Delivery artifacts must be production-grade: clear docs, tests, and verification evidence."
+                .to_string(),
+            "No unchecked assumptions: unknowns are surfaced as explicit questions or bounded decisions."
+                .to_string(),
+            "Final recommendation includes tradeoffs, rejected alternatives, and rationale.".to_string(),
+        ];
+
+        StrategyOutline {
+            required_facts,
+            decision_checks,
+            quality_bar,
+        }
+    }
+
+    fn build_intent_execution_plan(&self, input: &AssuranceEvaluateInput) -> IntentExecutionPlan {
+        let mission = self.extract_user_mission(input);
+        let assigned_task_id = input
+            .params
+            .get("assigned_task_id")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .or_else(|| {
+                input
+                    .params
+                    .get("todo_id")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string())
+            })
+            .or_else(|| {
+                input
+                    .params
+                    .get("task_id")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string())
+            });
+
+        let mut one_shot_todos = vec![];
+
+        let analyze_id = "oneshot.define-outcome".to_string();
+        one_shot_todos.push(OneShotTodo {
+            id: analyze_id.clone(),
+            title: "Define expected outcome and proof criteria from user intent".to_string(),
+            depends_on: vec![],
+            done_when: "Success criteria and observable proof are written in one concise checklist"
+                .to_string(),
+        });
+        let mut previous_id = analyze_id;
+
+        let implementation_id = "oneshot.implement-minimal-change".to_string();
+        one_shot_todos.push(OneShotTodo {
+            id: implementation_id.clone(),
+            title: "Implement the smallest change that moves the mission forward".to_string(),
+            depends_on: vec![previous_id.clone()],
+            done_when:
+                "Code/config changes are complete and each touched file maps directly to mission"
+                    .to_string(),
+        });
+        previous_id = implementation_id;
+
+        if !input.touched_paths.is_empty() {
+            let touched_preview = input
+                .touched_paths
+                .iter()
+                .take(2)
+                .cloned()
+                .collect::<Vec<_>>()
+                .join(", ");
+            let id = "oneshot.verify-behavior".to_string();
+            one_shot_todos.push(OneShotTodo {
+                id: id.clone(),
+                title: format!("Verify behavior on key touched paths: {}", touched_preview),
+                depends_on: vec![previous_id.clone()],
+                done_when: "Observed behavior matches user-requested outcome, not only test pass"
+                    .to_string(),
+            });
+            previous_id = id;
+        }
+
+        let proof_id = "oneshot.run-proof-gates".to_string();
+        one_shot_todos.push(OneShotTodo {
+            id: proof_id.clone(),
+            title: "Run validation/proof gates and capture evidence".to_string(),
+            depends_on: vec![previous_id.clone()],
+            done_when: "decapod validate and required proofs are green with evidence attached"
+                .to_string(),
+        });
+        previous_id = proof_id;
+
+        if let Some(task_id) = &assigned_task_id {
+            one_shot_todos.push(OneShotTodo {
+                id: format!("oneshot.complete-{}", task_id),
+                title: format!(
+                    "Complete assigned task {} with dependency-safe closure",
+                    task_id
+                ),
+                depends_on: vec![previous_id],
+                done_when: format!(
+                    "Assigned task {} can be closed with objective evidence chain",
+                    task_id
+                ),
+            });
+        }
+
+        IntentExecutionPlan {
+            mission,
+            assigned_task_id,
+            one_shot_todos,
+        }
+    }
+
+    fn extract_user_mission(&self, input: &AssuranceEvaluateInput) -> String {
+        for key in ["user_intent", "intent", "mission", "goal", "idea"] {
+            if let Some(val) = input.params.get(key).and_then(|v| v.as_str()) {
+                let trimmed = val.trim();
+                if !trimmed.is_empty() {
+                    return trimmed.to_string();
+                }
+            }
+        }
+        if let Some(summary) = input.diff_summary.as_ref() {
+            let trimmed = summary.trim();
+            if !trimmed.is_empty() {
+                return format!(
+                    "Deliver intended outcome for operation '{}': {}",
+                    input.op, trimmed
+                );
+            }
+        }
+        format!("Deliver intended outcome for operation '{}'", input.op)
     }
 
     fn obligation_to_pointer(obligation: &Obligation) -> ReconciliationPointer {

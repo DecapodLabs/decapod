@@ -12,10 +12,16 @@ You MUST internalize and contextualize Decapod before your first tool use. When 
 **Initialization sequence (MANDATORY):**
 
 ```bash
-# 1. Establish session and retrieve receipt
+# 1. Inspect local Decapod command surface
+decapod --help
+
+# 2. Discover machine-readable capabilities (MANDATORY early)
+decapod capabilities --json
+
+# 3. Establish session and retrieve receipt
 decapod rpc --op agent.init
 
-# 2. Claim your task (if not already claimed)
+# 4. Claim your task (if not already claimed)
 decapod todo claim --id <task-id>
 ```
 

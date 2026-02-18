@@ -9,16 +9,25 @@ You MUST internalize and contextualize Decapod before your first tool use. When 
 **Initialization sequence (MANDATORY):**
 
 ```bash
-# 1. Acquire per-agent session credentials
+# 1. Inspect local Decapod command surface
+decapod --help
+
+# 2. Discover machine-readable capabilities (MANDATORY early)
+decapod capabilities --json
+
+# 3. Read canonical Decapod router docs
+decapod docs show core/DECAPOD.md
+
+# 4. Acquire per-agent session credentials
 decapod session acquire
 
-# 2. Establish session receipt and constitutional mandates
+# 5. Establish session receipt and constitutional mandates
 decapod rpc --op agent.init
 
-# 3. Resolve constitutional context before mutating state
+# 6. Resolve constitutional context before mutating state
 decapod rpc --op context.resolve
 
-# 4. Claim your task (if not already claimed)
+# 7. Claim your task (if not already claimed)
 decapod todo claim --id <task-id>
 ```
 

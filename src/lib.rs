@@ -811,11 +811,10 @@ pub fn run() -> Result<(), error::DecapodError> {
         },
         _ => {
             let project_root = decapod_root_option?;
-            enforce_worktree_requirement(&cli.command, &project_root)?;
-
             if requires_session_token(&cli.command) {
                 ensure_session_valid()?;
             }
+            enforce_worktree_requirement(&cli.command, &project_root)?;
 
             // For other commands, ensure .decapod exists
             let decapod_root_path = project_root.join(".decapod");
@@ -878,7 +877,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     run_rpc_command(rpc_cli, &project_root)?;
                 }
                 Command::Capabilities(cap_cli) => {
-                    run_capabilities_command(cap_cli)?;
+                    run_capabilities_command(cap_cli, &project_root)?;
                 }
                 Command::Trace(trace_cli) => {
                     run_trace_command(trace_cli, &project_root)?;
@@ -1030,6 +1029,7 @@ struct ConstitutionalAwarenessRecord {
     agent_id: String,
     session_token: Option<String>,
     initialized_at_epoch_secs: u64,
+    capabilities_checked_at_epoch_secs: Option<u64>,
     context_resolved_at_epoch_secs: Option<u64>,
     source_ops: Vec<String>,
 }
@@ -1206,13 +1206,40 @@ fn mark_constitution_initialized(project_root: &Path) -> Result<(), error::Decap
     let agent_id = current_agent_id();
     let session_token = read_agent_session(project_root, &agent_id)?.map(|s| s.token);
     let now = now_epoch_secs();
+    let existing = read_awareness_record(project_root, &agent_id)?;
+    let capabilities_checked_at_epoch_secs = existing
+        .as_ref()
+        .and_then(|r| r.capabilities_checked_at_epoch_secs);
+    let mut source_ops = existing.map(|r| r.source_ops).unwrap_or_default();
+    if !source_ops.iter().any(|op| op == "agent.init") {
+        source_ops.push("agent.init".to_string());
+    }
     let rec = ConstitutionalAwarenessRecord {
         agent_id,
         session_token,
         initialized_at_epoch_secs: now,
+        capabilities_checked_at_epoch_secs,
         context_resolved_at_epoch_secs: None,
-        source_ops: vec!["agent.init".to_string()],
+        source_ops,
     };
+    write_awareness_record(project_root, &rec)
+}
+
+fn mark_capabilities_checked(project_root: &Path) -> Result<(), error::DecapodError> {
+    let agent_id = current_agent_id();
+    let mut rec =
+        read_awareness_record(project_root, &agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
+            agent_id: agent_id.clone(),
+            session_token: read_agent_session(project_root, &agent_id)?.map(|s| s.token),
+            initialized_at_epoch_secs: now_epoch_secs(),
+            capabilities_checked_at_epoch_secs: None,
+            context_resolved_at_epoch_secs: None,
+            source_ops: Vec::new(),
+        });
+    rec.capabilities_checked_at_epoch_secs = Some(now_epoch_secs());
+    if !rec.source_ops.iter().any(|op| op == "capabilities") {
+        rec.source_ops.push("capabilities".to_string());
+    }
     write_awareness_record(project_root, &rec)
 }
 
@@ -1223,6 +1250,7 @@ fn mark_constitution_context_resolved(project_root: &Path) -> Result<(), error::
             agent_id: agent_id.clone(),
             session_token: read_agent_session(project_root, &agent_id)?.map(|s| s.token),
             initialized_at_epoch_secs: now_epoch_secs(),
+            capabilities_checked_at_epoch_secs: None,
             context_resolved_at_epoch_secs: None,
             source_ops: Vec::new(),
         });
@@ -1498,6 +1526,12 @@ fn enforce_constitutional_awareness_for_rpc(
     if rec.context_resolved_at_epoch_secs.is_none() {
         return Err(error::DecapodError::ValidationError(
             "Constitutional awareness incomplete: `context.resolve` has not been executed after initialization. Run `decapod rpc --op context.resolve`."
+                .to_string(),
+        ));
+    }
+    if rec.capabilities_checked_at_epoch_secs.is_none() {
+        return Err(error::DecapodError::ValidationError(
+            "Capability awareness required before mutating operations. Run `decapod --help` and `decapod capabilities --json` early in the session."
                 .to_string(),
         ));
     }
@@ -3227,6 +3261,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         "verification_required" => BlockerKind::MissingProof,
                         "store_boundary_violation" => BlockerKind::Unauthorized,
                         "decision_required" => BlockerKind::MissingAnswer,
+                        "intent_required" => BlockerKind::MissingAnswer,
                         _ => BlockerKind::ValidationFailed,
                     },
                     message: interlock.code,
@@ -3261,7 +3296,10 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 }
 
 /// Run capabilities command
-fn run_capabilities_command(cli: CapabilitiesCli) -> Result<(), error::DecapodError> {
+fn run_capabilities_command(
+    cli: CapabilitiesCli,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
     use crate::core::rpc::generate_capabilities;
 
     let report = generate_capabilities();
@@ -3324,6 +3362,8 @@ fn run_capabilities_command(cli: CapabilitiesCli) -> Result<(), error::DecapodEr
             println!("  Codes: {}", report.interlock_codes.join(", "));
         }
     }
+
+    mark_capabilities_checked(project_root)?;
 
     Ok(())
 }

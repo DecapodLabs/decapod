@@ -1,6 +1,6 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
-use crate::plugins::federation::{federation_db_path, FederationNode};
+use crate::plugins::federation::{FederationNode, federation_db_path};
 use std::path::Path;
 
 pub fn list_nodes(

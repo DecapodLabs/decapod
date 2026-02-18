@@ -1,38 +1,40 @@
 # OVERRIDE.md - Project-Specific Decapod Overrides
 
-**Canonical:** OVERRIDE.md
-**Authority:** override
-**Layer:** Project
+**Canonical:** OVERRIDE.md  
+**Authority:** override  
+**Layer:** Project  
 **Binding:** Yes (overrides embedded constitution)
 
 ---
 
 ## Summary
 
-This file allows you to override or extend Decapod's embedded constitution for project-specific needs.
+This file is your project-local override layer for Decapod's embedded constitution.
 
-The embedded constitution (read-only, shipped with Decapod) provides the base methodology. This file lets you customize behavior without forking Decapod. Overrides are applied at runtime when agents read the constitution via `decapod docs show`.
+The embedded constitution (shipped with Decapod) is read-only baseline policy.  
+`OVERRIDE.md` is where you add project-specific behavior without forking Decapod.
 
-**Keep overrides minimal** - only add what's truly specific to your project.
+Overrides are resolved at runtime via `decapod docs show`.
+
+Keep overrides minimal and explicit.
 
 ---
 
-## How to Use
+## How To Use
 
-1. Find the component section below (Core, Specs, Interfaces, Methodology, Plugins, or Architecture)
-2. Scroll to the specific component you want to override (e.g., `### plugins/TODO.md`)
-3. Write your override content under that heading
-4. Use markdown formatting for your overrides
-5. Commit this file to version control
+1. Find the relevant section below (Core, Specs, Interfaces, Methodology, Plugins, Architecture).
+2. Go to the specific heading you want to override (example: `### plugins/TODO.md`).
+3. Add your project-specific markdown directly under that heading.
+4. Commit this file.
 
-**Example:**
+**Example**
 
 ```markdown
 ### plugins/TODO.md
 
 ## Priority Levels (Project Override)
 
-For this project, we use a 5-level priority system:
+For this project:
 - **critical**: Production down, blocking release
 - **high**: Sprint commitment, must complete this iteration
 - **medium**: Backlog, next sprint candidate

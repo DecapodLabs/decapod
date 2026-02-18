@@ -276,10 +276,49 @@ pub struct LoopSignal {
 pub struct Advisory {
     pub reconciliations: ReconciliationSets,
     pub verification_plan: VerificationPlan,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub intent_prompts: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub intent_execution_plan: Option<IntentExecutionPlan>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub strategy_outline: Option<StrategyOutline>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub loop_signal: Option<LoopSignal>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notes: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct IntentExecutionPlan {
+    pub mission: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assigned_task_id: Option<String>,
+    pub one_shot_todos: Vec<OneShotTodo>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct OneShotTodo {
+    pub id: String,
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub depends_on: Vec<String>,
+    pub done_when: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StrategyOutline {
+    pub required_facts: Vec<String>,
+    pub decision_checks: Vec<TechDecisionCheck>,
+    pub quality_bar: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct TechDecisionCheck {
+    pub area: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub current_suggestion: Option<String>,
+    pub alternatives_to_evaluate: Vec<String>,
+    pub decide_by: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -302,19 +341,22 @@ pub fn generate_capabilities() -> CapabilitiesReport {
         capabilities: vec![
             Capability {
                 name: "daemonless".to_string(),
-                description: "Decapod never runs in the background; it is invoked by agents".to_string(),
+                description: "Decapod never runs in the background; it is invoked by agents"
+                    .to_string(),
                 stability: "stable".to_string(),
                 cost: "none".to_string(),
             },
             Capability {
                 name: "deterministic".to_string(),
-                description: "Same inputs produce identical outputs given fixed repo state".to_string(),
+                description: "Same inputs produce identical outputs given fixed repo state"
+                    .to_string(),
                 stability: "stable".to_string(),
                 cost: "none".to_string(),
             },
             Capability {
                 name: "context.resolve".to_string(),
-                description: "Resolve relevant constitution/authority fragments for an operation".to_string(),
+                description: "Resolve relevant constitution/authority fragments for an operation"
+                    .to_string(),
                 stability: "stable".to_string(),
                 cost: "low".to_string(),
             },
@@ -403,6 +445,7 @@ pub fn generate_capabilities() -> CapabilitiesReport {
             "verification_required".to_string(),
             "store_boundary_violation".to_string(),
             "decision_required".to_string(),
+            "intent_required".to_string(),
         ],
     }
 }
@@ -419,9 +462,15 @@ pub fn success_response(
     mandates: Vec<Mandate>,
 ) -> RpcResponse {
     let timestamp = chrono::Utc::now().to_rfc3339();
-    
-    let inputs_hash = format!("{:x}", sha2::Sha256::digest(serde_json::to_string(&params).unwrap_or_default()));
-    let outputs_hash = format!("{:x}", sha2::Sha256::digest(serde_json::to_string(&result).unwrap_or_default()));
+
+    let inputs_hash = format!(
+        "{:x}",
+        sha2::Sha256::digest(serde_json::to_string(&params).unwrap_or_default())
+    );
+    let outputs_hash = format!(
+        "{:x}",
+        sha2::Sha256::digest(serde_json::to_string(&result).unwrap_or_default())
+    );
 
     RpcResponse {
         id: request_id,
@@ -457,7 +506,10 @@ pub fn error_response(
     mandates: Vec<Mandate>,
 ) -> RpcResponse {
     let timestamp = chrono::Utc::now().to_rfc3339();
-    let inputs_hash = format!("{:x}", sha2::Sha256::digest(serde_json::to_string(&params).unwrap_or_default()));
+    let inputs_hash = format!(
+        "{:x}",
+        sha2::Sha256::digest(serde_json::to_string(&params).unwrap_or_default())
+    );
     let outputs_hash = format!("{:x}", sha2::Sha256::digest("error"));
 
     let blocked_by = if let Some(b) = blocker {

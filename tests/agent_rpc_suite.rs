@@ -1,14 +1,29 @@
 use std::io::Write;
 use std::process::{Command, Stdio};
+use std::sync::{Mutex, OnceLock};
+
+fn rpc_suite_lock() -> &'static Mutex<()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+}
 
 fn run_rpc(request: serde_json::Value) -> serde_json::Value {
+    let _guard = rpc_suite_lock().lock().expect("lock poisoned");
+
     // We need a stable agent ID and session for enforcement
     let agent_id = "unknown";
 
     // Ensure we are on a non-protected branch for tests
-    let _ = Command::new("git")
-        .args(["checkout", "-b", "feat/test-rpc-suite"])
+    let checkout_out = Command::new("git")
+        .args(["checkout", "-B", "feat/test-rpc-suite"])
         .output();
+    if let Ok(out) = checkout_out {
+        assert!(
+            out.status.success(),
+            "failed to switch to test branch: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
 
     // Ensure we have a session
     let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
@@ -31,6 +46,7 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
         cmd.args(["rpc", "--stdin"])
             .env("DECAPOD_AGENT_ID", agent_id)
             .env("DECAPOD_SESSION_PASSWORD", &session_password)
+            .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped());
 
@@ -44,6 +60,20 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
         let output = child.wait_with_output().expect("Failed to read stdout");
         serde_json::from_slice(&output.stdout).expect("Failed to parse JSON response")
     };
+
+    // Mandatory capabilities bootstrap command (session-scoped awareness).
+    let capabilities_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["capabilities", "--format", "json"])
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_SESSION_PASSWORD", &session_password)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .output()
+        .expect("capabilities");
+    assert!(
+        capabilities_out.status.success(),
+        "capabilities failed: {}",
+        String::from_utf8_lossy(&capabilities_out.stderr)
+    );
 
     // Mandatory constitutional-awareness bootstrap sequence.
     let init_res = run_rpc_once(&serde_json::json!({ "op": "agent.init", "params": {} }));
@@ -156,7 +186,7 @@ fn test_rpc_trace_and_redaction() {
 
     // Export traces to verify
     let mut child = Command::new("cargo")
-        .args(["run", "--", "trace", "export", "--last", "1"])
+        .args(["run", "--", "trace", "export", "--last", "50"])
         .env("DECAPOD_SESSION_PASSWORD", "test") // Dummy
         .env("DECAPOD_AGENT_ID", "test") // Dummy
         .stdout(Stdio::piped())
