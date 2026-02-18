@@ -10,6 +10,30 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
         .args(["checkout", "-b", "feat/test-rpc-suite"])
         .output();
 
+    let validate_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["validate"])
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+        .env("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1")
+        .output()
+        .expect("validate");
+    assert!(
+        validate_out.status.success(),
+        "validate failed: {}",
+        String::from_utf8_lossy(&validate_out.stderr)
+    );
+
+    let ingest_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["docs", "ingest"])
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .output()
+        .expect("docs ingest");
+    assert!(
+        ingest_out.status.success(),
+        "docs ingest failed: {}",
+        String::from_utf8_lossy(&ingest_out.stderr)
+    );
+
     // Ensure we have a session
     let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["session", "acquire"])
@@ -25,6 +49,41 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
                 .map(|v| v.trim().to_string())
         })
         .unwrap_or_else(|| "test".to_string());
+
+    let todo_add_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args([
+            "todo",
+            "add",
+            "ordering gate test task",
+            "--format",
+            "json",
+        ])
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .output()
+        .expect("todo add");
+    let todo_add_json: serde_json::Value =
+        serde_json::from_slice(&todo_add_out.stdout).expect("parse todo add");
+    let todo_id = todo_add_json["id"]
+        .as_str()
+        .expect("todo id")
+        .to_string();
+
+    let todo_claim_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args([
+            "todo",
+            "claim",
+            "--id",
+            &todo_id,
+            "--agent",
+            agent_id,
+            "--format",
+            "json",
+        ])
+        .output()
+        .expect("todo claim");
+    let todo_claim_json: serde_json::Value =
+        serde_json::from_slice(&todo_claim_out.stdout).expect("parse todo claim");
+    assert_eq!(todo_claim_json["status"], "ok");
 
     let run_rpc_once = |req: &serde_json::Value| -> serde_json::Value {
         let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
