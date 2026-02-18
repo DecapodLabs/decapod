@@ -1,5 +1,7 @@
 # OVERRIDE.md - Project-Specific Decapod Overrides
 
+> **IMPORTANT:** For detailed usage instructions and examples, see [README.md](README.md).
+
 **Canonical:** OVERRIDE.md  
 **Authority:** override  
 **Layer:** Project  
@@ -17,30 +19,6 @@ The embedded constitution (shipped with Decapod) is read-only baseline policy.
 Overrides are resolved at runtime via `decapod docs show`.
 
 Keep overrides minimal and explicit.
-
----
-
-## How To Use
-
-1. Find the relevant section below (Core, Specs, Interfaces, Methodology, Plugins, Architecture).
-2. Go to the specific heading you want to override (example: `### plugins/TODO.md`).
-3. Add your project-specific markdown directly under that heading.
-4. Commit this file.
-
-**Example**
-
-```markdown
-### plugins/TODO.md
-
-## Priority Levels (Project Override)
-
-For this project:
-- **critical**: Production down, blocking release
-- **high**: Sprint commitment, must complete this iteration
-- **medium**: Backlog, next sprint candidate
-- **low**: Nice-to-have, future consideration
-- **idea**: Exploration, needs refinement before actionable
-```
 
 ---
 
