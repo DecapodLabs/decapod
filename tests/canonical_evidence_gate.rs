@@ -78,8 +78,7 @@ fn enforced_claims_must_have_gate_mapping_and_kcr_trend_must_match() {
     let trend = fs::read_to_string(&trend_path).expect("read KCR trend");
     let last = trend
         .lines()
-        .filter(|l| !l.trim().is_empty())
-        .next_back()
+        .rfind(|l| !l.trim().is_empty())
         .expect("KCR trend must contain at least one row");
     let row: KcrTrendRow = serde_json::from_str(last).expect("parse KCR trend row JSON");
 
