@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0](https://github.com/DecapodLabs/decapod/compare/v0.28.12...v0.29.0) - 2026-02-19
+
+### Added
+
+- harvest knowledge lifecycle, broker audit, health cleanup, and CI health from stale branches
+
+### Fixed
+
+- *(ci)* skip git worktree gates in CI health job
+- *(tests)* resolve agent_rpc_suite flake and chaos_replay IOERR
+- *(federation)* eliminate drift window and downgrade determinism gates
+
 ## [0.28.12](https://github.com/DecapodLabs/decapod/compare/v0.28.11...v0.28.12) - 2026-02-18
 
 ### Fixed
