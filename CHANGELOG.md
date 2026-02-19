@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.3](https://github.com/DecapodLabs/decapod/compare/v0.29.2...v0.29.3) - 2026-02-19
+
+### Added
+
+- *(state_commit)* implement STATE_COMMIT v1 protocol
+
 ## [0.29.2](https://github.com/DecapodLabs/decapod/compare/v0.29.1...v0.29.2) - 2026-02-19
 
 ### Added
