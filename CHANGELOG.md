@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.2](https://github.com/DecapodLabs/decapod/compare/v0.29.1...v0.29.2) - 2026-02-19
+
+### Added
+
+- *(claims)* add KCR evidence gate test and trend baseline
+
+### Fixed
+
+- use rfind instead of filter().next_back() for clippy
+
 ## [0.29.1](https://github.com/DecapodLabs/decapod/compare/v0.29.0...v0.29.1) - 2026-02-19
 
 ### Added
