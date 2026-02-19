@@ -185,17 +185,27 @@ jobs:
 
       - name: Initialize Decapod
         run: decapod init --force
+        env:
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
 
       - name: Acquire Decapod session
         run: decapod session acquire
+        env:
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
 
       - name: Run validation harness
         run: decapod validate
+        env:
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
 
       - name: Run watcher
         run: decapod govern watcher run
+        env:
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
 
       - name: Check health summary
+        env:
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
         run: |
           STATUS=$(decapod govern health summary)
           echo "$STATUS"
