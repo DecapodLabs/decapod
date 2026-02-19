@@ -572,6 +572,20 @@ pub fn add_node(
     let events_path = federation_events_path(&store.root);
     let now = now_ts();
     let node_id = format!("F_{}", Ulid::new());
+    let event_id = Ulid::new().to_string();
+
+    let payload_json = serde_json::json!({
+        "title": title,
+        "node_type": node_type,
+        "priority": priority,
+        "confidence": confidence,
+        "body": body,
+        "sources": sources,
+        "tags": tags,
+        "scope": scope,
+        "effective_from": effective_from,
+        "dir_path": store.root.to_string_lossy().to_string(),
+    });
 
     let node = broker.with_conn(&db_path, actor, None, "federation.add", |conn| {
         conn.execute(
@@ -593,7 +607,6 @@ pub fn add_node(
         }
 
         // Insert event record
-        let event_id = Ulid::new().to_string();
         conn.execute(
             "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
@@ -602,21 +615,22 @@ pub fn add_node(
                 now,
                 "node.create",
                 node_id,
-                serde_json::to_string(&serde_json::json!({
-                    "title": title,
-                    "node_type": node_type,
-                    "priority": priority,
-                    "confidence": confidence,
-                    "body": body,
-                    "sources": sources,
-                    "tags": tags,
-                    "scope": scope,
-                    "effective_from": effective_from,
-                    "dir_path": store.root.to_string_lossy().to_string(),
-                }))
-                .unwrap(),
+                serde_json::to_string(&payload_json).unwrap(),
                 actor,
             ],
+        )?;
+
+        // Append to JSONL inside the same logical unit to prevent drift
+        append_event(
+            &events_path,
+            &FederationEvent {
+                event_id: event_id.clone(),
+                ts: now.clone(),
+                event_type: "node.create".to_string(),
+                node_id: Some(node_id.clone()),
+                payload: payload_json.clone(),
+                actor: actor.to_string(),
+            },
         )?;
 
         Ok(FederationNode {
@@ -638,30 +652,6 @@ pub fn add_node(
             edges: Some(vec![]),
         })
     })?;
-
-    // Append to JSONL event log
-    append_event(
-        &events_path,
-        &FederationEvent {
-            event_id: Ulid::new().to_string(),
-            ts: node.created_at.clone(),
-            event_type: "node.create".to_string(),
-            node_id: Some(node.id.clone()),
-            payload: serde_json::json!({
-                "title": title,
-                "node_type": node_type,
-                "priority": priority,
-                "confidence": confidence,
-                "body": body,
-                "sources": node.sources,
-                "tags": tags,
-                "scope": scope,
-                "effective_from": effective_from,
-                "dir_path": store.root.to_string_lossy(),
-            }),
-            actor: actor.to_string(),
-        },
-    )?;
 
     Ok(node)
 }
@@ -743,6 +733,12 @@ pub fn edit_node(
 
         // Record event in DB
         let event_id = Ulid::new().to_string();
+        let payload_json = serde_json::json!({
+            "title": title,
+            "body": body,
+            "tags": tags,
+            "priority": priority,
+        });
         conn.execute(
             "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
@@ -751,37 +747,25 @@ pub fn edit_node(
                 now,
                 "node.edit",
                 id,
-                serde_json::to_string(&serde_json::json!({
-                    "title": title,
-                    "body": body,
-                    "tags": tags,
-                    "priority": priority,
-                }))
-                .unwrap(),
+                serde_json::to_string(&payload_json).unwrap(),
                 "decapod",
             ],
         )?;
 
+        append_event(
+            &events_path,
+            &FederationEvent {
+                event_id,
+                ts: now.clone(),
+                event_type: "node.edit".to_string(),
+                node_id: Some(id.to_string()),
+                payload: payload_json,
+                actor: "decapod".to_string(),
+            },
+        )?;
+
         Ok(())
     })?;
-
-    // Append to JSONL
-    append_event(
-        &events_path,
-        &FederationEvent {
-            event_id: Ulid::new().to_string(),
-            ts: now,
-            event_type: "node.edit".to_string(),
-            node_id: Some(id.to_string()),
-            payload: serde_json::json!({
-                "title": title,
-                "body": body,
-                "tags": tags,
-                "priority": priority,
-            }),
-            actor: "decapod".to_string(),
-        },
-    )?;
 
     Ok(())
 }
@@ -837,6 +821,12 @@ pub fn supersede_node(
 
         // Record event
         let event_id = Ulid::new().to_string();
+        let payload_json = serde_json::json!({
+            "old_id": old_id,
+            "new_id": new_id,
+            "reason": reason,
+            "edge_id": edge_id,
+        });
         conn.execute(
             "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
@@ -845,35 +835,25 @@ pub fn supersede_node(
                 now,
                 "node.supersede",
                 old_id,
-                serde_json::to_string(&serde_json::json!({
-                    "old_id": old_id,
-                    "new_id": new_id,
-                    "reason": reason,
-                    "edge_id": edge_id,
-                }))
-                .unwrap(),
+                serde_json::to_string(&payload_json).unwrap(),
                 "decapod",
             ],
         )?;
 
+        append_event(
+            &events_path,
+            &FederationEvent {
+                event_id,
+                ts: now.clone(),
+                event_type: "node.supersede".to_string(),
+                node_id: Some(old_id.to_string()),
+                payload: payload_json,
+                actor: "decapod".to_string(),
+            },
+        )?;
+
         Ok(())
     })?;
-
-    append_event(
-        &events_path,
-        &FederationEvent {
-            event_id: Ulid::new().to_string(),
-            ts: now,
-            event_type: "node.supersede".to_string(),
-            node_id: Some(old_id.to_string()),
-            payload: serde_json::json!({
-                "old_id": old_id,
-                "new_id": new_id,
-                "reason": reason,
-            }),
-            actor: "decapod".to_string(),
-        },
-    )?;
 
     Ok(())
 }
@@ -907,6 +887,10 @@ pub fn transition_node_status(
         )?;
 
         let event_id = Ulid::new().to_string();
+        let payload_json = serde_json::json!({
+            "new_status": new_status,
+            "reason": reason,
+        });
         conn.execute(
             "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
@@ -915,32 +899,25 @@ pub fn transition_node_status(
                 now,
                 event_type,
                 id,
-                serde_json::to_string(&serde_json::json!({
-                    "new_status": new_status,
-                    "reason": reason,
-                }))
-                .unwrap(),
+                serde_json::to_string(&payload_json).unwrap(),
                 "decapod",
             ],
         )?;
 
+        append_event(
+            &events_path,
+            &FederationEvent {
+                event_id,
+                ts: now.clone(),
+                event_type: event_type.to_string(),
+                node_id: Some(id.to_string()),
+                payload: payload_json,
+                actor: "decapod".to_string(),
+            },
+        )?;
+
         Ok(())
     })?;
-
-    append_event(
-        &events_path,
-        &FederationEvent {
-            event_id: Ulid::new().to_string(),
-            ts: now,
-            event_type: event_type.to_string(),
-            node_id: Some(id.to_string()),
-            payload: serde_json::json!({
-                "new_status": new_status,
-                "reason": reason,
-            }),
-            actor: "decapod".to_string(),
-        },
-    )?;
 
     Ok(())
 }
@@ -980,6 +957,12 @@ pub fn add_edge(
         )?;
 
         let event_id = Ulid::new().to_string();
+        let payload_json = serde_json::json!({
+            "edge_id": edge_id,
+            "source_id": source_id,
+            "target_id": target_id,
+            "edge_type": edge_type,
+        });
         conn.execute(
             "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
@@ -988,36 +971,25 @@ pub fn add_edge(
                 now,
                 "edge.add",
                 source_id,
-                serde_json::to_string(&serde_json::json!({
-                    "edge_id": edge_id,
-                    "source_id": source_id,
-                    "target_id": target_id,
-                    "edge_type": edge_type,
-                }))
-                .unwrap(),
+                serde_json::to_string(&payload_json).unwrap(),
                 "decapod",
             ],
         )?;
 
+        append_event(
+            &events_path,
+            &FederationEvent {
+                event_id,
+                ts: now.clone(),
+                event_type: "edge.add".to_string(),
+                node_id: Some(source_id.to_string()),
+                payload: payload_json,
+                actor: "decapod".to_string(),
+            },
+        )?;
+
         Ok(())
     })?;
-
-    append_event(
-        &events_path,
-        &FederationEvent {
-            event_id: Ulid::new().to_string(),
-            ts: now,
-            event_type: "edge.add".to_string(),
-            node_id: Some(source_id.to_string()),
-            payload: serde_json::json!({
-                "edge_id": edge_id,
-                "source_id": source_id,
-                "target_id": target_id,
-                "edge_type": edge_type,
-            }),
-            actor: "decapod".to_string(),
-        },
-    )?;
 
     Ok(edge_id.clone())
 }
@@ -1039,6 +1011,7 @@ fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> 
         }
 
         let event_id = Ulid::new().to_string();
+        let payload_json = serde_json::json!({ "edge_id": edge_id });
         conn.execute(
             "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
              VALUES(?1, ?2, ?3, NULL, ?4, ?5)",
@@ -1046,25 +1019,25 @@ fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> 
                 event_id,
                 now,
                 "edge.remove",
-                serde_json::to_string(&serde_json::json!({ "edge_id": edge_id })).unwrap(),
+                serde_json::to_string(&payload_json).unwrap(),
                 "decapod",
             ],
         )?;
 
+        append_event(
+            &events_path,
+            &FederationEvent {
+                event_id,
+                ts: now.clone(),
+                event_type: "edge.remove".to_string(),
+                node_id: None,
+                payload: payload_json,
+                actor: "decapod".to_string(),
+            },
+        )?;
+
         Ok(())
     })?;
-
-    append_event(
-        &events_path,
-        &FederationEvent {
-            event_id: Ulid::new().to_string(),
-            ts: now,
-            event_type: "edge.remove".to_string(),
-            node_id: None,
-            payload: serde_json::json!({ "edge_id": edge_id }),
-            actor: "decapod".to_string(),
-        },
-    )?;
 
     Ok(())
 }
@@ -1107,6 +1080,10 @@ pub fn add_source_to_node(
             )?;
 
             let event_id = Ulid::new().to_string();
+            let payload_json = serde_json::json!({
+                "source_id": src_id,
+                "source": source,
+            });
             conn.execute(
                 "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
@@ -1115,31 +1092,24 @@ pub fn add_source_to_node(
                     now,
                     "source.add",
                     node_id,
-                    serde_json::to_string(&serde_json::json!({
-                        "source_id": src_id,
-                        "source": source,
-                    }))
-                    .unwrap(),
+                    serde_json::to_string(&payload_json).unwrap(),
                     "decapod",
                 ],
             )?;
 
-            Ok(())
-        },
-    )?;
+            append_event(
+                &events_path,
+                &FederationEvent {
+                    event_id,
+                    ts: now.clone(),
+                    event_type: "source.add".to_string(),
+                    node_id: Some(node_id.to_string()),
+                    payload: payload_json,
+                    actor: "decapod".to_string(),
+                },
+            )?;
 
-    append_event(
-        &events_path,
-        &FederationEvent {
-            event_id: Ulid::new().to_string(),
-            ts: now,
-            event_type: "source.add".to_string(),
-            node_id: Some(node_id.to_string()),
-            payload: serde_json::json!({
-                "source_id": src_id,
-                "source": source,
-            }),
-            actor: "decapod".to_string(),
+            Ok(())
         },
     )?;
 
