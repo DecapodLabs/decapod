@@ -451,6 +451,8 @@ struct BrokerCli {
 enum BrokerCommand {
     /// Show the audit log of brokered mutations.
     Audit,
+    /// Verify audit log integrity and detect crash-induced divergence.
+    Verify,
 }
 
 #[derive(clap::Args, Debug)]
@@ -1803,6 +1805,17 @@ fn run_data_command(
                     println!("{}", content);
                 } else {
                     println!("No audit log found.");
+                }
+            }
+            BrokerCommand::Verify => {
+                let broker = core::broker::DbBroker::new(store_root);
+                let report = broker.verify_replay()?;
+                println!("{}", serde_json::to_string_pretty(&report).unwrap());
+                if !report.divergences.is_empty() {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Audit log integrity check failed: {} divergence(s) detected",
+                        report.divergences.len()
+                    )));
                 }
             }
         },

@@ -314,6 +314,7 @@ struct TodoEvent {
     ts: String,
     event_id: String,
     event_type: String,
+    status: String,
     task_id: Option<String>,
     payload: JsonValue,
     actor: String,
@@ -1170,6 +1171,7 @@ fn record_heartbeat(root: &Path, agent_id: &str) -> Result<serde_json::Value, er
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
             event_type: "agent.heartbeat".to_string(),
             task_id: None,
             payload: serde_json::json!({ "agent_id": agent_id }),
@@ -1253,6 +1255,7 @@ pub fn cleanup_stale_agent_assignments(
                     let ev = TodoEvent {
                         ts: ts.clone(),
                         event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
                         event_type: "task.release".to_string(),
                         task_id: Some(task_id.clone()),
                         payload: serde_json::json!({
@@ -1288,6 +1291,7 @@ pub fn cleanup_stale_agent_assignments(
             let ev = TodoEvent {
                 ts: ts.clone(),
                 event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
                 event_type: "agent.session.cleanup".to_string(),
                 task_id: None,
                 payload: serde_json::json!({
@@ -1847,6 +1851,7 @@ pub fn record_task_event(
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
             event_type: event_type.to_string(),
             task_id: task_id.map(|s| s.to_string()),
             payload,
@@ -2105,6 +2110,7 @@ fn write_ownership_claim_event(
     let ev = TodoEvent {
         ts: claim.ts.to_string(),
         event_id: Ulid::new().to_string(),
+        status: "success".to_string(),
         event_type: "ownership.claim".to_string(),
         task_id: Some(claim.task_id.to_string()),
         payload: serde_json::json!({
@@ -2184,6 +2190,7 @@ fn set_task_owners(
         let ev = TodoEvent {
             ts: ts.to_string(),
             event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
             event_type: "ownership.release".to_string(),
             task_id: Some(task_id.to_string()),
             payload: serde_json::json!({
@@ -2337,6 +2344,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
             event_type: "task.add".to_string(),
             task_id: Some(task_id.clone()),
             payload,
@@ -2450,6 +2458,7 @@ pub fn update_status(
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
             event_type: event_type.to_string(),
             task_id: Some(id.to_string()),
             payload: payload.clone(),
@@ -2549,6 +2558,7 @@ fn comment_task(
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
             event_type: "task.comment".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({ "comment": comment }),
@@ -2664,6 +2674,7 @@ fn edit_task(
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
             event_type: "task.edit".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::Value::Object(payload),
@@ -2984,6 +2995,7 @@ fn claim_task(
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
             event_type: "task.claim".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({
@@ -3103,6 +3115,7 @@ fn handoff_task(
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: event_id.clone(),
+            status: "success".to_string(),
             event_type: "task.handoff".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({
@@ -3283,6 +3296,7 @@ fn remove_task_owner(
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
             event_type: "ownership.release".to_string(),
             task_id: Some(task_id.to_string()),
             payload: serde_json::json!({
@@ -3354,6 +3368,7 @@ fn register_agent_expertise(
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
             event_type: "agent.expertise".to_string(),
             task_id: None,
             payload: serde_json::json!({
@@ -3506,6 +3521,7 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
+            status: "success".to_string(),
             event_type: "task.release".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({}),
@@ -3726,6 +3742,10 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                 error::DecapodError::ValidationError(format!("Invalid JSONL event: {}", e))
             })?;
             count += 1;
+
+            if ev.status == "pending" {
+                continue;
+            }
 
             insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 
