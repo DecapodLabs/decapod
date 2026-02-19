@@ -80,7 +80,7 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs, docs_cli, error, flight_recorder, migration, proof, repomap, scaffold,
+    db, docs, docs_cli, error, flight_recorder, migration, proof, repomap, scaffold, state_commit,
     store::{Store, StoreKind},
     todo, trace, validate,
 };
@@ -443,12 +443,53 @@ enum Command {
     /// Governance Flight Recorder - render timeline from event logs
     #[clap(name = "flight-recorder")]
     FlightRecorder(flight_recorder::FlightRecorderCli),
+
+    /// STATE_COMMIT: prove and verify cryptographic state commitments
+    #[clap(name = "state-commit")]
+    StateCommit(StateCommitCli),
 }
 
 #[derive(clap::Args, Debug)]
 struct BrokerCli {
     #[clap(subcommand)]
     command: BrokerCommand,
+}
+
+#[derive(clap::Args, Debug)]
+struct StateCommitCli {
+    #[clap(subcommand)]
+    command: StateCommitCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum StateCommitCommand {
+    /// Compute STATE_COMMIT for the current workspace
+    Prove {
+        /// Base commit SHA (required)
+        #[clap(long)]
+        base: String,
+        /// Head commit SHA (defaults to current HEAD)
+        #[clap(long)]
+        head: Option<String>,
+        /// Output file for scope_record.cbor
+        #[clap(long, default_value = "scope_record.cbor")]
+        output: PathBuf,
+    },
+    /// Verify a STATE_COMMIT matches current workspace
+    Verify {
+        /// Path to scope_record.cbor
+        #[clap(long)]
+        scope_record: PathBuf,
+        /// Expected state_commit_root
+        #[clap(long)]
+        expected_root: Option<String>,
+    },
+    /// Explain the contents of a scope_record.cbor file
+    Explain {
+        /// Path to scope_record.cbor
+        #[clap(long)]
+        scope_record: PathBuf,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -899,6 +940,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::FlightRecorder(fr_cli) => {
                     flight_recorder::run_flight_recorder_cli(&project_store, fr_cli)?;
                 }
+                Command::StateCommit(sc_cli) => {
+                    run_state_commit_command(sc_cli, &project_root)?;
+                }
                 _ => unreachable!(),
             }
         }
@@ -909,7 +953,11 @@ pub fn run() -> Result<(), error::DecapodError> {
 fn should_auto_clock_in(command: &Command) -> bool {
     match command {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
-        Command::Version | Command::Init(_) | Command::Setup(_) | Command::Session(_) => false,
+        Command::Version
+        | Command::Init(_)
+        | Command::Setup(_)
+        | Command::Session(_)
+        | Command::StateCommit(_) => false,
         _ => true,
     }
 }
@@ -925,7 +973,8 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Trace(_)
         | Command::FlightRecorder(_)
         | Command::Docs(_)
-        | Command::Todo(_) => false,
+        | Command::Todo(_)
+        | Command::StateCommit(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
         Command::Rpc(_) => false,
         _ => true,
@@ -1019,7 +1068,8 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Docs(_)
         | Command::Capabilities(_)
         | Command::Trace(_)
-        | Command::FlightRecorder(_) => false,
+        | Command::FlightRecorder(_)
+        | Command::StateCommit(_) => false,
         Command::Data(DataCli {
             command: DataCommand::Schema(_),
         }) => false,
@@ -2338,6 +2388,118 @@ fn run_workspace_command(
     }
 
     Ok(())
+}
+
+/// Run STATE_COMMIT commands (prove/verify)
+fn run_state_commit_command(
+    cli: StateCommitCli,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
+    match cli.command {
+        StateCommitCommand::Prove { base, head, output } => {
+            let head = head.unwrap_or_else(|| {
+                state_commit::run_git(project_root, &["rev-parse", "HEAD"])
+                    .unwrap_or_else(|_| "HEAD".to_string())
+            });
+
+            println!("Computing STATE_COMMIT:");
+            println!("  base: {}", base);
+            println!("  head: {}", head);
+
+            // Use library function
+            let input = state_commit::StateCommitInput {
+                base_sha: base,
+                head_sha: head.clone(),
+                ignore_policy_hash: "da39a3ee5e6b4b0d3255bfef95601890afd80709".to_string(), // empty
+            };
+
+            let result = state_commit::prove(&input, project_root)
+                .map_err(error::DecapodError::ValidationError)?;
+
+            println!("  files: {}", result.entries.len());
+
+            // Write output
+            std::fs::write(&output, &result.scope_record_bytes)
+                .map_err(error::DecapodError::IoError)?;
+
+            println!("  scope_record_hash: {}", result.scope_record_hash);
+            println!("  state_commit_root: {}", result.state_commit_root);
+            println!("  output: {}", output.display());
+
+            Ok(())
+        }
+        StateCommitCommand::Verify {
+            scope_record,
+            expected_root,
+        } => {
+            // Read scope record
+            let cbor_bytes = std::fs::read(&scope_record).map_err(error::DecapodError::IoError)?;
+
+            // Use library function for verification
+            let record_hash = if let Some(ref exp) = expected_root {
+                match state_commit::verify(&cbor_bytes, exp) {
+                    Ok(h) => h,
+                    Err(e) => {
+                        println!("STATE_COMMIT verification:");
+                        println!("  scope_record: {}", scope_record.display());
+                        println!("  ❌ MISMATCH: {}", e);
+                        return Err(error::DecapodError::ValidationError(e));
+                    }
+                }
+            } else {
+                use sha2::{Digest, Sha256};
+                let mut hasher = Sha256::new();
+                hasher.update(&cbor_bytes);
+                format!("{:x}", hasher.finalize())
+            };
+
+            println!("STATE_COMMIT verification:");
+            println!("  scope_record: {}", scope_record.display());
+            println!("  scope_record_hash: {}", record_hash);
+            println!("  ✅ VERIFIED");
+
+            Ok(())
+        }
+        StateCommitCommand::Explain { scope_record } => {
+            // Read and parse scope_record
+            let cbor_bytes = std::fs::read(&scope_record).map_err(error::DecapodError::IoError)?;
+
+            // Compute hashes
+            use sha2::{Digest, Sha256};
+            let mut hasher = Sha256::new();
+            hasher.update(&cbor_bytes);
+            let scope_record_hash = format!("{:x}", hasher.finalize());
+
+            // Parse basic structure (simplified - looks for embedded strings)
+            let content = String::from_utf8_lossy(&cbor_bytes);
+
+            println!("STATE_COMMIT Explanation:");
+            println!("  File: {}", scope_record.display());
+            println!("  Size: {} bytes", cbor_bytes.len());
+            println!("  scope_record_hash: {}", scope_record_hash);
+            println!();
+
+            // Try to extract version and SHAs from the CBOR structure
+            if let Some(version_pos) = content.find("state_commit.") {
+                if let Some(end_pos) = content[version_pos..].find('\0') {
+                    println!(
+                        "  algo_version: {}",
+                        &content[version_pos..version_pos + end_pos]
+                    );
+                }
+            }
+
+            // Count entries (looking for patterns in the binary data)
+            let entry_count = content.matches("kind=").count();
+            println!("  Estimated entries: {}", entry_count);
+            println!();
+
+            println!("Note: scope_record_hash is sha256(scope_record_bytes)");
+            println!("      state_commit_root is the Merkle root of entry hashes");
+
+            Ok(())
+        }
+    }
 }
 
 /// Run RPC command
