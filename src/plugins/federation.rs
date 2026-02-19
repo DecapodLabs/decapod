@@ -239,9 +239,15 @@ struct FederationEvent {
     event_id: String,
     ts: String,
     event_type: String,
+    #[serde(default = "default_federation_event_status")]
+    status: String,
     node_id: Option<String>,
     payload: JsonValue,
     actor: String,
+}
+
+fn default_federation_event_status() -> String {
+    "success".to_string()
 }
 
 // --- Helpers ---
@@ -627,6 +633,7 @@ pub fn add_node(
                 event_id: event_id.clone(),
                 ts: now.clone(),
                 event_type: "node.create".to_string(),
+                status: "success".to_string(),
                 node_id: Some(node_id.clone()),
                 payload: payload_json.clone(),
                 actor: actor.to_string(),
@@ -758,6 +765,7 @@ pub fn edit_node(
                 event_id,
                 ts: now.clone(),
                 event_type: "node.edit".to_string(),
+                status: "success".to_string(),
                 node_id: Some(id.to_string()),
                 payload: payload_json,
                 actor: "decapod".to_string(),
@@ -846,6 +854,7 @@ pub fn supersede_node(
                 event_id,
                 ts: now.clone(),
                 event_type: "node.supersede".to_string(),
+                status: "success".to_string(),
                 node_id: Some(old_id.to_string()),
                 payload: payload_json,
                 actor: "decapod".to_string(),
@@ -910,6 +919,7 @@ pub fn transition_node_status(
                 event_id,
                 ts: now.clone(),
                 event_type: event_type.to_string(),
+                status: "success".to_string(),
                 node_id: Some(id.to_string()),
                 payload: payload_json,
                 actor: "decapod".to_string(),
@@ -982,6 +992,7 @@ pub fn add_edge(
                 event_id,
                 ts: now.clone(),
                 event_type: "edge.add".to_string(),
+                status: "success".to_string(),
                 node_id: Some(source_id.to_string()),
                 payload: payload_json,
                 actor: "decapod".to_string(),
@@ -1030,6 +1041,7 @@ fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> 
                 event_id,
                 ts: now.clone(),
                 event_type: "edge.remove".to_string(),
+                status: "success".to_string(),
                 node_id: None,
                 payload: payload_json,
                 actor: "decapod".to_string(),
@@ -1103,6 +1115,7 @@ pub fn add_source_to_node(
                     event_id,
                     ts: now.clone(),
                     event_type: "source.add".to_string(),
+                    status: "success".to_string(),
                     node_id: Some(node_id.to_string()),
                     payload: payload_json,
                     actor: "decapod".to_string(),
@@ -1514,6 +1527,11 @@ pub fn rebuild_from_events(root: &Path) -> Result<usize, error::DecapodError> {
         let event: FederationEvent = serde_json::from_str(line).map_err(|e| {
             error::DecapodError::ValidationError(format!("Invalid event JSON: {}", e))
         })?;
+
+        // Skip incomplete pending events (crash recovery)
+        if event.status == "pending" {
+            continue;
+        }
 
         replay_event(&conn, &event)?;
         count += 1;
