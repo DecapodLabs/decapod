@@ -98,7 +98,7 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
             "todo", "claim", "--id", &todo_id, "--agent", agent_id, "--format", "json",
         ])
         .env("DECAPOD_AGENT_ID", agent_id)
-        .env("DECAPOD_SESSION_PASSWORD", &session_password)
+        .env("DECAPOD_SESSION_PASSWORD", session_password)
         .output()
         .expect("todo claim");
     let todo_claim_json: serde_json::Value =
@@ -109,7 +109,7 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
         let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
         cmd.args(["rpc", "--stdin"])
             .env("DECAPOD_AGENT_ID", agent_id)
-            .env("DECAPOD_SESSION_PASSWORD", &session_password)
+            .env("DECAPOD_SESSION_PASSWORD", session_password)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped());
 
