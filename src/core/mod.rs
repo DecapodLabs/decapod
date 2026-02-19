@@ -48,6 +48,7 @@ pub mod rpc;
 pub mod scaffold;
 pub mod schemas;
 pub mod standards;
+pub mod state_commit;
 pub mod store;
 pub mod time;
 pub mod todo;

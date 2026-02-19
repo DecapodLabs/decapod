@@ -1,6 +1,7 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
+use crate::core::state_commit;
 use crate::core::store::Store;
 use crate::core::todo;
 use crate::plugins::federation;
@@ -434,13 +435,20 @@ fn verify_target(
         }
     };
 
-    if proof_plan.len() != 1 || proof_plan.first().map(String::as_str) != Some("validate_passes") {
+    let supported_proofs = ["validate_passes", "state_commit"];
+    if proof_plan
+        .iter()
+        .any(|p| !supported_proofs.iter().any(|sp| p == *sp))
+    {
         result.status = "unknown".to_string();
         result.notes.push(
-            "Unsupported proof_plan for MVP. Remediation: set proof_plan to [\"validate_passes\"] and capture artifacts.".to_string(),
+            "Unsupported proof_plan. Supported: validate_passes, state_commit. Remediation: set proof_plan to [\"validate_passes\"] or [\"state_commit\"].".to_string(),
         );
         return Ok(result);
     }
+
+    // Check validate_passes if in plan
+    let validate_check_needed = proof_plan.iter().any(|p| p == "validate_passes");
 
     let artifacts_raw = match target.artifacts.as_deref() {
         Some(v) if !v.trim().is_empty() => v,
@@ -478,35 +486,175 @@ fn verify_target(
         return Ok(result);
     }
 
-    let (validate_ok, actual_hash) = run_validate_and_hash(store_root, repo_root)?;
-    let expected = expected_hash.unwrap_or_default();
+    // Only check validate_passes if it's in the proof plan
+    if validate_check_needed {
+        let (validate_ok, actual_hash) = run_validate_and_hash(store_root, repo_root)?;
+        let expected = expected_hash.unwrap_or_default();
 
-    if !validate_ok {
-        result.status = "fail".to_string();
-        result.proofs.push(ProofCheckResult {
-            gate: "validate_passes".to_string(),
-            status: "fail".to_string(),
-            expected_output_hash: Some(expected),
-            actual_output_hash: Some(actual_hash),
-            reason: Some("decapod validate did not pass".to_string()),
-        });
-    } else if actual_hash != expected {
-        result.status = "fail".to_string();
-        result.proofs.push(ProofCheckResult {
-            gate: "validate_passes".to_string(),
-            status: "fail".to_string(),
-            expected_output_hash: Some(expected),
-            actual_output_hash: Some(actual_hash),
-            reason: Some("validate output hash changed".to_string()),
-        });
-    } else {
-        result.proofs.push(ProofCheckResult {
-            gate: "validate_passes".to_string(),
-            status: "pass".to_string(),
-            expected_output_hash: Some(expected),
-            actual_output_hash: Some(actual_hash),
-            reason: None,
-        });
+        if !validate_ok {
+            result.status = "fail".to_string();
+            result.proofs.push(ProofCheckResult {
+                gate: "validate_passes".to_string(),
+                status: "fail".to_string(),
+                expected_output_hash: Some(expected),
+                actual_output_hash: Some(actual_hash),
+                reason: Some("decapod validate did not pass".to_string()),
+            });
+        } else if actual_hash != expected {
+            result.status = "fail".to_string();
+            result.proofs.push(ProofCheckResult {
+                gate: "validate_passes".to_string(),
+                status: "fail".to_string(),
+                expected_output_hash: Some(expected),
+                actual_output_hash: Some(actual_hash),
+                reason: Some("validate output hash changed".to_string()),
+            });
+        } else {
+            result.proofs.push(ProofCheckResult {
+                gate: "validate_passes".to_string(),
+                status: "pass".to_string(),
+                expected_output_hash: Some(expected),
+                actual_output_hash: Some(actual_hash),
+                reason: None,
+            });
+        }
+    }
+
+    // Check state_commit if in plan
+    if proof_plan.iter().any(|p| p == "state_commit") {
+        let state_commit_proof = artifacts
+            .proof_plan_results
+            .iter()
+            .find(|p| p.proof_gate == "state_commit");
+
+        let expected_root = state_commit_proof.map(|p| p.output_hash.clone());
+
+        let expected = match expected_root {
+            Some(exp) => exp,
+            None => {
+                result.status = "fail".to_string();
+                result.notes.push(
+                    "Missing baseline state_commit output hash. Remediation: run `decapod state-commit prove --base <sha> --head <sha> --output scope_record.cbor` and capture as proof artifact.".to_string(),
+                );
+                String::new() // Skip the rest of state_commit verification
+            }
+        };
+
+        // Only verify if we have an expected_root
+        if !expected.is_empty() {
+            // Full state_commit verification using canonical prove logic:
+            // 1. scope_record.cbor must exist
+            // 2. Recompute Merkle root from git objects at current HEAD
+            // 3. Compare recomputed root to expected_root
+            let scope_record_path = repo_root.join("scope_record.cbor");
+            if !scope_record_path.exists() {
+                result.status = "fail".to_string();
+                result.proofs.push(ProofCheckResult {
+                gate: "state_commit".to_string(),
+                status: "fail".to_string(),
+                expected_output_hash: Some(expected.clone()),
+                actual_output_hash: None,
+                reason: Some("scope_record.cbor not found in repo root. Run `decapod state-commit prove` first.".to_string()),
+            });
+            } else {
+                // Get current HEAD
+                let head_output = std::process::Command::new("git")
+                    .args(["rev-parse", "HEAD"])
+                    .current_dir(repo_root)
+                    .output();
+
+                // Use library function to recompute root from git objects (hermetic, no subprocess)
+                // This verifies the full contract: git objects -> entries -> Merkle root
+                let current_head = match head_output {
+                    Ok(o) if o.status.success() => {
+                        String::from_utf8_lossy(&o.stdout).trim().to_string()
+                    }
+                    _ => String::new(),
+                };
+
+                let recomputed_root = if !current_head.is_empty() {
+                    // Get base_sha (previous commit)
+                    let base_output = std::process::Command::new("git")
+                        .args(["rev-parse", "HEAD~1"])
+                        .current_dir(repo_root)
+                        .output();
+
+                    let base_sha = match base_output {
+                        Ok(o) if o.status.success() => {
+                            String::from_utf8_lossy(&o.stdout).trim().to_string()
+                        }
+                        _ => String::new(),
+                    };
+
+                    if !base_sha.is_empty() {
+                        let input = state_commit::StateCommitInput {
+                            base_sha,
+                            head_sha: current_head.clone(),
+                            ignore_policy_hash: "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+                                .to_string(),
+                        };
+                        match state_commit::prove(&input, repo_root) {
+                            Ok(result) => Some(result.state_commit_root),
+                            Err(_) => None,
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
+                match recomputed_root {
+                    Some(root) if root == expected => {
+                        // Verify HEAD binding - check scope_record contains current HEAD
+                        let scope_bytes = std::fs::read(&scope_record_path).unwrap_or_default();
+                        let head_in_record = !current_head.is_empty()
+                            && scope_bytes
+                                .windows(current_head.len())
+                                .any(|w| w == current_head.as_bytes());
+
+                        if !head_in_record {
+                            result.status = "fail".to_string();
+                            result.proofs.push(ProofCheckResult {
+                                gate: "state_commit".to_string(),
+                                status: "fail".to_string(),
+                                expected_output_hash: Some(expected.clone()),
+                                actual_output_hash: Some(root.clone()),
+                                reason: Some(format!("STATE_COMMIT head_sha mismatch. Current HEAD: {} not in scope_record. Run `decapod state-commit prove` to regenerate.", current_head)),
+                            });
+                        } else {
+                            result.proofs.push(ProofCheckResult {
+                                gate: "state_commit".to_string(),
+                                status: "pass".to_string(),
+                                expected_output_hash: Some(expected.clone()),
+                                actual_output_hash: Some(root),
+                                reason: Some("STATE_COMMIT verified: root recomputed from git objects matches expected, bound to current HEAD".to_string()),
+                            });
+                        }
+                    }
+                    Some(root) => {
+                        result.status = "fail".to_string();
+                        result.proofs.push(ProofCheckResult {
+                            gate: "state_commit".to_string(),
+                            status: "fail".to_string(),
+                            expected_output_hash: Some(expected.clone()),
+                            actual_output_hash: Some(root.clone()),
+                            reason: Some(format!("STATE_COMMIT root mismatch. Expected: {}, Recomputed: {}. Files changed since scope recorded. Run `decapod state-commit prove` to regenerate.", expected, root)),
+                        });
+                    }
+                    None => {
+                        result.status = "fail".to_string();
+                        result.proofs.push(ProofCheckResult {
+                            gate: "state_commit".to_string(),
+                            status: "fail".to_string(),
+                            expected_output_hash: Some(expected.clone()),
+                            actual_output_hash: None,
+                            reason: Some("Failed to recompute STATE_COMMIT root. Verify decapod binary is available.".to_string()),
+                        });
+                    }
+                }
+            }
+        }
     }
 
     if artifacts.file_artifacts.is_empty() {
