@@ -314,9 +314,15 @@ struct TodoEvent {
     ts: String,
     event_id: String,
     event_type: String,
+    #[serde(default = "default_todo_event_status")]
+    status: String,
     task_id: Option<String>,
     payload: JsonValue,
     actor: String,
+}
+
+fn default_todo_event_status() -> String {
+    "success".to_string()
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1171,6 +1177,7 @@ fn record_heartbeat(root: &Path, agent_id: &str) -> Result<serde_json::Value, er
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "agent.heartbeat".to_string(),
+            status: "success".to_string(),
             task_id: None,
             payload: serde_json::json!({ "agent_id": agent_id }),
             actor: agent_id.to_string(),
@@ -1254,6 +1261,7 @@ pub fn cleanup_stale_agent_assignments(
                         ts: ts.clone(),
                         event_id: Ulid::new().to_string(),
                         event_type: "task.release".to_string(),
+                        status: "success".to_string(),
                         task_id: Some(task_id.clone()),
                         payload: serde_json::json!({
                             "assigned_to": "",
@@ -1289,6 +1297,7 @@ pub fn cleanup_stale_agent_assignments(
                 ts: ts.clone(),
                 event_id: Ulid::new().to_string(),
                 event_type: "agent.session.cleanup".to_string(),
+                status: "success".to_string(),
                 task_id: None,
                 payload: serde_json::json!({
                     "agent_id": agent_id,
@@ -1848,6 +1857,7 @@ pub fn record_task_event(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: event_type.to_string(),
+            status: "success".to_string(),
             task_id: task_id.map(|s| s.to_string()),
             payload,
             actor: "decapod".to_string(),
@@ -2106,6 +2116,7 @@ fn write_ownership_claim_event(
         ts: claim.ts.to_string(),
         event_id: Ulid::new().to_string(),
         event_type: "ownership.claim".to_string(),
+        status: "success".to_string(),
         task_id: Some(claim.task_id.to_string()),
         payload: serde_json::json!({
             "agent_id": claim.agent_id,
@@ -2185,6 +2196,7 @@ fn set_task_owners(
             ts: ts.to_string(),
             event_id: Ulid::new().to_string(),
             event_type: "ownership.release".to_string(),
+            status: "success".to_string(),
             task_id: Some(task_id.to_string()),
             payload: serde_json::json!({
                 "agent_id": removed_agent,
@@ -2338,6 +2350,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "task.add".to_string(),
+            status: "success".to_string(),
             task_id: Some(task_id.clone()),
             payload,
             actor: "decapod".to_string(),
@@ -2451,6 +2464,7 @@ pub fn update_status(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: event_type.to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: payload.clone(),
             actor: "decapod".to_string(),
@@ -2550,6 +2564,7 @@ fn comment_task(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "task.comment".to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({ "comment": comment }),
             actor: "decapod".to_string(),
@@ -2665,6 +2680,7 @@ fn edit_task(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "task.edit".to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::Value::Object(payload),
             actor: "decapod".to_string(),
@@ -2985,6 +3001,7 @@ fn claim_task(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "task.claim".to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({
                 "assigned_to": agent_id,
@@ -3104,6 +3121,7 @@ fn handoff_task(
             ts: ts.clone(),
             event_id: event_id.clone(),
             event_type: "task.handoff".to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({
                 "from": previous,
@@ -3284,6 +3302,7 @@ fn remove_task_owner(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "ownership.release".to_string(),
+            status: "success".to_string(),
             task_id: Some(task_id.to_string()),
             payload: serde_json::json!({
                 "agent_id": agent_id,
@@ -3355,6 +3374,7 @@ fn register_agent_expertise(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "agent.expertise".to_string(),
+            status: "success".to_string(),
             task_id: None,
             payload: serde_json::json!({
                 "agent_id": agent_id,
@@ -3507,6 +3527,7 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "task.release".to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({}),
             actor: "decapod".to_string(),
@@ -3726,6 +3747,11 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                 error::DecapodError::ValidationError(format!("Invalid JSONL event: {}", e))
             })?;
             count += 1;
+
+            // Skip incomplete pending events (crash recovery)
+            if ev.status == "pending" {
+                continue;
+            }
 
             insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 

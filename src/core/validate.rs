@@ -28,6 +28,7 @@
 //! - Canon mutation gate (no unauthorized doc writes)
 //! - Tooling validation gate (formatting, linting, type checking)
 
+use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::output;
 use crate::core::store::{Store, StoreKind};
@@ -330,6 +331,24 @@ fn validate_repo_store_dogfood(
     if !db_path.is_file() {
         fail("Repo store missing todo.db", fail_count);
         return Ok(());
+    }
+
+    // Broker log integrity check
+    let broker = DbBroker::new(&store.root);
+    let replay_report = broker.verify_replay()?;
+    if replay_report.divergences.is_empty() {
+        pass(
+            "Audit log integrity verified (no pending event gaps)",
+            pass_count,
+        );
+    } else {
+        fail(
+            &format!(
+                "Audit log contains {} potential crash divergence(s)",
+                replay_report.divergences.len()
+            ),
+            fail_count,
+        );
     }
 
     let tmp_root = std::env::temp_dir().join(format!("decapod_validate_repo_{}", Ulid::new()));

@@ -80,7 +80,7 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs, docs_cli, error, migration, proof, repomap, scaffold,
+    db, docs, docs_cli, error, flight_recorder, migration, proof, repomap, scaffold,
     store::{Store, StoreKind},
     todo, trace, validate,
 };
@@ -439,6 +439,10 @@ enum Command {
     /// Local trace management
     #[clap(name = "trace")]
     Trace(TraceCli),
+
+    /// Governance Flight Recorder - render timeline from event logs
+    #[clap(name = "flight-recorder")]
+    FlightRecorder(flight_recorder::FlightRecorderCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -451,6 +455,8 @@ struct BrokerCli {
 enum BrokerCommand {
     /// Show the audit log of brokered mutations.
     Audit,
+    /// Verify audit log integrity and detect crash-induced divergence.
+    Verify,
 }
 
 #[derive(clap::Args, Debug)]
@@ -890,6 +896,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Trace(trace_cli) => {
                     run_trace_command(trace_cli, &project_root)?;
                 }
+                Command::FlightRecorder(fr_cli) => {
+                    flight_recorder::run_flight_recorder_cli(&project_store, fr_cli)?;
+                }
                 _ => unreachable!(),
             }
         }
@@ -914,6 +923,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Workspace(_)
         | Command::Capabilities(_)
         | Command::Trace(_)
+        | Command::FlightRecorder(_)
         | Command::Docs(_)
         | Command::Todo(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
@@ -1008,7 +1018,8 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Version
         | Command::Docs(_)
         | Command::Capabilities(_)
-        | Command::Trace(_) => false,
+        | Command::Trace(_)
+        | Command::FlightRecorder(_) => false,
         Command::Data(DataCli {
             command: DataCommand::Schema(_),
         }) => false,
@@ -1803,6 +1814,17 @@ fn run_data_command(
                     println!("{}", content);
                 } else {
                     println!("No audit log found.");
+                }
+            }
+            BrokerCommand::Verify => {
+                let broker = core::broker::DbBroker::new(store_root);
+                let report = broker.verify_replay()?;
+                println!("{}", serde_json::to_string_pretty(&report).unwrap());
+                if !report.divergences.is_empty() {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Audit log integrity check failed: {} divergence(s) detected",
+                        report.divergences.len()
+                    )));
                 }
             }
         },
