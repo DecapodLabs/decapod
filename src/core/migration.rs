@@ -329,6 +329,14 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
     let knowledge_db = data_root.join("knowledge.db");
     if knowledge_db.exists() {
         let k_conn = Connection::open(&knowledge_db).map_err(error::DecapodError::RusqliteError)?;
+        // Guard: knowledge table may not exist yet if the DB file was created but not initialized
+        let has_table: bool = k_conn
+            .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='knowledge'")
+            .and_then(|mut s| s.exists([]))
+            .unwrap_or(false);
+        if !has_table {
+            return Ok(());
+        }
         let mut stmt =
             k_conn.prepare("SELECT id, title, content, provenance, created_at FROM knowledge")?;
         let rows = stmt.query_map([], |row| {
