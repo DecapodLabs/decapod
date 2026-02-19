@@ -54,3 +54,4 @@ pub mod todo;
 pub mod trace;
 pub mod validate;
 pub mod workspace;
+pub mod state_commit;
