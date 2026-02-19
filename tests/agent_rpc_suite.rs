@@ -2,72 +2,93 @@ use std::io::Write;
 use std::process::{Command, Stdio};
 use std::sync::{Mutex, OnceLock};
 
-static RUN_RPC_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+/// Session password acquired once during bootstrap.
+static SESSION_PASSWORD: OnceLock<String> = OnceLock::new();
+/// Mutex to serialize run_rpc calls (tests share repo state).
+static RPC_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+fn bootstrap_session() -> &'static str {
+    SESSION_PASSWORD.get_or_init(|| {
+        let agent_id = "unknown";
+
+        // Ensure we are on a non-protected branch for tests
+        let _ = Command::new("git")
+            .args(["checkout", "-b", "feat/test-rpc-suite"])
+            .output();
+
+        // Acquire session once
+        let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(["session", "acquire"])
+            .env("DECAPOD_AGENT_ID", agent_id)
+            .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+            .output()
+            .expect("session acquire");
+        let session_stdout = String::from_utf8_lossy(&session_out.stdout);
+        let session_password = session_stdout
+            .lines()
+            .find_map(|line| {
+                line.strip_prefix("Password: ")
+                    .map(|v| v.trim().to_string())
+            })
+            .unwrap_or_else(|| "test".to_string());
+
+        // Validate once
+        let validate_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(["validate"])
+            .env("DECAPOD_AGENT_ID", agent_id)
+            .env("DECAPOD_SESSION_PASSWORD", &session_password)
+            .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+            .env("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1")
+            .output()
+            .expect("validate");
+        assert!(
+            validate_out.status.success(),
+            "validate failed:\nstdout:\n{}\nstderr:\n{}",
+            String::from_utf8_lossy(&validate_out.stdout),
+            String::from_utf8_lossy(&validate_out.stderr)
+        );
+
+        // Ingest once
+        let ingest_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(["docs", "ingest"])
+            .env("DECAPOD_AGENT_ID", agent_id)
+            .env("DECAPOD_SESSION_PASSWORD", &session_password)
+            .output()
+            .expect("docs ingest");
+        assert!(
+            ingest_out.status.success(),
+            "docs ingest failed: {}",
+            String::from_utf8_lossy(&ingest_out.stderr)
+        );
+
+        session_password
+    })
+}
 
 fn run_rpc(request: serde_json::Value) -> serde_json::Value {
-    let lock = RUN_RPC_LOCK.get_or_init(|| Mutex::new(()));
+    let session_password = bootstrap_session();
+    let agent_id = "unknown";
+
+    // Serialize RPC calls — tests share repo state via external processes.
+    let lock = RPC_LOCK.get_or_init(|| Mutex::new(()));
     let _guard = match lock.lock() {
         Ok(guard) => guard,
         Err(poisoned) => poisoned.into_inner(),
     };
 
-    // We need a stable agent ID and session for enforcement
-    let agent_id = "unknown";
-
-    // Ensure we are on a non-protected branch for tests
-    let _ = Command::new("git")
-        .args(["checkout", "-b", "feat/test-rpc-suite"])
-        .output();
-
-    // Ensure we have a session
-    let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["session", "acquire"])
-        .env("DECAPOD_AGENT_ID", agent_id)
-        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
-        .output()
-        .expect("session acquire");
-    let session_stdout = String::from_utf8_lossy(&session_out.stdout);
-    let session_password = session_stdout
-        .lines()
-        .find_map(|line| {
-            line.strip_prefix("Password: ")
-                .map(|v| v.trim().to_string())
-        })
-        .unwrap_or_else(|| "test".to_string());
-
-    let validate_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["validate"])
-        .env("DECAPOD_AGENT_ID", agent_id)
-        .env("DECAPOD_SESSION_PASSWORD", &session_password)
-        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
-        .env("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1")
-        .output()
-        .expect("validate");
-    assert!(
-        validate_out.status.success(),
-        "validate failed:\nstdout:\n{}\nstderr:\n{}",
-        String::from_utf8_lossy(&validate_out.stdout),
-        String::from_utf8_lossy(&validate_out.stderr)
-    );
-
-    let ingest_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["docs", "ingest"])
-        .env("DECAPOD_AGENT_ID", agent_id)
-        .env("DECAPOD_SESSION_PASSWORD", &session_password)
-        .output()
-        .expect("docs ingest");
-    assert!(
-        ingest_out.status.success(),
-        "docs ingest failed: {}",
-        String::from_utf8_lossy(&ingest_out.stderr)
-    );
-
+    // Each test still needs its own todo claim for ordering-gate compliance.
     let todo_add_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["todo", "add", "ordering gate test task", "--format", "json"])
         .env("DECAPOD_AGENT_ID", agent_id)
-        .env("DECAPOD_SESSION_PASSWORD", &session_password)
+        .env("DECAPOD_SESSION_PASSWORD", session_password)
         .output()
         .expect("todo add");
+    assert!(
+        todo_add_out.status.success(),
+        "todo add failed:\nstdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&todo_add_out.stdout),
+        String::from_utf8_lossy(&todo_add_out.stderr)
+    );
     let todo_add_json: serde_json::Value =
         serde_json::from_slice(&todo_add_out.stdout).expect("parse todo add");
     let todo_id = todo_add_json["id"].as_str().expect("todo id").to_string();
@@ -77,7 +98,7 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
             "todo", "claim", "--id", &todo_id, "--agent", agent_id, "--format", "json",
         ])
         .env("DECAPOD_AGENT_ID", agent_id)
-        .env("DECAPOD_SESSION_PASSWORD", &session_password)
+        .env("DECAPOD_SESSION_PASSWORD", session_password)
         .output()
         .expect("todo claim");
     let todo_claim_json: serde_json::Value =
@@ -88,7 +109,7 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
         let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
         cmd.args(["rpc", "--stdin"])
             .env("DECAPOD_AGENT_ID", agent_id)
-            .env("DECAPOD_SESSION_PASSWORD", &session_password)
+            .env("DECAPOD_SESSION_PASSWORD", session_password)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped());
 

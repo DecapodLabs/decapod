@@ -214,6 +214,40 @@ Each entry MUST include:
 - Proof surface run:
   - `decapod validate`
 
+### 2026-02-18 (knowledge lifecycle, temporal retrieval, decay/merge invariants, memory redaction)
+
+- Docs changed:
+  - `interfaces/MEMORY_SCHEMA.md` (temporal retrieval, decay event, and capture audit invariants)
+  - `interfaces/MEMORY_INDEX.md` (optional local index contract, SPEC/IDEA)
+  - `specs/SECURITY.md` (memory/knowledge redaction policy §4.5)
+  - `src/core/schemas.rs` (knowledge table columns: status, merge_key, supersedes_id, ttl_policy, expires_ts)
+  - `src/core/db.rs` (knowledge DB separation to knowledge.db, column migration)
+  - `src/plugins/knowledge.rs` (merge/supersede/conflict policies, temporal retrieval, decay/prune, retrieval feedback)
+  - `src/plugins/health.rs` (removed ConstitutionViolation, simplified autonomy tiers)
+  - `src/plugins/policy.rs` (removed dead git push risk eval)
+  - `src/plugins/primitives.rs` (broker-routed DB access for audit compliance)
+  - `.github/workflows/ci.yml` (added health checks CI job)
+- Summary:
+  - Added enforceable retrieval-event and temporal invariants, deterministic decay audit expectations, and explicit merge/supersede lifecycle constraints for knowledge.
+  - Separated knowledge DB to its own file (knowledge.db) from shared memory.db.
+  - Removed ConstitutionViolation system from health plugin, simplified autonomy tier computation.
+  - Routed primitives DB access through broker for audit compliance.
+  - Added CI health checks stage gating release builds.
+- Claims added/changed:
+  - `claim.knowledge.merge.no_duplicate_active`
+  - `claim.memory.temporal.as_of_respected`
+  - `claim.memory.decay.prune_audited`
+  - `claim.memory.roi.retrieval_event_logged`
+  - `claim.memory.redaction.pointerization_required`
+- Deprecations:
+  - `ConstitutionViolation` struct and `record_violation`/`get_violation_count` functions removed from health plugin.
+  - `violation_count` field removed from `AutonomyStatus`.
+- Proof surface run:
+  - `cargo fmt`
+  - `cargo check --all-targets --all-features`
+  - `cargo test`
+  - `decapod validate`
+
 ---
 
 ## Links
