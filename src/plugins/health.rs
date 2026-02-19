@@ -7,7 +7,6 @@ use clap::{Parser, Subcommand};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
 
@@ -117,69 +116,6 @@ pub enum HealthState {
     VERIFIED,
 }
 
-// ===== Constitution Violations =====
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ConstitutionViolation {
-    pub id: String,
-    pub claim_id: String,
-    pub violation_type: String,
-    pub description: String,
-    pub ts: String,
-    pub actor: Option<String>,
-}
-
-pub fn record_violation(
-    store: &Store,
-    claim_id: &str,
-    violation_type: &str,
-    description: &str,
-    actor: Option<&str>,
-) -> Result<(), error::DecapodError> {
-    let violation = ConstitutionViolation {
-        id: Ulid::new().to_string(),
-        claim_id: claim_id.to_string(),
-        violation_type: violation_type.to_string(),
-        description: description.to_string(),
-        ts: now_iso(),
-        actor: actor.map(|s| s.to_string()),
-    };
-
-    let events_path = store.root.join("violation.events.jsonl");
-    let entry = serde_json::to_string(&violation)
-        .map_err(|e| error::DecapodError::ValidationError(format!("JSON error: {}", e)))?;
-    std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&events_path)?
-        .write_all(entry.as_bytes())?;
-    Ok(())
-}
-
-pub fn get_violation_count(store: &Store, actor_id: &str) -> Result<usize, error::DecapodError> {
-    let events_path = store.root.join("violation.events.jsonl");
-    if !events_path.exists() {
-        return Ok(0);
-    }
-
-    let content = std::fs::read_to_string(&events_path).map_err(error::DecapodError::IoError)?;
-    let count = content
-        .lines()
-        .filter(|line| {
-            if let Ok(v) = serde_json::from_str::<serde_json::Value>(line) {
-                v.get("actor")
-                    .and_then(|a| a.as_str())
-                    .map(|a| a == actor_id)
-                    .unwrap_or(false)
-            } else {
-                false
-            }
-        })
-        .count();
-
-    Ok(count)
-}
-
 // ===== Summary (formerly heartbeat) =====
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -221,7 +157,6 @@ pub struct AutonomyStatus {
     pub tier: AutonomyTier,
     pub success_count: usize,
     pub failure_count: usize,
-    pub violation_count: usize,
     pub reasons: Vec<String>,
 }
 
@@ -543,27 +478,10 @@ pub fn get_autonomy(store: &Store, actor_id: &str) -> Result<AutonomyStatus, err
         }
     }
 
-    // Check for constitution violations (weights and balances)
-    let violation_count = get_violation_count(store, actor_id)?;
-
     let mut reasons = Vec::new();
-    let tier = if violation_count >= 3 {
-        // Repeated violations -> untrusted tier
-        reasons.push(format!(
-            "{} constitution violation(s) recorded; autonomy revoked",
-            violation_count
-        ));
-        AutonomyTier::Untrusted
-    } else if failure_count > 0 {
+    let tier = if failure_count > 0 {
         reasons.push("Contradicted claims detected; restricted to Basic".to_string());
         AutonomyTier::Basic
-    } else if violation_count > 0 {
-        // First violations -> reduced autonomy
-        reasons.push(format!(
-            "{} constitution violation(s) recorded; verified operations only",
-            violation_count
-        ));
-        AutonomyTier::Verified
     } else if success_count >= 5 {
         reasons.push(format!(
             "Verified success count ({}) exceeds threshold",
@@ -580,7 +498,6 @@ pub fn get_autonomy(store: &Store, actor_id: &str) -> Result<AutonomyStatus, err
         tier,
         success_count,
         failure_count,
-        violation_count,
         reasons,
     })
 }

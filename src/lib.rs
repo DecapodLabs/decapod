@@ -1667,18 +1667,36 @@ fn run_data_command(
                     provenance,
                     claim_id,
                 } => {
-                    knowledge::add_knowledge(
+                    let result = knowledge::add_knowledge(
                         project_store,
-                        &id,
-                        &title,
-                        &text,
-                        &provenance,
-                        claim_id.as_deref(),
+                        knowledge::AddKnowledgeParams {
+                            id: &id,
+                            title: &title,
+                            content: &text,
+                            provenance: &provenance,
+                            claim_id: claim_id.as_deref(),
+                            merge_key: None,
+                            conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
+                            status: "active",
+                            ttl_policy: "persistent",
+                            expires_ts: None,
+                        },
                     )?;
-                    println!("Knowledge entry added: {}", id);
+                    println!(
+                        "Knowledge entry {}: {} (action: {})",
+                        result.id, id, result.action
+                    );
                 }
                 KnowledgeCommand::Search { query } => {
-                    let results = knowledge::search_knowledge(project_store, &query)?;
+                    let results = knowledge::search_knowledge(
+                        project_store,
+                        &query,
+                        knowledge::SearchOptions {
+                            as_of: None,
+                            window_days: None,
+                            rank: "relevance",
+                        },
+                    )?;
                     println!("{}", serde_json::to_string_pretty(&results).unwrap());
                 }
             }
@@ -2801,21 +2819,29 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         .to_string();
 
                     db::initialize_knowledge_db(&project_store.root)?;
-                    knowledge::add_knowledge(
+                    let result = knowledge::add_knowledge(
                         &project_store,
-                        &id,
-                        &title,
-                        &text,
-                        &provenance,
-                        None,
+                        knowledge::AddKnowledgeParams {
+                            id: &id,
+                            title: &title,
+                            content: &text,
+                            provenance: &provenance,
+                            claim_id: None,
+                            merge_key: None,
+                            conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
+                            status: "active",
+                            ttl_policy: "persistent",
+                            expires_ts: None,
+                        },
                     )?;
                     success_response(
                         request.id.clone(),
                         request.op.clone(),
                         request.params.clone(),
                         Some(serde_json::json!({
-                            "id": id,
-                            "stored": true
+                            "id": result.id,
+                            "stored": true,
+                            "action": result.action
                         })),
                         vec![],
                         None,
@@ -2913,7 +2939,15 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         .and_then(|v| v.as_str())
                         .unwrap_or("");
                     db::initialize_knowledge_db(&project_store.root)?;
-                    let entries = knowledge::search_knowledge(&project_store, text)?;
+                    let entries = knowledge::search_knowledge(
+                        &project_store,
+                        text,
+                        knowledge::SearchOptions {
+                            as_of: None,
+                            window_days: None,
+                            rank: "relevance",
+                        },
+                    )?;
                     success_response(
                         request.id.clone(),
                         request.op.clone(),
