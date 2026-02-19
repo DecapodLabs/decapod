@@ -1384,7 +1384,16 @@ fn summarize_task_context(
         .collect();
 
     for word in title_words {
-        let hits = knowledge::search_knowledge(store, word).unwrap_or_default();
+        let hits = knowledge::search_knowledge(
+            store,
+            word,
+            knowledge::SearchOptions {
+                as_of: None,
+                window_days: None,
+                rank: "relevance",
+            },
+        )
+        .unwrap_or_default();
         if !hits.is_empty() {
             hints.push(serde_json::json!({
                 "query": word,
@@ -1419,11 +1428,18 @@ fn record_task_lesson(
     );
     let _ = knowledge::add_knowledge(
         store,
-        &lesson_id,
-        &lesson_title,
-        &lesson_content,
-        &provenance,
-        None,
+        knowledge::AddKnowledgeParams {
+            id: &lesson_id,
+            title: &lesson_title,
+            content: &lesson_content,
+            provenance: &provenance,
+            claim_id: None,
+            merge_key: None,
+            conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
+            status: "active",
+            ttl_policy: "persistent",
+            expires_ts: None,
+        },
     );
 
     let _ = federation::add_node(
@@ -3127,7 +3143,21 @@ fn handoff_task(
         let title = format!("Task handoff {}", id);
         let content = format!("Handoff from {:?} to {}. Summary: {}", from, to, summary);
         let provenance = format!("event:{}", event_id);
-        let _ = knowledge::add_knowledge(store, &knowledge_id, &title, &content, &provenance, None);
+        let _ = knowledge::add_knowledge(
+            store,
+            knowledge::AddKnowledgeParams {
+                id: &knowledge_id,
+                title: &title,
+                content: &content,
+                provenance: &provenance,
+                claim_id: None,
+                merge_key: None,
+                conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
+                status: "active",
+                ttl_policy: "persistent",
+                expires_ts: None,
+            },
+        );
         let obs = format!("Task {} handoff to {}: {}", id, to, summary);
         let _ = teammate::record_observation(store, &obs, Some("multi_agent"));
 

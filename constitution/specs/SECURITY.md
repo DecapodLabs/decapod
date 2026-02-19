@@ -168,6 +168,20 @@ Agents must not bleed state. One agent's context must not leak to another. This 
 
 **The Contamination Problem:** If agent A's state can influence agent B's behavior, then compromise of A is compromise of B. Design for failure isolation.
 
+### 4.5 Memory and Knowledge Redaction
+
+Captured memory/knowledge artifacts must not persist raw secrets or credentials.
+
+Minimum denylist targets:
+- passwords and passphrases
+- API keys and bearer tokens
+- private keys and seed phrases
+- authorization headers and session secrets
+
+Operational rule:
+- Persist pointers or redacted residues instead of raw secret-bearing blobs.
+- Secret-pattern validation must fail loud when known credential patterns appear in persisted memory/retrieval logs.
+
 ---
 
 ## 5. Supply Chain Security

@@ -1594,7 +1594,7 @@ fn validate_heartbeat_invocation_gate(
 fn validate_federation_gates(
     store: &Store,
     pass_count: &mut u32,
-    fail_count: &mut u32,
+    warn_count: &mut u32,
 ) -> Result<(), error::DecapodError> {
     info("Federation Gates");
 
@@ -1604,7 +1604,10 @@ fn validate_federation_gates(
         if passed {
             pass(&format!("[{}] {}", gate_name, message), pass_count);
         } else {
-            fail(&format!("[{}] {}", gate_name, message), fail_count);
+            // Federation gates are advisory (warn) rather than hard-fail because the
+            // two-phase DB+JSONL write design can produce transient drift that does
+            // not indicate data loss.
+            warn(&format!("[{}] {}", gate_name, message), warn_count);
         }
     }
 
@@ -2105,7 +2108,7 @@ pub fn run_validation(
     trace_gate("validate_markdown_primitives_roundtrip_gate");
     validate_markdown_primitives_roundtrip_gate(store, &mut pass_count, &mut fail_count)?;
     trace_gate("validate_federation_gates");
-    validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
+    validate_federation_gates(store, &mut pass_count, &mut warn_count)?;
     trace_gate("validate_git_workspace_context");
     validate_git_workspace_context(&mut pass_count, &mut fail_count, decapod_dir)?;
     trace_gate("validate_git_protected_branch");

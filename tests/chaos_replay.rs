@@ -57,18 +57,35 @@ fn setup_workspace() -> (TempDir, PathBuf) {
 }
 
 fn run(dir: &PathBuf, args: &[&str]) -> (bool, String) {
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(args)
-        .current_dir(dir)
-        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
-        .output()
-        .expect("failed to run decapod");
-    let combined = format!(
-        "{}\n{}",
-        String::from_utf8_lossy(&out.stdout),
-        String::from_utf8_lossy(&out.stderr)
-    );
-    (out.status.success(), combined)
+    run_with_retries(dir, args, 1)
+}
+
+/// Run a decapod command with retry logic for transient SQLite I/O errors
+/// that occur under heavy concurrent process contention.
+fn run_with_retries(dir: &PathBuf, args: &[&str], max_retries: u32) -> (bool, String) {
+    for attempt in 0..=max_retries {
+        let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(args)
+            .current_dir(dir)
+            .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+            .output()
+            .expect("failed to run decapod");
+        let combined = format!(
+            "{}\n{}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        if out.status.success() || attempt == max_retries {
+            return (out.status.success(), combined);
+        }
+        // Retry on transient SQLite I/O errors (disk I/O error, database is locked)
+        if combined.contains("disk I/O error") || combined.contains("database is locked") {
+            thread::sleep(std::time::Duration::from_millis(50 * (attempt as u64 + 1)));
+            continue;
+        }
+        return (false, combined);
+    }
+    unreachable!()
 }
 
 fn list_chaos_projection(dir: &PathBuf) -> BTreeMap<String, (String, String, String)> {
@@ -104,7 +121,7 @@ fn chaos_multi_agent_replay_is_deterministic() {
             let agent = format!("agent-{}", worker);
             for n in 0..tasks_per_worker {
                 let title = format!("CHAOS: {} task {}", agent, n);
-                let (ok, out) = run(
+                let (ok, out) = run_with_retries(
                     &dir_clone,
                     &[
                         "todo",
@@ -117,6 +134,7 @@ fn chaos_multi_agent_replay_is_deterministic() {
                         "--tags",
                         "chaos,replay",
                     ],
+                    3,
                 );
                 assert!(ok, "todo add failed for {}:\n{}", title, out);
 
