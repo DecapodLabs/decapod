@@ -1957,6 +1957,93 @@ fn validate_tooling_gate(
     Ok(())
 }
 
+fn validate_state_commit_gate(
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("STATE_COMMIT Validation Gate");
+
+    // Policy knob: configurable CI job name (can be set via env var)
+    let required_ci_job = std::env::var("DECAPOD_STATE_COMMIT_CI_JOB")
+        .unwrap_or_else(|_| "state_commit_golden_vectors".to_string());
+
+    info(&format!(
+        "STATE_COMMIT: required_ci_job = {}",
+        required_ci_job
+    ));
+
+    // Check for v1 golden directory (versioned)
+    let golden_v1_dir = repo_root
+        .join("tests")
+        .join("golden")
+        .join("state_commit")
+        .join("v1");
+    if !golden_v1_dir.exists() {
+        skip(
+            "No tests/golden/state_commit/v1 directory found; skipping STATE_COMMIT validation",
+            pass_count,
+        );
+        return Ok(());
+    }
+
+    // Check for required v1 golden files
+    let required_files = ["scope_record_hash.txt", "state_commit_root.txt"];
+    let mut has_golden = true;
+    for file in &required_files {
+        if !golden_v1_dir.join(file).exists() {
+            fail(
+                &format!("Missing golden file: tests/golden/state_commit/v1/{}", file),
+                fail_count,
+            );
+            has_golden = false;
+        }
+    }
+
+    // Immutability check: v1 files should not change
+    // In v1, these are the canonical golden vectors
+    if has_golden {
+        pass("STATE_COMMIT v1 golden vectors present", pass_count);
+
+        // Verify the expected hashes match v1 protocol
+        let expected_scope_hash =
+            "41d7e3729b6f4512887fb3cb6f10140942b600041e0d88308b0177e06ebb4b93";
+        let expected_root = "28591ac86e52ffac76d5fc3aceeceda5d8592708a8d7fcb75371567fdc481492";
+
+        if let Ok(actual_hash) =
+            std::fs::read_to_string(golden_v1_dir.join("scope_record_hash.txt"))
+        {
+            if actual_hash.trim() != expected_scope_hash {
+                fail(
+                    &format!(
+                        "STATE_COMMIT v1 scope_record_hash changed! Expected {}, got {}. This requires a SPEC_VERSION bump to v2.",
+                        expected_scope_hash,
+                        actual_hash.trim()
+                    ),
+                    fail_count,
+                );
+            }
+        }
+
+        if let Ok(actual_root) =
+            std::fs::read_to_string(golden_v1_dir.join("state_commit_root.txt"))
+        {
+            if actual_root.trim() != expected_root {
+                fail(
+                    &format!(
+                        "STATE_COMMIT v1 state_commit_root changed! Expected {}, got {}. This requires a SPEC_VERSION bump to v2.",
+                        expected_root,
+                        actual_root.trim()
+                    ),
+                    fail_count,
+                );
+            }
+        }
+    }
+
+    Ok(())
+}
+
 /// Evaluates a set of mandates and returns any active blockers.
 pub fn evaluate_mandates(
     project_root: &Path,
@@ -2134,6 +2221,8 @@ pub fn run_validation(
     validate_git_protected_branch(&mut pass_count, &mut fail_count, decapod_dir)?;
     trace_gate("validate_tooling_gate");
     validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_state_commit_gate");
+    validate_state_commit_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 
     let fail_total = VALIDATION_FAILS
         .with(|v| v.borrow().len() as u32)

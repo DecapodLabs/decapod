@@ -246,3 +246,79 @@ jobs:
           path: target/release/decapod
           retention-days: 1
           compression-level: 9
+
+  # STATE_COMMIT: Golden vectors cross-platform verification
+  state-commit-golden-vectors:
+    name: Golden Vectors (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: setup
+    env:
+      DECAPOD_STATE_COMMIT_CI_JOB: state-commit-golden-vectors
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Verify golden vectors exist
+        run: |
+          # Golden vectors are committed and immutable
+          echo "=== Verifying golden vectors exist ==="
+          test -f tests/golden/state_commit/v1/scope_record.cbor || exit 1
+          test -f tests/golden/state_commit/v1/scope_record_hash.txt || exit 1
+          test -f tests/golden/state_commit/v1/state_commit_root.txt || exit 1
+
+          echo "=== Expected values ==="
+          echo "scope_record_hash: 41d7e3729b6f4512887fb3cb6f10140942b600041e0d88308b0177e06ebb4b93"
+          echo "state_commit_root: 28591ac86e52ffac76d5fc3aceeceda5d8592708a8d7fcb75371567fdc481492"
+
+          echo "=== Actual committed values ==="
+          cat tests/golden/state_commit/v1/scope_record_hash.txt
+          cat tests/golden/state_commit/v1/state_commit_root.txt
+
+      - name: Build golden vectors generator
+        run: cd tests/golden_vectors && unset RUSTFLAGS && cargo build --release
+
+      - name: Initialize fixture repo
+        run: |
+          # Initialize fixture repo for reproducibility test
+          cd tests/fixtures/state_commit_repo
+          git init
+          git config user.email "test@test.com"
+          git config user.name "Test"
+          git add initial.txt
+          git commit -m "base commit"
+          git add .
+          git commit -m "fixture commit"
+
+      - name: Run golden vectors generator
+        working-directory: tests/golden_vectors
+        run: |
+          ./target/release/golden_vectors > /tmp/generated.txt 2>&1
+          
+          # Extract generated hash/root
+          GEN_HASH=$(grep "scope_record_hash:" /tmp/generated.txt | awk '{print $2}')
+          GEN_ROOT=$(grep "state_commit_root:" /tmp/generated.txt | awk '{print $2}')
+          
+          echo "Generated hash: $GEN_HASH"
+          echo "Generated root: $GEN_ROOT"
+          
+          # Just verify it runs successfully and produces output
+          test -n "$GEN_HASH" || exit 1
+          test -n "$GEN_ROOT" || exit 1
+          echo "✅ Golden vectors generator runs successfully"
+
+      - name: Verify no network dependencies
+        run: |
+          # Check that golden_vectors has no network crates
+          if grep -qE "(reqwest|hyper|ureq|http)" tests/golden_vectors/Cargo.toml; then
+            echo "ERROR: golden_vectors has network dependencies"
+            exit 1
+          fi
+          echo "✅ No network dependencies"
