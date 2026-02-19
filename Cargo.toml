@@ -15,7 +15,9 @@ exclude = [
     "dist/*",
     "target/*",
     "constitution_embed/*",
-    "assets/*.mp4"
+    "assets/*.mp4",
+    "tests/fixtures/*",
+    "tests/golden_vectors/*"
 ]
 
 [lib]
