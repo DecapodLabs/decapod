@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.4](https://github.com/DecapodLabs/decapod/compare/v0.29.3...v0.29.4) - 2026-02-19
+
+### Other
+
+- update CHANGELOG with packaging fix
+
 ### Fixed
 
 - *(packaging)* add missing symlink target and exclude test fixtures from crate
