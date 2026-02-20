@@ -80,7 +80,8 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs, docs_cli, error, flight_recorder, migration, proof, repomap, scaffold, state_commit,
+    db, docs, docs_cli, error, flight_recorder, migration, obligation, proof, repomap, scaffold,
+    state_commit,
     store::{Store, StoreKind},
     todo, trace, validate,
 };
@@ -398,6 +399,10 @@ enum Command {
     /// Track tasks and work items
     #[clap(name = "todo", visible_alias = "t")]
     Todo(todo::TodoCli),
+
+    /// Governance-native obligation graph
+    #[clap(name = "obligation", visible_alias = "o")]
+    Obligation(obligation::ObligationCli),
 
     /// Validate methodology compliance
     #[clap(name = "validate", visible_alias = "v")]
@@ -877,24 +882,74 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Check for version/schema changes and run protected migrations if needed.
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
             migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
-                // Bin 4: Transactional (TODO)
-                todo::initialize_todo_db(data_root)?;
-
-                // Bin 1: Governance
-                health::initialize_health_db(data_root)?;
-                policy::initialize_policy_db(data_root)?;
-                feedback::initialize_feedback_db(data_root)?;
-                archive::initialize_archive_db(data_root)?;
-
-                // Bin 2: Memory
-                db::initialize_knowledge_db(data_root)?;
-                teammate::initialize_teammate_db(data_root)?;
-                federation::initialize_federation_db(data_root)?;
-                decide::initialize_decide_db(data_root)?;
-
-                // Bin 3: Automation
-                cron::initialize_cron_db(data_root)?;
-                reflex::initialize_reflex_db(data_root)?;
+                use std::sync::Mutex;
+                let init_errors: Mutex<Vec<error::DecapodError>> = Mutex::new(Vec::new());
+                rayon::scope(|s| {
+                    let errs = &init_errors;
+                    // Bin 4: Transactional (TODO)
+                    s.spawn(|_| {
+                        if let Err(e) = todo::initialize_todo_db(data_root) {
+                            errs.lock().unwrap().push(e);
+                        }
+                    });
+                    // Bin 1: Governance
+                    s.spawn(|_| {
+                        if let Err(e) = health::initialize_health_db(data_root) {
+                            errs.lock().unwrap().push(e);
+                        }
+                    });
+                    s.spawn(|_| {
+                        if let Err(e) = policy::initialize_policy_db(data_root) {
+                            errs.lock().unwrap().push(e);
+                        }
+                    });
+                    s.spawn(|_| {
+                        if let Err(e) = feedback::initialize_feedback_db(data_root) {
+                            errs.lock().unwrap().push(e);
+                        }
+                    });
+                    s.spawn(|_| {
+                        if let Err(e) = archive::initialize_archive_db(data_root) {
+                            errs.lock().unwrap().push(e);
+                        }
+                    });
+                    // Bin 2: Memory
+                    s.spawn(|_| {
+                        if let Err(e) = db::initialize_knowledge_db(data_root) {
+                            errs.lock().unwrap().push(e);
+                        }
+                    });
+                    s.spawn(|_| {
+                        if let Err(e) = teammate::initialize_teammate_db(data_root) {
+                            errs.lock().unwrap().push(e);
+                        }
+                    });
+                    s.spawn(|_| {
+                        if let Err(e) = federation::initialize_federation_db(data_root) {
+                            errs.lock().unwrap().push(e);
+                        }
+                    });
+                    s.spawn(|_| {
+                        if let Err(e) = decide::initialize_decide_db(data_root) {
+                            errs.lock().unwrap().push(e);
+                        }
+                    });
+                    // Bin 3: Automation
+                    s.spawn(|_| {
+                        if let Err(e) = cron::initialize_cron_db(data_root) {
+                            errs.lock().unwrap().push(e);
+                        }
+                    });
+                    s.spawn(|_| {
+                        if let Err(e) = reflex::initialize_reflex_db(data_root) {
+                            errs.lock().unwrap().push(e);
+                        }
+                    });
+                });
+                let errs = init_errors.into_inner().unwrap();
+                if let Some(e) = errs.into_iter().next() {
+                    return Err(e);
+                }
                 Ok(())
             })?;
 
@@ -919,6 +974,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                     }
                 }
                 Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
+                Command::Obligation(obligation_cli) => {
+                    obligation::run_obligation_cli(&project_store, obligation_cli)?
+                }
                 Command::Govern(govern_cli) => {
                     run_govern_command(govern_cli, &project_store, &store_root)?;
                 }
@@ -2285,7 +2343,8 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
     command_paths.sort();
     command_paths.dedup();
 
-    for path in command_paths {
+    use rayon::prelude::*;
+    command_paths.par_iter().try_for_each(|path| {
         let mut args = path.clone();
         args.push("--help".to_string());
         let output = std::process::Command::new(&exe)
@@ -2299,7 +2358,8 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
                 String::from_utf8_lossy(&output.stderr).trim()
             )));
         }
-    }
+        Ok(())
+    })?;
     Ok(())
 }
 
