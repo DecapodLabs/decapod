@@ -81,6 +81,8 @@ pub struct Obligations {
     pub recommended: Vec<Obligation>,
     /// Detected contradictions
     pub contradictions: Vec<Contradiction>,
+    /// Co-player snapshots for in-context inference
+    pub coplayer_snapshots: Vec<crate::core::coplayer::CoPlayerSnapshot>,
 }
 
 /// A detected contradiction
@@ -139,6 +141,26 @@ enum CandidateSource {
         status: String,
         category: Option<String>,
     },
+    TeammateSkill {
+        name: String,
+        description: String,
+        workflow: String,
+        context: Option<String>,
+        usage_count: i64,
+    },
+    TeammatePreference {
+        category: String,
+        key: String,
+        value: String,
+        context: Option<String>,
+        confidence: i64,
+    },
+    FederationLesson {
+        id: String,
+        title: String,
+        body: String,
+        tags: Vec<String>,
+    },
 }
 
 /// Mentor engine for computing obligations
@@ -190,10 +212,60 @@ impl MentorEngine {
         must.truncate(5);
         recommended.truncate(5);
 
+        // Step 7: Resolve co-player snapshots for in-context inference
+        let mut coplayer_snapshots = Vec::new();
+        let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+
+        let mut has_high_risk_coplayer = false;
+
+        // Get all actors from traces
+        let trace_path = self.repo_root.join(".decapod/data/traces.jsonl");
+        if trace_path.exists() {
+            let mut actors = std::collections::HashSet::new();
+            if let Ok(content) = std::fs::read_to_string(&trace_path) {
+                for line in content.lines() {
+                    if let Ok(ev) = serde_json::from_str::<crate::core::trace::TraceEvent>(line) {
+                        actors.insert(ev.actor);
+                    }
+                }
+            }
+
+            for actor in actors {
+                if actor != agent_id {
+                    if let Ok(snap) =
+                        crate::core::coplayer::resolve_snapshot(&self.repo_root, &actor)
+                    {
+                        if snap.risk_profile == "high" {
+                            has_high_risk_coplayer = true;
+                        }
+                        coplayer_snapshots.push(snap);
+                    }
+                }
+            }
+        }
+
+        // Step 8: Adaptive constraints
+        if has_high_risk_coplayer {
+            must.insert(0, Obligation {
+                kind: ObligationKind::Gate,
+                ref_path: ".decapod/data/traces.jsonl".to_string(),
+                title: "ADAPTIVE: High-Risk Co-player Detected".to_string(),
+                why_short: "A co-player has a high risk profile. Require granular state-commits and full validation for every change.".to_string(),
+                evidence: Evidence {
+                    source: "coplayer_inference".to_string(),
+                    id: "high_risk_detected".to_string(),
+                    hash: None,
+                    timestamp: Some(crate::core::time::now_epoch_z()),
+                },
+                relevance_score: 1.0,
+            });
+        }
+
         Ok(Obligations {
             must,
             recommended,
             contradictions,
+            coplayer_snapshots,
         })
     }
 
@@ -215,6 +287,15 @@ impl MentorEngine {
 
         // Get todo candidates
         candidates.extend(self.get_todo_candidates()?);
+
+        // Get teammate skills
+        candidates.extend(self.get_teammate_skill_candidates()?);
+
+        // Get teammate preferences
+        candidates.extend(self.get_teammate_preference_candidates()?);
+
+        // Get federation lessons
+        candidates.extend(self.get_federation_lesson_candidates()?);
 
         Ok(candidates)
     }
@@ -441,6 +522,116 @@ impl MentorEngine {
         Ok(candidates)
     }
 
+    /// Get teammate skill candidates
+    fn get_teammate_skill_candidates(&self) -> Result<Vec<CandidateSource>, DecapodError> {
+        let mut candidates = vec![];
+        let db_path = self
+            .repo_root
+            .join(".decapod")
+            .join("data")
+            .join("teammate.db");
+
+        if !db_path.exists() {
+            return Ok(candidates);
+        }
+
+        let conn = rusqlite::Connection::open(&db_path)?;
+        let mut stmt = conn.prepare(
+            "SELECT name, description, workflow, context, usage_count FROM skills ORDER BY usage_count DESC LIMIT 20",
+        )?;
+
+        let rows = stmt.query_map([], |row| {
+            Ok(CandidateSource::TeammateSkill {
+                name: row.get(0)?,
+                description: row.get::<_, Option<String>>(1)?.unwrap_or_default(),
+                workflow: row.get(2)?,
+                context: row.get(3)?,
+                usage_count: row.get(4)?,
+            })
+        })?;
+
+        for row in rows {
+            candidates.push(row?);
+        }
+
+        Ok(candidates)
+    }
+
+    /// Get teammate preference candidates
+    fn get_teammate_preference_candidates(&self) -> Result<Vec<CandidateSource>, DecapodError> {
+        let mut candidates = vec![];
+        let db_path = self
+            .repo_root
+            .join(".decapod")
+            .join("data")
+            .join("teammate.db");
+
+        if !db_path.exists() {
+            return Ok(candidates);
+        }
+
+        let conn = rusqlite::Connection::open(&db_path)?;
+        let mut stmt = conn.prepare(
+            "SELECT category, key, value, context, confidence FROM preferences ORDER BY access_count DESC LIMIT 50",
+        )?;
+
+        let rows = stmt.query_map([], |row| {
+            Ok(CandidateSource::TeammatePreference {
+                category: row.get(0)?,
+                key: row.get(1)?,
+                value: row.get(2)?,
+                context: row.get(3)?,
+                confidence: row.get(4)?,
+            })
+        })?;
+
+        for row in rows {
+            candidates.push(row?);
+        }
+
+        Ok(candidates)
+    }
+
+    /// Get federation lesson candidates
+    fn get_federation_lesson_candidates(&self) -> Result<Vec<CandidateSource>, DecapodError> {
+        let mut candidates = vec![];
+        let db_path = self
+            .repo_root
+            .join(".decapod")
+            .join("data")
+            .join("federation.db");
+
+        if !db_path.exists() {
+            return Ok(candidates);
+        }
+
+        let conn = rusqlite::Connection::open(&db_path)?;
+        let mut stmt = conn.prepare(
+            "SELECT id, title, body, tags FROM nodes WHERE node_type = 'lesson' AND status = 'active' ORDER BY created_at DESC LIMIT 20",
+        )?;
+
+        let rows = stmt.query_map([], |row| {
+            let tags_str: String = row.get(3)?;
+            let tags = tags_str
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+            Ok(CandidateSource::FederationLesson {
+                id: row.get(0)?,
+                title: row.get(1)?,
+                body: row.get(2)?,
+                tags,
+            })
+        })?;
+
+        for row in rows {
+            candidates.push(row?);
+        }
+
+        Ok(candidates)
+    }
+
     /// Score candidates by relevance
     fn score_candidates(
         &self,
@@ -581,6 +772,97 @@ impl MentorEngine {
                 for path in &context.touched_paths {
                     if title_lower.contains(&path.to_lowercase()) {
                         score += 0.1;
+                    }
+                }
+            }
+            CandidateSource::TeammateSkill {
+                name,
+                description,
+                workflow,
+                context: skill_context,
+                usage_count,
+            } => {
+                // Base score for skills
+                score += 0.5;
+
+                // Boost for high usage
+                if *usage_count > 5 {
+                    score += 0.1;
+                }
+
+                // Check context match (e.g. "git", "style")
+                if let Some(ctx) = skill_context {
+                    if context.op.contains(ctx) {
+                        score += 0.3;
+                    }
+                }
+
+                // Check content relevance
+                let combined = format!("{} {} {}", name, description, workflow).to_lowercase();
+                for path in &context.touched_paths {
+                    if combined.contains(&path.to_lowercase()) {
+                        score += 0.2;
+                    }
+                }
+            }
+            CandidateSource::TeammatePreference {
+                category,
+                key,
+                value: _,
+                context: pref_context,
+                confidence,
+            } => {
+                // Base score
+                score += 0.4;
+
+                // High confidence boost
+                if *confidence > 90 {
+                    score += 0.1;
+                }
+
+                // Category match
+                if context.op.contains(category) {
+                    score += 0.2;
+                }
+
+                // Context match
+                if let Some(ctx) = pref_context {
+                    if context.op.contains(ctx) {
+                        score += 0.2;
+                    }
+                }
+
+                // Key relevance
+                let key_lower = key.to_lowercase();
+                for path in &context.touched_paths {
+                    if key_lower.contains(&path.to_lowercase()) {
+                        score += 0.2;
+                    }
+                }
+            }
+            CandidateSource::FederationLesson {
+                id: _,
+                title,
+                body,
+                tags,
+            } => {
+                // Lessons are valuable
+                score += 0.6;
+
+                // Check tags
+                for tag in tags {
+                    for path in &context.touched_paths {
+                        if tag.to_lowercase().contains(&path.to_lowercase()) {
+                            score += 0.2;
+                        }
+                    }
+                }
+
+                // Check content
+                let content_lower = format!("{} {}", title, body).to_lowercase();
+                for path in &context.touched_paths {
+                    if content_lower.contains(&path.to_lowercase()) {
+                        score += 0.15;
                     }
                 }
             }
@@ -775,6 +1057,62 @@ impl MentorEngine {
                     relevance_score: score,
                 }
             }
+            CandidateSource::TeammateSkill {
+                name,
+                description,
+                workflow,
+                context: _,
+                usage_count: _,
+            } => Obligation {
+                kind: ObligationKind::DocAnchor, // Reusing DocAnchor as it fits the "read this" model
+                ref_path: format!("teammate.db/skills/{}", name),
+                title: format!("Skill: {}", name),
+                why_short: description.clone(),
+                evidence: Evidence {
+                    source: "teammate.db".to_string(),
+                    id: name.clone(),
+                    hash: Some(self.compute_hash(workflow)),
+                    timestamp: None,
+                },
+                relevance_score: score,
+            },
+            CandidateSource::TeammatePreference {
+                category,
+                key,
+                value,
+                context: _,
+                confidence,
+            } => Obligation {
+                kind: ObligationKind::DocAnchor,
+                ref_path: format!("teammate.db/preferences/{}.{}", category, key),
+                title: format!("Preference: {}.{}", category, key),
+                why_short: format!("User preference (confidence {}%): {}", confidence, value),
+                evidence: Evidence {
+                    source: "teammate.db".to_string(),
+                    id: format!("{}.{}", category, key),
+                    hash: None,
+                    timestamp: None,
+                },
+                relevance_score: score,
+            },
+            CandidateSource::FederationLesson {
+                id,
+                title,
+                body,
+                tags: _,
+            } => Obligation {
+                kind: ObligationKind::KgNode,
+                ref_path: format!(".decapod/data/federation# {}", id),
+                title: format!("Learned Lesson: {}", title),
+                why_short: "Applying past learnings to current context".to_string(),
+                evidence: Evidence {
+                    source: ".decapod/data".to_string(),
+                    id: id.clone(),
+                    hash: Some(self.compute_hash(body)),
+                    timestamp: None,
+                },
+                relevance_score: score,
+            },
         }
     }
 

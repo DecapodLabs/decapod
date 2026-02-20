@@ -3556,6 +3556,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
     let trace_event = trace::TraceEvent {
         trace_id: request.id.clone(),
         ts: chrono::Utc::now().to_rfc3339(),
+        actor: current_agent_id(),
         op: request.op.clone(),
         request: serde_json::to_value(&request).unwrap_or(serde_json::Value::Null),
         response: serde_json::to_value(&response).unwrap_or(serde_json::Value::Null),
