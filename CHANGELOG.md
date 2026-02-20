@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0](https://github.com/DecapodLabs/decapod/compare/v0.30.0...v0.31.0) - 2026-02-20
+
+### Fixed
+
+- *(verify)* strip elapsed timing from validate output before hashing
+- revert schema determinism parallelization to avoid shared state conflicts
+
+### Other
+
+- fix fmt and clippy warnings, fix test compilation
+- *(validate)* add --verbose timing and parallelize expensive gates
+
 ## [0.30.0](https://github.com/DecapodLabs/decapod/compare/v0.29.6...v0.30.0) - 2026-02-20
 
 ### Added
