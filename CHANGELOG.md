@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0](https://github.com/DecapodLabs/decapod/compare/v0.29.6...v0.30.0) - 2026-02-20
+
+### Added
+
+- *(core)* implement gatekeeper safety gates and co-player inference
+
+### Other
+
+- fix formatting in coplayer and gatekeeper
+
 ## [0.29.6](https://github.com/DecapodLabs/decapod/compare/v0.29.5...v0.29.6) - 2026-02-20
 
 ### Fixed
