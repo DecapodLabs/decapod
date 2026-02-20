@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0](https://github.com/DecapodLabs/decapod/compare/v0.31.1...v0.32.0) - 2026-02-20
+
+### Other
+
+- added to ai category
+- Fix clippy warnings and simplify lineage validation
+- Add ObligationNode test suite
+- Phase 1: Enforce derived completion in ObligationNode
+
 ## [0.31.1](https://github.com/DecapodLabs/decapod/compare/v0.31.0...v0.31.1) - 2026-02-20
 
 ### Added
