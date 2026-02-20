@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.2](https://github.com/DecapodLabs/decapod/compare/v0.32.1...v0.32.2) - 2026-02-20
+
+### Added
+
+- add multi-language tooling gates and config protection to validation
+
 ## [0.32.1](https://github.com/DecapodLabs/decapod/compare/v0.32.0...v0.32.1) - 2026-02-20
 
 ### Added
