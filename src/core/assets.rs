@@ -187,6 +187,7 @@ pub const TEMPLATE_CODEX: &str = include_str!("../../templates/CODEX.md");
 
 pub const TEMPLATE_README: &str = include_str!("../../templates/README.md");
 pub const TEMPLATE_OVERRIDE: &str = include_str!("../../templates/OVERRIDE.md");
+pub const TEMPLATE_DOCKERFILE: &str = include_str!("../../templates/Dockerfile");
 
 pub fn get_template(name: &str) -> Option<String> {
     match name {
@@ -197,6 +198,7 @@ pub fn get_template(name: &str) -> Option<String> {
 
         "README.md" => Some(TEMPLATE_README.to_string()),
         "OVERRIDE.md" => Some(TEMPLATE_OVERRIDE.to_string()),
+        "Dockerfile" => Some(TEMPLATE_DOCKERFILE.to_string()),
         _ => None,
     }
 }
