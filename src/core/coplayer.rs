@@ -103,9 +103,9 @@ mod tests {
     fn test_resolve_snapshot() {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
-        
+
         let agent_id = "agent-1";
-        
+
         // Create some trace events
         let events = vec![
             TraceEvent {
@@ -163,7 +163,7 @@ mod tests {
         }
 
         let snapshot = resolve_snapshot(root, agent_id).unwrap();
-        
+
         assert_eq!(snapshot.agent_id, agent_id);
         assert_eq!(snapshot.total_ops, 5);
         assert_eq!(snapshot.successful_ops, 4);
@@ -178,7 +178,7 @@ mod tests {
     fn test_resolve_snapshot_no_traces() {
         let tmp = tempdir().unwrap();
         let root = tmp.path();
-        
+
         let snapshot = resolve_snapshot(root, "unknown").unwrap();
         assert_eq!(snapshot.total_ops, 0);
         assert_eq!(snapshot.risk_profile, "unknown");

@@ -6,9 +6,9 @@
 //! - Secret scanning
 //! - Dangerous pattern detection
 
+use crate::core::error;
 use regex::Regex;
 use std::path::{Path, PathBuf};
-use crate::core::error;
 
 /// Gatekeeper configuration
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ pub struct GatekeeperConfig {
 impl Default for GatekeeperConfig {
     fn default() -> Self {
         Self {
-            max_diff_bytes: 10 * 1024 * 1024, // 10MB default
+            max_diff_bytes: 10 * 1024 * 1024,   // 10MB default
             allow_paths: vec!["*".to_string()], // Allow all by default
             block_paths: vec![
                 ".env".to_string(),
@@ -102,7 +102,7 @@ pub fn run_gatekeeper(
     // Check paths
     for path in paths {
         let path_str = path.to_string_lossy();
-        
+
         // Check blocklist first
         for pattern in &config.block_paths {
             if glob_match(pattern, &path_str) {
@@ -176,7 +176,7 @@ fn scan_for_dangerous_patterns(
 
     // Only scan code files
     let code_extensions = ["rs", "py", "js", "ts", "sh", "bash", "zsh"];
-    
+
     for path in paths {
         let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
         if !code_extensions.contains(&ext) {
@@ -256,11 +256,11 @@ fn glob_match(pattern: &str, text: &str) -> bool {
         if parts.len() == 2 {
             let prefix = parts[0];
             let suffix = parts[1];
-            return (suffix.is_empty() || text.ends_with(suffix)) 
+            return (suffix.is_empty() || text.ends_with(suffix))
                 && (prefix.is_empty() || text.starts_with(prefix));
         }
     }
-    
+
     // Handle * wildcard (single level)
     if pattern.contains('*') && !pattern.contains("**") {
         let parts: Vec<&str> = pattern.split('*').collect();
@@ -270,7 +270,7 @@ fn glob_match(pattern: &str, text: &str) -> bool {
             return text.starts_with(prefix) && text.ends_with(suffix);
         }
     }
-    
+
     // Exact match
     pattern == text
 }
@@ -291,15 +291,15 @@ mod tests {
     #[test]
     fn test_secret_patterns() {
         let patterns = secret_patterns();
-        
+
         // AWS key
         let line = "AWS_KEY=AKIAIOSFODNN7EXAMPLE";
         assert!(patterns.iter().any(|p| p.is_match(line)));
-        
+
         // GitHub token
         let line = "token=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
         assert!(patterns.iter().any(|p| p.is_match(line)));
-        
+
         // Private key
         let line = "-----BEGIN PRIVATE KEY-----";
         assert!(patterns.iter().any(|p| p.is_match(line)));
@@ -308,11 +308,11 @@ mod tests {
     #[test]
     fn test_dangerous_patterns() {
         let patterns = dangerous_patterns();
-        
+
         // eval with variable
         let line = "eval $CMD";
         assert!(patterns.iter().any(|p| p.is_match(line)));
-        
+
         // shell=True
         let line = "subprocess.run(cmd, shell=True)";
         assert!(patterns.iter().any(|p| p.is_match(line)));
