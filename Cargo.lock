@@ -360,6 +360,7 @@ dependencies = [
  "colored",
  "criterion",
  "decapod",
+ "rayon",
  "regex",
  "rusqlite",
  "rust-embed",
