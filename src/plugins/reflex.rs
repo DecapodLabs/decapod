@@ -3,6 +3,7 @@ use crate::core::error;
 use crate::core::external_action;
 use crate::core::schemas;
 use crate::core::store::Store;
+use crate::plugins::health;
 use clap::{Parser, Subcommand};
 use rusqlite::{Result, types::ToSql};
 use serde::{Deserialize, Serialize};
@@ -197,6 +198,23 @@ pub enum ReflexCommand {
         #[clap(long)]
         dir: Option<String>,
     },
+    /// Install a condition-based health trigger reflex that creates remediation tasks
+    /// when health claims enter STALE or CONTRADICTED states.
+    AddHealthTrigger {
+        #[clap(long, default_value = "health-state-remediate")]
+        name: String,
+        #[clap(long)]
+        agent: Option<String>,
+        /// Health states that trigger remediation (comma-separated: STALE,CONTRADICTED)
+        #[clap(long, default_value = "STALE,CONTRADICTED")]
+        watch_states: String,
+        #[clap(long, default_value = "high")]
+        priority: String,
+        #[clap(long, default_value = "")]
+        tags: String,
+        #[clap(long)]
+        dir: Option<String>,
+    },
 }
 
 pub fn schema() -> serde_json::Value {
@@ -276,6 +294,16 @@ pub fn schema() -> serde_json::Value {
                     {"name": "task_title", "required": true, "description": "Task title to create on trigger"},
                     {"name": "priority", "required": false, "description": "Task priority", "default": "medium"},
                     {"name": "max_tasks", "required": false, "description": "Worker max tasks per run", "default": 1}
+                ]
+            },
+            {
+                "name": "add-health-trigger",
+                "description": "Install a condition-based health trigger that creates remediation tasks when claims degrade",
+                "parameters": [
+                    {"name": "name", "required": false, "description": "Reflex name", "default": "health-state-remediate"},
+                    {"name": "agent", "required": false, "description": "Agent ID (defaults to DECAPOD_AGENT_ID or unknown)"},
+                    {"name": "watch_states", "required": false, "description": "Comma-separated health states to watch", "default": "STALE,CONTRADICTED"},
+                    {"name": "priority", "required": false, "description": "Remediation task priority", "default": "high"}
                 ]
             }
         ],
@@ -369,6 +397,14 @@ pub fn run_reflex_cli(store: &Store, cli: ReflexCli) {
             &tags,
             &dir,
         ),
+        ReflexCommand::AddHealthTrigger {
+            name,
+            agent,
+            watch_states,
+            priority,
+            tags,
+            dir,
+        } => add_health_trigger_reflex(root, &name, &agent, &watch_states, &priority, &tags, &dir),
     };
     if let Err(e) = result {
         eprintln!("Error: {}", e);
@@ -562,6 +598,108 @@ fn execute_reflex_action(
                 "status": "ok",
                 "add_task": add_out,
                 "worker_run": worker_out
+            }))
+        }
+        "todo.health.remediate" => {
+            let cfg = parse_json_config(&reflex.action_config, "action_config")?;
+            let default_agent =
+                env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let agent = cfg
+                .get("agent")
+                .and_then(|v| v.as_str())
+                .unwrap_or(default_agent.as_str());
+            let priority = cfg
+                .get("priority")
+                .and_then(|v| v.as_str())
+                .unwrap_or("high");
+            let watch_states: Vec<String> = cfg
+                .get("watch_states")
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect()
+                })
+                .unwrap_or_else(|| vec!["STALE".to_string(), "CONTRADICTED".to_string()]);
+
+            // Evaluate health claims against watched states
+            let store = Store {
+                kind: crate::core::store::StoreKind::Repo,
+                root: root.to_path_buf(),
+            };
+            health::initialize_health_db(&store.root)?;
+            let all_health = health::get_all_health(&store)?;
+
+            let mut triggered_claims = Vec::new();
+            for (claim_id, state, reason) in &all_health {
+                let state_str = format!("{:?}", state);
+                if watch_states.iter().any(|ws| ws == &state_str) {
+                    triggered_claims.push(serde_json::json!({
+                        "claim_id": claim_id,
+                        "state": state_str,
+                        "reason": reason
+                    }));
+                }
+            }
+
+            if triggered_claims.is_empty() {
+                return Ok(serde_json::json!({
+                    "status": "ok",
+                    "triggered": false,
+                    "message": "No health claims match watched states",
+                    "watched_states": watch_states
+                }));
+            }
+
+            // Create a remediation task for each degraded claim
+            let mut task_results = Vec::new();
+            for tc in &triggered_claims {
+                let claim_id = tc
+                    .get("claim_id")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown");
+                let state_str = tc
+                    .get("state")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown");
+                let reason = tc.get("reason").and_then(|v| v.as_str()).unwrap_or("");
+                let task_title = format!(
+                    "Remediate {} health claim: {}",
+                    state_str.to_lowercase(),
+                    claim_id
+                );
+                let tags_val = format!("health-remediation,{}", state_str.to_lowercase());
+                let add_args = vec![
+                    "todo",
+                    "add",
+                    "--format",
+                    "json",
+                    &task_title,
+                    "--priority",
+                    priority,
+                    "--owner",
+                    agent,
+                    "--tags",
+                    &tags_val,
+                ];
+                let add_out = run_decapod_command_json(
+                    root,
+                    "reflex.action.todo.health.remediate",
+                    &add_args,
+                )?;
+                task_results.push(serde_json::json!({
+                    "claim_id": claim_id,
+                    "state": state_str,
+                    "reason": reason,
+                    "task": add_out
+                }));
+            }
+
+            Ok(serde_json::json!({
+                "status": "ok",
+                "triggered": true,
+                "watched_states": watch_states,
+                "remediation_tasks": task_results
             }))
         }
         other => Err(error::DecapodError::ValidationError(format!(
@@ -934,6 +1072,65 @@ fn list_reflexes(
         println!("----------------------------------------------------");
         Ok(())
     })
+}
+
+#[allow(clippy::too_many_arguments)]
+fn add_health_trigger_reflex(
+    root: &Path,
+    name: &str,
+    agent: &Option<String>,
+    watch_states: &str,
+    priority: &str,
+    tags: &str,
+    dir: &Option<String>,
+) -> Result<(), error::DecapodError> {
+    let default_agent = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+    let agent = agent.clone().unwrap_or(default_agent);
+    let states: Vec<String> = watch_states
+        .split(',')
+        .map(|s| s.trim().to_uppercase())
+        .filter(|s| !s.is_empty())
+        .collect();
+
+    // Validate states
+    let valid_states = ["STALE", "CONTRADICTED", "ASSERTED"];
+    for s in &states {
+        if !valid_states.contains(&s.as_str()) {
+            return Err(error::DecapodError::ValidationError(format!(
+                "invalid watch_state '{}'; valid values: {}",
+                s,
+                valid_states.join(", ")
+            )));
+        }
+    }
+
+    let trigger_config = serde_json::json!({
+        "source": "health_state",
+        "watch_states": states,
+        "intent": "condition_based_remediation"
+    })
+    .to_string();
+    let action_config = serde_json::json!({
+        "agent": agent,
+        "priority": priority,
+        "watch_states": states
+    })
+    .to_string();
+    add_reflex(
+        root,
+        name.to_string(),
+        format!(
+            "Condition-based trigger: create remediation tasks when health claims enter {} states",
+            states.join("/")
+        ),
+        "health_state".to_string(),
+        trigger_config,
+        "todo.health.remediate".to_string(),
+        action_config,
+        "active".to_string(),
+        tags.to_string(),
+        dir.clone(),
+    )
 }
 
 fn delete_reflex(root: &Path, id: String) -> Result<(), error::DecapodError> {
