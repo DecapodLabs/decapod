@@ -474,7 +474,7 @@ fn schemas_errors_and_validate_entrypoint_are_exercised() {
         root: store_root.path().to_path_buf(),
     };
 
-    let result = validate::run_validation(&store, repo.path(), repo.path());
+    let result = validate::run_validation(&store, repo.path(), repo.path(), false);
     assert!(result.is_err());
 }
 
