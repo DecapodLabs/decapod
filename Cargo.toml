@@ -9,7 +9,7 @@ repository = "https://github.com/DecapodLabs/decapod"
 homepage = "https://github.com/DecapodLabs/decapod"
 readme = "README.md"
 keywords = ["rust", "ai", "ai-agents", "control-plane", "orchestration"]
-categories = ["development-tools", "command-line-utilities"]
+categories = ["artificial-intelligence", "development-tools", "command-line-utilities"]
 exclude = [
     ".decapod/*",
     "dist/*",
@@ -78,6 +78,10 @@ path = "tests/plugins/federation.rs"
 [[test]]
 name = "plugins_decide_tests"
 path = "tests/plugins/decide.rs"
+
+[[test]]
+name = "plugins_obligation_tests"
+path = "tests/plugins/obligation.rs"
 
 [[test]]
 name = "gatling"

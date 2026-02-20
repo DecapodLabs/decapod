@@ -3,6 +3,10 @@
 //! Obligations are the formal, dependency-aware units of work in Decapod.
 //! Unlike TODOs, obligations are proof-gated and strictly integrated with
 //! governance and promotion cycles.
+//!
+//! KEY PRINCIPLE: Completion is DERIVED, never asserted.
+//! - Status is computed from: dependencies satisfied, proofs verified, state_commit present
+//! - No user-settable status field - status is always derived
 
 use crate::core::broker::DbBroker;
 use crate::core::error;
@@ -51,6 +55,29 @@ pub struct ObligationNode {
     pub created_at: String,
     pub updated_at: String,
     pub metadata: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ObligationValidationResult {
+    pub obligation_id: String,
+    pub derived_status: ObligationStatus,
+    pub dependencies_satisfied: bool,
+    pub proofs_satisfied: bool,
+    pub commit_present: bool,
+    pub validation_errors: Vec<String>,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GraphValidationResult {
+    pub is_valid: bool,
+    pub has_cycles: bool,
+    pub cycle_errors: Vec<String>,
+    pub unsatisfied_obligations: Vec<String>,
+    pub missing_proofs: Vec<String>,
+    pub missing_commits: Vec<String>,
+    pub total_nodes: usize,
+    pub total_edges: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -104,7 +131,7 @@ pub enum ObligationCommand {
         #[clap(long)]
         id: String,
     },
-    /// Compute and update the status of an obligation.
+    /// Compute and update the status of an obligation (DERIVED, never asserted).
     Verify {
         #[clap(long)]
         id: String,
@@ -116,6 +143,8 @@ pub enum ObligationCommand {
         #[clap(long)]
         commit: String,
     },
+    /// Validate the entire obligation graph (cycles, dependencies, proofs, commits).
+    ValidateGraph,
 }
 
 pub fn run_obligation_cli(store: &Store, cli: ObligationCli) -> Result<(), error::DecapodError> {
@@ -139,8 +168,12 @@ pub fn run_obligation_cli(store: &Store, cli: ObligationCli) -> Result<(), error
             println!("{}", serde_json::to_string_pretty(&obligation).unwrap());
         }
         ObligationCommand::Verify { id } => {
-            let (status, reason) = verify_obligation(store, &id)?;
-            println!("Status: {:?}\nReason: {}", status, reason);
+            let result = derive_obligation_status(store, &id)?;
+            println!("{}", serde_json::to_string_pretty(&result).unwrap());
+        }
+        ObligationCommand::ValidateGraph => {
+            let result = validate_obligation_graph(store)?;
+            println!("{}", serde_json::to_string_pretty(&result).unwrap());
         }
         ObligationCommand::Complete { id, commit } => {
             complete_obligation(store, &id, &commit)?;
@@ -308,43 +341,138 @@ pub fn verify_obligation(
     store: &Store,
     id: &str,
 ) -> Result<(ObligationStatus, String), error::DecapodError> {
-    let obligation = get_obligation(store, id)?;
+    let result = derive_obligation_status(store, id)?;
+    let reason = if result.validation_errors.is_empty() {
+        "All conditions satisfied".to_string()
+    } else {
+        result.validation_errors.join("; ")
+    };
+    Ok((result.derived_status, reason))
+}
 
-    // 1. Check dependencies
+pub fn derive_obligation_status(
+    store: &Store,
+    id: &str,
+) -> Result<ObligationValidationResult, error::DecapodError> {
+    let obligation = get_obligation(store, id)?;
+    let mut validation_errors = Vec::new();
+
     let dependencies = get_dependencies(store, id)?;
-    for dep in dependencies {
-        if dep.status != ObligationStatus::Met {
-            return Ok((
-                ObligationStatus::Open,
-                format!("Dependency {} is not Met", dep.id),
-            ));
-        }
+    let dependencies_satisfied = dependencies
+        .iter()
+        .all(|dep| dep.status == ObligationStatus::Met);
+
+    if !dependencies_satisfied {
+        let unsatisfied: Vec<String> = dependencies
+            .iter()
+            .filter(|d| d.status != ObligationStatus::Met)
+            .map(|d| d.id.clone())
+            .collect();
+        validation_errors.push(format!("Dependencies not met: {:?}", unsatisfied));
     }
 
-    // 2. Check proofs
+    let mut proofs_satisfied = true;
     for proof_label in &obligation.required_proofs {
         if !check_proof_satisfied(store, proof_label)? {
-            return Ok((
-                ObligationStatus::Open,
-                format!("Proof {} is not satisfied", proof_label),
-            ));
+            proofs_satisfied = false;
+            validation_errors.push(format!("Proof not satisfied: {}", proof_label));
         }
     }
 
-    // 3. Check state commit
-    if obligation.state_commit_root.is_none() {
-        return Ok((
-            ObligationStatus::Open,
-            "State commit root missing".to_string(),
-        ));
+    let commit_present = obligation.state_commit_root.is_some();
+    if !commit_present {
+        validation_errors.push("STATE_COMMIT root missing".to_string());
     }
 
-    // All conditions met
-    update_obligation_status(store, id, ObligationStatus::Met)?;
-    Ok((
-        ObligationStatus::Met,
-        "All conditions satisfied".to_string(),
-    ))
+    let derived_status = if dependencies_satisfied && proofs_satisfied && commit_present {
+        ObligationStatus::Met
+    } else {
+        ObligationStatus::Open
+    };
+
+    Ok(ObligationValidationResult {
+        obligation_id: id.to_string(),
+        derived_status,
+        dependencies_satisfied,
+        proofs_satisfied,
+        commit_present,
+        validation_errors,
+        timestamp: chrono::Utc::now().to_rfc3339(),
+    })
+}
+
+pub fn validate_obligation_graph(
+    store: &Store,
+) -> Result<GraphValidationResult, error::DecapodError> {
+    let obligations = list_obligations(store)?;
+    let mut cycle_errors = Vec::new();
+    let mut unsatisfied_obligations = Vec::new();
+    let mut missing_proofs = Vec::new();
+    let mut missing_commits = Vec::new();
+
+    let mut edge_count = 0;
+    for obligation in &obligations {
+        let deps = get_dependencies(store, &obligation.id)?;
+        edge_count += deps.len();
+
+        let validation = derive_obligation_status(store, &obligation.id)?;
+
+        if validation.derived_status != ObligationStatus::Met {
+            unsatisfied_obligations.push(obligation.id.clone());
+        }
+
+        if !validation.proofs_satisfied {
+            missing_proofs.push(obligation.id.clone());
+        }
+
+        if !validation.commit_present && !obligation.required_proofs.is_empty() {
+            missing_commits.push(obligation.id.clone());
+        }
+
+        for dep in deps {
+            if detect_cycle_in_path(&obligations, store, &dep.id, &obligation.id)? {
+                cycle_errors.push(format!("Cycle: {} depends on {}", obligation.id, dep.id));
+            }
+        }
+    }
+
+    Ok(GraphValidationResult {
+        is_valid: cycle_errors.is_empty() && unsatisfied_obligations.is_empty(),
+        has_cycles: !cycle_errors.is_empty(),
+        cycle_errors,
+        unsatisfied_obligations,
+        missing_proofs,
+        missing_commits,
+        total_nodes: obligations.len(),
+        total_edges: edge_count,
+    })
+}
+
+fn detect_cycle_in_path(
+    _obligations: &[ObligationNode],
+    store: &Store,
+    start_id: &str,
+    target_id: &str,
+) -> Result<bool, error::DecapodError> {
+    let mut visited = std::collections::HashSet::new();
+    let mut stack = vec![start_id.to_string()];
+
+    while let Some(current) = stack.pop() {
+        if current == target_id {
+            return Ok(true);
+        }
+        if visited.contains(&current) {
+            continue;
+        }
+        visited.insert(current.clone());
+
+        let deps = get_dependencies(store, &current)?;
+        for dep in deps {
+            stack.push(dep.id);
+        }
+    }
+
+    Ok(false)
 }
 
 pub fn get_dependencies(
@@ -411,6 +539,7 @@ fn check_proof_satisfied(store: &Store, proof_label: &str) -> Result<bool, error
     )
 }
 
+#[allow(dead_code)]
 fn update_obligation_status(
     store: &Store,
     id: &str,
