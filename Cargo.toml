@@ -9,7 +9,7 @@ repository = "https://github.com/DecapodLabs/decapod"
 homepage = "https://github.com/DecapodLabs/decapod"
 readme = "README.md"
 keywords = ["rust", "ai", "ai-agents", "control-plane", "orchestration"]
-categories = ["artificial-intelligence", "development-tools", "command-line-utilities"]
+categories = ["command-line-utilities", "development-tools"]
 exclude = [
     ".decapod/*",
     "dist/*",
