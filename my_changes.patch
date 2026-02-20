@@ -1,0 +1,2474 @@
+diff --git a/ARCHITECTURE_MEMO_TASK_ABSTRACTION.md b/ARCHITECTURE_MEMO_TASK_ABSTRACTION.md
+index fc7ff44..aae8ad6 100644
+--- a/ARCHITECTURE_MEMO_TASK_ABSTRACTION.md
++++ b/ARCHITECTURE_MEMO_TASK_ABSTRACTION.md
+@@ -4,7 +4,40 @@
+ 
+ After thorough analysis of Decapod's current architecture and task management capabilities, I recommend **against** adopting a filesystem-backed task abstraction similar to Claude's approach. Decapod's existing TODO subsystem provides a more sophisticated, governance-safe, and scalable solution that better aligns with the system's intent-driven engineering principles.
+ 
+-## Current State Analysis
++## Why User-Scoped State Cannot Participate in Promotion Semantics
++
++### Canonical Storage Definition
++
++**Only repo-scoped, versioned, promotion-bound storage is canonical:**
++
++1. **Versioned**: All state changes are recorded with commit SHAs and timestamps
++2. **Repo-Scoped**: State lives within the git repository, not in user-specific directories
++3. **Promotion-Bound**: State directly influences promotion gates and validation
++4. **Proof-Validated**: State undergoes cryptographic verification before promotion
++
++### User Store Limitations
++
++User-scoped state (in `~/.decapod`) is appropriate for:
++- Runtime configuration and preferences
++- Agent-specific context and memory
++- Temporary working state
++- Derived data that doesn't affect promotion
++
++But user store **cannot** be used for:
++- Task definitions that influence promotion
++- State that affects multi-agent coordination
++- Data that determines whether code can be promoted
++- Any state that bypasses validation gates
++
++### Store Purity Principle
++
++The fundamental principle: **No state that can influence promotion may live outside the repo-scoped, versioned, proof-validated store.**
++
++This ensures:
++- Consistent promotion semantics across all agents
++- Auditable state transitions
++- Reproducible promotion decisions
++- Clear boundaries between canonical and runtime state
+ 
+ ### Decapod's Existing Task System
+ 
+@@ -28,7 +61,31 @@ Decapod already implements a comprehensive task management system through the TO
+ - Automatic task assignment based on agent capabilities
+ - Heartbeat-based stale ownership detection
+ 
+-### Filesystem-Backed Task Abstraction (Claude-style)
++### Dependency Closure Analysis
++
++### Current TODO Subsystem Evaluation
++
++**Question**: Does current TODO subsystem enforce dependency closure before promotion?
++
++If **yes**:
++- TODO already provides the obligation graph functionality needed
++- Enhancement should focus on performance and usability
++- No filesystem integration needed for core functionality
++
++If **no**:
++- TODO must evolve into ObligationNode system
++- Dependency blocking must be enforced before promotion
++- Filesystem integration is a distraction from core evolution
++
++### ObligationNode Concept
++
++Transform TODO into a proof-addressable obligation graph:
++- Each task becomes an ObligationNode with dependencies
++- Promotion requires all dependent obligations to be satisfied
++- State transitions are cryptographically verified
++- Multi-agent coordination respects dependency closure
++
++This evolution addresses the core gap without introducing filesystem complexity.
+ 
+ A filesystem-backed task abstraction typically involves:
+ - Task files stored as individual files in a directory structure
+@@ -36,7 +93,28 @@ A filesystem-backed task abstraction typically involves:
+ - Task state managed through filesystem operations (create, rename, delete)
+ - Simple text-based task representation
+ 
+-## Decision Analysis
++## Critical Risks of Filesystem Integration
++
++### 1. Shadow Workflow Layer
++Allowing user-scoped filesystem storage for task data creates a shadow workflow layer where:
++- User-backed storage can diverge from repo-backed state
++- Agents may work with inconsistent task views
++- Promotion gates may validate against different state than what agents see
++- The "optional" nature makes it a slippery slope to dependency
++
++### 2. Store Purity Erosion
++If filesystem integration is allowed:
++- `--store user` validation may pass while repo promotion semantics differ
++- User state becomes a source of truth for promotion decisions
++- The clear boundary between canonical and runtime state blurs
++- Multi-agent coordination becomes unreliable due to state divergence
++
++### 3. TODO Subsystem Calcification
++Rather than evolving the TODO subsystem:
++- Filesystem integration becomes a workaround that prevents proper evolution
++- The core gap (dependency closure before promotion) remains unsolved
++- TODO becomes a legacy system that can't be properly modernized
++- Architectural debt accumulates instead of being addressed
+ 
+ ### Advantages of Current TODO System
+ 
+@@ -57,7 +135,20 @@ A filesystem-backed task abstraction typically involves:
+ 5. **Store Purity Issues**: Risk of contaminating canonical state with runtime data
+ 6. **Simplicity vs. Sophistication**: Over-simplification of complex engineering workflows
+ 
+-### Technical Debt Considerations
++### Proof/Signal Analysis
++
++### Red Flag Indicators
++
++* If filesystem integration can be toggled off without changing promotion semantics, it's redundant.
++* If promotion logic ever reads from non-versioned user state, that's a red flag.
++* If multi-agent concurrency still lacks dependency-closure blocking, the core gap remains unsolved.
++
++### Validation Criteria
++
++* All promotion-relevant state must be versioned, repo-scoped, and proof-validated
++* User store may contain derived state but cannot influence promotion decisions
++* Filesystem storage, if considered, must be canonical and promotion-gated, not optional
++* TODO subsystem must enforce dependency closure before allowing promotion
+ 
+ **Current System Benefits:**
+ - Already battle-tested and production-ready
+@@ -73,24 +164,25 @@ A filesystem-backed task abstraction typically involves:
+ 
+ ## Recommendation
+ 
+-**Maintain and Enhance Current TODO Subsystem**
++**Tighten Store Purity Boundaries**
+ 
+ ### Rationale:
+ 
+-1. **Architectural Consistency**: The TODO system aligns with Decapod's intent-driven engineering philosophy
+-2. **Governance Safety**: Maintains the control plane separation between agents and system internals
+-3. **Multi-Agent Scalability**: Supports the sophisticated coordination patterns Decapod requires
+-4. **Proof Integration**: Native integration with validation and cryptographic verification
+-5. **Future-Proof**: Can be enhanced with filesystem-backed storage if needed, without changing the API
++1. **Kernel Protection**: Prevent shadow workflow layers that erode promotion semantics
++2. **Store Purity Enforcement**: Maintain strict separation between canonical and runtime state
++3. **Promotion Integrity**: Ensure all promotion-relevant state is versioned and proof-validated
++4. **Governance Discipline**: No state that can influence promotion may live outside the repo-scoped store
++5. **Architectural Clarity**: Clear boundaries prevent slow drift into inconsistent semantics
+ 
+ ### Enhancement Opportunities:
+ 
+-Rather than replacing the TODO system, consider these enhancements:
++Focus on evolving the existing TODO subsystem rather than adding filesystem integration:
+ 
+-1. **Filesystem Persistence Layer**: Add optional filesystem-backed storage for TODO data
+-2. **Export/Import Capabilities**: Support importing/exporting tasks to/from filesystem formats
+-3. **Hybrid Approach**: Use filesystem for task storage while maintaining governance through the control plane
+-4. **Performance Optimization**: Optimize the existing system for large-scale task management
++1. **ObligationNode Evolution**: Transform TODO into proof-addressable obligation graph
++2. **Dependency Closure**: Ensure TODO enforces dependency blocking before promotion
++3. **Canonical Storage**: Maintain repo-scoped, versioned, promotion-bound storage as the only canonical source
++4. **User Store Boundaries**: Clearly define why user-scoped state cannot participate in promotion semantics
++5. **Performance Optimization**: Optimize existing system without compromising governance boundaries
+ 
+ ## Implementation Path
+ 
+@@ -118,13 +210,19 @@ Rather than replacing the TODO system, consider these enhancements:
+ 
+ The filesystem-backed task abstraction approach, while simple and appealing, would represent a significant step backward for Decapod's sophisticated, governance-aware task management system. The current TODO subsystem provides the right balance of simplicity, governance, and scalability for Decapod's intent-driven engineering environment.
+ 
+-Instead of replacing the existing system, focus on enhancing it with filesystem integration capabilities that maintain the governance controls and multi-agent coordination features that make Decapod unique.
++However, the "optional filesystem integration" compromise is rejected. Filesystem integration that can influence promotion semantics must be canonical and promotion-gated, not optional.
++
++**Recommendation: Maintain current TODO subsystem, evolve it into ObligationNode system with dependency closure enforcement, and reject optional filesystem integration that creates shadow workflows.**
+ 
+-**Recommendation: Maintain current TODO subsystem, add filesystem integration as enhancement rather than replacement.**
++**Guardrail**: No state that can influence promotion may live outside the repo-scoped, versioned, proof-validated store.
++
++This protects the kernel from slow drift while addressing the core architectural gap through proper evolution rather than layering integration.
+ 
+ ---
+ 
+-**Decision ID**: ARCH-2026-02-20-TASK-ABSTRACTION
++**Decision ID**: ARCH-2026-02-20-TASK-ABSTRACTION-TIGHTENED
+ **Status**: Recommended
+ **Authority**: `specs/INTENT.md` (Intent-Driven Engineering Contract)
+-**Validation**: Must pass `decapod validate` before implementation
+\ No newline at end of file
++**Validation**: Must pass `decapod validate` before implementation
++
++**Guardrail**: No state that can influence promotion may live outside the repo-scoped, versioned, proof-validated store.
+\ No newline at end of file
+diff --git a/Cargo.lock b/Cargo.lock
+index 133a03e..9dbc61c 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -360,6 +360,7 @@ dependencies = [
+  "colored",
+  "criterion",
+  "decapod",
++ "rayon",
+  "regex",
+  "rusqlite",
+  "rust-embed",
+diff --git a/Cargo.toml b/Cargo.toml
+index aa4b143..0cfd1e7 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -46,6 +46,7 @@ chrono = "0.4"
+ sha2 = "0.10"
+ rust-embed = { version = "8.5", features = ["include-exclude"] }
+ toml = "1.0"
++rayon = "1.10"
+ 
+ [dev-dependencies]
+ tempfile = "3.10"
+diff --git a/src/core/validate.rs b/src/core/validate.rs
+index 6e55434..c11e02c 100644
+--- a/src/core/validate.rs
++++ b/src/core/validate.rs
+@@ -35,27 +35,48 @@ use crate::core::store::{Store, StoreKind};
+ use crate::{db, primitives, todo};
+ use regex::Regex;
+ use serde_json;
+-use std::cell::RefCell;
+ use std::fs;
+ use std::path::{Path, PathBuf};
+-use std::time::Instant;
++use std::sync::Mutex;
++use std::sync::atomic::{AtomicU32, Ordering};
++use std::time::{Duration, Instant};
+ use ulid::Ulid;
+ 
+-thread_local! {
+-    static VALIDATION_FAILS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+-    static VALIDATION_WARNS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+-    static REPO_FILES_CACHE: RefCell<Vec<(PathBuf, Vec<PathBuf>)>> = const { RefCell::new(Vec::new()) };
++struct ValidationContext {
++    pass_count: AtomicU32,
++    fail_count: AtomicU32,
++    warn_count: AtomicU32,
++    fails: Mutex<Vec<String>>,
++    warns: Mutex<Vec<String>>,
++    repo_files_cache: Mutex<Vec<(PathBuf, Vec<PathBuf>)>>,
+ }
+ 
+-fn collect_repo_files(root: &Path, out: &mut Vec<PathBuf>) -> Result<(), error::DecapodError> {
++impl ValidationContext {
++    fn new() -> Self {
++        Self {
++            pass_count: AtomicU32::new(0),
++            fail_count: AtomicU32::new(0),
++            warn_count: AtomicU32::new(0),
++            fails: Mutex::new(Vec::new()),
++            warns: Mutex::new(Vec::new()),
++            repo_files_cache: Mutex::new(Vec::new()),
++        }
++    }
++}
++
++fn collect_repo_files(
++    root: &Path,
++    out: &mut Vec<PathBuf>,
++    ctx: &ValidationContext,
++) -> Result<(), error::DecapodError> {
+     // Check cache first — this is called 3 times on the same root during validation.
+-    let cached = REPO_FILES_CACHE.with(|cache| {
++    let cached = {
++        let cache = ctx.repo_files_cache.lock().unwrap();
+         cache
+-            .borrow()
+             .iter()
+             .find(|(k, _)| k == root)
+             .map(|(_, v)| v.clone())
+-    });
++    };
+     if let Some(files) = cached {
+         out.extend(files);
+         return Ok(());
+@@ -86,23 +107,21 @@ fn collect_repo_files(root: &Path, out: &mut Vec<PathBuf>) -> Result<(), error::
+     let start = out.len();
+     recurse(root, out)?;
+     // Cache the result for subsequent calls with the same root.
+-    REPO_FILES_CACHE.with(|cache| {
+-        cache
+-            .borrow_mut()
+-            .push((root.to_path_buf(), out[start..].to_vec()));
+-    });
++    ctx.repo_files_cache
++        .lock()
++        .unwrap()
++        .push((root.to_path_buf(), out[start..].to_vec()));
+     Ok(())
+ }
+ 
+ fn validate_no_legacy_namespaces(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     decapod_dir: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Namespace Purge Gate");
+ 
+     let mut files = Vec::new();
+-    collect_repo_files(decapod_dir, &mut files)?;
++    collect_repo_files(decapod_dir, &mut files, ctx)?;
+ 
+     let needles = [
+         [".".to_string(), "globex".to_string()].concat(),
+@@ -137,7 +156,7 @@ fn validate_no_legacy_namespaces(
+     if offenders.is_empty() {
+         pass(
+             "No legacy namespace references found in repo text sources",
+-            pass_count,
++            ctx,
+         );
+     } else {
+         let mut msg = String::from("Forbidden legacy namespace references found:");
+@@ -147,14 +166,13 @@ fn validate_no_legacy_namespaces(
+         if offenders.len() > 12 {
+             msg.push_str(&format!(" ... ({} total)", offenders.len()));
+         }
+-        fail(&msg, fail_count);
++        fail(&msg, ctx);
+     }
+     Ok(())
+ }
+ 
+ fn validate_embedded_self_contained(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     repo_root: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Embedded Self-Contained Gate");
+@@ -162,12 +180,12 @@ fn validate_embedded_self_contained(
+     let constitution_dir = repo_root.join("constitution");
+     if !constitution_dir.exists() {
+         // This is a decapod repo, not a project with embedded docs
+-        skip("No constitution/ directory found (decapod repo)", &mut 0);
++        skip("No constitution/ directory found (decapod repo)", ctx);
+         return Ok(());
+     }
+ 
+     let mut files = Vec::new();
+-    collect_repo_files(&constitution_dir, &mut files)?;
++    collect_repo_files(&constitution_dir, &mut files, ctx)?;
+ 
+     let mut offenders: Vec<PathBuf> = Vec::new();
+ 
+@@ -216,7 +234,7 @@ fn validate_embedded_self_contained(
+     if offenders.is_empty() {
+         pass(
+             "Embedded constitution files contain no invalid .decapod/ references",
+-            pass_count,
++            ctx,
+         );
+     } else {
+         let mut msg =
+@@ -227,65 +245,31 @@ fn validate_embedded_self_contained(
+         if offenders.len() > 8 {
+             msg.push_str(&format!(" ... ({} total)", offenders.len()));
+         }
+-        fail(&msg, fail_count);
++        fail(&msg, ctx);
+     }
+     Ok(())
+ }
+ 
+-fn pass(message: &str, pass_count: &mut u32) {
+-    *pass_count += 1;
+-    let _ = message;
++fn pass(_message: &str, ctx: &ValidationContext) {
++    ctx.pass_count.fetch_add(1, Ordering::Relaxed);
+ }
+ 
+-fn fail(message: &str, fail_count: &mut u32) {
+-    *fail_count += 1;
+-    VALIDATION_FAILS.with(|v| v.borrow_mut().push(message.to_string()));
++fn fail(message: &str, ctx: &ValidationContext) {
++    ctx.fail_count.fetch_add(1, Ordering::Relaxed);
++    ctx.fails.lock().unwrap().push(message.to_string());
+ }
+ 
+-fn skip(message: &str, skip_count: &mut u32) {
+-    *skip_count += 1;
+-    let _ = message;
++fn skip(_message: &str, ctx: &ValidationContext) {
++    ctx.pass_count.fetch_add(1, Ordering::Relaxed);
+ }
+ 
+-fn warn(message: &str, warn_count: &mut u32) {
+-    *warn_count += 1;
+-    VALIDATION_WARNS.with(|v| v.borrow_mut().push(message.to_string()));
++fn warn(message: &str, ctx: &ValidationContext) {
++    ctx.warn_count.fetch_add(1, Ordering::Relaxed);
++    ctx.warns.lock().unwrap().push(message.to_string());
+ }
+ 
+ fn info(_message: &str) {}
+ 
+-struct TimedGate {
+-    name: &'static str,
+-    start: Instant,
+-    verbose: bool,
+-}
+-
+-impl TimedGate {
+-    fn new(name: &'static str, verbose: bool) -> Self {
+-        if verbose {
+-            println!("validate: [{name}] starting...");
+-        }
+-        Self {
+-            name,
+-            start: Instant::now(),
+-            verbose,
+-        }
+-    }
+-}
+-
+-impl Drop for TimedGate {
+-    fn drop(&mut self) {
+-        if self.verbose {
+-            let elapsed = self.start.elapsed();
+-            println!(
+-                "validate: [{name}] done ({elapsed:.2?})",
+-                name = self.name,
+-                elapsed = elapsed
+-            );
+-        }
+-    }
+-}
+-
+ fn count_tasks_in_db(db_path: &Path) -> Result<i64, error::DecapodError> {
+     let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
+     let count: i64 = conn
+@@ -320,10 +304,7 @@ fn fetch_tasks_fingerprint(db_path: &Path) -> Result<String, error::DecapodError
+     Ok(serde_json::to_string(&out).unwrap())
+ }
+ 
+-fn validate_user_store_blank_slate(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
+-) -> Result<(), error::DecapodError> {
++fn validate_user_store_blank_slate(ctx: &ValidationContext) -> Result<(), error::DecapodError> {
+     info("Store: user (blank-slate semantics)");
+     let tmp_root = std::env::temp_dir().join(format!("decapod_validate_user_{}", Ulid::new()));
+     fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
+@@ -333,14 +314,14 @@ fn validate_user_store_blank_slate(
+     let n = count_tasks_in_db(&db_path)?;
+ 
+     if n == 0 {
+-        pass("User store starts empty (no automatic seeding)", pass_count);
++        pass("User store starts empty (no automatic seeding)", ctx);
+     } else {
+         fail(
+             &format!(
+                 "User store is not empty on fresh init ({} task(s) found)",
+                 n
+             ),
+-            fail_count,
++            ctx,
+         );
+     }
+     Ok(())
+@@ -348,15 +329,14 @@ fn validate_user_store_blank_slate(
+ 
+ fn validate_repo_store_dogfood(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     _decapod_dir: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Store: repo (dogfood backlog semantics)");
+ 
+     let events = store.root.join("todo.events.jsonl");
+     if !events.is_file() {
+-        fail("Repo store missing todo.events.jsonl", fail_count);
++        fail("Repo store missing todo.events.jsonl", ctx);
+         return Ok(());
+     }
+     let content = fs::read_to_string(&events).map_err(error::DecapodError::IoError)?;
+@@ -371,12 +351,12 @@ fn validate_repo_store_dogfood(
+             "Repo backlog event log present ({} task.add events)",
+             add_count
+         ),
+-        pass_count,
++        ctx,
+     );
+ 
+     let db_path = store.root.join("todo.db");
+     if !db_path.is_file() {
+-        fail("Repo store missing todo.db", fail_count);
++        fail("Repo store missing todo.db", ctx);
+         return Ok(());
+     }
+ 
+@@ -384,17 +364,14 @@ fn validate_repo_store_dogfood(
+     let broker = DbBroker::new(&store.root);
+     let replay_report = broker.verify_replay()?;
+     if replay_report.divergences.is_empty() {
+-        pass(
+-            "Audit log integrity verified (no pending event gaps)",
+-            pass_count,
+-        );
++        pass("Audit log integrity verified (no pending event gaps)", ctx);
+     } else {
+         fail(
+             &format!(
+                 "Audit log contains {} potential crash divergence(s)",
+                 replay_report.divergences.len()
+             ),
+-            fail_count,
++            ctx,
+         );
+     }
+ 
+@@ -408,12 +385,12 @@ fn validate_repo_store_dogfood(
+     if fp_a == fp_b {
+         pass(
+             "Repo todo.db matches deterministic rebuild from todo.events.jsonl",
+-            pass_count,
++            ctx,
+         );
+     } else {
+         fail(
+             "Repo todo.db does NOT match rebuild from todo.events.jsonl",
+-            fail_count,
++            ctx,
+         );
+     }
+ 
+@@ -421,8 +398,7 @@ fn validate_repo_store_dogfood(
+ }
+ 
+ fn validate_repo_map(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     _decapod_dir: &Path, // decapod_dir is no longer used for filesystem constitution checks
+ ) -> Result<(), error::DecapodError> {
+     info("Repo Map");
+@@ -431,43 +407,30 @@ fn validate_repo_map(
+     // Instead, we verify embedded docs.
+     pass(
+         "Methodology constitution checks will verify embedded docs.",
+-        pass_count,
++        ctx,
+     );
+ 
+     let required_specs = ["specs/INTENT.md", "specs/SYSTEM.md"];
+     let required_methodology = ["methodology/ARCHITECTURE.md"];
+     for r in required_specs {
+         if crate::core::assets::get_doc(r).is_some() {
+-            pass(
+-                &format!("Constitution doc {} present (embedded)", r),
+-                pass_count,
+-            );
++            pass(&format!("Constitution doc {} present (embedded)", r), ctx);
+         } else {
+-            fail(
+-                &format!("Constitution doc {} missing (embedded)", r),
+-                fail_count,
+-            );
++            fail(&format!("Constitution doc {} missing (embedded)", r), ctx);
+         }
+     }
+     for r in required_methodology {
+         if crate::core::assets::get_doc(r).is_some() {
+-            pass(
+-                &format!("Constitution doc {} present (embedded)", r),
+-                pass_count,
+-            );
++            pass(&format!("Constitution doc {} present (embedded)", r), ctx);
+         } else {
+-            fail(
+-                &format!("Constitution doc {} missing (embedded)", r),
+-                fail_count,
+-            );
++            fail(&format!("Constitution doc {} missing (embedded)", r), ctx);
+         }
+     }
+     Ok(())
+ }
+ 
+ fn validate_docs_templates_bucket(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     decapod_dir: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Entrypoint Gate");
+@@ -477,19 +440,19 @@ fn validate_docs_templates_bucket(
+     for a in required {
+         let p = decapod_dir.join(a);
+         if p.is_file() {
+-            pass(&format!("Root entrypoint {} present", a), pass_count);
++            pass(&format!("Root entrypoint {} present", a), ctx);
+         } else {
+             fail(
+                 &format!("Root entrypoint {} missing from project root", a),
+-                fail_count,
++                ctx,
+             );
+         }
+     }
+ 
+     if decapod_dir.join(".decapod").join("README.md").is_file() {
+-        pass(".decapod/README.md present", pass_count);
++        pass(".decapod/README.md present", ctx);
+     } else {
+-        fail(".decapod/README.md missing", fail_count);
++        fail(".decapod/README.md missing", ctx);
+     }
+ 
+     // NEGATIVE GATE: Decapod docs MUST NOT be copied into the project
+@@ -497,32 +460,28 @@ fn validate_docs_templates_bucket(
+     if forbidden_docs.exists() {
+         fail(
+             "Decapod internal docs were copied into .decapod/docs/ (Forbidden)",
+-            fail_count,
++            ctx,
+         );
+     } else {
+         pass(
+             "Decapod internal docs correctly excluded from project repo",
+-            pass_count,
++            ctx,
+         );
+     }
+ 
+     // NEGATIVE GATE: projects/<id> MUST NOT exist
+     let forbidden_projects = decapod_dir.join(".decapod").join("projects");
+     if forbidden_projects.exists() {
+-        fail(
+-            "Legacy .decapod/projects/ directory found (Forbidden)",
+-            fail_count,
+-        );
++        fail("Legacy .decapod/projects/ directory found (Forbidden)", ctx);
+     } else {
+-        pass(".decapod/projects/ correctly absent", pass_count);
++        pass(".decapod/projects/ correctly absent", ctx);
+     }
+ 
+     Ok(())
+ }
+ 
+ fn validate_entrypoint_invariants(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     decapod_dir: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Four Invariants Gate");
+@@ -530,7 +489,7 @@ fn validate_entrypoint_invariants(
+     // Check AGENTS.md for the four invariants
+     let agents_path = decapod_dir.join("AGENTS.md");
+     if !agents_path.is_file() {
+-        fail("AGENTS.md missing, cannot check invariants", fail_count);
++        fail("AGENTS.md missing, cannot check invariants", ctx);
+         return Ok(());
+     }
+ 
+@@ -577,9 +536,9 @@ fn validate_entrypoint_invariants(
+     let mut all_present = true;
+     for (marker, description) in exact_invariants {
+         if content.contains(marker) {
+-            pass(&format!("Invariant present: {}", description), pass_count);
++            pass(&format!("Invariant present: {}", description), ctx);
+         } else {
+-            fail(&format!("Invariant missing: {}", description), fail_count);
++            fail(&format!("Invariant missing: {}", description), ctx);
+             all_present = false;
+         }
+     }
+@@ -590,7 +549,7 @@ fn validate_entrypoint_invariants(
+         if content.contains(legacy) {
+             fail(
+                 &format!("AGENTS.md contains legacy router reference: {}", legacy),
+-                fail_count,
++                ctx,
+             );
+             all_present = false;
+         }
+@@ -605,7 +564,7 @@ fn validate_entrypoint_invariants(
+                 "AGENTS.md is thin ({} lines ≤ {})",
+                 line_count, MAX_AGENTS_LINES
+             ),
+-            pass_count,
++            ctx,
+         );
+     } else {
+         fail(
+@@ -613,7 +572,7 @@ fn validate_entrypoint_invariants(
+                 "AGENTS.md exceeds line limit ({} lines > {})",
+                 line_count, MAX_AGENTS_LINES
+             ),
+-            fail_count,
++            ctx,
+         );
+         all_present = false;
+     }
+@@ -623,10 +582,7 @@ fn validate_entrypoint_invariants(
+     for agent_file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
+         let agent_path = decapod_dir.join(agent_file);
+         if !agent_path.is_file() {
+-            fail(
+-                &format!("{} missing from project root", agent_file),
+-                fail_count,
+-            );
++            fail(&format!("{} missing from project root", agent_file), ctx);
+             all_present = false;
+             continue;
+         }
+@@ -636,25 +592,19 @@ fn validate_entrypoint_invariants(
+ 
+         // Must defer to AGENTS.md
+         if agent_content.contains("See `AGENTS.md`") || agent_content.contains("AGENTS.md") {
+-            pass(&format!("{} defers to AGENTS.md", agent_file), pass_count);
++            pass(&format!("{} defers to AGENTS.md", agent_file), ctx);
+         } else {
+-            fail(
+-                &format!("{} does not reference AGENTS.md", agent_file),
+-                fail_count,
+-            );
++            fail(&format!("{} does not reference AGENTS.md", agent_file), ctx);
+             all_present = false;
+         }
+ 
+         // Must reference canonical router
+         if agent_content.contains("core/DECAPOD.md") {
+-            pass(
+-                &format!("{} references canonical router", agent_file),
+-                pass_count,
+-            );
++            pass(&format!("{} references canonical router", agent_file), ctx);
+         } else {
+             fail(
+                 &format!("{} missing canonical router reference", agent_file),
+-                fail_count,
++                ctx,
+             );
+             all_present = false;
+         }
+@@ -663,12 +613,12 @@ fn validate_entrypoint_invariants(
+         if agent_content.contains(".decapod files are accessed only via decapod CLI") {
+             pass(
+                 &format!("{} includes .decapod CLI-only jail rule", agent_file),
+-                pass_count,
++                ctx,
+             );
+         } else {
+             fail(
+                 &format!("{} missing .decapod CLI-only jail rule marker", agent_file),
+-                fail_count,
++                ctx,
+             );
+             all_present = false;
+         }
+@@ -677,12 +627,12 @@ fn validate_entrypoint_invariants(
+         if agent_content.contains("Docker git workspaces") {
+             pass(
+                 &format!("{} includes Docker workspace mandate", agent_file),
+-                pass_count,
++                ctx,
+             );
+         } else {
+             fail(
+                 &format!("{} missing Docker workspace mandate marker", agent_file),
+-                fail_count,
++                ctx,
+             );
+             all_present = false;
+         }
+@@ -693,12 +643,12 @@ fn validate_entrypoint_invariants(
+         {
+             pass(
+                 &format!("{} includes elevated-permissions mandate", agent_file),
+-                pass_count,
++                ctx,
+             );
+         } else {
+             fail(
+                 &format!("{} missing elevated-permissions mandate marker", agent_file),
+-                fail_count,
++                ctx,
+             );
+             all_present = false;
+         }
+@@ -707,7 +657,7 @@ fn validate_entrypoint_invariants(
+         if agent_content.contains("DECAPOD_SESSION_PASSWORD") {
+             pass(
+                 &format!("{} includes per-agent session password mandate", agent_file),
+-                pass_count,
++                ctx,
+             );
+         } else {
+             fail(
+@@ -715,7 +665,7 @@ fn validate_entrypoint_invariants(
+                     "{} missing per-agent session password mandate marker",
+                     agent_file
+                 ),
+-                fail_count,
++                ctx,
+             );
+             all_present = false;
+         }
+@@ -724,12 +674,12 @@ fn validate_entrypoint_invariants(
+         if agent_content.contains("decapod todo claim --id <task-id>") {
+             pass(
+                 &format!("{} includes claim-before-work mandate", agent_file),
+-                pass_count,
++                ctx,
+             );
+         } else {
+             fail(
+                 &format!("{} missing claim-before-work mandate marker", agent_file),
+-                fail_count,
++                ctx,
+             );
+             all_present = false;
+         }
+@@ -741,7 +691,7 @@ fn validate_entrypoint_invariants(
+                     "{} includes core constitution ingestion mandate",
+                     agent_file
+                 ),
+-                pass_count,
++                ctx,
+             );
+         } else {
+             fail(
+@@ -749,24 +699,21 @@ fn validate_entrypoint_invariants(
+                     "{} missing core constitution ingestion mandate marker",
+                     agent_file
+                 ),
+-                fail_count,
++                ctx,
+             );
+             all_present = false;
+         }
+ 
+         // Must include explicit update command in startup sequence
+         if agent_content.contains("cargo install decapod") {
+-            pass(
+-                &format!("{} includes version update step", agent_file),
+-                pass_count,
+-            );
++            pass(&format!("{} includes version update step", agent_file), ctx);
+         } else {
+             fail(
+                 &format!(
+                     "{} missing version update step (`cargo install decapod`)",
+                     agent_file
+                 ),
+-                fail_count,
++                ctx,
+             );
+             all_present = false;
+         }
+@@ -779,7 +726,7 @@ fn validate_entrypoint_invariants(
+                     "{} is thin ({} lines ≤ {})",
+                     agent_file, agent_lines, MAX_AGENT_SPECIFIC_LINES
+                 ),
+-                pass_count,
++                ctx,
+             );
+         } else {
+             fail(
+@@ -787,7 +734,7 @@ fn validate_entrypoint_invariants(
+                     "{} exceeds line limit ({} lines > {})",
+                     agent_file, agent_lines, MAX_AGENT_SPECIFIC_LINES
+                 ),
+-                fail_count,
++                ctx,
+             );
+             all_present = false;
+         }
+@@ -806,7 +753,7 @@ fn validate_entrypoint_invariants(
+                         "{} contains duplicated contract details ({})",
+                         agent_file, marker
+                     ),
+-                    fail_count,
++                    ctx,
+                 );
+                 all_present = false;
+             }
+@@ -814,18 +761,14 @@ fn validate_entrypoint_invariants(
+     }
+ 
+     if all_present {
+-        pass(
+-            "All entrypoint files follow thin waist architecture",
+-            pass_count,
+-        );
++        pass("All entrypoint files follow thin waist architecture", ctx);
+     }
+ 
+     Ok(())
+ }
+ 
+ fn validate_interface_contract_bootstrap(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     repo_root: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Interface Contract Bootstrap Gate");
+@@ -836,7 +779,7 @@ fn validate_interface_contract_bootstrap(
+     if !constitution_dir.exists() {
+         skip(
+             "No constitution/ directory found (project repo); skipping interface bootstrap checks",
+-            pass_count,
++            ctx,
+         );
+         return Ok(());
+     }
+@@ -848,15 +791,9 @@ fn validate_interface_contract_bootstrap(
+         (&context_pack_doc, "AGENT_CONTEXT_PACK interface"),
+     ] {
+         if path.is_file() {
+-            pass(
+-                &format!("{} present at {}", label, path.display()),
+-                pass_count,
+-            );
++            pass(&format!("{} present at {}", label, path.display()), ctx);
+         } else {
+-            fail(
+-                &format!("{} missing at {}", label, path.display()),
+-                fail_count,
+-            );
++            fail(&format!("{} missing at {}", label, path.display()), ctx);
+         }
+     }
+ 
+@@ -877,13 +814,10 @@ fn validate_interface_contract_bootstrap(
+             if content.contains(marker) {
+                 pass(
+                     &format!("RISK_POLICY_GATE includes marker: {}", marker),
+-                    pass_count,
++                    ctx,
+                 );
+             } else {
+-                fail(
+-                    &format!("RISK_POLICY_GATE missing marker: {}", marker),
+-                    fail_count,
+-                );
++                fail(&format!("RISK_POLICY_GATE missing marker: {}", marker), ctx);
+             }
+         }
+     }
+@@ -906,12 +840,12 @@ fn validate_interface_contract_bootstrap(
+             if content.contains(marker) {
+                 pass(
+                     &format!("AGENT_CONTEXT_PACK includes marker: {}", marker),
+-                    pass_count,
++                    ctx,
+                 );
+             } else {
+                 fail(
+                     &format!("AGENT_CONTEXT_PACK missing marker: {}", marker),
+-                    fail_count,
++                    ctx,
+                 );
+             }
+         }
+@@ -935,13 +869,12 @@ fn extract_md_version(content: &str) -> Option<String> {
+ }
+ 
+ fn validate_health_purity(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     decapod_dir: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Health Purity Gate");
+     let mut files = Vec::new();
+-    collect_repo_files(decapod_dir, &mut files)?;
++    collect_repo_files(decapod_dir, &mut files, ctx)?;
+ 
+     let forbidden =
+         Regex::new(r"(?i)\(health:\s*(VERIFIED|ASSERTED|STALE|CONTRADICTED)\)").unwrap();
+@@ -966,7 +899,7 @@ fn validate_health_purity(
+     if offenders.is_empty() {
+         pass(
+             "No manual health status values found in authoritative docs",
+-            pass_count,
++            ctx,
+         );
+     } else {
+         fail(
+@@ -974,7 +907,7 @@ fn validate_health_purity(
+                 "Manual health values found in non-generated files: {:?}",
+                 offenders
+             ),
+-            fail_count,
++            ctx,
+         );
+     }
+     Ok(())
+@@ -982,13 +915,12 @@ fn validate_health_purity(
+ 
+ fn validate_project_scoped_state(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     decapod_dir: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Project-Scoped State Gate");
+     if store.kind != StoreKind::Repo {
+-        skip("Not in repo mode; skipping state scoping check", pass_count);
++        skip("Not in repo mode; skipping state scoping check", ctx);
+         return Ok(());
+     }
+ 
+@@ -1006,22 +938,21 @@ fn validate_project_scoped_state(
+     }
+ 
+     if offenders.is_empty() {
+-        pass("All state is correctly scoped within .decapod/", pass_count);
++        pass("All state is correctly scoped within .decapod/", ctx);
+     } else {
+         fail(
+             &format!(
+                 "Found Decapod state files outside .decapod/: {:?}",
+                 offenders
+             ),
+-            fail_count,
++            ctx,
+         );
+     }
+     Ok(())
+ }
+ 
+ fn validate_schema_determinism(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     _decapod_dir: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Schema Determinism Gate");
+@@ -1043,25 +974,21 @@ fn validate_schema_determinism(
+     let s2 = run_schema()?;
+ 
+     if s1 == s2 && !s1.is_empty() {
+-        pass("Schema output is deterministic", pass_count);
++        pass("Schema output is deterministic", ctx);
+     } else {
+-        fail("Schema output is non-deterministic or empty", fail_count);
++        fail("Schema output is non-deterministic or empty", ctx);
+     }
+     Ok(())
+ }
+ 
+ fn validate_health_cache_integrity(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+ ) -> Result<(), error::DecapodError> {
+     info("Health Cache Non-Authoritative Gate");
+     let db_path = store.root.join("health.db");
+     if !db_path.exists() {
+-        skip(
+-            "health.db not found; skipping health integrity check",
+-            pass_count,
+-        );
++        skip("health.db not found; skipping health integrity check", ctx);
+         return Ok(());
+     }
+ 
+@@ -1075,41 +1002,33 @@ fn validate_health_cache_integrity(
+     ).map_err(error::DecapodError::RusqliteError)?;
+ 
+     if orphaned == 0 {
+-        pass(
+-            "No orphaned health cache entries (integrity pass)",
+-            pass_count,
+-        );
++        pass("No orphaned health cache entries (integrity pass)", ctx);
+     } else {
+         warn(
+             &format!(
+                 "Found {} health cache entries without proof events (might be manual writes)",
+                 orphaned
+             ),
+-            fail_count,
++            ctx,
+         );
+     }
+     Ok(())
+ }
+ 
+-fn validate_risk_map(
+-    store: &Store,
+-    pass_count: &mut u32,
+-    _fail_count: &mut u32,
+-) -> Result<(), error::DecapodError> {
++fn validate_risk_map(store: &Store, ctx: &ValidationContext) -> Result<(), error::DecapodError> {
+     info("Risk Map Gate");
+     let map_path = store.root.join("RISKMAP.json");
+     if map_path.exists() {
+-        pass("Risk map (blast-radius) is present", pass_count);
++        pass("Risk map (blast-radius) is present", ctx);
+     } else {
+-        warn("Risk map missing (run `decapod riskmap init`)", pass_count);
++        warn("Risk map missing (run `decapod riskmap init`)", ctx);
+     }
+     Ok(())
+ }
+ 
+ fn validate_risk_map_violations(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     pre_read_broker: Option<&str>,
+ ) -> Result<(), error::DecapodError> {
+     info("Zone Violation Gate");
+@@ -1133,11 +1052,11 @@ fn validate_risk_map_violations(
+             }
+         }
+         if offenders.is_empty() {
+-            pass("No risk zone violations detected in audit log", pass_count);
++            pass("No risk zone violations detected in audit log", ctx);
+         } else {
+             fail(
+                 &format!("Detected operations in protected zones: {:?}", offenders),
+-                fail_count,
++                ctx,
+             );
+         }
+     }
+@@ -1146,14 +1065,13 @@ fn validate_risk_map_violations(
+ 
+ fn validate_policy_integrity(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     pre_read_broker: Option<&str>,
+ ) -> Result<(), error::DecapodError> {
+     info("Policy Integrity Gates");
+     let db_path = store.root.join("policy.db");
+     if !db_path.exists() {
+-        skip("policy.db not found; skipping policy check", pass_count);
++        skip("policy.db not found; skipping policy check", ctx);
+         return Ok(());
+     }
+ 
+@@ -1184,7 +1102,7 @@ fn validate_policy_integrity(
+         if offenders.is_empty() {
+             pass(
+                 "Approval isolation verified (no direct health mutations)",
+-                pass_count,
++                ctx,
+             );
+         } else {
+             fail(
+@@ -1192,7 +1110,7 @@ fn validate_policy_integrity(
+                     "Policy approval directly mutated health state: {:?}",
+                     offenders
+                 ),
+-                fail_count,
++                ctx,
+             );
+         }
+     }
+@@ -1202,8 +1120,7 @@ fn validate_policy_integrity(
+ 
+ fn validate_knowledge_integrity(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     pre_read_broker: Option<&str>,
+ ) -> Result<(), error::DecapodError> {
+     info("Knowledge Integrity Gate");
+@@ -1211,7 +1128,7 @@ fn validate_knowledge_integrity(
+     if !db_path.exists() {
+         skip(
+             "knowledge.db not found; skipping knowledge integrity check",
+-            pass_count,
++            ctx,
+         );
+         return Ok(());
+     }
+@@ -1229,7 +1146,7 @@ fn validate_knowledge_integrity(
+     if missing_provenance == 0 {
+         pass(
+             "Knowledge provenance verified (all entries have pointers)",
+-            pass_count,
++            ctx,
+         );
+     } else {
+         fail(
+@@ -1237,7 +1154,7 @@ fn validate_knowledge_integrity(
+                 "Found {} knowledge entries missing mandatory provenance",
+                 missing_provenance
+             ),
+-            fail_count,
++            ctx,
+         );
+     }
+ 
+@@ -1263,17 +1180,14 @@ fn validate_knowledge_integrity(
+             }
+         }
+         if offenders.is_empty() {
+-            pass(
+-                "No direct health promotion from knowledge detected",
+-                pass_count,
+-            );
++            pass("No direct health promotion from knowledge detected", ctx);
+         } else {
+             fail(
+                 &format!(
+                     "Knowledge system directly mutated health state: {:?}",
+                     offenders
+                 ),
+-                fail_count,
++                ctx,
+             );
+         }
+     }
+@@ -1283,8 +1197,7 @@ fn validate_knowledge_integrity(
+ 
+ fn validate_lineage_hard_gate(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+ ) -> Result<(), error::DecapodError> {
+     info("Lineage Hard Gate");
+     let todo_events = store.root.join("todo.events.jsonl");
+@@ -1292,7 +1205,7 @@ fn validate_lineage_hard_gate(
+     if !todo_events.exists() || !federation_db.exists() {
+         skip(
+             "lineage inputs missing (todo.events.jsonl or federation.db); skipping",
+-            pass_count,
++            ctx,
+         );
+         return Ok(());
+     }
+@@ -1394,20 +1307,16 @@ fn validate_lineage_hard_gate(
+     if violations.is_empty() {
+         pass(
+             "Intent-tagged task.add/task.done events have commitment+proof lineage",
+-            pass_count,
++            ctx,
+         );
+     } else {
+-        fail(
+-            &format!("Lineage gate violations: {:?}", violations),
+-            fail_count,
+-        );
++        fail(&format!("Lineage gate violations: {:?}", violations), ctx);
+     }
+     Ok(())
+ }
+ 
+ fn validate_repomap_determinism(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     decapod_dir: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Repo Map Determinism Gate");
+@@ -1427,26 +1336,25 @@ fn validate_repomap_determinism(
+         .map_err(|_| error::DecapodError::ValidationError("repomap thread panicked".into()))?;
+ 
+     if m1 == m2 && !m1.is_empty() {
+-        pass("Repo map output is deterministic", pass_count);
++        pass("Repo map output is deterministic", ctx);
+     } else {
+-        fail("Repo map output is non-deterministic or empty", fail_count);
++        fail("Repo map output is non-deterministic or empty", ctx);
+     }
+     Ok(())
+ }
+ 
+ fn validate_watcher_audit(
+     store: &Store,
+-    pass_count: &mut u32,
+-    _fail_count: &mut u32,
++    ctx: &ValidationContext,
+ ) -> Result<(), error::DecapodError> {
+     info("Watcher Audit Gate");
+     let audit_log = store.root.join("watcher.events.jsonl");
+     if audit_log.exists() {
+-        pass("Watcher audit trail present", pass_count);
++        pass("Watcher audit trail present", ctx);
+     } else {
+         warn(
+             "Watcher audit trail missing (run `decapod govern watcher run`)",
+-            pass_count,
++            ctx,
+         );
+     }
+     Ok(())
+@@ -1454,8 +1362,7 @@ fn validate_watcher_audit(
+ 
+ fn validate_watcher_purity(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     pre_read_broker: Option<&str>,
+ ) -> Result<(), error::DecapodError> {
+     info("Watcher Purity Gate");
+@@ -1480,17 +1387,14 @@ fn validate_watcher_purity(
+             }
+         }
+         if offenders.is_empty() {
+-            pass(
+-                "Watcher purity verified (read-only checks only)",
+-                pass_count,
+-            );
++            pass("Watcher purity verified (read-only checks only)", ctx);
+         } else {
+             fail(
+                 &format!(
+                     "Watcher subsystem attempted brokered mutations: {:?}",
+                     offenders
+                 ),
+-                fail_count,
++                ctx,
+             );
+         }
+     }
+@@ -1499,13 +1403,12 @@ fn validate_watcher_purity(
+ 
+ fn validate_archive_integrity(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+ ) -> Result<(), error::DecapodError> {
+     info("Archive Integrity Gate");
+     let db_path = store.root.join("archive.db");
+     if !db_path.exists() {
+-        skip("archive.db not found; skipping archive check", pass_count);
++        skip("archive.db not found; skipping archive check", ctx);
+         return Ok(());
+     }
+ 
+@@ -1514,12 +1417,12 @@ fn validate_archive_integrity(
+     if failures.is_empty() {
+         pass(
+             "All session archives verified (content and hash match)",
+-            pass_count,
++            ctx,
+         );
+     } else {
+         fail(
+             &format!("Archive integrity failures detected: {:?}", failures),
+-            fail_count,
++            ctx,
+         );
+     }
+     Ok(())
+@@ -1527,8 +1430,7 @@ fn validate_archive_integrity(
+ 
+ fn validate_control_plane_contract(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+ ) -> Result<(), error::DecapodError> {
+     info("Control Plane Contract Gate");
+ 
+@@ -1541,7 +1443,7 @@ fn validate_control_plane_contract(
+     let broker_log = data_dir.join("broker.events.jsonl");
+     if !broker_log.exists() {
+         // First run - no broker log yet, this is OK
+-        pass("No broker events yet (first run)", pass_count);
++        pass("No broker events yet (first run)", ctx);
+         return Ok(());
+     }
+ 
+@@ -1583,7 +1485,7 @@ fn validate_control_plane_contract(
+     if violations.is_empty() {
+         pass(
+             "Control plane contract honored (all mutations brokered)",
+-            pass_count,
++            ctx,
+         );
+     } else {
+         fail(
+@@ -1591,7 +1493,7 @@ fn validate_control_plane_contract(
+                 "Control plane contract violations detected: {:?}",
+                 violations
+             ),
+-            fail_count,
++            ctx,
+         );
+     }
+ 
+@@ -1600,8 +1502,7 @@ fn validate_control_plane_contract(
+ 
+ fn validate_canon_mutation(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     pre_read_broker: Option<&str>,
+ ) -> Result<(), error::DecapodError> {
+     info("Canon Mutation Gate");
+@@ -1630,14 +1531,14 @@ fn validate_canon_mutation(
+             }
+         }
+         if offenders.is_empty() {
+-            pass("No unauthorized canon mutations detected", pass_count);
++            pass("No unauthorized canon mutations detected", ctx);
+         } else {
+             warn(
+                 &format!(
+                     "Detected direct mutations to canonical documents: {:?}",
+                     offenders
+                 ),
+-                fail_count,
++                ctx,
+             );
+         }
+     }
+@@ -1645,8 +1546,7 @@ fn validate_canon_mutation(
+ }
+ 
+ fn validate_heartbeat_invocation_gate(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     decapod_dir: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Heartbeat Invocation Gate");
+@@ -1677,15 +1577,15 @@ fn validate_heartbeat_invocation_gate(
+ 
+         for (ok, msg) in code_markers {
+             if ok {
+-                pass(msg, pass_count);
++                pass(msg, ctx);
+             } else {
+-                fail(msg, fail_count);
++                fail(msg, ctx);
+             }
+         }
+     } else {
+         skip(
+             "Heartbeat wiring source files absent; skipping code-level heartbeat checks",
+-            pass_count,
++            ctx,
+         );
+     }
+ 
+@@ -1718,9 +1618,9 @@ fn validate_heartbeat_invocation_gate(
+ 
+     for (ok, msg) in doc_markers {
+         if ok {
+-            pass(msg, pass_count);
++            pass(msg, ctx);
+         } else {
+-            fail(msg, fail_count);
++            fail(msg, ctx);
+         }
+     }
+ 
+@@ -1729,8 +1629,7 @@ fn validate_heartbeat_invocation_gate(
+ 
+ fn validate_federation_gates(
+     store: &Store,
+-    pass_count: &mut u32,
+-    warn_count: &mut u32,
++    ctx: &ValidationContext,
+ ) -> Result<(), error::DecapodError> {
+     info("Federation Gates");
+ 
+@@ -1738,12 +1637,12 @@ fn validate_federation_gates(
+ 
+     for (gate_name, passed, message) in results {
+         if passed {
+-            pass(&format!("[{}] {}", gate_name, message), pass_count);
++            pass(&format!("[{}] {}", gate_name, message), ctx);
+         } else {
+             // Federation gates are advisory (warn) rather than hard-fail because the
+             // two-phase DB+JSONL write design can produce transient drift that does
+             // not indicate data loss.
+-            warn(&format!("[{}] {}", gate_name, message), warn_count);
++            warn(&format!("[{}] {}", gate_name, message), ctx);
+         }
+     }
+ 
+@@ -1752,21 +1651,20 @@ fn validate_federation_gates(
+ 
+ fn validate_markdown_primitives_roundtrip_gate(
+     store: &Store,
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+ ) -> Result<(), error::DecapodError> {
+     info("Markdown Primitive Round-Trip Gate");
+     match primitives::validate_roundtrip_gate(store) {
+         Ok(()) => {
+             pass(
+                 "Markdown primitives export and round-trip validation pass",
+-                pass_count,
++                ctx,
+             );
+         }
+         Err(err) => {
+             fail(
+                 &format!("Markdown primitive round-trip failed: {}", err),
+-                fail_count,
++                ctx,
+             );
+         }
+     }
+@@ -1776,8 +1674,7 @@ fn validate_markdown_primitives_roundtrip_gate(
+ /// Validates that tooling requirements are satisfied.
+ /// This gate ensures formatting, linting, and type checking pass before promotion.
+ fn validate_git_workspace_context(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     repo_root: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Git Workspace Context Gate");
+@@ -1786,7 +1683,7 @@ fn validate_git_workspace_context(
+     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+         skip(
+             "Git workspace gates skipped (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
+-            pass_count,
++            ctx,
+         );
+         return Ok(());
+     }
+@@ -1820,12 +1717,12 @@ fn validate_git_workspace_context(
+                 "Running in container workspace (signals: {})",
+                 reasons.join(", ")
+             ),
+-            pass_count,
++            ctx,
+         );
+     } else {
+         fail(
+             "Not running in container workspace - git-tracked work must execute in Docker-isolated workspace (claim.git.container_workspace_required)",
+-            fail_count,
++            ctx,
+         );
+     }
+ 
+@@ -1836,16 +1733,16 @@ fn validate_git_workspace_context(
+     };
+ 
+     if is_worktree {
+-        pass("Running in git worktree (isolated branch)", pass_count);
++        pass("Running in git worktree (isolated branch)", ctx);
+     } else if in_container {
+         pass(
+             "Container workspace detected (worktree check informational)",
+-            pass_count,
++            ctx,
+         );
+     } else {
+         fail(
+             "Not running in isolated git worktree - must use container workspace for implementation work",
+-            fail_count,
++            ctx,
+         );
+     }
+ 
+@@ -1853,8 +1750,7 @@ fn validate_git_workspace_context(
+ }
+ 
+ fn validate_git_protected_branch(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     repo_root: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Git Protected Branch Gate");
+@@ -1863,7 +1759,7 @@ fn validate_git_protected_branch(
+     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+         skip(
+             "Git protected branch gate skipped (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
+-            pass_count,
++            ctx,
+         );
+         return Ok(());
+     }
+@@ -1897,12 +1793,12 @@ fn validate_git_protected_branch(
+                 "Currently on protected branch '{}' - implementation work must happen in working branch, not directly on protected refs (claim.git.no_direct_main_push)",
+                 current_branch
+             ),
+-            fail_count,
++            ctx,
+         );
+     } else {
+         pass(
+             &format!("On working branch '{}' (not protected)", current_branch),
+-            pass_count,
++            ctx,
+         );
+     }
+ 
+@@ -1946,10 +1842,10 @@ fn validate_git_protected_branch(
+                                 "Protected branch has {} unpushed commit(s) - direct push to protected branch detected (commit: {})",
+                                 ahead, commit_msg
+                             ),
+-                            fail_count,
++                            ctx,
+                         );
+                     } else {
+-                        pass("No unpushed commits to protected branches", pass_count);
++                        pass("No unpushed commits to protected branches", ctx);
+                     }
+                 }
+             }
+@@ -1960,8 +1856,7 @@ fn validate_git_protected_branch(
+ }
+ 
+ fn validate_tooling_gate(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     repo_root: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("Tooling Validation Gate");
+@@ -1969,7 +1864,7 @@ fn validate_tooling_gate(
+     if std::env::var("DECAPOD_VALIDATE_SKIP_TOOLING_GATES").is_ok() {
+         skip(
+             "Tooling validation gates skipped (DECAPOD_VALIDATE_SKIP_TOOLING_GATES set)",
+-            pass_count,
++            ctx,
+         );
+         return Ok(());
+     }
+@@ -1981,7 +1876,7 @@ fn validate_tooling_gate(
+         // Future: Add support for other language toolchains
+         skip(
+             "No Cargo.toml found; skipping Rust toolchain validation",
+-            pass_count,
++            ctx,
+         );
+         return Ok(());
+     }
+@@ -2018,17 +1913,14 @@ fn validate_tooling_gate(
+     match fmt_handle.join().expect("fmt thread panicked") {
+         Ok(output) => {
+             if output.status.success() {
+-                pass("Rust code formatting passes (cargo fmt)", pass_count);
++                pass("Rust code formatting passes (cargo fmt)", ctx);
+             } else {
+-                fail(
+-                    "Rust code formatting failed - run `cargo fmt --all`",
+-                    fail_count,
+-                );
++                fail("Rust code formatting failed - run `cargo fmt --all`", ctx);
+                 has_failures = true;
+             }
+         }
+         Err(e) => {
+-            fail(&format!("Failed to run cargo fmt: {}", e), fail_count);
++            fail(&format!("Failed to run cargo fmt: {}", e), ctx);
+             has_failures = true;
+         }
+     }
+@@ -2036,20 +1928,17 @@ fn validate_tooling_gate(
+     match clippy_handle.join().expect("clippy thread panicked") {
+         Ok(output) => {
+             if output.status.success() {
+-                pass(
+-                    "Rust linting and type checking pass (cargo clippy)",
+-                    pass_count,
+-                );
++                pass("Rust linting and type checking pass (cargo clippy)", ctx);
+             } else {
+                 fail(
+                     "Rust linting failed - run `cargo clippy --all-targets --all-features`",
+-                    fail_count,
++                    ctx,
+                 );
+                 has_failures = true;
+             }
+         }
+         Err(e) => {
+-            fail(&format!("Failed to run cargo clippy: {}", e), fail_count);
++            fail(&format!("Failed to run cargo clippy: {}", e), ctx);
+             has_failures = true;
+         }
+     }
+@@ -2057,7 +1946,7 @@ fn validate_tooling_gate(
+     if !has_failures {
+         pass(
+             "All toolchain validations pass - project is ready for promotion",
+-            pass_count,
++            ctx,
+         );
+     }
+ 
+@@ -2065,8 +1954,7 @@ fn validate_tooling_gate(
+ }
+ 
+ fn validate_state_commit_gate(
+-    pass_count: &mut u32,
+-    fail_count: &mut u32,
++    ctx: &ValidationContext,
+     repo_root: &Path,
+ ) -> Result<(), error::DecapodError> {
+     info("STATE_COMMIT Validation Gate");
+@@ -2089,7 +1977,7 @@ fn validate_state_commit_gate(
+     if !golden_v1_dir.exists() {
+         skip(
+             "No tests/golden/state_commit/v1 directory found; skipping STATE_COMMIT validation",
+-            pass_count,
++            ctx,
+         );
+         return Ok(());
+     }
+@@ -2101,7 +1989,7 @@ fn validate_state_commit_gate(
+         if !golden_v1_dir.join(file).exists() {
+             fail(
+                 &format!("Missing golden file: tests/golden/state_commit/v1/{}", file),
+-                fail_count,
++                ctx,
+             );
+             has_golden = false;
+         }
+@@ -2110,7 +1998,7 @@ fn validate_state_commit_gate(
+     // Immutability check: v1 files should not change
+     // In v1, these are the canonical golden vectors
+     if has_golden {
+-        pass("STATE_COMMIT v1 golden vectors present", pass_count);
++        pass("STATE_COMMIT v1 golden vectors present", ctx);
+ 
+         // Verify the expected hashes match v1 protocol
+         let expected_scope_hash =
+@@ -2127,7 +2015,7 @@ fn validate_state_commit_gate(
+                         expected_scope_hash,
+                         actual_hash.trim()
+                     ),
+-                    fail_count,
++                    ctx,
+                 );
+             }
+         }
+@@ -2142,7 +2030,7 @@ fn validate_state_commit_gate(
+                         expected_root,
+                         actual_root.trim()
+                     ),
+-                    fail_count,
++                    ctx,
+                 );
+             }
+         }
+@@ -2151,6 +2039,30 @@ fn validate_state_commit_gate(
+     Ok(())
+ }
+ 
++fn validate_obligations(store: &Store, ctx: &ValidationContext) -> Result<(), error::DecapodError> {
++    // Initialize the DB to ensure tables exist
++    obligation::initialize_obligation_db(&store.root)?;
++
++    let obligations = obligation::list_obligations(store)?;
++    let mut met_count = 0;
++    for ob in obligations {
++        // If an obligation is marked Met, we MUST verify it still holds
++        if ob.status == obligation::ObligationStatus::Met {
++            let (status, reason) = obligation::verify_obligation(store, &ob.id)?;
++            if status != obligation::ObligationStatus::Met {
++                fail(
++                    &format!("Obligation {} failed verification: {}", ob.id, reason),
++                    ctx,
++                );
++            } else {
++                met_count += 1;
++            }
++        }
++    }
++    pass(&format!("Obligation Graph Validation Gate ({} met nodes verified)", met_count), ctx);
++    Ok(())
++}
++
+ /// Evaluates a set of mandates and returns any active blockers.
+ pub fn evaluate_mandates(
+     project_root: &Path,
+@@ -2248,9 +2160,6 @@ pub fn run_validation(
+     _home_dir: &Path,
+     verbose: bool,
+ ) -> Result<(), error::DecapodError> {
+-    VALIDATION_FAILS.with(|v| v.borrow_mut().clear());
+-    VALIDATION_WARNS.with(|v| v.borrow_mut().clear());
+-    REPO_FILES_CACHE.with(|v| v.borrow_mut().clear());
+     let total_start = Instant::now();
+     println!("validate: running");
+ 
+@@ -2260,9 +2169,7 @@ pub fn run_validation(
+         extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
+     println!("validate: intent_version={}", intent_version);
+ 
+-    let mut pass_count = 0;
+-    let mut fail_count = 0;
+-    let mut warn_count = 0;
++    let ctx = ValidationContext::new();
+ 
+     // Pre-read broker.events.jsonl once for gates that need it
+     let broker_events_path = store.root.join("broker.events.jsonl");
+@@ -2272,190 +2179,369 @@ pub fn run_validation(
+         None
+     };
+ 
+-    // Store validations
++    // Store validations — run sequentially since they set up state
+     match store.kind {
+         StoreKind::User => {
+-            let _tg = TimedGate::new("validate_user_store_blank_slate", verbose);
+-            validate_user_store_blank_slate(&mut pass_count, &mut fail_count)?;
++            let start = Instant::now();
++            validate_user_store_blank_slate(&ctx)?;
++            if verbose {
++                println!(
++                    "validate: [validate_user_store_blank_slate] done ({:.2?})",
++                    start.elapsed()
++                );
++            }
+         }
+         StoreKind::Repo => {
+-            let _tg = TimedGate::new("validate_repo_store_dogfood", verbose);
+-            validate_repo_store_dogfood(store, &mut pass_count, &mut fail_count, decapod_dir)?;
++            let start = Instant::now();
++            validate_repo_store_dogfood(store, &ctx, decapod_dir)?;
++            if verbose {
++                println!(
++                    "validate: [validate_repo_store_dogfood] done ({:.2?})",
++                    start.elapsed()
++                );
++            }
+         }
+     }
+ 
+-    {
+-        let _tg = TimedGate::new("validate_repo_map", verbose);
+-        validate_repo_map(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_no_legacy_namespaces", verbose);
+-        validate_no_legacy_namespaces(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_embedded_self_contained", verbose);
+-        validate_embedded_self_contained(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_docs_templates_bucket", verbose);
+-        validate_docs_templates_bucket(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_entrypoint_invariants", verbose);
+-        validate_entrypoint_invariants(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_interface_contract_bootstrap", verbose);
+-        validate_interface_contract_bootstrap(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+     println!("validate: gate Four Invariants Gate");
+-    {
+-        let _tg = TimedGate::new("validate_health_purity", verbose);
+-        validate_health_purity(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_project_scoped_state", verbose);
+-        validate_project_scoped_state(store, &mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_schema_determinism", verbose);
+-        validate_schema_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_health_cache_integrity", verbose);
+-        validate_health_cache_integrity(store, &mut pass_count, &mut fail_count)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_risk_map", verbose);
+-        validate_risk_map(store, &mut pass_count, &mut warn_count)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_risk_map_violations", verbose);
+-        validate_risk_map_violations(
+-            store,
+-            &mut pass_count,
+-            &mut fail_count,
+-            broker_content.as_deref(),
+-        )?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_policy_integrity", verbose);
+-        validate_policy_integrity(
+-            store,
+-            &mut pass_count,
+-            &mut fail_count,
+-            broker_content.as_deref(),
+-        )?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_knowledge_integrity", verbose);
+-        validate_knowledge_integrity(
+-            store,
+-            &mut pass_count,
+-            &mut fail_count,
+-            broker_content.as_deref(),
+-        )?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_lineage_hard_gate", verbose);
+-        validate_lineage_hard_gate(store, &mut pass_count, &mut fail_count)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_repomap_determinism", verbose);
+-        validate_repomap_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_watcher_audit", verbose);
+-        validate_watcher_audit(store, &mut pass_count, &mut warn_count)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_watcher_purity", verbose);
+-        validate_watcher_purity(
+-            store,
+-            &mut pass_count,
+-            &mut fail_count,
+-            broker_content.as_deref(),
+-        )?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_archive_integrity", verbose);
+-        validate_archive_integrity(store, &mut pass_count, &mut fail_count)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_control_plane_contract", verbose);
+-        validate_control_plane_contract(store, &mut pass_count, &mut fail_count)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_canon_mutation", verbose);
+-        validate_canon_mutation(
+-            store,
+-            &mut pass_count,
+-            &mut fail_count,
+-            broker_content.as_deref(),
+-        )?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_heartbeat_invocation_gate", verbose);
+-        validate_heartbeat_invocation_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_markdown_primitives_roundtrip_gate", verbose);
+-        validate_markdown_primitives_roundtrip_gate(store, &mut pass_count, &mut fail_count)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_federation_gates", verbose);
+-        validate_federation_gates(store, &mut pass_count, &mut warn_count)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_git_workspace_context", verbose);
+-        validate_git_workspace_context(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_git_protected_branch", verbose);
+-        validate_git_protected_branch(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_tooling_gate", verbose);
+-        validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
+-    }
+-    {
+-        let _tg = TimedGate::new("validate_state_commit_gate", verbose);
+-        validate_state_commit_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
++
++    // All remaining gates run in parallel via rayon::scope
++    let timings: Mutex<Vec<(&str, Duration)>> = Mutex::new(Vec::new());
++
++    rayon::scope(|s| {
++        let ctx = &ctx;
++        let timings = &timings;
++        let broker = broker_content.as_deref();
++
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_repo_map(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_repo_map", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_no_legacy_namespaces(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_no_legacy_namespaces", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_embedded_self_contained(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_embedded_self_contained", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_docs_templates_bucket(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_docs_templates_bucket", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_entrypoint_invariants(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_entrypoint_invariants", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_interface_contract_bootstrap(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_interface_contract_bootstrap", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_health_purity(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_health_purity", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_project_scoped_state(store, ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_project_scoped_state", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_schema_determinism(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_schema_determinism", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_health_cache_integrity(store, ctx) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_health_cache_integrity", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_risk_map(store, ctx) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_risk_map", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_risk_map_violations(store, ctx, broker) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_risk_map_violations", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_policy_integrity(store, ctx, broker) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_policy_integrity", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_knowledge_integrity(store, ctx, broker) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_knowledge_integrity", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_lineage_hard_gate(store, ctx) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_lineage_hard_gate", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_repomap_determinism(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_repomap_determinism", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_watcher_audit(store, ctx) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_watcher_audit", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_watcher_purity(store, ctx, broker) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_watcher_purity", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_archive_integrity(store, ctx) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_archive_integrity", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_control_plane_contract(store, ctx) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_control_plane_contract", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_canon_mutation(store, ctx, broker) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_canon_mutation", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_heartbeat_invocation_gate(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_heartbeat_invocation_gate", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_markdown_primitives_roundtrip_gate(store, ctx) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings.lock().unwrap().push((
++                "validate_markdown_primitives_roundtrip_gate",
++                start.elapsed(),
++            ));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_federation_gates(store, ctx) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_federation_gates", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_git_workspace_context(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_git_workspace_context", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_git_protected_branch(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_git_protected_branch", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_tooling_gate(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_tooling_gate", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_state_commit_gate(ctx, decapod_dir) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_state_commit_gate", start.elapsed()));
++        });
++        s.spawn(move |_| {
++            let start = Instant::now();
++            if let Err(e) = validate_obligations(store, ctx) {
++                fail(&format!("gate error: {e}"), ctx);
++            }
++            timings
++                .lock()
++                .unwrap()
++                .push(("validate_obligations", start.elapsed()));
++        });
++    });
++
++    // Print per-gate timings in verbose mode
++    if verbose {
++        let mut gate_timings = timings.into_inner().unwrap();
++        gate_timings.sort_by(|a, b| b.1.cmp(&a.1));
++        for (name, elapsed) in &gate_timings {
++            println!("validate: [{name}] done ({elapsed:.2?})");
++        }
+     }
+ 
+     let elapsed = total_start.elapsed();
+-    let fail_total = VALIDATION_FAILS
+-        .with(|v| v.borrow().len() as u32)
+-        .max(fail_count);
+-    let warn_total = VALIDATION_WARNS
+-        .with(|v| v.borrow().len() as u32)
+-        .max(warn_count);
++    let pass_count = ctx.pass_count.load(Ordering::Relaxed);
++    let fail_count = ctx.fail_count.load(Ordering::Relaxed);
++    let warn_count = ctx.warn_count.load(Ordering::Relaxed);
++    let fails = ctx.fails.lock().unwrap();
++    let warns = ctx.warns.lock().unwrap();
++    let fail_total = (fails.len() as u32).max(fail_count);
++    let warn_total = (warns.len() as u32).max(warn_count);
+     println!(
+         "validate: summary pass={} fail={} warn={} elapsed={:.2?}",
+         pass_count, fail_total, warn_total, elapsed
+     );
+ 
+-    VALIDATION_FAILS.with(|v| {
+-        let fails = v.borrow();
+-        if !fails.is_empty() {
+-            println!(
+-                "validate: failures {}: {}",
+-                fails.len(),
+-                output::preview_messages(&fails, 2, 110)
+-            );
+-        }
+-    });
++    if !fails.is_empty() {
++        println!(
++            "validate: failures {}: {}",
++            fails.len(),
++            output::preview_messages(&fails, 2, 110)
++        );
++    }
+ 
+-    VALIDATION_WARNS.with(|v| {
+-        let warns = v.borrow();
+-        if !warns.is_empty() {
+-            println!(
+-                "validate: warnings {}: {}",
+-                warns.len(),
+-                output::preview_messages(&warns, 2, 110)
+-            );
+-        }
+-    });
++    if !warns.is_empty() {
++        println!(
++            "validate: warnings {}: {}",
++            warns.len(),
++            output::preview_messages(&warns, 2, 110)
++        );
++    }
+ 
+     if fail_total > 0 {
+         Err(error::DecapodError::ValidationError(format!(
+diff --git a/src/lib.rs b/src/lib.rs
+index de9b32d..6c1d1be 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -80,8 +80,8 @@ pub mod core;
+ pub mod plugins;
+ 
+ use core::{
+-    db, docs, docs_cli, error, flight_recorder, migration, proof, repomap, scaffold, state_commit,
+-    store::{Store, StoreKind},
++    db, docs, docs_cli, error, flight_recorder, migration, proof, repomap, scaffold,
++    state_commit, store::{Store, StoreKind},
+     todo, trace, validate,
+ };
+ use plugins::{
+@@ -877,24 +877,74 @@ pub fn run() -> Result<(), error::DecapodError> {
+             // Check for version/schema changes and run protected migrations if needed.
+             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
+             migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
+-                // Bin 4: Transactional (TODO)
+-                todo::initialize_todo_db(data_root)?;
+-
+-                // Bin 1: Governance
+-                health::initialize_health_db(data_root)?;
+-                policy::initialize_policy_db(data_root)?;
+-                feedback::initialize_feedback_db(data_root)?;
+-                archive::initialize_archive_db(data_root)?;
+-
+-                // Bin 2: Memory
+-                db::initialize_knowledge_db(data_root)?;
+-                teammate::initialize_teammate_db(data_root)?;
+-                federation::initialize_federation_db(data_root)?;
+-                decide::initialize_decide_db(data_root)?;
+-
+-                // Bin 3: Automation
+-                cron::initialize_cron_db(data_root)?;
+-                reflex::initialize_reflex_db(data_root)?;
++                use std::sync::Mutex;
++                let init_errors: Mutex<Vec<error::DecapodError>> = Mutex::new(Vec::new());
++                rayon::scope(|s| {
++                    let errs = &init_errors;
++                    // Bin 4: Transactional (TODO)
++                    s.spawn(|_| {
++                        if let Err(e) = todo::initialize_todo_db(data_root) {
++                            errs.lock().unwrap().push(e);
++                        }
++                    });
++                    // Bin 1: Governance
++                    s.spawn(|_| {
++                        if let Err(e) = health::initialize_health_db(data_root) {
++                            errs.lock().unwrap().push(e);
++                        }
++                    });
++                    s.spawn(|_| {
++                        if let Err(e) = policy::initialize_policy_db(data_root) {
++                            errs.lock().unwrap().push(e);
++                        }
++                    });
++                    s.spawn(|_| {
++                        if let Err(e) = feedback::initialize_feedback_db(data_root) {
++                            errs.lock().unwrap().push(e);
++                        }
++                    });
++                    s.spawn(|_| {
++                        if let Err(e) = archive::initialize_archive_db(data_root) {
++                            errs.lock().unwrap().push(e);
++                        }
++                    });
++                    // Bin 2: Memory
++                    s.spawn(|_| {
++                        if let Err(e) = db::initialize_knowledge_db(data_root) {
++                            errs.lock().unwrap().push(e);
++                        }
++                    });
++                    s.spawn(|_| {
++                        if let Err(e) = teammate::initialize_teammate_db(data_root) {
++                            errs.lock().unwrap().push(e);
++                        }
++                    });
++                    s.spawn(|_| {
++                        if let Err(e) = federation::initialize_federation_db(data_root) {
++                            errs.lock().unwrap().push(e);
++                        }
++                    });
++                    s.spawn(|_| {
++                        if let Err(e) = decide::initialize_decide_db(data_root) {
++                            errs.lock().unwrap().push(e);
++                        }
++                    });
++                    // Bin 3: Automation
++                    s.spawn(|_| {
++                        if let Err(e) = cron::initialize_cron_db(data_root) {
++                            errs.lock().unwrap().push(e);
++                        }
++                    });
++                    s.spawn(|_| {
++                        if let Err(e) = reflex::initialize_reflex_db(data_root) {
++                            errs.lock().unwrap().push(e);
++                        }
++                    });
++                });
++                let errs = init_errors.into_inner().unwrap();
++                if let Some(e) = errs.into_iter().next() {
++                    return Err(e);
++                }
+                 Ok(())
+             })?;
+ 
+@@ -2285,7 +2335,8 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
+     command_paths.sort();
+     command_paths.dedup();
+ 
+-    for path in command_paths {
++    use rayon::prelude::*;
++    command_paths.par_iter().try_for_each(|path| {
+         let mut args = path.clone();
+         args.push("--help".to_string());
+         let output = std::process::Command::new(&exe)
+@@ -2299,7 +2350,8 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
+                 String::from_utf8_lossy(&output.stderr).trim()
+             )));
+         }
+-    }
++        Ok(())
++    })?;
+     Ok(())
+ }
+ 
