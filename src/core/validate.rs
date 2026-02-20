@@ -2273,6 +2273,82 @@ fn validate_obligations(store: &Store, ctx: &ValidationContext) -> Result<(), er
     Ok(())
 }
 
+fn validate_gatekeeper_gate(
+    ctx: &ValidationContext,
+    decapod_dir: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Gatekeeper Safety Gate");
+
+    // Get staged files from git (if in a git repo)
+    let output = std::process::Command::new("git")
+        .args(["diff", "--cached", "--name-only"])
+        .current_dir(decapod_dir)
+        .output();
+
+    let staged_paths: Vec<PathBuf> = match output {
+        Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout)
+            .lines()
+            .filter(|l| !l.is_empty())
+            .map(PathBuf::from)
+            .collect(),
+        _ => {
+            skip(
+                "Git not available or not in a repo; skipping gatekeeper gate",
+                ctx,
+            );
+            return Ok(());
+        }
+    };
+
+    if staged_paths.is_empty() {
+        pass("No staged files; gatekeeper gate trivially passes", ctx);
+        return Ok(());
+    }
+
+    let config = crate::core::gatekeeper::GatekeeperConfig::default();
+    let result = crate::core::gatekeeper::run_gatekeeper(decapod_dir, &staged_paths, 0, &config)?;
+
+    if result.passed {
+        pass(
+            &format!(
+                "Gatekeeper: {} staged file(s) passed safety checks",
+                staged_paths.len()
+            ),
+            ctx,
+        );
+    } else {
+        let secret_count = result
+            .violations
+            .iter()
+            .filter(|v| v.kind == crate::core::gatekeeper::ViolationKind::SecretDetected)
+            .count();
+        let blocked_count = result
+            .violations
+            .iter()
+            .filter(|v| v.kind == crate::core::gatekeeper::ViolationKind::PathBlocked)
+            .count();
+        let dangerous_count = result
+            .violations
+            .iter()
+            .filter(|v| v.kind == crate::core::gatekeeper::ViolationKind::DangerousPattern)
+            .count();
+
+        let mut parts = Vec::new();
+        if secret_count > 0 {
+            parts.push(format!("{} secret(s)", secret_count));
+        }
+        if blocked_count > 0 {
+            parts.push(format!("{} blocked path(s)", blocked_count));
+        }
+        if dangerous_count > 0 {
+            parts.push(format!("{} dangerous pattern(s)", dangerous_count));
+        }
+        fail(&format!("Gatekeeper violations: {}", parts.join(", ")), ctx);
+    }
+
+    Ok(())
+}
+
 /// Evaluates a set of mandates and returns any active blockers.
 pub fn evaluate_mandates(
     project_root: &Path,
@@ -2712,6 +2788,17 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_obligations", start.elapsed()));
+        });
+
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_gatekeeper_gate(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_gatekeeper_gate", start.elapsed()));
         });
     });
 
