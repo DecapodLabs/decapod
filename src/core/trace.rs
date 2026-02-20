@@ -1,6 +1,6 @@
 use crate::core::error::DecapodError;
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, Map};
+use serde_json::{Map, Value};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
@@ -33,16 +33,14 @@ pub fn redact(value: Value) -> Value {
             }
             Value::Object(redacted_map)
         }
-        Value::Array(vec) => {
-            Value::Array(vec.into_iter().map(redact).collect())
-        }
+        Value::Array(vec) => Value::Array(vec.into_iter().map(redact).collect()),
         _ => value,
     }
 }
 
 pub fn append_trace(project_root: &Path, event: TraceEvent) -> Result<(), DecapodError> {
     let trace_path = project_root.join(".decapod/data/traces.jsonl");
-    
+
     // Ensure parent directory exists
     if let Some(parent) = trace_path.parent() {
         std::fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
@@ -62,7 +60,8 @@ pub fn append_trace(project_root: &Path, event: TraceEvent) -> Result<(), Decapo
         response: redact(event.response),
     };
 
-    let json = serde_json::to_string(&redacted_event).map_err(|e| DecapodError::ValidationError(e.to_string()))?;
+    let json = serde_json::to_string(&redacted_event)
+        .map_err(|e| DecapodError::ValidationError(e.to_string()))?;
     writeln!(file, "{}", json).map_err(DecapodError::IoError)?;
 
     Ok(())
