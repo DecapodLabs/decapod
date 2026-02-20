@@ -51,3 +51,6 @@ debug/
 out.log
 err.log
 .decapod/generated/sessions/
+
+# --- Claude Code Hooks ---
+.claude/
