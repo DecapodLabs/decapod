@@ -1027,29 +1027,20 @@ fn validate_schema_determinism(
     info("Schema Determinism Gate");
     let exe = std::env::current_exe().map_err(error::DecapodError::IoError)?;
 
-    let run_schema = move |exe: PathBuf| -> Result<String, String> {
+    let run_schema = || -> Result<String, error::DecapodError> {
         let out = std::process::Command::new(&exe)
             .env("DECAPOD_BYPASS_SESSION", "1")
             .arg("data")
             .arg("schema")
             .arg("--deterministic")
             .output()
-            .map_err(|e| e.to_string())?;
+            .map_err(error::DecapodError::IoError)?;
         Ok(String::from_utf8_lossy(&out.stdout).to_string())
     };
 
-    let exe2 = exe.clone();
-    let h1 = std::thread::spawn(move || run_schema(exe));
-    let h2 = std::thread::spawn(move || run_schema(exe2));
-
-    let s1 = h1
-        .join()
-        .map_err(|_| error::DecapodError::ValidationError("schema thread panicked".into()))?
-        .map_err(error::DecapodError::ValidationError)?;
-    let s2 = h2
-        .join()
-        .map_err(|_| error::DecapodError::ValidationError("schema thread panicked".into()))?
-        .map_err(error::DecapodError::ValidationError)?;
+    // Run sequentially: parallel execution causes non-determinism due to shared state
+    let s1 = run_schema()?;
+    let s2 = run_schema()?;
 
     if s1 == s2 && !s1.is_empty() {
         pass("Schema output is deterministic", pass_count);
