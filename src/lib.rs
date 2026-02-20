@@ -118,6 +118,9 @@ struct ValidateCli {
     /// Output format: 'text' or 'json'.
     #[clap(long, default_value = "text")]
     format: String,
+    /// Print per-gate timing information.
+    #[clap(long, short = 'v')]
+    verbose: bool,
 }
 
 #[derive(clap::Args, Debug)]
@@ -1588,7 +1591,7 @@ fn run_validate_command(
         _ => project_store.clone(),
     };
 
-    validate::run_validation(&store, &decapod_root, &decapod_root)?;
+    validate::run_validation(&store, &decapod_root, &decapod_root, validate_cli.verbose)?;
     mark_validation_completed(project_root)?;
     Ok(())
 }
@@ -3188,7 +3191,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             // We need to capture the output of validate::run_validation
             // For now, we'll just run it and return a simple success result
             // as it currently prints to stdout and manages thread-local state.
-            let res = validate::run_validation(&project_store, project_root, project_root);
+            let res = validate::run_validation(&project_store, project_root, project_root, false);
 
             match res {
                 Ok(_) => success_response(
