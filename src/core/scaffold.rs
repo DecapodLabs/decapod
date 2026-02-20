@@ -193,6 +193,17 @@ pub fn scaffold_project_entrypoints(
         blend_legacy_entrypoints(&opts.target_dir)?;
     }
 
+    // Explode Dockerfile template to .decapod/generated/
+    let generated_dir = opts.target_dir.join(".decapod/generated");
+    fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
+    if let Some(dockerfile_content) = assets::get_template("Dockerfile") {
+        let dockerfile_path = generated_dir.join("Dockerfile");
+        if !dockerfile_path.exists() {
+            fs::write(&dockerfile_path, dockerfile_content)
+                .map_err(error::DecapodError::IoError)?;
+        }
+    }
+
     Ok(ScaffoldSummary {
         entrypoints_created: ep_created,
         entrypoints_unchanged: ep_unchanged,
