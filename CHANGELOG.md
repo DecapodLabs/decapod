@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.6](https://github.com/DecapodLabs/decapod/compare/v0.29.5...v0.29.6) - 2026-02-20
+
+### Fixed
+
+- speed up validation
+
+### Other
+
+- add governance kernel architecture review (codex_analysis.md)
+
 ## [0.29.5](https://github.com/DecapodLabs/decapod/compare/v0.29.4...v0.29.5) - 2026-02-20
 
 ### Added
