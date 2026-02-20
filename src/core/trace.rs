@@ -9,6 +9,7 @@ use std::path::Path;
 pub struct TraceEvent {
     pub trace_id: String,
     pub ts: String,
+    pub actor: String,
     pub op: String,
     pub request: Value,
     pub response: Value,
@@ -55,6 +56,7 @@ pub fn append_trace(project_root: &Path, event: TraceEvent) -> Result<(), Decapo
     let redacted_event = TraceEvent {
         trace_id: event.trace_id,
         ts: event.ts,
+        actor: event.actor,
         op: event.op,
         request: redact(event.request),
         response: redact(event.response),
