@@ -183,6 +183,24 @@ pub fn eval_risk(
     target_path: Option<&str>,
     risk_map: &RiskMap,
 ) -> (RiskLevel, Vec<String>) {
+    // Linter config files that are always protected (CRITICAL)
+    const LINTER_CONFIG_PATTERNS: &[&str] = &[
+        ".ruff.toml",
+        "ty.toml",
+        "biome.json",
+        ".oxlintrc.json",
+        ".semgrep.yml",
+        "knip.json",
+        ".flake8",
+        ".yamllint",
+        ".shellcheckrc",
+        ".hadolint.yaml",
+        "taplo.toml",
+        ".markdownlint.jsonc",
+        ".markdownlint-cli2.jsonc",
+        ".jscpd.json",
+    ];
+
     // Basic heuristic-based risk evaluation for Epoch 2
     let mut level = RiskLevel::LOW;
     let mut requirements = Vec::new();
@@ -193,15 +211,29 @@ pub fn eval_risk(
         requirements.push("Operator Approval Required (Irreversible)".to_string());
     }
 
-    // Zone-based risk
+    // Linter config protection (highest priority)
     if let Some(path) = target_path {
-        for zone in &risk_map.zones {
-            if path.contains(&zone.path) {
-                if zone.level as u8 > level as u8 {
-                    level = zone.level;
-                }
-                for rule in &zone.rules {
-                    requirements.push(format!("Zone Rule: {}", rule));
+        for pattern in LINTER_CONFIG_PATTERNS {
+            if path.contains(pattern) {
+                level = RiskLevel::CRITICAL;
+                requirements
+                    .push("Linter config modification forbidden - fix code, not rules".to_string());
+                break;
+            }
+        }
+    }
+
+    // Zone-based risk (only if not already CRITICAL from linter config)
+    if level != RiskLevel::CRITICAL {
+        if let Some(path) = target_path {
+            for zone in &risk_map.zones {
+                if path.contains(&zone.path) {
+                    if zone.level as u8 > level as u8 {
+                        level = zone.level;
+                    }
+                    for rule in &zone.rules {
+                        requirements.push(format!("Zone Rule: {}", rule));
+                    }
                 }
             }
         }

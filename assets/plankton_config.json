@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "_comment": "Decapod-managed Plankton hooks configuration",
+  "languages": {
+    "python": true,
+    "shell": true,
+    "yaml": true,
+    "json": true,
+    "toml": true,
+    "dockerfile": true,
+    "markdown": true,
+    "typescript": {
+      "enabled": false
+    }
+  },
+  "protected_files": [
+    ".markdownlint.jsonc",
+    ".markdownlint-cli2.jsonc",
+    ".shellcheckrc",
+    ".yamllint",
+    ".hadolint.yaml",
+    ".jscpd.json",
+    ".flake8",
+    "taplo.toml",
+    ".ruff.toml",
+    "ty.toml",
+    "biome.json",
+    ".oxlintrc.json",
+    ".semgrep.yml",
+    "knip.json"
+  ],
+  "exclusions": [
+    "tests/",
+    "docs/",
+    ".venv/",
+    "scripts/",
+    "node_modules/",
+    ".git/",
+    ".claude/"
+  ],
+  "phases": {
+    "auto_format": true,
+    "subprocess_delegation": true
+  },
+  "subprocess": {
+    "timeout": 300,
+    "model_selection": {
+      "sonnet_patterns": "C901|PLR[0-9]+|PYD[0-9]+|FAST[0-9]+|ASYNC[0-9]+|unresolved-import|MD[0-9]+|D[0-9]+|complexity",
+      "opus_patterns": "unresolved-attribute|type-assertion",
+      "volume_threshold": 5
+    }
+  },
+  "package_managers": {
+    "python": "uv",
+    "javascript": "bun",
+    "allowed_subcommands": {
+      "npm": ["audit", "view", "pack", "publish", "whoami", "login"],
+      "pip": ["download"],
+      "yarn": ["audit", "info"],
+      "pnpm": ["audit", "info"],
+      "poetry": [],
+      "pipenv": []
+    }
+  }
+}
