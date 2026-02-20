@@ -245,6 +245,9 @@ enum SetupCommand {
         /// Install Rust pre-commit hook (fmt + clippy)
         #[clap(long)]
         pre_commit: bool,
+        /// Install Plankton-style Claude Code hooks for write-time enforcement
+        #[clap(long)]
+        plankton: bool,
         /// Remove installed hooks
         #[clap(long)]
         uninstall: bool,
@@ -862,9 +865,10 @@ pub fn run() -> Result<(), error::DecapodError> {
             SetupCommand::Hook {
                 commit_msg,
                 pre_commit,
+                plankton,
                 uninstall,
             } => {
-                run_hook_install(commit_msg, pre_commit, uninstall)?;
+                run_hook_install(commit_msg, pre_commit, plankton, uninstall)?;
             }
         },
         _ => {
@@ -2183,6 +2187,7 @@ fn run_qa_command(
 fn run_hook_install(
     commit_msg: bool,
     pre_commit: bool,
+    plankton: bool,
     uninstall: bool,
 ) -> Result<(), error::DecapodError> {
     let git_dir_output = std::process::Command::new("git")
@@ -2272,9 +2277,111 @@ cargo clippy --all-targets --all-features -- -D warnings
         println!("✓ Installed pre-commit hook (fmt + clippy)");
     }
 
-    if !commit_msg && !pre_commit {
-        println!("No hooks specified. Use --commit-msg and/or --pre-commit");
+    if plankton {
+        install_plankton_hooks()?;
     }
+
+    if !commit_msg && !pre_commit && !plankton {
+        println!("No hooks specified. Use --commit-msg, --pre-commit, and/or --plankton");
+    }
+
+    Ok(())
+}
+
+fn install_plankton_hooks() -> Result<(), error::DecapodError> {
+    let git_dir_output = std::process::Command::new("git")
+        .args(["rev-parse", "--git-dir"])
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+
+    if !git_dir_output.status.success() {
+        return Err(error::DecapodError::ValidationError(
+            "Not in a git repository".to_string(),
+        ));
+    }
+
+    let git_dir = String::from_utf8_lossy(&git_dir_output.stdout)
+        .trim()
+        .to_string();
+    let git_dir_path = PathBuf::from(&git_dir);
+    let repo_root = git_dir_path.parent().expect("git dir has no parent");
+    let claude_dir = repo_root.join(".claude");
+    let hooks_dir = claude_dir.join("hooks");
+
+    fs::create_dir_all(&hooks_dir).map_err(error::DecapodError::IoError)?;
+
+    let config_json = include_str!("../assets/plankton_config.json");
+    let config_path = hooks_dir.join("config.json");
+    fs::write(&config_path, config_json).map_err(error::DecapodError::IoError)?;
+    println!("✓ Installed Plankton config.json");
+
+    let multi_linter = include_str!("../assets/plankton_multi_linter.sh");
+    let multi_linter_path = hooks_dir.join("multi_linter.sh");
+    fs::write(&multi_linter_path, multi_linter).map_err(error::DecapodError::IoError)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&multi_linter_path)
+            .map_err(error::DecapodError::IoError)?
+            .permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&multi_linter_path, perms).map_err(error::DecapodError::IoError)?;
+    }
+    println!("✓ Installed Plankton multi_linter.sh hook");
+
+    let protect_configs = include_str!("../assets/plankton_protect_configs.sh");
+    let protect_configs_path = hooks_dir.join("protect_linter_configs.sh");
+    fs::write(&protect_configs_path, protect_configs).map_err(error::DecapodError::IoError)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&protect_configs_path)
+            .map_err(error::DecapodError::IoError)?
+            .permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&protect_configs_path, perms).map_err(error::DecapodError::IoError)?;
+    }
+    println!("✓ Installed Plankton protect_linter_configs.sh hook");
+
+    let package_mgr = include_str!("../assets/plankton_package_managers.sh");
+    let package_mgr_path = hooks_dir.join("enforce_package_managers.sh");
+    fs::write(&package_mgr_path, package_mgr).map_err(error::DecapodError::IoError)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&package_mgr_path)
+            .map_err(error::DecapodError::IoError)?
+            .permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&package_mgr_path, perms).map_err(error::DecapodError::IoError)?;
+    }
+    println!("✓ Installed Plankton enforce_package_managers.sh hook");
+
+    let stop_guardian = include_str!("../assets/plankton_stop_guardian.sh");
+    let stop_guardian_path = hooks_dir.join("stop_config_guardian.sh");
+    fs::write(&stop_guardian_path, stop_guardian).map_err(error::DecapodError::IoError)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&stop_guardian_path)
+            .map_err(error::DecapodError::IoError)?
+            .permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&stop_guardian_path, perms).map_err(error::DecapodError::IoError)?;
+    }
+    println!("✓ Installed Plankton stop_config_guardian.sh hook");
+
+    let settings_json = include_str!("../assets/plankton_settings.json");
+    let settings_path = claude_dir.join("settings.json");
+    if settings_path.exists() {
+        println!("  .claude/settings.json already exists, skipping");
+    } else {
+        fs::write(&settings_path, settings_json).map_err(error::DecapodError::IoError)?;
+        println!("✓ Installed Plankton settings.json");
+    }
+
+    println!("\nPlankton hooks installed successfully!");
+    println!("Run `decapod validate` to verify your project meets quality standards.");
 
     Ok(())
 }

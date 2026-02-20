@@ -1895,81 +1895,259 @@ fn validate_tooling_gate(
         return Ok(());
     }
 
-    // Check for Cargo.toml to detect Rust projects
+    let mut has_failures = false;
+    let mut has_tooling = false;
+
     let cargo_toml = repo_root.join("Cargo.toml");
-    if !cargo_toml.exists() {
-        // Not a Rust project, skip tooling validation for now
-        // Future: Add support for other language toolchains
+    if cargo_toml.exists() {
+        has_tooling = true;
+        let root_fmt = repo_root.to_path_buf();
+        let root_clippy = repo_root.to_path_buf();
+
+        let fmt_handle = std::thread::spawn(move || {
+            std::process::Command::new("cargo")
+                .args(["fmt", "--all", "--", "--check"])
+                .current_dir(&root_fmt)
+                .output()
+        });
+
+        let clippy_handle = std::thread::spawn(move || {
+            std::process::Command::new("cargo")
+                .args([
+                    "clippy",
+                    "--all-targets",
+                    "--all-features",
+                    "--",
+                    "-D",
+                    "warnings",
+                ])
+                .current_dir(&root_clippy)
+                .output()
+        });
+
+        match fmt_handle.join().expect("fmt thread panicked") {
+            Ok(output) => {
+                if output.status.success() {
+                    pass("Rust code formatting passes (cargo fmt)", ctx);
+                } else {
+                    fail("Rust code formatting failed - run `cargo fmt --all`", ctx);
+                    has_failures = true;
+                }
+            }
+            Err(e) => {
+                fail(&format!("Failed to run cargo fmt: {}", e), ctx);
+                has_failures = true;
+            }
+        }
+
+        match clippy_handle.join().expect("clippy thread panicked") {
+            Ok(output) => {
+                if output.status.success() {
+                    pass("Rust linting passes (cargo clippy)", ctx);
+                } else {
+                    fail(
+                        "Rust linting failed - run `cargo clippy --all-targets --all-features`",
+                        ctx,
+                    );
+                    has_failures = true;
+                }
+            }
+            Err(e) => {
+                fail(&format!("Failed to run cargo clippy: {}", e), ctx);
+                has_failures = true;
+            }
+        }
+    }
+
+    let pyproject = repo_root.join("pyproject.toml");
+    let requirements = repo_root.join("requirements.txt");
+    if pyproject.exists() || requirements.exists() {
+        has_tooling = true;
+
+        if std::process::Command::new("which")
+            .arg("ruff")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+        {
+            let root_ruff = repo_root.to_path_buf();
+            let ruff_handle = std::thread::spawn(move || {
+                std::process::Command::new("ruff")
+                    .args(["check", ".", "--output-format=concise"])
+                    .current_dir(&root_ruff)
+                    .output()
+            });
+
+            match ruff_handle.join().expect("ruff thread panicked") {
+                Ok(output) => {
+                    if output.status.success() {
+                        pass("Python linting passes (ruff)", ctx);
+                    } else {
+                        fail("Python linting failed - fix ruff violations", ctx);
+                        has_failures = true;
+                    }
+                }
+                Err(e) => {
+                    warn(&format!("ruff not available: {}", e), ctx);
+                }
+            }
+        } else {
+            skip("ruff not installed; skipping Python linting", ctx);
+        }
+    }
+
+    let shell_check = repo_root.join(".shellcheckrc");
+    let shell_files_exist = std::fs::read_dir(repo_root)
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e.ok())
+        .any(|e| {
+            let p = e.path();
+            p.is_file() && p.extension().map(|s| s == "sh").unwrap_or(false)
+        });
+
+    if shell_check.exists() || shell_files_exist {
+        has_tooling = true;
+
+        if std::process::Command::new("which")
+            .arg("shellcheck")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+        {
+            let repo_root_clone = repo_root.to_path_buf();
+            let shellcheck_handle = std::thread::spawn(move || {
+                std::process::Command::new("shellcheck")
+                    .args(["--enable=all"])
+                    .current_dir(repo_root_clone)
+                    .output()
+            });
+
+            match shellcheck_handle
+                .join()
+                .expect("shellcheck thread panicked")
+            {
+                Ok(output) => {
+                    if output.status.success() {
+                        pass("Shell script linting passes (shellcheck)", ctx);
+                    } else {
+                        fail(
+                            "Shell script linting failed - fix shellcheck violations",
+                            ctx,
+                        );
+                        has_failures = true;
+                    }
+                }
+                Err(e) => {
+                    warn(&format!("shellcheck failed: {}", e), ctx);
+                }
+            }
+        } else {
+            skip("shellcheck not installed; skipping shell linting", ctx);
+        }
+    }
+
+    let yaml_check = repo_root.join(".yamllint");
+    let yaml_files_exist = std::fs::read_dir(repo_root)
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e.ok())
+        .any(|e| {
+            let p = e.path();
+            p.is_file()
+                && p.extension()
+                    .map(|s| s == "yaml" || s == "yml")
+                    .unwrap_or(false)
+        });
+
+    if yaml_check.exists() || yaml_files_exist {
+        has_tooling = true;
+
+        if std::process::Command::new("which")
+            .arg("yamllint")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+        {
+            let repo_root_clone = repo_root.to_path_buf();
+            let yamllint_handle = std::thread::spawn(move || {
+                std::process::Command::new("yamllint")
+                    .arg(".")
+                    .current_dir(repo_root_clone)
+                    .output()
+            });
+
+            match yamllint_handle.join().expect("yamllint thread panicked") {
+                Ok(output) => {
+                    if output.status.success() {
+                        pass("YAML linting passes (yamllint)", ctx);
+                    } else {
+                        fail("YAML linting failed - fix yamllint violations", ctx);
+                        has_failures = true;
+                    }
+                }
+                Err(e) => {
+                    warn(&format!("yamllint failed: {}", e), ctx);
+                }
+            }
+        } else {
+            skip("yamllint not installed; skipping YAML linting", ctx);
+        }
+    }
+
+    let dockerfile_exists = std::fs::read_dir(repo_root)
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e.ok())
+        .any(|e| {
+            e.path()
+                .file_name()
+                .and_then(|n| n.to_str())
+                .map(|n| n.to_lowercase() == "dockerfile")
+                .unwrap_or(false)
+        });
+
+    if dockerfile_exists {
+        has_tooling = true;
+
+        if std::process::Command::new("which")
+            .arg("hadolint")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false)
+        {
+            let repo_root_clone = repo_root.to_path_buf();
+            let hadolint_handle = std::thread::spawn(move || {
+                std::process::Command::new("hadolint")
+                    .args(["Dockerfile"])
+                    .current_dir(repo_root_clone)
+                    .output()
+            });
+
+            match hadolint_handle.join().expect("hadolint thread panicked") {
+                Ok(output) => {
+                    if output.status.success() {
+                        pass("Dockerfile linting passes (hadolint)", ctx);
+                    } else {
+                        fail("Dockerfile linting failed - fix hadolint violations", ctx);
+                        has_failures = true;
+                    }
+                }
+                Err(e) => {
+                    warn(&format!("hadolint failed: {}", e), ctx);
+                }
+            }
+        } else {
+            skip("hadolint not installed; skipping Dockerfile linting", ctx);
+        }
+    }
+
+    if !has_tooling {
         skip(
-            "No Cargo.toml found; skipping Rust toolchain validation",
+            "No recognized project files found; skipping tooling validation",
             ctx,
         );
-        return Ok(());
-    }
-
-    let mut has_failures = false;
-
-    // Run fmt and clippy in parallel — they are independent checks.
-    // Note: cargo clippy is a superset of cargo check, so we skip the
-    // redundant cargo check entirely.
-    let root_fmt = repo_root.to_path_buf();
-    let root_clippy = repo_root.to_path_buf();
-
-    let fmt_handle = std::thread::spawn(move || {
-        std::process::Command::new("cargo")
-            .args(["fmt", "--all", "--", "--check"])
-            .current_dir(&root_fmt)
-            .output()
-    });
-
-    let clippy_handle = std::thread::spawn(move || {
-        std::process::Command::new("cargo")
-            .args([
-                "clippy",
-                "--all-targets",
-                "--all-features",
-                "--",
-                "-D",
-                "warnings",
-            ])
-            .current_dir(&root_clippy)
-            .output()
-    });
-
-    match fmt_handle.join().expect("fmt thread panicked") {
-        Ok(output) => {
-            if output.status.success() {
-                pass("Rust code formatting passes (cargo fmt)", ctx);
-            } else {
-                fail("Rust code formatting failed - run `cargo fmt --all`", ctx);
-                has_failures = true;
-            }
-        }
-        Err(e) => {
-            fail(&format!("Failed to run cargo fmt: {}", e), ctx);
-            has_failures = true;
-        }
-    }
-
-    match clippy_handle.join().expect("clippy thread panicked") {
-        Ok(output) => {
-            if output.status.success() {
-                pass("Rust linting and type checking pass (cargo clippy)", ctx);
-            } else {
-                fail(
-                    "Rust linting failed - run `cargo clippy --all-targets --all-features`",
-                    ctx,
-                );
-                has_failures = true;
-            }
-        }
-        Err(e) => {
-            fail(&format!("Failed to run cargo clippy: {}", e), ctx);
-            has_failures = true;
-        }
-    }
-
-    if !has_failures {
+    } else if !has_failures {
         pass(
             "All toolchain validations pass - project is ready for promotion",
             ctx,
