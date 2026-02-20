@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.1](https://github.com/DecapodLabs/decapod/compare/v0.31.0...v0.31.1) - 2026-02-20
+
+### Added
+
+- *(core)* implement ObligationNode governance-native primitive
+
+### Other
+
+- Merge pull request #303 from DecapodLabs/feat/R_01KHY5A2HF1F8P50FQZB2HBC2A/obligation-primitive
+- Add architecture memo: filesystem task abstraction decision
+
 ## [0.31.0](https://github.com/DecapodLabs/decapod/compare/v0.30.0...v0.31.0) - 2026-02-20
 
 ### Fixed
