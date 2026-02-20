@@ -323,14 +323,21 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
     migrate_table(&data_root, "federation.db", &mem_conn, "sources")?;
     migrate_table(&data_root, "federation.db", &mem_conn, "edges")?;
     migrate_table(&data_root, "federation.db", &mem_conn, "federation_events")?;
-    
+
     // Legacy knowledge to nodes migration (simplified)
     let knowledge_db = data_root.join("knowledge.db");
     if knowledge_db.exists() {
         let k_conn = Connection::open(&knowledge_db).map_err(error::DecapodError::RusqliteError)?;
-        let mut stmt = k_conn.prepare("SELECT id, title, content, provenance, created_at FROM knowledge")?;
+        let mut stmt =
+            k_conn.prepare("SELECT id, title, content, provenance, created_at FROM knowledge")?;
         let rows = stmt.query_map([], |row| {
-            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, String>(4)?))
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+            ))
         })?;
         for r in rows {
             let (id, title, content, prov, ts) = r?;
@@ -350,9 +357,16 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
 
     // Cleanup legacy and backup files
     let legacy = [
-        "health.db", "policy.db", "feedback.db", "archive.db", 
-        "knowledge.db", "federation.db", "decisions.db", "teammate.db", 
-        "cron.db", "reflex.db"
+        "health.db",
+        "policy.db",
+        "feedback.db",
+        "archive.db",
+        "knowledge.db",
+        "federation.db",
+        "decisions.db",
+        "teammate.db",
+        "cron.db",
+        "reflex.db",
     ];
     for f in legacy {
         let p = data_root.join(f);
@@ -368,18 +382,37 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
     Ok(())
 }
 
-fn migrate_table(data_root: &Path, source_db: &str, target_conn: &Connection, table: &str) -> Result<(), error::DecapodError> {
+fn migrate_table(
+    data_root: &Path,
+    source_db: &str,
+    target_conn: &Connection,
+    table: &str,
+) -> Result<(), error::DecapodError> {
     let source_path = data_root.join(source_db);
     if !source_path.exists() {
         return Ok(());
     }
 
-    target_conn.execute(&format!("ATTACH DATABASE '{}' AS source", source_path.to_string_lossy()), [])
+    target_conn
+        .execute(
+            &format!(
+                "ATTACH DATABASE '{}' AS source",
+                source_path.to_string_lossy()
+            ),
+            [],
+        )
         .map_err(error::DecapodError::RusqliteError)?;
-    
-    let res = target_conn.execute(&format!("INSERT OR IGNORE INTO main.{} SELECT * FROM source.{}", table, table), []);
-    
-    target_conn.execute("DETACH DATABASE source", [])
+
+    let res = target_conn.execute(
+        &format!(
+            "INSERT OR IGNORE INTO main.{} SELECT * FROM source.{}",
+            table, table
+        ),
+        [],
+    );
+
+    target_conn
+        .execute("DETACH DATABASE source", [])
         .map_err(error::DecapodError::RusqliteError)?;
 
     res.map_err(error::DecapodError::RusqliteError)?;
