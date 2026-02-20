@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
     use decapod::core::obligation::{
-        add_obligation, derive_obligation_status, get_obligation, initialize_obligation_db,
-        list_obligations, validate_obligation_graph, ObligationStatus,
+        ObligationStatus, add_obligation, derive_obligation_status, get_obligation,
+        initialize_obligation_db, list_obligations, validate_obligation_graph,
     };
     use decapod::core::store::{Store, StoreKind};
     use std::path::PathBuf;
@@ -56,10 +56,12 @@ mod tests {
         let result = derive_obligation_status(&store, &id).unwrap();
         assert_eq!(result.derived_status, ObligationStatus::Open);
         assert!(!result.commit_present);
-        assert!(result
-            .validation_errors
-            .iter()
-            .any(|e| e.contains("STATE_COMMIT")));
+        assert!(
+            result
+                .validation_errors
+                .iter()
+                .any(|e| e.contains("STATE_COMMIT"))
+        );
     }
 
     #[test]
