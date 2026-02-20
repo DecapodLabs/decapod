@@ -12,9 +12,8 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
-use chrono::Utc;
 use clap::{Parser, Subcommand, ValueEnum};
-use rusqlite::{params, OptionalExtension};
+use rusqlite::{OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use ulid::Ulid;
@@ -36,7 +35,7 @@ impl ObligationStatus {
         }
     }
 
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_status_str(s: &str) -> Self {
         match s {
             "met" => ObligationStatus::Met,
             "failed" => ObligationStatus::Failed,
@@ -262,7 +261,7 @@ pub fn list_obligations(store: &Store) -> Result<Vec<ObligationNode>, error::Dec
                 risk_tier: row.get(2)?,
                 required_proofs: proofs,
                 state_commit_root: row.get(4)?,
-                status: ObligationStatus::from_str(&row.get::<_, String>(5)?),
+                status: ObligationStatus::from_status_str(&row.get::<_, String>(5)?),
                 created_at: row.get(6)?,
                 updated_at: row.get(7)?,
                 metadata,
@@ -297,7 +296,7 @@ pub fn get_obligation(store: &Store, id: &str) -> Result<ObligationNode, error::
                     risk_tier: row.get(2)?,
                     required_proofs: proofs,
                     state_commit_root: row.get(4)?,
-                    status: ObligationStatus::from_str(&row.get::<_, String>(5)?),
+                    status: ObligationStatus::from_status_str(&row.get::<_, String>(5)?),
                     created_at: row.get(6)?,
                     updated_at: row.get(7)?,
                     metadata,
@@ -502,7 +501,7 @@ pub fn get_dependencies(
                 risk_tier: row.get(2)?,
                 required_proofs: proofs,
                 state_commit_root: row.get(4)?,
-                status: ObligationStatus::from_str(&row.get::<_, String>(5)?),
+                status: ObligationStatus::from_status_str(&row.get::<_, String>(5)?),
                 created_at: row.get(6)?,
                 updated_at: row.get(7)?,
                 metadata,
@@ -540,6 +539,7 @@ fn check_proof_satisfied(store: &Store, proof_label: &str) -> Result<bool, error
     )
 }
 
+#[allow(dead_code)]
 fn update_obligation_status(
     store: &Store,
     id: &str,
