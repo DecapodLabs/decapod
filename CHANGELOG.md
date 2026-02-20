@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.4](https://github.com/DecapodLabs/decapod/compare/v0.32.3...v0.32.4) - 2026-02-20
+
+### Other
+
+- remove plankton bash hooks - keep multi-language validation
+
 ## [0.32.3](https://github.com/DecapodLabs/decapod/compare/v0.32.2...v0.32.3) - 2026-02-20
 
 ### Added
