@@ -1045,11 +1045,11 @@ fn validate_schema_determinism(
     let s1 = h1
         .join()
         .map_err(|_| error::DecapodError::ValidationError("schema thread panicked".into()))?
-        .map_err(|e| error::DecapodError::ValidationError(e))?;
+        .map_err(error::DecapodError::ValidationError)?;
     let s2 = h2
         .join()
         .map_err(|_| error::DecapodError::ValidationError("schema thread panicked".into()))?
-        .map_err(|e| error::DecapodError::ValidationError(e))?;
+        .map_err(error::DecapodError::ValidationError)?;
 
     if s1 == s2 && !s1.is_empty() {
         pass("Schema output is deterministic", pass_count);
@@ -1127,7 +1127,9 @@ fn validate_risk_map_violations(
         Some(c) => c,
         None => {
             let audit_log = store.root.join("broker.events.jsonl");
-            if !audit_log.exists() { return Ok(()); }
+            if !audit_log.exists() {
+                return Ok(());
+            }
             fallback = fs::read_to_string(audit_log)?;
             &fallback
         }
@@ -1421,11 +1423,17 @@ fn validate_repomap_determinism(
     use crate::core::repomap;
     let dir1 = decapod_dir.to_path_buf();
     let dir2 = decapod_dir.to_path_buf();
-    let h1 = std::thread::spawn(move || serde_json::to_string(&repomap::generate_map(&dir1)).unwrap());
-    let h2 = std::thread::spawn(move || serde_json::to_string(&repomap::generate_map(&dir2)).unwrap());
+    let h1 =
+        std::thread::spawn(move || serde_json::to_string(&repomap::generate_map(&dir1)).unwrap());
+    let h2 =
+        std::thread::spawn(move || serde_json::to_string(&repomap::generate_map(&dir2)).unwrap());
 
-    let m1 = h1.join().map_err(|_| error::DecapodError::ValidationError("repomap thread panicked".into()))?;
-    let m2 = h2.join().map_err(|_| error::DecapodError::ValidationError("repomap thread panicked".into()))?;
+    let m1 = h1
+        .join()
+        .map_err(|_| error::DecapodError::ValidationError("repomap thread panicked".into()))?;
+    let m2 = h2
+        .join()
+        .map_err(|_| error::DecapodError::ValidationError("repomap thread panicked".into()))?;
 
     if m1 == m2 && !m1.is_empty() {
         pass("Repo map output is deterministic", pass_count);
@@ -2285,63 +2293,144 @@ pub fn run_validation(
         }
     }
 
-    { let _tg = TimedGate::new("validate_repo_map", verbose);
-    validate_repo_map(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_no_legacy_namespaces", verbose);
-    validate_no_legacy_namespaces(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_embedded_self_contained", verbose);
-    validate_embedded_self_contained(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_docs_templates_bucket", verbose);
-    validate_docs_templates_bucket(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_entrypoint_invariants", verbose);
-    validate_entrypoint_invariants(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_interface_contract_bootstrap", verbose);
-    validate_interface_contract_bootstrap(&mut pass_count, &mut fail_count, decapod_dir)?; }
+    {
+        let _tg = TimedGate::new("validate_repo_map", verbose);
+        validate_repo_map(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_no_legacy_namespaces", verbose);
+        validate_no_legacy_namespaces(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_embedded_self_contained", verbose);
+        validate_embedded_self_contained(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_docs_templates_bucket", verbose);
+        validate_docs_templates_bucket(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_entrypoint_invariants", verbose);
+        validate_entrypoint_invariants(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_interface_contract_bootstrap", verbose);
+        validate_interface_contract_bootstrap(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
     println!("validate: gate Four Invariants Gate");
-    { let _tg = TimedGate::new("validate_health_purity", verbose);
-    validate_health_purity(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_project_scoped_state", verbose);
-    validate_project_scoped_state(store, &mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_schema_determinism", verbose);
-    validate_schema_determinism(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_health_cache_integrity", verbose);
-    validate_health_cache_integrity(store, &mut pass_count, &mut fail_count)?; }
-    { let _tg = TimedGate::new("validate_risk_map", verbose);
-    validate_risk_map(store, &mut pass_count, &mut warn_count)?; }
-    { let _tg = TimedGate::new("validate_risk_map_violations", verbose);
-    validate_risk_map_violations(store, &mut pass_count, &mut fail_count, broker_content.as_deref())?; }
-    { let _tg = TimedGate::new("validate_policy_integrity", verbose);
-    validate_policy_integrity(store, &mut pass_count, &mut fail_count, broker_content.as_deref())?; }
-    { let _tg = TimedGate::new("validate_knowledge_integrity", verbose);
-    validate_knowledge_integrity(store, &mut pass_count, &mut fail_count, broker_content.as_deref())?; }
-    { let _tg = TimedGate::new("validate_lineage_hard_gate", verbose);
-    validate_lineage_hard_gate(store, &mut pass_count, &mut fail_count)?; }
-    { let _tg = TimedGate::new("validate_repomap_determinism", verbose);
-    validate_repomap_determinism(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_watcher_audit", verbose);
-    validate_watcher_audit(store, &mut pass_count, &mut warn_count)?; }
-    { let _tg = TimedGate::new("validate_watcher_purity", verbose);
-    validate_watcher_purity(store, &mut pass_count, &mut fail_count, broker_content.as_deref())?; }
-    { let _tg = TimedGate::new("validate_archive_integrity", verbose);
-    validate_archive_integrity(store, &mut pass_count, &mut fail_count)?; }
-    { let _tg = TimedGate::new("validate_control_plane_contract", verbose);
-    validate_control_plane_contract(store, &mut pass_count, &mut fail_count)?; }
-    { let _tg = TimedGate::new("validate_canon_mutation", verbose);
-    validate_canon_mutation(store, &mut pass_count, &mut fail_count, broker_content.as_deref())?; }
-    { let _tg = TimedGate::new("validate_heartbeat_invocation_gate", verbose);
-    validate_heartbeat_invocation_gate(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_markdown_primitives_roundtrip_gate", verbose);
-    validate_markdown_primitives_roundtrip_gate(store, &mut pass_count, &mut fail_count)?; }
-    { let _tg = TimedGate::new("validate_federation_gates", verbose);
-    validate_federation_gates(store, &mut pass_count, &mut warn_count)?; }
-    { let _tg = TimedGate::new("validate_git_workspace_context", verbose);
-    validate_git_workspace_context(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_git_protected_branch", verbose);
-    validate_git_protected_branch(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_tooling_gate", verbose);
-    validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?; }
-    { let _tg = TimedGate::new("validate_state_commit_gate", verbose);
-    validate_state_commit_gate(&mut pass_count, &mut fail_count, decapod_dir)?; }
+    {
+        let _tg = TimedGate::new("validate_health_purity", verbose);
+        validate_health_purity(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_project_scoped_state", verbose);
+        validate_project_scoped_state(store, &mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_schema_determinism", verbose);
+        validate_schema_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_health_cache_integrity", verbose);
+        validate_health_cache_integrity(store, &mut pass_count, &mut fail_count)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_risk_map", verbose);
+        validate_risk_map(store, &mut pass_count, &mut warn_count)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_risk_map_violations", verbose);
+        validate_risk_map_violations(
+            store,
+            &mut pass_count,
+            &mut fail_count,
+            broker_content.as_deref(),
+        )?;
+    }
+    {
+        let _tg = TimedGate::new("validate_policy_integrity", verbose);
+        validate_policy_integrity(
+            store,
+            &mut pass_count,
+            &mut fail_count,
+            broker_content.as_deref(),
+        )?;
+    }
+    {
+        let _tg = TimedGate::new("validate_knowledge_integrity", verbose);
+        validate_knowledge_integrity(
+            store,
+            &mut pass_count,
+            &mut fail_count,
+            broker_content.as_deref(),
+        )?;
+    }
+    {
+        let _tg = TimedGate::new("validate_lineage_hard_gate", verbose);
+        validate_lineage_hard_gate(store, &mut pass_count, &mut fail_count)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_repomap_determinism", verbose);
+        validate_repomap_determinism(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_watcher_audit", verbose);
+        validate_watcher_audit(store, &mut pass_count, &mut warn_count)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_watcher_purity", verbose);
+        validate_watcher_purity(
+            store,
+            &mut pass_count,
+            &mut fail_count,
+            broker_content.as_deref(),
+        )?;
+    }
+    {
+        let _tg = TimedGate::new("validate_archive_integrity", verbose);
+        validate_archive_integrity(store, &mut pass_count, &mut fail_count)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_control_plane_contract", verbose);
+        validate_control_plane_contract(store, &mut pass_count, &mut fail_count)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_canon_mutation", verbose);
+        validate_canon_mutation(
+            store,
+            &mut pass_count,
+            &mut fail_count,
+            broker_content.as_deref(),
+        )?;
+    }
+    {
+        let _tg = TimedGate::new("validate_heartbeat_invocation_gate", verbose);
+        validate_heartbeat_invocation_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_markdown_primitives_roundtrip_gate", verbose);
+        validate_markdown_primitives_roundtrip_gate(store, &mut pass_count, &mut fail_count)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_federation_gates", verbose);
+        validate_federation_gates(store, &mut pass_count, &mut warn_count)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_git_workspace_context", verbose);
+        validate_git_workspace_context(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_git_protected_branch", verbose);
+        validate_git_protected_branch(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_tooling_gate", verbose);
+        validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
+    {
+        let _tg = TimedGate::new("validate_state_commit_gate", verbose);
+        validate_state_commit_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
+    }
 
     let elapsed = total_start.elapsed();
     let fail_total = VALIDATION_FAILS
