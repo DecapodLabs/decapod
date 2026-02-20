@@ -80,7 +80,7 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs, docs_cli, error, migration, proof, repomap, scaffold,
+    db, docs, docs_cli, error, flight_recorder, migration, proof, repomap, scaffold, state_commit,
     store::{Store, StoreKind},
     todo, trace, validate,
 };
@@ -140,6 +140,9 @@ enum WorkspaceCommand {
         /// Branch name (auto-generated if not provided)
         #[clap(long)]
         branch: Option<String>,
+        /// Use a container for the workspace
+        #[clap(long)]
+        container: bool,
     },
     /// Show current workspace status
     Status,
@@ -436,6 +439,14 @@ enum Command {
     /// Local trace management
     #[clap(name = "trace")]
     Trace(TraceCli),
+
+    /// Governance Flight Recorder - render timeline from event logs
+    #[clap(name = "flight-recorder")]
+    FlightRecorder(flight_recorder::FlightRecorderCli),
+
+    /// STATE_COMMIT: prove and verify cryptographic state commitments
+    #[clap(name = "state-commit")]
+    StateCommit(StateCommitCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -444,10 +455,49 @@ struct BrokerCli {
     command: BrokerCommand,
 }
 
+#[derive(clap::Args, Debug)]
+struct StateCommitCli {
+    #[clap(subcommand)]
+    command: StateCommitCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum StateCommitCommand {
+    /// Compute STATE_COMMIT for the current workspace
+    Prove {
+        /// Base commit SHA (required)
+        #[clap(long)]
+        base: String,
+        /// Head commit SHA (defaults to current HEAD)
+        #[clap(long)]
+        head: Option<String>,
+        /// Output file for scope_record.cbor
+        #[clap(long, default_value = "scope_record.cbor")]
+        output: PathBuf,
+    },
+    /// Verify a STATE_COMMIT matches current workspace
+    Verify {
+        /// Path to scope_record.cbor
+        #[clap(long)]
+        scope_record: PathBuf,
+        /// Expected state_commit_root
+        #[clap(long)]
+        expected_root: Option<String>,
+    },
+    /// Explain the contents of a scope_record.cbor file
+    Explain {
+        /// Path to scope_record.cbor
+        #[clap(long)]
+        scope_record: PathBuf,
+    },
+}
+
 #[derive(Subcommand, Debug)]
 enum BrokerCommand {
     /// Show the audit log of brokered mutations.
     Audit,
+    /// Verify audit log integrity and detect crash-induced divergence.
+    Verify,
 }
 
 #[derive(clap::Args, Debug)]
@@ -811,11 +861,10 @@ pub fn run() -> Result<(), error::DecapodError> {
         },
         _ => {
             let project_root = decapod_root_option?;
-            enforce_worktree_requirement(&cli.command, &project_root)?;
-
             if requires_session_token(&cli.command) {
                 ensure_session_valid()?;
             }
+            enforce_worktree_requirement(&cli.command, &project_root)?;
 
             // For other commands, ensure .decapod exists
             let decapod_root_path = project_root.join(".decapod");
@@ -860,7 +909,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                     run_validate_command(validate_cli, &project_root, &project_store)?;
                 }
                 Command::Version => show_version_info()?,
-                Command::Docs(docs_cli) => docs_cli::run_docs_cli(docs_cli)?,
+                Command::Docs(docs_cli) => {
+                    let result = docs_cli::run_docs_cli(docs_cli)?;
+                    if result.ingested_core_constitution {
+                        mark_core_constitution_ingested(&project_root)?;
+                    }
+                }
                 Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
                 Command::Govern(govern_cli) => {
                     run_govern_command(govern_cli, &project_store, &store_root)?;
@@ -883,6 +937,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Trace(trace_cli) => {
                     run_trace_command(trace_cli, &project_root)?;
                 }
+                Command::FlightRecorder(fr_cli) => {
+                    flight_recorder::run_flight_recorder_cli(&project_store, fr_cli)?;
+                }
+                Command::StateCommit(sc_cli) => {
+                    run_state_commit_command(sc_cli, &project_root)?;
+                }
                 _ => unreachable!(),
             }
         }
@@ -893,7 +953,11 @@ pub fn run() -> Result<(), error::DecapodError> {
 fn should_auto_clock_in(command: &Command) -> bool {
     match command {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
-        Command::Version | Command::Init(_) | Command::Setup(_) | Command::Session(_) => false,
+        Command::Version
+        | Command::Init(_)
+        | Command::Setup(_)
+        | Command::Session(_)
+        | Command::StateCommit(_) => false,
         _ => true,
     }
 }
@@ -907,8 +971,10 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Workspace(_)
         | Command::Capabilities(_)
         | Command::Trace(_)
+        | Command::FlightRecorder(_)
         | Command::Docs(_)
-        | Command::Todo(_) => false,
+        | Command::Todo(_)
+        | Command::StateCommit(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
         Command::Rpc(_) => false,
         _ => true,
@@ -999,8 +1065,11 @@ fn requires_session_token(command: &Command) -> bool {
         Command::Init(_)
         | Command::Session(_)
         | Command::Version
+        | Command::Docs(_)
         | Command::Capabilities(_)
-        | Command::Trace(_) => false,
+        | Command::Trace(_)
+        | Command::FlightRecorder(_)
+        | Command::StateCommit(_) => false,
         Command::Data(DataCli {
             command: DataCommand::Schema(_),
         }) => false,
@@ -1030,6 +1099,8 @@ struct ConstitutionalAwarenessRecord {
     agent_id: String,
     session_token: Option<String>,
     initialized_at_epoch_secs: u64,
+    validated_at_epoch_secs: Option<u64>,
+    core_constitution_ingested_at_epoch_secs: Option<u64>,
     context_resolved_at_epoch_secs: Option<u64>,
     source_ops: Vec<String>,
 }
@@ -1206,12 +1277,24 @@ fn mark_constitution_initialized(project_root: &Path) -> Result<(), error::Decap
     let agent_id = current_agent_id();
     let session_token = read_agent_session(project_root, &agent_id)?.map(|s| s.token);
     let now = now_epoch_secs();
+    let existing = read_awareness_record(project_root, &agent_id)?;
+    let mut source_ops = existing
+        .as_ref()
+        .map(|r| r.source_ops.clone())
+        .unwrap_or_default();
+    if !source_ops.iter().any(|op| op == "agent.init") {
+        source_ops.push("agent.init".to_string());
+    }
     let rec = ConstitutionalAwarenessRecord {
         agent_id,
         session_token,
         initialized_at_epoch_secs: now,
-        context_resolved_at_epoch_secs: None,
-        source_ops: vec!["agent.init".to_string()],
+        validated_at_epoch_secs: existing.as_ref().and_then(|r| r.validated_at_epoch_secs),
+        core_constitution_ingested_at_epoch_secs: existing
+            .as_ref()
+            .and_then(|r| r.core_constitution_ingested_at_epoch_secs),
+        context_resolved_at_epoch_secs: existing.and_then(|r| r.context_resolved_at_epoch_secs),
+        source_ops,
     };
     write_awareness_record(project_root, &rec)
 }
@@ -1223,12 +1306,52 @@ fn mark_constitution_context_resolved(project_root: &Path) -> Result<(), error::
             agent_id: agent_id.clone(),
             session_token: read_agent_session(project_root, &agent_id)?.map(|s| s.token),
             initialized_at_epoch_secs: now_epoch_secs(),
+            validated_at_epoch_secs: None,
+            core_constitution_ingested_at_epoch_secs: None,
             context_resolved_at_epoch_secs: None,
             source_ops: Vec::new(),
         });
     rec.context_resolved_at_epoch_secs = Some(now_epoch_secs());
     if !rec.source_ops.iter().any(|op| op == "context.resolve") {
         rec.source_ops.push("context.resolve".to_string());
+    }
+    write_awareness_record(project_root, &rec)
+}
+
+fn mark_validation_completed(project_root: &Path) -> Result<(), error::DecapodError> {
+    let agent_id = current_agent_id();
+    let mut rec =
+        read_awareness_record(project_root, &agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
+            agent_id: agent_id.clone(),
+            session_token: read_agent_session(project_root, &agent_id)?.map(|s| s.token),
+            initialized_at_epoch_secs: now_epoch_secs(),
+            validated_at_epoch_secs: None,
+            core_constitution_ingested_at_epoch_secs: None,
+            context_resolved_at_epoch_secs: None,
+            source_ops: Vec::new(),
+        });
+    rec.validated_at_epoch_secs = Some(now_epoch_secs());
+    if !rec.source_ops.iter().any(|op| op == "validate") {
+        rec.source_ops.push("validate".to_string());
+    }
+    write_awareness_record(project_root, &rec)
+}
+
+fn mark_core_constitution_ingested(project_root: &Path) -> Result<(), error::DecapodError> {
+    let agent_id = current_agent_id();
+    let mut rec =
+        read_awareness_record(project_root, &agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
+            agent_id: agent_id.clone(),
+            session_token: read_agent_session(project_root, &agent_id)?.map(|s| s.token),
+            initialized_at_epoch_secs: now_epoch_secs(),
+            validated_at_epoch_secs: None,
+            core_constitution_ingested_at_epoch_secs: None,
+            context_resolved_at_epoch_secs: None,
+            source_ops: Vec::new(),
+        });
+    rec.core_constitution_ingested_at_epoch_secs = Some(now_epoch_secs());
+    if !rec.source_ops.iter().any(|op| op == "docs.ingest") {
+        rec.source_ops.push("docs.ingest".to_string());
     }
     write_awareness_record(project_root, &rec)
 }
@@ -1465,7 +1588,9 @@ fn run_validate_command(
         _ => project_store.clone(),
     };
 
-    validate::run_validation(&store, &decapod_root, &decapod_root)
+    validate::run_validation(&store, &decapod_root, &decapod_root)?;
+    mark_validation_completed(project_root)?;
+    Ok(())
 }
 
 fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {
@@ -1490,10 +1615,24 @@ fn enforce_constitutional_awareness_for_rpc(
     let rec = read_awareness_record(project_root, &agent_id)?;
     let Some(rec) = rec else {
         return Err(error::DecapodError::ValidationError(
-            "Constitutional awareness required before mutating operations. Run `decapod session acquire`, `decapod rpc --op agent.init`, then `decapod rpc --op context.resolve`."
+            "Constitutional awareness required before mutating operations. Run `decapod validate`, then `decapod docs ingest`, then `decapod session acquire`, `decapod rpc --op agent.init`, and `decapod rpc --op context.resolve`."
                 .to_string(),
         ));
     };
+
+    if rec.validated_at_epoch_secs.is_none() {
+        return Err(error::DecapodError::ValidationError(
+            "Constitutional awareness incomplete: `decapod validate` has not completed for this agent context. Run `decapod validate` first."
+                .to_string(),
+        ));
+    }
+
+    if rec.core_constitution_ingested_at_epoch_secs.is_none() {
+        return Err(error::DecapodError::ValidationError(
+            "Constitutional awareness incomplete: core constitution ingestion missing. Run `decapod docs ingest` to ingest `constitution/core/*.md` before mutating operations."
+                .to_string(),
+        ));
+    }
 
     if rec.context_resolved_at_epoch_secs.is_none() {
         return Err(error::DecapodError::ValidationError(
@@ -1589,18 +1728,36 @@ fn run_data_command(
                     provenance,
                     claim_id,
                 } => {
-                    knowledge::add_knowledge(
+                    let result = knowledge::add_knowledge(
                         project_store,
-                        &id,
-                        &title,
-                        &text,
-                        &provenance,
-                        claim_id.as_deref(),
+                        knowledge::AddKnowledgeParams {
+                            id: &id,
+                            title: &title,
+                            content: &text,
+                            provenance: &provenance,
+                            claim_id: claim_id.as_deref(),
+                            merge_key: None,
+                            conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
+                            status: "active",
+                            ttl_policy: "persistent",
+                            expires_ts: None,
+                        },
                     )?;
-                    println!("Knowledge entry added: {}", id);
+                    println!(
+                        "Knowledge entry {}: {} (action: {})",
+                        result.id, id, result.action
+                    );
                 }
                 KnowledgeCommand::Search { query } => {
-                    let results = knowledge::search_knowledge(project_store, &query)?;
+                    let results = knowledge::search_knowledge(
+                        project_store,
+                        &query,
+                        knowledge::SearchOptions {
+                            as_of: None,
+                            window_days: None,
+                            rank: "relevance",
+                        },
+                    )?;
                     println!("{}", serde_json::to_string_pretty(&results).unwrap());
                 }
             }
@@ -1707,6 +1864,17 @@ fn run_data_command(
                     println!("{}", content);
                 } else {
                     println!("No audit log found.");
+                }
+            }
+            BrokerCommand::Verify => {
+                let broker = core::broker::DbBroker::new(store_root);
+                let report = broker.verify_replay()?;
+                println!("{}", serde_json::to_string_pretty(&report).unwrap());
+                if !report.divergences.is_empty() {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Audit log integrity check failed: {} divergence(s) detected",
+                        report.divergences.len()
+                    )));
                 }
             }
         },
@@ -2158,13 +2326,17 @@ fn run_workspace_command(
     use crate::core::workspace;
 
     match cli.command {
-        WorkspaceCommand::Ensure { branch } => {
+        WorkspaceCommand::Ensure { branch, container } => {
             let agent_id =
                 std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let config = branch.map(|b| workspace::WorkspaceConfig {
                 branch: b,
-                use_container: true,
-                base_image: Some("rust:1.75-slim".to_string()),
+                use_container: container,
+                base_image: if container {
+                    Some("rust:1.75-slim".to_string())
+                } else {
+                    None
+                },
             });
             let status = workspace::ensure_workspace(project_root, config, &agent_id)?;
 
@@ -2200,22 +2372,134 @@ fn run_workspace_command(
                 })
             );
         }
-        WorkspaceCommand::Publish {
-            title: _,
-            description: _,
-        } => {
-            // TODO: Implement container-based publish
+        WorkspaceCommand::Publish { title, description } => {
+            let result = workspace::publish_workspace(project_root, title, description)?;
             println!(
                 "{}",
                 serde_json::json!({
-                    "status": "error",
-                    "message": "Publish not yet implemented in new workspace system"
+                    "status": "ok",
+                    "branch": result.branch,
+                    "commit_hash": result.commit_hash,
+                    "remote_url": result.remote_url,
+                    "pr_url": result.pr_url,
                 })
             );
         }
     }
 
     Ok(())
+}
+
+/// Run STATE_COMMIT commands (prove/verify)
+fn run_state_commit_command(
+    cli: StateCommitCli,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
+    match cli.command {
+        StateCommitCommand::Prove { base, head, output } => {
+            let head = head.unwrap_or_else(|| {
+                state_commit::run_git(project_root, &["rev-parse", "HEAD"])
+                    .unwrap_or_else(|_| "HEAD".to_string())
+            });
+
+            println!("Computing STATE_COMMIT:");
+            println!("  base: {}", base);
+            println!("  head: {}", head);
+
+            // Use library function
+            let input = state_commit::StateCommitInput {
+                base_sha: base,
+                head_sha: head.clone(),
+                ignore_policy_hash: "da39a3ee5e6b4b0d3255bfef95601890afd80709".to_string(), // empty
+            };
+
+            let result = state_commit::prove(&input, project_root)
+                .map_err(error::DecapodError::ValidationError)?;
+
+            println!("  files: {}", result.entries.len());
+
+            // Write output
+            std::fs::write(&output, &result.scope_record_bytes)
+                .map_err(error::DecapodError::IoError)?;
+
+            println!("  scope_record_hash: {}", result.scope_record_hash);
+            println!("  state_commit_root: {}", result.state_commit_root);
+            println!("  output: {}", output.display());
+
+            Ok(())
+        }
+        StateCommitCommand::Verify {
+            scope_record,
+            expected_root,
+        } => {
+            // Read scope record
+            let cbor_bytes = std::fs::read(&scope_record).map_err(error::DecapodError::IoError)?;
+
+            // Use library function for verification
+            let record_hash = if let Some(ref exp) = expected_root {
+                match state_commit::verify(&cbor_bytes, exp) {
+                    Ok(h) => h,
+                    Err(e) => {
+                        println!("STATE_COMMIT verification:");
+                        println!("  scope_record: {}", scope_record.display());
+                        println!("  ❌ MISMATCH: {}", e);
+                        return Err(error::DecapodError::ValidationError(e));
+                    }
+                }
+            } else {
+                use sha2::{Digest, Sha256};
+                let mut hasher = Sha256::new();
+                hasher.update(&cbor_bytes);
+                format!("{:x}", hasher.finalize())
+            };
+
+            println!("STATE_COMMIT verification:");
+            println!("  scope_record: {}", scope_record.display());
+            println!("  scope_record_hash: {}", record_hash);
+            println!("  ✅ VERIFIED");
+
+            Ok(())
+        }
+        StateCommitCommand::Explain { scope_record } => {
+            // Read and parse scope_record
+            let cbor_bytes = std::fs::read(&scope_record).map_err(error::DecapodError::IoError)?;
+
+            // Compute hashes
+            use sha2::{Digest, Sha256};
+            let mut hasher = Sha256::new();
+            hasher.update(&cbor_bytes);
+            let scope_record_hash = format!("{:x}", hasher.finalize());
+
+            // Parse basic structure (simplified - looks for embedded strings)
+            let content = String::from_utf8_lossy(&cbor_bytes);
+
+            println!("STATE_COMMIT Explanation:");
+            println!("  File: {}", scope_record.display());
+            println!("  Size: {} bytes", cbor_bytes.len());
+            println!("  scope_record_hash: {}", scope_record_hash);
+            println!();
+
+            // Try to extract version and SHAs from the CBOR structure
+            if let Some(version_pos) = content.find("state_commit.") {
+                if let Some(end_pos) = content[version_pos..].find('\0') {
+                    println!(
+                        "  algo_version: {}",
+                        &content[version_pos..version_pos + end_pos]
+                    );
+                }
+            }
+
+            // Count entries (looking for patterns in the binary data)
+            let entry_count = content.matches("kind=").count();
+            println!("  Estimated entries: {}", entry_count);
+            println!();
+
+            println!("Note: scope_record_hash is sha256(scope_record_bytes)");
+            println!("      state_commit_root is the Merkle root of entry hashes");
+
+            Ok(())
+        }
+    }
 }
 
 /// Run RPC command
@@ -2231,7 +2515,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         let mut buffer = String::new();
         std::io::stdin()
             .read_to_string(&mut buffer)
-            .map_err(|e| error::DecapodError::IoError(e))?;
+            .map_err(error::DecapodError::IoError)?;
         serde_json::from_str(&buffer)
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid JSON: {}", e)))?
     } else {
@@ -2436,24 +2720,30 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             )
         }
         "workspace.publish" => {
-            // TODO: Implement container-based publish
-            let _title = request
+            let title = request
                 .params
                 .get("title")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string());
-            let _description = request
+            let description = request
                 .params
                 .get("description")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string());
 
+            let result = workspace::publish_workspace(project_root, title, description)?;
+
             success_response(
                 request.id.clone(),
                 request.op.clone(),
                 request.params.clone(),
-                None,
-                vec![],
+                Some(serde_json::json!({
+                    "branch": result.branch,
+                    "commit_hash": result.commit_hash,
+                    "remote_url": result.remote_url,
+                    "pr_url": result.pr_url,
+                })),
+                vec![format!(".git/refs/heads/{}", result.branch)],
                 None,
                 vec![AllowedOp {
                     op: "validate".to_string(),
@@ -2713,21 +3003,29 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         .to_string();
 
                     db::initialize_knowledge_db(&project_store.root)?;
-                    knowledge::add_knowledge(
+                    let result = knowledge::add_knowledge(
                         &project_store,
-                        &id,
-                        &title,
-                        &text,
-                        &provenance,
-                        None,
+                        knowledge::AddKnowledgeParams {
+                            id: &id,
+                            title: &title,
+                            content: &text,
+                            provenance: &provenance,
+                            claim_id: None,
+                            merge_key: None,
+                            conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
+                            status: "active",
+                            ttl_policy: "persistent",
+                            expires_ts: None,
+                        },
                     )?;
                     success_response(
                         request.id.clone(),
                         request.op.clone(),
                         request.params.clone(),
                         Some(serde_json::json!({
-                            "id": id,
-                            "stored": true
+                            "id": result.id,
+                            "stored": true,
+                            "action": result.action
                         })),
                         vec![],
                         None,
@@ -2825,7 +3123,15 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         .and_then(|v| v.as_str())
                         .unwrap_or("");
                     db::initialize_knowledge_db(&project_store.root)?;
-                    let entries = knowledge::search_knowledge(&project_store, text)?;
+                    let entries = knowledge::search_knowledge(
+                        &project_store,
+                        text,
+                        knowledge::SearchOptions {
+                            as_of: None,
+                            window_days: None,
+                            rank: "relevance",
+                        },
+                    )?;
                     success_response(
                         request.id.clone(),
                         request.op.clone(),

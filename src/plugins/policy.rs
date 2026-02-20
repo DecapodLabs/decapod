@@ -187,25 +187,6 @@ pub fn eval_risk(
     let mut level = RiskLevel::LOW;
     let mut requirements = Vec::new();
 
-    // Git push risk evaluation (protected branch enforcement)
-    if command.starts_with("git.push") || command.contains("git push") {
-        let target = target_path.unwrap_or("");
-        let protected = ["master", "main", "production", "stable"];
-        let is_protected =
-            protected.iter().any(|p| target.contains(p)) || target.starts_with("release/");
-
-        if is_protected {
-            level = RiskLevel::CRITICAL;
-            requirements.push("DIRECT_PUSH_TO_PROTECTED_BRANCH_FORBIDDEN".to_string());
-            requirements.push("Use working branch + PR workflow instead".to_string());
-            requirements
-                .push("Operator Approval Required (claim.git.no_direct_main_push)".to_string());
-        } else {
-            level = RiskLevel::MEDIUM;
-            requirements.push("Push to working branch - standard workflow".to_string());
-        }
-    }
-
     // Command-based risk
     if command.contains("delete") || command.contains("archive") || command.contains("purge") {
         level = RiskLevel::HIGH;

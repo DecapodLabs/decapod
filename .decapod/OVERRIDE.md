@@ -1,202 +1,151 @@
-### plugins/CONTAINER.md
-## Runtime Guard Override (auto-generated)
-DECAPOD_CONTAINER_RUNTIME_DISABLED=true
-reason: missing dedicated ssh key (see .decapod/generated/container_ssh_key_path)
-warning: disabling isolated containers increases risk of concurrent agents stepping on each other.
+# OVERRIDE.md - Project-Specific Decapod Overrides
 
+> **IMPORTANT:** For detailed usage instructions and examples, see [README.md](README.md).
 
-### Blended from Legacy AGENTS Entrypoint
+**Canonical:** OVERRIDE.md  
+**Authority:** override  
+**Layer:** Project  
+**Binding:** Yes (overrides embedded constitution)
 
-# AGENTS.md - Agent Entrypoint
+---
 
-This is a Decapod-managed repository.
+## Summary
 
-## Required: Agent Initialization
+This file is your project-local override layer for Decapod's embedded constitution.
 
-**Call this before any work:**
+The embedded constitution (shipped with Decapod) is read-only baseline policy.  
+`OVERRIDE.md` is where you add project-specific behavior without forking Decapod.
 
-```bash
-decapod rpc --op agent.init
-```
+Overrides are resolved at runtime via `decapod docs show`.
 
-This produces a session receipt and tells you what's allowed next.
+Keep overrides minimal and explicit.
 
-## Quick Commands
+---
 
-- decapod workspace status: Check state.
-- decapod workspace ensure: Create isolated workspace (if on main/master).
-- decapod capabilities --json: See capabilities.
-- decapod validate: Validate before claiming done.
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- ⚠️  CHANGES ARE NOT PERMITTED ABOVE THIS LINE                           -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
 
-## Critical Rules
+## Core Overrides (Routers and Indices)
 
-1. NEVER work on main/master - Decapod will refuse.
-2. Call decapod rpc --op agent.init before operating.
-3. Create and claim a todo: decapod todo claim --id <task-id>.
-4. Pass decapod validate before claiming done.
+### core/DECAPOD.md
 
-## Safety Invariants
+### core/INTERFACES.md
 
-- core/DECAPOD.md: Universal router.
-- ✅ Verification: decapod validate must pass.
-- Stop if error or ambiguous state occurs; respect invocation heartbeat.
-- Safe Environment: Use Docker git workspaces; request elevated permissions before Docker/container workspace commands.
-- Security: DECAPOD_SESSION_PASSWORD required; .decapod files are accessed only via decapod CLI.
-- Architecture: Respect the Interface abstraction boundary.
-- Updates: cargo install decapod.
+### core/METHODOLOGY.md
 
-## For Full Documentation
+### core/PLUGINS.md
 
-decapod docs show core/DECAPOD.md
+### core/GAPS.md
 
-Or use the RPC interface: decapod rpc --stdin
+### core/DEMANDS.md
 
+### core/DEPRECATION.md
 
-### Blended from Legacy CLAUDE Entrypoint
+---
 
-# CLAUDE.md - Claude Agent Entrypoint
+## Specs Overrides (System Contracts)
 
-You (Claude) are working in a Decapod-managed repository.
-You are bound by the universal contract in **AGENTS.md**.
+### specs/INTENT.md
 
-This is a Decapod-managed repository.
+### specs/SYSTEM.md
 
-## Required: Agent Initialization
+### specs/AMENDMENTS.md
 
-**Call this before any work:**
+### specs/SECURITY.md
 
-```bash
-decapod rpc --op agent.init
-```
+### specs/GIT.md
 
-This produces a session receipt and tells you what's allowed next.
+---
 
-## Quick Commands
+## Interfaces Overrides (Binding Contracts)
 
-- decapod workspace status: Check state.
-- decapod workspace ensure: Create isolated workspace (if on main/master).
-- decapod capabilities --json: See capabilities.
-- decapod validate: Validate before claiming done.
+### interfaces/CLAIMS.md
 
-## Critical Rules
+### interfaces/CONTROL_PLANE.md
 
-1. NEVER work on main/master - Decapod will refuse.
-2. Call decapod rpc --op agent.init before operating.
-3. Create and claim a todo: decapod todo claim --id <task-id>.
-4. Pass decapod validate before claiming done.
+### interfaces/DOC_RULES.md
 
-## Safety Invariants
+### interfaces/GLOSSARY.md
 
-- core/DECAPOD.md: Universal router.
-- ✅ Verification: decapod validate must pass.
-- Stop if error or ambiguous state occurs; respect invocation heartbeat.
-- Safe Environment: Use Docker git workspaces; request elevated permissions before Docker/container workspace commands.
-- Security: DECAPOD_SESSION_PASSWORD required; .decapod files are accessed only via decapod CLI.
-- Architecture: Respect the Interface abstraction boundary.
-- Updates: cargo install decapod.
+### interfaces/STORE_MODEL.md
 
-## For Full Documentation
+---
 
-decapod docs show core/DECAPOD.md
+## Methodology Overrides (Practice Guides)
 
-Or use the RPC interface: decapod rpc --stdin
+### methodology/ARCHITECTURE.md
 
+### methodology/SOUL.md
 
-### Blended from Legacy GEMINI Entrypoint
+### methodology/KNOWLEDGE.md
 
-# GEMINI.md - Gemini Agent Entrypoint
+### methodology/MEMORY.md
 
-You (Gemini) are working in a Decapod-managed repository.
-You are bound by the universal contract in **AGENTS.md**.
+---
 
-This is a Decapod-managed repository.
+## Architecture Overrides (Domain Patterns)
 
-## Required: Agent Initialization
+### architecture/DATA.md
 
-**Call this before any work:**
+### architecture/CACHING.md
 
-```bash
-decapod rpc --op agent.init
-```
+### architecture/MEMORY.md
 
-This produces a session receipt and tells you what's allowed next.
+### architecture/WEB.md
 
-## Quick Commands
+### architecture/CLOUD.md
 
-- decapod workspace status: Check state.
-- decapod workspace ensure: Create isolated workspace (if on main/master).
-- decapod capabilities --json: See capabilities.
-- decapod validate: Validate before claiming done.
+### architecture/FRONTEND.md
 
-## Critical Rules
+### architecture/ALGORITHMS.md
 
-1. NEVER work on main/master - Decapod will refuse.
-2. Call decapod rpc --op agent.init before operating.
-3. Create and claim a todo: decapod todo claim --id <task-id>.
-4. Pass decapod validate before claiming done.
+### architecture/SECURITY.md
 
-## Safety Invariants
+### architecture/OBSERVABILITY.md
 
-- core/DECAPOD.md: Universal router.
-- ✅ Verification: decapod validate must pass.
-- Stop if error or ambiguous state occurs; respect invocation heartbeat.
-- Safe Environment: Use Docker git workspaces; request elevated permissions before Docker/container workspace commands.
-- Security: DECAPOD_SESSION_PASSWORD required; .decapod files are accessed only via decapod CLI.
-- Architecture: Respect the Interface abstraction boundary.
-- Updates: cargo install decapod.
+### architecture/CONCURRENCY.md
 
-## For Full Documentation
+---
 
-decapod docs show core/DECAPOD.md
+## Plugins Overrides (Operational Subsystems)
 
-Or use the RPC interface: decapod rpc --stdin
+### plugins/TODO.md
 
+### plugins/MANIFEST.md
 
-### Blended from Legacy CODEX Entrypoint
+### plugins/EMERGENCY_PROTOCOL.md
 
-# CODEX.md - Codex Agent Entrypoint
+### plugins/DB_BROKER.md
 
-You (Codex) are working in a Decapod-managed repository.
-You are bound by the universal contract in **AGENTS.md**.
+### plugins/CRON.md
 
-This is a Decapod-managed repository.
+### plugins/REFLEX.md
 
-## Required: Agent Initialization
+### plugins/HEALTH.md
 
-**Call this before any work:**
+### plugins/POLICY.md
 
-```bash
-decapod rpc --op agent.init
-```
+### plugins/WATCHER.md
 
-This produces a session receipt and tells you what's allowed next.
+### plugins/KNOWLEDGE.md
 
-## Quick Commands
+### plugins/ARCHIVE.md
 
-- decapod workspace status: Check state.
-- decapod workspace ensure: Create isolated workspace (if on main/master).
-- decapod capabilities --json: See capabilities.
-- decapod validate: Validate before claiming done.
+### plugins/FEDERATION.md
 
-## Critical Rules
+### plugins/FEEDBACK.md
 
-1. NEVER work on main/master - Decapod will refuse.
-2. Call decapod rpc --op agent.init before operating.
-3. Create and claim a todo: decapod todo claim --id <task-id>.
-4. Pass decapod validate before claiming done.
+### plugins/TRUST.md
 
-## Safety Invariants
+### plugins/CONTEXT.md
 
-- core/DECAPOD.md: Universal router.
-- ✅ Verification: decapod validate must pass.
-- Stop if error or ambiguous state occurs; respect invocation heartbeat.
-- Safe Environment: Use Docker git workspaces; request elevated permissions before Docker/container workspace commands.
-- Security: DECAPOD_SESSION_PASSWORD required; .decapod files are accessed only via decapod CLI.
-- Architecture: Respect the Interface abstraction boundary.
-- Updates: cargo install decapod.
+### plugins/HEARTBEAT.md
 
-## For Full Documentation
+### plugins/TEAMMATE.md
 
-decapod docs show core/DECAPOD.md
+### plugins/VERIFY.md
 
-Or use the RPC interface: decapod rpc --stdin
+### plugins/DECIDE.md
+
+### plugins/AUTOUPDATE.md

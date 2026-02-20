@@ -186,13 +186,13 @@ pub fn get_fragment(repo_root: &Path, path: &str, anchor: Option<&str>) -> Optio
 
 fn extract_section(content: &str, anchor: &str) -> Option<(String, String)> {
     let slug = anchor.to_lowercase().replace(' ', "-");
-    let mut lines = content.lines();
+    let lines = content.lines();
     let mut section_lines = Vec::new();
     let mut in_section = false;
     let mut section_title = String::new();
     let mut section_level = 0;
 
-    while let Some(line) = lines.next() {
+    for line in lines {
         if line.starts_with('#') {
             let level = line.chars().take_while(|&c| c == '#').count();
             let title = line.trim_start_matches('#').trim();

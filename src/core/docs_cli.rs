@@ -57,7 +57,12 @@ pub enum DocsCommand {
     },
 }
 
-pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
+#[derive(Debug, Default)]
+pub struct DocsRunResult {
+    pub ingested_core_constitution: bool,
+}
+
+pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> {
     match cli.command {
         DocsCommand::List => {
             let docs = assets::list_docs();
@@ -66,7 +71,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
                 println!("- {}", doc);
             }
             // TODO: Also list dynamically loaded docs from .decapod/constitutions/
-            Ok(())
+            Ok(DocsRunResult::default())
         }
         DocsCommand::Show { path, source } => {
             // Split path and anchor
@@ -89,7 +94,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
                     println!("{}", fragment.excerpt); // Note: this is still truncated if excerpt is truncated
                     // Should we show full section? The user asked for "exact markdown fragment".
                     // I will add a full extraction to docs.rs later if needed.
-                    Ok(())
+                    Ok(DocsRunResult::default())
                 } else {
                     Err(error::DecapodError::NotFound(format!(
                         "Section not found: {} in {}",
@@ -121,7 +126,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
                 match content {
                     Some(content) => {
                         println!("{}", content);
-                        Ok(())
+                        Ok(DocsRunResult::default())
                     }
                     None => Err(error::DecapodError::NotFound(format!(
                         "Document not found: {} (source: {:?})",
@@ -135,10 +140,14 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
             // Determine repo root for override merging
             let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
             let repo_root = find_repo_root(&current_dir)?;
+            let mut ingested_core_constitution = false;
 
             for doc_path in docs {
                 // Convert embedded path to relative path for override merging
                 let relative_path = doc_path.strip_prefix("embedded/").unwrap_or(&doc_path);
+                if relative_path.starts_with("core/") && relative_path.ends_with(".md") {
+                    ingested_core_constitution = true;
+                }
 
                 if let Some(content) = assets::get_merged_doc(&repo_root, relative_path) {
                     println!("--- BEGIN {} ---", doc_path);
@@ -146,7 +155,9 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
                     println!("--- END {} ---", doc_path);
                 }
             }
-            Ok(())
+            Ok(DocsRunResult {
+                ingested_core_constitution,
+            })
         }
         DocsCommand::Override { force } => {
             let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
@@ -156,7 +167,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
             if !override_path.exists() {
                 println!("ℹ No OVERRIDE.md found at {}", override_path.display());
                 println!("  Run `decapod init` to create one.");
-                return Ok(());
+                return Ok(DocsRunResult::default());
             }
 
             // Calculate current checksum
@@ -166,7 +177,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
                 println!("🔄 Force re-caching OVERRIDE.md checksum...");
                 cache_checksum(&repo_root, &current_checksum)?;
                 println!("✓ Checksum cached: {}", current_checksum);
-                return Ok(());
+                return Ok(DocsRunResult::default());
             }
 
             // Check if changed
@@ -191,7 +202,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<(), error::DecapodError> {
                 }
             }
 
-            Ok(())
+            Ok(DocsRunResult::default())
         }
     }
 }

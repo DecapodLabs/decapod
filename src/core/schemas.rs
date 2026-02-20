@@ -159,7 +159,6 @@ pub const MEMORY_DB_INDEX_EDGES_TYPE: &str =
 pub const MEMORY_DB_INDEX_EVENTS_NODE: &str =
     "CREATE INDEX IF NOT EXISTS idx_fed_events_node ON federation_events(node_id)";
 
-// Legacy Knowledge Schema (preserved for migration)
 pub const KNOWLEDGE_DB_SCHEMA: &str = "
     CREATE TABLE IF NOT EXISTS knowledge (
         id TEXT PRIMARY KEY,
@@ -171,9 +170,22 @@ pub const KNOWLEDGE_DB_SCHEMA: &str = "
         created_at TEXT NOT NULL,
         updated_at TEXT,
         dir_path TEXT NOT NULL,
-        scope TEXT NOT NULL
+        scope TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        merge_key TEXT DEFAULT '',
+        supersedes_id TEXT,
+        ttl_policy TEXT NOT NULL DEFAULT 'persistent',
+        expires_ts TEXT
     )
 ";
+
+pub const KNOWLEDGE_DB_INDEX_STATUS: &str =
+    "CREATE INDEX IF NOT EXISTS idx_knowledge_status ON knowledge(status)";
+pub const KNOWLEDGE_DB_INDEX_CREATED: &str =
+    "CREATE INDEX IF NOT EXISTS idx_knowledge_created ON knowledge(created_at)";
+pub const KNOWLEDGE_DB_INDEX_MERGE_KEY: &str =
+    "CREATE INDEX IF NOT EXISTS idx_knowledge_merge_key ON knowledge(merge_key)";
+pub const KNOWLEDGE_DB_INDEX_ACTIVE_MERGE_SCOPE: &str = "CREATE INDEX IF NOT EXISTS idx_knowledge_active_merge_scope ON knowledge(status, merge_key, scope)";
 
 // Legacy Decide Schemas (preserved for migration)
 pub const DECIDE_DB_SCHEMA_SESSIONS: &str = "

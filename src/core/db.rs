@@ -194,7 +194,7 @@ fn format_db_open_diagnostics(db_path: &Path, stage: &str, err: &rusqlite::Error
 }
 
 pub fn knowledge_db_path(root: &Path) -> PathBuf {
-    root.join(schemas::MEMORY_DB_NAME)
+    root.join(schemas::KNOWLEDGE_DB_NAME)
 }
 
 pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
@@ -204,25 +204,45 @@ pub fn initialize_knowledge_db(root: &Path) -> Result<(), error::DecapodError> {
 
     let broker = DbBroker::new(root);
     broker.with_conn(&db_path, "decapod", None, "knowledge.init", |conn| {
-        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
-        conn.execute_batch(schemas::KNOWLEDGE_DB_SCHEMA)?;
-        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODES)?;
-        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
-        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EDGES)?;
-        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EVENTS)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_TYPE)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_STATUS)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_SCOPE)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_PRIORITY)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_UPDATED)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_SOURCES_NODE)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_SOURCE)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_TARGET)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_TYPE)?;
-        conn.execute_batch(schemas::MEMORY_DB_INDEX_EVENTS_NODE)?;
+        conn.execute(schemas::KNOWLEDGE_DB_SCHEMA, [])?;
+        ensure_knowledge_columns(conn)?;
+        conn.execute(schemas::KNOWLEDGE_DB_INDEX_STATUS, [])?;
+        conn.execute(schemas::KNOWLEDGE_DB_INDEX_CREATED, [])?;
+        conn.execute(schemas::KNOWLEDGE_DB_INDEX_MERGE_KEY, [])?;
+        conn.execute(schemas::KNOWLEDGE_DB_INDEX_ACTIVE_MERGE_SCOPE, [])?;
         Ok(())
     })?;
 
+    Ok(())
+}
+
+/// Migrate existing knowledge tables to add new columns if missing.
+fn ensure_knowledge_columns(conn: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
+    let mut stmt = conn.prepare("PRAGMA table_info(knowledge)")?;
+    let cols_iter = stmt.query_map([], |row| row.get::<_, String>(1))?;
+    let mut cols = std::collections::HashSet::new();
+    for c in cols_iter {
+        cols.insert(c?);
+    }
+
+    let add_col = |name: &str, sql_type: &str, default_expr: &str| -> Result<(), rusqlite::Error> {
+        if !cols.contains(name) {
+            conn.execute(
+                &format!(
+                    "ALTER TABLE knowledge ADD COLUMN {} {} DEFAULT {}",
+                    name, sql_type, default_expr
+                ),
+                [],
+            )?;
+        }
+        Ok(())
+    };
+
+    add_col("status", "TEXT NOT NULL", "'active'")?;
+    add_col("merge_key", "TEXT", "''")?;
+    add_col("supersedes_id", "TEXT", "NULL")?;
+    add_col("ttl_policy", "TEXT NOT NULL", "'persistent'")?;
+    add_col("expires_ts", "TEXT", "NULL")?;
     Ok(())
 }
 
