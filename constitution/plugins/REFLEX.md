@@ -18,14 +18,27 @@ REFLEX defines trigger->action automations that execute when agents invoke Decap
 - `decapod data schema --subsystem reflex`
 
 ## Trigger and Action Contracts
-- Trigger types include `human` and `cron`.
+- Trigger types include `human`, `cron`, and `health_state`.
 - Supported autonomy actions include:
   - `todo.heartbeat.autoclaim`
   - `todo.human.trigger.loop`
+  - `todo.health.remediate`
 - `todo.human.trigger.loop` composes:
   1. create task
   2. run worker heartbeat loop for the created task
   3. capture lesson/context updates via worker
+- `todo.health.remediate` composes:
+  1. evaluate all health claims against watched states (STALE, CONTRADICTED)
+  2. create a remediation task per degraded claim
+  3. assign to the configured agent with health-remediation tags
+
+## Condition-Based Health Triggers
+- `health_state` trigger type evaluates health claim states at run time.
+- All maintenance is condition-triggered, never time-based.
+- Install via: `decapod auto reflex add-health-trigger [--watch-states STALE,CONTRADICTED]`
+- Run via: `decapod auto reflex run --trigger-type health_state`
+- Condition evaluation: queries `govern health` for all claims, matches against `watch_states` in trigger config.
+- When claims match, remediation tasks are created automatically with provenance tags.
 
 ## Heartbeat Contract
 - Invocation heartbeat is automatic at top-level command dispatch.
