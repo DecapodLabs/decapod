@@ -43,9 +43,23 @@ use ulid::Ulid;
 thread_local! {
     static VALIDATION_FAILS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
     static VALIDATION_WARNS: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+    static REPO_FILES_CACHE: RefCell<Vec<(PathBuf, Vec<PathBuf>)>> = const { RefCell::new(Vec::new()) };
 }
 
 fn collect_repo_files(root: &Path, out: &mut Vec<PathBuf>) -> Result<(), error::DecapodError> {
+    // Check cache first — this is called 3 times on the same root during validation.
+    let cached = REPO_FILES_CACHE.with(|cache| {
+        cache
+            .borrow()
+            .iter()
+            .find(|(k, _)| k == root)
+            .map(|(_, v)| v.clone())
+    });
+    if let Some(files) = cached {
+        out.extend(files);
+        return Ok(());
+    }
+
     fn recurse(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), error::DecapodError> {
         if !dir.is_dir() {
             return Ok(());
@@ -68,7 +82,15 @@ fn collect_repo_files(root: &Path, out: &mut Vec<PathBuf>) -> Result<(), error::
         Ok(())
     }
 
-    recurse(root, out)
+    let start = out.len();
+    recurse(root, out)?;
+    // Cache the result for subsequent calls with the same root.
+    REPO_FILES_CACHE.with(|cache| {
+        cache
+            .borrow_mut()
+            .push((root.to_path_buf(), out[start..].to_vec()));
+    });
+    Ok(())
 }
 
 fn validate_no_legacy_namespaces(
@@ -1871,12 +1893,34 @@ fn validate_tooling_gate(
 
     let mut has_failures = false;
 
-    // Check formatting with cargo fmt
-    match std::process::Command::new("cargo")
-        .args(["fmt", "--all", "--", "--check"])
-        .current_dir(repo_root)
-        .output()
-    {
+    // Run fmt and clippy in parallel — they are independent checks.
+    // Note: cargo clippy is a superset of cargo check, so we skip the
+    // redundant cargo check entirely.
+    let root_fmt = repo_root.to_path_buf();
+    let root_clippy = repo_root.to_path_buf();
+
+    let fmt_handle = std::thread::spawn(move || {
+        std::process::Command::new("cargo")
+            .args(["fmt", "--all", "--", "--check"])
+            .current_dir(&root_fmt)
+            .output()
+    });
+
+    let clippy_handle = std::thread::spawn(move || {
+        std::process::Command::new("cargo")
+            .args([
+                "clippy",
+                "--all-targets",
+                "--all-features",
+                "--",
+                "-D",
+                "warnings",
+            ])
+            .current_dir(&root_clippy)
+            .output()
+    });
+
+    match fmt_handle.join().expect("fmt thread panicked") {
         Ok(output) => {
             if output.status.success() {
                 pass("Rust code formatting passes (cargo fmt)", pass_count);
@@ -1894,22 +1938,13 @@ fn validate_tooling_gate(
         }
     }
 
-    // Check linting with cargo clippy
-    match std::process::Command::new("cargo")
-        .args([
-            "clippy",
-            "--all-targets",
-            "--all-features",
-            "--",
-            "-D",
-            "warnings",
-        ])
-        .current_dir(repo_root)
-        .output()
-    {
+    match clippy_handle.join().expect("clippy thread panicked") {
         Ok(output) => {
             if output.status.success() {
-                pass("Rust linting passes (cargo clippy)", pass_count);
+                pass(
+                    "Rust linting and type checking pass (cargo clippy)",
+                    pass_count,
+                );
             } else {
                 fail(
                     "Rust linting failed - run `cargo clippy --all-targets --all-features`",
@@ -1920,29 +1955,6 @@ fn validate_tooling_gate(
         }
         Err(e) => {
             fail(&format!("Failed to run cargo clippy: {}", e), fail_count);
-            has_failures = true;
-        }
-    }
-
-    // Check type checking with cargo check
-    match std::process::Command::new("cargo")
-        .args(["check", "--all-targets", "--all-features"])
-        .current_dir(repo_root)
-        .output()
-    {
-        Ok(output) => {
-            if output.status.success() {
-                pass("Rust type checking passes (cargo check)", pass_count);
-            } else {
-                fail(
-                    "Rust type checking failed - run `cargo check --all-targets --all-features`",
-                    fail_count,
-                );
-                has_failures = true;
-            }
-        }
-        Err(e) => {
-            fail(&format!("Failed to run cargo check: {}", e), fail_count);
             has_failures = true;
         }
     }
@@ -2142,6 +2154,7 @@ pub fn run_validation(
 ) -> Result<(), error::DecapodError> {
     VALIDATION_FAILS.with(|v| v.borrow_mut().clear());
     VALIDATION_WARNS.with(|v| v.borrow_mut().clear());
+    REPO_FILES_CACHE.with(|v| v.borrow_mut().clear());
     println!("validate: running");
 
     // Directly get content from embedded assets
