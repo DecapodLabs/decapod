@@ -16,27 +16,26 @@ pub fn list_nodes(
     broker.with_conn(&db_path, "decapod", None, "federation.list", |conn| {
         let mut conditions = vec!["1=1".to_string()];
         let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = vec![];
-        let mut idx = 1u32;
 
         if let Some(ref nt) = node_type {
+            let idx = param_values.len() + 1;
             conditions.push(format!("node_type = ?{}", idx));
             param_values.push(Box::new(nt.clone()));
-            idx += 1;
         }
         if let Some(ref s) = status {
+            let idx = param_values.len() + 1;
             conditions.push(format!("status = ?{}", idx));
             param_values.push(Box::new(s.clone()));
-            idx += 1;
         }
         if let Some(ref p) = priority {
+            let idx = param_values.len() + 1;
             conditions.push(format!("priority = ?{}", idx));
             param_values.push(Box::new(p.clone()));
-            idx += 1;
         }
         if let Some(ref sc) = scope {
+            let idx = param_values.len() + 1;
             conditions.push(format!("scope = ?{}", idx));
             param_values.push(Box::new(sc.clone()));
-            idx += 1;
         }
 
         let sql = format!(

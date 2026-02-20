@@ -367,7 +367,7 @@ ENV DECAPOD_WORKSPACE_IMAGE=decapod-workspace
 CMD ["/bin/bash"]
 "#;
 
-    std::fs::write(&dockerfile_path, dockerfile_content).map_err(|e| DecapodError::IoError(e))?;
+    std::fs::write(&dockerfile_path, dockerfile_content).map_err(DecapodError::IoError)?;
 
     Ok(())
 }
@@ -382,7 +382,7 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
             workspace_path.to_str().unwrap_or("."),
         ])
         .output()
-        .map_err(|e| DecapodError::IoError(e))?;
+        .map_err(DecapodError::IoError)?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -447,8 +447,7 @@ fn get_repo_root(start_dir: &Path) -> Result<PathBuf, DecapodError> {
 fn is_branch_protected(branch: &str) -> bool {
     let branch_lower = branch.to_lowercase();
     for pattern in PROTECTED_PATTERNS {
-        if pattern.ends_with("/*") {
-            let prefix = &pattern[..pattern.len() - 2];
+        if let Some(prefix) = pattern.strip_suffix("/*") {
             if branch_lower.starts_with(prefix) {
                 return true;
             }
@@ -578,6 +577,161 @@ fn get_assigned_open_task_ids(
     ids.sort();
     ids.dedup();
     Ok(ids)
+}
+
+/// Result from publishing a workspace
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct PublishResult {
+    /// Branch that was published
+    pub branch: String,
+    /// Commit hash of the published changes
+    pub commit_hash: String,
+    /// Remote URL the branch was pushed to
+    pub remote_url: String,
+    /// PR URL if one was created
+    pub pr_url: Option<String>,
+}
+
+/// Publish workspace changes: commit, push, and optionally create a PR
+pub fn publish_workspace(
+    repo_root: &Path,
+    title: Option<String>,
+    description: Option<String>,
+) -> Result<PublishResult, DecapodError> {
+    let status = get_workspace_status(repo_root)?;
+
+    // 1. Must be in a worktree on an unprotected branch
+    if !status.git.in_worktree {
+        return Err(DecapodError::ValidationError(
+            "Cannot publish: not in a git worktree. Run `decapod workspace ensure` first."
+                .to_string(),
+        ));
+    }
+    if status.git.is_protected {
+        return Err(DecapodError::ValidationError(format!(
+            "Cannot publish: on protected branch '{}'. Work must be on a feature branch.",
+            status.git.current_branch
+        )));
+    }
+
+    let dir = repo_root.to_str().unwrap_or(".");
+
+    // 2. Stage and commit any uncommitted changes
+    if status.git.has_local_mods {
+        let add_output = Command::new("git")
+            .args(["-C", dir, "add", "-A"])
+            .output()
+            .map_err(DecapodError::IoError)?;
+        if !add_output.status.success() {
+            return Err(DecapodError::ValidationError(format!(
+                "Failed to stage changes: {}",
+                String::from_utf8_lossy(&add_output.stderr)
+            )));
+        }
+
+        let commit_msg = title
+            .as_deref()
+            .unwrap_or("decapod: publish workspace changes");
+        let commit_output = Command::new("git")
+            .args(["-C", dir, "commit", "-m", commit_msg])
+            .output()
+            .map_err(DecapodError::IoError)?;
+        if !commit_output.status.success() {
+            let stderr = String::from_utf8_lossy(&commit_output.stderr);
+            // Allow "nothing to commit" as non-fatal
+            if !stderr.contains("nothing to commit") {
+                return Err(DecapodError::ValidationError(format!(
+                    "Failed to commit: {}",
+                    stderr
+                )));
+            }
+        }
+    }
+
+    // Get current commit hash
+    let hash_output = Command::new("git")
+        .args(["-C", dir, "rev-parse", "HEAD"])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    let commit_hash = String::from_utf8_lossy(&hash_output.stdout)
+        .trim()
+        .to_string();
+
+    // 3. Push branch to origin
+    let push_output = Command::new("git")
+        .args([
+            "-C",
+            dir,
+            "push",
+            "-u",
+            "origin",
+            &status.git.current_branch,
+        ])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if !push_output.status.success() {
+        return Err(DecapodError::ValidationError(format!(
+            "Failed to push: {}",
+            String::from_utf8_lossy(&push_output.stderr)
+        )));
+    }
+
+    // Get remote URL
+    let remote_output = Command::new("git")
+        .args(["-C", dir, "remote", "get-url", "origin"])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    let remote_url = String::from_utf8_lossy(&remote_output.stdout)
+        .trim()
+        .to_string();
+
+    // 4. If gh CLI is available, create a PR
+    let pr_url = if Command::new("gh")
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+    {
+        let pr_title = title.as_deref().unwrap_or(&status.git.current_branch);
+        let mut pr_args = vec![
+            "-C",
+            dir,
+            "pr",
+            "create",
+            "--title",
+            pr_title,
+            "--head",
+            &status.git.current_branch,
+        ];
+        let desc;
+        if let Some(ref d) = description {
+            desc = d.clone();
+            pr_args.push("--body");
+            pr_args.push(&desc);
+        }
+        let pr_output = Command::new("gh")
+            .args(&pr_args)
+            .output()
+            .map_err(DecapodError::IoError)?;
+        if pr_output.status.success() {
+            Some(
+                String::from_utf8_lossy(&pr_output.stdout)
+                    .trim()
+                    .to_string(),
+            )
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    Ok(PublishResult {
+        branch: status.git.current_branch,
+        commit_hash,
+        remote_url,
+        pr_url,
+    })
 }
 
 pub fn get_allowed_ops(status: &WorkspaceStatus) -> Vec<AllowedOp> {

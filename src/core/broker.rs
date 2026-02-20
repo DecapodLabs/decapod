@@ -136,6 +136,18 @@ impl DbBroker {
             .unwrap_or_default()
             .to_string_lossy()
             .to_string();
+
+        // Two-phase logging: only for mutations (reads don't need crash recovery)
+        if !is_read {
+            self.log_event(
+                actor,
+                effective_intent.as_deref(),
+                op_name,
+                &db_id,
+                "pending",
+            )?;
+        }
+
         let conn = db::db_connect(&db_path.to_string_lossy())?;
 
         let result = f(&conn);
@@ -257,6 +269,89 @@ impl DbBroker {
         map.remove(&compound);
         Ok(())
     }
+
+    /// Verify log integrity and detect potential crash-induced divergence.
+    ///
+    /// Scans the audit log for `pending` events that lack a corresponding
+    /// terminal `success` or `error` event, which indicates a process crash
+    /// between the two-phase commit boundaries.
+    pub fn verify_replay(&self) -> Result<ReplayReport, error::DecapodError> {
+        use std::io::BufRead;
+        if !self.audit_log_path.exists() {
+            return Ok(ReplayReport {
+                ts: time::now_epoch_z(),
+                divergences: vec![],
+                total_events: 0,
+            });
+        }
+
+        let f = std::fs::File::open(&self.audit_log_path).map_err(error::DecapodError::IoError)?;
+        let reader = std::io::BufReader::new(f);
+        let mut pending_map = HashMap::new();
+        let mut total_events = 0usize;
+
+        for line in reader.lines() {
+            let line = line.map_err(error::DecapodError::IoError)?;
+            let ev: BrokerEvent = serde_json::from_str(&line).map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid audit log entry: {}", e))
+            })?;
+            total_events += 1;
+
+            match ev.status.as_str() {
+                "pending" => {
+                    pending_map.insert(ev.event_id.clone(), ev);
+                }
+                "success" | "error" => {
+                    // Match terminal events to pending events by intent_ref + op + db_id.
+                    // When both have matching intent_ref (including both None), clear the pending.
+                    pending_map.retain(|_, v| {
+                        let intent_match = match (&v.intent_ref, &ev.intent_ref) {
+                            (Some(a), Some(b)) => a == b,
+                            (None, None) => true,
+                            _ => false,
+                        };
+                        !(intent_match && v.op == ev.op && v.db_id == ev.db_id)
+                    });
+                }
+                _ => {}
+            }
+        }
+
+        let divergences = pending_map
+            .into_values()
+            .map(|ev| Divergence {
+                event_id: ev.event_id,
+                op: ev.op,
+                db_id: ev.db_id,
+                ts: ev.ts,
+                intent_ref: ev.intent_ref,
+                reason: "Pending event without terminal status (potential crash)".to_string(),
+            })
+            .collect();
+
+        Ok(ReplayReport {
+            ts: time::now_epoch_z(),
+            divergences,
+            total_events,
+        })
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReplayReport {
+    pub ts: String,
+    pub divergences: Vec<Divergence>,
+    pub total_events: usize,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Divergence {
+    pub event_id: String,
+    pub op: String,
+    pub db_id: String,
+    pub ts: String,
+    pub intent_ref: Option<String>,
+    pub reason: String,
 }
 
 fn db_lock_map() -> &'static Mutex<HashMap<PathBuf, Arc<Mutex<()>>>> {

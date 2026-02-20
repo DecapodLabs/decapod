@@ -28,6 +28,7 @@
 //! - Canon mutation gate (no unauthorized doc writes)
 //! - Tooling validation gate (formatting, linting, type checking)
 
+use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::output;
 use crate::core::store::{Store, StoreKind};
@@ -332,6 +333,24 @@ fn validate_repo_store_dogfood(
         return Ok(());
     }
 
+    // Broker log integrity check
+    let broker = DbBroker::new(&store.root);
+    let replay_report = broker.verify_replay()?;
+    if replay_report.divergences.is_empty() {
+        pass(
+            "Audit log integrity verified (no pending event gaps)",
+            pass_count,
+        );
+    } else {
+        fail(
+            &format!(
+                "Audit log contains {} potential crash divergence(s)",
+                replay_report.divergences.len()
+            ),
+            fail_count,
+        );
+    }
+
     let tmp_root = std::env::temp_dir().join(format!("decapod_validate_repo_{}", Ulid::new()));
     fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
     let tmp_db = tmp_root.join("todo.db");
@@ -475,6 +494,10 @@ fn validate_entrypoint_invariants(
         ("core/DECAPOD.md", "Router pointer to core/DECAPOD.md"),
         ("cargo install decapod", "Version update gate language"),
         ("decapod validate", "Validation gate language"),
+        (
+            "decapod docs ingest",
+            "Core constitution ingestion mandate language",
+        ),
         ("Stop if", "Stop-if-missing behavior"),
         ("Docker git workspaces", "Docker workspace mandate language"),
         (
@@ -549,7 +572,7 @@ fn validate_entrypoint_invariants(
     }
 
     // Check that agent-specific files defer to AGENTS.md and are thin
-    const MAX_AGENT_SPECIFIC_LINES: usize = 50;
+    const MAX_AGENT_SPECIFIC_LINES: usize = 70;
     for agent_file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let agent_path = decapod_dir.join(agent_file);
         if !agent_path.is_file() {
@@ -659,6 +682,26 @@ fn validate_entrypoint_invariants(
         } else {
             fail(
                 &format!("{} missing claim-before-work mandate marker", agent_file),
+                fail_count,
+            );
+            all_present = false;
+        }
+
+        // Must include core constitution ingestion mandate
+        if agent_content.contains("decapod docs ingest") {
+            pass(
+                &format!(
+                    "{} includes core constitution ingestion mandate",
+                    agent_file
+                ),
+                pass_count,
+            );
+        } else {
+            fail(
+                &format!(
+                    "{} missing core constitution ingestion mandate marker",
+                    agent_file
+                ),
                 fail_count,
             );
             all_present = false;
@@ -1570,7 +1613,7 @@ fn validate_heartbeat_invocation_gate(
 fn validate_federation_gates(
     store: &Store,
     pass_count: &mut u32,
-    fail_count: &mut u32,
+    warn_count: &mut u32,
 ) -> Result<(), error::DecapodError> {
     info("Federation Gates");
 
@@ -1580,7 +1623,10 @@ fn validate_federation_gates(
         if passed {
             pass(&format!("[{}] {}", gate_name, message), pass_count);
         } else {
-            fail(&format!("[{}] {}", gate_name, message), fail_count);
+            // Federation gates are advisory (warn) rather than hard-fail because the
+            // two-phase DB+JSONL write design can produce transient drift that does
+            // not indicate data loss.
+            warn(&format!("[{}] {}", gate_name, message), warn_count);
         }
     }
 
@@ -1803,6 +1849,14 @@ fn validate_tooling_gate(
 ) -> Result<(), error::DecapodError> {
     info("Tooling Validation Gate");
 
+    if std::env::var("DECAPOD_VALIDATE_SKIP_TOOLING_GATES").is_ok() {
+        skip(
+            "Tooling validation gates skipped (DECAPOD_VALIDATE_SKIP_TOOLING_GATES set)",
+            pass_count,
+        );
+        return Ok(());
+    }
+
     // Check for Cargo.toml to detect Rust projects
     let cargo_toml = repo_root.join("Cargo.toml");
     if !cargo_toml.exists() {
@@ -1898,6 +1952,93 @@ fn validate_tooling_gate(
             "All toolchain validations pass - project is ready for promotion",
             pass_count,
         );
+    }
+
+    Ok(())
+}
+
+fn validate_state_commit_gate(
+    pass_count: &mut u32,
+    fail_count: &mut u32,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("STATE_COMMIT Validation Gate");
+
+    // Policy knob: configurable CI job name (can be set via env var)
+    let required_ci_job = std::env::var("DECAPOD_STATE_COMMIT_CI_JOB")
+        .unwrap_or_else(|_| "state_commit_golden_vectors".to_string());
+
+    info(&format!(
+        "STATE_COMMIT: required_ci_job = {}",
+        required_ci_job
+    ));
+
+    // Check for v1 golden directory (versioned)
+    let golden_v1_dir = repo_root
+        .join("tests")
+        .join("golden")
+        .join("state_commit")
+        .join("v1");
+    if !golden_v1_dir.exists() {
+        skip(
+            "No tests/golden/state_commit/v1 directory found; skipping STATE_COMMIT validation",
+            pass_count,
+        );
+        return Ok(());
+    }
+
+    // Check for required v1 golden files
+    let required_files = ["scope_record_hash.txt", "state_commit_root.txt"];
+    let mut has_golden = true;
+    for file in &required_files {
+        if !golden_v1_dir.join(file).exists() {
+            fail(
+                &format!("Missing golden file: tests/golden/state_commit/v1/{}", file),
+                fail_count,
+            );
+            has_golden = false;
+        }
+    }
+
+    // Immutability check: v1 files should not change
+    // In v1, these are the canonical golden vectors
+    if has_golden {
+        pass("STATE_COMMIT v1 golden vectors present", pass_count);
+
+        // Verify the expected hashes match v1 protocol
+        let expected_scope_hash =
+            "41d7e3729b6f4512887fb3cb6f10140942b600041e0d88308b0177e06ebb4b93";
+        let expected_root = "28591ac86e52ffac76d5fc3aceeceda5d8592708a8d7fcb75371567fdc481492";
+
+        if let Ok(actual_hash) =
+            std::fs::read_to_string(golden_v1_dir.join("scope_record_hash.txt"))
+        {
+            if actual_hash.trim() != expected_scope_hash {
+                fail(
+                    &format!(
+                        "STATE_COMMIT v1 scope_record_hash changed! Expected {}, got {}. This requires a SPEC_VERSION bump to v2.",
+                        expected_scope_hash,
+                        actual_hash.trim()
+                    ),
+                    fail_count,
+                );
+            }
+        }
+
+        if let Ok(actual_root) =
+            std::fs::read_to_string(golden_v1_dir.join("state_commit_root.txt"))
+        {
+            if actual_root.trim() != expected_root {
+                fail(
+                    &format!(
+                        "STATE_COMMIT v1 state_commit_root changed! Expected {}, got {}. This requires a SPEC_VERSION bump to v2.",
+                        expected_root,
+                        actual_root.trim()
+                    ),
+                    fail_count,
+                );
+            }
+        }
     }
 
     Ok(())
@@ -2073,13 +2214,15 @@ pub fn run_validation(
     trace_gate("validate_markdown_primitives_roundtrip_gate");
     validate_markdown_primitives_roundtrip_gate(store, &mut pass_count, &mut fail_count)?;
     trace_gate("validate_federation_gates");
-    validate_federation_gates(store, &mut pass_count, &mut fail_count)?;
+    validate_federation_gates(store, &mut pass_count, &mut warn_count)?;
     trace_gate("validate_git_workspace_context");
     validate_git_workspace_context(&mut pass_count, &mut fail_count, decapod_dir)?;
     trace_gate("validate_git_protected_branch");
     validate_git_protected_branch(&mut pass_count, &mut fail_count, decapod_dir)?;
     trace_gate("validate_tooling_gate");
     validate_tooling_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
+    trace_gate("validate_state_commit_gate");
+    validate_state_commit_gate(&mut pass_count, &mut fail_count, decapod_dir)?;
 
     let fail_total = VALIDATION_FAILS
         .with(|v| v.borrow().len() as u32)

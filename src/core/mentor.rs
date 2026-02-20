@@ -139,11 +139,6 @@ enum CandidateSource {
         status: String,
         category: Option<String>,
     },
-    Container {
-        item: String,
-        exists: bool,
-        path: PathBuf,
-    },
 }
 
 /// Mentor engine for computing obligations
@@ -233,8 +228,8 @@ impl MentorEngine {
             return Ok(candidates);
         }
 
-        for entry in std::fs::read_dir(&decisions_dir).map_err(|e| DecapodError::IoError(e))? {
-            let entry = entry.map_err(|e| DecapodError::IoError(e))?;
+        for entry in std::fs::read_dir(&decisions_dir).map_err(DecapodError::IoError)? {
+            let entry = entry.map_err(DecapodError::IoError)?;
             let path = entry.path();
 
             if path.extension().and_then(|e| e.to_str()) == Some("md") {
@@ -292,12 +287,12 @@ impl MentorEngine {
         let mut current_content = String::new();
 
         for line in &lines {
-            if line.starts_with("## ") {
+            if let Some(stripped) = line.strip_prefix("## ") {
                 // Save previous section
                 if !current_content.is_empty() {
                     sections.push((current_section.clone(), current_content.clone()));
                 }
-                current_section = line[3..].trim().to_string();
+                current_section = stripped.trim().to_string();
                 current_content.clear();
             } else {
                 current_content.push_str(line);
@@ -589,23 +584,6 @@ impl MentorEngine {
                     }
                 }
             }
-            CandidateSource::Container {
-                item,
-                exists,
-                path: _,
-            } => {
-                // Container obligations are high priority (Silicon Valley hygiene)
-                if *exists {
-                    score += 0.95;
-                } else {
-                    score += 0.90;
-                }
-
-                // Boost for certain critical items
-                if item == "Dockerfile" {
-                    score += 0.05;
-                }
-            }
         }
 
         // Cap at 1.0
@@ -626,41 +604,38 @@ impl MentorEngine {
                 continue; // Skip low-relevance candidates
             }
 
-            match candidate {
-                CandidateSource::Adr { path, content } => {
-                    // Check if ADR imposes constraints that operation might violate
-                    let content_lower = content.to_lowercase();
+            if let CandidateSource::Adr { path, content } = candidate {
+                // Check if ADR imposes constraints that operation might violate
+                let content_lower = content.to_lowercase();
 
-                    for touched in &context.touched_paths {
-                        let touched_lower = touched.to_lowercase();
-                        if content_lower.contains(&format!("must use {}", touched_lower))
-                            || content_lower.contains(&format!("shall use {}", touched_lower))
-                            || content_lower.contains(&format!("decided: {}", touched_lower))
+                for touched in &context.touched_paths {
+                    let touched_lower = touched.to_lowercase();
+                    if content_lower.contains(&format!("must use {}", touched_lower))
+                        || content_lower.contains(&format!("shall use {}", touched_lower))
+                        || content_lower.contains(&format!("decided: {}", touched_lower))
+                    {
+                        // Potential contradiction if operation changes this
+                        if context.op.contains("change")
+                            || context.op.contains("modify")
+                            || context.op.contains("update")
                         {
-                            // Potential contradiction if operation changes this
-                            if context.op.contains("change")
-                                || context.op.contains("modify")
-                                || context.op.contains("update")
-                            {
-                                contradictions.push(Contradiction {
-                                    description: format!(
-                                        "Operation may contradict ADR decision regarding {}",
-                                        touched
-                                    ),
-                                    current: format!("Operation: {}", context.op),
-                                    prior: format!(
-                                        "ADR {} specifies requirements",
-                                        path.file_name().unwrap_or_default().to_string_lossy()
-                                    ),
-                                    resolution_hint:
-                                        "Review ADR or create new ADR if decision has changed"
-                                            .to_string(),
-                                });
-                            }
+                            contradictions.push(Contradiction {
+                                description: format!(
+                                    "Operation may contradict ADR decision regarding {}",
+                                    touched
+                                ),
+                                current: format!("Operation: {}", context.op),
+                                prior: format!(
+                                    "ADR {} specifies requirements",
+                                    path.file_name().unwrap_or_default().to_string_lossy()
+                                ),
+                                resolution_hint:
+                                    "Review ADR or create new ADR if decision has changed"
+                                        .to_string(),
+                            });
                         }
                     }
                 }
-                _ => {}
             }
         }
 
@@ -800,54 +775,14 @@ impl MentorEngine {
                     relevance_score: score,
                 }
             }
-            CandidateSource::Container { item, exists, path } => {
-                let (title, why) = if *exists {
-                    (
-                        format!("{} exists - Containerization Required", item),
-                        "Silicon Valley hygiene: Work must be containerized".to_string(),
-                    )
-                } else {
-                    (
-                        format!("{} missing - Create for containerization", item),
-                        format!(
-                            "Silicon Valley hygiene: {} required before proceeding",
-                            item
-                        ),
-                    )
-                };
-
-                let content = if *exists {
-                    std::fs::read_to_string(path).unwrap_or_default()
-                } else {
-                    String::new()
-                };
-
-                Obligation {
-                    kind: ObligationKind::Container,
-                    ref_path: path.to_string_lossy().to_string(),
-                    title,
-                    why_short: why,
-                    evidence: Evidence {
-                        source: "workspace".to_string(),
-                        id: item.clone(),
-                        hash: if *exists {
-                            Some(self.compute_hash(&content))
-                        } else {
-                            None
-                        },
-                        timestamp: None,
-                    },
-                    relevance_score: score,
-                }
-            }
         }
     }
 
     /// Extract title from markdown content
     fn extract_title(&self, content: &str) -> Option<String> {
         for line in content.lines() {
-            if line.starts_with("# ") {
-                return Some(line[2..].trim().to_string());
+            if let Some(stripped) = line.strip_prefix("# ") {
+                return Some(stripped.trim().to_string());
             }
         }
         None

@@ -1,6 +1,6 @@
 [package]
 name = "decapod"
-version = "0.28.3"
+version = "0.29.4"
 edition = "2024"
 rust-version = "1.85"
 description = "Decapod is a Rust-built governance runtime for AI agents: repo-native state, enforced workflow, proof gates, safe coordination."
@@ -15,7 +15,9 @@ exclude = [
     "dist/*",
     "target/*",
     "constitution_embed/*",
-    "assets/*.mp4"
+    "assets/*.mp4",
+    "tests/fixtures/*",
+    "tests/golden_vectors/*"
 ]
 
 [lib]

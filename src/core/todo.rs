@@ -314,9 +314,15 @@ struct TodoEvent {
     ts: String,
     event_id: String,
     event_type: String,
+    #[serde(default = "default_todo_event_status")]
+    status: String,
     task_id: Option<String>,
     payload: JsonValue,
     actor: String,
+}
+
+fn default_todo_event_status() -> String {
+    "success".to_string()
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -515,6 +521,14 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         .and_then(|s| s.parse::<u32>().ok())
         .unwrap_or(0);
 
+    // Always enforce critical additive tables/indexes even when schema_version is current.
+    // Cached CI databases can carry stale meta while missing newer tables.
+    conn.execute(schemas::TODO_DB_SCHEMA_AGENT_TRUST, [])?;
+    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_AGENT_TRUST_LEVEL, [])?;
+    conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
+    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
+    seed_default_risk_zones(conn)?;
+
     if current_version >= schemas::TODO_SCHEMA_VERSION {
         return Ok(());
     }
@@ -605,9 +619,6 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
         backfill_task_dependencies(conn)?;
     }
-    // Keep defaults current across upgrades; INSERT OR IGNORE is idempotent.
-    seed_default_risk_zones(conn)?;
-
     conn.execute(
         "INSERT INTO meta(key, value) VALUES('schema_version', ?1)
          ON CONFLICT(key) DO UPDATE SET value=excluded.value",
@@ -1166,6 +1177,7 @@ fn record_heartbeat(root: &Path, agent_id: &str) -> Result<serde_json::Value, er
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "agent.heartbeat".to_string(),
+            status: "success".to_string(),
             task_id: None,
             payload: serde_json::json!({ "agent_id": agent_id }),
             actor: agent_id.to_string(),
@@ -1249,6 +1261,7 @@ pub fn cleanup_stale_agent_assignments(
                         ts: ts.clone(),
                         event_id: Ulid::new().to_string(),
                         event_type: "task.release".to_string(),
+                        status: "success".to_string(),
                         task_id: Some(task_id.clone()),
                         payload: serde_json::json!({
                             "assigned_to": "",
@@ -1284,6 +1297,7 @@ pub fn cleanup_stale_agent_assignments(
                 ts: ts.clone(),
                 event_id: Ulid::new().to_string(),
                 event_type: "agent.session.cleanup".to_string(),
+                status: "success".to_string(),
                 task_id: None,
                 payload: serde_json::json!({
                     "agent_id": agent_id,
@@ -1379,7 +1393,16 @@ fn summarize_task_context(
         .collect();
 
     for word in title_words {
-        let hits = knowledge::search_knowledge(store, word).unwrap_or_default();
+        let hits = knowledge::search_knowledge(
+            store,
+            word,
+            knowledge::SearchOptions {
+                as_of: None,
+                window_days: None,
+                rank: "relevance",
+            },
+        )
+        .unwrap_or_default();
         if !hits.is_empty() {
             hints.push(serde_json::json!({
                 "query": word,
@@ -1414,11 +1437,18 @@ fn record_task_lesson(
     );
     let _ = knowledge::add_knowledge(
         store,
-        &lesson_id,
-        &lesson_title,
-        &lesson_content,
-        &provenance,
-        None,
+        knowledge::AddKnowledgeParams {
+            id: &lesson_id,
+            title: &lesson_title,
+            content: &lesson_content,
+            provenance: &provenance,
+            claim_id: None,
+            merge_key: None,
+            conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
+            status: "active",
+            ttl_policy: "persistent",
+            expires_ts: None,
+        },
     );
 
     let _ = federation::add_node(
@@ -1827,6 +1857,7 @@ pub fn record_task_event(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: event_type.to_string(),
+            status: "success".to_string(),
             task_id: task_id.map(|s| s.to_string()),
             payload,
             actor: "decapod".to_string(),
@@ -2085,6 +2116,7 @@ fn write_ownership_claim_event(
         ts: claim.ts.to_string(),
         event_id: Ulid::new().to_string(),
         event_type: "ownership.claim".to_string(),
+        status: "success".to_string(),
         task_id: Some(claim.task_id.to_string()),
         payload: serde_json::json!({
             "agent_id": claim.agent_id,
@@ -2164,6 +2196,7 @@ fn set_task_owners(
             ts: ts.to_string(),
             event_id: Ulid::new().to_string(),
             event_type: "ownership.release".to_string(),
+            status: "success".to_string(),
             task_id: Some(task_id.to_string()),
             payload: serde_json::json!({
                 "agent_id": removed_agent,
@@ -2317,6 +2350,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "task.add".to_string(),
+            status: "success".to_string(),
             task_id: Some(task_id.clone()),
             payload,
             actor: "decapod".to_string(),
@@ -2430,6 +2464,7 @@ pub fn update_status(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: event_type.to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: payload.clone(),
             actor: "decapod".to_string(),
@@ -2529,6 +2564,7 @@ fn comment_task(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "task.comment".to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({ "comment": comment }),
             actor: "decapod".to_string(),
@@ -2644,6 +2680,7 @@ fn edit_task(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "task.edit".to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::Value::Object(payload),
             actor: "decapod".to_string(),
@@ -2964,6 +3001,7 @@ fn claim_task(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "task.claim".to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({
                 "assigned_to": agent_id,
@@ -3083,6 +3121,7 @@ fn handoff_task(
             ts: ts.clone(),
             event_id: event_id.clone(),
             event_type: "task.handoff".to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({
                 "from": previous,
@@ -3122,7 +3161,21 @@ fn handoff_task(
         let title = format!("Task handoff {}", id);
         let content = format!("Handoff from {:?} to {}. Summary: {}", from, to, summary);
         let provenance = format!("event:{}", event_id);
-        let _ = knowledge::add_knowledge(store, &knowledge_id, &title, &content, &provenance, None);
+        let _ = knowledge::add_knowledge(
+            store,
+            knowledge::AddKnowledgeParams {
+                id: &knowledge_id,
+                title: &title,
+                content: &content,
+                provenance: &provenance,
+                claim_id: None,
+                merge_key: None,
+                conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
+                status: "active",
+                ttl_policy: "persistent",
+                expires_ts: None,
+            },
+        );
         let obs = format!("Task {} handoff to {}: {}", id, to, summary);
         let _ = teammate::record_observation(store, &obs, Some("multi_agent"));
 
@@ -3249,6 +3302,7 @@ fn remove_task_owner(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "ownership.release".to_string(),
+            status: "success".to_string(),
             task_id: Some(task_id.to_string()),
             payload: serde_json::json!({
                 "agent_id": agent_id,
@@ -3320,6 +3374,7 @@ fn register_agent_expertise(
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "agent.expertise".to_string(),
+            status: "success".to_string(),
             task_id: None,
             payload: serde_json::json!({
                 "agent_id": agent_id,
@@ -3472,6 +3527,7 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
             ts: ts.clone(),
             event_id: Ulid::new().to_string(),
             event_type: "task.release".to_string(),
+            status: "success".to_string(),
             task_id: Some(id.to_string()),
             payload: serde_json::json!({}),
             actor: "decapod".to_string(),
@@ -3691,6 +3747,11 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                 error::DecapodError::ValidationError(format!("Invalid JSONL event: {}", e))
             })?;
             count += 1;
+
+            // Skip incomplete pending events (crash recovery)
+            if ev.status == "pending" {
+                continue;
+            }
 
             insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
 

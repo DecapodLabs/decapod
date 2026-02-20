@@ -7,6 +7,120 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.4](https://github.com/DecapodLabs/decapod/compare/v0.29.3...v0.29.4) - 2026-02-19
+
+### Other
+
+- update CHANGELOG with packaging fix
+
+### Fixed
+
+- *(packaging)* add missing symlink target and exclude test fixtures from crate
+
+## [0.29.3](https://github.com/DecapodLabs/decapod/compare/v0.29.2...v0.29.3) - 2026-02-19
+
+### Added
+
+- *(state_commit)* implement STATE_COMMIT v1 protocol
+
+## [0.29.2](https://github.com/DecapodLabs/decapod/compare/v0.29.1...v0.29.2) - 2026-02-19
+
+### Added
+
+- *(claims)* add KCR evidence gate test and trend baseline
+
+### Fixed
+
+- use rfind instead of filter().next_back() for clippy
+
+## [0.29.1](https://github.com/DecapodLabs/decapod/compare/v0.29.0...v0.29.1) - 2026-02-19
+
+### Added
+
+- *(broker,flight-recorder)* crash consistency and governance timeline
+
+## [0.29.0](https://github.com/DecapodLabs/decapod/compare/v0.28.12...v0.29.0) - 2026-02-19
+
+### Added
+
+- harvest knowledge lifecycle, broker audit, health cleanup, and CI health from stale branches
+
+### Fixed
+
+- *(ci)* skip git worktree gates in CI health job
+- *(tests)* resolve agent_rpc_suite flake and chaos_replay IOERR
+- *(federation)* eliminate drift window and downgrade determinism gates
+
+## [0.28.12](https://github.com/DecapodLabs/decapod/compare/v0.28.11...v0.28.12) - 2026-02-18
+
+### Fixed
+
+- *(workspace)* implement publish and wire --container flag for constitution parity
+
+## [0.28.11](https://github.com/DecapodLabs/decapod/compare/v0.28.10...v0.28.11) - 2026-02-18
+
+### Other
+
+- Fix typo in README.md
+
+## [0.28.10](https://github.com/DecapodLabs/decapod/compare/v0.28.9...v0.28.10) - 2026-02-18
+
+### Other
+
+- Update README with constitution info and typo fix
+- *(readme)* add research links, proof-gate example, context philosophy
+
+## [0.28.9](https://github.com/DecapodLabs/decapod/compare/v0.28.8...v0.28.9) - 2026-02-18
+
+### Other
+
+- *(readme)* add research links, proof-gate example, validate output
+
+## [0.28.8](https://github.com/DecapodLabs/decapod/compare/v0.28.7...v0.28.8) - 2026-02-18
+
+### Fixed
+
+- *(clippy)* resolve denied lint violations
+- *(tests)* acquire session before validate in rpc suite
+- *(validate)* require session password before worktree gate
+
+### Other
+
+- *(fmt)* apply rustfmt-normalized ordering and wrapping
+
+## [0.28.7](https://github.com/DecapodLabs/decapod/compare/v0.28.6...v0.28.7) - 2026-02-18
+
+### Fixed
+
+- *(ci)* restore session-first gating and thin-file threshold alignment
+- *(ci)* stabilize rpc suite and ensure schema init on startup
+- *(tests)* harden schema bootstrap and parallel trace assertions
+- resolve -D warnings failures blocking tests
+
+### Other
+
+- Merge branch 'master' into agent/codex/r-01khqw3kvtbtpzmchtq7s9azmn
+- *(gitignore)* ignore generated awareness artifacts
+- *(constitution)* add testing and ci/cd methodology guides
+
+## [0.28.6](https://github.com/DecapodLabs/decapod/compare/v0.28.5...v0.28.6) - 2026-02-18
+
+### Other
+
+- *(release)* add manual dispatch mode for release-pr
+
+## [0.28.5](https://github.com/DecapodLabs/decapod/compare/v0.28.4...v0.28.5) - 2026-02-18
+
+### Other
+
+- *(readme)* add Ko-fi callout, emoji polish, and linked file refs
+
+## [0.28.4](https://github.com/DecapodLabs/decapod/compare/v0.28.3...v0.28.4) - 2026-02-18
+
+### Other
+
+- Enforce constitutional bootstrap and todo-scoped worktrees
+
 ## [0.28.3](https://github.com/DecapodLabs/decapod/compare/v0.28.2...v0.28.3) - 2026-02-18
 
 ### Added
