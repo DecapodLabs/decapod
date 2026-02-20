@@ -1,6 +1,6 @@
-# .decapod - Decapod Project Metadata
+# .decapod - Decapod Project Metadata 🦀✨
 
-This directory is managed by the decapod.
+Welcome to the control-plane directory for this repo.
 
 ## Quick Start
 

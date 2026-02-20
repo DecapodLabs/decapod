@@ -329,29 +329,34 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
     let knowledge_db = data_root.join("knowledge.db");
     if knowledge_db.exists() {
         let k_conn = Connection::open(&knowledge_db).map_err(error::DecapodError::RusqliteError)?;
-        // Guard: knowledge table may not exist yet if the DB file was created but not initialized
+        // Guard against concurrent processes that may have created the file
+        // but not yet populated the schema (race between Connection::open and
+        // CREATE TABLE in initialize_knowledge_db).
         let has_table: bool = k_conn
-            .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='knowledge'")
-            .and_then(|mut s| s.exists([]))
+            .query_row(
+                "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='knowledge'",
+                [],
+                |row| row.get::<_, i64>(0),
+            )
+            .map(|c| c > 0)
             .unwrap_or(false);
-        if !has_table {
-            return Ok(());
-        }
-        let mut stmt =
-            k_conn.prepare("SELECT id, title, content, provenance, created_at FROM knowledge")?;
-        let rows = stmt.query_map([], |row| {
-            Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, String>(1)?,
-                row.get::<_, String>(2)?,
-                row.get::<_, String>(3)?,
-                row.get::<_, String>(4)?,
-            ))
-        })?;
-        for r in rows {
-            let (id, title, content, prov, ts) = r?;
-            mem_conn.execute("INSERT OR IGNORE INTO nodes(id, node_type, title, body, created_at, updated_at, dir_path, scope) VALUES(?1, 'observation', ?2, ?3, ?4, ?4, '', 'repo')", rusqlite::params![id, title, content, ts])?;
-            mem_conn.execute("INSERT OR IGNORE INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)", rusqlite::params![Ulid::new().to_string(), id, prov, ts])?;
+        if has_table {
+            let mut stmt = k_conn
+                .prepare("SELECT id, title, content, provenance, created_at FROM knowledge")?;
+            let rows = stmt.query_map([], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, String>(4)?,
+                ))
+            })?;
+            for r in rows {
+                let (id, title, content, prov, ts) = r?;
+                mem_conn.execute("INSERT OR IGNORE INTO nodes(id, node_type, title, body, created_at, updated_at, dir_path, scope) VALUES(?1, 'observation', ?2, ?3, ?4, ?4, '', 'repo')", rusqlite::params![id, title, content, ts])?;
+                mem_conn.execute("INSERT OR IGNORE INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)", rusqlite::params![Ulid::new().to_string(), id, prov, ts])?;
+            }
         }
     }
 
