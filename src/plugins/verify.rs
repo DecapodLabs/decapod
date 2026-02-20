@@ -129,6 +129,7 @@ fn epoch_secs(ts: &str) -> Option<i64> {
 
 fn normalize_validate_output(raw: &str) -> String {
     let ansi = Regex::new(r"\x1B\[[0-9;]*[A-Za-z]").expect("valid ANSI regex");
+    let elapsed_re = Regex::new(r" elapsed=\S+").expect("valid elapsed regex");
     let stripped = ansi.replace_all(raw, "");
     stripped
         .lines()
@@ -138,7 +139,8 @@ fn normalize_validate_output(raw: &str) -> String {
             if line.contains("decapod_validate_user_") || line.contains("decapod_validate_repo_") {
                 "<tmp_validate_path>".to_string()
             } else {
-                line.to_string()
+                // Strip non-deterministic elapsed timing from summary line
+                elapsed_re.replace_all(line, "").to_string()
             }
         })
         .collect::<Vec<_>>()
