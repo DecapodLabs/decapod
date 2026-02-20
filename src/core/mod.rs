@@ -43,6 +43,7 @@ pub mod gatekeeper;
 pub mod interview;
 pub mod mentor;
 pub mod migration;
+pub mod obligation;
 pub mod output;
 pub mod proof;
 pub mod repomap;

@@ -72,6 +72,33 @@ pub const ARCHIVE_DB_SCHEMA: &str = "
     )
 ";
 
+pub const GOVERNANCE_DB_SCHEMA_OBLIGATIONS: &str = "
+    CREATE TABLE IF NOT EXISTS obligations (
+        id TEXT PRIMARY KEY,
+        intent_ref TEXT NOT NULL,
+        risk_tier TEXT NOT NULL,
+        required_proofs TEXT NOT NULL, -- JSON array of claim IDs or proof labels
+        state_commit_root TEXT,
+        status TEXT NOT NULL DEFAULT 'open', -- open, met, failed
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        metadata TEXT -- JSON blob for extra info
+    )
+";
+
+pub const GOVERNANCE_DB_SCHEMA_OBLIGATION_EDGES: &str = "
+    CREATE TABLE IF NOT EXISTS obligation_edges (
+        edge_id TEXT PRIMARY KEY,
+        from_id TEXT NOT NULL,
+        to_id TEXT NOT NULL,
+        kind TEXT NOT NULL DEFAULT 'depends_on',
+        created_at TEXT NOT NULL,
+        UNIQUE(from_id, to_id),
+        FOREIGN KEY(from_id) REFERENCES obligations(id) ON DELETE CASCADE,
+        FOREIGN KEY(to_id) REFERENCES obligations(id) ON DELETE CASCADE
+    )
+";
+
 // --- 2. Memory Bin ---
 pub const MEMORY_DB_NAME: &str = "memory.db";
 pub const MEMORY_EVENTS_NAME: &str = "memory.events.jsonl";
