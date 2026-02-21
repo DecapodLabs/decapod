@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.1](https://github.com/DecapodLabs/decapod/compare/v0.35.0...v0.35.1) - 2026-02-21
+
+### Added
+
+- harden control-plane contracts and bound validate termination
+
+### Fixed
+
+- keep CLAUDE template in sync with root entrypoint
+- *(ci)* raise health validate timeout and refresh KCR trend
+- satisfy CLAUDE line gate and self-heal knowledge schema in validate
+
 ## [0.35.0](https://github.com/DecapodLabs/decapod/compare/v0.34.0...v0.35.0) - 2026-02-21
 
 ### Other
