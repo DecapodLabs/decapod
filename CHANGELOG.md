@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.3](https://github.com/DecapodLabs/decapod/compare/v0.35.2...v0.35.3) - 2026-02-21
+
+### Other
+
+- Speed up RPC suite and split CI test load
+- Harden validate lock handling and RPC suite contention retries
+
 ## [0.35.2](https://github.com/DecapodLabs/decapod/compare/v0.35.1...v0.35.2) - 2026-02-21
 
 ### Added
