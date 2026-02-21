@@ -3,6 +3,7 @@ pub mod container;
 pub mod context;
 pub mod cron;
 pub mod decide;
+pub mod doctor;
 pub mod federation;
 pub mod federation_ext;
 pub mod feedback;
