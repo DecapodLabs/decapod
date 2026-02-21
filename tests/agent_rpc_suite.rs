@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::sync::{Mutex, OnceLock};
 
@@ -7,19 +8,46 @@ static SESSION_PASSWORD: OnceLock<String> = OnceLock::new();
 /// Mutex to serialize run_rpc calls (tests share repo state).
 static RPC_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
+fn run_cmd_with_lock_retry<F>(mut run: F) -> std::process::Output
+where
+    F: FnMut() -> std::process::Output,
+{
+    let mut last = None;
+    for attempt in 1..=3 {
+        let out = run();
+        if out.status.success() {
+            return out;
+        }
+        let stderr = String::from_utf8_lossy(&out.stderr).to_ascii_lowercase();
+        let transient = stderr.contains("database is locked")
+            || stderr.contains("disk i/o error")
+            || stderr.contains("validate_timeout_or_lock");
+        last = Some(out);
+        if transient && attempt < 3 {
+            std::thread::sleep(std::time::Duration::from_millis(250 * attempt as u64));
+            continue;
+        }
+        break;
+    }
+    last.expect("retry output")
+}
+
 fn bootstrap_session() -> &'static str {
     SESSION_PASSWORD.get_or_init(|| {
         let agent_id = "unknown";
 
         // Ensure we are on a non-protected branch for tests
         let _ = Command::new("git")
+            .current_dir(test_repo_root())
             .args(["checkout", "-b", "feat/test-rpc-suite"])
             .output();
 
         // Acquire session once
         let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .current_dir(test_repo_root())
             .args(["session", "acquire"])
             .env("DECAPOD_AGENT_ID", agent_id)
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
             .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
             .output()
             .expect("session acquire");
@@ -32,26 +60,52 @@ fn bootstrap_session() -> &'static str {
             })
             .unwrap_or_else(|| "test".to_string());
 
-        // Validate once
-        let validate_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-            .args(["validate"])
-            .env("DECAPOD_AGENT_ID", agent_id)
-            .env("DECAPOD_SESSION_PASSWORD", &session_password)
-            .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
-            .env("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1")
-            .output()
-            .expect("validate");
+        // Validate once (retry transient lock contention)
+        let mut validate_out = None;
+        for attempt in 1..=3 {
+            let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+                .current_dir(test_repo_root())
+                .args(["validate"])
+                .env("DECAPOD_AGENT_ID", agent_id)
+                .env("DECAPOD_CLAIM_AUTORUN", "0")
+                .env("DECAPOD_SESSION_PASSWORD", &session_password)
+                .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+                .env("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1")
+                .output()
+                .expect("validate");
+
+            if out.status.success() {
+                validate_out = Some(out);
+                break;
+            }
+
+            let stderr = String::from_utf8_lossy(&out.stderr);
+            if stderr.contains("VALIDATE_TIMEOUT_OR_LOCK") && attempt < 3 {
+                std::thread::sleep(std::time::Duration::from_millis(250 * attempt as u64));
+                continue;
+            }
+
+            validate_out = Some(out);
+            break;
+        }
+        let validate_out = validate_out.expect("validate output");
         assert!(
             validate_out.status.success(),
-            "validate failed:\nstdout:\n{}\nstderr:\n{}",
+            "validate failed:
+stdout:
+{}
+stderr:
+{}",
             String::from_utf8_lossy(&validate_out.stdout),
             String::from_utf8_lossy(&validate_out.stderr)
         );
 
         // Ingest once
         let ingest_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .current_dir(test_repo_root())
             .args(["docs", "ingest"])
             .env("DECAPOD_AGENT_ID", agent_id)
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
             .env("DECAPOD_SESSION_PASSWORD", &session_password)
             .output()
             .expect("docs ingest");
@@ -77,12 +131,16 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
     };
 
     // Each test still needs its own todo claim for ordering-gate compliance.
-    let todo_add_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["todo", "add", "ordering gate test task", "--format", "json"])
-        .env("DECAPOD_AGENT_ID", agent_id)
-        .env("DECAPOD_SESSION_PASSWORD", session_password)
-        .output()
-        .expect("todo add");
+    let todo_add_out = run_cmd_with_lock_retry(|| {
+        Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .current_dir(test_repo_root())
+            .args(["todo", "add", "ordering gate test task", "--format", "json"])
+            .env("DECAPOD_AGENT_ID", agent_id)
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
+            .env("DECAPOD_SESSION_PASSWORD", session_password)
+            .output()
+            .expect("todo add")
+    });
     assert!(
         todo_add_out.status.success(),
         "todo add failed:\nstdout: {}\nstderr: {}",
@@ -93,35 +151,79 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
         serde_json::from_slice(&todo_add_out.stdout).expect("parse todo add");
     let todo_id = todo_add_json["id"].as_str().expect("todo id").to_string();
 
-    let todo_claim_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args([
-            "todo", "claim", "--id", &todo_id, "--agent", agent_id, "--format", "json",
-        ])
-        .env("DECAPOD_AGENT_ID", agent_id)
-        .env("DECAPOD_SESSION_PASSWORD", session_password)
-        .output()
-        .expect("todo claim");
+    let todo_claim_out = run_cmd_with_lock_retry(|| {
+        Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .current_dir(test_repo_root())
+            .args([
+                "todo", "claim", "--id", &todo_id, "--agent", agent_id, "--format", "json",
+            ])
+            .env("DECAPOD_AGENT_ID", agent_id)
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
+            .env("DECAPOD_SESSION_PASSWORD", session_password)
+            .output()
+            .expect("todo claim")
+    });
     let todo_claim_json: serde_json::Value =
         serde_json::from_slice(&todo_claim_out.stdout).expect("parse todo claim");
     assert_eq!(todo_claim_json["status"], "ok");
 
     let run_rpc_once = |req: &serde_json::Value| -> serde_json::Value {
-        let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
-        cmd.args(["rpc", "--stdin"])
-            .env("DECAPOD_AGENT_ID", agent_id)
-            .env("DECAPOD_SESSION_PASSWORD", session_password)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped());
+        for attempt in 1..=3 {
+            let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+            cmd.args(["rpc", "--stdin"])
+                .env("DECAPOD_AGENT_ID", agent_id)
+                .env("DECAPOD_CLAIM_AUTORUN", "0")
+                .env("DECAPOD_SESSION_PASSWORD", session_password)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped());
 
-        let mut child = cmd.spawn().expect("Failed to spawn decapod rpc");
-        let mut stdin = child.stdin.take().expect("Failed to open stdin");
-        stdin
-            .write_all(serde_json::to_string(req).unwrap().as_bytes())
-            .expect("Failed to write to stdin");
-        drop(stdin);
+            let mut child = cmd.spawn().expect("Failed to spawn decapod rpc");
+            let mut stdin = child.stdin.take().expect("Failed to open stdin");
+            stdin
+                .write_all(serde_json::to_string(req).unwrap().as_bytes())
+                .expect("Failed to write to stdin");
+            drop(stdin);
 
-        let output = child.wait_with_output().expect("Failed to read stdout");
-        serde_json::from_slice(&output.stdout).expect("Failed to parse JSON response")
+            let output = {
+                let started = std::time::Instant::now();
+                let timeout = std::time::Duration::from_secs(20);
+                loop {
+                    if child.try_wait().expect("Failed to poll child").is_some() {
+                        break child.wait_with_output().expect("Failed to read stdout");
+                    }
+                    if started.elapsed() >= timeout {
+                        let _ = child.kill();
+                        break child
+                            .wait_with_output()
+                            .expect("Failed to read stdout after kill");
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(50));
+                }
+            };
+            if output.status.success() {
+                if let Ok(json) = serde_json::from_slice::<serde_json::Value>(&output.stdout) {
+                    return json;
+                }
+            }
+
+            let stderr = String::from_utf8_lossy(&output.stderr).to_ascii_lowercase();
+            let transient = stderr.contains("database is locked")
+                || stderr.contains("disk i/o error")
+                || stderr.contains("validate_timeout_or_lock")
+                || !output.status.success();
+            if transient && attempt < 3 {
+                std::thread::sleep(std::time::Duration::from_millis(250 * attempt as u64));
+                continue;
+            }
+
+            panic!(
+                "rpc call failed:\nstdout:\n{}\nstderr:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+        unreachable!("retry loop should return or panic")
     };
 
     // Mandatory constitutional-awareness bootstrap sequence.
@@ -233,19 +335,91 @@ fn test_rpc_trace_and_redaction() {
 
     let _res = run_rpc(request);
 
-    // Export traces to verify
-    let child = Command::new("cargo")
-        .args(["run", "--", "trace", "export", "--last", "50"])
-        .env("DECAPOD_SESSION_PASSWORD", "test") // Dummy
-        .env("DECAPOD_AGENT_ID", "test") // Dummy
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect("Failed to spawn cargo run for trace export");
+    // Serialize trace export with other RPC tests to avoid cross-process DB contention.
+    let lock = RPC_LOCK.get_or_init(|| Mutex::new(()));
+    let _guard = match lock.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
 
-    let output = child.wait_with_output().expect("Failed to read stdout");
+    // Export traces to verify (retry transient lock / I/O contention)
+    let mut output = None;
+    for attempt in 1..=3 {
+        let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .current_dir(test_repo_root())
+            .args(["trace", "export", "--last", "50"])
+            .env("DECAPOD_SESSION_PASSWORD", "test") // Dummy
+            .env("DECAPOD_AGENT_ID", "test") // Dummy
+            .output()
+            .expect("run trace export");
+
+        if out.status.success() {
+            output = Some(out);
+            break;
+        }
+
+        let stderr = String::from_utf8_lossy(&out.stderr).to_ascii_lowercase();
+        let transient = stderr.contains("disk i/o error")
+            || stderr.contains("database is locked")
+            || stderr.contains("validate_timeout_or_lock");
+        if transient && attempt < 3 {
+            std::thread::sleep(std::time::Duration::from_millis(300 * attempt as u64));
+            continue;
+        }
+
+        output = Some(out);
+        break;
+    }
+
+    let output = output.expect("trace export output");
+    assert!(
+        output.status.success(),
+        "trace export failed:
+stdout:
+{}
+stderr:
+{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+
     let trace_line = String::from_utf8_lossy(&output.stdout);
 
     assert!(trace_line.contains(&secret_id));
     assert!(trace_line.contains("[REDACTED]"));
     assert!(!trace_line.contains("supersecretpassword"));
+}
+
+static TEST_REPO_ROOT: OnceLock<PathBuf> = OnceLock::new();
+
+fn test_repo_root() -> &'static PathBuf {
+    TEST_REPO_ROOT.get_or_init(|| {
+        let dir = std::env::temp_dir().join(format!("decapod_rpc_suite_{}", ulid::Ulid::new()));
+        std::fs::create_dir_all(&dir).expect("create rpc suite repo dir");
+
+        let git_init = Command::new("git")
+            .current_dir(&dir)
+            .args(["init", "-b", "master"])
+            .output()
+            .expect("git init");
+        assert!(
+            git_init.status.success(),
+            "git init failed: {}",
+            String::from_utf8_lossy(&git_init.stderr)
+        );
+
+        let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .current_dir(test_repo_root())
+            .current_dir(&dir)
+            .args(["init", "--force"])
+            .output()
+            .expect("decapod init");
+        assert!(
+            init.status.success(),
+            "decapod init failed: {}",
+            String::from_utf8_lossy(&init.stderr)
+        );
+
+        dir
+    })
 }
