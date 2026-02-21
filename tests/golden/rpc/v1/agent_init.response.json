@@ -1,0 +1,21 @@
+{
+  "id": "01HZYRPCREQUEST00000000000000",
+  "success": true,
+  "mandates": [],
+  "receipt": {
+    "op": "agent.init",
+    "timestamp": "2026-01-01T00:00:00Z",
+    "inputs_hash": "sha256:placeholder-input",
+    "outputs_hash": "sha256:placeholder-output",
+    "touched_paths": [],
+    "governing_anchors": []
+  },
+  "allowed_next_ops": [
+    {
+      "op": "context.resolve",
+      "reason": "context handshake",
+      "required_params": []
+    }
+  ],
+  "blocked_by": []
+}
