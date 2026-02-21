@@ -66,6 +66,7 @@ Columns:
 | claim.git.no_direct_main_push | Direct commits/pushes to protected branches (master/main/production/stable/release/*) are forbidden; work must happen in working branches. | `specs/GIT.md` | enforced | `decapod validate` (Git Protected Branch Gate) | Enforced via validate gate checking current branch and unpushed commits. |
 | claim.git.container_runtime_preflight_required | Container workspace runs must pass runtime-access preflight and fail loudly with elevated-permission remediation when access is denied. | `specs/GIT.md` | partially_enforced | `container.run` runtime `info` preflight + permission-aware error diagnostics | Enforced in container runtime preflight; broader policy-level enforcement remains future work. |
 | claim.session.agent_password_required | Session access requires agent identity plus an ephemeral per-session password; expired sessions trigger cleanup and assignment eviction. | `specs/SECURITY.md` | partially_enforced | `session.acquire` credential issuance + `ensure_session_valid` password check + stale-session cleanup hook | Enforced for active command auth path; stronger cryptographic hardening may be added later. |
+| claim.validate.bounded_termination | `decapod validate` MUST terminate in bounded time and return a typed failure under DB lock contention. | `interfaces/TESTING.md` | enforced | `tests/validate_termination.rs` + `DECAPOD_VALIDATE_TIMEOUT_SECS` timeout path | Prevents proof-gate hangs from becoming cultural bypass. |
 
 ---
 
