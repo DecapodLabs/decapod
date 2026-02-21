@@ -539,31 +539,6 @@ fn check_proof_satisfied(store: &Store, proof_label: &str) -> Result<bool, error
     )
 }
 
-#[allow(dead_code)]
-fn update_obligation_status(
-    store: &Store,
-    id: &str,
-    status: ObligationStatus,
-) -> Result<(), error::DecapodError> {
-    let broker = DbBroker::new(&store.root);
-    let db_path = obligation_db_path(&store.root);
-    let now = chrono::Utc::now().to_rfc3339();
-
-    broker.with_conn(
-        &db_path,
-        "decapod",
-        None,
-        "obligation.update_status",
-        |conn| {
-            conn.execute(
-                "UPDATE obligations SET status = ?1, updated_at = ?2 WHERE id = ?3",
-                params![status.as_str(), now, id],
-            )?;
-            Ok(())
-        },
-    )
-}
-
 pub fn complete_obligation(
     store: &Store,
     id: &str,
