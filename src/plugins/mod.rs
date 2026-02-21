@@ -15,7 +15,6 @@ pub mod policy;
 pub mod primitives;
 pub mod reflex;
 pub mod teammate;
-pub mod trust;
 pub mod verify;
 pub mod watcher;
 pub mod workflow;
