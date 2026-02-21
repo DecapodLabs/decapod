@@ -1809,6 +1809,60 @@ fn validate_git_workspace_context(
         );
     }
 
+    validate_commit_often_gate(ctx, repo_root)?;
+
+    Ok(())
+}
+
+fn validate_commit_often_gate(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    let max_dirty_files = std::env::var("DECAPOD_COMMIT_OFTEN_MAX_DIRTY_FILES")
+        .ok()
+        .and_then(|v| v.parse::<usize>().ok())
+        .filter(|v| *v > 0)
+        .unwrap_or(6);
+
+    let status_output = std::process::Command::new("git")
+        .args(["status", "--porcelain"])
+        .current_dir(repo_root)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+
+    if !status_output.status.success() {
+        warn("Commit-often gate skipped: unable to read git status", ctx);
+        return Ok(());
+    }
+
+    let dirty_count = String::from_utf8_lossy(&status_output.stdout)
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .count();
+
+    if dirty_count == 0 {
+        pass("Commit-often gate: working tree is clean", ctx);
+        return Ok(());
+    }
+
+    if dirty_count > max_dirty_files {
+        fail(
+            &format!(
+                "Commit-often mandate violation: {} dirty file(s) exceed limit {}. Commit incremental changes before continuing.",
+                dirty_count, max_dirty_files
+            ),
+            ctx,
+        );
+    } else {
+        pass(
+            &format!(
+                "Commit-often gate: {} dirty file(s) within limit {}",
+                dirty_count, max_dirty_files
+            ),
+            ctx,
+        );
+    }
+
     Ok(())
 }
 
