@@ -9,6 +9,20 @@ Decapod is a repo-native helper for humans that makes an agent:
 
 The human interfaces ONLY with the agent as the UX. The agent calls Decapod.
 
+## What Decapod Is Not
+
+- Not an agent framework.
+- Not a prompt-pack.
+- Not a daemonized control plane with hidden always-on state.
+
+## Foundation Demands (Non-Negotiable)
+
+1. **Intent MUST be explicit before mutation.** If a change alters "what must be true," update intent/spec first.
+2. **Boundaries MUST be explicit.** Authority boundary (`specs/` and `interfaces/`), interface boundary (`decapod` CLI/RPC), and store boundary (repo vs user) are mandatory.
+3. **Completion MUST be provable.** Promotion-relevant outcomes require executable proof surfaces (`decapod validate` + required tests/gates), not narrative claims.
+4. **Decapod MUST remain daemonless and repo-native.** Promotion-relevant state must be auditable from repo artifacts and control-plane receipts.
+5. **Validation liveness is mandatory.** Validation must terminate boundedly with typed failure under contention, never hang indefinitely.
+
 ## For Agents: Quick Start
 
 **You MUST call `decapod agent init` before operating.**
@@ -20,6 +34,7 @@ This produces a session receipt and tells you what's allowed next.
 - **Local-first**: Everything is on disk, auditable, versioned
 - **Deterministic**: Same inputs produce same outputs
 - **Agent-native**: Designed for programmatic access via `decapod rpc`
+- **Daemonless**: No required long-lived control-plane process
 - **Workspace-enforced**: You cannot work on main/master - Decapod refuses
 - **Liveness-aware**: Requires **invocation heartbeat** for continuous presence tracking
 
