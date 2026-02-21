@@ -1649,26 +1649,6 @@ fn get_agent_trust_level(conn: &Connection, agent_id: &str) -> Result<String, er
     Ok(level.unwrap_or_else(|| "basic".to_string()))
 }
 
-#[allow(dead_code)]
-fn set_agent_trust_level(
-    conn: &Connection,
-    agent_id: &str,
-    level: &str,
-    granted_by: &str,
-) -> Result<(), error::DecapodError> {
-    let ts = now_iso();
-    conn.execute(
-        "INSERT INTO agent_trust(agent_id, trust_level, granted_at, updated_at, granted_by)
-         VALUES(?1, ?2, ?3, ?4, ?5)
-         ON CONFLICT(agent_id) DO UPDATE SET 
-           trust_level=excluded.trust_level, 
-           updated_at=excluded.updated_at,
-           granted_by=excluded.granted_by",
-        rusqlite::params![agent_id, level, ts, ts, granted_by],
-    )?;
-    Ok(())
-}
-
 fn trust_level_to_int(level: &str) -> i32 {
     match level {
         "untrusted" => 0,

@@ -6,5 +6,4 @@
 pub mod core;
 pub mod interfaces;
 pub mod methodology;
-pub mod plugins;
 pub mod specs;
