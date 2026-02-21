@@ -1049,7 +1049,15 @@ pub fn run() -> Result<(), error::DecapodError> {
                 });
             match migration_result {
                 Ok(()) => {}
-                Err(e) if is_validate_cmd => return Err(normalize_validate_error(e)),
+                Err(e) if is_validate_cmd => {
+                    let normalized = normalize_validate_error(e);
+                    return Err(attach_validate_diagnostic_if_enabled(
+                        normalized,
+                        &project_root,
+                        0,
+                        validate_timeout_secs(),
+                    ));
+                }
                 Err(e) => return Err(e),
             }
 
@@ -2231,6 +2239,126 @@ fn validate_timeout_secs() -> u64 {
         .unwrap_or(30)
 }
 
+fn validate_diagnostics_enabled() -> bool {
+    std::env::var("DECAPOD_DIAGNOSTICS")
+        .ok()
+        .map(|v| matches!(v.as_str(), "1" | "true" | "TRUE" | "yes" | "YES"))
+        .unwrap_or(false)
+}
+
+fn classify_validate_failure_reason(message: &str) -> &'static str {
+    let lower = message.to_ascii_lowercase();
+    if lower.contains("sqlite contention") || lower.contains("database is locked") {
+        return "timeout_acquiring_lock";
+    }
+    if lower.contains("exceeded timeout") {
+        return "timeout_running_validations";
+    }
+    if lower.contains("worker disconnected") {
+        return "worker_disconnected";
+    }
+    "validate_failure"
+}
+
+fn lock_age_ms(project_root: &Path) -> Option<u64> {
+    let data_dir = project_root.join(".decapod").join("data");
+    let entries = fs::read_dir(data_dir).ok()?;
+    let now = SystemTime::now();
+    let mut max_age_ms: Option<u64> = None;
+    for entry in entries.flatten() {
+        let file_name = entry.file_name();
+        let file_name = file_name.to_string_lossy();
+        if !(file_name.ends_with("-wal")
+            || file_name.ends_with("-shm")
+            || file_name.ends_with("-journal"))
+        {
+            continue;
+        }
+        let Ok(meta) = entry.metadata() else {
+            continue;
+        };
+        let Ok(modified) = meta.modified() else {
+            continue;
+        };
+        let Ok(age) = now.duration_since(modified) else {
+            continue;
+        };
+        let age_ms = age.as_millis() as u64;
+        max_age_ms = Some(max_age_ms.map_or(age_ms, |existing| existing.max(age_ms)));
+    }
+    max_age_ms
+}
+
+fn write_validate_diagnostic_artifact(
+    project_root: &Path,
+    reason_code: &str,
+    elapsed_ms: u64,
+    timeout_secs: u64,
+) -> Result<PathBuf, error::DecapodError> {
+    let run_id = ulid::Ulid::new().to_string();
+    let diagnostics_dir = project_root.join("artifacts/diagnostics/validate");
+    fs::create_dir_all(&diagnostics_dir).map_err(error::DecapodError::IoError)?;
+
+    let mut payload = serde_json::json!({
+        "schema_version": "1.0.0",
+        "kind": "validate_diagnostic",
+        "run_id": run_id,
+        "op": "validate",
+        "reason_code": reason_code,
+        "elapsed_ms": elapsed_ms,
+        "timeout_secs": timeout_secs,
+        "lock_age_ms": lock_age_ms(project_root),
+        "stale_lock_recovery_triggered": false
+    });
+
+    let payload_bytes = serde_json::to_vec(&payload).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Failed to encode validate diagnostics: {e}"))
+    })?;
+    let mut hasher = Sha256::new();
+    hasher.update(payload_bytes);
+    let artifact_hash = hash_bytes_hex(&hasher.finalize());
+    payload["artifact_hash"] = serde_json::json!(artifact_hash);
+
+    let relative_path = PathBuf::from(format!("artifacts/diagnostics/validate/{run_id}.json"));
+    let artifact_path = project_root.join(&relative_path);
+    let pretty = serde_json::to_vec_pretty(&payload).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "Failed to serialize validate diagnostics artifact: {e}"
+        ))
+    })?;
+    fs::write(&artifact_path, pretty).map_err(error::DecapodError::IoError)?;
+    Ok(relative_path)
+}
+
+fn attach_validate_diagnostic_if_enabled(
+    err: error::DecapodError,
+    project_root: &Path,
+    elapsed_ms: u64,
+    timeout_secs: u64,
+) -> error::DecapodError {
+    if !validate_diagnostics_enabled() {
+        return err;
+    }
+    let error::DecapodError::ValidationError(message) = err else {
+        return err;
+    };
+    if !message.contains("VALIDATE_TIMEOUT_OR_LOCK") {
+        return error::DecapodError::ValidationError(message);
+    }
+    let reason_code = classify_validate_failure_reason(&message);
+    match write_validate_diagnostic_artifact(project_root, reason_code, elapsed_ms, timeout_secs) {
+        Ok(relative_path) => error::DecapodError::ValidationError(format!(
+            "{} Diagnostics: {}",
+            message,
+            relative_path.display()
+        )),
+        Err(diag_err) => error::DecapodError::ValidationError(format!(
+            "{} DiagnosticsWriteError: {}",
+            message, diag_err
+        )),
+    }
+}
+
 fn normalize_validate_error(err: error::DecapodError) -> error::DecapodError {
     match err {
         error::DecapodError::RusqliteError(rusqlite::Error::SqliteFailure(code, msg)) => {
@@ -2270,6 +2398,7 @@ fn run_validation_bounded(
     verbose: bool,
 ) -> Result<(), error::DecapodError> {
     let timeout_secs = validate_timeout_secs();
+    let started = std::time::Instant::now();
     let (tx, rx) = mpsc::channel();
     let store_cloned = store.clone();
     let root = project_root.to_path_buf();
@@ -2279,7 +2408,7 @@ fn run_validation_bounded(
         let _ = tx.send(result);
     });
 
-    match rx.recv_timeout(std::time::Duration::from_secs(timeout_secs)) {
+    let result = match rx.recv_timeout(std::time::Duration::from_secs(timeout_secs)) {
         Ok(result) => result.map_err(normalize_validate_error),
         Err(mpsc::RecvTimeoutError::Timeout) => Err(error::DecapodError::ValidationError(format!(
             "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({}s). Terminated to preserve proof-gate liveness.",
@@ -2288,7 +2417,15 @@ fn run_validation_bounded(
         Err(mpsc::RecvTimeoutError::Disconnected) => Err(error::DecapodError::ValidationError(
             "VALIDATE_TIMEOUT_OR_LOCK: validate worker disconnected unexpectedly.".to_string(),
         )),
-    }
+    };
+    result.map_err(|err| {
+        attach_validate_diagnostic_if_enabled(
+            err,
+            project_root,
+            started.elapsed().as_millis() as u64,
+            timeout_secs,
+        )
+    })
 }
 
 fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {
