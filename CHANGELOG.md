@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.4](https://github.com/DecapodLabs/decapod/compare/v0.36.3...v0.36.4) - 2026-02-21
+
+### Added
+
+- *(validate)* enforce commit-often dirty file limit
+
+### Other
+
+- Merge pull request #347 from DecapodLabs/agent/unknown/commit-often-mandate-1771715984
+- *(validate)* add commit-often gate integration coverage
+
 ## [0.36.3](https://github.com/DecapodLabs/decapod/compare/v0.36.2...v0.36.3) - 2026-02-21
 
 ### Other
