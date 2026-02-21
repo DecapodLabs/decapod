@@ -46,6 +46,8 @@ Decapod is agent-agnostic. Integrations are done through:
 - RPC: typed request/response envelope.
 - Tiny SDK shims: `sdk/python` and `sdk/typescript`.
 
+Known fit examples: Claude Code, Codex, OpenClaw, and other framework/tooling wrappers.
+
 See:
 
 - `docs/CONTROL_PLANE_API.md`

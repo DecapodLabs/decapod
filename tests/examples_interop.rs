@@ -38,19 +38,19 @@ fn python_and_typescript_examples_parse_fixture_envelopes() {
 }
 
 #[test]
-fn release_check_help_surface_exists() {
+fn release_check_surface_exists_and_runs() {
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["release", "--help"])
+        .args(["release", "check"])
         .output()
-        .expect("run release help");
+        .expect("run release check");
     assert!(
         output.status.success(),
-        "release help failed:\nstdout:\n{}\nstderr:\n{}",
+        "release check failed:\nstdout:\n{}\nstderr:\n{}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(
-        String::from_utf8_lossy(&output.stdout).contains("check"),
-        "release help should advertise `check` subcommand"
+        String::from_utf8_lossy(&output.stdout).contains("\"status\":\"ok\""),
+        "release check should emit ok envelope"
     );
 }

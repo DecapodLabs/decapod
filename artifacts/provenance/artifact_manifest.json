@@ -5,6 +5,11 @@
     "intent": "INTENT.md",
     "spec": "SPEC.md",
     "diff": "git",
+    "tests": [
+      "cargo test --test validate_termination",
+      "cargo test --test rpc_golden_vectors",
+      "cargo test --test examples_interop"
+    ],
     "artifacts": [
       "README.md"
     ]
@@ -12,7 +17,7 @@
   "artifacts": [
     {
       "path": "README.md",
-      "sha256": "TO_BE_FILLED"
+      "sha256": "5afeccae2d9f20770a5edbe7738e3151cb5063cb8596aece0d3c2347eaf29114"
     }
   ]
 }
