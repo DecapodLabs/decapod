@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.4](https://github.com/DecapodLabs/decapod/compare/v0.35.3...v0.35.4) - 2026-02-21
+
+### Added
+
+- add coplayer policy tightening gate + instruction stack hardening
+
+### Fixed
+
+- update artifact manifest SHA256 for README.md
+
 ## [0.35.3](https://github.com/DecapodLabs/decapod/compare/v0.35.2...v0.35.3) - 2026-02-21
 
 ### Other
