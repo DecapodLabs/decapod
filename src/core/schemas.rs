@@ -516,3 +516,47 @@ pub const POLICY_DB_NAME: &str = "policy.db";
 pub const FEEDBACK_DB_NAME: &str = "feedback.db";
 pub const ARCHIVE_DB_NAME: &str = "archive.db";
 pub const TEAMMATE_DB_NAME: &str = "teammate.db";
+
+// --- 5. LCM Bin (Lossless Context Management) ---
+pub const LCM_DB_NAME: &str = "lcm.db";
+pub const LCM_EVENTS_NAME: &str = "lcm.events.jsonl";
+
+pub const LCM_DB_SCHEMA_ORIGINALS_INDEX: &str = "
+    CREATE TABLE IF NOT EXISTS originals_index (
+        content_hash TEXT PRIMARY KEY,
+        event_id TEXT NOT NULL,
+        ts TEXT NOT NULL,
+        actor TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        byte_size INTEGER NOT NULL,
+        session_id TEXT
+    )
+";
+
+pub const LCM_DB_SCHEMA_SUMMARIES: &str = "
+    CREATE TABLE IF NOT EXISTS summaries (
+        summary_hash TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        scope TEXT NOT NULL,
+        original_hashes TEXT NOT NULL,
+        summary_text TEXT NOT NULL,
+        token_estimate INTEGER NOT NULL
+    )
+";
+
+pub const LCM_DB_SCHEMA_META: &str = "
+    CREATE TABLE IF NOT EXISTS meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+    )
+";
+
+pub const LCM_DB_INDEX_ORIGINALS_KIND: &str =
+    "CREATE INDEX IF NOT EXISTS idx_lcm_originals_kind ON originals_index(kind)";
+pub const LCM_DB_INDEX_ORIGINALS_TS: &str =
+    "CREATE INDEX IF NOT EXISTS idx_lcm_originals_ts ON originals_index(ts)";
+pub const LCM_DB_INDEX_SUMMARIES_SCOPE: &str =
+    "CREATE INDEX IF NOT EXISTS idx_lcm_summaries_scope ON summaries(scope)";
+
+// --- 6. Map Operators ---
+pub const MAP_EVENTS_NAME: &str = "map.events.jsonl";

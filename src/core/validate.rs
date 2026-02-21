@@ -2285,6 +2285,28 @@ fn validate_obligations(store: &Store, ctx: &ValidationContext) -> Result<(), er
     Ok(())
 }
 
+fn validate_lcm_immutability(
+    store: &Store,
+    ctx: &ValidationContext,
+) -> Result<(), error::DecapodError> {
+    info("LCM Immutability Gate");
+    let ledger_path = store.root.join(crate::core::schemas::LCM_EVENTS_NAME);
+    if !ledger_path.exists() {
+        pass("No LCM ledger yet; gate trivially passes", ctx);
+        return Ok(());
+    }
+
+    let failures = crate::plugins::lcm::validate_ledger_integrity(&store.root)?;
+    if failures.is_empty() {
+        pass("LCM ledger integrity verified", ctx);
+    } else {
+        for f in &failures {
+            fail(&format!("LCM immutability: {}", f), ctx);
+        }
+    }
+    Ok(())
+}
+
 fn validate_gatekeeper_gate(
     ctx: &ValidationContext,
     decapod_dir: &Path,
@@ -2893,6 +2915,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_coplayer_policy_tightening", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_lcm_immutability(store, ctx) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_lcm_immutability", start.elapsed()));
         });
     });
 
