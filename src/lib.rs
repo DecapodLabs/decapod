@@ -1969,7 +1969,10 @@ fn run_release_command(cli: ReleaseCli, project_root: &Path) -> Result<(), error
 fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     let mut failures = Vec::new();
     let changelog = project_root.join("CHANGELOG.md");
-    let migrations = project_root.join("docs").join("MIGRATIONS.md");
+    let migrations = project_root
+        .join("constitution")
+        .join("docs")
+        .join("MIGRATIONS.md");
     let cargo_lock = project_root.join("Cargo.lock");
     let cargo_toml = project_root.join("Cargo.toml");
     let rpc_golden_req = project_root.join("tests/golden/rpc/v1/agent_init.request.json");
@@ -1986,7 +1989,7 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
         }
     }
     if !migrations.exists() {
-        failures.push("docs/MIGRATIONS.md missing".to_string());
+        failures.push("constitution/docs/MIGRATIONS.md missing".to_string());
     }
     if !cargo_lock.exists() {
         failures.push("Cargo.lock missing (locked builds required)".to_string());

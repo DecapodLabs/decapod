@@ -11,7 +11,7 @@ decapod release check
 Release readiness requires:
 
 - `CHANGELOG.md` with `## [Unreleased]` section.
-- `docs/MIGRATIONS.md` present and current.
+- `constitution/docs/MIGRATIONS.md` present and current.
 - `Cargo.lock` present for locked builds.
 - RPC golden vectors present (`tests/golden/rpc/v1`).
 - Provenance manifests present in `artifacts/provenance/`.

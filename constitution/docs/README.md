@@ -1,6 +1,6 @@
 # Decapod Docs
 
-This is the operator and integrator landing page for Decapod.
+This is the operator and integrator landing page for embedded Decapod docs.
 
 ## Start Here
 
