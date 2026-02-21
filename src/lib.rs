@@ -86,8 +86,8 @@ use core::{
     todo, trace, validate,
 };
 use plugins::{
-    archive, container, context, cron, decide, federation, feedback, health, knowledge, policy,
-    primitives, reflex, teammate, verify, watcher, workflow,
+    archive, container, context, cron, decide, doctor, federation, feedback, health, knowledge,
+    policy, primitives, reflex, teammate, verify, watcher, workflow,
 };
 
 use clap::{CommandFactory, Parser, Subcommand};
@@ -273,6 +273,9 @@ enum GovernCommand {
 
     /// Operator feedback and preferences
     Feedback(FeedbackCli),
+
+    /// Workspace safety gates: path blocklist, diff size, secret scan, dangerous patterns
+    Gatekeeper(GatekeeperCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -455,6 +458,10 @@ enum Command {
     /// STATE_COMMIT: prove and verify cryptographic state commitments
     #[clap(name = "state-commit")]
     StateCommit(StateCommitCli),
+
+    /// Preflight health checks for the workspace
+    #[clap(name = "doctor")]
+    Doctor(doctor::DoctorCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -595,6 +602,31 @@ enum FeedbackCommand {
     },
     /// Propose preference updates based on feedback
     Propose,
+}
+
+#[derive(clap::Args, Debug)]
+struct GatekeeperCli {
+    #[clap(subcommand)]
+    command: GatekeeperCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum GatekeeperCommand {
+    /// Check staged/changed files against safety gates
+    Check {
+        /// Paths to check (defaults to git staged files)
+        #[clap(long)]
+        paths: Option<Vec<String>>,
+        /// Maximum diff size in bytes (default 10MB)
+        #[clap(long)]
+        max_diff_bytes: Option<u64>,
+        /// Disable secret scanning
+        #[clap(long)]
+        no_secrets: bool,
+        /// Disable dangerous pattern scanning
+        #[clap(long)]
+        no_dangerous: bool,
+    },
 }
 
 #[derive(clap::Args, Debug)]
@@ -1004,6 +1036,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::StateCommit(sc_cli) => {
                     run_state_commit_command(sc_cli, &project_root)?;
                 }
+                Command::Doctor(doctor_cli) => {
+                    doctor::run_doctor_cli(&project_store, &project_root, doctor_cli)?;
+                }
                 _ => unreachable!(),
             }
         }
@@ -1018,7 +1053,8 @@ fn should_auto_clock_in(command: &Command) -> bool {
         | Command::Init(_)
         | Command::Setup(_)
         | Command::Session(_)
-        | Command::StateCommit(_) => false,
+        | Command::StateCommit(_)
+        | Command::Doctor(_) => false,
         _ => true,
     }
 }
@@ -1035,7 +1071,8 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::FlightRecorder(_)
         | Command::Docs(_)
         | Command::Todo(_)
-        | Command::StateCommit(_) => false,
+        | Command::StateCommit(_)
+        | Command::Doctor(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
         Command::Rpc(_) => false,
         _ => true,
@@ -1130,7 +1167,8 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Capabilities(_)
         | Command::Trace(_)
         | Command::FlightRecorder(_)
-        | Command::StateCommit(_) => false,
+        | Command::StateCommit(_)
+        | Command::Doctor(_) => false,
         Command::Data(DataCli {
             command: DataCommand::Schema(_),
         }) => false,
@@ -1747,6 +1785,77 @@ fn run_govern_command(
                 }
             }
         }
+        GovernCommand::Gatekeeper(gk_cli) => match gk_cli.command {
+            GatekeeperCommand::Check {
+                paths,
+                max_diff_bytes,
+                no_secrets,
+                no_dangerous,
+            } => {
+                use crate::core::gatekeeper;
+
+                let repo_root = project_store
+                    .root
+                    .parent()
+                    .and_then(|p| p.parent())
+                    .unwrap_or(&project_store.root);
+
+                // Collect paths: explicit or git staged files
+                let check_paths: Vec<std::path::PathBuf> = if let Some(explicit) = paths {
+                    explicit.into_iter().map(std::path::PathBuf::from).collect()
+                } else {
+                    // Get staged files from git
+                    let output = std::process::Command::new("git")
+                        .args(["diff", "--cached", "--name-only"])
+                        .current_dir(repo_root)
+                        .output()
+                        .map_err(error::DecapodError::IoError)?;
+                    String::from_utf8_lossy(&output.stdout)
+                        .lines()
+                        .filter(|l| !l.is_empty())
+                        .map(std::path::PathBuf::from)
+                        .collect()
+                };
+
+                // Get diff size
+                let diff_output = std::process::Command::new("git")
+                    .args(["diff", "--cached", "--stat"])
+                    .current_dir(repo_root)
+                    .output()
+                    .map_err(error::DecapodError::IoError)?;
+                let diff_bytes = diff_output.stdout.len() as u64;
+
+                let mut config = gatekeeper::GatekeeperConfig::default();
+                if let Some(max) = max_diff_bytes {
+                    config.max_diff_bytes = max;
+                }
+                config.scan_secrets = !no_secrets;
+                config.scan_dangerous_patterns = !no_dangerous;
+
+                let result =
+                    gatekeeper::run_gatekeeper(repo_root, &check_paths, diff_bytes, &config)?;
+
+                if result.passed {
+                    println!(
+                        "Gatekeeper: all checks passed ({} files scanned)",
+                        check_paths.len()
+                    );
+                } else {
+                    println!(
+                        "Gatekeeper: {} violation(s) found:",
+                        result.violations.len()
+                    );
+                    for v in &result.violations {
+                        let loc = v.line.map(|l| format!(":{}", l)).unwrap_or_default();
+                        println!("  [{}] {}{}: {}", v.kind, v.path.display(), loc, v.message);
+                    }
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Gatekeeper: {} violation(s)",
+                        result.violations.len()
+                    )));
+                }
+            }
+        },
     }
 
     Ok(())
