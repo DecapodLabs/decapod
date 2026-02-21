@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0](https://github.com/DecapodLabs/decapod/compare/v0.35.8...v0.36.0) - 2026-02-21
+
+### Added
+
+- wire LCM/Map into capabilities, schema, and add rebuild command
+
+### Fixed
+
+- KCR trend - all enforced claims have gate mappings (KCR=1.0)
+- fmt, clippy, and update KCR trend for new LCM claims
+
+### Other
+
+- Merge pull request #339 from DecapodLabs/feat/lcm-work
+
+## [0.35.8](https://github.com/DecapodLabs/decapod/compare/v0.35.7...v0.35.8) - 2026-02-21
+
+### Added
+
+- add safe validate diagnostics and contention gate
+
 ## [0.35.7](https://github.com/DecapodLabs/decapod/compare/v0.35.6...v0.35.7) - 2026-02-21
 
 ### Added
