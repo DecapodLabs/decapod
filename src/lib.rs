@@ -2167,12 +2167,6 @@ fn deprecation_metadata() -> serde_json::Value {
                 "path": "src/plugins/heartbeat.rs",
                 "status": "deprecated",
                 "replacement": "src/plugins/health.rs"
-            },
-            {
-                "surface": "module",
-                "path": "src/plugins/trust.rs",
-                "status": "deprecated",
-                "replacement": "src/plugins/health.rs"
             }
         ]
     })
