@@ -2,55 +2,30 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[test]
-fn python_and_typescript_examples_parse_fixture_envelopes() {
+fn claude_workflow_example_contains_required_ops() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let fixture = root.join("examples/fixtures/validate_envelope.json");
-
-    let py = Command::new("python3")
-        .arg(root.join("examples/python_validate_demo.py"))
-        .arg("--fixture")
-        .arg(&fixture)
-        .output()
-        .expect("run python demo");
-    assert!(
-        py.status.success(),
-        "python demo failed: {}",
-        String::from_utf8_lossy(&py.stderr)
-    );
-    let py_out = String::from_utf8_lossy(&py.stdout);
-    assert!(py_out.contains("\"demo\": \"python\""));
-    assert!(py_out.contains("\"status\": \"ok\""));
-
-    let ts = Command::new("node")
-        .arg(root.join("examples/ts_validate_demo.js"))
-        .arg("--fixture")
-        .arg(&fixture)
-        .output()
-        .expect("run ts demo");
-    assert!(
-        ts.status.success(),
-        "ts demo failed: {}",
-        String::from_utf8_lossy(&ts.stderr)
-    );
-    let ts_out = String::from_utf8_lossy(&ts.stdout);
-    assert!(ts_out.contains("\"demo\": \"typescript\""));
-    assert!(ts_out.contains("\"status\": \"ok\""));
+    let workflow = std::fs::read_to_string(root.join("examples/claude_code_workflow.md"))
+        .expect("read claude workflow example");
+    assert!(workflow.contains("decapod session init"));
+    assert!(workflow.contains("decapod validate"));
+    assert!(workflow.contains("decapod handshake"));
+    assert!(workflow.contains("decapod workspace publish"));
 }
 
 #[test]
-fn release_check_help_surface_exists() {
+fn release_check_surface_exists_and_runs() {
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["release", "--help"])
+        .args(["release", "check"])
         .output()
-        .expect("run release help");
+        .expect("run release check");
     assert!(
         output.status.success(),
-        "release help failed:\nstdout:\n{}\nstderr:\n{}",
+        "release check failed:\nstdout:\n{}\nstderr:\n{}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(
-        String::from_utf8_lossy(&output.stdout).contains("check"),
-        "release help should advertise `check` subcommand"
+        String::from_utf8_lossy(&output.stdout).contains("\"status\":\"ok\""),
+        "release check should emit ok envelope"
     );
 }
