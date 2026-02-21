@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0](https://github.com/DecapodLabs/decapod/compare/v0.32.4...v0.33.0) - 2026-02-21
+
+### Added
+
+- add secret redaction, gatekeeper CLI, and doctor preflight checks
+
+### Other
+
+- Merge pull request #315 from DecapodLabs/feat/oneshot-batch
+
 ## [0.32.4](https://github.com/DecapodLabs/decapod/compare/v0.32.3...v0.32.4) - 2026-02-20
 
 ### Other
