@@ -2729,6 +2729,8 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("decide", decide::schema());
     schemas.insert("docs", docs_cli::schema());
     schemas.insert("deprecations", deprecation_metadata());
+    schemas.insert("lcm", lcm::schema());
+    schemas.insert("map", map_ops::schema());
     schemas.insert(
         "command_registry",
         serde_json::json!({
