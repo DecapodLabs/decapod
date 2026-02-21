@@ -379,6 +379,28 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 status: "active".to_string(),
                 ops: vec!["add".to_string(), "get".to_string(), "graph".to_string()],
             },
+            SubsystemInfo {
+                name: "lcm".to_string(),
+                status: "active".to_string(),
+                ops: vec![
+                    "ingest".to_string(),
+                    "list".to_string(),
+                    "show".to_string(),
+                    "summarize".to_string(),
+                    "summary".to_string(),
+                    "schema".to_string(),
+                    "rebuild".to_string(),
+                ],
+            },
+            SubsystemInfo {
+                name: "map".to_string(),
+                status: "active".to_string(),
+                ops: vec![
+                    "llm".to_string(),
+                    "agentic".to_string(),
+                    "schema".to_string(),
+                ],
+            },
         ],
         workspace: WorkspaceCapabilities {
             enforcement_available: true,
