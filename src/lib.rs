@@ -87,7 +87,7 @@ use core::{
 };
 use plugins::{
     archive, container, context, cron, decide, doctor, federation, feedback, health, knowledge,
-    policy, primitives, reflex, teammate, verify, watcher, workflow,
+    lcm, map_ops, policy, primitives, reflex, teammate, verify, watcher, workflow,
 };
 
 use clap::{CommandFactory, Parser, Subcommand};
@@ -505,6 +505,14 @@ enum Command {
     /// Preflight health checks for the workspace
     #[clap(name = "doctor")]
     Doctor(doctor::DoctorCli),
+
+    /// Lossless Context Management — immutable originals + deterministic summaries
+    #[clap(name = "lcm")]
+    Lcm(lcm::LcmCli),
+
+    /// Deterministic map operators — structured parallel processing
+    #[clap(name = "map")]
+    Map(map_ops::MapCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -1015,6 +1023,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                                 errs.lock().unwrap().push(e);
                             }
                         });
+                        // Bin 5: LCM
+                        s.spawn(|_| {
+                            if let Err(e) = lcm::initialize_lcm_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
                         // Bin 3: Automation
                         s.spawn(|_| {
                             if let Err(e) = cron::initialize_cron_db(data_root) {
@@ -1098,6 +1112,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
                 Command::Doctor(doctor_cli) => {
                     doctor::run_doctor_cli(&project_store, &project_root, doctor_cli)?;
+                }
+                Command::Lcm(lcm_cli) => {
+                    lcm::run_lcm_cli(&project_store, lcm_cli)?;
+                }
+                Command::Map(map_cli) => {
+                    map_ops::run_map_cli(&project_store, map_cli)?;
                 }
                 _ => unreachable!(),
             }
