@@ -156,3 +156,53 @@ fn validate_terminates_with_typed_error_under_immediate_lock_contention() {
 
     conn.execute_batch("ROLLBACK;").expect("release lock");
 }
+
+#[test]
+fn validate_timeout_does_not_strand_db_for_followup_commands() {
+    let (_tmp, dir, password) = setup_repo();
+    let db_path = dir.join(".decapod").join("data").join("todo.db");
+    assert!(db_path.exists(), "todo db should exist before lock test");
+
+    let conn = Connection::open(&db_path).expect("open todo db");
+    conn.execute_batch("BEGIN EXCLUSIVE;")
+        .expect("acquire exclusive lock");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+            ("DECAPOD_VALIDATE_TIMEOUT_SECONDS", "2"),
+        ],
+    );
+    assert!(
+        !validate.status.success(),
+        "validate should fail under forced lock contention"
+    );
+
+    let stderr = String::from_utf8_lossy(&validate.stderr);
+    assert!(
+        stderr.contains("VALIDATE_TIMEOUT_OR_LOCK"),
+        "validate stderr should contain typed bounded-time failure marker; got: {}",
+        stderr
+    );
+
+    conn.execute_batch("ROLLBACK;").expect("release lock");
+
+    let followup = run_decapod(
+        &dir,
+        &["todo", "list"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        followup.status.success(),
+        "follow-up command should succeed after lock release; stderr:\n{}",
+        String::from_utf8_lossy(&followup.stderr)
+    );
+}
