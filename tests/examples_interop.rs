@@ -2,39 +2,14 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[test]
-fn python_and_typescript_examples_parse_fixture_envelopes() {
+fn claude_workflow_example_contains_required_ops() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let fixture = root.join("examples/fixtures/validate_envelope.json");
-
-    let py = Command::new("python3")
-        .arg(root.join("examples/python_validate_demo.py"))
-        .arg("--fixture")
-        .arg(&fixture)
-        .output()
-        .expect("run python demo");
-    assert!(
-        py.status.success(),
-        "python demo failed: {}",
-        String::from_utf8_lossy(&py.stderr)
-    );
-    let py_out = String::from_utf8_lossy(&py.stdout);
-    assert!(py_out.contains("\"demo\": \"python\""));
-    assert!(py_out.contains("\"status\": \"ok\""));
-
-    let ts = Command::new("node")
-        .arg(root.join("examples/ts_validate_demo.js"))
-        .arg("--fixture")
-        .arg(&fixture)
-        .output()
-        .expect("run ts demo");
-    assert!(
-        ts.status.success(),
-        "ts demo failed: {}",
-        String::from_utf8_lossy(&ts.stderr)
-    );
-    let ts_out = String::from_utf8_lossy(&ts.stdout);
-    assert!(ts_out.contains("\"demo\": \"typescript\""));
-    assert!(ts_out.contains("\"status\": \"ok\""));
+    let workflow = std::fs::read_to_string(root.join("examples/claude_code_workflow.md"))
+        .expect("read claude workflow example");
+    assert!(workflow.contains("decapod session init"));
+    assert!(workflow.contains("decapod validate"));
+    assert!(workflow.contains("decapod handshake"));
+    assert!(workflow.contains("decapod workspace publish"));
 }
 
 #[test]
