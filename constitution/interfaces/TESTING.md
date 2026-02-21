@@ -51,6 +51,16 @@ Primary cross-cutting gate:
 
 Subsystem gates are defined by owner docs and registry entries in `core/PLUGINS.md`.
 
+### 5.1 Validate Liveness Invariant (`claim.validate.bounded_termination`)
+
+`decapod validate` MUST terminate in bounded time.
+
+If DB contention prevents progress, validate MUST fail with a typed error marker:
+
+- `VALIDATE_TIMEOUT_OR_LOCK`
+
+and MUST provide remediation guidance (retry with backoff / inspect concurrent processes).
+
 ---
 
 ## Links
