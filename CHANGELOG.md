@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.5](https://github.com/DecapodLabs/decapod/compare/v0.35.4...v0.35.5) - 2026-02-21
+
+### Other
+
+- Remove top-level non-essential docs and purge non-Rust shim code
+
 ## [0.35.4](https://github.com/DecapodLabs/decapod/compare/v0.35.3...v0.35.4) - 2026-02-21
 
 ### Added
