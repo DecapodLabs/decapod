@@ -108,9 +108,9 @@ jobs:
       - name: Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
-  # TEST: Run all tests
+  # TEST: Unit + integration tests except RPC suite
   test:
-    name: Tests
+    name: Tests (Core + Integration)
     runs-on: ubuntu-latest
     needs: setup
     steps:
@@ -130,8 +130,43 @@ jobs:
           shared-key: "ci-setup"
           save-if: false
 
-      - name: Run tests
-        run: cargo test --all-features -- --test-threads=4
+      - name: Run unit tests
+        run: cargo test --all-features --lib --bins -- --test-threads=4
+
+      - name: Run integration tests (except agent_rpc_suite)
+        run: |
+          set -euo pipefail
+          for t in $(ls tests/*.rs | xargs -n1 basename | sed 's/\.rs$//'); do
+            if [ "$t" = "agent_rpc_suite" ]; then
+              continue
+            fi
+            cargo test --all-features --test "$t" -- --test-threads=4
+          done
+
+  # RPC SUITE: isolated job to avoid contention with other integration tests
+  test-rpc-suite:
+    name: Tests (RPC Suite)
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install LLD
+        run: sudo apt-get update && sudo apt-get install -y lld
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Restore Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-setup"
+          save-if: false
+
+      - name: Run RPC suite
+        run: cargo test --all-features --test agent_rpc_suite -- --test-threads=1
 
   # CHAOS: Multi-agent contention + deterministic replay gate
   chaos-replay:
@@ -219,7 +254,7 @@ jobs:
     name: Release Build Check
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    needs: [lint, test, chaos-replay, health]
+    needs: [lint, test, test-rpc-suite, chaos-replay, health]
     steps:
       - uses: actions/checkout@v4
         with:

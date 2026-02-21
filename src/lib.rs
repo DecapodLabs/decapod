@@ -2205,6 +2205,7 @@ fn run_validate_command(
 fn validate_timeout_secs() -> u64 {
     std::env::var("DECAPOD_VALIDATE_TIMEOUT_SECS")
         .ok()
+        .or_else(|| std::env::var("DECAPOD_VALIDATE_TIMEOUT_SECONDS").ok())
         .and_then(|v| v.parse::<u64>().ok())
         .filter(|v| *v > 0)
         .unwrap_or(30)
