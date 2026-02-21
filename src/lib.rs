@@ -933,6 +933,10 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
         }
+        Command::Release(release_cli) => {
+            let project_root = decapod_root_option?;
+            run_release_command(release_cli, &project_root)?;
+        }
         Command::Setup(setup_cli) => match setup_cli.command {
             SetupCommand::Hook {
                 commit_msg,
@@ -1971,6 +1975,16 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
                 .to_string(),
         );
     }
+    if artifact_manifest.exists()
+        && let Err(e) = validate_artifact_manifest(project_root, &artifact_manifest)
+    {
+        failures.push(format!("artifact manifest invalid: {}", e));
+    }
+    if proof_manifest.exists()
+        && let Err(e) = validate_proof_manifest(&proof_manifest)
+    {
+        failures.push(format!("proof manifest invalid: {}", e));
+    }
 
     if !failures.is_empty() {
         return Err(error::DecapodError::ValidationError(format!(
@@ -1989,10 +2003,139 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
                 "migrations.doc",
                 "cargo.lock.present",
                 "rpc.golden_vectors.present",
-                "provenance.manifests.present"
+                "provenance.manifests.verified"
             ]
         })
     );
+    Ok(())
+}
+
+fn sha256_file(path: &Path) -> Result<String, error::DecapodError> {
+    let bytes = fs::read(path).map_err(error::DecapodError::IoError)?;
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    Ok(format!("{:x}", hasher.finalize()))
+}
+
+fn validate_artifact_manifest(
+    project_root: &Path,
+    manifest_path: &Path,
+) -> Result<(), error::DecapodError> {
+    let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
+    let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!("artifact manifest is not valid JSON: {e}"))
+    })?;
+    if v.get("schema_version").and_then(|x| x.as_str()) != Some("1.0.0") {
+        return Err(error::DecapodError::ValidationError(
+            "artifact manifest schema_version must be 1.0.0".to_string(),
+        ));
+    }
+    if v.get("kind").and_then(|x| x.as_str()) != Some("artifact_manifest") {
+        return Err(error::DecapodError::ValidationError(
+            "artifact manifest kind must be artifact_manifest".to_string(),
+        ));
+    }
+
+    let artifacts = v
+        .get("artifacts")
+        .and_then(|x| x.as_array())
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "artifact manifest artifacts[] required".to_string(),
+            )
+        })?;
+    if artifacts.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "artifact manifest artifacts[] must not be empty".to_string(),
+        ));
+    }
+
+    for entry in artifacts {
+        let path = entry.get("path").and_then(|x| x.as_str()).ok_or_else(|| {
+            error::DecapodError::ValidationError("artifact entry missing path".to_string())
+        })?;
+        let sha = entry
+            .get("sha256")
+            .and_then(|x| x.as_str())
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError("artifact entry missing sha256".to_string())
+            })?;
+        if sha.is_empty() || sha.contains("TO_BE_FILLED") {
+            return Err(error::DecapodError::ValidationError(format!(
+                "artifact entry '{}' has placeholder sha256",
+                path
+            )));
+        }
+        let abs = project_root.join(path);
+        if !abs.exists() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "artifact entry '{}' does not exist",
+                path
+            )));
+        }
+        let actual = sha256_file(&abs)?;
+        if actual != sha {
+            return Err(error::DecapodError::ValidationError(format!(
+                "artifact entry '{}' sha256 mismatch",
+                path
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn validate_proof_manifest(manifest_path: &Path) -> Result<(), error::DecapodError> {
+    let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
+    let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!("proof manifest is not valid JSON: {e}"))
+    })?;
+    if v.get("schema_version").and_then(|x| x.as_str()) != Some("1.0.0") {
+        return Err(error::DecapodError::ValidationError(
+            "proof manifest schema_version must be 1.0.0".to_string(),
+        ));
+    }
+    if v.get("kind").and_then(|x| x.as_str()) != Some("proof_manifest") {
+        return Err(error::DecapodError::ValidationError(
+            "proof manifest kind must be proof_manifest".to_string(),
+        ));
+    }
+    let proofs = v.get("proofs").and_then(|x| x.as_array()).ok_or_else(|| {
+        error::DecapodError::ValidationError("proof manifest proofs[] required".to_string())
+    })?;
+    if proofs.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "proof manifest proofs[] must not be empty".to_string(),
+        ));
+    }
+    for p in proofs {
+        let command = p.get("command").and_then(|x| x.as_str()).unwrap_or("");
+        let result = p.get("result").and_then(|x| x.as_str()).unwrap_or("");
+        if command.is_empty() || command.contains("TO_BE_FILLED") {
+            return Err(error::DecapodError::ValidationError(
+                "proof manifest command must be non-empty and non-placeholder".to_string(),
+            ));
+        }
+        if result.is_empty() || result.contains("TO_BE_FILLED") {
+            return Err(error::DecapodError::ValidationError(
+                "proof manifest result must be non-empty and non-placeholder".to_string(),
+            ));
+        }
+    }
+    let env = v
+        .get("environment")
+        .and_then(|x| x.as_object())
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError("proof manifest environment required".to_string())
+        })?;
+    for key in ["os", "rust"] {
+        let value = env.get(key).and_then(|x| x.as_str()).unwrap_or("");
+        if value.is_empty() || value.contains("TO_BE_FILLED") {
+            return Err(error::DecapodError::ValidationError(format!(
+                "proof manifest environment.{} must be non-empty and non-placeholder",
+                key
+            )));
+        }
+    }
     Ok(())
 }
 

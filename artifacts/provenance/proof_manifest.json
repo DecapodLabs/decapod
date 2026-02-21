@@ -4,11 +4,11 @@
   "proofs": [
     {
       "command": "decapod validate",
-      "result": "TO_BE_FILLED"
+      "result": "pass"
     }
   ],
   "environment": {
-    "os": "TO_BE_FILLED",
-    "rust": "TO_BE_FILLED"
+    "os": "linux",
+    "rust": "stable"
   }
 }

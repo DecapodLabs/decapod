@@ -19,7 +19,7 @@ Key surfaces:
 | Security/provenance | partial | threat model + publish provenance gate |
 | Release lifecycle | partial | release policy + `decapod release check` |
 | Templates/ergonomics | sparse | session bootstrap + template set |
-| Integration demos | missing | Claude/Python/TS demos + tests |
+| Integration demos | missing | Rust-native CLI/RPC demo coverage + tests |
 
 ## Top 3 Risks If Left Weak
 
