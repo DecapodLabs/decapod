@@ -1726,6 +1726,31 @@ fn validate_git_workspace_context(
         return Ok(());
     }
 
+    // Exempt read-only schema commands (data schema, lcm schema, map schema)
+    let args: Vec<String> = std::env::args().collect();
+    let is_schema_command = args.iter().any(|a| {
+        a == "schema"
+            || (a == "lcm"
+                && args
+                    .iter()
+                    .skip_while(|x| *x != "lcm")
+                    .nth(1)
+                    .is_some_and(|x| x == "schema"))
+            || (a == "map"
+                && args
+                    .iter()
+                    .skip_while(|x| *x != "map")
+                    .nth(1)
+                    .is_some_and(|x| x == "schema"))
+    });
+    if is_schema_command {
+        skip(
+            "Schema command exempted from workspace requirement (read-only)",
+            ctx,
+        );
+        return Ok(());
+    }
+
     let signals_container = [
         (
             std::env::var("DECAPOD_CONTAINER").ok().as_deref() == Some("1"),
@@ -2303,6 +2328,36 @@ fn validate_lcm_immutability(
         for f in &failures {
             fail(&format!("LCM immutability: {}", f), ctx);
         }
+    }
+    Ok(())
+}
+
+fn validate_lcm_rebuild_gate(
+    store: &Store,
+    ctx: &ValidationContext,
+) -> Result<(), error::DecapodError> {
+    info("LCM Rebuild Gate");
+    let ledger_path = store.root.join(crate::core::schemas::LCM_EVENTS_NAME);
+    if !ledger_path.exists() {
+        pass("No LCM ledger yet; rebuild gate trivially passes", ctx);
+        return Ok(());
+    }
+
+    let result = crate::plugins::lcm::rebuild_index(store, true)?;
+    if result.get("status").and_then(|v| v.as_str()) == Some("success") {
+        pass("LCM index rebuild successful", ctx);
+    } else {
+        let errors = result
+            .get("errors")
+            .and_then(|v| v.as_array())
+            .map(|a| {
+                a.iter()
+                    .filter_map(|e| e.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            })
+            .unwrap_or_default();
+        fail(&format!("LCM rebuild failed: {}", errors), ctx);
     }
     Ok(())
 }
@@ -2925,6 +2980,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_lcm_immutability", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_lcm_rebuild_gate(store, ctx) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_lcm_rebuild_gate", start.elapsed()));
         });
     });
 
