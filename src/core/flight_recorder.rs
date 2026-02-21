@@ -91,6 +91,8 @@ fn render_timeline(store: &Store, format: &str, limit: usize) -> Result<(), Deca
         ("federation", store.root.join("federation.events.jsonl")),
         ("proof", store.root.join("proof.events.jsonl")),
         ("watcher", store.root.join("watcher.events.jsonl")),
+        ("map", store.root.join("map.events.jsonl")),
+        ("lcm", store.root.join("lcm.events.jsonl")),
     ];
 
     for (name, path) in &event_files {
@@ -251,6 +253,8 @@ fn render_transcript(
         ("todo", store.root.join("todo.events.jsonl")),
         ("federation", store.root.join("federation.events.jsonl")),
         ("proof", store.root.join("proof.events.jsonl")),
+        ("map", store.root.join("map.events.jsonl")),
+        ("lcm", store.root.join("lcm.events.jsonl")),
     ];
 
     for (name, path) in &event_files {

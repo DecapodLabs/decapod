@@ -1726,6 +1726,31 @@ fn validate_git_workspace_context(
         return Ok(());
     }
 
+    // Exempt read-only schema commands (data schema, lcm schema, map schema)
+    let args: Vec<String> = std::env::args().collect();
+    let is_schema_command = args.iter().any(|a| {
+        a == "schema"
+            || (a == "lcm"
+                && args
+                    .iter()
+                    .skip_while(|x| *x != "lcm")
+                    .nth(1)
+                    .is_some_and(|x| x == "schema"))
+            || (a == "map"
+                && args
+                    .iter()
+                    .skip_while(|x| *x != "map")
+                    .nth(1)
+                    .is_some_and(|x| x == "schema"))
+    });
+    if is_schema_command {
+        skip(
+            "Schema command exempted from workspace requirement (read-only)",
+            ctx,
+        );
+        return Ok(());
+    }
+
     let signals_container = [
         (
             std::env::var("DECAPOD_CONTAINER").ok().as_deref() == Some("1"),
