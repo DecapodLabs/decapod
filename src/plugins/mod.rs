@@ -11,6 +11,8 @@ pub mod gatling;
 pub mod health;
 pub mod heartbeat;
 pub mod knowledge;
+pub mod lcm;
+pub mod map_ops;
 pub mod policy;
 pub mod primitives;
 pub mod reflex;
