@@ -1133,15 +1133,27 @@ fn validate_knowledge_integrity(
         return Ok(());
     }
 
-    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
-
-    let missing_provenance: i64 = conn
-        .query_row(
+    let query_missing_provenance = |conn: &rusqlite::Connection| -> Result<i64, rusqlite::Error> {
+        conn.query_row(
             "SELECT COUNT(*) FROM knowledge WHERE provenance IS NULL OR provenance = ''",
             [],
             |row| row.get(0),
         )
-        .map_err(error::DecapodError::RusqliteError)?;
+    };
+
+    let mut conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
+    let missing_provenance: i64 = match query_missing_provenance(&conn) {
+        Ok(v) => v,
+        Err(rusqlite::Error::SqliteFailure(_, Some(msg)))
+            if msg.contains("no such table: knowledge") =>
+        {
+            // Self-heal schema drift/partial bootstrap before validating integrity.
+            db::initialize_knowledge_db(&store.root)?;
+            conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
+            query_missing_provenance(&conn).map_err(error::DecapodError::RusqliteError)?
+        }
+        Err(e) => return Err(error::DecapodError::RusqliteError(e)),
+    };
 
     if missing_provenance == 0 {
         pass(

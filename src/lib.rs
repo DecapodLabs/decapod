@@ -97,6 +97,7 @@ use std::fs;
 use std::io::Read;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::mpsc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Parser, Debug)]
@@ -227,6 +228,18 @@ enum SessionCommand {
     Status,
     /// Release the current session token
     Release,
+    /// Bootstrap a governed work session with stubs and handshake artifact
+    Init {
+        /// Intended scope for this work session
+        #[clap(long, default_value = "governed-work-session")]
+        scope: String,
+        /// Proof commands this session commits to run
+        #[clap(long = "proof")]
+        proofs: Vec<String>,
+        /// Overwrite existing stubs if they already exist
+        #[clap(long)]
+        force: bool,
+    },
 }
 
 #[derive(clap::Args, Debug)]
@@ -363,6 +376,28 @@ enum QaCommand {
     Gatling(plugins::gatling::GatlingCli),
 }
 
+#[derive(clap::Args, Debug)]
+struct HandshakeCli {
+    /// Intended scope of work for this agent/session
+    #[clap(long)]
+    scope: String,
+    /// Proof commands this agent commits to run
+    #[clap(long = "proof")]
+    proofs: Vec<String>,
+}
+
+#[derive(clap::Args, Debug)]
+struct ReleaseCli {
+    #[clap(subcommand)]
+    command: ReleaseCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum ReleaseCommand {
+    /// Validate release readiness (versioning, changelog, manifests, lockfile)
+    Check,
+}
+
 // ===== Main Command Enum =====
 
 #[derive(clap::Args, Debug)]
@@ -442,6 +477,14 @@ enum Command {
     /// Structured JSON-RPC interface for agents
     #[clap(name = "rpc")]
     Rpc(RpcCli),
+
+    /// Deterministic agent handshake artifact (repo-native)
+    #[clap(name = "handshake")]
+    Handshake(HandshakeCli),
+
+    /// Release lifecycle checks and guards
+    #[clap(name = "release")]
+    Release(ReleaseCli),
 
     /// Show Decapod capabilities (for agent discovery)
     #[clap(name = "capabilities")]
@@ -901,6 +944,7 @@ pub fn run() -> Result<(), error::DecapodError> {
         },
         _ => {
             let project_root = decapod_root_option?;
+            let is_validate_cmd = matches!(&cli.command, Command::Validate(_));
             if requires_session_token(&cli.command) {
                 ensure_session_valid()?;
             }
@@ -913,77 +957,83 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Check for version/schema changes and run protected migrations if needed.
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
-            migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
-                use std::sync::Mutex;
-                let init_errors: Mutex<Vec<error::DecapodError>> = Mutex::new(Vec::new());
-                rayon::scope(|s| {
-                    let errs = &init_errors;
-                    // Bin 4: Transactional (TODO)
-                    s.spawn(|_| {
-                        if let Err(e) = todo::initialize_todo_db(data_root) {
-                            errs.lock().unwrap().push(e);
-                        }
+            let migration_result =
+                migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
+                    use std::sync::Mutex;
+                    let init_errors: Mutex<Vec<error::DecapodError>> = Mutex::new(Vec::new());
+                    rayon::scope(|s| {
+                        let errs = &init_errors;
+                        // Bin 4: Transactional (TODO)
+                        s.spawn(|_| {
+                            if let Err(e) = todo::initialize_todo_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
+                        // Bin 1: Governance
+                        s.spawn(|_| {
+                            if let Err(e) = health::initialize_health_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
+                        s.spawn(|_| {
+                            if let Err(e) = policy::initialize_policy_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
+                        s.spawn(|_| {
+                            if let Err(e) = feedback::initialize_feedback_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
+                        s.spawn(|_| {
+                            if let Err(e) = archive::initialize_archive_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
+                        // Bin 2: Memory
+                        s.spawn(|_| {
+                            if let Err(e) = db::initialize_knowledge_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
+                        s.spawn(|_| {
+                            if let Err(e) = teammate::initialize_teammate_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
+                        s.spawn(|_| {
+                            if let Err(e) = federation::initialize_federation_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
+                        s.spawn(|_| {
+                            if let Err(e) = decide::initialize_decide_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
+                        // Bin 3: Automation
+                        s.spawn(|_| {
+                            if let Err(e) = cron::initialize_cron_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
+                        s.spawn(|_| {
+                            if let Err(e) = reflex::initialize_reflex_db(data_root) {
+                                errs.lock().unwrap().push(e);
+                            }
+                        });
                     });
-                    // Bin 1: Governance
-                    s.spawn(|_| {
-                        if let Err(e) = health::initialize_health_db(data_root) {
-                            errs.lock().unwrap().push(e);
-                        }
-                    });
-                    s.spawn(|_| {
-                        if let Err(e) = policy::initialize_policy_db(data_root) {
-                            errs.lock().unwrap().push(e);
-                        }
-                    });
-                    s.spawn(|_| {
-                        if let Err(e) = feedback::initialize_feedback_db(data_root) {
-                            errs.lock().unwrap().push(e);
-                        }
-                    });
-                    s.spawn(|_| {
-                        if let Err(e) = archive::initialize_archive_db(data_root) {
-                            errs.lock().unwrap().push(e);
-                        }
-                    });
-                    // Bin 2: Memory
-                    s.spawn(|_| {
-                        if let Err(e) = db::initialize_knowledge_db(data_root) {
-                            errs.lock().unwrap().push(e);
-                        }
-                    });
-                    s.spawn(|_| {
-                        if let Err(e) = teammate::initialize_teammate_db(data_root) {
-                            errs.lock().unwrap().push(e);
-                        }
-                    });
-                    s.spawn(|_| {
-                        if let Err(e) = federation::initialize_federation_db(data_root) {
-                            errs.lock().unwrap().push(e);
-                        }
-                    });
-                    s.spawn(|_| {
-                        if let Err(e) = decide::initialize_decide_db(data_root) {
-                            errs.lock().unwrap().push(e);
-                        }
-                    });
-                    // Bin 3: Automation
-                    s.spawn(|_| {
-                        if let Err(e) = cron::initialize_cron_db(data_root) {
-                            errs.lock().unwrap().push(e);
-                        }
-                    });
-                    s.spawn(|_| {
-                        if let Err(e) = reflex::initialize_reflex_db(data_root) {
-                            errs.lock().unwrap().push(e);
-                        }
-                    });
+                    let errs = init_errors.into_inner().unwrap();
+                    if let Some(e) = errs.into_iter().next() {
+                        return Err(e);
+                    }
+                    Ok(())
                 });
-                let errs = init_errors.into_inner().unwrap();
-                if let Some(e) = errs.into_iter().next() {
-                    return Err(e);
-                }
-                Ok(())
-            })?;
+            match migration_result {
+                Ok(()) => {}
+                Err(e) if is_validate_cmd => return Err(normalize_validate_error(e)),
+                Err(e) => return Err(e),
+            }
 
             let project_store = Store {
                 kind: StoreKind::Repo,
@@ -1024,6 +1074,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Rpc(rpc_cli) => {
                     run_rpc_command(rpc_cli, &project_root)?;
                 }
+                Command::Handshake(handshake_cli) => {
+                    run_handshake_command(handshake_cli, &project_root)?;
+                }
+                Command::Release(release_cli) => {
+                    run_release_command(release_cli, &project_root)?;
+                }
                 Command::Capabilities(cap_cli) => {
                     run_capabilities_command(cap_cli)?;
                 }
@@ -1053,6 +1109,7 @@ fn should_auto_clock_in(command: &Command) -> bool {
         | Command::Init(_)
         | Command::Setup(_)
         | Command::Session(_)
+        | Command::Release(_)
         | Command::StateCommit(_)
         | Command::Doctor(_) => false,
         _ => true,
@@ -1070,6 +1127,8 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Trace(_)
         | Command::FlightRecorder(_)
         | Command::Docs(_)
+        | Command::Handshake(_)
+        | Command::Release(_)
         | Command::Todo(_)
         | Command::StateCommit(_)
         | Command::Doctor(_) => false,
@@ -1165,6 +1224,7 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Version
         | Command::Docs(_)
         | Command::Capabilities(_)
+        | Command::Release(_)
         | Command::Trace(_)
         | Command::FlightRecorder(_)
         | Command::StateCommit(_)
@@ -1626,7 +1686,314 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
             }
             Ok(())
         }
+        SessionCommand::Init {
+            scope,
+            mut proofs,
+            force,
+        } => {
+            if proofs.is_empty() {
+                proofs.push("decapod validate".to_string());
+            }
+            run_session_init(&project_root, &scope, &proofs, force)
+        }
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct HandshakeArtifact {
+    schema_version: String,
+    request_id: String,
+    agent_id: String,
+    repo_version: String,
+    scope: String,
+    proofs: Vec<String>,
+    declared_docs: Vec<String>,
+    doc_hashes: serde_json::Value,
+    artifact_hash: String,
+}
+
+fn hash_bytes_hex(input: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(input);
+    format!("{:x}", hasher.finalize())
+}
+
+fn required_handshake_docs() -> Vec<&'static str> {
+    vec![
+        "CLAUDE.md",
+        "AGENTS.md",
+        "constitution/core/DECAPOD.md",
+        "constitution/interfaces/CONTROL_PLANE.md",
+    ]
+}
+
+fn build_handshake_artifact(
+    project_root: &Path,
+    scope: &str,
+    proofs: &[String],
+) -> Result<HandshakeArtifact, error::DecapodError> {
+    let mut doc_hashes = serde_json::Map::new();
+    let required_docs = required_handshake_docs();
+    for rel in &required_docs {
+        let abs = project_root.join(rel);
+        if !abs.exists() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Handshake requires `{}` to exist.",
+                rel
+            )));
+        }
+        let bytes = fs::read(&abs).map_err(error::DecapodError::IoError)?;
+        doc_hashes.insert(
+            (*rel).to_string(),
+            serde_json::json!(hash_bytes_hex(&bytes)),
+        );
+    }
+
+    let request_id = ulid::Ulid::new().to_string();
+    let mut unsigned = serde_json::json!({
+        "schema_version": "1.0.0",
+        "request_id": request_id,
+        "agent_id": current_agent_id(),
+        "repo_version": migration::DECAPOD_VERSION,
+        "scope": scope,
+        "proofs": proofs,
+        "declared_docs": required_docs,
+        "doc_hashes": doc_hashes,
+    });
+    let canonical = serde_json::to_vec(&unsigned).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Failed to encode handshake artifact: {e}"))
+    })?;
+    let artifact_hash = hash_bytes_hex(&canonical);
+    unsigned["artifact_hash"] = serde_json::json!(artifact_hash);
+
+    serde_json::from_value(unsigned).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Failed to finalize handshake artifact: {e}"))
+    })
+}
+
+fn write_handshake_artifact(
+    project_root: &Path,
+    artifact: &HandshakeArtifact,
+) -> Result<PathBuf, error::DecapodError> {
+    let dir = project_root
+        .join(".decapod")
+        .join("records")
+        .join("handshakes");
+    fs::create_dir_all(&dir).map_err(error::DecapodError::IoError)?;
+    let file = format!(
+        "{}-{}.json",
+        crate::core::time::now_epoch_z(),
+        artifact.agent_id.replace('/', "_")
+    );
+    let path = dir.join(file);
+    let pretty = serde_json::to_vec_pretty(artifact).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Failed to serialize handshake record: {e}"))
+    })?;
+    fs::write(&path, pretty).map_err(error::DecapodError::IoError)?;
+    Ok(path)
+}
+
+fn run_handshake_command(
+    cli: HandshakeCli,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
+    if cli.proofs.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "Handshake requires at least one `--proof` declaration.".to_string(),
+        ));
+    }
+    let artifact = build_handshake_artifact(project_root, &cli.scope, &cli.proofs)?;
+    let path = write_handshake_artifact(project_root, &artifact)?;
+    println!(
+        "{}",
+        serde_json::json!({
+            "cmd": "handshake",
+            "status": "ok",
+            "path": path,
+            "artifact_hash": artifact.artifact_hash,
+            "repo_version": artifact.repo_version,
+            "scope": artifact.scope,
+            "proofs": artifact.proofs,
+        })
+    );
+    Ok(())
+}
+
+fn run_session_init(
+    project_root: &Path,
+    scope: &str,
+    proofs: &[String],
+    force: bool,
+) -> Result<(), error::DecapodError> {
+    let mut created = Vec::new();
+    let mut skipped = Vec::new();
+
+    let tasks_dir = project_root.join("tasks");
+    fs::create_dir_all(&tasks_dir).map_err(error::DecapodError::IoError)?;
+
+    let todo_path = tasks_dir.join("todo.md");
+    let todo_stub = "\
+# Work Session Plan
+
+- Task: <replace-with-task-id-and-title>
+- Scope: <replace-with-scope>
+- Constraints: keep daemonless, repo-native, proof-gated
+
+## Required Constitution Links
+- constitution/core/DECAPOD.md
+- constitution/interfaces/CONTROL_PLANE.md
+- constitution/specs/SECURITY.md
+
+## Proof Plan
+- decapod validate
+";
+    write_stub(&todo_path, todo_stub, force, &mut created, &mut skipped)?;
+
+    let intent_path = project_root.join("INTENT.md");
+    let intent_stub = "\
+# INTENT
+
+## Problem
+<what outcome is required>
+
+## Constraints
+- daemonless
+- repo-native canonical state
+- deterministic reducers and proof gates
+
+## Acceptance Proofs
+- decapod validate
+";
+    write_stub(&intent_path, intent_stub, force, &mut created, &mut skipped)?;
+
+    let handshake_path = project_root.join("HANDSHAKE.md");
+    let handshake_stub = "\
+# HANDSHAKE
+
+- Agent: <agent-id>
+- Scope: <scope>
+- Proofs: <proof-list>
+- Record: `.decapod/records/handshakes/<latest>.json`
+";
+    write_stub(
+        &handshake_path,
+        handshake_stub,
+        force,
+        &mut created,
+        &mut skipped,
+    )?;
+
+    let artifact = build_handshake_artifact(project_root, scope, proofs)?;
+    let artifact_path = write_handshake_artifact(project_root, &artifact)?;
+
+    println!(
+        "{}",
+        serde_json::json!({
+            "cmd": "session.init",
+            "status": "ok",
+            "created": created,
+            "skipped": skipped,
+            "handshake_record": artifact_path,
+            "template_refs": [
+                "templates/INTENT.md",
+                "templates/SPEC.md",
+                "templates/ADR.md",
+                "templates/CLAIM_NODE.md",
+                "templates/DRIFT_ROW.md"
+            ]
+        })
+    );
+    Ok(())
+}
+
+fn write_stub(
+    path: &Path,
+    content: &str,
+    force: bool,
+    created: &mut Vec<String>,
+    skipped: &mut Vec<String>,
+) -> Result<(), error::DecapodError> {
+    if path.exists() && !force {
+        skipped.push(path.display().to_string());
+        return Ok(());
+    }
+    fs::write(path, content).map_err(error::DecapodError::IoError)?;
+    created.push(path.display().to_string());
+    Ok(())
+}
+
+fn run_release_command(cli: ReleaseCli, project_root: &Path) -> Result<(), error::DecapodError> {
+    match cli.command {
+        ReleaseCommand::Check => run_release_check(project_root),
+    }
+}
+
+fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
+    let mut failures = Vec::new();
+    let changelog = project_root.join("CHANGELOG.md");
+    let migrations = project_root.join("MIGRATIONS.md");
+    let cargo_lock = project_root.join("Cargo.lock");
+    let cargo_toml = project_root.join("Cargo.toml");
+    let rpc_golden_req = project_root.join("tests/golden/rpc/v1/agent_init.request.json");
+    let rpc_golden_res = project_root.join("tests/golden/rpc/v1/agent_init.response.json");
+    let artifact_manifest = project_root.join("artifacts/provenance/artifact_manifest.json");
+    let proof_manifest = project_root.join("artifacts/provenance/proof_manifest.json");
+
+    if !changelog.exists() {
+        failures.push("CHANGELOG.md missing".to_string());
+    } else {
+        let raw = fs::read_to_string(&changelog).map_err(error::DecapodError::IoError)?;
+        if !raw.contains("## [Unreleased]") {
+            failures.push("CHANGELOG.md missing `## [Unreleased]` section".to_string());
+        }
+    }
+    if !migrations.exists() {
+        failures.push("MIGRATIONS.md missing".to_string());
+    }
+    if !cargo_lock.exists() {
+        failures.push("Cargo.lock missing (locked builds required)".to_string());
+    }
+    if !cargo_toml.exists() {
+        failures.push("Cargo.toml missing".to_string());
+    }
+    if !rpc_golden_req.exists() || !rpc_golden_res.exists() {
+        failures.push("RPC golden vectors missing under tests/golden/rpc/v1".to_string());
+    }
+    if !artifact_manifest.exists() {
+        failures.push(
+            "artifact provenance manifest missing: artifacts/provenance/artifact_manifest.json"
+                .to_string(),
+        );
+    }
+    if !proof_manifest.exists() {
+        failures.push(
+            "proof provenance manifest missing: artifacts/provenance/proof_manifest.json"
+                .to_string(),
+        );
+    }
+
+    if !failures.is_empty() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "release.check failed:\n- {}",
+            failures.join("\n- ")
+        )));
+    }
+
+    println!(
+        "{}",
+        serde_json::json!({
+            "cmd": "release.check",
+            "status": "ok",
+            "checks": [
+                "changelog.unreleased",
+                "migrations.doc",
+                "cargo.lock.present",
+                "rpc.golden_vectors.present",
+                "provenance.manifests.present"
+            ]
+        })
+    );
+    Ok(())
 }
 
 fn run_validate_command(
@@ -1687,9 +2054,77 @@ fn run_validate_command(
         _ => project_store.clone(),
     };
 
-    validate::run_validation(&store, &decapod_root, &decapod_root, validate_cli.verbose)?;
+    run_validation_bounded(&store, &decapod_root, validate_cli.verbose)?;
     mark_validation_completed(project_root)?;
     Ok(())
+}
+
+fn validate_timeout_secs() -> u64 {
+    std::env::var("DECAPOD_VALIDATE_TIMEOUT_SECS")
+        .ok()
+        .and_then(|v| v.parse::<u64>().ok())
+        .filter(|v| *v > 0)
+        .unwrap_or(30)
+}
+
+fn normalize_validate_error(err: error::DecapodError) -> error::DecapodError {
+    match err {
+        error::DecapodError::RusqliteError(rusqlite::Error::SqliteFailure(code, msg)) => {
+            let is_lock = code.code == rusqlite::ErrorCode::DatabaseBusy
+                || code.extended_code == 522
+                || msg
+                    .as_deref()
+                    .unwrap_or_default()
+                    .to_ascii_lowercase()
+                    .contains("locked");
+            if is_lock {
+                return error::DecapodError::ValidationError(
+                    "VALIDATE_TIMEOUT_OR_LOCK: SQLite contention detected. Retry with backoff or inspect concurrent decapod processes.".to_string(),
+                );
+            }
+            error::DecapodError::RusqliteError(rusqlite::Error::SqliteFailure(code, msg))
+        }
+        error::DecapodError::ValidationError(message) => {
+            let lower = message.to_ascii_lowercase();
+            if lower.contains("database is locked")
+                || lower.contains("databasebusy")
+                || lower.contains("sqlite_code=databasebusy")
+            {
+                return error::DecapodError::ValidationError(
+                    "VALIDATE_TIMEOUT_OR_LOCK: SQLite contention detected. Retry with backoff or inspect concurrent decapod processes.".to_string(),
+                );
+            }
+            error::DecapodError::ValidationError(message)
+        }
+        other => other,
+    }
+}
+
+fn run_validation_bounded(
+    store: &Store,
+    project_root: &Path,
+    verbose: bool,
+) -> Result<(), error::DecapodError> {
+    let timeout_secs = validate_timeout_secs();
+    let (tx, rx) = mpsc::channel();
+    let store_cloned = store.clone();
+    let root = project_root.to_path_buf();
+
+    std::thread::spawn(move || {
+        let result = validate::run_validation(&store_cloned, &root, &root, verbose);
+        let _ = tx.send(result);
+    });
+
+    match rx.recv_timeout(std::time::Duration::from_secs(timeout_secs)) {
+        Ok(result) => result.map_err(normalize_validate_error),
+        Err(mpsc::RecvTimeoutError::Timeout) => Err(error::DecapodError::ValidationError(format!(
+            "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({}s). Terminated to preserve proof-gate liveness.",
+            timeout_secs
+        ))),
+        Err(mpsc::RecvTimeoutError::Disconnected) => Err(error::DecapodError::ValidationError(
+            "VALIDATE_TIMEOUT_OR_LOCK: validate worker disconnected unexpectedly.".to_string(),
+        )),
+    }
 }
 
 fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {
@@ -2539,6 +2974,11 @@ fn run_workspace_command(
             );
         }
         WorkspaceCommand::Publish { title, description } => {
+            let project_store = Store {
+                kind: StoreKind::Repo,
+                root: project_root.join(".decapod").join("data"),
+            };
+            run_validation_bounded(&project_store, project_root, false)?;
             let result = workspace::publish_workspace(project_root, title, description)?;
             println!(
                 "{}",
@@ -3351,10 +3791,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 root: project_root.join(".decapod").join("data"),
             };
 
-            // We need to capture the output of validate::run_validation
-            // For now, we'll just run it and return a simple success result
-            // as it currently prints to stdout and manages thread-local state.
-            let res = validate::run_validation(&project_store, project_root, project_root, false);
+            let res = run_validation_bounded(&project_store, project_root, false);
 
             match res {
                 Ok(_) => success_response(

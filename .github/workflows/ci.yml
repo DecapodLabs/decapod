@@ -197,6 +197,7 @@ jobs:
         run: decapod validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
+          DECAPOD_VALIDATE_TIMEOUT_SECS: "120"
 
       - name: Run watcher
         run: decapod govern watcher run

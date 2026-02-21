@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "proof_manifest",
+  "proofs": [
+    {
+      "command": "decapod validate",
+      "result": "TO_BE_FILLED"
+    }
+  ],
+  "environment": {
+    "os": "TO_BE_FILLED",
+    "rust": "TO_BE_FILLED"
+  }
+}
