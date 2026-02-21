@@ -24,7 +24,7 @@ Differentiator:
 - Not a prompt pack.
 - Not a replacement for your model runtime (Claude Code, Codex, OpenCode, CrewAI, etc.).
 
-Decapod is a stable governance shim those systems call.
+Decapod is a stable governance shim those systems call directly (CLI/RPC).
 
 ## Quickstart (5 Commands)
 
@@ -44,14 +44,13 @@ Decapod is agent-agnostic. Integrations are done through:
 
 - CLI: stable command groups and JSON envelopes.
 - RPC: typed request/response envelope.
-- Tiny SDK shims: `sdk/python` and `sdk/typescript`.
+
+Known fit examples: Claude Code, Codex, OpenClaw, and other framework/tooling wrappers.
 
 See:
 
 - `docs/CONTROL_PLANE_API.md`
 - `examples/claude_code_workflow.md`
-- `examples/python_validate_demo.py`
-- `examples/ts_validate_demo.js`
 
 ## Trust Model
 
