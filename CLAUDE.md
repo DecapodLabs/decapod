@@ -63,11 +63,4 @@ decapod docs show core/DECAPOD.md
 ## Session Bootstrap Templates
 
 Use `decapod session init` at the start of a work session.
-
-Required templates:
-
-- `templates/INTENT.md`
-- `templates/SPEC.md`
-- `templates/ADR.md`
-- `templates/CLAIM_NODE.md`
-- `templates/DRIFT_ROW.md`
+Required templates: `templates/INTENT.md`, `templates/SPEC.md`, `templates/ADR.md`, `templates/CLAIM_NODE.md`, `templates/DRIFT_ROW.md`.
