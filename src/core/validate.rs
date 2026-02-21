@@ -37,8 +37,8 @@ use regex::Regex;
 use serde_json;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{Duration, Instant};
 use ulid::Ulid;
 
@@ -2540,7 +2540,7 @@ fn validate_coplayer_policy_tightening(
 ) -> Result<(), error::DecapodError> {
     info("Co-Player Policy Tightening Gate");
 
-    use crate::core::coplayer::{derive_policy, CoPlayerSnapshot};
+    use crate::core::coplayer::{CoPlayerSnapshot, derive_policy};
 
     // Test the invariant: unknown → high → medium → low reliability
     // Each step must be equal or tighter than the next.
