@@ -1,52 +1,74 @@
-# AGENTS.md - Agent Entrypoint
+# AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod control plane.**
 
-## Automated Initialization
+This contract applies equally to Claude, Codex, Gemini, and any other agent operating here.
 
-You MUST internalize and contextualize Decapod before your first tool use. When you detect a `.decapod` directory, you must fully depend on Decapod and resolve its API to use it for all operations.
+---
 
-**Initialization sequence (MANDATORY):**
+## Mandatory Initialization
+
+You MUST run this sequence before your first mutation:
 
 ```bash
-# 1. Validate first (authoritative gate)
+# 1. Validate (authoritative gate)
 decapod validate
 
-# 2. Ingest constitution core docs
+# 2. Ingest constitution
 decapod docs ingest
 
-# 3. Acquire per-agent session credentials
+# 3. Acquire session credentials
 decapod session acquire
 
-# 4. Establish session receipt and constitutional mandates
+# 4. Initialize session
 decapod rpc --op agent.init
 
-# 5. Resolve constitutional context before mutating state
+# 5. Resolve context
 decapod rpc --op context.resolve
 
-# 6. Claim your task (if not already claimed)
+# 6. Claim your task
 decapod todo claim --id <task-id>
 ```
 
+If any step fails, **stop and diagnose**. Do not skip steps.
+
+---
+
+## Golden Rules (Non-Negotiable)
+
+1. **NEVER work on main/master.** Use `decapod workspace ensure` for isolation.
+2. **NEVER read/write `.decapod/` files directly.** Use `decapod` CLI exclusively.
+3. **NEVER claim done without `decapod validate` passing.**
+4. **NEVER invent parallel CLIs or state roots.** Use Decapod's command surface.
+5. **NEVER bypass proofs based on self-confidence.** Evidence or nothing.
+6. **Claim a task before substantive work.** `decapod todo claim --id <task-id>`.
+7. **Record decisions in durable artifacts.** Not in transient conversation.
+
+---
+
 ## Standard Operating Procedure
 
-- **Contextualization**: Always resolve context and standards via `agent.init` and `context.resolve` before starting work.
-- **State Mutation**: Use `decapod` CLI/RPC exclusively for state changes (todos, knowledge, decisions).
-- **Isolation**: Use `decapod workspace ensure` to create isolated worktrees; never work on protected branches.
+- **Contextualization**: Resolve context via `agent.init` and `context.resolve` before mutations.
+- **State Mutation**: Use `decapod` CLI/RPC exclusively for state changes.
+- **Isolation**: Use `decapod workspace ensure` for worktrees. Never work on protected branches.
 - **Verification**: `decapod validate` is the authoritative completion gate.
+- **Liveness**: Each command invocation refreshes your agent presence. Use `decapod todo heartbeat` for explicit heartbeat.
 
-## Critical Rules
+---
 
-1. NEVER work on main/master - Decapod will refuse.
-2. Start by running `decapod validate`.
-3. Create and claim a todo: `decapod todo claim --id <task-id>`.
-4. Ingest `constitution/core/*.md` via `decapod docs ingest` before mutating operations.
-5. Worktree branch and directory must include your claimed `todo_id` (task- or task-group scoped).
-6. Pass `decapod validate` before claiming done.
+## Multi-Agent Coordination
+
+- One agent per claimed task. No concurrent claims on the same task.
+- Agents MUST declare scope when delegating to subagents.
+- Subagents MUST NOT mutate shared state. They research and report.
+- Handoffs use `decapod todo handoff --id <id> --to <agent>` with artifact references.
+- Session credentials are per-agent and non-transferable.
+
+---
 
 ## Safety Invariants
 
-- core/DECAPOD.md: Universal router.
+- ✅ core/DECAPOD.md: Universal router.
 - ✅ Verification: `decapod validate` must pass.
 - Stop if error or ambiguous state occurs; respect invocation heartbeat.
 - Safe Environment: Use Docker git workspaces; request elevated permissions before Docker/container workspace commands.
@@ -54,6 +76,17 @@ decapod todo claim --id <task-id>
 - Architecture: Respect the Interface abstraction boundary.
 - Updates: cargo install decapod.
 
+---
+
 ## Documentation
 
-decapod docs show core/DECAPOD.md
+```bash
+decapod docs show core/DECAPOD.md      # Universal router
+decapod docs show core/INTERFACES.md   # Binding contracts index
+decapod docs search <query>            # Search constitution
+```
+
+For agent-specific instructions, see:
+- `CLAUDE.md` — Claude-specific operating mode
+- `CODEX.md` — Codex-specific operating mode
+- `GEMINI.md` — Gemini-specific operating mode
