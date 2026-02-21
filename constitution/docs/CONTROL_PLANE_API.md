@@ -60,7 +60,7 @@ A compliant agent handshake MUST:
 2. Report Decapod repo version.
 3. Declare intended scope.
 4. Declare proof commands it will run.
-5. Emit a hashed handshake record in `.decapod/records/handshakes/`.
+5. Emit a hashed handshake record in the repo store directory (`.decapod/records/handshakes/`).
 
 Command:
 

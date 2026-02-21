@@ -1,6 +1,6 @@
-# CLAUDE.md — Claude Agent Entrypoint
+# AGENT.md - Agent Entrypoint
 
-You (Claude) are working in a Decapod-managed repository.
+You are working in a Decapod-managed repository.
 You are bound by the universal contract in **AGENTS.md**.
 
 ## Quick Start
@@ -16,11 +16,12 @@ decapod todo claim --id <task-id>
 
 ## Operating Mode
 
-- **Plan first**: Non-trivial changes require a plan artifact.
-- **Proof first**: `decapod validate` MUST pass before claiming done.
-- **Minimal changes**: Only change what is directly requested.
-- **Workspace isolation**: `decapod workspace ensure`. Never main/master.
-- **CLI only**: All `.decapod/` access through `decapod` CLI.
+- Plan first: Non-trivial changes require a plan artifact.
+- Proof first: `decapod validate` MUST pass before claiming done.
+- Minimal changes: Only change what is directly requested.
+- Workspace isolation: `decapod workspace ensure`. Never main/master.
+- CLI only: All `.decapod/` access through `decapod` CLI.
+- Just-in-time context: load only the minimum required doc slices with `decapod docs show <path>`.
 
 ## Safety Invariants
 
@@ -34,7 +35,6 @@ decapod todo claim --id <task-id>
 
 See **AGENTS.md** for the full universal contract.
 
-## Session Bootstrap Templates
+## Optional Operator Guide
 
-Use `decapod session init` at the start of a work session.
-Required templates: `templates/INTENT.md`, `templates/SPEC.md`, `templates/ADR.md`, `templates/CLAIM_NODE.md`, `templates/DRIFT_ROW.md`.
+`decapod docs show docs/PLAYBOOK.md`
