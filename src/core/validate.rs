@@ -2307,6 +2307,36 @@ fn validate_lcm_immutability(
     Ok(())
 }
 
+fn validate_lcm_rebuild_gate(
+    store: &Store,
+    ctx: &ValidationContext,
+) -> Result<(), error::DecapodError> {
+    info("LCM Rebuild Gate");
+    let ledger_path = store.root.join(crate::core::schemas::LCM_EVENTS_NAME);
+    if !ledger_path.exists() {
+        pass("No LCM ledger yet; rebuild gate trivially passes", ctx);
+        return Ok(());
+    }
+
+    let result = crate::plugins::lcm::rebuild_index(store, true)?;
+    if result.get("status").and_then(|v| v.as_str()) == Some("success") {
+        pass("LCM index rebuild successful", ctx);
+    } else {
+        let errors = result
+            .get("errors")
+            .and_then(|v| v.as_array())
+            .map(|a| {
+                a.iter()
+                    .filter_map(|e| e.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            })
+            .unwrap_or_default();
+        fail(&format!("LCM rebuild failed: {}", errors), ctx);
+    }
+    Ok(())
+}
+
 fn validate_gatekeeper_gate(
     ctx: &ValidationContext,
     decapod_dir: &Path,
@@ -2925,6 +2955,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_lcm_immutability", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_lcm_rebuild_gate(store, ctx) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_lcm_rebuild_gate", start.elapsed()));
         });
     });
 

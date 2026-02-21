@@ -359,6 +359,82 @@ pub fn summarize(store: &Store, scope: &str) -> Result<serde_json::Value, error:
     }))
 }
 
+/// Rebuild LCM index from events ledger (validates integrity).
+pub fn rebuild_index(
+    store: &Store,
+    validate: bool,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let events_path = lcm_events_path(&store.root);
+    if !events_path.exists() {
+        return Ok(serde_json::json!({
+            "status": "skipped",
+            "reason": "No events ledger found",
+        }));
+    }
+
+    let file = fs::File::open(&events_path).map_err(error::DecapodError::IoError)?;
+    let reader = BufReader::new(file);
+
+    let broker = DbBroker::new(&store.root);
+    let db_path = lcm_db_path(&store.root);
+
+    let mut validated_count = 0;
+    let mut error_count = 0;
+    let mut errors: Vec<String> = vec![];
+
+    broker.with_conn(&db_path, "decapod", None, "lcm.rebuild", |conn| {
+        conn.execute("DELETE FROM originals_index", [])?;
+        Ok(())
+    })?;
+
+    for line in reader.lines() {
+        let line = line.map_err(error::DecapodError::IoError)?;
+        if line.trim().is_empty() {
+            continue;
+        }
+
+        let event: LcmEvent = serde_json::from_str(&line).map_err(|e| {
+            error::DecapodError::ValidationError(format!("Failed to parse event: {}", e))
+        })?;
+
+        if validate {
+            let computed_hash = sha256_hex(event.content.as_bytes());
+            if computed_hash != event.content_hash {
+                error_count += 1;
+                errors.push(format!(
+                    "Hash mismatch for event {}: expected {}, got {}",
+                    event.event_id, event.content_hash, computed_hash
+                ));
+                continue;
+            }
+            validated_count += 1;
+        }
+
+        broker.with_conn(&db_path, "decapod", None, "lcm.rebuild.insert", |conn| {
+            conn.execute(
+                "INSERT INTO originals_index (content_hash, event_id, ts, actor, kind, byte_size, session_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                params![
+                    event.content_hash,
+                    event.event_id,
+                    event.ts,
+                    event.actor,
+                    event.kind,
+                    event.content.len() as i64,
+                    event.metadata.get("session_id").and_then(|v| v.as_str()),
+                ],
+            )?;
+            Ok(())
+        })?;
+    }
+
+    Ok(serde_json::json!({
+        "status": if error_count > 0 { "failed" } else { "success" },
+        "validated_count": validated_count,
+        "error_count": error_count,
+        "errors": errors,
+    }))
+}
+
 /// Show a summary by hash, or the latest if no hash is given.
 pub fn show_summary(
     store: &Store,
@@ -535,6 +611,12 @@ pub enum LcmCommand {
         #[clap(long)]
         id: Option<String>,
     },
+    /// Rebuild LCM index from events ledger (validates integrity)
+    Rebuild {
+        /// Validate content hashes during rebuild
+        #[clap(long)]
+        validate: bool,
+    },
     /// Emit subsystem schema JSON
     Schema,
 }
@@ -590,6 +672,10 @@ pub fn run_lcm_cli(store: &Store, cli: LcmCli) -> Result<(), error::DecapodError
                 None => println!("{{\"error\": \"no summary found\"}}"),
             }
         }
+        LcmCommand::Rebuild { validate } => {
+            let result = rebuild_index(store, validate)?;
+            println!("{}", serde_json::to_string_pretty(&result).unwrap());
+        }
         LcmCommand::Schema => {
             println!("{}", serde_json::to_string_pretty(&schema()).unwrap());
         }
@@ -608,6 +694,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "show", "description": "Retrieve an original by content hash" },
             { "name": "summarize", "description": "Produce deterministic summary DAG from originals" },
             { "name": "summary", "description": "Show a summary with pointers to originals" },
+            { "name": "rebuild", "description": "Rebuild LCM index from events ledger (validates integrity)" },
             { "name": "schema", "description": "Emit subsystem schema JSON" },
         ],
         "storage": [schemas::LCM_DB_NAME, schemas::LCM_EVENTS_NAME],
