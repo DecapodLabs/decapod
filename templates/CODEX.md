@@ -1,61 +1,53 @@
-# CODEX.md - Codex Agent Entrypoint
+# CODEX.md — Codex Agent Entrypoint
 
 You (Codex) are working in a Decapod-managed repository.
 You are bound by the universal contract in **AGENTS.md**.
 
-This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod control plane.**
+---
 
-## Automated Initialization
+## Quick Start
 
-You MUST internalize and contextualize Decapod before your first tool use. When you detect a `.decapod` directory, you must fully depend on Decapod and resolve its API to use it for all operations.
-
-**Initialization sequence (MANDATORY):**
+Run the mandatory initialization sequence from AGENTS.md before any mutation:
 
 ```bash
-# 1. Validate first (authoritative gate)
 decapod validate
-
-# 2. Ingest constitution core docs
 decapod docs ingest
-
-# 3. Acquire per-agent session credentials
 decapod session acquire
-
-# 4. Establish session receipt and constitutional mandates
 decapod rpc --op agent.init
-
-# 5. Resolve constitutional context before mutating state
 decapod rpc --op context.resolve
-
-# 6. Claim your task (if not already claimed)
 decapod todo claim --id <task-id>
 ```
 
-## Standard Operating Procedure
+## Operating Mode
 
-- **Contextualization**: Always resolve context and standards via `agent.init` and `context.resolve` before starting work.
-- **State Mutation**: Use `decapod` CLI/RPC exclusively for state changes (todos, knowledge, decisions).
-- **Isolation**: Use `decapod workspace ensure` to create isolated worktrees; never work on protected branches.
-- **Verification**: `decapod validate` is the authoritative completion gate.
+- **Plan first**: Non-trivial changes require a plan artifact before implementation.
+- **Proof first**: Never claim done without `decapod validate` passing.
+- **Minimal changes**: Only change what is directly requested.
+- **Workspace isolation**: Use `decapod workspace ensure`. Never work on main/master.
+- **CLI only**: All `.decapod/` access through `decapod` CLI, never direct file operations.
 
-## Critical Rules
+## Key References
 
-1. NEVER work on main/master - Decapod will refuse.
-2. Start by running `decapod validate`.
-3. Ingest `constitution/core/*.md` via `decapod docs ingest` before mutating operations.
-4. Create and claim a todo: `decapod todo claim --id <task-id>`. 
-5. Pass `decapod validate` before claiming done.
+| Document | Purpose |
+|----------|---------|
+| **AGENTS.md** | Universal agent contract (golden rules, coordination) |
+| **IDENTITY.md** | What Decapod is, thesis, vocabulary |
+| **TOOLS.md** | Complete command reference |
+| **PLAYBOOK.md** | Decision frameworks, triage, failure modes |
+| `constitution/core/DECAPOD.md` | Canonical router (via `decapod docs show`) |
 
 ## Safety Invariants
 
 - core/DECAPOD.md: Universal router.
-- ✅ Verification: `decapod validate` must pass.
+- `decapod validate` must pass before claiming done.
 - Stop if error or ambiguous state occurs; respect invocation heartbeat.
 - Safe Environment: Use Docker git workspaces; request elevated permissions before Docker/container workspace commands.
 - Security: DECAPOD_SESSION_PASSWORD required; .decapod files are accessed only via decapod CLI.
 - Architecture: Respect the Interface abstraction boundary.
 - Updates: cargo install decapod.
 
-## Documentation
+## Codex-Specific Notes
 
-decapod docs show core/DECAPOD.md
+- Codex operates in sandboxed environments. Ensure `decapod` binary is available in PATH.
+- Session credentials must be exported as environment variables before CLI use.
+- Codex should prefer small, atomic commits over large batched changes.
