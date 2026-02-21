@@ -289,3 +289,124 @@ fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
         "expected at least one diagnostics artifact per failed validate run"
     );
 }
+
+#[test]
+fn validate_diagnostics_disabled_does_not_write_artifacts() {
+    let (_tmp, dir, password) = setup_repo();
+    let db_path = dir.join(".decapod").join("data").join("todo.db");
+    assert!(db_path.exists(), "todo db should exist before lock test");
+
+    let conn = Connection::open(&db_path).expect("open todo db");
+    conn.execute_batch("BEGIN EXCLUSIVE;")
+        .expect("acquire exclusive lock");
+
+    let output = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+            ("DECAPOD_VALIDATE_TIMEOUT_SECS", "2"),
+        ],
+    );
+    conn.execute_batch("ROLLBACK;").expect("release lock");
+
+    assert!(
+        !output.status.success(),
+        "validate should fail under forced lock contention"
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("VALIDATE_TIMEOUT_OR_LOCK"),
+        "expected typed failure marker; got: {stderr}"
+    );
+    assert!(
+        !stderr.contains("Diagnostics:"),
+        "diagnostics path should not be emitted when DECAPOD_DIAGNOSTICS is disabled"
+    );
+    assert!(
+        !dir.join("artifacts").join("diagnostics").exists(),
+        "diagnostics artifacts must not be written unless explicitly enabled"
+    );
+}
+
+#[test]
+fn validate_diagnostics_payload_is_sanitized() {
+    let (_tmp, dir, password) = setup_repo();
+    let db_path = dir.join(".decapod").join("data").join("todo.db");
+    assert!(db_path.exists(), "todo db should exist before lock test");
+
+    let conn = Connection::open(&db_path).expect("open todo db");
+    conn.execute_batch("BEGIN EXCLUSIVE;")
+        .expect("acquire exclusive lock");
+
+    let output = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+            ("DECAPOD_VALIDATE_TIMEOUT_SECS", "2"),
+            ("DECAPOD_DIAGNOSTICS", "1"),
+        ],
+    );
+    conn.execute_batch("ROLLBACK;").expect("release lock");
+    assert!(
+        !output.status.success(),
+        "validate should fail under forced lock contention"
+    );
+
+    let diagnostics_dir = dir.join("artifacts").join("diagnostics").join("validate");
+    let artifact_path = fs::read_dir(&diagnostics_dir)
+        .expect("read diagnostics dir")
+        .find_map(|entry| {
+            let path = entry.ok()?.path();
+            (path.extension().and_then(|s| s.to_str()) == Some("json")).then_some(path)
+        })
+        .expect("at least one diagnostics artifact");
+
+    let raw = fs::read_to_string(&artifact_path).expect("read diagnostics artifact");
+    let payload: Value = serde_json::from_str(&raw).expect("parse diagnostics artifact");
+    assert_eq!(payload["kind"], "validate_diagnostic");
+    assert_eq!(payload["op"], "validate");
+    assert_eq!(payload["reason_code"], "timeout_acquiring_lock");
+
+    let object = payload.as_object().expect("diagnostics payload object");
+    let forbidden_keys = [
+        "hostname", "username", "env", "cwd", "path", "pid", "command",
+    ];
+    for key in forbidden_keys {
+        assert!(
+            !object.contains_key(key),
+            "diagnostics payload must not contain forbidden key '{key}'"
+        );
+    }
+
+    let forbidden_patterns = [
+        "/home/",
+        "C:\\",
+        "USER=",
+        "HOSTNAME=",
+        "PATH=",
+        "DECAPOD_SESSION_PASSWORD",
+    ];
+    for pat in forbidden_patterns {
+        assert!(
+            !raw.contains(pat),
+            "diagnostics payload must not contain forbidden pattern '{pat}'"
+        );
+    }
+
+    let run_id = payload["run_id"].as_str().expect("run_id string");
+    assert_eq!(run_id.len(), 32, "run_id must be 128-bit hex");
+    assert!(
+        run_id.chars().all(|c| c.is_ascii_hexdigit()),
+        "run_id must be lower/upper hex only"
+    );
+    assert!(
+        !run_id.contains('-'),
+        "run_id must be non-ULID/non-hyphenated to avoid inferential timestamp encoding"
+    );
+}

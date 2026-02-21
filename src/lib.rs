@@ -2301,7 +2301,9 @@ fn write_validate_diagnostic_artifact(
     elapsed_ms: u64,
     timeout_secs: u64,
 ) -> Result<PathBuf, error::DecapodError> {
-    let run_id = ulid::Ulid::new().to_string();
+    let mut run_id_hasher = Sha256::new();
+    run_id_hasher.update(ulid::Ulid::new().to_string().as_bytes());
+    let run_id = hash_bytes_hex(&run_id_hasher.finalize())[..32].to_string();
     let diagnostics_dir = project_root.join("artifacts/diagnostics/validate");
     fs::create_dir_all(&diagnostics_dir).map_err(error::DecapodError::IoError)?;
 

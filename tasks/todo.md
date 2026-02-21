@@ -16,11 +16,11 @@ This file tracks higher-level initiatives and their proof status.
   - [x] Add `decapod lcm rebuild` command
   - [x] Add LCM rebuild validation gate
   - [x] Register LCM claims in CLAIMS registry
+  - [x] Add map.events.jsonl to flight-recorder timeline
+  - [x] Add lcm.events.jsonl to flight-recorder timeline
+  - [x] Worktree exemption for schema commands
 - **In Progress**:
-  - [ ] Add map.events.jsonl to broker audit trail
-  - [ ] Add LCM events to flight-recorder timeline
-  - [ ] Context pack integration
-  - [ ] Worktree exemption for schema commands
+  - [ ] Context pack integration (LCM summaries in context packs)
 - **Gate**: `decapod validate` must pass
 
 ### ObligationNode Evolution
