@@ -240,53 +240,6 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
     Ok(())
 }
 
-// Example migration functions (add as needed):
-
-/// Example: Add index to todo.db for better performance
-#[allow(dead_code)]
-fn migrate_add_todo_index(decapod_root: &Path) -> Result<(), error::DecapodError> {
-    let db_path = decapod_root.join("data/todo.db");
-    if !db_path.exists() {
-        return Ok(()); // Nothing to migrate
-    }
-
-    let conn = Connection::open(&db_path).map_err(error::DecapodError::RusqliteError)?;
-
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)",
-        [],
-    )
-    .map_err(error::DecapodError::RusqliteError)?;
-
-    Ok(())
-}
-
-/// Example: Migrate schema for a database
-#[allow(dead_code)]
-fn migrate_schema_change(decapod_root: &Path) -> Result<(), error::DecapodError> {
-    let db_path = decapod_root.join("data/some.db");
-    if !db_path.exists() {
-        return Ok(());
-    }
-
-    let conn = Connection::open(&db_path).map_err(error::DecapodError::RusqliteError)?;
-
-    // Check if migration already applied
-    let has_new_column: Result<i64, _> = conn.query_row(
-        "SELECT COUNT(*) FROM pragma_table_info('some_table') WHERE name='new_column'",
-        [],
-        |row| row.get(0),
-    );
-
-    if has_new_column.unwrap_or(0) == 0 {
-        // Apply migration
-        conn.execute("ALTER TABLE some_table ADD COLUMN new_column TEXT", [])
-            .map_err(error::DecapodError::RusqliteError)?;
-    }
-
-    Ok(())
-}
-
 fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::DecapodError> {
     let data_root = decapod_root.join("data");
     if !data_root.exists() {
