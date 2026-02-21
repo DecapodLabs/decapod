@@ -460,3 +460,37 @@ fn test_root_entrypoints_match_templates() {
         );
     }
 }
+
+#[test]
+fn test_agent_entrypoints_are_identical() {
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
+    let root_claude = fs::read_to_string(repo_root.join("CLAUDE.md")).expect("read CLAUDE.md");
+    let root_gemini = fs::read_to_string(repo_root.join("GEMINI.md")).expect("read GEMINI.md");
+    let root_codex = fs::read_to_string(repo_root.join("CODEX.md")).expect("read CODEX.md");
+
+    assert_eq!(
+        root_claude, root_gemini,
+        "Root entrypoints must be identical: CLAUDE.md != GEMINI.md"
+    );
+    assert_eq!(
+        root_claude, root_codex,
+        "Root entrypoints must be identical: CLAUDE.md != CODEX.md"
+    );
+
+    let tpl_claude =
+        fs::read_to_string(repo_root.join("templates/CLAUDE.md")).expect("read template CLAUDE");
+    let tpl_gemini =
+        fs::read_to_string(repo_root.join("templates/GEMINI.md")).expect("read template GEMINI");
+    let tpl_codex =
+        fs::read_to_string(repo_root.join("templates/CODEX.md")).expect("read template CODEX");
+
+    assert_eq!(
+        tpl_claude, tpl_gemini,
+        "Template entrypoints must be identical: CLAUDE.md != GEMINI.md"
+    );
+    assert_eq!(
+        tpl_claude, tpl_codex,
+        "Template entrypoints must be identical: CLAUDE.md != CODEX.md"
+    );
+}
