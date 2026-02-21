@@ -83,7 +83,7 @@ use core::{
     db, docs, docs_cli, error, flight_recorder, migration, obligation, proof, repomap, scaffold,
     state_commit,
     store::{Store, StoreKind},
-    todo, trace, validate,
+    todo, trace, validate, workspace,
 };
 use plugins::{
     archive, container, context, cron, decide, doctor, federation, feedback, health, knowledge,
@@ -1059,6 +1059,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                     ));
                 }
                 Err(e) => return Err(e),
+            }
+
+            // Best-effort hygiene: routinely scrub stale git worktree metadata/config.
+            // This must not block primary command execution.
+            if let Err(e) = workspace::prune_stale_worktree_config(&project_root) {
+                eprintln!("warn: worktree maintenance skipped: {e}");
             }
 
             let project_store = Store {
