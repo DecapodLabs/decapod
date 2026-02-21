@@ -37,8 +37,8 @@ use regex::Regex;
 use serde_json;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::Mutex;
 use std::time::{Duration, Instant};
 use ulid::Ulid;
 
@@ -1726,6 +1726,31 @@ fn validate_git_workspace_context(
         return Ok(());
     }
 
+    // Exempt read-only schema commands (data schema, lcm schema, map schema)
+    let args: Vec<String> = std::env::args().collect();
+    let is_schema_command = args.iter().any(|a| {
+        a == "schema"
+            || (a == "lcm"
+                && args
+                    .iter()
+                    .skip_while(|x| *x != "lcm")
+                    .nth(1)
+                    .is_some_and(|x| x == "schema"))
+            || (a == "map"
+                && args
+                    .iter()
+                    .skip_while(|x| *x != "map")
+                    .nth(1)
+                    .is_some_and(|x| x == "schema"))
+    });
+    if is_schema_command {
+        skip(
+            "Schema command exempted from workspace requirement (read-only)",
+            ctx,
+        );
+        return Ok(());
+    }
+
     let signals_container = [
         (
             std::env::var("DECAPOD_CONTAINER").ok().as_deref() == Some("1"),
@@ -2515,7 +2540,7 @@ fn validate_coplayer_policy_tightening(
 ) -> Result<(), error::DecapodError> {
     info("Co-Player Policy Tightening Gate");
 
-    use crate::core::coplayer::{CoPlayerSnapshot, derive_policy};
+    use crate::core::coplayer::{derive_policy, CoPlayerSnapshot};
 
     // Test the invariant: unknown → high → medium → low reliability
     // Each step must be equal or tighter than the next.
