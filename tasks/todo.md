@@ -7,6 +7,22 @@ This file tracks higher-level initiatives and their proof status.
 
 ## Active Initiatives
 
+### Phase 3 LCM + Map Operators
+- **Status**: In Progress
+- **Scope**: Wire LCM/Map into RPC, capabilities, schema; add rebuild command; add validation gates
+- **Completed**:
+  - [x] Add LCM/Map to `decapod capabilities` output
+  - [x] Add LCM/Map to `decapod data schema` output
+  - [x] Add `decapod lcm rebuild` command
+  - [x] Add LCM rebuild validation gate
+  - [x] Register LCM claims in CLAIMS registry
+  - [x] Add map.events.jsonl to flight-recorder timeline
+  - [x] Add lcm.events.jsonl to flight-recorder timeline
+  - [x] Worktree exemption for schema commands
+- **In Progress**:
+  - [ ] Context pack integration (LCM summaries in context packs)
+- **Gate**: `decapod validate` must pass
+
 ### ObligationNode Evolution
 - **Status**: In progress
 - **Plan**: `IMPLEMENTATION_TASK_PLAN.md`
@@ -57,6 +73,10 @@ This file tracks higher-level initiatives and their proof status.
 | Secret redaction in traces | Pattern-based redaction | `src/core/trace.rs` |
 | Entrypoint files exist | Entrypoint gate | `src/core/validate.rs` |
 | Co-player policy only tightens | Co-Player Policy Tightening Gate | `src/core/validate.rs` |
+| LCM append-only ledger | `decapod validate` LCM Immutability Gate | `src/core/validate.rs` |
+| LCM index rebuildable | `decapod validate` LCM Rebuild Gate | `src/core/validate.rs` |
+| LCM content hash deterministic | `decapod validate` LCM Immutability Gate | `src/core/validate.rs` |
+| Map scope-reduction invariant | `decapod map agentic --retain` required | CLI argument parsing |
 
 ### PARTIALLY ENFORCED (Gate exists but has procedural gaps)
 
@@ -85,6 +105,6 @@ This file tracks higher-level initiatives and their proof status.
 
 1. **CLAIMS registry drift**: New guarantees added to docs without corresponding CLAIMS.md entries. Mitigation: validate gate checks claim registration.
 2. **Constitution doc staleness**: Embedded docs diverge from reality as code evolves. Mitigation: `decapod validate` doc graph checks.
-3. **Event log / SQLite divergence**: SQLite state diverges from JSONL event log. Mitigation: `decapod todo rebuild` deterministic replay. Needs regular CI assertion.
+3. **Event log / SQLite divergence**: SQLite state diverges from JSONL event log. Mitigation: `decapod lcm rebuild` deterministic replay. Needs regular CI assertion.
 4. **Test coverage gaps on validation gates**: New gates added without regression tests. Mitigation: `tests/entrypoint_correctness.rs` covers entrypoints; needs expansion.
 5. **Session TTL silently breaking background operations**: Long-running batch operations fail partway through. Mitigation: documented in `tasks/lessons.md`; needs retry logic in CLI.
