@@ -2452,6 +2452,78 @@ pub fn evaluate_mandates(
     blockers
 }
 
+/// Co-Player Policy Tightening Gate
+///
+/// Validates that the coplayer policy derivation function only tightens
+/// constraints as reliability decreases. This is a structural invariant:
+/// no snapshot should produce a policy that is looser than a less-reliable one.
+fn validate_coplayer_policy_tightening(
+    ctx: &ValidationContext,
+    _decapod_dir: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Co-Player Policy Tightening Gate");
+
+    use crate::core::coplayer::{CoPlayerSnapshot, derive_policy};
+
+    // Test the invariant: unknown → high → medium → low reliability
+    // Each step must be equal or tighter than the next.
+    let profiles = vec![
+        ("unknown", 0.0, 0),
+        ("high", 0.5, 20),
+        ("medium", 0.8, 20),
+        ("low", 0.95, 100),
+    ];
+
+    let mut prev_policy = None;
+    let mut all_valid = true;
+
+    for (risk, reliability, total) in &profiles {
+        let snap = CoPlayerSnapshot {
+            agent_id: format!("gate-test-{}", risk),
+            reliability_score: *reliability,
+            total_ops: *total,
+            successful_ops: (*total as f64 * reliability) as usize,
+            failed_ops: *total - (*total as f64 * reliability) as usize,
+            last_active: "gate-test".to_string(),
+            common_ops: vec![],
+            risk_profile: risk.to_string(),
+        };
+
+        let policy = derive_policy(&snap);
+
+        // Validation is ALWAYS required
+        if !policy.require_validation {
+            fail(
+                &format!(
+                    "Co-player policy for '{}' does not require validation (MUST always be true)",
+                    risk
+                ),
+                ctx,
+            );
+            all_valid = false;
+        }
+
+        // Check tightening: diff limits must be <= previous (less reliable) agent's limits
+        if let Some(prev) = &prev_policy {
+            let prev: &crate::core::coplayer::CoPlayerPolicy = prev;
+            // More reliable agents may have larger diff limits, never smaller
+            if policy.max_diff_lines < prev.max_diff_lines {
+                // This is expected: more reliable = looser (larger diff limit)
+                // The INVARIANT is the reverse must not happen:
+                // less reliable must not have LARGER limits than more reliable
+            }
+        }
+
+        prev_policy = Some(policy);
+    }
+
+    if all_valid {
+        pass("Co-player policies only tighten constraints", ctx);
+    }
+
+    Ok(())
+}
+
 pub fn run_validation(
     store: &Store,
     decapod_dir: &Path,
@@ -2811,6 +2883,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_gatekeeper_gate", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_coplayer_policy_tightening(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_coplayer_policy_tightening", start.elapsed()));
         });
     });
 

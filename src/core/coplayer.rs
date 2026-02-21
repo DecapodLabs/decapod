@@ -183,4 +183,125 @@ mod tests {
         assert_eq!(snapshot.total_ops, 0);
         assert_eq!(snapshot.risk_profile, "unknown");
     }
+
+    #[test]
+    fn test_policy_only_tightens() {
+        // Policy from a high-reliability agent should still require proofs
+        let high_snap = CoPlayerSnapshot {
+            agent_id: "trusted-agent".to_string(),
+            reliability_score: 0.95,
+            total_ops: 100,
+            successful_ops: 95,
+            failed_ops: 5,
+            last_active: "2026-02-19T10:25:00Z".to_string(),
+            common_ops: vec!["todo.add".to_string()],
+            risk_profile: "low".to_string(),
+        };
+        let policy = derive_policy(&high_snap);
+        // Even high-reliability agents must validate
+        assert!(policy.require_validation);
+        // High-reliability allows larger diffs but never skips gates
+        assert!(policy.max_diff_lines > 0);
+
+        // Unknown agent gets strictly tighter constraints
+        let unknown_snap = CoPlayerSnapshot {
+            agent_id: "new-agent".to_string(),
+            reliability_score: 0.0,
+            total_ops: 0,
+            successful_ops: 0,
+            failed_ops: 0,
+            last_active: "never".to_string(),
+            common_ops: vec![],
+            risk_profile: "unknown".to_string(),
+        };
+        let unknown_policy = derive_policy(&unknown_snap);
+        assert!(unknown_policy.require_validation);
+        assert!(unknown_policy.require_handshake);
+        // Unknown must have stricter diff limits
+        assert!(unknown_policy.max_diff_lines <= policy.max_diff_lines);
+
+        // Low-reliability agent gets even tighter
+        let low_snap = CoPlayerSnapshot {
+            agent_id: "risky-agent".to_string(),
+            reliability_score: 0.5,
+            total_ops: 20,
+            successful_ops: 10,
+            failed_ops: 10,
+            last_active: "2026-02-19T10:00:00Z".to_string(),
+            common_ops: vec![],
+            risk_profile: "high".to_string(),
+        };
+        let low_policy = derive_policy(&low_snap);
+        assert!(low_policy.require_validation);
+        assert!(low_policy.require_extra_proofs);
+        assert!(low_policy.forbid_broad_refactors);
+        // Low-reliability must be strictly tighter than high-reliability
+        assert!(low_policy.max_diff_lines <= policy.max_diff_lines);
+    }
+}
+
+/// Deterministic policy constraints derived from a co-player snapshot.
+///
+/// INVARIANT: Policies can only TIGHTEN constraints, never loosen them.
+/// Every agent, regardless of reliability, MUST pass validation gates.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CoPlayerPolicy {
+    /// Agent this policy applies to
+    pub agent_id: String,
+    /// Validation is always required (never false)
+    pub require_validation: bool,
+    /// Whether agent must complete handshake before operating
+    pub require_handshake: bool,
+    /// Whether extra proof steps are required
+    pub require_extra_proofs: bool,
+    /// Whether broad refactors are forbidden
+    pub forbid_broad_refactors: bool,
+    /// Maximum diff size (lines) allowed per commit
+    pub max_diff_lines: usize,
+    /// Risk profile that drove this policy
+    pub source_risk_profile: String,
+}
+
+/// Derive a deterministic policy from a co-player snapshot.
+///
+/// This function is the sole authority for snapshot → policy conversion.
+/// It uses fixed thresholds and deterministic logic (no stochastic scoring).
+///
+/// CRITICAL INVARIANT: This function MUST only tighten constraints.
+/// - `require_validation` is ALWAYS true.
+/// - Lower reliability → stricter limits (never the reverse).
+/// - Unknown agents get mandatory handshake + smallest diff limits.
+pub fn derive_policy(snapshot: &CoPlayerSnapshot) -> CoPlayerPolicy {
+    // Base: every agent must validate. This is non-negotiable.
+    let require_validation = true;
+
+    // Unknown or new agents: mandatory handshake, tight limits
+    let require_handshake = snapshot.risk_profile == "unknown" || snapshot.total_ops < 5;
+
+    // High-risk agents: extra proofs, no broad refactors
+    let require_extra_proofs = snapshot.risk_profile == "high"
+        || (snapshot.total_ops >= 5 && snapshot.reliability_score < 0.7);
+
+    let forbid_broad_refactors = snapshot.risk_profile == "high"
+        || (snapshot.total_ops >= 5 && snapshot.reliability_score < 0.7);
+
+    // Diff limits: deterministic function of reliability
+    // unknown → 100, high-risk → 150, medium → 300, low-risk → 500
+    let max_diff_lines = match snapshot.risk_profile.as_str() {
+        "unknown" => 100,
+        "high" => 150,
+        "medium" => 300,
+        "low" => 500,
+        _ => 100, // Default to strictest
+    };
+
+    CoPlayerPolicy {
+        agent_id: snapshot.agent_id.clone(),
+        require_validation,
+        require_handshake,
+        require_extra_proofs,
+        forbid_broad_refactors,
+        max_diff_lines,
+        source_risk_profile: snapshot.risk_profile.clone(),
+    }
 }
