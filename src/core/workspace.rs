@@ -613,6 +613,14 @@ pub fn publish_workspace(
             status.git.current_branch
         )));
     }
+    let artifact_manifest = repo_root.join("artifacts/provenance/artifact_manifest.json");
+    let proof_manifest = repo_root.join("artifacts/provenance/proof_manifest.json");
+    if !artifact_manifest.exists() || !proof_manifest.exists() {
+        return Err(DecapodError::ValidationError(
+            "Cannot publish: provenance manifests are required for promotion. Missing `artifacts/provenance/artifact_manifest.json` and/or `artifacts/provenance/proof_manifest.json`."
+                .to_string(),
+        ));
+    }
 
     let dir = repo_root.to_str().unwrap_or(".");
 
