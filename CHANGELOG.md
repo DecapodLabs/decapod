@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.7](https://github.com/DecapodLabs/decapod/compare/v0.35.6...v0.35.7) - 2026-02-21
+
+### Added
+
+- implement Phase 3 LCM + Map operators
+
 ## [0.35.6](https://github.com/DecapodLabs/decapod/compare/v0.35.5...v0.35.6) - 2026-02-21
 
 ### Other
