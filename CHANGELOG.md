@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.2](https://github.com/DecapodLabs/decapod/compare/v0.36.1...v0.36.2) - 2026-02-21
+
+### Added
+
+- add map and lcm events to flight-recorder timeline
+- add worktree exemption for schema commands
+- add safe validate diagnostics and contention gate
+
+### Other
+
+- Merge pull request #341 from DecapodLabs/agent/unknown/validate-diagnostics-dedicated-1771713199
+- update todo.md with completed items
+- Merge branch 'master' into agent/unknown/validate-diagnostics-dedicated-1771713199
+- enforce validate diagnostics sanitization
+
 ## [0.36.1](https://github.com/DecapodLabs/decapod/compare/v0.36.0...v0.36.1) - 2026-02-21
 
 ### Added
