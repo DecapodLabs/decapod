@@ -9,7 +9,7 @@ This is the operator and integrator landing page for Decapod.
 - `docs/CONTROL_PLANE_API.md`: stable CLI/RPC control-plane contract.
 - `docs/SECURITY_THREAT_MODEL.md`: security posture and limits.
 - `docs/RELEASE_PROCESS.md`: release readiness and versioning discipline.
-- `MIGRATIONS.md`: forward-only schema evolution policy.
+- `docs/MIGRATIONS.md`: forward-only schema evolution policy.
 
 ## Enforcement Surfaces
 
