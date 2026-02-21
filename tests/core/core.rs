@@ -10,8 +10,10 @@ use decapod::core::scaffold::{ScaffoldOptions, scaffold_project_entrypoints};
 use decapod::core::schemas;
 use decapod::core::store::{Store, StoreKind};
 use decapod::core::validate;
+use decapod::core::workspace;
 use rusqlite::params;
 use std::fs;
+use std::process::Command;
 use std::sync::{Arc, Barrier};
 use std::time::{Duration, Instant};
 use tempfile::tempdir;
@@ -212,6 +214,140 @@ fn broker_policy_enforces_trust_tier_on_high_risk_mutator_ops() {
         Ok(())
     });
     assert!(allowed.is_ok(), "core actor should pass policy gate");
+}
+
+fn init_git_repo(path: &std::path::Path) {
+    let init = Command::new("git")
+        .current_dir(path)
+        .args(["init", "-b", "master"])
+        .output()
+        .expect("git init");
+    assert!(init.status.success(), "git init failed");
+
+    let email = Command::new("git")
+        .current_dir(path)
+        .args(["config", "user.email", "alexhraber@gmail.com"])
+        .output()
+        .expect("git config email");
+    assert!(email.status.success());
+
+    let name = Command::new("git")
+        .current_dir(path)
+        .args(["config", "user.name", "Alex H. Raber"])
+        .output()
+        .expect("git config name");
+    assert!(name.status.success());
+
+    fs::write(path.join("README.md"), "# test\n").expect("write readme");
+    let add = Command::new("git")
+        .current_dir(path)
+        .args(["add", "README.md"])
+        .output()
+        .expect("git add");
+    assert!(add.status.success());
+
+    let commit = Command::new("git")
+        .current_dir(path)
+        .args(["commit", "-m", "init"])
+        .output()
+        .expect("git commit");
+    assert!(commit.status.success());
+}
+
+#[test]
+fn worktree_config_prune_removes_stale_section() {
+    let tmp = tempdir().expect("tempdir");
+    let root = tmp.path();
+    init_git_repo(root);
+
+    let config_path = root.join(".git").join("config");
+    let stale_path = root.join(".decapod").join("workspaces").join("stale-wt");
+    let set = Command::new("git")
+        .current_dir(root)
+        .args([
+            "config",
+            "--file",
+            config_path.to_str().expect("config path"),
+            "worktree.stale.path",
+            stale_path.to_str().expect("stale path"),
+        ])
+        .output()
+        .expect("write stale worktree key");
+    assert!(set.status.success(), "set stale section failed");
+    assert!(!stale_path.exists(), "stale worktree path must not exist");
+
+    let removed = workspace::prune_stale_worktree_config(root).expect("prune config");
+    assert_eq!(removed, 1, "expected one stale section removed");
+
+    let get = Command::new("git")
+        .current_dir(root)
+        .args([
+            "config",
+            "--file",
+            config_path.to_str().expect("config path"),
+            "--get",
+            "worktree.stale.path",
+        ])
+        .output()
+        .expect("check stale key removed");
+    assert!(!get.status.success(), "stale section should be removed");
+}
+
+#[test]
+fn worktree_config_prune_preserves_live_section() {
+    let tmp = tempdir().expect("tempdir");
+    let root = tmp.path();
+    init_git_repo(root);
+
+    let live_path = root.join("live-worktree");
+    fs::create_dir_all(&live_path).expect("create live path");
+
+    let add_wt = Command::new("git")
+        .current_dir(root)
+        .args([
+            "worktree",
+            "add",
+            "-b",
+            "agent/test/live",
+            live_path.to_str().expect("live worktree path"),
+        ])
+        .output()
+        .expect("create live worktree");
+    assert!(
+        add_wt.status.success(),
+        "create live worktree failed: {}",
+        String::from_utf8_lossy(&add_wt.stderr)
+    );
+
+    let config_path = root.join(".git").join("config");
+    let set = Command::new("git")
+        .current_dir(root)
+        .args([
+            "config",
+            "--file",
+            config_path.to_str().expect("config path"),
+            "worktree.live.path",
+            live_path.to_str().expect("live path"),
+        ])
+        .output()
+        .expect("write live worktree key");
+    assert!(set.status.success(), "set live section failed");
+
+    let removed = workspace::prune_stale_worktree_config(root).expect("prune config");
+    assert_eq!(removed, 0, "live section must not be removed");
+
+    let get = Command::new("git")
+        .current_dir(root)
+        .args([
+            "config",
+            "--file",
+            config_path.to_str().expect("config path"),
+            "--get",
+            "worktree.live.path",
+        ])
+        .output()
+        .expect("check live key present");
+    assert!(get.status.success(), "live section should remain");
 }
 
 #[test]

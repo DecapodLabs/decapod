@@ -15,6 +15,7 @@ use crate::core::error::DecapodError;
 use crate::core::rpc::{AllowedOp, Blocker, BlockerKind};
 use crate::core::todo;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -83,6 +84,109 @@ const PROTECTED_PATTERNS: &[&str] = &[
     "release/*",
     "hotfix/*",
 ];
+
+/// Prune stale git worktree metadata and remove stale worktree sections from .git/config.
+///
+/// This is a best-effort maintenance operation to keep worktree state healthy after
+/// merged PRs, deleted branches, or manually removed worktree directories.
+/// Returns the number of stale `worktree.<name>` sections removed from `.git/config`.
+pub fn prune_stale_worktree_config(repo_root: &Path) -> Result<usize, DecapodError> {
+    let main_repo = get_main_repo_root(repo_root)?;
+    let dir = main_repo.to_str().unwrap_or(".");
+
+    // 1) Let git clean known stale admin entries first.
+    let prune_output = Command::new("git")
+        .args(["-C", dir, "worktree", "prune", "--expire", "now"])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if !prune_output.status.success() {
+        return Err(DecapodError::ValidationError(format!(
+            "Failed to prune worktrees: {}",
+            String::from_utf8_lossy(&prune_output.stderr)
+        )));
+    }
+
+    let config_path = main_repo.join(".git").join("config");
+    if !config_path.exists() {
+        return Ok(0);
+    }
+
+    let registered_paths = registered_worktree_paths(&main_repo)?;
+    let keys_output = Command::new("git")
+        .args([
+            "-C",
+            dir,
+            "config",
+            "--file",
+            config_path.to_str().unwrap_or(".git/config"),
+            "--name-only",
+            "--get-regexp",
+            r"^worktree\..*\.path$",
+        ])
+        .output()
+        .map_err(DecapodError::IoError)?;
+
+    // No worktree sections to process.
+    if !keys_output.status.success() && keys_output.stdout.is_empty() {
+        return Ok(0);
+    }
+
+    let mut removed = 0usize;
+    for key in String::from_utf8_lossy(&keys_output.stdout)
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+    {
+        let Some(section_name) = key.strip_suffix(".path") else {
+            continue;
+        };
+        let value_output = Command::new("git")
+            .args([
+                "-C",
+                dir,
+                "config",
+                "--file",
+                config_path.to_str().unwrap_or(".git/config"),
+                "--get",
+                key,
+            ])
+            .output()
+            .map_err(DecapodError::IoError)?;
+        if !value_output.status.success() {
+            continue;
+        }
+        let raw_path = String::from_utf8_lossy(&value_output.stdout)
+            .trim()
+            .to_string();
+        if raw_path.is_empty() {
+            continue;
+        }
+        let candidate = resolve_worktree_candidate_path(&main_repo, &raw_path);
+        let normalized = normalize_path_for_compare(&candidate);
+        let is_stale = !candidate.exists() || !registered_paths.contains(&normalized);
+        if !is_stale {
+            continue;
+        }
+
+        let remove_output = Command::new("git")
+            .args([
+                "-C",
+                dir,
+                "config",
+                "--file",
+                config_path.to_str().unwrap_or(".git/config"),
+                "--remove-section",
+                section_name,
+            ])
+            .output()
+            .map_err(DecapodError::IoError)?;
+        if remove_output.status.success() {
+            removed += 1;
+        }
+    }
+
+    Ok(removed)
+}
 
 /// Get workspace status
 pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, DecapodError> {
@@ -330,6 +434,50 @@ fn create_worktree(
     }
 
     Ok(worktree_path)
+}
+
+fn registered_worktree_paths(main_repo: &Path) -> Result<HashSet<String>, DecapodError> {
+    let output = Command::new("git")
+        .args([
+            "-C",
+            main_repo.to_str().unwrap_or("."),
+            "worktree",
+            "list",
+            "--porcelain",
+        ])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(DecapodError::ValidationError(format!(
+            "Failed to list git worktrees: {}",
+            String::from_utf8_lossy(&output.stderr)
+        )));
+    }
+
+    let mut out = HashSet::new();
+    for line in String::from_utf8_lossy(&output.stdout).lines() {
+        let Some(path) = line.strip_prefix("worktree ") else {
+            continue;
+        };
+        out.insert(normalize_path_for_compare(Path::new(path.trim())));
+    }
+    Ok(out)
+}
+
+fn resolve_worktree_candidate_path(main_repo: &Path, raw: &str) -> PathBuf {
+    let p = PathBuf::from(raw);
+    if p.is_absolute() {
+        p
+    } else {
+        main_repo.join(p)
+    }
+}
+
+fn normalize_path_for_compare(path: &Path) -> String {
+    std::fs::canonicalize(path)
+        .unwrap_or_else(|_| path.to_path_buf())
+        .to_string_lossy()
+        .to_string()
 }
 
 /// Ensure Dockerfile exists in workspace
