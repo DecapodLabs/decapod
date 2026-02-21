@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.3](https://github.com/DecapodLabs/decapod/compare/v0.36.2...v0.36.3) - 2026-02-21
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' into agent/unknown/entrypoint-constitution-docs-1771714881
+
 ## [0.36.2](https://github.com/DecapodLabs/decapod/compare/v0.36.1...v0.36.2) - 2026-02-21
 
 ### Added
