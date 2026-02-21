@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.1](https://github.com/DecapodLabs/decapod/compare/v0.36.0...v0.36.1) - 2026-02-21
+
+### Added
+
+- prune stale worktree config sections routinely
+
+### Other
+
+- Merge pull request #342 from DecapodLabs/agent/unknown/worktree-config-cleanup-1771713742
+
 ## [0.36.0](https://github.com/DecapodLabs/decapod/compare/v0.35.8...v0.36.0) - 2026-02-21
 
 ### Added
