@@ -86,32 +86,40 @@ Every semantic/procedural entry MUST cite:
 
 ---
 
-## 3. CLI/Skill Surfaces
+## 3. CLI/Skill Surfaces (Implemented)
 
-### Core Commands
+### Currently Implemented
 
 ```bash
-# Knowledge management
-decapod knowledge add --type semantic --evidence <ref> --content <json>
-decapod knowledge add --type procedural --norm-type commit|pr|expectation --evidence <ref> --content <json>
-decapod knowledge list --type semantic [--limit N]
-decapod knowledge list --type procedural [--norm-type commit]
-decapod knowledge show <id>
+# Add knowledge entry (requires provenance)
+decapod data knowledge add \
+  --id "entity.my-feature" \
+  --title "My Feature" \
+  --text "Description of the feature" \
+  --provenance "commit:abc123" \
+  [--claim-id "todo-123"]
 
-# Digestion pipeline phases (each runs with fresh context)
-decapod knowledge reduce --sources <paths>           # Parse sources into atomic norms
-decapod knowledge reflect                           # Link, dedupe, detect contradictions
-decapod knowledge reweave --entry <id> --evidence <ref>  # Update with new evidence
-decapod knowledge verify                           # Schema + provenance + link integrity
-decapod knowledge archive --older-than <days>      # Move to archive, preserve provenance
+# Search knowledge base
+decapod data knowledge search --query "authentication"
+```
+
+### Planned (Aspirational)
+
+```bash
+# Digestion pipeline phases
+decapod knowledge reduce --sources <paths>
+decapod knowledge reflect
+decapod knowledge reweave --entry <id> --evidence <ref>
+decapod knowledge verify
+decapod knowledge archive --older-than <days>
 
 # Friction ledger
 decapod friction record --type tool_error|redo|validation_fail --context <json>
-decapod friction report                            # Emit friction summary
+decapod friction report
 
-# Homeostasis triggers
-decapod health report                              # Session-start health check
-decapod health review --thresholds                # Emit review proposal if thresholds trip
+# Homeostasis
+decapod health report
+decapod health review --thresholds
 ```
 
 ### Input/Output Artifacts
@@ -213,38 +221,34 @@ fn test_friction_cannot_directly_enter_procedural() {
 
 ---
 
-## 6. Migration Plan (Smallest Incremental Steps)
+## 6. Migration Plan
 
-### Phase 1: Foundation (v0.1)
-- [ ] Create `.decapod/knowledge/` folder structure
-- [ ] Add `VERSION` file with schema version
-- [ ] Implement `decapod knowledge add` (minimal: just write JSONL)
-- [ ] Implement `decapod knowledge list` (read JSONL)
-- [ ] Add provenance field to entry schema (required)
-- **Gate**: `knowledge.provenance` - reject entries without evidence
+### Phase 0: Already Implemented (v0.30+)
+- [x] `knowledge.db` SQLite store under `.decapod/data/`
+- [x] `decapod data knowledge add` command (requires provenance)
+- [x] `decapod data knowledge search` command
+- [x] Decay/TTL mechanism for stale entries
+- [x] Provenance field on entries
 
-### Phase 2: Procedural Memory (v0.2)
-- [ ] Define commit_norm, pr_expectation, user_expectation schemas
-- [ ] Add example entries (5-10)
-- [ ] Implement `decapod knowledge verify` (schema + provenance check)
-- **Gate**: `knowledge.schema` + `knowledge.provenance`
+### Phase 1: Foundation (this PR)
+- [x] Specification documentation
+- [x] Provenance claims in CLAIMS.md
+- [ ] **TODO**: Update spec to reflect implemented vs aspirational
 
-### Phase 3: Friction Ledger (v0.3)
-- [ ] Implement `decapod friction record`
-- [ ] Implement `decapod friction report`
-- [ ] Add episodic memory folder
-- **Gate**: `episodic.no_backflow` (preliminary check)
+### Phase 2: Query & Retrieval (future)
+- [ ] Rich search with filters (by provenance, date, status)
+- [ ] Retrieval feedback logging
+- [ ] Relevance scoring
 
-### Phase 4: Homeostasis (v0.4)
-- [ ] Implement `decapod health report` (session start)
-- [ ] Define thresholds in JSON config
-- [ ] Implement `decapod health review` (slow loop)
-- **Gate**: `knowledge.staleness` (warning only)
+### Phase 3: Governance Gates (future)
+- [ ] `knowledge.verify` command
+- [ ] Provenance enforcement gate (reject entries without evidence)
+- [ ] Schema validation gate
 
-### Phase 5: Full Digestion Pipeline (v0.5)
-- [ ] Implement `reduce`, `reflect`, `reweave`, `archive`
-- [ ] Add contradiction detection
-- **Gate**: `knowledge.contradictions` (blocking)
+### Phase 4: Advanced Features (future)
+- [ ] Friction ledger
+- [ ] Health report
+- [ ] Digestion pipeline (reduce/reflect/reweave)
 
 ---
 
