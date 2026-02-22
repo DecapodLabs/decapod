@@ -24,7 +24,7 @@ Container subsystem runs agent actions in ephemeral Docker/Podman containers wit
 - Repo root is not mounted directly; this avoids agents contending on the same live branch/worktree mount.
 - Overlay workspace is branched from base (`master` by default), so container edits happen in isolation.
 - On success, the workspace branch is folded back into host repo refs via local fetch from workspace clone.
-- Decapod manages a generated Dockerfile template for `--image-profile alpine`.
+- Decapod generates the control-plane `generated/Dockerfile` from Rust-owned template logic for `--image-profile alpine`.
 - In-container script checks out branch from local refs, executes command, and optionally commits.
 - Local environment is inherited by default (`--inherit-env`) for non-Git-network runtime context.
 - Safety defaults: cap-drop all, no-new-privileges, pids limit, tmpfs `/tmp`.
@@ -47,7 +47,7 @@ Container subsystem runs agent actions in ephemeral Docker/Podman containers wit
    `decapod auto container run --agent clawdious --task-id R_01ABC --keep-worktree --cmd "..."`
 5. Local-workspace mode is default and mandatory (flag is compatibility only):
    `decapod auto container run --agent clawdious --task-id R_01ABC --local-only --cmd "cargo test -q"`
-6. Inspect generated image template from the control-plane generated output.
+6. Inspect generated Dockerfile from the control-plane generated output.
 
 Expected loop:
 - Agent claims TODO.
