@@ -4,7 +4,11 @@ Decapod takes security seriously. This document provides an overview of our secu
 
 ## For Agents
 
-**Read the constitutional security contract:** [`constitution/specs/SECURITY.md`](constitution/specs/SECURITY.md)
+**Read the constitutional security contract via embedded docs:**
+
+```bash
+decapod docs show specs/SECURITY.md
+```
 
 This document is binding. All agents must follow the security principles outlined therein, including:
 - Credential handling (never log, never commit, always rotate)

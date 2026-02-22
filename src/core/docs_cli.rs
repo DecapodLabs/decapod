@@ -28,7 +28,7 @@ pub struct DocsCli {
 pub enum DocumentSource {
     /// Show only the embedded content (from the binary)
     Embedded,
-    /// Show only the override content (from .decapod/constitution/)
+    /// Show only the override content (from .decapod/OVERRIDE.md sections)
     Override,
     /// Show merged content (embedded base + project override appended)
     Merged,
@@ -70,7 +70,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             for doc in docs {
                 println!("- {}", doc);
             }
-            // TODO: Also list dynamically loaded docs from .decapod/constitutions/
+            // TODO: Also list project override sections from .decapod/OVERRIDE.md
             Ok(DocsRunResult::default())
         }
         DocsCommand::Show { path, source } => {
@@ -108,7 +108,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
                         assets::get_embedded_doc(relative_path)
                     }
                     DocumentSource::Override => {
-                        // Show only override content from .decapod/constitution/
+                        // Show only override content from .decapod/OVERRIDE.md
                         let current_dir =
                             std::env::current_dir().map_err(error::DecapodError::IoError)?;
                         let repo_root = find_repo_root(&current_dir)?;
