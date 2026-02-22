@@ -4,7 +4,7 @@
 **Layer:** Interfaces  
 **Binding:** Yes  
 **Scope:** architecture fundamentals that keep intent alignment and production-grade engineering explicit in the constitution  
-**Non-goals:** runtime architecture files under `.decapod/*`, framework-specific style guides, language-specific implementation detail
+**Non-goals:** runtime architecture files under mutable state roots, framework-specific style guides, language-specific implementation detail
 
 ## Purpose
 
