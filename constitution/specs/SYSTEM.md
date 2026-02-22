@@ -27,6 +27,16 @@ The fundamental principle of the Decapod system is that **Intent is the primary 
 
 **The Golden Rule:** No change is legitimate until it is consistent with intent, either by preserving the existing intent or by updating the intent first.
 
+### 1.1 Decapod Foundation Demands (Binding)
+
+For Decapod-managed repositories, the following are mandatory:
+
+1. **Daemonless + repo-native canonicality:** Promotion-relevant state MUST be derivable from repo-native artifacts, ledgers, and receipts.
+2. **Deterministic infrastructure:** Reducers, replays, and gate evaluations MUST produce stable results for equivalent inputs.
+3. **Explicit boundaries:** Authority (`specs/`, `interfaces/`), interface (`decapod` CLI/RPC), and storage (`--store user|repo`) boundaries MUST be explicit and must not be bypassed.
+4. **Proof-gated promotion:** No promotion-relevant claim is valid without executable proof surfaces and machine-verifiable outputs.
+5. **Bounded validator liveness:** `decapod validate` MUST terminate within bounded time and return typed failure on contention, not block indefinitely.
+
 ---
 
 ## 2. The Intent-First Loop (Unidirectional Flow)
@@ -110,6 +120,7 @@ To prevent drift and ensure quality, all projects must adhere to strict structur
 3.  The compliance numbers in `proof.md` and `specs/INTENT.md` match exactly.
 4.  If the intent declares invariants, there is runtime validation code for them.
 5.  **Tooling validation passes** - All declared language toolchain requirements (formatting, linting, type checking) are satisfied.
+6.  Validation liveness guarantees are preserved (no unbounded hang path in proof gates).
 
 **Violation of these rules is considered drift.** The process must stop, the proof surface must be updated, and verification must be re-run.
 
