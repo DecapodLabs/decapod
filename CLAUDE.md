@@ -21,7 +21,7 @@ decapod workspace ensure
 - Plan first: Non-trivial changes require a plan artifact.
 - Proof first: `decapod validate` MUST pass before claiming done.
 - Minimal changes: Only change what is directly requested.
-- Workspace isolation: run `decapod workspace ensure` and work only from `.decapod/workspaces/*`. Never main/master, never `.claude/worktrees`.
+- Workspace isolation: run `decapod workspace ensure` and work only from `.decapod/workspaces/*`. Never main/master and never non-canonical worktree roots.
 - CLI only: All `.decapod/` access through `decapod` CLI.
 - Just-in-time context: load only the minimum required doc slices with `decapod docs show <path>`.
 - Embedded constitution only: never read `constitution/*` directly; use `decapod docs show <embedded-path>`.

@@ -66,7 +66,7 @@ decapod capabilities --format json
 2. **Use `decapod workspace ensure`** to create an isolated worktree under `.decapod/workspaces/*`
 3. **Use on-demand containers** for build/test execution (clean env)
 4. **Validate before claiming done** - `decapod validate` is the gate
-5. **Do not use non-canonical worktree roots** (for example `.claude/worktrees`)
+5. **Do not use non-canonical worktree roots**
 
 ## Worktree + On-Demand Sandbox
 
