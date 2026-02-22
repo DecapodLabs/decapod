@@ -140,6 +140,8 @@ fn container_help_schema_and_docs_stay_in_sync() {
         "\"keep_worktree\"",
         "\"inherit_env\"",
         "\"local_only\"",
+        "\"dockerfile_template\"",
+        "\"extra_packages_env\"",
     ] {
         assert!(
             schema_out.contains(field),
