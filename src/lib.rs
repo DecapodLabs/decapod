@@ -1631,17 +1631,17 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
         return Ok(());
     }
 
-    let supplied_password = std::env::var("DECAPOD_SESSION_PASSWORD").map_err(|_| {
-        error::DecapodError::SessionError(
-            "Missing DECAPOD_SESSION_PASSWORD. Agent+password is required for session access."
-                .to_string(),
-        )
-    })?;
+    let supplied_password = match std::env::var("DECAPOD_SESSION_PASSWORD") {
+        Ok(p) => p,
+        Err(_) => {
+            // No password in env - auto-acquire new session (entrypoint funnel)
+            return auto_acquire_session(&project_root, &agent_id);
+        }
+    };
     let supplied_hash = hash_password(&supplied_password, &session.token);
     if supplied_hash != session.password_hash {
-        return Err(error::DecapodError::SessionError(
-            "Invalid DECAPOD_SESSION_PASSWORD for current agent session.".to_string(),
-        ));
+        // Password invalid - auto-acquire new session (entrypoint funnel)
+        return auto_acquire_session(&project_root, &agent_id);
     }
     Ok(())
 }
