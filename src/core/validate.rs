@@ -31,6 +31,7 @@
 use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::output;
+use crate::core::plan_governance;
 use crate::core::store::{Store, StoreKind};
 use crate::{db, primitives, todo};
 use regex::Regex;
@@ -1894,6 +1895,75 @@ fn validate_commit_often_gate(
     Ok(())
 }
 
+fn validate_plan_governed_execution_gate(
+    store: &Store,
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Plan-Governed Execution Gate");
+
+    let plan = plan_governance::load_plan(repo_root)?;
+    if let Some(plan) = plan {
+        if plan.state != plan_governance::PlanState::Approved
+            && plan.state != plan_governance::PlanState::Done
+        {
+            fail(
+                &format!(
+                    "NEEDS_PLAN_APPROVAL: plan state is {:?}; execution/promotion requires APPROVED or DONE",
+                    plan.state
+                ),
+                ctx,
+            );
+        } else {
+            pass("Plan artifact state allows governed execution", ctx);
+        }
+
+        if plan.intent.trim().is_empty()
+            || !plan.unknowns.is_empty()
+            || !plan.human_questions.is_empty()
+        {
+            fail(
+                "NEEDS_HUMAN_INPUT: governed plan has unresolved intent/unknowns/questions",
+                ctx,
+            );
+        } else {
+            pass("Plan intent and unknowns are resolved", ctx);
+        }
+    } else {
+        let done_count = plan_governance::count_done_todos(&store.root)?;
+        if done_count > 0 {
+            fail(
+                &format!(
+                    "NEEDS_PLAN_APPROVAL: {} done TODO(s) exist but governed PLAN artifact is missing",
+                    done_count
+                ),
+                ctx,
+            );
+        } else {
+            pass(
+                "No governed plan artifact present; gate is advisory until first done TODO",
+                ctx,
+            );
+        }
+    }
+
+    let unverified = plan_governance::collect_unverified_done_todos(&store.root)?;
+    if !unverified.is_empty() {
+        fail(
+            &format!(
+                "PROOF_HOOK_FAILED: {} done TODO(s) are CLAIMED but not VERIFIED: {}",
+                unverified.len(),
+                output::preview_messages(&unverified, 4, 80)
+            ),
+            ctx,
+        );
+    } else {
+        pass("Done TODOs are proof-verified", ctx);
+    }
+
+    Ok(())
+}
+
 fn validate_git_protected_branch(
     ctx: &ValidationContext,
     repo_root: &Path,
@@ -3072,6 +3142,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_lcm_rebuild_gate", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_plan_governed_execution_gate(store, ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_plan_governed_execution_gate", start.elapsed()));
         });
     });
 
