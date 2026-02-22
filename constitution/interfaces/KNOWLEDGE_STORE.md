@@ -2,12 +2,17 @@
 
 ## 1. Decision
 
-Adding a **Knowledge Store** to Decapod - a repo-native, three-memory-system architecture for persistent agent knowledge with explicit provenance, directional flow enforcement, and deterministic verification.
+Knowledge is just **data** within Decapod's existing `.decapod/data/` store - not a separate system. The "knowledge store" is simply the `knowledge.db` SQLite database and any related artifacts managed by the data layer.
+
+### Core Principle
+- **Knowledge is data**: No separate `.decapod/knowledge/` folder. Knowledge lives in `.decapod/data/knowledge.db` alongside todo.db, broker.db, etc.
+- **Unified store**: All Decapod state (tasks, knowledge, broker events, archives) lives in `.decapod/data/`
+- **Single provenance**: Knowledge entries use the same audit trail as everything else
 
 ### Scope Boundaries
-- **In scope**: Semantic memory (knowledge), procedural memory (team skills), episodic memory (self-calibration)
-- **Out of scope**: Live session state, runtime agent context, external KB integration
-- **Invariant protected**: All canonical knowledge lives in-repo under `.decapod/knowledge/` or `constitution/`
+- **In scope**: Knowledge entries in `knowledge.db`, provenance tracking
+- **Out of scope**: Separate knowledge folders, external KB integration
+- **Invariant protected**: All knowledge in `.decapod/data/` (repo-scoped)
 
 ---
 
@@ -16,40 +21,31 @@ Adding a **Knowledge Store** to Decapod - a repo-native, three-memory-system arc
 ### A. Folder Layout
 
 ```
-.decapod/knowledge/                    # Canonical knowledge store (repo-scoped)
-├── semantic/                          # Durable facts/concepts
-│   ├── v1/                           # Versioned schema
-│   │   ├── entities/                 # Entity definitions (JSONL)
-│   │   ├── relationships/            # Relationship graph (JSONL)
-│   │   └── provenance/               # Provenance ledger (JSONL)
-│   └── v2/                           # Future schema migrations
-├── procedural/                       # Team skills / methodology
-│   ├── v1/
-│   │   ├── commit_norms/             # Commit best practices
-│   │   ├── pr_expectations/          # PR templates/checklists
-│   │   ├── user_expectations/        # Definition of done
-│   │   └── risk_tiers/              # Risk classification
-│   └── provenance/
-├── episodic/                         # Agent calibration / learnings
-│   ├── v1/
-│   │   ├── friction_ledger.jsonl     # Operational friction observations
-│   │   └── calibration/             # Agent behavior patterns provenance/
-├── .
-│   └──index/                          # Knowledge index (SQLite)
-├── .lock                           # Write lock (semantic/procedural)
-└── VERSION                         # Schema version file
+.decapod/data/                         # All Decapod data lives here
+├── knowledge.db                      # Knowledge entries (SQLite)
+├── knowledge.provenance.jsonl         # Provenance ledger (append-only)
+├── todo.db                           # Task tracking
+├── broker.events.jsonl               # Broker audit trail
+├── archive/                          # Session archives
+└── ...
 
 constitution/interfaces/
 ├── KNOWLEDGE_STORE.md              # This spec
-├── PROCEDURAL_NORMS.md            # Team skills examples
-└── MEMORY_SYSTEMS.md              # Architecture overview
+└── PROCEDURAL_NORMS.md            # Example norms
 ```
 
 **Justification**:
-- `.decapod/knowledge/` ensures repo-scoped canonicality (not user-scoped)
-- Versioned subdirs (`v1/`) enable schema migration without breaking readers
-- Separate `semantic/`, `procedural/`, `episodic/` enforces hard memory separation
-- Provenance ledger in each subsystem enables full audit trail
+- Single store = simpler invariants
+- Existing `.decapod/data/` already has all necessary infrastructure
+- No new folders needed - knowledge is just another table
+
+### B. Existing Implementation
+
+Knowledge is already stored in `knowledge.db`:
+- Table: `knowledge` with columns `id, title, content, provenance, claim_id, ...`
+- Managed via: `decapod data knowledge add/search`
+- Already has provenance field
+- Already has integrity gate (`validate_knowledge_integrity`)
 
 ### B. File Formats
 
@@ -126,14 +122,11 @@ decapod health review --thresholds
 
 | Command | Input | Output |
 |---------|-------|--------|
-| `reduce` | Source files (docs, commits, PRs) | `.decapod/knowledge/{type}/staging/` |
-| `reflect` | Staging + canonical | Contradiction report JSON |
-| `reweave` | Entry ID + new evidence | Updated entry + provenance |
-| `verify` | All knowledge | Pass/fail + errors JSON |
-| `archive` | Timestamp filter | Moved to `.decapod/knowledge/archive/` |
-| `friction record` | Tool context JSON | `.decapod/knowledge/episodic/friction_ledger.jsonl` |
-| `health report` | None | `.decapod/knowledge/.health/latest.json` |
-| `health review` | Health report | `.decapod/knowledge/.review/proposal.json` (if thresholds trip) |
+| `reduce` | Source files (docs, commits, PRs) | Staging in `.decapod/data/` |
+| `archive` | Timestamp filter | Moved to `.decapod/data/archive/` |
+| `friction record` | Tool context JSON | `.decapod/data/knowledge.friction.jsonl` |
+| `health report` | None | `.decapod/data/health.json` |
+| `health review` | Health report | `.decapod/data/review/proposal.json` (if thresholds trip) |
 
 ---
 
@@ -223,41 +216,29 @@ fn test_friction_cannot_directly_enter_procedural() {
 
 ## 6. Migration Plan
 
-### Phase 0: Already Implemented (v0.30+)
+Knowledge is already implemented as data in `.decapod/data/knowledge.db`. This spec documents the existing implementation and planned enhancements.
+
+### Already Implemented (v0.30+)
 - [x] `knowledge.db` SQLite store under `.decapod/data/`
 - [x] `decapod data knowledge add` command (requires provenance)
 - [x] `decapod data knowledge search` command
 - [x] Decay/TTL mechanism for stale entries
 - [x] Provenance field on entries
+- [x] Knowledge integrity gate in `decapod validate`
 
-### Phase 1: Foundation (this PR)
-- [x] Specification documentation
-- [x] Provenance claims in CLAIMS.md
-- [ ] **TODO**: Update spec to reflect implemented vs aspirational
-
-### Phase 2: Query & Retrieval (future)
+### Future Enhancements
 - [ ] Rich search with filters (by provenance, date, status)
 - [ ] Retrieval feedback logging
-- [ ] Relevance scoring
-
-### Phase 3: Governance Gates (future)
-- [ ] `knowledge.verify` command
-- [ ] Provenance enforcement gate (reject entries without evidence)
-- [ ] Schema validation gate
-
-### Phase 4: Advanced Features (future)
-- [ ] Friction ledger
-- [ ] Health report
-- [ ] Digestion pipeline (reduce/reflect/reweave)
+- [ ] Friction ledger (as data in .decapod/data/)
+- [ ] Health report (as data in .decapod/data/)
 
 ---
 
 ## 7. Guardrails (One-Line Constraints)
 
-1. **No backflow**: Episodic → Semantic/Procedural requires explicit promotion artifact + human approval
-2. **Provenance mandatory**: Every procedural entry needs evidence_ref
-3. **Schema first**: All writes validated against JSON schema before disk
-4. **Promotion-blocking only procedural**: Semantic/episodic are advisory only
-5. **Versioned schemas**: Never break readers; migrate via `vN/` directories
+1. **Knowledge is data**: Lives in `.decapod/data/`, not separate folder
+2. **Provenance mandatory**: Every knowledge entry needs evidence_ref
+3. **Schema first**: All writes validated before disk
+4. **Single store**: All Decapod state in `.decapod/data/`
 6. **Immutable provenance**: Never modify history; only append new citations
 7. **Threshold-triggered, not cron**: Homeostasis loops fire on state, not schedule
