@@ -218,7 +218,7 @@ pub fn resolve_standards(project_root: &Path) -> Result<ResolvedStandards, Decap
         } else {
             None
         },
-        resolved_at: chrono::Utc::now().to_rfc3339(),
+        resolved_at: crate::core::time::now_epoch_z(),
     })
 }
 

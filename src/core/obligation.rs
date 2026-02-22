@@ -195,7 +195,7 @@ pub fn add_obligation(
     let broker = DbBroker::new(&store.root);
     let db_path = obligation_db_path(&store.root);
     let id = Ulid::new().to_string();
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = crate::core::time::now_epoch_z();
 
     let depends_on_ids: Vec<String> = depends_on
         .split(',')
@@ -397,7 +397,7 @@ pub fn derive_obligation_status(
         proofs_satisfied,
         commit_present,
         validation_errors,
-        timestamp: chrono::Utc::now().to_rfc3339(),
+        timestamp: crate::core::time::now_epoch_z(),
     })
 }
 
@@ -546,7 +546,7 @@ pub fn complete_obligation(
 ) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = obligation_db_path(&store.root);
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = crate::core::time::now_epoch_z();
 
     broker.with_conn(&db_path, "decapod", None, "obligation.complete", |conn| {
         conn.execute(

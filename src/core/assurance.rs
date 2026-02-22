@@ -358,7 +358,7 @@ impl AssuranceEngine {
         input: &AssuranceEvaluateInput,
         interlock: Option<&Interlock>,
     ) -> Result<Attestation, DecapodError> {
-        let timestamp = chrono::Utc::now().to_rfc3339();
+        let timestamp = crate::core::time::now_epoch_z();
         let canonical_input = serde_json::to_string(input).unwrap_or_else(|_| "{}".to_string());
         let mut hasher = Sha256::new();
         hasher.update(canonical_input.as_bytes());
