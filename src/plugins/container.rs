@@ -588,8 +588,7 @@ fn ensure_local_alpine_image(runtime: &str, repo: &Path) -> Result<String, error
     let image_tag = format!("decapod-local-{}:alpine", repo_slug);
 
     let dockerfile = generated_dir.join("Dockerfile");
-    let capabilities = detect_project_capabilities(repo);
-    let contents = render_generated_dockerfile(&capabilities);
+    let contents = generated_dockerfile_for_repo(repo);
     fs::write(&dockerfile, contents).map_err(error::DecapodError::IoError)?;
 
     let output = Command::new(runtime)
@@ -646,7 +645,7 @@ fn dockerfile_template_schema_component() -> DockerfileTemplateSchemaComponent {
     DockerfileTemplateSchemaComponent {
         schema_version: "1.0.0",
         path: ".decapod/generated/Dockerfile",
-        generator: "container::render_generated_dockerfile",
+        generator: "container::generated_dockerfile_for_repo",
         regenerate_hint: "decapod auto container run --image-profile alpine",
         base_images,
         required_packages: vec!["git", "openssh-client", "ca-certificates", "bash", "curl"],
@@ -666,6 +665,11 @@ fn detect_project_capabilities(repo: &Path) -> ProjectCapabilities {
             || repo.join("poetry.lock").exists(),
         go: repo.join("go.mod").exists(),
     }
+}
+
+pub fn generated_dockerfile_for_repo(repo: &Path) -> String {
+    let capabilities = detect_project_capabilities(repo);
+    render_generated_dockerfile(&capabilities)
 }
 
 fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
