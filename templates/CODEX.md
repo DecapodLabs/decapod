@@ -22,6 +22,7 @@ decapod todo claim --id <task-id>
 - Workspace isolation: `decapod workspace ensure`. Never main/master.
 - CLI only: All `.decapod/` access through `decapod` CLI.
 - Just-in-time context: load only the minimum required doc slices with `decapod docs show <path>`.
+- Embedded constitution only: never read `constitution/*` directly; use `decapod docs show <embedded-path>`.
 
 ## Safety Invariants
 
