@@ -7,7 +7,7 @@ This is the operator and integrator landing page for embedded Decapod docs.
 - `README.md`: product positioning and quickstart.
 - `docs/ARCHITECTURE_OVERVIEW.md`: canonical runtime model.
 - `docs/CONTROL_PLANE_API.md`: stable CLI/RPC control-plane contract.
-- `docs/LEVIE_GOVERNANCE_AUDIT.md`: governance-first capability audit + dependency-ordered kernel TODOs.
+- `docs/GOVERNANCE_AUDIT.md`: governance-first capability audit + dependency-ordered kernel TODOs.
 - `docs/VERIFICATION.md`: operator verification commands and proof surfaces.
 - `docs/SECURITY_THREAT_MODEL.md`: security posture and limits.
 - `docs/RELEASE_PROCESS.md`: release readiness and versioning discipline.
