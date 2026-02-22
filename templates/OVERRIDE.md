@@ -2,25 +2,10 @@
 
 > **IMPORTANT:** For detailed usage instructions and examples, see [README.md](README.md).
 
-**Canonical:** OVERRIDE.md  
-**Authority:** override  
-**Layer:** Project  
+**Canonical:** OVERRIDE.md
+**Authority:** override
+**Layer:** Project
 **Binding:** Yes (overrides embedded constitution)
-
----
-
-## Summary
-
-This file is your project-local override layer for Decapod's embedded constitution.
-
-The embedded constitution (shipped with Decapod) is read-only baseline policy.  
-`OVERRIDE.md` is where you add project-specific behavior without forking Decapod.
-
-Overrides are resolved at runtime via `decapod docs show`.
-
-Keep overrides minimal and explicit.
-
----
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- ⚠️  CHANGES ARE NOT PERMITTED ABOVE THIS LINE                           -->

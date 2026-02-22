@@ -5,12 +5,21 @@ Welcome to the control-plane directory for this repo.
 ## Quick Start
 
 1. **Initialize**: Run `decapod init` to set up your project
-2. **Configure overrides**: Edit `OVERRIDE.md` to customize behavior
+2. **Configure overrides**: Edit `.decapod/OVERRIDE.md` to customize behavior
 3. **Read docs**: Use `decapod docs show <path>` to read constitution docs
+
+## Summary
+
+The `.decapod/OVERRIDES.md` file is your project-local override layer for Decapod's embedded constitution.
+
+The embedded constitution (shipped with Decapod) is read-only baseline policy.
+`.decapod/OVERRIDE.md` is where you add project-specific behavior without forking Decapod.
+
+Keep overrides in the correct section, minimal and explicit.
 
 ## How to Use Overrides
 
-The embedded constitution (read-only, shipped with Decapod) provides the base methodology. The `OVERRIDE.md` file lets you customize behavior without forking Decapod.
+The embedded constitution (read-only, shipped with Decapod) provides the base methodology. The `.decapod/OVERRIDE.md` file lets you customize behavior without forking Decapod.
 
 **To add an override:**
 
