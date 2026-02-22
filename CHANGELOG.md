@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.0](https://github.com/DecapodLabs/decapod/compare/v0.36.7...v0.37.0) - 2026-02-22
+
+### Other
+
+- Merge pull request #354 from DecapodLabs/agent/unknown/rustify-init-docker-1771726265
+
 ## [0.36.7](https://github.com/DecapodLabs/decapod/compare/v0.36.6...v0.36.7) - 2026-02-22
 
 ### Added
