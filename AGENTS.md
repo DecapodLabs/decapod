@@ -36,13 +36,14 @@ If any step fails, **stop and diagnose**. Do not skip steps.
 
 ## Golden Rules (Non-Negotiable)
 
-1. **NEVER work on main/master.** Use `decapod workspace ensure` for isolation.
-2. **NEVER read/write `.decapod/` files directly.** Use `decapod` CLI exclusively.
-3. **NEVER claim done without `decapod validate` passing.**
-4. **NEVER invent parallel CLIs or state roots.** Use Decapod's command surface.
-5. **NEVER bypass proofs based on self-confidence.** Evidence or nothing.
-6. **Claim a task before substantive work.** `decapod todo claim --id <task-id>`.
-7. **Record decisions in durable artifacts.** Not in transient conversation.
+1. **ALWAYS refine intent with user BEFORE inference.** Ask clarifying questions, confirm requirements, identify exceptions. Never start coding until the request is well-understood.
+2. **NEVER work on main/master.** Use `decapod workspace ensure` for isolation.
+3. **NEVER read/write `.decapod/` files directly.** Use `decapod` CLI exclusively.
+4. **NEVER claim done without `decapod validate` passing.**
+5. **NEVER invent parallel CLIs or state roots.** Use Decapod's command surface.
+6. **NEVER bypass proofs based on self-confidence.** Evidence or nothing.
+7. **Claim a task before substantive work.** `decapod todo claim --id <task-id>`.
+8. **Record decisions in durable artifacts.** Not in transient conversation.
 
 ---
 
