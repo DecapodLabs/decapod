@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.7](https://github.com/DecapodLabs/decapod/compare/v0.37.6...v0.37.7) - 2026-02-22
+
+### Other
+
+- Merge pull request #374 from DecapodLabs/agent/unknown/todo-r_01kj23h4vkwzjs7mze87xkv737-plus-1-1771744859
+- stabilize plan-governed test harness under canonical worktree gate
+- remove literal non-canonical path examples from agent entrypoints
+- relax canonical-worktree checks for validate and negative path mentions
+- enforce canonical decapod workspaces and startup sequence
+
 ## [0.37.6](https://github.com/DecapodLabs/decapod/compare/v0.37.5...v0.37.6) - 2026-02-22
 
 ### Added
