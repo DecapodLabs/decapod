@@ -45,6 +45,7 @@ sha2 = "0.10"
 rust-embed = { version = "8.5", features = ["include-exclude"] }
 toml = "1.0"
 rayon = "1.10"
+colored = "3.1"
 
 [dev-dependencies]
 tempfile = "3.10"
