@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.7](https://github.com/DecapodLabs/decapod/compare/v0.36.6...v0.36.7) - 2026-02-22
+
+### Added
+
+- add intent refinement requirement for agents
+
+### Fixed
+
+- sync templates with AGENTS.md golden rules
+
 ## [0.36.6](https://github.com/DecapodLabs/decapod/compare/v0.36.5...v0.36.6) - 2026-02-22
 
 ### Other
