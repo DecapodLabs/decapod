@@ -1,16 +1,25 @@
-# .decapod - Decapod Project Metadata
+# .decapod - Decapod Project Metadata 🦀✨
 
-This directory is managed by the decapod.
+Welcome to the control-plane directory for this repo.
 
 ## Quick Start
 
 1. **Initialize**: Run `decapod init` to set up your project
-2. **Configure overrides**: Edit `OVERRIDE.md` to customize behavior
+2. **Configure overrides**: Edit `.decapod/OVERRIDE.md` to customize behavior
 3. **Read docs**: Use `decapod docs show <path>` to read constitution docs
+
+## Summary
+
+The `.decapod/OVERRIDES.md` file is your project-local override layer for Decapod's embedded constitution.
+
+The embedded constitution (shipped with Decapod) is read-only baseline policy.
+`.decapod/OVERRIDE.md` is where you add project-specific behavior without forking Decapod.
+
+Keep overrides in the correct section, minimal and explicit.
 
 ## How to Use Overrides
 
-The embedded constitution (read-only, shipped with Decapod) provides the base methodology. The `OVERRIDE.md` file lets you customize behavior without forking Decapod.
+The embedded constitution (read-only, shipped with Decapod) provides the base methodology. The `.decapod/OVERRIDE.md` file lets you customize behavior without forking Decapod.
 
 **To add an override:**
 
@@ -40,7 +49,7 @@ For this project, we use a 5-level priority system:
 - **Core**: DECAPOD.md, INTERFACES.md, METHODOLOGY.md, PLUGINS.md, GAPS.md, DEMANDS.md, DEPRECATION.md
 - **Specs**: INTENT.md, SYSTEM.md, AMENDMENTS.md, SECURITY.md, GIT.md
 - **Interfaces**: CLAIMS.md, CONTROL_PLANE.md, DOC_RULES.md, GLOSSARY.md, STORE_MODEL.md
-- **Methodology**: ARCHITECTURE.md, SOUL.md, KNOWLEDGE.md, MEMORY.md, TESTING.md, CI_CD.md
+- **Methodology**: ARCHITECTURE.md, SOUL.md, KNOWLEDGE.md, MEMORY.md
 - **Architecture**: DATA.md, CACHING.md, MEMORY.md, WEB.md, CLOUD.md, FRONTEND.md, ALGORITHMS.md, SECURITY.md, OBSERVABILITY.md, CONCURRENCY.md
 - **Plugins**: TODO.md, MANIFEST.md, EMERGENCY_PROTOCOL.md, DB_BROKER.md, CRON.md, REFLEX.md, HEALTH.md, POLICY.md, WATCHER.md, KNOWLEDGE.md, ARCHIVE.md, FEDERATION.md, FEEDBACK.md, TRUST.md, CONTEXT.md, HEARTBEAT.md, TEAMMATE.md, VERIFY.md, DECIDE.md, AUTOUPDATE.md
 
