@@ -8,6 +8,7 @@ use std::process::Command;
 
 const PLAN_SCHEMA_VERSION: &str = "1.0.0";
 const PLAN_PATH: &str = ".decapod/governance/plan.json";
+const ARCHITECTURE_PATH: &str = ".decapod/governance/architecture.md";
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -77,6 +78,83 @@ pub fn plan_path(project_root: &Path) -> PathBuf {
     project_root.join(PLAN_PATH)
 }
 
+pub fn architecture_path(project_root: &Path) -> PathBuf {
+    project_root.join(ARCHITECTURE_PATH)
+}
+
+fn render_architecture_artifact(plan: &GovernedPlan) -> String {
+    let todo_line = if plan.todo_ids.is_empty() {
+        "<none>".to_string()
+    } else {
+        plan.todo_ids.join(", ")
+    };
+    let proof_line = if plan.proof_hooks.is_empty() {
+        "decapod validate".to_string()
+    } else {
+        plan.proof_hooks.join(", ")
+    };
+
+    format!(
+        "# Architecture Artifact\n\n## Intent Alignment\n- Plan title: {}\n- Intent: {}\n- TODO scope: {}\n\n## System Design\n- Components touched: documented in this artifact before merge.\n- Data/store boundaries: repo-native through decapod control plane.\n\n## Invariants\n- Deterministic execution and typed failures are preserved.\n- Promotion-relevant state remains proof-gated.\n- No direct mutation outside decapod CLI/RPC boundaries.\n\n## Tradeoffs\n- Chosen approach and rejected alternatives are documented.\n- Risks and mitigations are explicit and testable.\n\n## Verification Strategy\n- Required proof hooks: {}\n- CI gates: cargo fmt, cargo clippy, cargo test, decapod validate\n\n## Rollout & Operations\n- Migration/compatibility impact is documented.\n- Failure handling and rollback path are documented.\n",
+        plan.title, plan.intent, todo_line, proof_line
+    )
+}
+
+fn ensure_architecture_artifact(
+    project_root: &Path,
+    plan: &GovernedPlan,
+) -> Result<(), error::DecapodError> {
+    let path = architecture_path(project_root);
+    if path.exists() {
+        return Ok(());
+    }
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    }
+    fs::write(path, render_architecture_artifact(plan)).map_err(error::DecapodError::IoError)
+}
+
+fn architecture_artifact_sections_present(content: &str) -> bool {
+    [
+        "## Intent Alignment",
+        "## System Design",
+        "## Invariants",
+        "## Tradeoffs",
+        "## Verification Strategy",
+        "## Rollout & Operations",
+    ]
+    .iter()
+    .all(|required| content.contains(required))
+}
+
+pub fn ensure_architecture_artifact_ready(project_root: &Path) -> Result<(), error::DecapodError> {
+    let path = architecture_path(project_root);
+    if !path.exists() {
+        return Err(marker_error(
+            "NEEDS_HUMAN_INPUT",
+            "Execution blocked: required architecture artifact is missing.",
+            Some(json!({
+                "questions": [
+                    "Create architecture artifact at .decapod/governance/architecture.md using Decapod-generated sections."
+                ]
+            })),
+        ));
+    }
+    let content = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+    if !architecture_artifact_sections_present(&content) {
+        return Err(marker_error(
+            "NEEDS_HUMAN_INPUT",
+            "Execution blocked: architecture artifact is incomplete.",
+            Some(json!({
+                "questions": [
+                    "Populate all required sections in .decapod/governance/architecture.md (Intent Alignment, System Design, Invariants, Tradeoffs, Verification Strategy, Rollout & Operations)."
+                ]
+            })),
+        ));
+    }
+    Ok(())
+}
+
 pub fn load_plan(project_root: &Path) -> Result<Option<GovernedPlan>, error::DecapodError> {
     let path = plan_path(project_root);
     if !path.exists() {
@@ -118,6 +196,7 @@ pub fn init_plan(
         updated_at: crate::core::time::now_epoch_z(),
     };
     save_plan(project_root, &plan)?;
+    ensure_architecture_artifact(project_root, &plan)?;
     Ok(plan)
 }
 
@@ -159,6 +238,7 @@ pub fn patch_plan(
     }
     plan.updated_at = crate::core::time::now_epoch_z();
     save_plan(project_root, &plan)?;
+    ensure_architecture_artifact(project_root, &plan)?;
     Ok(plan)
 }
 
@@ -243,6 +323,7 @@ pub fn ensure_execute_ready(
         ));
     }
 
+    ensure_architecture_artifact_ready(input.project_root)?;
     enforce_scope_constraints(input.project_root, &plan.constraints)?;
     Ok(plan)
 }

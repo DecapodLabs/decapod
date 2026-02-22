@@ -1,3 +1,4 @@
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
@@ -111,6 +112,16 @@ fn plan_gate_returns_needs_human_input_until_questions_cleared() {
         "plan init failed: {}",
         String::from_utf8_lossy(&init_plan.stderr)
     );
+    let architecture_path = dir.join(".decapod/governance/architecture.md");
+    assert!(
+        architecture_path.exists(),
+        "plan init must generate architecture artifact"
+    );
+    let architecture = fs::read_to_string(&architecture_path).expect("read architecture artifact");
+    assert!(
+        architecture.contains("## Verification Strategy"),
+        "architecture artifact must include required sections"
+    );
 
     let approve = run_decapod(&dir, &["govern", "plan", "approve"]);
     assert!(
@@ -157,5 +168,20 @@ fn plan_gate_returns_needs_human_input_until_questions_cleared() {
         ok.status.success(),
         "check-execute should pass after questions are cleared: {}",
         String::from_utf8_lossy(&ok.stderr)
+    );
+
+    fs::remove_file(&architecture_path).expect("remove architecture artifact");
+    let missing_arch = run_decapod(
+        &dir,
+        &["govern", "plan", "check-execute", "--todo-id", &todo_id],
+    );
+    assert!(
+        !missing_arch.status.success(),
+        "check-execute should fail when architecture artifact is missing"
+    );
+    let missing_arch_stderr = String::from_utf8_lossy(&missing_arch.stderr);
+    assert!(
+        missing_arch_stderr.contains("NEEDS_HUMAN_INPUT"),
+        "missing architecture artifact must emit NEEDS_HUMAN_INPUT marker; got: {missing_arch_stderr}"
     );
 }
