@@ -28,6 +28,8 @@ Golden rules:
 6. Preserve control-plane opacity at the operator interface: communicate intent/actions/outcomes, not command-surface mechanics, unless diagnostics are explicitly requested.
 7. Liveness must be maintained through invocation heartbeat: each Decapod command invocation should refresh agent presence.
 8. Session access must be bound to agent identity plus ephemeral password (`DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD`) for command authorization (claim: `claim.session.agent_password_required`).
+9. Control-plane operations MUST remain daemonless and local-first; no required always-on coordinator may become a hidden dependency.
+10. No single session may hold datastore locks across user turns; lock scope must stay within a bounded command invocation.
 
 This is how you get determinism, auditability, and eventually policy.
 
@@ -150,6 +152,15 @@ Severity levels:
 - error: fails validation (blocks claims)
 - warn: allowed but noisy
 - info: telemetry
+
+### 6.1 Locking and Liveness Contract
+
+Validation and promotion-critical checks must preserve control-plane liveness:
+
+1. `decapod validate` MUST terminate boundedly (success or typed failure).
+2. Lock/contention failures MUST return structured, machine-readable error markers (`VALIDATE_TIMEOUT_OR_LOCK` family), never silent hangs.
+3. Transactions in validation paths MUST be short-lived and scoped to a single invocation.
+4. Promotion-relevant commands MUST treat typed timeout/lock failures as blocking failures by default.
 
 Validate coverage matrix (starter; expand over time):
 
