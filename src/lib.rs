@@ -1830,7 +1830,8 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
     }
 
     if agent_id == "unknown" {
-        return Ok(());
+        // Force session instantiation for unknown agents (required for validate)
+        return auto_acquire_session(&project_root, &agent_id);
     }
 
     let supplied_password = match std::env::var("DECAPOD_SESSION_PASSWORD") {
