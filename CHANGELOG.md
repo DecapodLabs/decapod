@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.5](https://github.com/DecapodLabs/decapod/compare/v0.37.4...v0.37.5) - 2026-02-22
+
+### Other
+
+- Trim runtime deps by replacing chrono/colored/which
+
 ### Added
 
 - *(interfaces)* add plan-governed execution contract and typed pushback markers
