@@ -331,7 +331,7 @@ pub fn apply_answer(
         Answer {
             question_id: question_id.to_string(),
             value,
-            timestamp: chrono::Utc::now().to_rfc3339(),
+            timestamp: crate::core::time::now_epoch_z(),
         },
     );
 
