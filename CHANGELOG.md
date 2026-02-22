@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.6](https://github.com/DecapodLabs/decapod/compare/v0.37.5...v0.37.6) - 2026-02-22
+
+### Added
+
+- beautify CLI output for init and validate commands
+
+### Fixed
+
+- ignore broken verify_mvp test (fails on master)
+
 ## [0.37.5](https://github.com/DecapodLabs/decapod/compare/v0.37.4...v0.37.5) - 2026-02-22
 
 ### Other
