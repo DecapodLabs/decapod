@@ -38,4 +38,4 @@ See **AGENTS.md** for the full universal contract.
 
 ## Optional Operator Guide
 
-`decapod docs show constitution/docs/PLAYBOOK.md`
+`decapod docs show docs/PLAYBOOK.md`
