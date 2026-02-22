@@ -11,7 +11,9 @@ decapod docs ingest
 decapod session acquire
 decapod rpc --op agent.init
 decapod rpc --op context.resolve
+decapod todo add "<task>"
 decapod todo claim --id <task-id>
+decapod workspace ensure
 ```
 
 ## Operating Mode
@@ -19,7 +21,7 @@ decapod todo claim --id <task-id>
 - Plan first: Non-trivial changes require a plan artifact.
 - Proof first: `decapod validate` MUST pass before claiming done.
 - Minimal changes: Only change what is directly requested.
-- Workspace isolation: `decapod workspace ensure`. Never main/master.
+- Workspace isolation: run `decapod workspace ensure` and work only from `.decapod/workspaces/*`. Never main/master, never `.claude/worktrees`.
 - CLI only: All `.decapod/` access through `decapod` CLI.
 - Just-in-time context: load only the minimum required doc slices with `decapod docs show <path>`.
 - Embedded constitution only: never read `constitution/*` directly; use `decapod docs show <embedded-path>`.

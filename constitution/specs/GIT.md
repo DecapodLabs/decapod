@@ -26,7 +26,7 @@ Git is the canonical state layer for all project work. Poor git hygiene leads to
 
 ### 1.0. Container Workspace Mandate
 
-All git-tracked implementation work MUST execute in Docker-isolated git workspaces, not by directly editing the host repository working tree (claim: `claim.git.container_workspace_required`).
+All git-tracked implementation work MUST execute in Docker-isolated git workspaces rooted at `.decapod/workspaces/*`, not by directly editing the host repository working tree (claim: `claim.git.container_workspace_required`).
 
 Required:
 - Use container workspace flows for branch creation, commits, and pushes.

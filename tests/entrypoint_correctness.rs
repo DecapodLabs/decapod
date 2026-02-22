@@ -512,6 +512,21 @@ fn test_entrypoints_use_embedded_docs_paths_only() {
             "{} must reference embedded docs path for operator playbook",
             file
         );
+        assert!(
+            content.contains(".decapod/workspaces"),
+            "{} must mandate canonical Decapod worktree root",
+            file
+        );
+        assert!(
+            content.contains("decapod todo add \"<task>\""),
+            "{} must require task creation before claim",
+            file
+        );
+        assert!(
+            !content.contains(".claude/worktrees"),
+            "{} must never reference non-canonical .claude/worktrees path",
+            file
+        );
     }
 }
 

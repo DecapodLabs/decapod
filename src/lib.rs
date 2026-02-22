@@ -1269,6 +1269,35 @@ fn command_requires_worktree(command: &Command) -> bool {
     }
 }
 
+fn is_canonical_decapod_worktree_path(path: &Path) -> bool {
+    let mut saw_decapod = false;
+    for comp in path.components() {
+        let seg = comp.as_os_str().to_string_lossy();
+        if seg == ".decapod" {
+            saw_decapod = true;
+            continue;
+        }
+        if saw_decapod && seg == "workspaces" {
+            return true;
+        }
+    }
+    false
+}
+
+fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
+    !matches!(
+        command,
+        Command::Validate(_)
+            | Command::Docs(_)
+            | Command::Release(_)
+            | Command::Trace(_)
+            | Command::Capabilities(_)
+            | Command::Doctor(_)
+            | Command::StateCommit(_)
+            | Command::Qa(_)
+    )
+}
+
 fn enforce_worktree_requirement(
     command: &Command,
     project_root: &Path,
@@ -1282,11 +1311,35 @@ fn enforce_worktree_requirement(
 
     let status = crate::core::workspace::get_workspace_status(project_root)?;
     if status.git.in_worktree {
+        let worktree_path = status
+            .git
+            .worktree_path
+            .clone()
+            .unwrap_or_else(|| project_root.to_path_buf());
+        if !is_canonical_decapod_worktree_path(&worktree_path) {
+            return Err(error::DecapodError::ValidationError(format!(
+                "SCOPE_VIOLATION: non-canonical worktree path '{}'. Decapod-managed work must run from '.decapod/workspaces/*'. Run `decapod workspace ensure --branch agent/<id>/<topic>` and execute from the returned path.",
+                worktree_path.display()
+            )));
+        }
+
+        if command_requires_todo_scoped_worktree(command)
+            && !status
+                .git
+                .current_branch
+                .to_ascii_lowercase()
+                .contains("r_")
+        {
+            return Err(error::DecapodError::ValidationError(format!(
+                "SCOPE_VIOLATION: branch '{}' is not todo-scoped. Run `decapod todo add \"<task>\"`, `decapod todo claim --id <task-id>`, then `decapod workspace ensure`.",
+                status.git.current_branch
+            )));
+        }
         return Ok(());
     }
 
     Err(error::DecapodError::ValidationError(format!(
-        "Command requires isolated git worktree; current checkout is not a worktree (branch='{}'). Run `decapod workspace ensure --branch agent/<id>/<topic>` and execute from the reported worktree path.",
+        "Command requires isolated git worktree under '.decapod/workspaces'; current checkout is not a worktree (branch='{}'). Run `decapod workspace ensure --branch agent/<id>/<topic>` and execute from the reported worktree path.",
         status.git.current_branch
     )))
 }
@@ -1322,11 +1375,23 @@ fn enforce_worktree_requirement_for_rpc(
 
     let status = crate::core::workspace::get_workspace_status(project_root)?;
     if status.git.in_worktree {
+        let worktree_path = status
+            .git
+            .worktree_path
+            .clone()
+            .unwrap_or_else(|| project_root.to_path_buf());
+        if !is_canonical_decapod_worktree_path(&worktree_path) {
+            return Err(error::DecapodError::ValidationError(format!(
+                "SCOPE_VIOLATION: RPC op '{}' must execute from a Decapod-managed worktree under '.decapod/workspaces/*' (current '{}'). Run `decapod workspace ensure` and retry.",
+                op,
+                worktree_path.display()
+            )));
+        }
         return Ok(());
     }
 
     Err(error::DecapodError::ValidationError(format!(
-        "RPC op '{}' requires isolated git worktree; current checkout is not a worktree (branch='{}'). Run `decapod workspace ensure --branch agent/<id>/<topic>` and execute from the reported worktree path.",
+        "RPC op '{}' requires isolated git worktree under '.decapod/workspaces'; current checkout is not a worktree (branch='{}'). Run `decapod workspace ensure --branch agent/<id>/<topic>` and execute from the reported worktree path.",
         op, status.git.current_branch
     )))
 }

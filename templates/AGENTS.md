@@ -26,8 +26,12 @@ decapod rpc --op agent.init
 # 5. Resolve context
 decapod rpc --op context.resolve
 
-# 6. Claim your task
+# 6. Create + claim your task
+decapod todo add "<task>"
 decapod todo claim --id <task-id>
+
+# 7. Enter canonical worktree
+decapod workspace ensure
 ```
 
 If any step fails, **stop and diagnose**. Do not skip steps.
@@ -37,7 +41,7 @@ If any step fails, **stop and diagnose**. Do not skip steps.
 ## Golden Rules (Non-Negotiable)
 
 1. **ALWAYS refine intent with user BEFORE inference.** Ask clarifying questions, confirm requirements, identify exceptions. Never start coding until the request is well-understood.
-2. **NEVER work on main/master.** Use `decapod workspace ensure` for isolation.
+2. **NEVER work on main/master.** Use `decapod workspace ensure` and run from `.decapod/workspaces/*`.
 3. **NEVER read/write `.decapod/` files directly.** Use `decapod` CLI exclusively.
 4. **NEVER claim done without `decapod validate` passing.**
 5. **NEVER invent parallel CLIs or state roots.** Use Decapod's command surface.
@@ -45,6 +49,7 @@ If any step fails, **stop and diagnose**. Do not skip steps.
 7. **Claim a task before substantive work.** `decapod todo claim --id <task-id>`.
 8. **Record decisions in durable artifacts.** Not in transient conversation.
 9. **NEVER read `constitution/*` files directly.** Constitution is embedded in the Decapod binary; access it via `decapod docs show <embedded-path>`.
+10. **NEVER use non-canonical worktree roots** (for example `.claude/worktrees`). Decapod work executes only in `.decapod/workspaces/*`.
 
 ---
 
@@ -52,7 +57,7 @@ If any step fails, **stop and diagnose**. Do not skip steps.
 
 - **Contextualization**: Resolve context via `agent.init` and `context.resolve` before mutations.
 - **State Mutation**: Use `decapod` CLI/RPC exclusively for state changes.
-- **Isolation**: Use `decapod workspace ensure` for worktrees. Never work on protected branches.
+- **Isolation**: Use `decapod workspace ensure` for worktrees and execute from `.decapod/workspaces/*`. Never work on protected branches.
 - **Verification**: `decapod validate` is the authoritative completion gate.
 - **Liveness**: Each command invocation refreshes your agent presence. Use `decapod todo heartbeat` for explicit heartbeat.
 
