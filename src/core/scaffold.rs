@@ -14,6 +14,7 @@
 
 use crate::core::assets;
 use crate::core::error;
+use crate::plugins::container;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -193,15 +194,13 @@ pub fn scaffold_project_entrypoints(
         blend_legacy_entrypoints(&opts.target_dir)?;
     }
 
-    // Explode Dockerfile template to .decapod/generated/
+    // Generate .decapod/generated/Dockerfile from Rust-owned template component.
     let generated_dir = opts.target_dir.join(".decapod/generated");
     fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
-    if let Some(dockerfile_content) = assets::get_template("Dockerfile") {
-        let dockerfile_path = generated_dir.join("Dockerfile");
-        if !dockerfile_path.exists() {
-            fs::write(&dockerfile_path, dockerfile_content)
-                .map_err(error::DecapodError::IoError)?;
-        }
+    let dockerfile_path = generated_dir.join("Dockerfile");
+    if !dockerfile_path.exists() {
+        let dockerfile_content = container::generated_dockerfile_for_repo(&opts.target_dir);
+        fs::write(&dockerfile_path, dockerfile_content).map_err(error::DecapodError::IoError)?;
     }
 
     Ok(ScaffoldSummary {

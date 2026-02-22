@@ -6,11 +6,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-env-changed=DECAPOD_CONSTITUTION_DIR");
     println!("cargo:rerun-if-changed=constitution");
     println!("cargo:rerun-if-changed=templates");
-    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=crates/build/constitution_index.rs");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
 
-    // Index all constitution documents and set up watch dependencies
     let dirs = [
         "core",
         "specs",
@@ -18,6 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "interfaces",
         "methodology",
         "architecture",
+        "docs",
     ];
     let mut doc_count = 0;
 
@@ -33,7 +33,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let entry = entry?;
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) == Some("md") {
-                // Set up individual file watch for fine-grained rebuilds
                 println!("cargo:rerun-if-changed={}", path.display());
                 doc_count += 1;
             }
