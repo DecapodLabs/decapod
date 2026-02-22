@@ -4233,15 +4233,31 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
             artifact,
         } => {
             let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
+            let project_root = store
+                .root
+                .parent()
+                .and_then(|p| p.parent())
+                .map(|p| p.to_path_buf())
+                .unwrap_or(std::env::current_dir().map_err(error::DecapodError::IoError)?);
+            if crate::core::plan_governance::load_plan(&project_root)?.is_some() {
+                crate::core::plan_governance::ensure_execute_ready(
+                    crate::core::plan_governance::ExecuteCheckInput {
+                        project_root: &project_root,
+                        store_root: &store.root,
+                        todo_id: Some(&task_id),
+                    },
+                )?;
+            }
             let out = update_status(store, &task_id, "done", "task.done", serde_json::json!({}))?;
             if *validated && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
-                let repo_root = store
-                    .root
-                    .parent()
-                    .and_then(|p| p.parent())
-                    .map(|p| p.to_path_buf())
-                    .unwrap_or(std::env::current_dir().map_err(error::DecapodError::IoError)?);
-                verify::capture_baseline_for_todo(store, &repo_root, &task_id, artifact.clone())?;
+                verify::capture_baseline_for_todo(
+                    store,
+                    &project_root,
+                    &task_id,
+                    artifact.clone(),
+                )?;
+            } else if out.get("status").and_then(|v| v.as_str()) == Some("ok") {
+                mark_todo_claimed_pending_proof(store, &task_id)?;
             }
             out
         }
@@ -4597,6 +4613,53 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
         },
     }
 
+    Ok(())
+}
+
+fn mark_todo_claimed_pending_proof(
+    store: &Store,
+    todo_id: &str,
+) -> Result<(), error::DecapodError> {
+    let ts = now_iso();
+    let broker = DbBroker::new(&store.root);
+    let db_path = todo_db_path(&store.root);
+    broker.with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "todo.proof.claimed",
+        |conn| {
+            ensure_schema(conn)?;
+            conn.execute(
+                "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
+                 VALUES(?1, ?2, NULL, ?3, ?4, ?5, 90, ?3)
+                 ON CONFLICT(todo_id) DO UPDATE SET
+                   proof_plan=excluded.proof_plan,
+                   last_verified_at=excluded.last_verified_at,
+                   last_verified_status=excluded.last_verified_status,
+                   last_verified_notes=excluded.last_verified_notes,
+                   updated_at=excluded.updated_at",
+                rusqlite::params![
+                    todo_id,
+                    "[\"validate_passes\"]",
+                    ts,
+                    "CLAIMED",
+                    "Claimed complete; proof hooks not yet verified. Run `decapod qa verify todo <id>`.",
+                ],
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+            Ok(())
+        },
+    )?;
+    record_task_event(
+        &store.root,
+        "task.proof.claimed",
+        Some(todo_id),
+        serde_json::json!({
+            "last_verified_status": "CLAIMED",
+            "last_verified_notes": "Proof hooks pending verification"
+        }),
+    )?;
     Ok(())
 }
 
