@@ -444,7 +444,7 @@ pub fn success_response(
     allowed_next_ops: Vec<AllowedOp>,
     mandates: Vec<Mandate>,
 ) -> RpcResponse {
-    let timestamp = chrono::Utc::now().to_rfc3339();
+    let timestamp = crate::core::time::now_epoch_z();
 
     let inputs_hash = format!(
         "{:x}",
@@ -488,7 +488,7 @@ pub fn error_response(
     blocker: Option<Blocker>,
     mandates: Vec<Mandate>,
 ) -> RpcResponse {
-    let timestamp = chrono::Utc::now().to_rfc3339();
+    let timestamp = crate::core::time::now_epoch_z();
     let inputs_hash = format!(
         "{:x}",
         sha2::Sha256::digest(serde_json::to_string(&params).unwrap_or_default())
