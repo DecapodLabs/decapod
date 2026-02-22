@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.1](https://github.com/DecapodLabs/decapod/compare/v0.37.0...v0.37.1) - 2026-02-22
+
+### Other
+
+- *(audit)* map Levie capability buckets to kernel primitives
+
 ## [0.37.0](https://github.com/DecapodLabs/decapod/compare/v0.36.7...v0.37.0) - 2026-02-22
 
 ### Other
