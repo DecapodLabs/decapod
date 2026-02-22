@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.4](https://github.com/DecapodLabs/decapod/compare/v0.37.3...v0.37.4) - 2026-02-22
+
+### Added
+
+- *(release)* ship 5 one-shot governance gates for intent convergence
+
+### Other
+
+- Merge pull request #362 from DecapodLabs/agent/unknown/r-01kj1n50qe34xkvq6c30s28np9
+
 ## [0.37.3](https://github.com/DecapodLabs/decapod/compare/v0.37.2...v0.37.3) - 2026-02-22
 
 ### Added
