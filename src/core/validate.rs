@@ -609,21 +609,32 @@ fn validate_entrypoint_invariants(
             all_present = false;
         }
 
-        // Entrypoints must reference embedded constitution docs, never legacy top-level docs/.
-        if agent_content.contains("decapod docs show docs/") {
+        // Must use embedded doc paths via CLI, never direct constitution/* file paths.
+        if agent_content.contains("decapod docs show constitution/")
+            || agent_content.contains("(constitution/")
+        {
             fail(
                 &format!(
-                    "{} references non-embedded docs path (`docs/`). Use `constitution/docs/`.",
+                    "{} references direct constitution filesystem paths; use embedded doc paths (e.g. core/*, specs/*, docs/*)",
                     agent_file
                 ),
                 ctx,
             );
             all_present = false;
-        } else if agent_content.contains("decapod docs show constitution/docs/") {
+        } else if agent_content.contains("decapod docs show docs/") {
             pass(
-                &format!("{} references embedded constitution docs path", agent_file),
+                &format!("{} references embedded docs path convention", agent_file),
                 ctx,
             );
+        } else {
+            fail(
+                &format!(
+                    "{} missing embedded docs path reference (`decapod docs show docs/...`)",
+                    agent_file
+                ),
+                ctx,
+            );
+            all_present = false;
         }
 
         // Must include explicit jail rule for .decapod access
