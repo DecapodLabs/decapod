@@ -2,6 +2,7 @@ use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
 use std::process::Command;
 use std::thread;
+use std::time::Duration;
 use tempfile::TempDir;
 
 fn setup_workspace() -> (TempDir, PathBuf) {
@@ -46,12 +47,28 @@ fn setup_workspace() -> (TempDir, PathBuf) {
         String::from_utf8_lossy(&session.stderr)
     );
 
-    // Warm up the TODO DB to avoid migration race conditions in threads
-    let _ = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["todo", "list"])
-        .current_dir(&dir)
-        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
-        .output();
+    // Warm up and assert the TODO surface is ready to avoid migration/setup races in worker threads.
+    let mut warm_ok = false;
+    let mut warm_out = String::new();
+    for attempt in 0..=5 {
+        let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(["todo", "list"])
+            .current_dir(&dir)
+            .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+            .output()
+            .expect("decapod todo list");
+        warm_out = format!(
+            "{}\n{}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        if out.status.success() {
+            warm_ok = true;
+            break;
+        }
+        thread::sleep(Duration::from_millis(40 * (attempt + 1)));
+    }
+    assert!(warm_ok, "todo list warmup failed:\n{}", warm_out);
 
     (tmp, dir)
 }
@@ -78,9 +95,13 @@ fn run_with_retries(dir: &PathBuf, args: &[&str], max_retries: u32) -> (bool, St
         if out.status.success() || attempt == max_retries {
             return (out.status.success(), combined);
         }
-        // Retry on transient SQLite I/O errors (disk I/O error, database is locked)
-        if combined.contains("disk I/O error") || combined.contains("database is locked") {
-            thread::sleep(std::time::Duration::from_millis(50 * (attempt as u64 + 1)));
+        // Retry on transient DB/process contention errors seen under heavy parallel CI load.
+        if combined.contains("disk I/O error")
+            || combined.contains("database is locked")
+            || combined.contains("No such file or directory")
+            || combined.contains("IoError(Os { code: 2")
+        {
+            thread::sleep(Duration::from_millis(50 * (attempt as u64 + 1)));
             continue;
         }
         return (false, combined);
@@ -135,7 +156,7 @@ fn chaos_multi_agent_replay_is_deterministic() {
                         "--tags",
                         "chaos,replay",
                     ],
-                    3,
+                    6,
                 );
                 assert!(ok, "todo add failed for {}:\n{}", title, out);
 

@@ -20,6 +20,7 @@ This registry defines the canonical binding interface surfaces.
 | `interfaces/GLOSSARY.md` | Normative term definitions | Yes |
 | `interfaces/STORE_MODEL.md` | Store semantics and purity model | Yes |
 | `interfaces/TESTING.md` | Verification and proof claim contract | Yes |
+| `interfaces/ARCHITECTURE_FOUNDATIONS.md` | Architecture quality primitives and governed artifact contract | Yes |
 | `interfaces/KNOWLEDGE_SCHEMA.md` | Knowledge schema + invariants | Yes |
 | `interfaces/MEMORY_SCHEMA.md` | Memory schema + retrieval-event contract | Yes |
 | `interfaces/DEMANDS_SCHEMA.md` | User-demand schema + precedence rules | Yes |
@@ -31,6 +32,7 @@ This registry defines the canonical binding interface surfaces.
 ## 2. Decision Rights (Routing)
 
 - Proof claims and testing obligations: `interfaces/TESTING.md`
+- Architecture delivery primitives and artifact contract: `interfaces/ARCHITECTURE_FOUNDATIONS.md`
 - Knowledge structure and validation: `interfaces/KNOWLEDGE_SCHEMA.md`
 - Memory structure and retrieval-event semantics: `interfaces/MEMORY_SCHEMA.md`
 - User demand typing and precedence: `interfaces/DEMANDS_SCHEMA.md`
@@ -63,6 +65,7 @@ This registry defines the canonical binding interface surfaces.
 - `interfaces/STORE_MODEL.md` - Store semantics
 - `interfaces/GLOSSARY.md` - Term definitions
 - `interfaces/TESTING.md` - Testing contract
+- `interfaces/ARCHITECTURE_FOUNDATIONS.md` - Architecture quality primitives
 - `interfaces/RISK_POLICY_GATE.md` - Deterministic PR risk-policy gate
 - `interfaces/AGENT_CONTEXT_PACK.md` - Agent context-pack contract
 
