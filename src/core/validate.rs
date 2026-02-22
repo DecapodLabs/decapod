@@ -218,7 +218,10 @@ fn validate_embedded_self_contained(
                     || line.contains("primarily contain")
                     || line.contains(".decapod/context/")
                     || line.contains(".decapod/memory/")
-                    || line.contains("intended as");
+                    || line.contains("intended as")
+                    || line.contains(".decapod/knowledge/")
+                    || line.contains(".decapod/data/")
+                    || line.contains("repo-scoped");
                 if is_legitimate_line {
                     legitimate_ref_count += refs_on_line;
                 }
