@@ -410,3 +410,42 @@ fn validate_diagnostics_payload_is_sanitized() {
         "run_id must be non-ULID/non-hyphenated to avoid inferential timestamp encoding"
     );
 }
+
+#[test]
+fn validate_smoke_runtime_is_bounded_without_contention() {
+    let (_tmp, dir, password) = setup_repo();
+    let mut durations_ms = Vec::new();
+
+    for _ in 0..3 {
+        let start = Instant::now();
+        let output = run_decapod(
+            &dir,
+            &["validate"],
+            &[
+                ("DECAPOD_AGENT_ID", "unknown"),
+                ("DECAPOD_SESSION_PASSWORD", &password),
+                ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+                ("DECAPOD_VALIDATE_TIMEOUT_SECS", "10"),
+            ],
+        );
+        let elapsed = start.elapsed().as_millis() as u64;
+        durations_ms.push(elapsed);
+        assert!(
+            output.status.success(),
+            "validate should pass without forced contention; stderr:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(
+            elapsed < 10_000,
+            "validate runtime exceeded bounded smoke threshold: {}ms",
+            elapsed
+        );
+    }
+
+    let total: u64 = durations_ms.iter().sum();
+    assert!(
+        total < 20_000,
+        "three sequential validates should stay within bounded aggregate runtime; got {}ms",
+        total
+    );
+}

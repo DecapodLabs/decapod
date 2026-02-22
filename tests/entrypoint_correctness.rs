@@ -494,3 +494,29 @@ fn test_agent_entrypoints_are_identical() {
         "Template entrypoints must be identical: CLAUDE.md != CODEX.md"
     );
 }
+
+#[test]
+fn test_agent_entrypoints_only_reference_embedded_docs() {
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    for file in [
+        "CLAUDE.md",
+        "GEMINI.md",
+        "CODEX.md",
+        "templates/CLAUDE.md",
+        "templates/GEMINI.md",
+        "templates/CODEX.md",
+    ] {
+        let content = fs::read_to_string(repo_root.join(file))
+            .unwrap_or_else(|_| panic!("Failed to read {}", file));
+        assert!(
+            !content.contains("decapod docs show docs/"),
+            "{} must not reference legacy docs/ paths",
+            file
+        );
+        assert!(
+            content.contains("decapod docs show constitution/docs/"),
+            "{} must reference embedded constitution docs",
+            file
+        );
+    }
+}

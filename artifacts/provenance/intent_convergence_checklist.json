@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "kind": "intent_convergence_checklist",
+  "pr": {
+    "base": "master",
+    "scope": "governance-kernel"
+  },
+  "intent": "Each merge MUST preserve user intent traceability and proof-gated completion.",
+  "scope": "release-ready repository state",
+  "checklist": [
+    {
+      "name": "intent-linked-spec",
+      "status": "pass",
+      "evidence": "INTENT.md"
+    },
+    {
+      "name": "proof-gates-green",
+      "status": "pass",
+      "evidence": "decapod validate"
+    },
+    {
+      "name": "provenance-manifests-present",
+      "status": "pass",
+      "evidence": "artifacts/provenance/*.json"
+    }
+  ]
+}
