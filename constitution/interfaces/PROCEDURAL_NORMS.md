@@ -222,7 +222,7 @@ This file provides concrete examples of procedural norms (team skills) that agen
   "type": "agent_expectation",
   "schema_version": "1.0.0",
   "title": "Never work on main/master directly",
-  "rule": "All implementation work must happen in isolated worktrees. Use 'decapod workspace ensure'.",
+  "rule": "All implementation work must happen in isolated worktrees under '.decapod/workspaces/*'. Use 'decapod workspace ensure'.",
   "provenance": [
     {
       "evidence_type": "doc",

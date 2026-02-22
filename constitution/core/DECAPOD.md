@@ -63,9 +63,10 @@ decapod capabilities --format json
 ## Workspace Rules (Non-Negotiable)
 
 1. **Agents MUST NOT work on main/master** - Decapod validates and refuses
-2. **Use `decapod workspace ensure`** to create an isolated worktree
+2. **Use `decapod workspace ensure`** to create an isolated worktree under `.decapod/workspaces/*`
 3. **Use on-demand containers** for build/test execution (clean env)
 4. **Validate before claiming done** - `decapod validate` is the gate
+5. **Do not use non-canonical worktree roots**
 
 ## Worktree + On-Demand Sandbox
 
