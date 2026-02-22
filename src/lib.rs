@@ -80,8 +80,8 @@ pub mod core;
 pub mod plugins;
 
 use core::{
-    db, docs, docs_cli, error, flight_recorder, migration, obligation, proof, repomap, scaffold,
-    state_commit,
+    db, docs, docs_cli, error, flight_recorder, migration, obligation, plan_governance, proof,
+    repomap, scaffold, state_commit,
     store::{Store, StoreKind},
     todo, trace, validate, workspace,
 };
@@ -290,6 +290,96 @@ enum GovernCommand {
 
     /// Workspace safety gates: path blocklist, diff size, secret scan, dangerous patterns
     Gatekeeper(GatekeeperCli),
+
+    /// Plan-governed execution artifacts and gates
+    Plan(PlanCli),
+}
+
+#[derive(clap::Args, Debug)]
+struct PlanCli {
+    #[clap(subcommand)]
+    command: PlanCommand,
+}
+
+#[derive(clap::ValueEnum, Clone, Debug)]
+enum PlanStateArg {
+    Draft,
+    Annotating,
+    Approved,
+    Executing,
+    Done,
+}
+
+impl From<PlanStateArg> for plan_governance::PlanState {
+    fn from(value: PlanStateArg) -> Self {
+        match value {
+            PlanStateArg::Draft => Self::Draft,
+            PlanStateArg::Annotating => Self::Annotating,
+            PlanStateArg::Approved => Self::Approved,
+            PlanStateArg::Executing => Self::Executing,
+            PlanStateArg::Done => Self::Done,
+        }
+    }
+}
+
+#[derive(Subcommand, Debug)]
+enum PlanCommand {
+    /// Initialize governed PLAN artifact
+    Init {
+        #[clap(long)]
+        title: String,
+        #[clap(long)]
+        intent: String,
+        #[clap(long = "todo-id")]
+        todo_ids: Vec<String>,
+        #[clap(long = "proof-hook")]
+        proof_hooks: Vec<String>,
+        #[clap(long = "unknown")]
+        unknowns: Vec<String>,
+        #[clap(long = "question")]
+        human_questions: Vec<String>,
+        #[clap(long = "forbidden-path")]
+        forbidden_paths: Vec<String>,
+        #[clap(long)]
+        file_touch_budget: Option<usize>,
+    },
+    /// Patch governed PLAN artifact
+    Update {
+        #[clap(long)]
+        title: Option<String>,
+        #[clap(long)]
+        intent: Option<String>,
+        #[clap(long = "todo-id")]
+        todo_ids: Vec<String>,
+        #[clap(long = "proof-hook")]
+        proof_hooks: Vec<String>,
+        #[clap(long = "unknown")]
+        unknowns: Vec<String>,
+        #[clap(long = "question")]
+        human_questions: Vec<String>,
+        #[clap(long, default_value_t = false)]
+        clear_unknowns: bool,
+        #[clap(long, default_value_t = false)]
+        clear_questions: bool,
+        #[clap(long = "forbidden-path")]
+        forbidden_paths: Vec<String>,
+        #[clap(long)]
+        file_touch_budget: Option<usize>,
+    },
+    /// Set plan state
+    SetState {
+        #[clap(long, value_enum)]
+        state: PlanStateArg,
+    },
+    /// Shortcut for setting plan state to APPROVED
+    Approve,
+    /// Display current plan artifact
+    Status,
+    /// Execute readiness check with typed pushback markers
+    CheckExecute {
+        #[clap(long)]
+        todo_id: Option<String>,
+    },
 }
 
 #[derive(clap::Args, Debug)]
@@ -2871,6 +2961,154 @@ fn run_govern_command(
                 }
             }
         },
+        GovernCommand::Plan(plan_cli) => run_plan_command(plan_cli, project_store)?,
+    }
+
+    Ok(())
+}
+
+fn run_plan_command(plan_cli: PlanCli, project_store: &Store) -> Result<(), error::DecapodError> {
+    let project_root = project_store
+        .root
+        .parent()
+        .and_then(|p| p.parent())
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "unable to resolve project root from store root".to_string(),
+            )
+        })?;
+
+    match plan_cli.command {
+        PlanCommand::Init {
+            title,
+            intent,
+            todo_ids,
+            proof_hooks,
+            unknowns,
+            human_questions,
+            forbidden_paths,
+            file_touch_budget,
+        } => {
+            let plan = plan_governance::init_plan(
+                project_root,
+                plan_governance::InitPlanInput {
+                    title,
+                    intent,
+                    todo_ids,
+                    proof_hooks,
+                    unknowns,
+                    human_questions,
+                    constraints: plan_governance::ScopeConstraints {
+                        forbidden_paths,
+                        file_touch_budget,
+                    },
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::Update {
+            title,
+            intent,
+            todo_ids,
+            proof_hooks,
+            unknowns,
+            human_questions,
+            clear_unknowns,
+            clear_questions,
+            forbidden_paths,
+            file_touch_budget,
+        } => {
+            let plan = plan_governance::patch_plan(
+                project_root,
+                plan_governance::PlanPatch {
+                    title,
+                    intent,
+                    state: None,
+                    todo_ids: if todo_ids.is_empty() {
+                        None
+                    } else {
+                        Some(todo_ids)
+                    },
+                    proof_hooks: if proof_hooks.is_empty() {
+                        None
+                    } else {
+                        Some(proof_hooks)
+                    },
+                    unknowns: if clear_unknowns {
+                        Some(vec![])
+                    } else if unknowns.is_empty() {
+                        None
+                    } else {
+                        Some(unknowns)
+                    },
+                    human_questions: if clear_questions {
+                        Some(vec![])
+                    } else if human_questions.is_empty() {
+                        None
+                    } else {
+                        Some(human_questions)
+                    },
+                    constraints: if forbidden_paths.is_empty() && file_touch_budget.is_none() {
+                        None
+                    } else {
+                        Some(plan_governance::ScopeConstraints {
+                            forbidden_paths,
+                            file_touch_budget,
+                        })
+                    },
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::SetState { state } => {
+            let plan = plan_governance::patch_plan(
+                project_root,
+                plan_governance::PlanPatch {
+                    state: Some(state.into()),
+                    ..Default::default()
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::Approve => {
+            let plan = plan_governance::patch_plan(
+                project_root,
+                plan_governance::PlanPatch {
+                    state: Some(plan_governance::PlanState::Approved),
+                    ..Default::default()
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::Status => {
+            let plan = plan_governance::load_plan(project_root)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "status": if plan.is_some() { "ok" } else { "missing" },
+                    "plan": plan
+                }))
+                .unwrap()
+            );
+        }
+        PlanCommand::CheckExecute { todo_id } => {
+            let plan = plan_governance::ensure_execute_ready(plan_governance::ExecuteCheckInput {
+                project_root,
+                store_root: &project_store.root,
+                todo_id: todo_id.as_deref(),
+            })?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "status": "ok",
+                    "marker": "EXECUTION_READY",
+                    "state": format!("{:?}", plan.state).to_uppercase(),
+                    "todo_ids": plan.todo_ids,
+                    "proof_hooks": plan.proof_hooks,
+                }))
+                .unwrap()
+            );
+        }
     }
 
     Ok(())
@@ -3560,6 +3798,11 @@ fn run_workspace_command(
                 kind: StoreKind::Repo,
                 root: project_root.join(".decapod").join("data"),
             };
+            plan_governance::ensure_execute_ready(plan_governance::ExecuteCheckInput {
+                project_root,
+                store_root: &project_store.root,
+                todo_id: None,
+            })?;
             run_validation_bounded(&project_store, project_root, false)?;
             let result = workspace::publish_workspace(project_root, title, description)?;
             println!(
@@ -3908,6 +4151,12 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             )
         }
         "workspace.publish" => {
+            let store_root = project_root.join(".decapod").join("data");
+            plan_governance::ensure_execute_ready(plan_governance::ExecuteCheckInput {
+                project_root,
+                store_root: &store_root,
+                todo_id: None,
+            })?;
             let title = request
                 .params
                 .get("title")

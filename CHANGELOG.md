@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- *(interfaces)* add plan-governed execution contract and typed pushback markers
+
+### Changed
+
+- *(governance)* enforce plan approval/proof-hook readiness in execute/publish/validate paths
+
 ## [0.37.4](https://github.com/DecapodLabs/decapod/compare/v0.37.3...v0.37.4) - 2026-02-22
 
 ### Added
