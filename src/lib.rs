@@ -1609,10 +1609,8 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
     let agent_id = current_agent_id();
     let session = read_agent_session(&project_root, &agent_id)?;
     let Some(session) = session else {
-        return Err(error::DecapodError::SessionError(format!(
-            "No active session for agent '{}'. Run 'decapod session acquire' first. Reminder: this CLI/API is not for humans.",
-            agent_id
-        )));
+        // Auto-acquire session if none exists (entrypoint funnel behavior)
+        return auto_acquire_session(&project_root, &agent_id);
     };
 
     if session.expires_at_epoch_secs <= now_epoch_secs() {
@@ -1622,10 +1620,8 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
             std::slice::from_ref(&agent_id),
             "session.expired",
         );
-        return Err(error::DecapodError::SessionError(format!(
-            "Session expired for agent '{}'. Run 'decapod session acquire' to rotate credentials.",
-            agent_id
-        )));
+        // Auto-acquire session if expired (entrypoint funnel behavior)
+        return auto_acquire_session(&project_root, &agent_id);
     }
 
     if agent_id == "unknown" {
@@ -1644,6 +1640,28 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
             "Invalid DECAPOD_SESSION_PASSWORD for current agent session.".to_string(),
         ));
     }
+    Ok(())
+}
+
+fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error::DecapodError> {
+    let issued = now_epoch_secs();
+    let expires = issued.saturating_add(session_ttl_secs());
+    let token = ulid::Ulid::to_string(&ulid::Ulid::new());
+    let password = generate_ephemeral_password()?;
+    let rec = AgentSessionRecord {
+        agent_id: agent_id.to_string(),
+        token: token.clone(),
+        password_hash: hash_password(&password, &token),
+        issued_at_epoch_secs: issued,
+        expires_at_epoch_secs: expires,
+    };
+    write_agent_session(project_root, &rec)?;
+
+    // Set the password for subsequent operations in this process
+    // SAFETY: This is safe because we're only setting for the current process
+    // and the password was just generated in this process.
+    unsafe { std::env::set_var("DECAPOD_SESSION_PASSWORD", &password) }
+
     Ok(())
 }
 
