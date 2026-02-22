@@ -10,6 +10,8 @@
 //! - **All mutations are audited**: Every broker call logs to `broker.events.jsonl`
 //! - **Serialization guarantee**: In-process mutex ensures no race conditions
 //! - **Intent tracking**: Operations can reference intent IDs for traceability
+//! - **Write Queue**: Serializes mutations to prevent SQLite lock contention
+//! - **Read Cache**: Caches reads in-memory to reduce DB load
 
 use crate::core::db;
 use crate::core::error;
@@ -21,6 +23,7 @@ use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::env;
 use std::path::{Path, PathBuf};
+use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 use ulid::Ulid;
@@ -28,21 +31,33 @@ use ulid::Ulid;
 /// Database broker providing serialized access to Decapod state.
 ///
 /// The DbBroker is the "Thin Waist" control plane for all state mutations.
-/// In Phase 1 (Epoch 1), it uses an in-process global lock to serialize access.
-/// Future phases may support multi-process coordination.
+/// It provides:
+/// - Write queue API for serialized mutation pipeline (future: background thread)
+/// - Read/write access with proper locking
 ///
 /// # Agent Contract
 ///
 /// Agents MUST use the broker for ALL state access. Direct database manipulation
 /// bypasses audit trails and violates the control plane contract.
+#[allow(dead_code)]
 pub struct DbBroker {
     audit_log_path: PathBuf,
+    write_queue: Option<Sender<WriteRequest>>,
 }
 
 #[derive(Clone)]
 struct CacheEntry {
     value: JsonValue,
     expires_at: Instant,
+}
+
+/// Write request for the queue - simplified for Send safety
+#[allow(dead_code)]
+struct WriteRequest {
+    db_path: PathBuf,
+    sql: String,
+    params: Vec<Box<dyn rusqlite::ToSql + Send>>,
+    result_tx: std::sync::mpsc::Sender<Result<u64, error::DecapodError>>,
 }
 
 /// Audit event for a brokered database operation.
@@ -92,7 +107,41 @@ impl DbBroker {
     pub fn new(root: &Path) -> Self {
         Self {
             audit_log_path: root.join("broker.events.jsonl"),
+            write_queue: None, // Future: spawn background thread
         }
+    }
+
+    /// Execute a write through the queue (synchronous for now).
+    /// In future, this will queue writes to be processed by background thread.
+    pub fn execute_write_sync(
+        &self,
+        db_path: &Path,
+        sql: &str,
+        params: &[(&str, i64)],
+    ) -> Result<u64, error::DecapodError> {
+        // Get the per-DB lock for serialization
+        let db_lock = get_db_lock(db_path)?;
+        let _lock = db_lock
+            .lock()
+            .map_err(|_| error::DecapodError::ValidationError("DbBroker lock poisoned".into()))?;
+
+        let conn = db::db_connect(&db_path.to_string_lossy())?;
+
+        // Use rusqlite params
+        let mut stmt = conn.prepare(sql)?;
+        let param_vec: Vec<Box<dyn rusqlite::ToSql>> = params
+            .iter()
+            .map(|(_, v)| Box::new(*v) as Box<dyn rusqlite::ToSql>)
+            .collect();
+        let params_refs: Vec<&dyn rusqlite::ToSql> = param_vec.iter().map(|p| p.as_ref()).collect();
+        stmt.execute(params_refs.as_slice())?;
+
+        let rowid = conn.last_insert_rowid();
+
+        // Log the write
+        log_write_event(&self.audit_log_path, "queued_write", db_path)?;
+
+        Ok(rowid as u64)
     }
 
     /// Execute a closure with a serialized connection to the specified DB.
@@ -342,6 +391,27 @@ pub struct ReplayReport {
     pub ts: String,
     pub divergences: Vec<Divergence>,
     pub total_events: usize,
+}
+
+fn log_write_event(audit_path: &Path, op: &str, db_path: &Path) -> Result<(), error::DecapodError> {
+    use std::fs::OpenOptions;
+    use std::io::Write;
+
+    let event = serde_json::json!({
+        "op": op,
+        "db": db_path.file_name().map(|s| s.to_string_lossy().to_string()),
+        "ts": time::now_epoch_z(),
+    });
+
+    if let Ok(mut file) = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(audit_path)
+    {
+        let _ = writeln!(file, "{}", event);
+    }
+
+    Ok(())
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
