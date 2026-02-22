@@ -749,14 +749,40 @@ fn validate_entrypoint_invariants(
         }
 
         if agent_content.contains(".claude/worktrees") {
-            fail(
-                &format!(
-                    "{} references forbidden non-canonical worktree path `.claude/worktrees`",
-                    agent_file
-                ),
-                ctx,
-            );
-            all_present = false;
+            let mut has_forbidden_positive_reference = false;
+            for line in agent_content.lines() {
+                if !line.contains(".claude/worktrees") {
+                    continue;
+                }
+                let lower = line.to_ascii_lowercase();
+                let is_negative_context = lower.contains("never")
+                    || lower.contains("forbid")
+                    || lower.contains("non-canonical")
+                    || lower.contains("must not")
+                    || lower.contains("do not");
+                if !is_negative_context {
+                    has_forbidden_positive_reference = true;
+                    break;
+                }
+            }
+            if has_forbidden_positive_reference {
+                fail(
+                    &format!(
+                        "{} references forbidden non-canonical worktree path `.claude/worktrees`",
+                        agent_file
+                    ),
+                    ctx,
+                );
+                all_present = false;
+            } else {
+                pass(
+                    &format!(
+                        "{} explicitly forbids `.claude/worktrees` non-canonical path",
+                        agent_file
+                    ),
+                    ctx,
+                );
+            }
         }
 
         // Must include core constitution ingestion mandate

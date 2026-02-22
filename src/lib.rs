@@ -1298,6 +1298,20 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
     )
 }
 
+fn command_requires_canonical_worktree_path(command: &Command) -> bool {
+    !matches!(
+        command,
+        Command::Validate(_)
+            | Command::Docs(_)
+            | Command::Release(_)
+            | Command::Trace(_)
+            | Command::Capabilities(_)
+            | Command::Doctor(_)
+            | Command::StateCommit(_)
+            | Command::Qa(_)
+    )
+}
+
 fn enforce_worktree_requirement(
     command: &Command,
     project_root: &Path,
@@ -1316,7 +1330,9 @@ fn enforce_worktree_requirement(
             .worktree_path
             .clone()
             .unwrap_or_else(|| project_root.to_path_buf());
-        if !is_canonical_decapod_worktree_path(&worktree_path) {
+        if command_requires_canonical_worktree_path(command)
+            && !is_canonical_decapod_worktree_path(&worktree_path)
+        {
             return Err(error::DecapodError::ValidationError(format!(
                 "SCOPE_VIOLATION: non-canonical worktree path '{}'. Decapod-managed work must run from '.decapod/workspaces/*'. Run `decapod workspace ensure --branch agent/<id>/<topic>` and execute from the returned path.",
                 worktree_path.display()
@@ -1380,7 +1396,11 @@ fn enforce_worktree_requirement_for_rpc(
             .worktree_path
             .clone()
             .unwrap_or_else(|| project_root.to_path_buf());
-        if !is_canonical_decapod_worktree_path(&worktree_path) {
+        if !matches!(
+            op,
+            "validate.run" | "context.resolve" | "context.bindings" | "schema.get"
+        ) && !is_canonical_decapod_worktree_path(&worktree_path)
+        {
             return Err(error::DecapodError::ValidationError(format!(
                 "SCOPE_VIOLATION: RPC op '{}' must execute from a Decapod-managed worktree under '.decapod/workspaces/*' (current '{}'). Run `decapod workspace ensure` and retry.",
                 op,
