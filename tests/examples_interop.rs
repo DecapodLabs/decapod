@@ -29,3 +29,31 @@ fn release_check_surface_exists_and_runs() {
         "release check should emit ok envelope"
     );
 }
+
+#[test]
+fn release_inventory_surface_exists_and_writes_artifact() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .current_dir(&root)
+        .args(["release", "inventory"])
+        .output()
+        .expect("run release inventory");
+    assert!(
+        output.status.success(),
+        "release inventory failed:\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("\"cmd\":\"release.inventory\""),
+        "release inventory should emit envelope"
+    );
+    assert!(
+        root.join("artifacts/inventory/repo_inventory.json")
+            .exists(),
+        "release inventory should write deterministic artifact"
+    );
+    std::fs::remove_file(root.join("artifacts/inventory/repo_inventory.json"))
+        .expect("cleanup generated inventory artifact");
+}
