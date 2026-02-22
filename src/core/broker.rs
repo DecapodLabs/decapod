@@ -17,13 +17,13 @@ use crate::core::db;
 use crate::core::error;
 use crate::core::time;
 use crate::plugins::policy;
-use rusqlite::{Connection, params};
+use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::env;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::{Sender, channel};
+use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 use ulid::Ulid;
@@ -39,6 +39,7 @@ use ulid::Ulid;
 ///
 /// Agents MUST use the broker for ALL state access. Direct database manipulation
 /// bypasses audit trails and violates the control plane contract.
+#[allow(dead_code)]
 pub struct DbBroker {
     audit_log_path: PathBuf,
     write_queue: Option<Sender<WriteRequest>>,
@@ -51,6 +52,7 @@ struct CacheEntry {
 }
 
 /// Write request for the queue - simplified for Send safety
+#[allow(dead_code)]
 struct WriteRequest {
     db_path: PathBuf,
     sql: String,
@@ -127,7 +129,7 @@ impl DbBroker {
 
         // Use rusqlite params
         let mut stmt = conn.prepare(sql)?;
-        let mut param_vec: Vec<Box<dyn rusqlite::ToSql>> = params
+        let param_vec: Vec<Box<dyn rusqlite::ToSql>> = params
             .iter()
             .map(|(_, v)| Box::new(*v) as Box<dyn rusqlite::ToSql>)
             .collect();
