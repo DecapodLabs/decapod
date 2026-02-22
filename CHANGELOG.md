@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.8](https://github.com/DecapodLabs/decapod/compare/v0.37.7...v0.37.8) - 2026-02-22
+
+### Other
+
+- Merge pull request #377 from DecapodLabs/agent/unknown/todo-r_01kj2c415q0y14c6e1fzncdtjd-1771753844
+- Stabilize chaos replay under concurrent todo add contention
+- Fix constitution path validators for architecture directives
+- Keep architecture directives constitution-only
+- Add architecture foundations artifact gate for governed execution
+
 ## [0.37.7](https://github.com/DecapodLabs/decapod/compare/v0.37.6...v0.37.7) - 2026-02-22
 
 ### Other
