@@ -2012,6 +2012,15 @@ fn validate_plan_governed_execution_gate(
         } else {
             pass("Plan intent and unknowns are resolved", ctx);
         }
+
+        if let Err(e) = plan_governance::ensure_architecture_artifact_ready(repo_root) {
+            fail(&e.to_string(), ctx);
+        } else {
+            pass(
+                "Governed architecture artifact is present and complete",
+                ctx,
+            );
+        }
     } else {
         let done_count = plan_governance::count_done_todos(&store.root)?;
         if done_count > 0 {
