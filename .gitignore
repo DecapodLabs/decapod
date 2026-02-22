@@ -4,6 +4,8 @@
 target/
 dist/
 build/
+!crates/build/
+!crates/build/constitution_index.rs
 dev/
 *.o
 *.so
