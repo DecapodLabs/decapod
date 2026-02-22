@@ -1,53 +1,53 @@
-# Levie-Inspired Governance Audit (Decapod Kernel Lens)
+# Governance Audit (Decapod Kernel Lens)
 
-Source note: the referenced Levie post body was not included in the prompt payload; this audit uses the provided capability buckets as the authoritative source material.
+Source note: the referenced post body was not included in the prompt payload; this audit uses the provided capability buckets as the authoritative source material.
 
 ## 1) Agent-Infra Capability Buckets
 
 ### Seamless identities across platforms
-- Levie implies: agents need portable identity and trust continuity across tools and services.
+- Implies: agents need portable identity and trust continuity across tools and services.
 - Decapod kernel version: session-bound identity (`agent_id + ephemeral password`) plus auditable invocation/proof receipts.
 - Kernel vs external steward: split; identity attestations and policy boundary in-kernel, provider-specific federation outside kernel (steward).
 - Minimal primitive: `identity.attest` artifact linking session token hash, actor, scope, and proof obligations to a deterministic receipt chain.
 
 ### File systems / databases for sessions & shared data
-- Levie implies: persistent memory/state for autonomous execution and collaboration.
+- Implies: persistent memory/state for autonomous execution and collaboration.
 - Decapod kernel version: strict store purity with explicit user/repo separation and append-only/auditable ledgers for promotion-relevant state.
 - Kernel vs external steward: in-kernel.
 - Minimal primitive: canonical store manifest classifying each file/table as `canonical` or `derived` with a validate gate that blocks promotion on contamination.
 
 ### Collaboration with people
-- Levie implies: human-in-the-loop delegation, handoff, and review loops.
+- Implies: human-in-the-loop delegation, handoff, and review loops.
 - Decapod kernel version: TODO claim/ownership/handoff/presence with auditable event logs and policy-gated high-risk operations.
 - Kernel vs external steward: in-kernel for coordination primitives; UI workflows outside kernel.
 - Minimal primitive: `handoff.receipt` linking task id, from/to actors, summary, and policy approval evidence.
 
 ### Safe ways of spending/managing money
-- Levie implies: autonomous financial actions need bounded controls, approvals, and traceability.
+- Implies: autonomous financial actions need bounded controls, approvals, and traceability.
 - Decapod kernel version: governance primitive for spend authority, not payments integration.
 - Kernel vs external steward: split; authority policy in-kernel, payment rails entirely outside kernel.
 - Minimal primitive: typed `spend.capability` envelope (budget, scope, expiry, approver) enforced as a precondition gate on spend-labeled operations.
 
 ### Computers to execute code / tasks (sandboxes, runners)
-- Levie implies: reliable execution substrate for agent actions.
+- Implies: reliable execution substrate for agent actions.
 - Decapod kernel version: containerized, isolated workspace execution with deterministic safety defaults and runtime preflight.
 - Kernel vs external steward: in-kernel for execution policy and artifacts; external for fleet orchestration.
 - Minimal primitive: `runner.proof` artifact containing runtime profile, workspace ref, command, exit status, and evidence hashes.
 
 ### Oversight, responsibility, and privacy asymmetry
-- Levie implies: operators need asymmetric visibility and accountability over agent actions.
+- Implies: operators need asymmetric visibility and accountability over agent actions.
 - Decapod kernel version: provenance manifests, broker audit trails, actor/session binding, and policy checkpoints.
 - Kernel vs external steward: in-kernel for accountability primitives; external for dashboards/reporting.
 - Minimal primitive: immutable `accountability.record` per promotion-relevant command with actor, scope, policy decision, and evidence pointers.
 
 ### Agents drifting / not knowing when they’ve gone astray
-- Levie implies: autonomous systems must detect and recover from drift/failure.
+- Implies: autonomous systems must detect and recover from drift/failure.
 - Decapod kernel version: bounded validate termination, typed failure markers, and deterministic verification/gate surfaces.
 - Kernel vs external steward: in-kernel.
 - Minimal primitive: `drift.interlock` requiring typed reason code + remediation artifact before retries on promotion paths.
 
 ### API-first tooling (CLIs/APIs are agents’ native tongue)
-- Levie implies: all core capabilities should be API-native and composable.
+- Implies: all core capabilities should be API-native and composable.
 - Decapod kernel version: CLI + RPC envelope contracts, schema surfaces, and golden vectors.
 - Kernel vs external steward: in-kernel.
 - Minimal primitive: versioned control-plane envelope schema with immutable goldens and semver-gated compatibility checks.
