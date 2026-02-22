@@ -49,7 +49,7 @@ If any step fails, **stop and diagnose**. Do not skip steps.
 7. **Claim a task before substantive work.** `decapod todo claim --id <task-id>`.
 8. **Record decisions in durable artifacts.** Not in transient conversation.
 9. **NEVER read `constitution/*` files directly.** Constitution is embedded in the Decapod binary; access it via `decapod docs show <embedded-path>`.
-10. **NEVER use non-canonical worktree roots** (for example `.claude/worktrees`). Decapod work executes only in `.decapod/workspaces/*`.
+10. **NEVER use non-canonical worktree roots.** Decapod work executes only in `.decapod/workspaces/*`.
 
 ---
 
