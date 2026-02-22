@@ -1902,6 +1902,17 @@ fn validate_plan_governed_execution_gate(
 ) -> Result<(), error::DecapodError> {
     info("Plan-Governed Execution Gate");
 
+    // Test harnesses and isolated fixture repos explicitly bypass git gates.
+    // Keep plan-governed promotion checks out of that mode to preserve stable
+    // verification replay fixtures that are not modeled as full workspaces.
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        skip(
+            "Plan-governed execution gate skipped (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
+            ctx,
+        );
+        return Ok(());
+    }
+
     let plan = plan_governance::load_plan(repo_root)?;
     if let Some(plan) = plan {
         if plan.state != plan_governance::PlanState::Approved
