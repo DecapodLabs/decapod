@@ -77,6 +77,9 @@ Columns:
 | claim.session.agent_password_required | Session access requires agent identity plus an ephemeral per-session password; expired sessions trigger cleanup and assignment eviction. | `specs/SECURITY.md` | partially_enforced | `session.acquire` credential issuance + `ensure_session_valid` password check + stale-session cleanup hook | Enforced for active command auth path; stronger cryptographic hardening may be added later. |
 | claim.validate.bounded_termination | `decapod validate` MUST terminate in bounded time and return a typed failure under DB lock contention. | `interfaces/TESTING.md` | enforced | `tests/validate_termination.rs` + `DECAPOD_VALIDATE_TIMEOUT_SECS` timeout path | Prevents proof-gate hangs from becoming cultural bypass. |
 | claim.validate.no_cross_turn_lock_residency | No single agent session may hold validation-related datastore locks across multiple turns/commands. | `interfaces/CONTROL_PLANE.md` | partially_enforced | `tests/validate_termination.rs` + contention integration tests | Locking discipline is implemented in command-scoped paths; broader contention coverage remains in progress. |
+| claim.knowledge.provenance_required | Every procedural memory entry must cite evidence (commit, PR, doc, test, or transcript). | `interfaces/KNOWLEDGE_STORE.md` | enforced | `decapod validate` (Knowledge Integrity Gate) | Enforced via validate_knowledge_integrity gate. |
+| claim.knowledge.directional_flow | Episodic observations cannot flow directly into procedural/semantic memory. Must use explicit promotion artifact + human approval. | `interfaces/KNOWLEDGE_STORE.md` | not_enforced | planned: gate in knowledge promote | Blocks direct friction→procedural writes. |
+| claim.knowledge.versioned_schema | Knowledge store uses versioned schemas. No breaking changes without migration path. | `interfaces/KNOWLEDGE_STORE.md` | not_enforced | planned: schema migration validation | Readers never break on writes. |
 
 ---
 
