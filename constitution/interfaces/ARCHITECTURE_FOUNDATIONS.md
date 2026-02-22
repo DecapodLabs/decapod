@@ -1,50 +1,48 @@
 # ARCHITECTURE_FOUNDATIONS.md - Industry-Grade Engineering Foundations
 
-**Authority:** interface (binding architecture delivery primitives)  
+**Authority:** interface (binding architecture directives)  
 **Layer:** Interfaces  
 **Binding:** Yes  
-**Scope:** baseline architecture quality gates that turn user intent into production-grade software artifacts  
-**Non-goals:** framework-specific style guides or language-specific implementation details
+**Scope:** architecture fundamentals that keep intent alignment and production-grade engineering explicit in the constitution  
+**Non-goals:** runtime architecture files under `.decapod/*`, framework-specific style guides, language-specific implementation detail
 
 ## Purpose
 
-Decapod MUST force architecture clarity before execution and promotion.  
-The control plane does this with explicit artifacts, typed gates, and proof surfaces.
+Decapod MUST keep architecture guidance in constitution documents and enforce quality through deterministic gates.
+Architecture directives are policy, not mutable runtime state.
 
 ## Mandatory Primitives
 
-1. **Intent primitive**: governed PLAN (`<repo>/.decapod/governance/plan.json`) defines intent, scope, unknowns, and proof hooks.
-2. **Architecture primitive**: architecture artifact (`<repo>/.decapod/governance/architecture.md`) captures system design and operational readiness.
+1. **Intent primitive**: governed PLAN defines intent, scope, unknowns, and proof hooks.
+2. **Architecture directive primitive**: constitution interfaces define required architecture thinking before promotion.
 3. **Proof primitive**: executable checks (`decapod validate`, tests, linters) verify outcomes.
-
-## Architecture Artifact Contract
-
-Before execution/promotion-relevant operations, the architecture artifact MUST exist and include all sections:
-
-- `## Intent Alignment`
-- `## System Design`
-- `## Invariants`
-- `## Tradeoffs`
-- `## Verification Strategy`
-- `## Rollout & Operations`
-
-If missing or incomplete, Decapod MUST return typed marker `NEEDS_HUMAN_INPUT` with remediation questions.
 
 ## Golden Path Expectations
 
 For production-grade delivery, agents MUST:
 
 1. Preserve deterministic behavior and typed failure semantics.
-2. Maintain explicit state boundaries and avoid hidden side effects.
-3. Document compatibility/migration impact before promotion.
-4. Define verification strategy before execution.
+2. Maintain explicit boundaries (state, interfaces, ownership) and avoid hidden side effects.
+3. Document compatibility and migration impact before promotion.
+4. Define verification strategy tied to concrete proof hooks.
 5. Keep rollback/remediation path explicit.
+6. Make tradeoffs explicit (what was chosen, what was rejected, why).
+
+## Required Architecture Reasoning Surfaces
+
+Architecture reasoning MUST be present in governed artifacts and reviewable evidence, including:
+
+- intent alignment (problem, user outcome, non-goals)
+- system design (interfaces, boundaries, data ownership)
+- invariants and failure modes
+- tradeoffs and risk posture
+- verification strategy
+- rollout and operations
 
 ## Proof Surfaces
 
-- `decapod govern plan check-execute` MUST fail with typed marker when architecture artifact is missing/incomplete.
-- `decapod validate` Plan-Governed Execution Gate MUST enforce architecture artifact readiness for governed plans.
-- `tests/plan_governed_execution.rs` MUST cover artifact generation and missing-artifact failure.
+- `decapod validate` Plan-Governed Execution Gate enforces plan state, intent resolution, unknown resolution, and verification readiness.
+- CI proof surfaces (`cargo fmt`, `cargo clippy`, `cargo test`, `decapod validate`) remain mandatory before promotion.
 
 ## Claim Mapping
 
