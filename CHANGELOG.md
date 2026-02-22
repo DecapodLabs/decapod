@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.3](https://github.com/DecapodLabs/decapod/compare/v0.37.2...v0.37.3) - 2026-02-22
+
+### Added
+
+- auto-acquire session in ensure_session_valid (entrypoint funnel)
+
 ## [0.37.2](https://github.com/DecapodLabs/decapod/compare/v0.37.1...v0.37.2) - 2026-02-22
 
 ### Other
