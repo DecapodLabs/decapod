@@ -3723,18 +3723,8 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
 
 /// Show version information
 fn show_version_info() -> Result<(), error::DecapodError> {
-    use colored::Colorize;
-
-    println!(
-        "{} {}",
-        "Decapod version:".bright_white(),
-        migration::DECAPOD_VERSION.bright_green()
-    );
-    println!(
-        "  {} {}",
-        "Update:".bright_white(),
-        "cargo install decapod".bright_cyan()
-    );
+    println!("Decapod version: {}", migration::DECAPOD_VERSION);
+    println!("  Update: cargo install decapod");
 
     Ok(())
 }
@@ -4989,7 +4979,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
     // Trace the RPC call
     let trace_event = trace::TraceEvent {
         trace_id: request.id.clone(),
-        ts: chrono::Utc::now().to_rfc3339(),
+        ts: crate::core::time::now_epoch_z(),
         actor: current_agent_id(),
         op: request.op.clone(),
         request: serde_json::to_value(&request).unwrap_or(serde_json::Value::Null),
