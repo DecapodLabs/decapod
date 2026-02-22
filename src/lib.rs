@@ -911,8 +911,12 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Check if .decapod exists and skip if it does, unless --force
             let setup_decapod_root = target_dir.join(".decapod");
             if setup_decapod_root.exists() && !init_group.force {
+                use colored::Colorize;
                 println!(
-                    "init: already initialized (.decapod exists); rerun with --force to overwrite"
+                    "{} {}",
+                    "init:".bright_yellow(),
+                    "already initialized (.decapod exists); rerun with --force to overwrite"
+                        .bright_red()
                 );
                 return Ok(());
             }
@@ -1010,26 +1014,49 @@ pub fn run() -> Result<(), error::DecapodError> {
                 .unwrap_or(current_dir.as_path())
                 .display()
                 .to_string();
+            use colored::Colorize;
+            print!(
+                "{} {} ",
+                "▶".bright_green().bold(),
+                "init:".bright_cyan().bold(),
+            );
             println!(
-                "init: ok target={} mode={}",
-                target_display,
+                "target={} mode={}",
+                target_display.bright_white(),
                 if init_group.dry_run {
-                    "dry-run"
+                    "dry-run".bright_yellow()
                 } else {
-                    "apply"
+                    "apply".bright_green()
                 }
             );
             println!(
-                "init: files entry+{}={}~{} cfg+{}={}~{} backups={}",
-                scaffold_summary.entrypoints_created,
-                scaffold_summary.entrypoints_unchanged,
-                scaffold_summary.entrypoints_preserved,
-                scaffold_summary.config_created,
-                scaffold_summary.config_unchanged,
-                scaffold_summary.config_preserved,
-                backup_count
+                "  {} entry+{}={}~{} cfg+{}={}~{} backups={}",
+                "files:".bright_cyan(),
+                scaffold_summary
+                    .entrypoints_created
+                    .to_string()
+                    .bright_green(),
+                scaffold_summary
+                    .entrypoints_unchanged
+                    .to_string()
+                    .bright_yellow(),
+                scaffold_summary
+                    .entrypoints_preserved
+                    .to_string()
+                    .bright_white(),
+                scaffold_summary.config_created.to_string().bright_green(),
+                scaffold_summary
+                    .config_unchanged
+                    .to_string()
+                    .bright_yellow(),
+                scaffold_summary.config_preserved.to_string().bright_white(),
+                backup_count.to_string().bright_magenta()
             );
-            println!("init: status=ready");
+            println!(
+                "{} {}",
+                "✓".bright_green().bold(),
+                "status=ready".bright_green().bold()
+            );
         }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
