@@ -2774,13 +2774,22 @@ pub fn run_validation(
     verbose: bool,
 ) -> Result<(), error::DecapodError> {
     let total_start = Instant::now();
-    println!("validate: running");
+    use colored::Colorize;
+    println!(
+        "{} {}",
+        "▶".bright_green().bold(),
+        "validate:".bright_cyan().bold()
+    );
 
     // Directly get content from embedded assets
     let intent_content = crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
     let intent_version =
         extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
-    println!("validate: intent_version={}", intent_version);
+    println!(
+        "  {} intent_version={}",
+        "spec:".bright_cyan(),
+        intent_version.bright_white()
+    );
 
     let ctx = ValidationContext::new();
 
@@ -2799,7 +2808,9 @@ pub fn run_validation(
             validate_user_store_blank_slate(&ctx)?;
             if verbose {
                 println!(
-                    "validate: [validate_user_store_blank_slate] done ({:.2?})",
+                    "  {} [validate_user_store_blank_slate] {} ({:.2?})",
+                    "✓".bright_green(),
+                    "done".bright_white(),
                     start.elapsed()
                 );
             }
@@ -2809,14 +2820,20 @@ pub fn run_validation(
             validate_repo_store_dogfood(store, &ctx, decapod_dir)?;
             if verbose {
                 println!(
-                    "validate: [validate_repo_store_dogfood] done ({:.2?})",
+                    "  {} [validate_repo_store_dogfood] {} ({:.2?})",
+                    "✓".bright_green(),
+                    "done".bright_white(),
                     start.elapsed()
                 );
             }
         }
     }
 
-    println!("validate: gate Four Invariants Gate");
+    println!(
+        "  {} {}",
+        "gate:".bright_magenta().bold(),
+        "Four Invariants Gate".bright_white()
+    );
 
     // All remaining gates run in parallel via rayon::scope
     let timings: Mutex<Vec<(&str, Duration)>> = Mutex::new(Vec::new());
@@ -3174,7 +3191,13 @@ pub fn run_validation(
         let mut gate_timings = timings.into_inner().unwrap();
         gate_timings.sort_by(|a, b| b.1.cmp(&a.1));
         for (name, elapsed) in &gate_timings {
-            println!("validate: [{name}] done ({elapsed:.2?})");
+            println!(
+                "  {} [{}] {} ({:.2?})",
+                "✓".bright_green(),
+                name.bright_cyan(),
+                "done".bright_white(),
+                elapsed
+            );
         }
     }
 
@@ -3186,23 +3209,30 @@ pub fn run_validation(
     let warns = ctx.warns.lock().unwrap();
     let fail_total = (fails.len() as u32).max(fail_count);
     let warn_total = (warns.len() as u32).max(warn_count);
+
     println!(
-        "validate: summary pass={} fail={} warn={} elapsed={:.2?}",
-        pass_count, fail_total, warn_total, elapsed
+        "  {} pass={} fail={} warn={} {}",
+        "summary:".bright_cyan(),
+        pass_count.to_string().bright_green(),
+        fail_total.to_string().bright_red(),
+        warn_total.to_string().bright_yellow(),
+        format!("({:.2?})", elapsed).bright_white()
     );
 
     if !fails.is_empty() {
         println!(
-            "validate: failures {}: {}",
-            fails.len(),
+            "  {} {}: {}",
+            "✗".bright_red().bold(),
+            "failures".bright_red(),
             output::preview_messages(&fails, 2, 110)
         );
     }
 
     if !warns.is_empty() {
         println!(
-            "validate: warnings {}: {}",
-            warns.len(),
+            "  {} {}: {}",
+            "⚠".bright_yellow().bold(),
+            "warnings".bright_yellow(),
             output::preview_messages(&warns, 2, 110)
         );
     }
@@ -3213,6 +3243,11 @@ pub fn run_validation(
             fail_total
         )))
     } else {
+        println!(
+            "{} {}",
+            "✓".bright_green().bold(),
+            "validation passed".bright_green().bold()
+        );
         Ok(())
     }
 }
