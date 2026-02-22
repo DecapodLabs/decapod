@@ -44,6 +44,7 @@ If any step fails, **stop and diagnose**. Do not skip steps.
 6. **NEVER bypass proofs based on self-confidence.** Evidence or nothing.
 7. **Claim a task before substantive work.** `decapod todo claim --id <task-id>`.
 8. **Record decisions in durable artifacts.** Not in transient conversation.
+9. **NEVER read `constitution/*` files directly.** Constitution is embedded in the Decapod binary; access it via `decapod docs show <embedded-path>`.
 
 ---
 

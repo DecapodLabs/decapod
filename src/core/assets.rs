@@ -8,7 +8,7 @@
 //!
 //! - **Constitution is embedded in binary**: No need for external doc files
 //! - **Use `decapod docs show <path>`**: Access docs via CLI, not direct file reads
-//! - **Override mechanism**: Projects can override docs in `.decapod/constitution/`
+//! - **Override mechanism**: Projects can override embedded docs via `.decapod/OVERRIDE.md`
 //! - **Merge semantics**: Overrides append to embedded base (see `get_merged_doc`)
 //! - **Templates for scaffolding**: CLAUDE.md, GEMINI.md, etc. are embedded here
 

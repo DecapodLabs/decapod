@@ -496,7 +496,7 @@ fn test_agent_entrypoints_are_identical() {
 }
 
 #[test]
-fn test_agent_entrypoints_only_reference_embedded_docs() {
+fn test_entrypoints_use_embedded_docs_paths_only() {
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     for file in [
         "CLAUDE.md",
@@ -506,17 +506,42 @@ fn test_agent_entrypoints_only_reference_embedded_docs() {
         "templates/GEMINI.md",
         "templates/CODEX.md",
     ] {
-        let content = fs::read_to_string(repo_root.join(file))
-            .unwrap_or_else(|_| panic!("Failed to read {}", file));
+        let content =
+            fs::read_to_string(repo_root.join(file)).unwrap_or_else(|_| panic!("read {}", file));
         assert!(
-            !content.contains("decapod docs show docs/"),
-            "{} must not reference legacy docs/ paths",
+            !content.contains("decapod docs show constitution/"),
+            "{} must not reference direct constitution/* filesystem paths",
             file
         );
         assert!(
-            content.contains("decapod docs show constitution/docs/"),
-            "{} must reference embedded constitution docs",
+            content.contains("decapod docs show docs/PLAYBOOK.md"),
+            "{} must reference embedded docs path for operator playbook",
             file
         );
     }
+}
+
+#[test]
+fn test_top_level_docs_avoid_direct_constitution_file_links() {
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let readme = fs::read_to_string(repo_root.join("README.md")).expect("read README.md");
+    let security = fs::read_to_string(repo_root.join("SECURITY.md")).expect("read SECURITY.md");
+
+    assert!(
+        !readme.contains("(constitution/"),
+        "README.md should not instruct direct constitution file access"
+    );
+    assert!(
+        readme.contains("decapod docs show core/DECAPOD.md"),
+        "README.md should route constitutional access through decapod docs show"
+    );
+
+    assert!(
+        !security.contains("(constitution/"),
+        "SECURITY.md should not instruct direct constitution file access"
+    );
+    assert!(
+        security.contains("decapod docs show specs/SECURITY.md"),
+        "SECURITY.md should route constitutional access through decapod docs show"
+    );
 }
