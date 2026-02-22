@@ -83,11 +83,8 @@ decapod init
 
 Then use your agents as normal. Decapod works on your behalf from inside the agent.
 
-Learn more about the embedded constitution via the CLI:
+Learn more about the embedded constitution here in [DECAPOD.md](constitution/core/DECAPOD.md).
 
-```bash
-decapod docs show core/DECAPOD.md
-```
 
 Override constitution defaults with plain English in `.decapod/OVERRIDE.md`.
 
