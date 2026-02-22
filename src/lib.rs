@@ -93,6 +93,7 @@ use plugins::{
 use clap::{CommandFactory, Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 use std::fs;
 use std::io::Read;
 use std::io::Write;
@@ -396,6 +397,8 @@ struct ReleaseCli {
 enum ReleaseCommand {
     /// Validate release readiness (versioning, changelog, manifests, lockfile)
     Check,
+    /// Emit deterministic repository inventory JSON for CI artifacts
+    Inventory,
 }
 
 // ===== Main Command Enum =====
@@ -1963,11 +1966,13 @@ fn write_stub(
 fn run_release_command(cli: ReleaseCli, project_root: &Path) -> Result<(), error::DecapodError> {
     match cli.command {
         ReleaseCommand::Check => run_release_check(project_root),
+        ReleaseCommand::Inventory => run_release_inventory(project_root),
     }
 }
 
 fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     let mut failures = Vec::new();
+    let mut changelog_raw: Option<String> = None;
     let changelog = project_root.join("CHANGELOG.md");
     let migrations = project_root
         .join("constitution")
@@ -1979,11 +1984,14 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     let rpc_golden_res = project_root.join("tests/golden/rpc/v1/agent_init.response.json");
     let artifact_manifest = project_root.join("artifacts/provenance/artifact_manifest.json");
     let proof_manifest = project_root.join("artifacts/provenance/proof_manifest.json");
+    let intent_convergence_manifest =
+        project_root.join("artifacts/provenance/intent_convergence_checklist.json");
 
     if !changelog.exists() {
         failures.push("CHANGELOG.md missing".to_string());
     } else {
         let raw = fs::read_to_string(&changelog).map_err(error::DecapodError::IoError)?;
+        changelog_raw = Some(raw.clone());
         if !raw.contains("## [Unreleased]") {
             failures.push("CHANGELOG.md missing `## [Unreleased]` section".to_string());
         }
@@ -2012,6 +2020,12 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
                 .to_string(),
         );
     }
+    if !intent_convergence_manifest.exists() {
+        failures.push(
+            "intent convergence manifest missing: artifacts/provenance/intent_convergence_checklist.json"
+                .to_string(),
+        );
+    }
     if artifact_manifest.exists()
         && let Err(e) = validate_artifact_manifest(project_root, &artifact_manifest)
     {
@@ -2021,6 +2035,27 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
         && let Err(e) = validate_proof_manifest(&proof_manifest)
     {
         failures.push(format!("proof manifest invalid: {}", e));
+    }
+    if intent_convergence_manifest.exists()
+        && let Err(e) = validate_intent_convergence_manifest(&intent_convergence_manifest)
+    {
+        failures.push(format!("intent convergence manifest invalid: {}", e));
+    }
+
+    let changed_paths = git_changed_paths(project_root);
+    if has_schema_or_interface_changes(&changed_paths) {
+        if let Some(changelog_text) = changelog_raw {
+            if !changelog_mentions_schema_or_interface(&changelog_text) {
+                failures.push(
+                    "schema/interface files changed but CHANGELOG.md [Unreleased] has no schema/interface entry"
+                        .to_string(),
+                );
+            }
+        } else {
+            failures.push(
+                "schema/interface files changed but CHANGELOG.md could not be read".to_string(),
+            );
+        }
     }
 
     if !failures.is_empty() {
@@ -2040,8 +2075,34 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
                 "migrations.doc",
                 "cargo.lock.present",
                 "rpc.golden_vectors.present",
-                "provenance.manifests.verified"
+                "provenance.manifests.verified",
+                "intent_convergence.manifest.verified",
+                "schema_interface.changelog.policy"
             ]
+        })
+    );
+    Ok(())
+}
+
+fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError> {
+    let inventory = build_release_inventory(project_root)?;
+    let out_dir = project_root.join("artifacts").join("inventory");
+    fs::create_dir_all(&out_dir).map_err(error::DecapodError::IoError)?;
+    let out_path = out_dir.join("repo_inventory.json");
+    let payload = serde_json::to_vec_pretty(&inventory).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "failed to serialize release inventory artifact: {e}"
+        ))
+    })?;
+    fs::write(&out_path, payload).map_err(error::DecapodError::IoError)?;
+
+    println!(
+        "{}",
+        serde_json::json!({
+            "cmd": "release.inventory",
+            "status": "ok",
+            "artifact": "artifacts/inventory/repo_inventory.json",
+            "summary": inventory["totals"]
         })
     );
     Ok(())
@@ -2174,6 +2235,195 @@ fn validate_proof_manifest(manifest_path: &Path) -> Result<(), error::DecapodErr
         }
     }
     Ok(())
+}
+
+fn validate_intent_convergence_manifest(manifest_path: &Path) -> Result<(), error::DecapodError> {
+    let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
+    let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "intent convergence manifest is not valid JSON: {e}"
+        ))
+    })?;
+    if v.get("schema_version").and_then(|x| x.as_str()) != Some("1.0.0") {
+        return Err(error::DecapodError::ValidationError(
+            "intent convergence manifest schema_version must be 1.0.0".to_string(),
+        ));
+    }
+    if v.get("kind").and_then(|x| x.as_str()) != Some("intent_convergence_checklist") {
+        return Err(error::DecapodError::ValidationError(
+            "intent convergence manifest kind must be intent_convergence_checklist".to_string(),
+        ));
+    }
+
+    for key in ["pr", "intent", "scope", "checklist"] {
+        if v.get(key).is_none() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "intent convergence manifest missing '{}' field",
+                key
+            )));
+        }
+    }
+
+    let checklist = v
+        .get("checklist")
+        .and_then(|x| x.as_array())
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "intent convergence manifest checklist[] required".to_string(),
+            )
+        })?;
+    if checklist.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "intent convergence manifest checklist[] must not be empty".to_string(),
+        ));
+    }
+
+    for item in checklist {
+        let name = item.get("name").and_then(|x| x.as_str()).unwrap_or("");
+        let status = item.get("status").and_then(|x| x.as_str()).unwrap_or("");
+        let evidence = item.get("evidence").and_then(|x| x.as_str()).unwrap_or("");
+        if name.is_empty() || status.is_empty() || evidence.is_empty() {
+            return Err(error::DecapodError::ValidationError(
+                "intent convergence checklist entries require name/status/evidence".to_string(),
+            ));
+        }
+        if matches!(status, "pending" | "unknown") {
+            return Err(error::DecapodError::ValidationError(format!(
+                "intent convergence checklist item '{}' must be resolved (status={})",
+                name, status
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn build_release_inventory(project_root: &Path) -> Result<serde_json::Value, error::DecapodError> {
+    let mut paths = Vec::new();
+    for root in ["src", "tests", "constitution"] {
+        collect_files_recursive(&project_root.join(root), &mut paths)?;
+    }
+    paths.sort();
+
+    let mut top_files = Vec::new();
+    let mut totals_by_root: BTreeMap<&'static str, u64> = BTreeMap::new();
+    let mut rust_files = 0u64;
+    let mut test_files = 0u64;
+
+    for path in paths {
+        let rel = match path.strip_prefix(project_root) {
+            Ok(p) => p.to_path_buf(),
+            Err(_) => continue,
+        };
+        let rel_s = rel.to_string_lossy().replace('\\', "/");
+        let raw = fs::read_to_string(&path).unwrap_or_default();
+        let loc = raw.lines().count() as u64;
+        if rel_s.starts_with("src/") {
+            *totals_by_root.entry("src_loc").or_insert(0) += loc;
+        } else if rel_s.starts_with("tests/") {
+            *totals_by_root.entry("tests_loc").or_insert(0) += loc;
+        } else if rel_s.starts_with("constitution/") {
+            *totals_by_root.entry("constitution_loc").or_insert(0) += loc;
+        }
+        if rel_s.ends_with(".rs") {
+            rust_files += 1;
+        }
+        if rel_s.starts_with("tests/") {
+            test_files += 1;
+        }
+        top_files.push((rel_s, loc));
+    }
+
+    top_files.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+    let top_files: Vec<serde_json::Value> = top_files
+        .into_iter()
+        .take(25)
+        .map(|(path, loc)| serde_json::json!({ "path": path, "loc": loc }))
+        .collect();
+
+    let src_loc = *totals_by_root.get("src_loc").unwrap_or(&0);
+    let tests_loc = *totals_by_root.get("tests_loc").unwrap_or(&0);
+    let constitution_loc = *totals_by_root.get("constitution_loc").unwrap_or(&0);
+
+    Ok(serde_json::json!({
+        "schema_version": "1.0.0",
+        "kind": "repo_inventory",
+        "scope": ["src", "tests", "constitution"],
+        "totals": {
+            "src_loc": src_loc,
+            "tests_loc": tests_loc,
+            "constitution_loc": constitution_loc,
+            "total_loc": src_loc + tests_loc + constitution_loc,
+            "rust_files": rust_files,
+            "test_files": test_files
+        },
+        "top_files_by_loc": top_files
+    }))
+}
+
+fn collect_files_recursive(root: &Path, out: &mut Vec<PathBuf>) -> Result<(), error::DecapodError> {
+    if !root.exists() {
+        return Ok(());
+    }
+    for entry in fs::read_dir(root).map_err(error::DecapodError::IoError)? {
+        let entry = entry.map_err(error::DecapodError::IoError)?;
+        let path = entry.path();
+        if path.is_dir() {
+            collect_files_recursive(&path, out)?;
+        } else if path.is_file() {
+            out.push(path);
+        }
+    }
+    Ok(())
+}
+
+fn git_changed_paths(project_root: &Path) -> Vec<String> {
+    let output = std::process::Command::new("git")
+        .current_dir(project_root)
+        .args(["status", "--porcelain"])
+        .output();
+    let Ok(output) = output else {
+        return Vec::new();
+    };
+    if !output.status.success() {
+        return Vec::new();
+    }
+    let raw = String::from_utf8_lossy(&output.stdout);
+    let mut paths = Vec::new();
+    for line in raw.lines() {
+        if line.len() < 4 {
+            continue;
+        }
+        let candidate = line[3..].trim();
+        if let Some((_, to)) = candidate.split_once(" -> ") {
+            paths.push(to.trim().to_string());
+        } else {
+            paths.push(candidate.to_string());
+        }
+    }
+    paths
+}
+
+fn has_schema_or_interface_changes(paths: &[String]) -> bool {
+    paths.iter().any(|path| {
+        path.starts_with("constitution/interfaces/")
+            || path == "src/core/schemas.rs"
+            || path == "src/core/rpc.rs"
+            || path.starts_with("tests/golden/rpc/")
+    })
+}
+
+fn changelog_mentions_schema_or_interface(changelog_raw: &str) -> bool {
+    let lower = changelog_raw.to_ascii_lowercase();
+    let Some(start) = lower.find("## [unreleased]") else {
+        return false;
+    };
+    let section = &lower[start..];
+    let next_heading = section[14..]
+        .find("\n## ")
+        .map(|idx| idx + 14)
+        .unwrap_or(section.len());
+    let unreleased = &section[..next_heading];
+    unreleased.contains("schema") || unreleased.contains("interface")
 }
 
 fn run_validate_command(

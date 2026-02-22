@@ -609,6 +609,23 @@ fn validate_entrypoint_invariants(
             all_present = false;
         }
 
+        // Entrypoints must reference embedded constitution docs, never legacy top-level docs/.
+        if agent_content.contains("decapod docs show docs/") {
+            fail(
+                &format!(
+                    "{} references non-embedded docs path (`docs/`). Use `constitution/docs/`.",
+                    agent_file
+                ),
+                ctx,
+            );
+            all_present = false;
+        } else if agent_content.contains("decapod docs show constitution/docs/") {
+            pass(
+                &format!("{} references embedded constitution docs path", agent_file),
+                ctx,
+            );
+        }
+
         // Must include explicit jail rule for .decapod access
         if agent_content.contains(".decapod files are accessed only via decapod CLI") {
             pass(
