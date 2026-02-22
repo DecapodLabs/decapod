@@ -222,6 +222,7 @@ fn validate_embedded_self_contained(
                     || line.contains("intended as")
                     || line.contains(".decapod/knowledge/")
                     || line.contains(".decapod/data/")
+                    || line.contains(".decapod/workspaces/")
                     || line.contains("repo-scoped");
                 if is_legitimate_line {
                     legitimate_ref_count += refs_on_line;
@@ -711,6 +712,48 @@ fn validate_entrypoint_invariants(
         } else {
             fail(
                 &format!("{} missing claim-before-work mandate marker", agent_file),
+                ctx,
+            );
+            all_present = false;
+        }
+
+        // Must include task creation before claim mandate
+        if agent_content.contains("decapod todo add \"<task>\"") {
+            pass(
+                &format!("{} includes task creation mandate", agent_file),
+                ctx,
+            );
+        } else {
+            fail(
+                &format!("{} missing task creation mandate marker", agent_file),
+                ctx,
+            );
+            all_present = false;
+        }
+
+        // Must include canonical Decapod workspace path mandate
+        if agent_content.contains(".decapod/workspaces") {
+            pass(
+                &format!("{} includes canonical workspace path mandate", agent_file),
+                ctx,
+            );
+        } else {
+            fail(
+                &format!(
+                    "{} missing canonical workspace path marker (`.decapod/workspaces`)",
+                    agent_file
+                ),
+                ctx,
+            );
+            all_present = false;
+        }
+
+        if agent_content.contains(".claude/worktrees") {
+            fail(
+                &format!(
+                    "{} references forbidden non-canonical worktree path `.claude/worktrees`",
+                    agent_file
+                ),
                 ctx,
             );
             all_present = false;
