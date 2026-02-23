@@ -7,6 +7,7 @@
 
 use crate::core::assets;
 use crate::core::error;
+use crate::core::project_specs::LOCAL_PROJECT_SPECS;
 use crate::plugins::container;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -27,6 +28,12 @@ pub struct ScaffoldOptions {
     pub created_backups: bool,
     /// Force creation of all 5 entrypoint files regardless of existing state
     pub all: bool,
+    /// Generate project-facing specs/ scaffolding.
+    pub generate_specs: bool,
+    /// Diagram style for generated architecture document.
+    pub diagram_style: DiagramStyle,
+    /// Intent/architecture seed captured from inferred or user-confirmed repo context.
+    pub specs_seed: Option<SpecsSeed>,
 }
 
 pub struct ScaffoldSummary {
@@ -36,6 +43,221 @@ pub struct ScaffoldSummary {
     pub config_created: usize,
     pub config_unchanged: usize,
     pub config_preserved: usize,
+    pub specs_created: usize,
+    pub specs_unchanged: usize,
+    pub specs_preserved: usize,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum DiagramStyle {
+    Ascii,
+    Mermaid,
+}
+
+#[derive(Clone, Debug)]
+pub struct SpecsSeed {
+    pub product_name: Option<String>,
+    pub product_summary: Option<String>,
+    pub architecture_direction: Option<String>,
+    pub product_type: Option<String>,
+    pub primary_languages: Vec<String>,
+    pub detected_surfaces: Vec<String>,
+    pub done_criteria: Option<String>,
+}
+
+fn specs_readme_template() -> String {
+    r#"# Project Specs
+
+This directory is the human+agent engineering contract for this repository.
+
+- `intent.md` captures why this repository exists and what outcome it must achieve.
+- `architecture.md` captures implementation topology, interfaces, and operational gates.
+- `interfaces.md` captures inbound/outbound service contracts and failure behavior.
+- `validation.md` captures proof surfaces, gate criteria, and required evidence artifacts.
+
+Keep these documents current as requirements and implementation evolve.
+"#
+    .to_string()
+}
+
+fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
+    let product_outcome = seed
+        .and_then(|s| s.product_summary.as_deref())
+        .unwrap_or("Define the user-visible outcome in one paragraph.");
+    let done_criteria = seed
+        .and_then(|s| s.done_criteria.as_deref())
+        .unwrap_or("Functional behavior is demonstrably correct.");
+    let product_name = seed
+        .and_then(|s| s.product_name.as_deref())
+        .unwrap_or("this repository");
+
+    format!(
+        r#"# Intent
+
+## Product Outcome
+- {product_outcome}
+
+## Scope
+- In scope for {product_name}:
+- Out of scope:
+
+## Constraints
+- Technical:
+- Operational:
+- Security/compliance:
+
+## Acceptance Criteria
+- [ ] {done_criteria}
+- [ ] Non-functional targets are met (latency, reliability, cost, etc.).
+- [ ] Validation gates pass and artifacts are attached.
+
+## Open Questions
+- List unresolved decisions that block implementation confidence.
+"#
+    )
+}
+
+fn specs_architecture_template(style: DiagramStyle, seed: Option<&SpecsSeed>) -> String {
+    let summary = seed
+        .and_then(|s| s.architecture_direction.as_deref())
+        .unwrap_or(
+            "Describe the architecture in 5-8 dense sentences focused on deployment reality, system boundaries, and operational risks.",
+        );
+    let runtime_langs = seed
+        .map(|s| s.primary_languages.join(", "))
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| "to be confirmed".to_string());
+    let surfaces = seed
+        .map(|s| s.detected_surfaces.join(", "))
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| "to be confirmed".to_string());
+    let product_type = seed
+        .and_then(|s| s.product_type.as_deref())
+        .unwrap_or("to be confirmed");
+
+    let diagram = match style {
+        DiagramStyle::Ascii => {
+            r#"```text
+Human Intent
+    |
+    v
+Agent Swarm(s)  <---->  Decapod Control Plane  <---->  Repo + Services
+                             |      |      |
+                             |      |      +-- Validation Gates
+                             |      +--------- Provenance + Artifacts
+                             +---------------- Work Unit / Context Governance
+```"#
+        }
+        DiagramStyle::Mermaid => {
+            r#"```mermaid
+flowchart LR
+  H[Human Intent] --> A[Agent Swarm(s)]
+  A <--> D[Decapod Control Plane]
+  D <--> R[Repo + Services]
+  D --> G[Validation Gates]
+  D --> P[Provenance + Artifacts]
+  D --> W[Work Unit and Context Governance]
+```"#
+        }
+    };
+
+    format!(
+        r#"# Architecture
+
+## Executive Summary
+{summary}
+
+## Integrated Surface
+- Runtime/languages: {runtime_langs}
+- Frameworks/libraries: {surfaces}
+- Infrastructure/services: {product_type}
+- External dependencies:
+
+## Implementation Strategy
+- What is being built now:
+- What is deferred:
+- Why this cut line is chosen:
+
+## System Topology
+{diagram}
+
+## Service Contracts
+- Inbound interfaces (API/events/CLI):
+- Outbound interfaces (datastores/queues/third-party):
+- Data ownership and consistency boundaries:
+
+## Multi-Agent Delivery Model
+- Work partitioning strategy:
+- Shared context/proof artifacts:
+- Coordination and handoff rules:
+
+## Validation Gates
+- Unit/integration/e2e gates:
+- Statistical/variance-aware gates (if nondeterministic surfaces exist):
+- Release/promotion blockers:
+
+## Delivery Plan
+- Milestone 1:
+- Milestone 2:
+- Milestone 3:
+
+## Risks and Mitigations
+- Risk:
+  Mitigation:
+"#
+    )
+}
+
+fn specs_interfaces_template() -> String {
+    r#"# Interfaces
+
+## Inbound Contracts
+- API / RPC entrypoints:
+- CLI surfaces:
+- Event/webhook consumers:
+
+## Outbound Dependencies
+- Datastores:
+- External APIs/services:
+- Queues/brokers:
+
+## Data Ownership
+- Source-of-truth tables/collections:
+- Cross-boundary read models:
+- Consistency expectations:
+
+## Failure Semantics
+- Retry/backoff policy:
+- Timeout/circuit behavior:
+- Degradation behavior:
+"#
+    .to_string()
+}
+
+fn specs_validation_template() -> String {
+    r#"# Validation
+
+## Proof Surfaces
+- `decapod validate`
+- Required test commands:
+- Required integration/e2e commands:
+
+## Promotion Gates
+- Blocking gates:
+- Warning-only gates:
+- Kill switches:
+
+## Evidence Artifacts
+- Manifest paths:
+- Required hashes/checksums:
+- Trace/log attachments:
+
+## Regression Guardrails
+- Baseline references:
+- Statistical thresholds (if non-deterministic):
+- Rollback criteria:
+"#
+    .to_string()
 }
 
 /// Canonical .gitignore rules managed by `decapod init`.
@@ -214,6 +436,37 @@ pub fn scaffold_project_entrypoints(
         fs::write(&dockerfile_path, dockerfile_content).map_err(error::DecapodError::IoError)?;
     }
 
+    let (specs_created, specs_unchanged, specs_preserved) = if opts.generate_specs {
+        let mut created = 0usize;
+        let mut unchanged = 0usize;
+        let mut preserved = 0usize;
+
+        let seed = opts.specs_seed.as_ref();
+        let mut specs_files: Vec<(&str, String)> = Vec::new();
+        for spec in LOCAL_PROJECT_SPECS {
+            let content = match spec.path {
+                "specs/README.md" => specs_readme_template(),
+                "specs/intent.md" => specs_intent_template(seed),
+                "specs/architecture.md" => specs_architecture_template(opts.diagram_style, seed),
+                "specs/interfaces.md" => specs_interfaces_template(),
+                "specs/validation.md" => specs_validation_template(),
+                _ => continue,
+            };
+            specs_files.push((spec.path, content));
+        }
+
+        for (rel_path, content) in specs_files {
+            match write_file(opts, rel_path, &content)? {
+                FileAction::Created => created += 1,
+                FileAction::Unchanged => unchanged += 1,
+                FileAction::Preserved => preserved += 1,
+            }
+        }
+        (created, unchanged, preserved)
+    } else {
+        (0usize, 0usize, 0usize)
+    };
+
     Ok(ScaffoldSummary {
         entrypoints_created: ep_created,
         entrypoints_unchanged: ep_unchanged,
@@ -221,6 +474,9 @@ pub fn scaffold_project_entrypoints(
         config_created: cfg_created,
         config_unchanged: cfg_unchanged,
         config_preserved: cfg_preserved,
+        specs_created,
+        specs_unchanged,
+        specs_preserved,
     })
 }
 

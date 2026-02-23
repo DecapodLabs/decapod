@@ -39,7 +39,7 @@ This is how you get determinism, auditability, and eventually policy.
 
 This is the default sequence when operating in a Decapod-managed repo:
 
-1. Read the contract: `specs/INTENT.md`, `methodology/ARCHITECTURE.md`, then `specs/SYSTEM.md`.
+1. Read the contract: constitution `specs/INTENT.md`, `methodology/ARCHITECTURE.md`, `specs/SYSTEM.md`, then local project specs `specs/intent.md`, `specs/architecture.md`, `specs/interfaces.md`, `specs/validation.md`.
 2. Discover proof: identify the smallest proof surface that can falsify success (`decapod validate`, tests, etc.).
 3. Use Decapod as the interface: read/write shared state through `decapod ...` commands.
 4. Add a repo TODO for multi-step work before implementation (dogfood mode inside this repo).

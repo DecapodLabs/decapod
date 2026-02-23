@@ -27,6 +27,7 @@ This registry defines the canonical binding interface surfaces.
 | `interfaces/DEMANDS_SCHEMA.md` | User-demand schema + precedence rules | Yes |
 | `interfaces/RISK_POLICY_GATE.md` | Deterministic PR risk-policy gate semantics | Yes |
 | `interfaces/AGENT_CONTEXT_PACK.md` | Agent context-pack layout and mutation contract | Yes |
+| `interfaces/PROJECT_SPECS.md` | Canonical local `specs/*.md` contract and constitution mapping | Yes |
 
 ---
 
@@ -39,6 +40,7 @@ This registry defines the canonical binding interface surfaces.
 - User demand typing and precedence: `interfaces/DEMANDS_SCHEMA.md`
 - Deterministic PR risk policy and evidence discipline: `interfaces/RISK_POLICY_GATE.md`
 - Agent memory/context pack semantics: `interfaces/AGENT_CONTEXT_PACK.md`
+- Canonical local project specs contract: `interfaces/PROJECT_SPECS.md`
 
 ---
 
@@ -73,6 +75,7 @@ This registry defines the canonical binding interface surfaces.
 - `interfaces/ARCHITECTURE_FOUNDATIONS.md` - Architecture quality primitives
 - `interfaces/RISK_POLICY_GATE.md` - Deterministic PR risk-policy gate
 - `interfaces/AGENT_CONTEXT_PACK.md` - Agent context-pack contract
+- `interfaces/PROJECT_SPECS.md` - Canonical local project specs contract
 - `interfaces/KNOWLEDGE_STORE.md` - Knowledge store and promotion firewall contract
 
 ### Operations (Plugins Layer)

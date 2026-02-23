@@ -8,6 +8,7 @@ use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
 use crate::core::output;
 use crate::core::plan_governance;
+use crate::core::project_specs::LOCAL_PROJECT_SPECS;
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
@@ -1124,6 +1125,273 @@ fn validate_generated_artifact_whitelist(
             ),
             ctx,
         );
+    }
+
+    Ok(())
+}
+
+fn validate_project_config_toml(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Project Config Gate");
+    let config_path = repo_root.join(".decapod").join("config.toml");
+    if !config_path.exists() {
+        warn(
+            "Missing .decapod/config.toml; rerun `decapod init` to scaffold repo context configuration.",
+            ctx,
+        );
+        return Ok(());
+    }
+    let raw = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
+    let value: toml::Value = toml::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Invalid .decapod/config.toml syntax: {}", e))
+    })?;
+    let schema_version = value
+        .get("schema_version")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    if schema_version == "1.0.0" {
+        pass("Project config schema_version is valid (1.0.0)", ctx);
+    } else {
+        fail(
+            "Project config schema_version must be 1.0.0 in .decapod/config.toml",
+            ctx,
+        );
+    }
+    if value.get("repo").is_some() && value.get("init").is_some() {
+        pass(
+            "Project config contains required [repo] and [init] tables",
+            ctx,
+        );
+    } else {
+        fail(
+            "Project config missing required [repo] or [init] table",
+            ctx,
+        );
+    }
+    let repo_table = value.get("repo").and_then(|v| v.as_table());
+    let has_intent_anchor = repo_table
+        .and_then(|t| t.get("product_summary"))
+        .and_then(|v| v.as_str())
+        .map(|s| !s.trim().is_empty())
+        .unwrap_or(false);
+    if has_intent_anchor {
+        pass(
+            "Project config captures repo.product_summary intent anchor",
+            ctx,
+        );
+    } else {
+        fail(
+            "Project config missing repo.product_summary (intent anchor).",
+            ctx,
+        );
+    }
+
+    let has_architecture_direction = repo_table
+        .and_then(|t| {
+            t.get("architecture_direction")
+                .or_else(|| t.get("architecture_intent"))
+        })
+        .and_then(|v| v.as_str())
+        .map(|s| !s.trim().is_empty())
+        .unwrap_or(false);
+    if has_architecture_direction {
+        pass("Project config captures repo.architecture_direction", ctx);
+    } else {
+        fail("Project config missing repo.architecture_direction.", ctx);
+    }
+
+    let has_done_criteria = repo_table
+        .and_then(|t| t.get("done_criteria"))
+        .and_then(|v| v.as_str())
+        .map(|s| !s.trim().is_empty())
+        .unwrap_or(false);
+    if has_done_criteria {
+        pass(
+            "Project config captures repo.done_criteria proof target",
+            ctx,
+        );
+    } else {
+        warn(
+            "Project config missing repo.done_criteria; init should capture explicit done evidence.",
+            ctx,
+        );
+    }
+    Ok(())
+}
+
+fn validate_project_specs_docs(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Project Specs Architecture Gate");
+
+    let specs_dir = repo_root.join("specs");
+    if !specs_dir.exists() {
+        warn(
+            "Project specs directory missing (specs/). Run `decapod init --force` to scaffold intent/architecture docs.",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    for spec in LOCAL_PROJECT_SPECS {
+        let path = repo_root.join(spec.path);
+        let file = spec.path;
+        if path.exists() {
+            pass(&format!("Project specs file present: {}", file), ctx);
+        } else {
+            fail(
+                &format!("Missing required project specs file: {}", file),
+                ctx,
+            );
+        }
+    }
+
+    let architecture_path = specs_dir.join("architecture.md");
+    if architecture_path.exists() {
+        let architecture =
+            fs::read_to_string(&architecture_path).map_err(error::DecapodError::IoError)?;
+        let required_sections = [
+            "# Architecture",
+            "## Integrated Surface",
+            "## Implementation Strategy",
+            "## System Topology",
+            "## Service Contracts",
+            "## Multi-Agent Delivery Model",
+            "## Validation Gates",
+            "## Delivery Plan",
+            "## Risks and Mitigations",
+        ];
+        let mut missing = Vec::new();
+        for section in required_sections {
+            if !architecture.contains(section) {
+                missing.push(section);
+            }
+        }
+        if missing.is_empty() {
+            pass(
+                "Architecture spec contains required engineering sections",
+                ctx,
+            );
+        } else {
+            fail(
+                &format!("Architecture spec missing required sections: {:?}", missing),
+                ctx,
+            );
+        }
+
+        if architecture.contains("```mermaid") || architecture.contains("```text") {
+            pass(
+                "Architecture spec contains required topology diagram block",
+                ctx,
+            );
+        } else {
+            fail(
+                "Architecture spec missing topology diagram block (`mermaid` or `text` fenced block)",
+                ctx,
+            );
+        }
+        if architecture.contains(
+            "Describe the architecture in 5-8 dense sentences focused on deployment reality, system boundaries, and operational risks.",
+        ) {
+            fail(
+                "Architecture spec still has placeholder executive summary; derive architecture from explicit intent.",
+                ctx,
+            );
+        } else {
+            pass("Architecture spec has non-placeholder executive summary", ctx);
+        }
+
+        let dense_line_count = architecture
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .count();
+        if dense_line_count >= 35 {
+            pass("Architecture spec meets minimum density threshold", ctx);
+        } else {
+            fail(
+                "Architecture spec is too sparse (<35 non-empty lines); expand it to an engineer-ready overview",
+                ctx,
+            );
+        }
+    }
+
+    let intent_path = specs_dir.join("intent.md");
+    if intent_path.exists() {
+        let intent = fs::read_to_string(intent_path).map_err(error::DecapodError::IoError)?;
+        let required_intent_sections = [
+            "# Intent",
+            "## Product Outcome",
+            "## Scope",
+            "## Constraints",
+            "## Acceptance Criteria",
+        ];
+        let mut missing = Vec::new();
+        for section in required_intent_sections {
+            if !intent.contains(section) {
+                missing.push(section);
+            }
+        }
+        if missing.is_empty() {
+            pass("Intent spec contains required planning sections", ctx);
+        } else {
+            fail(
+                &format!("Intent spec missing required sections: {:?}", missing),
+                ctx,
+            );
+        }
+        if intent.contains("Define the user-visible outcome in one paragraph.") {
+            fail(
+                "Intent spec still has placeholder product outcome; capture explicit intent before implementation.",
+                ctx,
+            );
+        } else {
+            pass("Intent spec has non-placeholder product outcome", ctx);
+        }
+    }
+
+    let interfaces_path = specs_dir.join("interfaces.md");
+    if interfaces_path.exists() {
+        let interfaces =
+            fs::read_to_string(&interfaces_path).map_err(error::DecapodError::IoError)?;
+        for section in [
+            "# Interfaces",
+            "## Inbound Contracts",
+            "## Outbound Dependencies",
+            "## Data Ownership",
+            "## Failure Semantics",
+        ] {
+            if !interfaces.contains(section) {
+                fail(
+                    &format!("Interfaces spec missing required section: {}", section),
+                    ctx,
+                );
+            }
+        }
+        pass("Interfaces spec contains required contract sections", ctx);
+    }
+
+    let validation_path = specs_dir.join("validation.md");
+    if validation_path.exists() {
+        let validation =
+            fs::read_to_string(&validation_path).map_err(error::DecapodError::IoError)?;
+        for section in [
+            "# Validation",
+            "## Proof Surfaces",
+            "## Promotion Gates",
+            "## Evidence Artifacts",
+            "## Regression Guardrails",
+        ] {
+            if !validation.contains(section) {
+                fail(
+                    &format!("Validation spec missing required section: {}", section),
+                    ctx,
+                );
+            }
+        }
+        pass("Validation spec contains required proof/gate sections", ctx);
     }
 
     Ok(())
@@ -3569,6 +3837,26 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_generated_artifact_whitelist", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_project_config_toml(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_project_config_toml", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_project_specs_docs(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_project_specs_docs", start.elapsed()));
         });
         s.spawn(move |_| {
             let start = Instant::now();
