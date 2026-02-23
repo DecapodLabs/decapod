@@ -44,6 +44,21 @@ Related: [Evaluating AGENTS.md](https://arxiv.org/pdf/2602.11988) (ETH SRI, 2026
   ☕ Like Decapod? <a href="https://ko-fi.com/decapodlabs"><strong>Buy us a coffee on Ko-fi</strong></a> 💙
 </p>
 
+## Getting Started 🚀
+
+```
+cargo install decapod
+decapod init
+```
+
+Then keep using your agents normally. Decapod is called from inside those agent runs when control-plane decisions are needed.
+
+Agent integration: If you use Claude Code / Codex / Gemini / Cursor / similar tools, see `AGENTS.md` and the tool-specific entrypoint files (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`) for the exact operational contract.
+
+Learn more about the embedded [constitution](constitution/core/DECAPOD.md).
+
+Override constitution defaults with plain English in `.decapod/OVERRIDE.md` after you initilaize Decapod in your project directory.
+
 ## Assurance Model ✅
 
 Decapod centers execution around three outcomes:
@@ -82,25 +97,6 @@ AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
 - ✅ Local-first auditability: `.decapod/` keeps durable traces, decisions, and proof artifacts.
 
 And dozens more. For the full high-level and data-level surface area, see `decapod docs show core/INTERFACES.md` and the override template at `.decapod/OVERRIDE.md`.
-
-## Getting Started 🚀
-
-```
-cargo install decapod
-decapod init
-```
-
-Then keep using your agents normally. Decapod is called from inside those agent runs when control-plane decisions are needed.
-
-Agent integration: If you use Claude Code / Codex / Gemini / Cursor / similar tools, see `AGENTS.md` and the tool-specific entrypoint files (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`) for the exact operational contract.
-
-Learn more about the embedded constitution via the CLI:
-
-```bash
-decapod docs show core/DECAPOD.md
-```
-
-Override constitution defaults with plain English in `.decapod/OVERRIDE.md`.
 
 ## Contributing 🤝
 

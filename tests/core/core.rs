@@ -507,6 +507,10 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must allowlist generated context capsule artifacts in .gitignore"
     );
     assert!(
+        gitignore.contains("!.decapod/generated/specs/*.md"),
+        "decapod init must allowlist generated project specs artifacts in .gitignore"
+    );
+    assert!(
         gitignore.contains("!.decapod/data/knowledge.promotions.jsonl"),
         "decapod init must allowlist knowledge promotion ledger in .gitignore"
     );
@@ -521,23 +525,32 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "generated Dockerfile must come from Rust template component"
     );
     assert!(
-        live_target.join("specs/architecture.md").exists(),
-        "decapod init must scaffold specs/architecture.md"
+        live_target
+            .join(".decapod/generated/specs/ARCHITECTURE.md")
+            .exists(),
+        "decapod init must scaffold .decapod/generated/specs/ARCHITECTURE.md"
     );
     assert!(
-        live_target.join("specs/intent.md").exists(),
-        "decapod init must scaffold specs/intent.md"
+        live_target
+            .join(".decapod/generated/specs/INTENT.md")
+            .exists(),
+        "decapod init must scaffold .decapod/generated/specs/INTENT.md"
     );
     assert!(
-        live_target.join("specs/interfaces.md").exists(),
-        "decapod init must scaffold specs/interfaces.md"
+        live_target
+            .join(".decapod/generated/specs/INTERFACES.md")
+            .exists(),
+        "decapod init must scaffold .decapod/generated/specs/INTERFACES.md"
     );
     assert!(
-        live_target.join("specs/validation.md").exists(),
-        "decapod init must scaffold specs/validation.md"
+        live_target
+            .join(".decapod/generated/specs/VALIDATION.md")
+            .exists(),
+        "decapod init must scaffold .decapod/generated/specs/VALIDATION.md"
     );
-    let architecture = fs::read_to_string(live_target.join("specs/architecture.md"))
-        .expect("read specs/architecture.md");
+    let architecture =
+        fs::read_to_string(live_target.join(".decapod/generated/specs/ARCHITECTURE.md"))
+            .expect("read .decapod/generated/specs/ARCHITECTURE.md");
     assert!(
         architecture.contains("```text"),
         "default diagram style should scaffold ascii topology block"
@@ -572,8 +585,9 @@ fn scaffold_store_and_docs_cli_behaviors() {
         specs_seed: None,
     };
     scaffold_project_entrypoints(&mermaid_opts).expect("mermaid scaffold");
-    let mermaid_arch = fs::read_to_string(mermaid_target.join("specs/architecture.md"))
-        .expect("read mermaid architecture");
+    let mermaid_arch =
+        fs::read_to_string(mermaid_target.join(".decapod/generated/specs/ARCHITECTURE.md"))
+            .expect("read mermaid architecture");
     assert!(
         mermaid_arch.contains("```mermaid"),
         "mermaid diagram style should scaffold mermaid topology block"
