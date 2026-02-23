@@ -72,9 +72,9 @@ AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
 - ✅ Scoped plain-English policy overrides in `.decapod/OVERRIDE.md`.
 - ✅ Agent-agnostic control plane: one CLI/RPC contract across Claude, Codex, Gemini, Cursor, and more.
 - ✅ Multi-agent-safe in one repo with governed task and workspace coordination.
+- ✅ Shared transient skills memory: capture human-taught preferences once and apply them across agents/sessions.
 - ✅ Work Unit manifests make `intent/spec/state/proof` explicit and durable.
 - ✅ VERIFIED is structural, not rhetorical: proof-plan results must pass before completion.
-- ✅ Promotion is gated at validate-time and publish-time, so regressions do not silently ship.
 - ✅ Variance-aware eval kernel (`eval plan/ingest-run/judge/aggregate/gate`) adds repeatable settings, judge contracts, and statistical regression gates.
 - ✅ Deterministic context capsules (`core|interfaces|plugins`) return scoped, hashable guidance.
 - ✅ Knowledge promotion firewall ledger (`.decapod/data/knowledge.promotions.jsonl`) controls what can become procedural truth.

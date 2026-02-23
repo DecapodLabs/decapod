@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Other
+
+- schema/interface: merge eval + gitignore governance surface updates and keep deterministic whitelist enforcement in init/validate
+
 ## [0.38.12](https://github.com/DecapodLabs/decapod/compare/v0.38.11...v0.38.12) - 2026-02-23
 
 ### Other
