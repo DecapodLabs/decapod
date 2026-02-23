@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.3](https://github.com/DecapodLabs/decapod/compare/v0.38.2...v0.38.3) - 2026-02-23
+
+### Other
+
+- *(workunit)* add init/get/status manifest commands
+- add optional artifact integrity gates for new kernel schemas
+- *(schema)* add deterministic workunit and context capsule models
+
 ## [0.38.2](https://github.com/DecapodLabs/decapod/compare/v0.38.1...v0.38.2) - 2026-02-23
 
 ### Other
