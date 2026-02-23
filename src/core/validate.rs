@@ -8,6 +8,7 @@ use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
 use crate::core::output;
 use crate::core::plan_governance;
+use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::plugins::teammate::{SkillCard, SkillResolution};
@@ -1060,19 +1061,8 @@ fn validate_generated_artifact_whitelist(
 
     let gitignore_path = decapod_dir.join(".gitignore");
     let gitignore = fs::read_to_string(&gitignore_path).map_err(error::DecapodError::IoError)?;
-    let required_rules = [
-        ".decapod/generated/*",
-        "!.decapod/generated/Dockerfile",
-        "!.decapod/generated/context/",
-        "!.decapod/generated/context/*.json",
-        ".decapod/data",
-        "!.decapod/data/",
-        ".decapod/data/*",
-        "!.decapod/data/knowledge.promotions.jsonl",
-    ];
-
-    for rule in required_rules {
-        if gitignore.lines().any(|line| line.trim() == rule) {
+    for rule in DECAPOD_GITIGNORE_RULES {
+        if gitignore.lines().any(|line| line.trim() == *rule) {
             pass(&format!("Gitignore contains required rule '{}'", rule), ctx);
         } else {
             fail(

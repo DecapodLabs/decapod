@@ -30,16 +30,18 @@ dev/
 .helix/
 
 # --- Decapod Sidecar (State) ---
-# We never commit local sidecar state or databases
+# Keep runtime state ignored by default, then allowlist deterministic artifacts.
 .decapod/data
-!.decapod/data/
 .decapod/data/*
+!.decapod/data/
 !.decapod/data/knowledge.promotions.jsonl
 .decapod/.stfolder
 .decapod/workspaces
-# Generated runtime outputs are non-canonical; keep them out of version control.
+# Generated runtime outputs are non-canonical; allowlist only governed artifacts.
 .decapod/generated/*
 # Allowlist deterministic generated artifact used as container build baseline.
+!.decapod/data/
+!.decapod/data/knowledge.promotions.jsonl
 !.decapod/generated/Dockerfile
 !.decapod/generated/context/
 !.decapod/generated/context/*.json
