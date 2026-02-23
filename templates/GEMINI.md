@@ -1,17 +1,13 @@
-# GEMINI.md — Gemini Entrypoint
+# AGENT.md - Agent Entrypoint
 
-Follow `AGENTS.md` as the primary contract.
+You are working in a Decapod-managed repository.
+See `AGENTS.md` for the universal contract.
 
-Gemini runtime rules in this repo:
-
-- Use Decapod as the control plane at plan, mutation, and proof checkpoints.
-- Operate only through Decapod CLI/RPC for shared state and governance.
-- Handle lock/contention failures explicitly; do not proceed on uncertain state.
-- Do not claim unsupported features or hidden workflows.
-
-Minimum flow:
+## Quick Start
 
 ```bash
+cargo install decapod
+
 decapod validate
 decapod docs ingest
 decapod session acquire
@@ -22,11 +18,13 @@ decapod todo claim --id <task-id>
 decapod workspace ensure
 ```
 
-Before completion:
+## Operating Mode
 
-```bash
-decapod validate
-# plus required tests/build checks for changed surfaces
-```
+- Use Docker git workspaces and execute in `.decapod/workspaces/*`.
+- request elevated permissions before Docker/container workspace commands.
+- `.decapod files are accessed only via decapod CLI`.
+- `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
+- Read canonical router: `decapod docs show core/DECAPOD.md`.
+- Operator reference: `decapod docs show docs/PLAYBOOK.md`.
 
-If intent or policy is unclear, stop and ask the human.
+Stop if requirements are ambiguous or conflicting.

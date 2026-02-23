@@ -1,15 +1,9 @@
 //! Workspace management with Git Worktree and Docker isolation
 //!
-//! Decapod enforces Silicon Valley project hygiene: reproducible, isolated workspaces.
-//! Git worktrees provide parallel isolation, while Docker provides environment consistency.
-//!
-//! # For AI Agents
-//!
-//! You SHOULD work in an isolated git worktree. Decapod enforces this via gates.
-//! The workspace system ensures:
-//! - Git worktree isolation (for parallel work)
-//! - Protected branch enforcement (no main/master mutations)
-//! - Containerized execution (optional but recommended for reproducible builds)
+//! Provides repository isolation primitives:
+//! - git worktree status and provisioning
+//! - protected-branch safeguards
+//! - optional containerized execution for reproducible builds
 
 use crate::core::error::DecapodError;
 use crate::core::rpc::{AllowedOp, Blocker, BlockerKind};

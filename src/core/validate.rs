@@ -2,31 +2,6 @@
 //!
 //! This module implements the comprehensive validation suite that enforces
 //! Decapod's contracts, invariants, and methodology gates.
-//!
-//! # For AI Agents
-//!
-//! - **`decapod validate` MUST pass before claiming work complete**: This is NON-NEGOTIABLE
-//! - **Validation is deterministic**: Same repo state always produces same results
-//! - **Gates enforce separation of concerns**: E.g., watchers can't mutate state
-//! - **Health purity**: No manual health values allowed in canonical docs
-//! - **Event sourcing**: Repo stores must match deterministic rebuild from events
-//! - **Namespace purge**: Legacy namespace references are forbidden
-//! - **Tooling validation**: Formatting, linting, and type checking must pass (see Tooling Validation Gate)
-//!
-//! # Validation Categories
-//!
-//! - Store integrity (user blank-slate, repo event-sourced)
-//! - Constitution presence (embedded docs exist)
-//! - Entrypoint gate (CLAUDE.md, AGENTS.md, etc.)
-//! - Namespace purge (no legacy references)
-//! - Health purity (no manual status values)
-//! - Schema determinism (stable output)
-//! - Policy isolation (approvals don't directly mutate health)
-//! - Knowledge provenance (all entries have pointers)
-//! - Watcher purity (read-only checks only)
-//! - Archive integrity (hash verification)
-//! - Canon mutation gate (no unauthorized doc writes)
-//! - Tooling validation gate (formatting, linting, type checking)
 
 use crate::core::broker::DbBroker;
 use crate::core::error;

@@ -1,79 +1,10 @@
-//! Decapod: A Project OS for AI Agents
+//! Decapod library crate.
 //!
-//! **Decapod is a local-first control plane for agentic software engineering.**
+//! Exposes the core control-plane runtime (`core`), embedded constitution/document
+//! access (`constitution`), and plugin subsystems (`plugins`).
 //!
-//! This is NOT a tool for humans to orchestrate. This IS a tool for AI agents to coordinate.
-//! Humans steer via intent; agents execute via this orchestration layer.
-//!
-//! # Core Principles
-//!
-//! - **Local-first**: All state is local, versioned, and auditable
-//! - **Deterministic**: Event-sourced stores enable reproducible replay
-//! - **Agent-first**: Designed for machine consumption, not human UX
-//! - **Constitution-driven**: Embedded methodology enforces contracts
-//! - **Proof-gated**: Validation harness ensures methodology adherence
-//!
-//! # For AI Agents
-//!
-//! **You MUST:**
-//! 1. Read the constitution first: `decapod docs show core/DECAPOD.md`
-//! 2. Use the CLI exclusively: Never bypass `decapod` commands
-//! 3. Validate before completion: `decapod validate` must pass
-//! 4. Record proofs: `decapod proof run` for executable claims
-//! 5. Track work: `decapod todo add` before multi-step tasks
-//!
-//! # Architecture
-//!
-//! ## Dual-Store Model
-//!
-//! - **User Store** (`~/.decapod/data/`): Agent-local, blank-slate semantics
-//! - **Repo Store** (`<repo>/.decapod/data/`): Project-scoped, event-sourced, deterministic
-//!
-//! ## The Thin Waist
-//!
-//! All state mutations route through `DbBroker` for:
-//! - Serialization (in-process lock)
-//! - Audit logging (`broker.events.jsonl`)
-//! - Intent tracking
-//!
-//! ## Subsystems (Plugins)
-//!
-//! - `todo`: Task tracking with event sourcing
-//! - `health`: Proof-based claim status tracking
-//! - `knowledge`: Structured knowledge with provenance
-//! - `policy`: Approval gates for high-risk operations
-//! - `watcher`: Read-only constitution compliance monitoring
-//! - `archive`: Session archival with hash verification
-//! - `context`: Multi-modal context packing for agents
-//! - `cron`: Scheduled recurring tasks
-//! - `reflex`: Event-triggered automation
-//! - `feedback`: Agent-to-human proposal system
-//! - `trust`: Trust score tracking for agents
-//! - `heartbeat`: Liveness monitoring
-//!
-//! # Examples
-//!
-//! ```bash
-//! # Initialize a Decapod project
-//! decapod init
-//!
-//! # Read the methodology
-//! decapod docs show core/DECAPOD.md
-//!
-//! # Add a task
-//! decapod todo add "Implement feature X"
-//!
-//! # Run validation harness
-//! decapod validate
-//!
-//! # Run proof checks
-//! decapod proof run
-//! ```
-//!
-//! # Crate Structure
-//!
-//! - [`core`]: Fundamental types and control plane (store, broker, proof, validate)
-//! - [`plugins`]: Subsystem implementations (TODO, health, knowledge, etc.)
+//! Runtime operational contracts for agents are defined in repository entrypoint
+//! docs and constitution documents, not in Rust source comments.
 
 pub mod constitution;
 pub mod core;

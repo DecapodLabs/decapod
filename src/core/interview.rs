@@ -3,15 +3,6 @@
 //! The interview engine helps agents gather requirements from humans
 //! through a structured question-and-answer process. It produces
 //! industry-grade documentation with sensible defaults.
-//!
-//! # For AI Agents
-//!
-//! Use the interview to build understanding before implementation:
-//! 1. Call `next_question()` to get the next best question
-//! 2. Present the question to the human
-//! 3. Call `apply_answer()` to store the response
-//! 4. Repeat until interview is complete
-//! 5. Call `generate_artifacts()` to produce docs
 
 use crate::core::error::DecapodError;
 use serde::{Deserialize, Serialize};

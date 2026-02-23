@@ -2,14 +2,6 @@
 //!
 //! This module implements the `decapod docs` command family for querying
 //! Decapod's embedded methodology documents.
-//!
-//! # For AI Agents
-//!
-//! - **Use `decapod docs show <path>` to read constitution**: Don't read from filesystem
-//! - **Three source modes**: embedded (binary), override (project), merged (both)
-//! - **List available docs**: `decapod docs list` shows all embedded docs
-//! - **Ingest command**: `decapod docs ingest` dumps full constitution for agent context
-//! - **Override validation**: `decapod docs override` validates and caches OVERRIDE.md checksum
 
 use crate::core::{assets, docs, error};
 use clap::Subcommand;

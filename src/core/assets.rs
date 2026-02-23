@@ -3,14 +3,6 @@
 //! This module provides compile-time embedded access to Decapod's methodology documents.
 //! All constitution files (core, specs, plugins) are baked into the binary for
 //! hermetic deployment - no external files required.
-//!
-//! # For AI Agents
-//!
-//! - **Constitution is embedded in binary**: No need for external doc files
-//! - **Use `decapod docs show <path>`**: Access docs via CLI, not direct file reads
-//! - **Override mechanism**: Projects can override embedded docs via `.decapod/OVERRIDE.md`
-//! - **Merge semantics**: Overrides append to embedded base (see `get_merged_doc`)
-//! - **Templates for scaffolding**: CLAUDE.md, GEMINI.md, etc. are embedded here
 
 use std::path::Path;
 
