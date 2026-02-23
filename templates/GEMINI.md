@@ -26,5 +26,6 @@ decapod workspace ensure
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod docs show core/DECAPOD.md`.
 - Operator reference: `decapod docs show docs/PLAYBOOK.md`.
+- Scoped context feature: `decapod docs search --query "<problem>" --op <op>` or `decapod rpc --op context.scope`.
 
 Stop if requirements are ambiguous or conflicting.

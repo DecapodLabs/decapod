@@ -318,6 +318,14 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 cost: "low".to_string(),
             },
             Capability {
+                name: "context.scope".to_string(),
+                description:
+                    "Return scoped, query-matched constitution fragments for just-in-time context"
+                        .to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
                 name: "schema.get".to_string(),
                 description: "Get authoritative JSON schemas for entities".to_string(),
                 stability: "stable".to_string(),
