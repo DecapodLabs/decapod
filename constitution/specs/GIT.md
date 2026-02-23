@@ -141,9 +141,9 @@ feat: add priority field, fix validation bug, update README
 
 **Rationale:** Some operators prefer attribution to remain human-only. Respect this preference.
 
-**How to check:** Look for teammate preference entries like:
+**How to check:** Look for aptitude preference entries like:
 ```bash
-decapod data teammate get --pattern commit
+decapod data aptitude get --pattern commit
 ```
 
 ---

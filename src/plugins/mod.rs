@@ -1,3 +1,4 @@
+pub mod aptitude;
 pub mod archive;
 pub mod container;
 pub mod context;
@@ -17,7 +18,6 @@ pub mod map_ops;
 pub mod policy;
 pub mod primitives;
 pub mod reflex;
-pub mod teammate;
 pub mod verify;
 pub mod watcher;
 pub mod workflow;

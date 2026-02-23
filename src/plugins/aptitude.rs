@@ -1,4 +1,4 @@
-//! Teammate plugin: remembers user preferences, skills, and behaviors.
+//! Aptitude plugin: remembers user preferences, skills, and behaviors.
 //!
 //! This plugin catalogs distinct user expectations like:
 //! - SSH key preferences for Git operations
@@ -20,13 +20,13 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub const TEAMMATE_DB_NAME: &str = "teammate.db";
+pub const APTITUDE_DB_NAME: &str = "aptitude.db";
 
 // ============================================================================
 // DATABASE SCHEMAS
 // ============================================================================
 
-pub const TEAMMATE_DB_SCHEMA_PREFERENCES: &str = "
+pub const APTITUDE_DB_SCHEMA_PREFERENCES: &str = "
     CREATE TABLE IF NOT EXISTS preferences (
         id TEXT PRIMARY KEY,
         category TEXT NOT NULL,
@@ -43,7 +43,7 @@ pub const TEAMMATE_DB_SCHEMA_PREFERENCES: &str = "
     )
 ";
 
-pub const TEAMMATE_DB_SCHEMA_SKILLS: &str = "
+pub const APTITUDE_DB_SCHEMA_SKILLS: &str = "
     CREATE TABLE IF NOT EXISTS skills (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
@@ -57,7 +57,7 @@ pub const TEAMMATE_DB_SCHEMA_SKILLS: &str = "
     )
 ";
 
-pub const TEAMMATE_DB_SCHEMA_PATTERNS: &str = "
+pub const APTITUDE_DB_SCHEMA_PATTERNS: &str = "
     CREATE TABLE IF NOT EXISTS patterns (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL UNIQUE,
@@ -70,7 +70,7 @@ pub const TEAMMATE_DB_SCHEMA_PATTERNS: &str = "
     )
 ";
 
-pub const TEAMMATE_DB_SCHEMA_OBSERVATIONS: &str = "
+pub const APTITUDE_DB_SCHEMA_OBSERVATIONS: &str = "
     CREATE TABLE IF NOT EXISTS observations (
         id TEXT PRIMARY KEY,
         content TEXT NOT NULL,
@@ -82,7 +82,7 @@ pub const TEAMMATE_DB_SCHEMA_OBSERVATIONS: &str = "
     )
 ";
 
-pub const TEAMMATE_DB_SCHEMA_CONSOLIDATIONS: &str = "
+pub const APTITUDE_DB_SCHEMA_CONSOLIDATIONS: &str = "
     CREATE TABLE IF NOT EXISTS consolidations (
         id TEXT PRIMARY KEY,
         source_type TEXT NOT NULL,
@@ -94,7 +94,7 @@ pub const TEAMMATE_DB_SCHEMA_CONSOLIDATIONS: &str = "
     )
 ";
 
-pub const TEAMMATE_DB_SCHEMA_AGENT_PROMPTS: &str = "
+pub const APTITUDE_DB_SCHEMA_AGENT_PROMPTS: &str = "
     CREATE TABLE IF NOT EXISTS agent_prompts (
         id TEXT PRIMARY KEY,
         context TEXT NOT NULL,
@@ -109,19 +109,19 @@ pub const TEAMMATE_DB_SCHEMA_AGENT_PROMPTS: &str = "
 ";
 
 // Index creation statements
-pub const TEAMMATE_DB_SCHEMA_INDEX_PREF_CATEGORY: &str =
+pub const APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY: &str =
     "CREATE INDEX IF NOT EXISTS idx_preferences_category ON preferences(category)";
-pub const TEAMMATE_DB_SCHEMA_INDEX_PREF_KEY: &str =
+pub const APTITUDE_DB_SCHEMA_INDEX_PREF_KEY: &str =
     "CREATE INDEX IF NOT EXISTS idx_preferences_key ON preferences(key)";
-pub const TEAMMATE_DB_SCHEMA_INDEX_PREF_ACCESS: &str =
+pub const APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS: &str =
     "CREATE INDEX IF NOT EXISTS idx_preferences_access ON preferences(last_accessed_at)";
-pub const TEAMMATE_DB_SCHEMA_INDEX_SKILL_NAME: &str =
+pub const APTITUDE_DB_SCHEMA_INDEX_SKILL_NAME: &str =
     "CREATE INDEX IF NOT EXISTS idx_skills_name ON skills(name)";
-pub const TEAMMATE_DB_SCHEMA_INDEX_PATTERN_CATEGORY: &str =
+pub const APTITUDE_DB_SCHEMA_INDEX_PATTERN_CATEGORY: &str =
     "CREATE INDEX IF NOT EXISTS idx_patterns_category ON patterns(category)";
-pub const TEAMMATE_DB_SCHEMA_INDEX_OBS_PROCESSED: &str =
+pub const APTITUDE_DB_SCHEMA_INDEX_OBS_PROCESSED: &str =
     "CREATE INDEX IF NOT EXISTS idx_observations_processed ON observations(processed)";
-pub const TEAMMATE_DB_SCHEMA_INDEX_PROMPT_CONTEXT: &str =
+pub const APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT: &str =
     "CREATE INDEX IF NOT EXISTS idx_agent_prompts_context ON agent_prompts(context)";
 
 // ============================================================================
@@ -183,22 +183,22 @@ const DEFAULT_PATTERNS: &[(&str, &str, &str, Option<&str>, Option<&str>, &str)] 
 const DEFAULT_AGENT_PROMPTS: &[(&str, &str, i64)] = &[
     (
         "git_operations",
-        "Check teammate preferences for: SSH key usage, branch naming conventions, commit message style",
+        "Check aptitude preferences for: SSH key usage, branch naming conventions, commit message style",
         100,
     ),
     (
         "code_style",
-        "Check teammate preferences for: formatting rules, naming conventions, style preferences",
+        "Check aptitude preferences for: formatting rules, naming conventions, style preferences",
         90,
     ),
     (
         "workflow",
-        "Check teammate preferences for: testing requirements, documentation needs, review processes",
+        "Check aptitude preferences for: testing requirements, documentation needs, review processes",
         80,
     ),
     (
         "preference_recording",
-        "When user expresses a preference (always/never/prefer), use 'decapod teammate add' to record it",
+        "When user expresses a preference (always/never/prefer), use 'decapod data aptitude add' to record it",
         95,
     ),
 ];
@@ -355,7 +355,7 @@ pub struct SimilarityGroup {
 // UTILITY FUNCTIONS
 // ============================================================================
 
-pub fn teammate_db_path(root: &Path) -> PathBuf {
+pub fn aptitude_db_path(root: &Path) -> PathBuf {
     root.join(crate::core::schemas::MEMORY_DB_NAME)
 }
 
@@ -367,18 +367,18 @@ fn now_iso() -> String {
 // DATABASE INITIALIZATION
 // ============================================================================
 
-pub fn initialize_teammate_db(root: &Path) -> Result<(), error::DecapodError> {
+pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(root);
-    let db_path = teammate_db_path(root);
+    let db_path = aptitude_db_path(root);
 
-    broker.with_conn(&db_path, "decapod", None, "teammate.init", |conn| {
+    broker.with_conn(&db_path, "decapod", None, "aptitude.init", |conn| {
         // Create tables (if not exists)
-        conn.execute(TEAMMATE_DB_SCHEMA_PREFERENCES, [])?;
-        conn.execute(TEAMMATE_DB_SCHEMA_SKILLS, [])?;
-        conn.execute(TEAMMATE_DB_SCHEMA_PATTERNS, [])?;
-        conn.execute(TEAMMATE_DB_SCHEMA_OBSERVATIONS, [])?;
-        conn.execute(TEAMMATE_DB_SCHEMA_CONSOLIDATIONS, [])?;
-        conn.execute(TEAMMATE_DB_SCHEMA_AGENT_PROMPTS, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_PREFERENCES, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_SKILLS, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_PATTERNS, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_OBSERVATIONS, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_CONSOLIDATIONS, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_AGENT_PROMPTS, [])?;
 
         // Schema migrations: add columns if they don't exist
         // These will fail silently if columns already exist
@@ -387,13 +387,13 @@ pub fn initialize_teammate_db(root: &Path) -> Result<(), error::DecapodError> {
         let _ = conn.execute("ALTER TABLE preferences ADD COLUMN access_count INTEGER DEFAULT 0", []);
 
         // Create indexes
-        conn.execute(TEAMMATE_DB_SCHEMA_INDEX_PREF_CATEGORY, [])?;
-        conn.execute(TEAMMATE_DB_SCHEMA_INDEX_PREF_KEY, [])?;
-        conn.execute(TEAMMATE_DB_SCHEMA_INDEX_PREF_ACCESS, [])?;
-        conn.execute(TEAMMATE_DB_SCHEMA_INDEX_SKILL_NAME, [])?;
-        conn.execute(TEAMMATE_DB_SCHEMA_INDEX_PATTERN_CATEGORY, [])?;
-        conn.execute(TEAMMATE_DB_SCHEMA_INDEX_OBS_PROCESSED, [])?;
-        conn.execute(TEAMMATE_DB_SCHEMA_INDEX_PROMPT_CONTEXT, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_INDEX_PREF_KEY, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_INDEX_SKILL_NAME, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_INDEX_PATTERN_CATEGORY, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_INDEX_OBS_PROCESSED, [])?;
+        conn.execute(APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT, [])?;
 
         // Insert default patterns
         let now = now_iso();
@@ -436,12 +436,12 @@ pub fn add_preference(
     input: PreferenceInput,
 ) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
     let id = ulid::Ulid::new().to_string();
     let now = now_iso();
     let confidence = input.confidence.unwrap_or(100);
 
-    broker.with_conn(&db_path, "decapod", None, "teammate.add", |conn| {
+    broker.with_conn(&db_path, "decapod", None, "aptitude.add", |conn| {
         conn.execute(
             "INSERT INTO preferences(id, category, key, value, context, source, confidence, created_at, updated_at, last_accessed_at, access_count)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, NULL, NULL, 0)
@@ -474,10 +474,10 @@ pub fn get_preference(
     key: &str,
 ) -> Result<Option<Preference>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
     let now = now_iso();
 
-    let pref = broker.with_conn(&db_path, "decapod", None, "teammate.get", |conn| {
+    let pref = broker.with_conn(&db_path, "decapod", None, "aptitude.get", |conn| {
         // First, update access metrics
         conn.execute(
             "UPDATE preferences SET access_count = access_count + 1, last_accessed_at = ?1
@@ -520,9 +520,9 @@ pub fn get_preference_by_id(
     id: &str,
 ) -> Result<Option<Preference>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
 
-    let pref = broker.with_conn(&db_path, "decapod", None, "teammate.get_by_id", |conn| {
+    let pref = broker.with_conn(&db_path, "decapod", None, "aptitude.get_by_id", |conn| {
         let mut stmt = conn.prepare(
             "SELECT id, category, key, value, context, source, confidence, created_at, updated_at, last_accessed_at, access_count
              FROM preferences WHERE id = ?1",
@@ -574,9 +574,9 @@ pub fn list_preferences(
     category: Option<&str>,
 ) -> Result<Vec<Preference>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
 
-    let entries = broker.with_conn(&db_path, "decapod", None, "teammate.list", |conn| {
+    let entries = broker.with_conn(&db_path, "decapod", None, "aptitude.list", |conn| {
         let mut out = Vec::new();
 
         if let Some(cat) = category {
@@ -611,9 +611,9 @@ pub fn delete_preference(
     key: &str,
 ) -> Result<bool, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
 
-    let deleted = broker.with_conn(&db_path, "decapod", None, "teammate.delete", |conn| {
+    let deleted = broker.with_conn(&db_path, "decapod", None, "aptitude.delete", |conn| {
         let rows = conn.execute(
             "DELETE FROM preferences WHERE category = ?1 AND key = ?2",
             params![category, key],
@@ -643,11 +643,11 @@ pub fn get_preferences_by_category(
 
 pub fn add_skill(store: &Store, input: SkillInput) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
     let id = ulid::Ulid::new().to_string();
     let now = now_iso();
 
-    broker.with_conn(&db_path, "decapod", None, "teammate.skill.add", |conn| {
+    broker.with_conn(&db_path, "decapod", None, "aptitude.skill.add", |conn| {
         conn.execute(
             "INSERT INTO skills(id, name, description, workflow, context, usage_count, last_used_at, created_at, updated_at)
              VALUES(?1, ?2, ?3, ?4, ?5, 0, NULL, ?6, NULL)
@@ -666,10 +666,10 @@ pub fn add_skill(store: &Store, input: SkillInput) -> Result<String, error::Deca
 
 pub fn get_skill(store: &Store, name: &str) -> Result<Option<Skill>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
     let now = now_iso();
 
-    let skill = broker.with_conn(&db_path, "decapod", None, "teammate.skill.get", |conn| {
+    let skill = broker.with_conn(&db_path, "decapod", None, "aptitude.skill.get", |conn| {
         // Update usage metrics
         conn.execute(
             "UPDATE skills SET usage_count = usage_count + 1, last_used_at = ?1 WHERE name = ?2",
@@ -706,9 +706,9 @@ pub fn get_skill(store: &Store, name: &str) -> Result<Option<Skill>, error::Deca
 
 pub fn list_skills(store: &Store) -> Result<Vec<Skill>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
 
-    let skills = broker.with_conn(&db_path, "decapod", None, "teammate.skill.list", |conn| {
+    let skills = broker.with_conn(&db_path, "decapod", None, "aptitude.skill.list", |conn| {
         let mut stmt = conn.prepare(
             "SELECT id, name, description, workflow, context, usage_count, last_used_at, created_at, updated_at
              FROM skills ORDER BY name",
@@ -739,9 +739,9 @@ pub fn list_skills(store: &Store) -> Result<Vec<Skill>, error::DecapodError> {
 
 pub fn delete_skill(store: &Store, name: &str) -> Result<bool, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
 
-    let deleted = broker.with_conn(&db_path, "decapod", None, "teammate.skill.delete", |conn| {
+    let deleted = broker.with_conn(&db_path, "decapod", None, "aptitude.skill.delete", |conn| {
         let rows = conn.execute("DELETE FROM skills WHERE name = ?1", params![name])?;
         Ok(rows > 0)
     })?;
@@ -1034,7 +1034,7 @@ pub fn resolve_skills(
 
 pub fn add_pattern(store: &Store, input: PatternInput) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
     let id = ulid::Ulid::new().to_string();
     let now = now_iso();
 
@@ -1045,7 +1045,7 @@ pub fn add_pattern(store: &Store, input: PatternInput) -> Result<String, error::
         ));
     }
 
-    broker.with_conn(&db_path, "decapod", None, "teammate.pattern.add", |conn| {
+    broker.with_conn(&db_path, "decapod", None, "aptitude.pattern.add", |conn| {
         conn.execute(
             "INSERT INTO patterns(id, name, category, regex_pattern, preference_category, preference_key, description, created_at)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
@@ -1074,9 +1074,9 @@ pub fn add_pattern(store: &Store, input: PatternInput) -> Result<String, error::
 
 pub fn list_patterns(store: &Store) -> Result<Vec<Pattern>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
 
-    let patterns = broker.with_conn(&db_path, "decapod", None, "teammate.pattern.list", |conn| {
+    let patterns = broker.with_conn(&db_path, "decapod", None, "aptitude.pattern.list", |conn| {
         let mut stmt = conn.prepare(
             "SELECT id, name, category, regex_pattern, preference_category, preference_key, description, created_at
              FROM patterns ORDER BY category, name",
@@ -1136,7 +1136,7 @@ pub fn record_observation(
     category: Option<&str>,
 ) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
     let id = ulid::Ulid::new().to_string();
     let now = now_iso();
 
@@ -1144,7 +1144,7 @@ pub fn record_observation(
     let patterns = match_patterns(store, content)?;
     let matched_pattern_id = patterns.first().map(|(p, _)| p.id.clone());
 
-    broker.with_conn(&db_path, "decapod", None, "teammate.observe", |conn| {
+    broker.with_conn(&db_path, "decapod", None, "aptitude.observe", |conn| {
         conn.execute(
             "INSERT INTO observations(id, content, category, matched_pattern_id, processed, created_at)
              VALUES(?1, ?2, ?3, ?4, 0, ?5)",
@@ -1161,9 +1161,9 @@ pub fn list_pending_observations(
     limit: Option<usize>,
 ) -> Result<Vec<Observation>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
 
-    let observations = broker.with_conn(&db_path, "decapod", None, "teammate.pending", |conn| {
+    let observations = broker.with_conn(&db_path, "decapod", None, "aptitude.pending", |conn| {
         let query = format!(
             "SELECT id, content, category, matched_pattern_id, processed, created_at
              FROM observations WHERE processed = 0 ORDER BY created_at DESC LIMIT {}",
@@ -1193,13 +1193,13 @@ pub fn list_pending_observations(
 
 pub fn mark_observation_processed(store: &Store, id: &str) -> Result<bool, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
 
     let updated = broker.with_conn(
         &db_path,
         "decapod",
         None,
-        "teammate.observe.process",
+        "aptitude.observe.process",
         |conn| {
             let rows = conn.execute(
                 "UPDATE observations SET processed = 1 WHERE id = ?1",
@@ -1225,11 +1225,11 @@ pub fn record_consolidation(
     reason: Option<&str>,
 ) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
     let id = ulid::Ulid::new().to_string();
     let now = now_iso();
 
-    broker.with_conn(&db_path, "decapod", None, "teammate.consolidate.record", |conn| {
+    broker.with_conn(&db_path, "decapod", None, "aptitude.consolidate.record", |conn| {
         conn.execute(
             "INSERT INTO consolidations(id, source_type, source_id, target_type, target_id, reason, created_at)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)",
@@ -1283,9 +1283,9 @@ pub fn execute_consolidation(
 ) -> Result<bool, error::DecapodError> {
     // Mark all preferences in the group as consolidated into the target
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
 
-    broker.with_conn(&db_path, "decapod", None, "teammate.consolidate.execute", |conn| {
+    broker.with_conn(&db_path, "decapod", None, "aptitude.consolidate.execute", |conn| {
         for pref in &group.preferences {
             if pref.id != target_id {
                 conn.execute(
@@ -1318,12 +1318,12 @@ pub fn add_agent_prompt(
     priority: Option<i64>,
 ) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
     let id = ulid::Ulid::new().to_string();
     let now = now_iso();
     let priority = priority.unwrap_or(100);
 
-    broker.with_conn(&db_path, "decapod", None, "teammate.prompt.add", |conn| {
+    broker.with_conn(&db_path, "decapod", None, "aptitude.prompt.add", |conn| {
         conn.execute(
             "INSERT INTO agent_prompts(id, context, prompt_text, priority, active, usage_count, created_at)
              VALUES(?1, ?2, ?3, ?4, 1, 0, ?5)",
@@ -1341,10 +1341,10 @@ pub fn get_prompts_for_context(
     limit: Option<usize>,
 ) -> Result<Vec<AgentPrompt>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
     let now = now_iso();
 
-    let prompts = broker.with_conn(&db_path, "decapod", None, "teammate.prompt.get", |conn| {
+    let prompts = broker.with_conn(&db_path, "decapod", None, "aptitude.prompt.get", |conn| {
         let query = format!(
             "SELECT id, context, prompt_text, priority, active, usage_count, last_shown_at, created_at, updated_at
              FROM agent_prompts 
@@ -1377,7 +1377,7 @@ pub fn get_prompts_for_context(
 
     // Update usage metrics
     for prompt in &prompts {
-        broker.with_conn(&db_path, "decapod", None, "teammate.prompt.update_usage", |conn| {
+        broker.with_conn(&db_path, "decapod", None, "aptitude.prompt.update_usage", |conn| {
             conn.execute(
                 "UPDATE agent_prompts SET usage_count = usage_count + 1, last_shown_at = ?1 WHERE id = ?2",
                 params![now, prompt.id],
@@ -1391,9 +1391,9 @@ pub fn get_prompts_for_context(
 
 pub fn list_agent_prompts(store: &Store) -> Result<Vec<AgentPrompt>, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
-    let db_path = teammate_db_path(&store.root);
+    let db_path = aptitude_db_path(&store.root);
 
-    let prompts = broker.with_conn(&db_path, "decapod", None, "teammate.prompt.list", |conn| {
+    let prompts = broker.with_conn(&db_path, "decapod", None, "aptitude.prompt.list", |conn| {
         let mut stmt = conn.prepare(
             "SELECT id, context, prompt_text, priority, active, usage_count, last_shown_at, created_at, updated_at
              FROM agent_prompts ORDER BY context, priority DESC",
@@ -1463,8 +1463,8 @@ pub fn generate_contextual_reminders(
 
 pub fn schema() -> serde_json::Value {
     serde_json::json!({
-        "name": "teammate",
-        "aliases": ["memory", "skills"],
+        "name": "aptitude",
+        "aliases": ["memory", "teammate"],
         "version": "0.2.0",
         "description": "User preference, skill, and behavior recall memory with pattern recognition",
         "commands": [
@@ -1476,7 +1476,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "skill get", "description": "Get a skill by name", "parameters": ["name"] },
             { "name": "skill list", "description": "List all skills", "parameters": [] },
             { "name": "skill delete", "description": "Delete a skill", "parameters": ["name"] },
-            { "name": "skill import", "description": "Import SKILL.md into teammate skill memory and optional deterministic skill card", "parameters": ["path", "write-card?"] },
+            { "name": "skill import", "description": "Import SKILL.md into aptitude skill memory and optional deterministic skill card", "parameters": ["path", "write-card?"] },
             { "name": "skill resolve", "description": "Resolve best-matching skills for a query with deterministic ranking", "parameters": ["query", "limit?", "write?"] },
             { "name": "observe", "description": "Record an observation for pattern matching", "parameters": ["content", "category?"] },
             { "name": "pending", "description": "List pending observations", "parameters": ["limit?"] },
@@ -1484,7 +1484,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "prompt", "description": "Get contextual prompts for agents", "parameters": ["--context", "--format"] },
             { "name": "remind", "description": "Generate contextual reminders", "parameters": ["--context"] }
         ],
-        "storage": ["teammate.db"],
+        "storage": ["aptitude.db"],
         "categories": [
             "git", "style", "workflow", "communication", "tooling"
         ],
@@ -1504,13 +1504,13 @@ pub fn schema() -> serde_json::Value {
 // ============================================================================
 
 #[derive(clap::Args, Debug)]
-pub struct TeammateCli {
+pub struct AptitudeCli {
     #[clap(subcommand)]
-    pub command: TeammateCommand,
+    pub command: AptitudeCommand,
 }
 
 #[derive(clap::Subcommand, Debug)]
-pub enum TeammateCommand {
+pub enum AptitudeCommand {
     /// Add or update a preference
     Add {
         /// Category (e.g., git, style, workflow)
@@ -1638,7 +1638,7 @@ pub enum SkillCommand {
         #[clap(long)]
         name: String,
     },
-    /// Import a SKILL.md file into teammate skills and optional governed skill card
+    /// Import a SKILL.md file into aptitude skills and optional governed skill card
     Import {
         /// Path to SKILL.md
         #[clap(long)]
@@ -1661,11 +1661,11 @@ pub enum SkillCommand {
     },
 }
 
-pub fn run_teammate_cli(store: &Store, cli: TeammateCli) -> Result<(), error::DecapodError> {
-    initialize_teammate_db(&store.root)?;
+pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::DecapodError> {
+    initialize_aptitude_db(&store.root)?;
 
     match cli.command {
-        TeammateCommand::Add {
+        AptitudeCommand::Add {
             category,
             key,
             value,
@@ -1684,7 +1684,7 @@ pub fn run_teammate_cli(store: &Store, cli: TeammateCli) -> Result<(), error::De
             let id = add_preference(store, input)?;
             println!("✓ Preference recorded: {}={} (id: {})", key, value, id);
         }
-        TeammateCommand::Get { category, key } => match get_preference(store, &category, &key)? {
+        AptitudeCommand::Get { category, key } => match get_preference(store, &category, &key)? {
             Some(pref) => {
                 println!("{}: {}", pref.key, pref.value);
                 if let Some(ctx) = pref.context {
@@ -1706,7 +1706,7 @@ pub fn run_teammate_cli(store: &Store, cli: TeammateCli) -> Result<(), error::De
                 println!("No preference found for {}.{}", category, key);
             }
         },
-        TeammateCommand::List { category, format } => {
+        AptitudeCommand::List { category, format } => {
             let prefs = list_preferences(store, category.as_deref())?;
 
             if format == "json" {
@@ -1726,14 +1726,14 @@ pub fn run_teammate_cli(store: &Store, cli: TeammateCli) -> Result<(), error::De
                 }
             }
         }
-        TeammateCommand::Delete { category, key } => {
+        AptitudeCommand::Delete { category, key } => {
             if delete_preference(store, &category, &key)? {
                 println!("✓ Deleted preference {}.{}", category, key);
             } else {
                 println!("✗ Preference {}.{} not found", category, key);
             }
         }
-        TeammateCommand::Skill(skill_cmd) => match skill_cmd {
+        AptitudeCommand::Skill(skill_cmd) => match skill_cmd {
             SkillCommand::Add {
                 name,
                 description,
@@ -1823,7 +1823,7 @@ pub fn run_teammate_cli(store: &Store, cli: TeammateCli) -> Result<(), error::De
                 println!("{}", serde_json::to_string_pretty(&out).unwrap());
             }
         },
-        TeammateCommand::Observe { content, category } => {
+        AptitudeCommand::Observe { content, category } => {
             let id = record_observation(store, &content, category.as_deref())?;
 
             // Check for pattern matches
@@ -1843,7 +1843,7 @@ pub fn run_teammate_cli(store: &Store, cli: TeammateCli) -> Result<(), error::De
                 println!("✓ Observation recorded (id: {})", id);
             }
         }
-        TeammateCommand::Pending { limit } => {
+        AptitudeCommand::Pending { limit } => {
             let observations = list_pending_observations(store, limit)?;
             if observations.is_empty() {
                 println!("No pending observations.");
@@ -1860,7 +1860,7 @@ pub fn run_teammate_cli(store: &Store, cli: TeammateCli) -> Result<(), error::De
                 }
             }
         }
-        TeammateCommand::Consolidate { dry_run, execute } => {
+        AptitudeCommand::Consolidate { dry_run, execute } => {
             let groups = analyze_similarity(store)?;
 
             if groups.is_empty() {
@@ -1900,7 +1900,7 @@ pub fn run_teammate_cli(store: &Store, cli: TeammateCli) -> Result<(), error::De
                 }
             }
         }
-        TeammateCommand::Prompt { context, format } => {
+        AptitudeCommand::Prompt { context, format } => {
             let ctx = context.as_deref().unwrap_or("global");
             let prompts = get_prompts_for_context(store, ctx, None)?;
 
@@ -1917,7 +1917,7 @@ pub fn run_teammate_cli(store: &Store, cli: TeammateCli) -> Result<(), error::De
                 }
             }
         }
-        TeammateCommand::Remind { context } => {
+        AptitudeCommand::Remind { context } => {
             let reminders = generate_contextual_reminders(store, &context)?;
 
             if reminders.is_empty() {

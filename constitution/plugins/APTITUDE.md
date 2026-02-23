@@ -1,4 +1,4 @@
-# TEAMMATE.md - TEAMMATE Subsystem (Embedded)
+# APTITUDE.md - APTITUDE Subsystem (Embedded)
 
 **Authority:** subsystem (REAL)
 **Layer:** Operational
@@ -7,9 +7,9 @@
 **Quick Reference:**
 | Command | Purpose |
 |---------|---------|
-| `decapod data teammate add --category git --key ssh --value "mine"` | Record a preference |
-| `decapod data teammate get --category git --key ssh` | Retrieve a preference |
-| `decapod data teammate list` | List all preferences by category |
+| `decapod data aptitude add --category git --key ssh --value "mine"` | Record a preference |
+| `decapod data aptitude get --category git --key ssh` | Retrieve a preference |
+| `decapod data aptitude list` | List all preferences by category |
 
 **Related:** `core/PLUGINS.md` (subsystem registry) | `AGENTS.md` (entrypoint)
 
@@ -18,10 +18,10 @@
 ## CLI Surface
 
 ```bash
-decapod data teammate add --category <cat> --key <key> --value <val> [--context <ctx>] [--source <src>]
-decapod data teammate get --category <cat> --key <key>
-decapod data teammate list [--category <cat>] [--format text|json]
-decapod data teammate schema  # JSON schema for programmatic use
+decapod data aptitude add --category <cat> --key <key> --value <val> [--context <ctx>] [--source <src>]
+decapod data aptitude get --category <cat> --key <key>
+decapod data aptitude list [--category <cat>] [--format text|json]
+decapod data aptitude schema  # JSON schema for programmatic use
 # Aliases: decapod data memory ..., decapod data skills ...
 ```
 
@@ -131,7 +131,7 @@ decapod data memory add --category style --key commit_messages --value "detailed
 
 ## Storage Model
 
-Preferences are stored in `teammate.db` with full audit trail:
+Preferences are stored in `aptitude.db` with full audit trail:
 
 | Field | Description |
 |-------|-------------|
@@ -176,7 +176,7 @@ decapod data memory get --category style --key commit_messages
 # Returns: concise and imperative
 
 # 3. Perform action respecting preferences
-git commit -m "feat: add teammate plugin"  # Using user's SSH
+git commit -m "feat: add aptitude plugin"  # Using user's SSH
 
 # 4. User expresses new preference
 # User: "always push to ahr/work branch"

@@ -118,7 +118,7 @@ embedded_docs! {
     "plugins/MANIFEST.md" => EMBEDDED_PLUGINS_MANIFEST,
     "plugins/POLICY.md" => EMBEDDED_PLUGINS_POLICY,
     "plugins/REFLEX.md" => EMBEDDED_PLUGINS_REFLEX,
-    "plugins/TEAMMATE.md" => EMBEDDED_PLUGINS_TEAMMATE,
+    "plugins/APTITUDE.md" => EMBEDDED_PLUGINS_APTITUDE,
     "plugins/TODO.md" => EMBEDDED_PLUGINS_TODO,
     "plugins/TRUST.md" => EMBEDDED_PLUGINS_TRUST,
     "plugins/VERIFY.md" => EMBEDDED_PLUGINS_VERIFY,

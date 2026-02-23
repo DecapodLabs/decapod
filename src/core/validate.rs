@@ -11,7 +11,7 @@ use crate::core::plan_governance;
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
-use crate::plugins::teammate::{SkillCard, SkillResolution};
+use crate::plugins::aptitude::{SkillCard, SkillResolution};
 use crate::{db, primitives, todo};
 use regex::Regex;
 use serde_json;

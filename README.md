@@ -67,19 +67,19 @@ AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
 
 ## Features ✨
 
-- ✅ Daemonless by design: no background service, no long-lived process, no hidden control loop.
-- ✅ `cargo install decapod` + `decapod init`, then keep using your agents exactly as-is.
-- ✅ Scoped plain-English policy overrides in `.decapod/OVERRIDE.md`.
-- ✅ Agent-agnostic control plane: one CLI/RPC contract across Claude, Codex, Gemini, Cursor, and more.
-- ✅ Multi-agent-safe in one repo with governed task and workspace coordination.
-- ✅ Shared transient skills memory: capture human-taught preferences once and apply them across agents/sessions.
-- ✅ Work Unit manifests make `intent/spec/state/proof` explicit and durable.
-- ✅ VERIFIED is structural, not rhetorical: proof-plan results must pass before completion.
-- ✅ Variance-aware eval kernel (`eval plan/ingest-run/judge/aggregate/gate`) adds repeatable settings, judge contracts, and statistical regression gates.
-- ✅ Deterministic context capsules (`core|interfaces|plugins`) return scoped, hashable guidance.
-- ✅ Knowledge promotion firewall ledger (`.decapod/data/knowledge.promotions.jsonl`) controls what can become procedural truth.
-- ✅ Procedural knowledge writes require event-backed provenance, blocking unproven memory drift.
-- ✅ Local-first `.decapod/` state keeps shared traces, decisions, and proofs durable and auditable.
+- ✅ Daemonless execution: no background agent manager, no hidden runtime.
+- ✅ Two-command adoption: `cargo install decapod` and `decapod init`.
+- ✅ Agent-agnostic contract: one CLI/RPC surface across Claude, Codex, Gemini, Cursor, and others.
+- ✅ Parallel-safe collaboration: multiple agents can operate in one repo without state collisions.
+- ✅ Work Unit governance: `intent/spec/state/proof` is explicit, durable, and machine-checkable.
+- ✅ VERIFIED is enforced: completion requires passing proof-plan results, not narrative claims.
+- ✅ Promotion discipline: validate-time and publish-time gates block silent regressions.
+- ✅ Deterministic context capsules: scoped (`core|interfaces|plugins`), hashable, and reproducible.
+- ✅ Variance-aware eval kernel: repeat-run plans, strict judge contracts, statistical regression gates.
+- ✅ Knowledge promotion firewall: procedural truth requires event-backed provenance in `.decapod/data/knowledge.promotions.jsonl`.
+- ✅ Shared transient aptitude memory: capture human-taught preferences once, reuse across agents and sessions.
+- ✅ Plain-English policy control in `.decapod/OVERRIDE.md`.
+- ✅ Local-first auditability: `.decapod/` keeps durable traces, decisions, and proof artifacts.
 
 And dozens more. For the full high-level and data-level surface area, see `decapod docs show core/INTERFACES.md` and the override template at `.decapod/OVERRIDE.md`.
 

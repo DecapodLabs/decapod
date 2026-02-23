@@ -17,8 +17,8 @@ use core::{
     todo, trace, validate, workspace,
 };
 use plugins::{
-    archive, container, context, cron, decide, doctor, eval, federation, feedback, health,
-    knowledge, lcm, map_ops, policy, primitives, reflex, teammate, verify, watcher, workflow,
+    aptitude, archive, container, context, cron, decide, doctor, eval, federation, feedback,
+    health, knowledge, lcm, map_ops, policy, primitives, reflex, verify, watcher, workflow,
 };
 
 use clap::{CommandFactory, Parser, Subcommand};
@@ -456,9 +456,9 @@ enum DataCommand {
     /// Audit log access (The Thin Waist)
     Broker(BrokerCli),
 
-    /// Teammate preferences and patterns
-    #[clap(aliases = ["memory", "skills"])]
-    Teammate(teammate::TeammateCli),
+    /// Aptitude memory and preferences
+    #[clap(aliases = ["memory", "teammate"])]
+    Aptitude(aptitude::AptitudeCli),
 
     /// Governed agent memory — typed knowledge graph
     Federation(federation::FederationCli),
@@ -1164,7 +1164,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     feedback::initialize_feedback_db(data_root)?;
                     archive::initialize_archive_db(data_root)?;
                     db::initialize_knowledge_db(data_root)?;
-                    teammate::initialize_teammate_db(data_root)?;
+                    aptitude::initialize_aptitude_db(data_root)?;
                     federation::initialize_federation_db(data_root)?;
                     decide::initialize_decide_db(data_root)?;
                     lcm::initialize_lcm_db(data_root)?;
@@ -3682,8 +3682,8 @@ fn run_data_command(
                 }
             }
         },
-        DataCommand::Teammate(teammate_cli) => {
-            teammate::run_teammate_cli(project_store, teammate_cli)?;
+        DataCommand::Aptitude(aptitude_cli) => {
+            aptitude::run_aptitude_cli(project_store, aptitude_cli)?;
         }
         DataCommand::Federation(federation_cli) => {
             federation::run_federation_cli(project_store, federation_cli)?;
@@ -3767,8 +3767,8 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("watcher", watcher::schema());
     schemas.insert("archive", archive::schema());
     schemas.insert("feedback", feedback::schema());
-    schemas.insert("teammate", teammate::schema());
-    schemas.insert("memory", teammate::schema());
+    schemas.insert("aptitude", aptitude::schema());
+    schemas.insert("memory", aptitude::schema());
     schemas.insert("federation", federation::schema());
     schemas.insert("primitives", primitives::schema());
     schemas.insert("decide", decide::schema());

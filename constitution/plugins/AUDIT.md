@@ -282,7 +282,7 @@ All pass, including invalid subsystem (graceful handling).
 
 ### 17. Broker (2/2 PASS)
 
-### 18. Teammate (10/10 PASS)
+### 18. Aptitude (10/10 PASS)
 
 Full CRUD cycle: add, list, get, observe, prompt all working.
 
@@ -327,7 +327,7 @@ All group-level help and alias commands work correctly.
 | T284 | `knowledge add` (missing fields) | PASS (expected error) | |
 | T285 | `cron add` (missing schedule) | PASS (expected error) | |
 | T286 | `reflex add` (missing trigger) | PASS (expected error) | |
-| T287 | `teammate get` (missing key) | PASS (expected error) | |
+| T287 | `aptitude get` (missing key) | PASS (expected error) | |
 | T288 | `health claim` (missing fields) | PASS (expected error) | |
 | T289 | `context audit` (no files) | **FAIL** | See EDGE-3: succeeds when error expected |
 
@@ -342,9 +342,9 @@ Shows which subcommands actually exist vs. what the constitution documents sugge
 | cron | add, update, get, list, delete, delete-all, enable, disable | **delete-all, enable, disable** | — |
 | reflex | add, update, get, list, delete, delete-all, enable, disable | **delete-all, enable, disable** | — |
 | todo | add, list, get, done, claim, release, rebuild, archive, comment, edit, categories | — | — |
-| teammate | add, get, list, observe, prompt, infer | **infer** | — |
+| aptitude | add, get, list, observe, prompt, infer | **infer** | — |
 
-The constitution/docs reference `cron disable`, `cron enable`, `cron delete-all`, `reflex disable`, `reflex enable`, `reflex delete-all`, and `teammate infer` — but these subcommands **do not exist in the CLI**. Either the docs are aspirational or the implementations were dropped.
+The constitution/docs reference `cron disable`, `cron enable`, `cron delete-all`, `reflex disable`, `reflex enable`, `reflex delete-all`, and `aptitude infer` — but these subcommands **do not exist in the CLI**. Either the docs are aspirational or the implementations were dropped.
 
 ---
 
@@ -356,7 +356,7 @@ The constitution/docs reference `cron disable`, `cron enable`, `cron delete-all`
 
 3. **RULE-1** (Low): Add provenance format hint to `knowledge add --help` output.
 
-4. **Doc drift** (Low): Reconcile constitution docs with actual CLI for cron/reflex/teammate missing subcommands.
+4. **Doc drift** (Low): Reconcile constitution docs with actual CLI for cron/reflex/aptitude missing subcommands.
 
 5. **EDGE-1** (Low): Consider rejecting empty-string task titles.
 

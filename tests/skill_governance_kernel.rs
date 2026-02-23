@@ -80,7 +80,7 @@ fn skill_import_writes_deterministic_card_hash() {
         &dir,
         &[
             "data",
-            "teammate",
+            "aptitude",
             "skill",
             "import",
             "--path",
@@ -108,7 +108,7 @@ fn skill_import_writes_deterministic_card_hash() {
         &dir,
         &[
             "data",
-            "teammate",
+            "aptitude",
             "skill",
             "import",
             "--path",
@@ -146,7 +146,7 @@ fn skill_resolution_is_deterministic_for_same_query() {
         &dir,
         &[
             "data",
-            "teammate",
+            "aptitude",
             "skill",
             "import",
             "--path",
@@ -165,7 +165,7 @@ fn skill_resolution_is_deterministic_for_same_query() {
             &dir,
             &[
                 "data",
-                "teammate",
+                "aptitude",
                 "skill",
                 "resolve",
                 "--query",
@@ -222,7 +222,7 @@ fn validate_fails_on_skill_card_hash_mismatch_if_present() {
         &dir,
         &[
             "data",
-            "teammate",
+            "aptitude",
             "skill",
             "import",
             "--path",
