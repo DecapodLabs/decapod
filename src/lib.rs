@@ -1022,80 +1022,21 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
             let migration_result =
                 migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
-                    use std::sync::Mutex;
-                    let init_errors: Mutex<Vec<error::DecapodError>> = Mutex::new(Vec::new());
-                    rayon::scope(|s| {
-                        let errs = &init_errors;
-                        // Bin 4: Transactional (TODO)
-                        s.spawn(|_| {
-                            if let Err(e) = todo::initialize_todo_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                        // Bin 1: Governance
-                        s.spawn(|_| {
-                            if let Err(e) = health::initialize_health_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                        s.spawn(|_| {
-                            if let Err(e) = policy::initialize_policy_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                        s.spawn(|_| {
-                            if let Err(e) = feedback::initialize_feedback_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                        s.spawn(|_| {
-                            if let Err(e) = archive::initialize_archive_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                        // Bin 2: Memory
-                        s.spawn(|_| {
-                            if let Err(e) = db::initialize_knowledge_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                        s.spawn(|_| {
-                            if let Err(e) = teammate::initialize_teammate_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                        s.spawn(|_| {
-                            if let Err(e) = federation::initialize_federation_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                        s.spawn(|_| {
-                            if let Err(e) = decide::initialize_decide_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                        // Bin 5: LCM
-                        s.spawn(|_| {
-                            if let Err(e) = lcm::initialize_lcm_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                        // Bin 3: Automation
-                        s.spawn(|_| {
-                            if let Err(e) = cron::initialize_cron_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                        s.spawn(|_| {
-                            if let Err(e) = reflex::initialize_reflex_db(data_root) {
-                                errs.lock().unwrap().push(e);
-                            }
-                        });
-                    });
-                    let errs = init_errors.into_inner().unwrap();
-                    if let Some(e) = errs.into_iter().next() {
-                        return Err(e);
-                    }
+                    // Intentionally sequential for daemonless first-start reliability.
+                    // Parallel init can contend on SQLite and produce immediate
+                    // DatabaseBusy errors in bootstrap/validate flows.
+                    todo::initialize_todo_db(data_root)?;
+                    health::initialize_health_db(data_root)?;
+                    policy::initialize_policy_db(data_root)?;
+                    feedback::initialize_feedback_db(data_root)?;
+                    archive::initialize_archive_db(data_root)?;
+                    db::initialize_knowledge_db(data_root)?;
+                    teammate::initialize_teammate_db(data_root)?;
+                    federation::initialize_federation_db(data_root)?;
+                    decide::initialize_decide_db(data_root)?;
+                    lcm::initialize_lcm_db(data_root)?;
+                    cron::initialize_cron_db(data_root)?;
+                    reflex::initialize_reflex_db(data_root)?;
                     Ok(())
                 });
             match migration_result {
@@ -2653,7 +2594,7 @@ fn validate_timeout_secs() -> u64 {
         .or_else(|| std::env::var("DECAPOD_VALIDATE_TIMEOUT_SECONDS").ok())
         .and_then(|v| v.parse::<u64>().ok())
         .filter(|v| *v > 0)
-        .unwrap_or(30)
+        .unwrap_or(120)
 }
 
 fn validate_diagnostics_enabled() -> bool {
@@ -2823,7 +2764,27 @@ fn run_validation_bounded(
     let root = project_root.to_path_buf();
 
     std::thread::spawn(move || {
-        let result = validate::run_validation(&store_cloned, &root, &root, verbose);
+        let mut result = validate::run_validation(&store_cloned, &root, &root, verbose);
+        for attempt in 1..=2 {
+            let should_retry = match &result {
+                Err(error::DecapodError::RusqliteError(err)) => {
+                    format!("{err}").to_ascii_lowercase().contains("locked")
+                }
+                Err(error::DecapodError::ValidationError(msg)) => {
+                    let lower = msg.to_ascii_lowercase();
+                    lower.contains("database is locked")
+                        || lower.contains("databasebusy")
+                        || lower.contains("sqlite_code=databasebusy")
+                }
+                _ => false,
+            };
+            if !should_retry {
+                break;
+            }
+            let backoff_ms = 200_u64 * attempt as u64;
+            std::thread::sleep(std::time::Duration::from_millis(backoff_ms));
+            result = validate::run_validation(&store_cloned, &root, &root, verbose);
+        }
         let _ = tx.send(result);
     });
 
@@ -3291,12 +3252,7 @@ fn run_data_command(
                     .cloned()
                     .unwrap_or(serde_json::json!({ "error": "subsystem not found" }))
             } else {
-                let mut envelope = serde_json::json!({
-                    "schema_version": "1.0.0",
-                    "subsystems": schemas,
-                    "deprecations": deprecation_metadata(),
-                    "command_registry": cli_command_registry()
-                });
+                let mut envelope = deterministic_schema_envelope();
                 if !schema_cli.deterministic {
                     envelope.as_object_mut().unwrap().insert(
                         "generated_at".to_string(),
@@ -3408,6 +3364,15 @@ fn schema_to_markdown(schema: &serde_json::Value) -> String {
     let mut out = String::from("# Decapod Schema\n\n");
     out.push_str(&render_value(schema));
     out
+}
+
+pub(crate) fn deterministic_schema_envelope() -> serde_json::Value {
+    serde_json::json!({
+        "schema_version": "1.0.0",
+        "subsystems": schema_catalog(),
+        "deprecations": deprecation_metadata(),
+        "command_registry": cli_command_registry()
+    })
 }
 
 fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Value> {

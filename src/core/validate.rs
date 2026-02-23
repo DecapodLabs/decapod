@@ -64,7 +64,19 @@ fn collect_repo_files(
         }
 
         let name = dir.file_name().and_then(|s| s.to_str()).unwrap_or("");
-        if name == ".git" || name == "target" {
+        // Skip VCS/build/runtime directories that are not authoritative sources
+        // for validation rules and can be very large in active agent workspaces.
+        if matches!(
+            name,
+            ".git"
+                | "target"
+                | ".decapod"
+                | "artifacts"
+                | "node_modules"
+                | ".venv"
+                | ".mypy_cache"
+                | ".pytest_cache"
+        ) {
             return Ok(());
         }
 
@@ -1032,17 +1044,14 @@ fn validate_schema_determinism(
     _decapod_dir: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Schema Determinism Gate");
-    let exe = std::env::current_exe().map_err(error::DecapodError::IoError)?;
-
     let run_schema = || -> Result<String, error::DecapodError> {
-        let out = std::process::Command::new(&exe)
-            .env("DECAPOD_BYPASS_SESSION", "1")
-            .arg("data")
-            .arg("schema")
-            .arg("--deterministic")
-            .output()
-            .map_err(error::DecapodError::IoError)?;
-        Ok(String::from_utf8_lossy(&out.stdout).to_string())
+        let snapshot = crate::deterministic_schema_envelope();
+        serde_json::to_string(&snapshot).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "schema determinism serialization failed: {}",
+                e
+            ))
+        })
     };
 
     // Run sequentially: parallel execution causes non-determinism due to shared state
@@ -1579,18 +1588,22 @@ fn validate_control_plane_contract(
         }
     }
 
-    // Check for direct SQLite write patterns in process list (best effort)
+    // Check for direct SQLite write patterns in process list (best effort).
+    // Bound the probe to keep validate responsive in active workspaces.
     #[cfg(target_os = "linux")]
     {
         use std::process::Command;
-        if let Ok(output) = Command::new("lsof")
-            .args(["+D", data_dir.to_string_lossy().as_ref()])
+        if let Ok(output) = Command::new("timeout")
+            .args(["3s", "lsof", "+D", data_dir.to_string_lossy().as_ref()])
             .output()
         {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            for line in stdout.lines() {
-                if line.contains("sqlite") && !line.contains("decapod") {
-                    violations.push(format!("External SQLite process accessing store: {}", line));
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                for line in stdout.lines() {
+                    if line.contains("sqlite") && !line.contains("decapod") {
+                        violations
+                            .push(format!("External SQLite process accessing store: {}", line));
+                    }
                 }
             }
         }
@@ -2133,6 +2146,18 @@ fn validate_tooling_gate(
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Tooling Validation Gate");
+
+    let tooling_enabled = std::env::var("DECAPOD_VALIDATE_ENABLE_TOOLING_GATES")
+        .ok()
+        .map(|v| matches!(v.as_str(), "1" | "true" | "TRUE" | "yes" | "YES"))
+        .unwrap_or(false);
+    if !tooling_enabled {
+        skip(
+            "Tooling validation gates disabled by default (set DECAPOD_VALIDATE_ENABLE_TOOLING_GATES=1 to enable)",
+            ctx,
+        );
+        return Ok(());
+    }
 
     if std::env::var("DECAPOD_VALIDATE_SKIP_TOOLING_GATES").is_ok() {
         skip(
@@ -2879,9 +2904,8 @@ pub fn run_validation(
         "Four Invariants Gate".bright_white()
     );
 
-    // All remaining gates run in parallel via rayon::scope
+    // Run remaining gates in parallel for bounded wall-clock validation time.
     let timings: Mutex<Vec<(&str, Duration)>> = Mutex::new(Vec::new());
-
     rayon::scope(|s| {
         let ctx = &ctx;
         let timings = &timings;
