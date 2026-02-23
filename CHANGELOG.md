@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.10](https://github.com/DecapodLabs/decapod/compare/v0.38.9...v0.38.10) - 2026-02-23
+
+### Other
+
+- Merge pull request #412 from DecapodLabs/agent/unknown/todo-r_01kj562ftvxcpe8def7gqb8vgb-plus-3-1771863796
+- Harden sqlite contention paths and stabilize validate/release checks
+
 ## [0.38.9](https://github.com/DecapodLabs/decapod/compare/v0.38.8...v0.38.9) - 2026-02-23
 
 ### Other
