@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.5](https://github.com/DecapodLabs/decapod/compare/v0.38.4...v0.38.5) - 2026-02-23
+
+### Other
+
+- split fmt clippy and core integration test jobs
+- stabilize context capsule CLI tests under CI gates
+- add rpc context capsule query operation
+- add optional context capsule artifact writes
+- add deterministic context capsule query command
+
 ## [0.38.4](https://github.com/DecapodLabs/decapod/compare/v0.38.3...v0.38.4) - 2026-02-23
 
 ### Other
