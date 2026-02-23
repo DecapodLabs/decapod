@@ -1129,6 +1129,122 @@ fn validate_generated_artifact_whitelist(
     Ok(())
 }
 
+fn validate_project_specs_docs(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Project Specs Architecture Gate");
+
+    let specs_dir = repo_root.join("specs");
+    if !specs_dir.exists() {
+        warn(
+            "Project specs directory missing (specs/). Run `decapod init --force` to scaffold intent/architecture docs.",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let required_files = ["README.md", "intent.md", "architecture.md"];
+    for file in required_files {
+        let path = specs_dir.join(file);
+        if path.exists() {
+            pass(&format!("Project specs file present: specs/{}", file), ctx);
+        } else {
+            fail(
+                &format!("Missing required project specs file: specs/{}", file),
+                ctx,
+            );
+        }
+    }
+
+    let architecture_path = specs_dir.join("architecture.md");
+    if architecture_path.exists() {
+        let architecture =
+            fs::read_to_string(&architecture_path).map_err(error::DecapodError::IoError)?;
+        let required_sections = [
+            "# Architecture",
+            "## Integrated Surface",
+            "## Build Intent",
+            "## System Topology",
+            "## Service Contracts",
+            "## Multi-Agent Delivery Model",
+            "## Validation Gates",
+            "## Delivery Plan",
+            "## Risks and Mitigations",
+        ];
+        let mut missing = Vec::new();
+        for section in required_sections {
+            if !architecture.contains(section) {
+                missing.push(section);
+            }
+        }
+        if missing.is_empty() {
+            pass(
+                "Architecture spec contains required engineering sections",
+                ctx,
+            );
+        } else {
+            fail(
+                &format!("Architecture spec missing required sections: {:?}", missing),
+                ctx,
+            );
+        }
+
+        if architecture.contains("```mermaid") || architecture.contains("```text") {
+            pass(
+                "Architecture spec contains required topology diagram block",
+                ctx,
+            );
+        } else {
+            fail(
+                "Architecture spec missing topology diagram block (`mermaid` or `text` fenced block)",
+                ctx,
+            );
+        }
+
+        let dense_line_count = architecture
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .count();
+        if dense_line_count >= 35 {
+            pass("Architecture spec meets minimum density threshold", ctx);
+        } else {
+            fail(
+                "Architecture spec is too sparse (<35 non-empty lines); expand it to an engineer-ready overview",
+                ctx,
+            );
+        }
+    }
+
+    let intent_path = specs_dir.join("intent.md");
+    if intent_path.exists() {
+        let intent = fs::read_to_string(intent_path).map_err(error::DecapodError::IoError)?;
+        let required_intent_sections = [
+            "# Intent",
+            "## Product Outcome",
+            "## Scope",
+            "## Constraints",
+            "## Acceptance Criteria",
+        ];
+        let mut missing = Vec::new();
+        for section in required_intent_sections {
+            if !intent.contains(section) {
+                missing.push(section);
+            }
+        }
+        if missing.is_empty() {
+            pass("Intent spec contains required planning sections", ctx);
+        } else {
+            fail(
+                &format!("Intent spec missing required sections: {:?}", missing),
+                ctx,
+            );
+        }
+    }
+
+    Ok(())
+}
+
 fn validate_workunit_manifests_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
@@ -3569,6 +3685,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_generated_artifact_whitelist", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_project_specs_docs(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_project_specs_docs", start.elapsed()));
         });
         s.spawn(move |_| {
             let start = Instant::now();

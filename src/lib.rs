@@ -123,6 +123,12 @@ struct InitGroupCli {
     /// Show what would change without writing files.
     #[clap(long)]
     dry_run: bool,
+    /// Generate project `specs/` docs scaffolding (enabled by default).
+    #[clap(long = "no-specs", action = clap::ArgAction::SetFalse, default_value_t = true)]
+    specs: bool,
+    /// Diagram style for generated `specs/architecture.md`.
+    #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
+    diagram_style: InitDiagramStyle,
     /// Force creation of all 3 entrypoint files (GEMINI.md, AGENTS.md, CLAUDE.md).
     #[clap(long)]
     all: bool,
@@ -145,6 +151,12 @@ enum InitCommand {
         #[clap(short, long)]
         dir: Option<PathBuf>,
     },
+}
+
+#[derive(clap::ValueEnum, Clone, Copy, Debug)]
+enum InitDiagramStyle {
+    Ascii,
+    Mermaid,
 }
 
 #[derive(clap::Args, Debug)]
@@ -1071,6 +1083,11 @@ pub fn run() -> Result<(), error::DecapodError> {
                     agent_files: agent_files_to_generate,
                     created_backups,
                     all: init_group.all,
+                    generate_specs: init_group.specs,
+                    diagram_style: match init_group.diagram_style {
+                        InitDiagramStyle::Ascii => scaffold::DiagramStyle::Ascii,
+                        InitDiagramStyle::Mermaid => scaffold::DiagramStyle::Mermaid,
+                    },
                 })?;
 
             let target_display = setup_decapod_root
@@ -1115,6 +1132,17 @@ pub fn run() -> Result<(), error::DecapodError> {
                     .bright_yellow(),
                 scaffold_summary.config_preserved.to_string().bright_white(),
                 backup_count.to_string().bright_magenta()
+            );
+            println!(
+                "  {} specs+{}={}~{} style={}",
+                "docs:".bright_cyan(),
+                scaffold_summary.specs_created.to_string().bright_green(),
+                scaffold_summary.specs_unchanged.to_string().bright_yellow(),
+                scaffold_summary.specs_preserved.to_string().bright_white(),
+                match init_group.diagram_style {
+                    InitDiagramStyle::Ascii => "ascii".bright_white(),
+                    InitDiagramStyle::Mermaid => "mermaid".bright_white(),
+                }
             );
             println!(
                 "{} {}",
