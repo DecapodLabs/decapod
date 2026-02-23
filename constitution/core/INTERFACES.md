@@ -55,6 +55,7 @@ This registry defines the canonical binding interface surfaces.
 - `specs/evaluations/VARIANCE_EVALS.md` - Variance-aware evaluation contract
 - `specs/evaluations/JUDGE_CONTRACT.md` - Judge JSON/timeout contract
 - `specs/engineering/FRONTEND_BACKEND_E2E.md` - Frontend/backend E2E governance contract
+- `specs/skills/SKILL_GOVERNANCE.md` - Skills-to-kernel artifact and governance contract
 - `specs/AMENDMENTS.md` - Change control
 
 ### Registry (Core Indices)

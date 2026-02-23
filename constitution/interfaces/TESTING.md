@@ -85,6 +85,19 @@ When eval gating is marked required, `decapod validate` and workspace publish MU
 4. No gate-level regression condition is triggered.
 5. Judge timeout failures are zero.
 
+### 5.4 Skill Governance Proof Surfaces
+
+For skill ingestion/resolution to be promotion-relevant, the following checks are required:
+
+1. SKILL.md import determinism:
+   - same SKILL.md source content -> identical `skill_card.card_hash`.
+2. Skill resolution determinism:
+   - same query + same skill store state -> identical `skill_resolution.resolution_hash`.
+3. Artifact integrity:
+   - tampered `skill_card` or `skill_resolution` hash fails `decapod validate`.
+4. Bounded authority:
+   - unmanaged external skill text cannot silently become promotion authority without control-plane artifacts.
+
 ---
 
 ## Links
