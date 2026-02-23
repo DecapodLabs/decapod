@@ -3,11 +3,11 @@ use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::schemas; // Import the new schemas module
 use crate::core::store::Store;
+use crate::plugins::aptitude;
 use crate::plugins::container;
 use crate::plugins::federation;
 use crate::plugins::knowledge;
 use crate::plugins::policy;
-use crate::plugins::teammate;
 use crate::plugins::verify;
 use clap::{Parser, Subcommand, ValueEnum};
 use rusqlite::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
@@ -662,8 +662,8 @@ fn seed_default_risk_zones(conn: &Connection) -> Result<(), error::DecapodError>
             0,
         ),
         (
-            "teammate.mutate",
-            "Teammate preference mutations require basic trust",
+            "aptitude.mutate",
+            "Aptitude preference mutations require basic trust",
             "basic",
             0,
         ),
@@ -871,8 +871,8 @@ pub fn infer_component(title: &str, tags: &str) -> Option<String> {
             vec!["github action", "workflow", "ci", "pipeline", "caching"],
         ),
         (
-            "teammate",
-            vec!["teammate", "preference", "skill", "pattern", "observation"],
+            "aptitude",
+            vec!["aptitude", "preference", "skill", "pattern", "observation"],
         ),
         ("todo", vec!["todo", "task", "work tracking"]),
         ("security", vec!["security", "credential", "key", "auth"]),
@@ -3157,7 +3157,7 @@ fn handoff_task(
             },
         );
         let obs = format!("Task {} handoff to {}: {}", id, to, summary);
-        let _ = teammate::record_observation(store, &obs, Some("multi_agent"));
+        let _ = aptitude::record_observation(store, &obs, Some("multi_agent"));
 
         // Attempt cross-branch reconciliation: commit current changes and mirror to target agent branch.
         let repo_root = root

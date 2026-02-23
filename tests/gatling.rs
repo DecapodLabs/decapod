@@ -799,18 +799,18 @@ fn t170_broker() {
 }
 
 // ---------------------------------------------------------------------------
-// 18. Data > Teammate
+// 18. Data > Aptitude
 // ---------------------------------------------------------------------------
 
 #[test]
-fn t180_teammate() {
+fn t180_aptitude() {
     let (_tmp, dir) = setup_workspace();
     // T180
     ok(
         &dir,
         &[
             "data",
-            "teammate",
+            "aptitude",
             "add",
             "--category",
             "style",
@@ -825,7 +825,7 @@ fn t180_teammate() {
         &dir,
         &[
             "data",
-            "teammate",
+            "aptitude",
             "add",
             "--category",
             "workflow",
@@ -840,13 +840,13 @@ fn t180_teammate() {
         ],
     );
     // T182
-    ok(&dir, &["data", "teammate", "list"]);
+    ok(&dir, &["data", "aptitude", "list"]);
     // T183
     ok(
         &dir,
         &[
             "data",
-            "teammate",
+            "aptitude",
             "get",
             "--category",
             "style",
@@ -859,7 +859,7 @@ fn t180_teammate() {
         &dir,
         &[
             "data",
-            "teammate",
+            "aptitude",
             "observe",
             "--content",
             "User prefers concise responses",
@@ -870,7 +870,7 @@ fn t180_teammate() {
         &dir,
         &[
             "data",
-            "teammate",
+            "aptitude",
             "observe",
             "--content",
             "Always uses dark mode",
@@ -879,16 +879,16 @@ fn t180_teammate() {
         ],
     );
     // T186
-    ok(&dir, &["data", "teammate", "prompt"]);
+    ok(&dir, &["data", "aptitude", "prompt"]);
     // T187
     ok(
         &dir,
-        &["data", "teammate", "prompt", "--context", "code review"],
+        &["data", "aptitude", "prompt", "--context", "code review"],
     );
     // T188
-    ok(&dir, &["data", "teammate", "prompt", "--format", "json"]);
+    ok(&dir, &["data", "aptitude", "prompt", "--format", "json"]);
     // T189
-    ok(&dir, &["data", "teammate", "--help"]);
+    ok(&dir, &["data", "aptitude", "--help"]);
 }
 
 // ---------------------------------------------------------------------------
@@ -1171,9 +1171,9 @@ fn t286_reflex_add_missing_trigger() {
 }
 
 #[test]
-fn t287_teammate_get_missing_key() {
+fn t287_aptitude_get_missing_key() {
     let (_tmp, dir) = setup_workspace();
-    fail(&dir, &["data", "teammate", "get", "--category", "style"]);
+    fail(&dir, &["data", "aptitude", "get", "--category", "style"]);
 }
 
 #[test]

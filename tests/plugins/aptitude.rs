@@ -1,10 +1,10 @@
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
-use decapod::plugins::teammate::{
-    PreferenceInput, SkillInput, add_preference, add_skill, delete_preference,
+use decapod::plugins::aptitude::{
+    PreferenceInput, SkillInput, add_preference, add_skill, aptitude_db_path, delete_preference,
     generate_contextual_reminders, get_preference, get_preferences_by_category,
-    get_prompts_for_context, get_skill, initialize_teammate_db, list_preferences, list_skills,
-    match_patterns, record_observation, teammate_db_path,
+    get_prompts_for_context, get_skill, initialize_aptitude_db, list_preferences, list_skills,
+    match_patterns, record_observation,
 };
 use tempfile::tempdir;
 
@@ -12,7 +12,7 @@ use tempfile::tempdir;
 fn test_preference_lifecycle() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
-    initialize_teammate_db(&root).unwrap();
+    initialize_aptitude_db(&root).unwrap();
 
     let store = Store {
         kind: StoreKind::Repo,
@@ -60,7 +60,7 @@ fn test_preference_lifecycle() {
 fn test_preference_update_on_conflict() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
-    initialize_teammate_db(&root).unwrap();
+    initialize_aptitude_db(&root).unwrap();
 
     let store = Store {
         kind: StoreKind::Repo,
@@ -100,7 +100,7 @@ fn test_preference_update_on_conflict() {
 fn test_skill_lifecycle() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
-    initialize_teammate_db(&root).unwrap();
+    initialize_aptitude_db(&root).unwrap();
 
     let store = Store {
         kind: StoreKind::Repo,
@@ -133,7 +133,7 @@ fn test_skill_lifecycle() {
 fn test_pattern_matching() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
-    initialize_teammate_db(&root).unwrap();
+    initialize_aptitude_db(&root).unwrap();
 
     let store = Store {
         kind: StoreKind::Repo,
@@ -155,7 +155,7 @@ fn test_pattern_matching() {
 fn test_observation_recording() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
-    initialize_teammate_db(&root).unwrap();
+    initialize_aptitude_db(&root).unwrap();
 
     let store = Store {
         kind: StoreKind::Repo,
@@ -171,7 +171,7 @@ fn test_observation_recording() {
 fn test_agent_prompts() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
-    initialize_teammate_db(&root).unwrap();
+    initialize_aptitude_db(&root).unwrap();
 
     let store = Store {
         kind: StoreKind::Repo,
@@ -188,7 +188,7 @@ fn test_agent_prompts() {
 fn test_contextual_reminders() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
-    initialize_teammate_db(&root).unwrap();
+    initialize_aptitude_db(&root).unwrap();
 
     let store = Store {
         kind: StoreKind::Repo,
@@ -215,6 +215,6 @@ fn test_contextual_reminders() {
 fn test_db_path() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
-    let db_path = teammate_db_path(&root);
+    let db_path = aptitude_db_path(&root);
     assert!(db_path.to_string_lossy().ends_with("memory.db"));
 }

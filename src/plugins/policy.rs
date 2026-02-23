@@ -526,8 +526,8 @@ fn risk_zone_for_operation(op_name: &str) -> &'static str {
     if op_name.starts_with("policy.") {
         return "policy.control";
     }
-    if op_name.starts_with("teammate.") {
-        return "teammate.mutate";
+    if op_name.starts_with("aptitude.") {
+        return "aptitude.mutate";
     }
     "control.mutate"
 }

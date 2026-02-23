@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Other
+
+- schema/interface: rename aptitude subsystem across CLI/docs/contracts as canonical memory surface
+
 ## [0.38.13](https://github.com/DecapodLabs/decapod/compare/v0.38.12...v0.38.13) - 2026-02-23
 
 ### Other

@@ -92,6 +92,9 @@ Columns:
 | claim.eval.judge.json_contract | Judge verdicts MUST conform to strict JSON contract and bounded-time execution. | `specs/evaluations/JUDGE_CONTRACT.md` | partially_enforced | `decapod eval judge` (typed errors: `EVAL_JUDGE_JSON_CONTRACT_ERROR`, `EVAL_JUDGE_TIMEOUT`) | Malformed or timed-out judgments are promotion blockers. |
 | claim.eval.bootstrap_ci | Non-deterministic promotion decisions MUST use repeated runs with bootstrap confidence intervals. | `specs/evaluations/VARIANCE_EVALS.md` | partially_enforced | `decapod eval aggregate` + deterministic CI tests | Prevents one-shot variance blindness. |
 | claim.eval.no_silent_regressions | Promotion MUST fail on statistical regression or insufficient run count when eval gate is required. | `specs/engineering/FRONTEND_BACKEND_E2E.md` | partially_enforced | `decapod eval gate` + `decapod validate` + publish eval gate check | Enforced when eval gate requirement artifact is present. |
+| claim.skill.card.deterministic | Imported SKILL.md content MUST produce deterministic SKILL_CARD hashes for identical source content. | `specs/skills/SKILL_GOVERNANCE.md` | partially_enforced | `decapod data aptitude skill import --write-card` + `decapod validate` skill-card gate | Hash ignores timestamp fields to preserve reproducibility. |
+| claim.skill.resolve.deterministic | Skill resolution for identical query + identical skill-store state MUST produce deterministic resolution hash. | `specs/skills/SKILL_GOVERNANCE.md` | partially_enforced | `decapod data aptitude skill resolve` + deterministic test vectors | Prevents non-repeatable skill selection in multi-agent runs. |
+| claim.skill.no_unverified_authority | Skill prose is non-authoritative unless translated into Decapod artifacts/store entries. | `specs/skills/SKILL_GOVERNANCE.md` | partially_enforced | `decapod validate` skill artifact gates + aptitude skill store | Blocks promotion dependence on external unmanaged skill text. |
 
 ---
 

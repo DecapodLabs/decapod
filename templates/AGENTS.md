@@ -19,6 +19,23 @@ decapod todo claim --id <task-id>
 decapod workspace ensure
 ```
 
+## Control-Plane First Loop
+
+```bash
+# Discover what this binary actually supports in this repo
+decapod capabilities --format json
+decapod data schema --deterministic
+
+# Resolve scoped governance context before implementation
+decapod docs search --query "<problem>" --op <op> --path <path> --tag <tag>
+decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
+
+# Convergence/proof surfaces (call when relevant)
+decapod workunit init --task-id <task-id> --intent-ref <intent>
+decapod govern capsule query --topic "<topic>" --scope interfaces --task-id <task-id>
+decapod eval plan --task-set-id <id> --task-ref <task-id> --model-id <model> --prompt-hash <hash> --judge-model-id <judge> --judge-prompt-hash <hash>
+```
+
 ## Golden Rules (Non-Negotiable)
 
 1. Always refine intent with the user before inference-heavy work.
@@ -42,7 +59,8 @@ decapod workspace ensure
 ## Operating Notes
 
 - Use `decapod docs show core/DECAPOD.md` and `decapod docs show core/INTERFACES.md` for binding contracts.
-- Use Decapod shared skills memory for human-taught preferences that must persist across sessions and agents: `decapod data memory add|get` (aliases: `decapod data skills`, `decapod data teammate`).
+- Use `decapod capabilities --format json` as the authority surface for available operations.
+- Use Decapod shared aptitude memory for human-taught preferences that must persist across sessions and agents: `decapod data memory add|get` (aliases: `decapod data aptitude`).
 - Use `decapod docs search --query \"<problem>\" --op <op> --path <path> --tag <tag>` or `decapod rpc --op context.scope --params '{\"query\":\"...\"}'` for scoped just-in-time constitution context.
 - Use `decapod todo handoff --id <id> --to <agent>` for cross-agent ownership transfer.
 - Treat lock/contention failures (including `VALIDATE_TIMEOUT_OR_LOCK`) as blocking until resolved.
