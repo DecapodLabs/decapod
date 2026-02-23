@@ -1169,6 +1169,51 @@ fn validate_project_config_toml(
             ctx,
         );
     }
+    let repo_table = value.get("repo").and_then(|v| v.as_table());
+    let has_intent_anchor = repo_table
+        .and_then(|t| t.get("product_summary"))
+        .and_then(|v| v.as_str())
+        .map(|s| !s.trim().is_empty())
+        .unwrap_or(false);
+    if has_intent_anchor {
+        pass(
+            "Project config captures repo.product_summary intent anchor",
+            ctx,
+        );
+    } else {
+        fail(
+            "Project config missing repo.product_summary (intent anchor).",
+            ctx,
+        );
+    }
+
+    let has_architecture_intent = repo_table
+        .and_then(|t| t.get("architecture_intent"))
+        .and_then(|v| v.as_str())
+        .map(|s| !s.trim().is_empty())
+        .unwrap_or(false);
+    if has_architecture_intent {
+        pass("Project config captures repo.architecture_intent", ctx);
+    } else {
+        fail("Project config missing repo.architecture_intent.", ctx);
+    }
+
+    let has_done_criteria = repo_table
+        .and_then(|t| t.get("done_criteria"))
+        .and_then(|v| v.as_str())
+        .map(|s| !s.trim().is_empty())
+        .unwrap_or(false);
+    if has_done_criteria {
+        pass(
+            "Project config captures repo.done_criteria proof target",
+            ctx,
+        );
+    } else {
+        warn(
+            "Project config missing repo.done_criteria; init should capture explicit done evidence.",
+            ctx,
+        );
+    }
     Ok(())
 }
 
@@ -1244,6 +1289,16 @@ fn validate_project_specs_docs(
                 ctx,
             );
         }
+        if architecture.contains(
+            "Describe the architecture in 5-8 dense sentences focused on deployment reality, system boundaries, and operational risks.",
+        ) {
+            fail(
+                "Architecture spec still has placeholder executive summary; derive architecture from explicit intent.",
+                ctx,
+            );
+        } else {
+            pass("Architecture spec has non-placeholder executive summary", ctx);
+        }
 
         let dense_line_count = architecture
             .lines()
@@ -1282,6 +1337,14 @@ fn validate_project_specs_docs(
                 &format!("Intent spec missing required sections: {:?}", missing),
                 ctx,
             );
+        }
+        if intent.contains("Define the user-visible outcome in one paragraph.") {
+            fail(
+                "Intent spec still has placeholder product outcome; capture explicit intent before implementation.",
+                ctx,
+            );
+        } else {
+            pass("Intent spec has non-placeholder product outcome", ctx);
         }
     }
 

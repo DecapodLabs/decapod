@@ -33,6 +33,15 @@ fn init_with_writes_config_toml_with_schema_and_diagram_style() {
     assert!(config.contains("diagram_style = \"mermaid\""));
     assert!(config.contains("[repo]"));
     assert!(config.contains("[init]"));
+    assert!(config.contains("product_summary = "));
+    assert!(config.contains("architecture_intent = "));
+
+    let intent =
+        fs::read_to_string(tmp.path().join("specs/intent.md")).expect("read specs/intent.md");
+    assert!(
+        !intent.contains("Define the user-visible outcome in one paragraph."),
+        "intent scaffold should be seeded with non-placeholder outcome"
+    );
 }
 
 #[test]
@@ -60,5 +69,12 @@ fn init_uses_existing_config_for_noninteractive_defaults() {
     assert!(
         architecture.contains("```mermaid"),
         "existing config should keep mermaid diagram style"
+    );
+
+    let intent =
+        fs::read_to_string(tmp.path().join("specs/intent.md")).expect("read specs/intent.md");
+    assert!(
+        !intent.contains("Define the user-visible outcome in one paragraph."),
+        "re-init should preserve intent-first seeded outcome"
     );
 }

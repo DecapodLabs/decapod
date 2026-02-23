@@ -31,6 +31,8 @@ pub struct ScaffoldOptions {
     pub generate_specs: bool,
     /// Diagram style for generated architecture document.
     pub diagram_style: DiagramStyle,
+    /// Intent/architecture seed captured from inferred or user-confirmed repo context.
+    pub specs_seed: Option<SpecsSeed>,
 }
 
 pub struct ScaffoldSummary {
@@ -51,6 +53,17 @@ pub enum DiagramStyle {
     Mermaid,
 }
 
+#[derive(Clone, Debug)]
+pub struct SpecsSeed {
+    pub product_name: Option<String>,
+    pub product_summary: Option<String>,
+    pub architecture_intent: Option<String>,
+    pub product_type: Option<String>,
+    pub primary_languages: Vec<String>,
+    pub detected_surfaces: Vec<String>,
+    pub done_criteria: Option<String>,
+}
+
 fn specs_readme_template() -> String {
     r#"# Project Specs
 
@@ -64,14 +77,25 @@ Keep both documents current as requirements and architecture evolve.
     .to_string()
 }
 
-fn specs_intent_template() -> String {
-    r#"# Intent
+fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
+    let product_outcome = seed
+        .and_then(|s| s.product_summary.as_deref())
+        .unwrap_or("Define the user-visible outcome in one paragraph.");
+    let done_criteria = seed
+        .and_then(|s| s.done_criteria.as_deref())
+        .unwrap_or("Functional behavior is demonstrably correct.");
+    let product_name = seed
+        .and_then(|s| s.product_name.as_deref())
+        .unwrap_or("this repository");
+
+    format!(
+        r#"# Intent
 
 ## Product Outcome
-- Define the user-visible outcome in one paragraph.
+- {product_outcome}
 
 ## Scope
-- In scope:
+- In scope for {product_name}:
 - Out of scope:
 
 ## Constraints
@@ -80,17 +104,34 @@ fn specs_intent_template() -> String {
 - Security/compliance:
 
 ## Acceptance Criteria
-- [ ] Functional behavior is demonstrably correct.
+- [ ] {done_criteria}
 - [ ] Non-functional targets are met (latency, reliability, cost, etc.).
 - [ ] Validation gates pass and artifacts are attached.
 
 ## Open Questions
 - List unresolved decisions that block implementation confidence.
 "#
-    .to_string()
+    )
 }
 
-fn specs_architecture_template(style: DiagramStyle) -> String {
+fn specs_architecture_template(style: DiagramStyle, seed: Option<&SpecsSeed>) -> String {
+    let summary = seed
+        .and_then(|s| s.architecture_intent.as_deref())
+        .unwrap_or(
+            "Describe the architecture in 5-8 dense sentences focused on deployment reality, system boundaries, and operational risks.",
+        );
+    let runtime_langs = seed
+        .map(|s| s.primary_languages.join(", "))
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| "to be confirmed".to_string());
+    let surfaces = seed
+        .map(|s| s.detected_surfaces.join(", "))
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| "to be confirmed".to_string());
+    let product_type = seed
+        .and_then(|s| s.product_type.as_deref())
+        .unwrap_or("to be confirmed");
+
     let diagram = match style {
         DiagramStyle::Ascii => {
             r#"```text
@@ -121,12 +162,12 @@ flowchart LR
         r#"# Architecture
 
 ## Executive Summary
-Describe the architecture in 5-8 dense sentences focused on deployment reality, system boundaries, and operational risks.
+{summary}
 
 ## Integrated Surface
-- Runtime/languages:
-- Frameworks/libraries:
-- Infrastructure/services:
+- Runtime/languages: {runtime_langs}
+- Frameworks/libraries: {surfaces}
+- Infrastructure/services: {product_type}
 - External dependencies:
 
 ## Build Intent
@@ -345,12 +386,13 @@ pub fn scaffold_project_entrypoints(
         let mut unchanged = 0usize;
         let mut preserved = 0usize;
 
+        let seed = opts.specs_seed.as_ref();
         let specs_files = vec![
             ("specs/README.md", specs_readme_template()),
-            ("specs/intent.md", specs_intent_template()),
+            ("specs/intent.md", specs_intent_template(seed)),
             (
                 "specs/architecture.md",
-                specs_architecture_template(opts.diagram_style),
+                specs_architecture_template(opts.diagram_style, seed),
             ),
         ];
 

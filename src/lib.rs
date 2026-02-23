@@ -27,6 +27,7 @@ use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::fs;
 use std::io;
+use std::io::IsTerminal;
 use std::io::Read;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -219,6 +220,8 @@ struct RepoContext {
     architecture_intent: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     product_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    done_criteria: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     primary_languages: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1151,6 +1154,58 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
         }
     }
 
+    if ctx.product_summary.is_none() {
+        let readme_path = target_dir.join("README.md");
+        if readme_path.exists()
+            && let Ok(readme) = fs::read_to_string(readme_path)
+        {
+            for line in readme.lines() {
+                let trimmed = line.trim();
+                if trimmed.is_empty()
+                    || trimmed.starts_with('#')
+                    || trimmed.starts_with("<")
+                    || trimmed.starts_with("![")
+                {
+                    continue;
+                }
+                ctx.product_summary = Some(trimmed.to_string());
+                break;
+            }
+        }
+    }
+
+    if ctx.product_summary.is_none() {
+        ctx.product_summary = Some(match ctx.product_name.as_deref() {
+            Some(name) => format!("Deliver {} against explicit user intent with proof-backed completion.", name),
+            None => "Deliver the repository outcome against explicit user intent with proof-backed completion.".to_string(),
+        });
+    }
+    if ctx.architecture_intent.is_none() {
+        let has_frontend = ctx.detected_surfaces.iter().any(|s| s == "frontend");
+        let has_backend = ctx.detected_surfaces.iter().any(|s| s == "backend");
+        let inferred = match (has_frontend, has_backend) {
+            (true, true) => {
+                "Layered frontend/backend system with explicit contracts, isolated mutation boundaries, and proof-gated promotion."
+            }
+            (true, false) => {
+                "Frontend-first architecture with explicit API boundaries and deterministic validation gates."
+            }
+            (false, true) => {
+                "Service-oriented backend with clear interface boundaries, durable state ownership, and proof-gated releases."
+            }
+            (false, false) => {
+                "Composable repository architecture with explicit boundaries and proof-backed delivery invariants."
+            }
+        };
+        ctx.architecture_intent = Some(inferred.to_string());
+    }
+    if ctx.done_criteria.is_none() {
+        ctx.done_criteria = Some(
+            "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
+                .to_string(),
+        );
+    }
+
     ctx.primary_languages.sort();
     ctx.primary_languages.dedup();
     ctx.detected_surfaces.sort();
@@ -1166,6 +1221,15 @@ fn prompt_line(prompt: &str) -> Result<String, error::DecapodError> {
         .read_line(&mut buf)
         .map_err(error::DecapodError::IoError)?;
     Ok(buf.trim().to_string())
+}
+
+fn prompt_line_default(prompt: &str, default_value: &str) -> Result<String, error::DecapodError> {
+    let line = prompt_line(&format!("{} [{}]: ", prompt, default_value))?;
+    if line.trim().is_empty() {
+        Ok(default_value.to_string())
+    } else {
+        Ok(line)
+    }
 }
 
 fn prompt_yes_no(prompt: &str, default_yes: bool) -> Result<bool, error::DecapodError> {
@@ -1278,24 +1342,45 @@ fn interactive_init_with(
 }
 
 fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::DecapodError> {
-    if repo.product_summary.is_none() {
-        let s = prompt_line("Product summary (one sentence, leave blank to skip): ")?;
-        if !s.is_empty() {
-            repo.product_summary = Some(s);
-        }
-    }
-    if repo.architecture_intent.is_none() {
-        let s = prompt_line("Architecture intent (primary system shape, leave blank to skip): ")?;
-        if !s.is_empty() {
-            repo.architecture_intent = Some(s);
-        }
-    }
+    let current_summary = repo.product_summary.clone().unwrap_or_else(|| {
+        "Deliver the repository outcome against explicit user intent with proof-backed completion."
+            .to_string()
+    });
+    repo.product_summary = Some(prompt_line_default(
+        "Intent outcome (who benefits + what changes)",
+        &current_summary,
+    )?);
+
+    let current_arch = repo.architecture_intent.clone().unwrap_or_else(|| {
+        "Composable repository architecture with explicit boundaries and proof-backed delivery invariants."
+            .to_string()
+    });
+    repo.architecture_intent = Some(prompt_line_default(
+        "Architecture direction (system shape + key boundaries)",
+        &current_arch,
+    )?);
+
+    let current_done = repo.done_criteria.clone().unwrap_or_else(|| {
+        "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
+            .to_string()
+    });
+    repo.done_criteria = Some(prompt_line_default(
+        "Done criteria (evidence required before ship)",
+        &current_done,
+    )?);
     Ok(())
+}
+
+fn needs_repo_context_interview(repo: &RepoContext) -> bool {
+    repo.product_summary.is_none()
+        || repo.architecture_intent.is_none()
+        || repo.done_criteria.is_none()
 }
 
 fn run_init_apply(
     init_with: &InitWithCli,
     current_dir: &Path,
+    repo_ctx: &RepoContext,
 ) -> Result<PathBuf, error::DecapodError> {
     let target_dir = match &init_with.dir {
         Some(d) => d.clone(),
@@ -1386,6 +1471,15 @@ fn run_init_apply(
             InitDiagramStyle::Ascii => scaffold::DiagramStyle::Ascii,
             InitDiagramStyle::Mermaid => scaffold::DiagramStyle::Mermaid,
         },
+        specs_seed: Some(scaffold::SpecsSeed {
+            product_name: repo_ctx.product_name.clone(),
+            product_summary: repo_ctx.product_summary.clone(),
+            architecture_intent: repo_ctx.architecture_intent.clone(),
+            product_type: repo_ctx.product_type.clone(),
+            primary_languages: repo_ctx.primary_languages.clone(),
+            detected_surfaces: repo_ctx.detected_surfaces.clone(),
+            done_criteria: repo_ctx.done_criteria.clone(),
+        }),
     })?;
 
     let target_display = setup_decapod_root
@@ -1522,11 +1616,17 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
             };
 
-            let target_dir = run_init_apply(&init_with, &current_dir)?;
-            let mut repo_ctx = infer_repo_context(&target_dir);
-            if base_init_invocation && had_existing_config {
+            let init_target =
+                std::fs::canonicalize(init_with.dir.clone().unwrap_or_else(|| current_dir.clone()))
+                    .map_err(error::DecapodError::IoError)?;
+            let mut repo_ctx = infer_repo_context(&init_target);
+            if base_init_invocation
+                && io::stdin().is_terminal()
+                && (had_existing_config || needs_repo_context_interview(&repo_ctx))
+            {
                 enrich_repo_context_interactive(&mut repo_ctx)?;
             }
+            let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
             let config = config_from_init_with(&init_with, repo_ctx);
             write_project_config(&target_dir, &config, init_with.dry_run)?;
         }
