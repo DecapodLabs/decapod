@@ -1042,6 +1042,100 @@ fn validate_project_scoped_state(
     Ok(())
 }
 
+fn validate_generated_artifact_whitelist(
+    store: &Store,
+    ctx: &ValidationContext,
+    decapod_dir: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Generated Artifact Whitelist Gate");
+
+    if store.kind != StoreKind::Repo {
+        skip(
+            "Not in repo mode; skipping generated artifact whitelist check",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let gitignore_path = decapod_dir.join(".gitignore");
+    let gitignore = fs::read_to_string(&gitignore_path).map_err(error::DecapodError::IoError)?;
+    let required_ignore = ".decapod/generated/*";
+    let required_unignore = "!.decapod/generated/Dockerfile";
+
+    if gitignore.lines().any(|line| line.trim() == required_ignore) {
+        pass(
+            "Gitignore enforces generated wildcard ignore (.decapod/generated/*)",
+            ctx,
+        );
+    } else {
+        fail(
+            "Missing .gitignore rule '.decapod/generated/*' for generated artifact whitelist enforcement",
+            ctx,
+        );
+    }
+
+    if gitignore
+        .lines()
+        .any(|line| line.trim() == required_unignore)
+    {
+        pass(
+            "Gitignore allowlists tracked generated Dockerfile (!.decapod/generated/Dockerfile)",
+            ctx,
+        );
+    } else {
+        fail(
+            "Missing .gitignore allowlist rule '!.decapod/generated/Dockerfile'",
+            ctx,
+        );
+    }
+
+    let output = std::process::Command::new("git")
+        .arg("-C")
+        .arg(decapod_dir)
+        .args(["ls-files", ".decapod/generated"])
+        .output();
+
+    let output = match output {
+        Ok(o) if o.status.success() => o,
+        Ok(_) | Err(_) => {
+            warn(
+                "Unable to evaluate tracked generated artifacts via git ls-files; skipping tracked whitelist check",
+                ctx,
+            );
+            return Ok(());
+        }
+    };
+
+    let allowed_tracked = [".decapod/generated/Dockerfile"];
+    let mut offenders = Vec::new();
+    for line in String::from_utf8_lossy(&output.stdout).lines() {
+        let path = line.trim();
+        if path.is_empty() {
+            continue;
+        }
+        if !allowed_tracked.iter().any(|allowed| allowed == &path) {
+            offenders.push(path.to_string());
+        }
+    }
+
+    if offenders.is_empty() {
+        pass(
+            "Tracked generated artifacts are restricted to the whitelist",
+            ctx,
+        );
+    } else {
+        fail(
+            &format!(
+                "Tracked non-whitelisted generated artifacts found: {:?}. Keep generated files ignored unless explicitly allowlisted.",
+                offenders
+            ),
+            ctx,
+        );
+    }
+
+    Ok(())
+}
+
 fn validate_workunit_manifests_if_present(
     ctx: &ValidationContext,
     repo_root: &Path,
@@ -3303,6 +3397,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_project_scoped_state", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_generated_artifact_whitelist(store, ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_generated_artifact_whitelist", start.elapsed()));
         });
         s.spawn(move |_| {
             let start = Instant::now();
