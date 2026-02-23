@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.13](https://github.com/DecapodLabs/decapod/compare/v0.38.12...v0.38.13) - 2026-02-23
+
+### Other
+
+- Merge master into PR branch and resolve README/gitignore conflicts
+- templatize decapod gitignore policy and surface shared skills memory
+
 ### Other
 
 - schema/interface: merge eval + gitignore governance surface updates and keep deterministic whitelist enforcement in init/validate
