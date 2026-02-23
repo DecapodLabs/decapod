@@ -154,8 +154,7 @@ impl DbBroker {
     where
         F: FnOnce(&Connection) -> Result<R, error::DecapodError>,
     {
-        let is_read = policy::is_read_only_operation(op_name)
-            && !op_name.ends_with(".init"); // .init ops do DDL writes; route through write pool
+        let is_read = policy::is_read_only_operation(op_name) && !op_name.ends_with(".init"); // .init ops do DDL writes; route through write pool
         let effective_intent = if let Some(i) = intent_ref {
             Some(i.to_string())
         } else if !is_read {

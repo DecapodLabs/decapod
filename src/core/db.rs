@@ -68,7 +68,10 @@ pub fn db_connect_for_validate(db_path: &str) -> Result<Connection, error::Decap
 /// Establish a read-write SQLite connection with configurable busy_timeout, for use by the pool.
 ///
 /// Same configuration as `db_connect` but with a caller-specified timeout.
-pub fn db_connect_pooled(db_path: &str, busy_timeout_secs: u32) -> Result<Connection, error::DecapodError> {
+pub fn db_connect_pooled(
+    db_path: &str,
+    busy_timeout_secs: u32,
+) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     ensure_db_parent_dir(db_path)?;
 
@@ -85,7 +88,10 @@ pub fn db_connect_pooled(db_path: &str, busy_timeout_secs: u32) -> Result<Connec
 /// Establish a read-only SQLite connection with configurable busy_timeout, for use by the pool.
 ///
 /// Enables `query_only` and `temp_store=MEMORY` for safe concurrent reads.
-pub fn db_connect_read_pooled(db_path: &str, busy_timeout_secs: u32) -> Result<Connection, error::DecapodError> {
+pub fn db_connect_read_pooled(
+    db_path: &str,
+    busy_timeout_secs: u32,
+) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX;
     let conn = Connection::open_with_flags(db_path, flags)
