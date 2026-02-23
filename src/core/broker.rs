@@ -13,8 +13,8 @@
 //! - **Write Queue**: Serializes mutations to prevent SQLite lock contention
 //! - **Read Cache**: Caches reads in-memory to reduce DB load
 
-use crate::core::db;
 use crate::core::error;
+use crate::core::pool;
 use crate::core::time;
 use crate::plugins::policy;
 use rusqlite::Connection;
@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 use ulid::Ulid;
 
@@ -119,29 +119,27 @@ impl DbBroker {
         sql: &str,
         params: &[(&str, i64)],
     ) -> Result<u64, error::DecapodError> {
-        // Get the per-DB lock for serialization
-        let db_lock = get_db_lock(db_path)?;
-        let _lock = db_lock
-            .lock()
-            .map_err(|_| error::DecapodError::ValidationError("DbBroker lock poisoned".into()))?;
+        let audit_path = self.audit_log_path.clone();
+        let sql = sql.to_string();
+        let params: Vec<i64> = params.iter().map(|(_, v)| *v).collect();
+        let db_path_owned = db_path.to_path_buf();
 
-        let conn = db::db_connect(&db_path.to_string_lossy())?;
+        pool::global_pool().with_write(db_path, |conn| {
+            let mut stmt = conn.prepare(&sql)?;
+            let param_vec: Vec<Box<dyn rusqlite::ToSql>> = params
+                .iter()
+                .map(|v| Box::new(*v) as Box<dyn rusqlite::ToSql>)
+                .collect();
+            let params_refs: Vec<&dyn rusqlite::ToSql> =
+                param_vec.iter().map(|p| p.as_ref()).collect();
+            stmt.execute(params_refs.as_slice())?;
 
-        // Use rusqlite params
-        let mut stmt = conn.prepare(sql)?;
-        let param_vec: Vec<Box<dyn rusqlite::ToSql>> = params
-            .iter()
-            .map(|(_, v)| Box::new(*v) as Box<dyn rusqlite::ToSql>)
-            .collect();
-        let params_refs: Vec<&dyn rusqlite::ToSql> = param_vec.iter().map(|p| p.as_ref()).collect();
-        stmt.execute(params_refs.as_slice())?;
+            let rowid = conn.last_insert_rowid();
 
-        let rowid = conn.last_insert_rowid();
+            log_write_event(&audit_path, "queued_write", &db_path_owned)?;
 
-        // Log the write
-        log_write_event(&self.audit_log_path, "queued_write", db_path)?;
-
-        Ok(rowid as u64)
+            Ok(rowid as u64)
+        })
     }
 
     /// Execute a closure with a serialized connection to the specified DB.
@@ -156,7 +154,7 @@ impl DbBroker {
     where
         F: FnOnce(&Connection) -> Result<R, error::DecapodError>,
     {
-        let is_read = policy::is_read_only_operation(op_name);
+        let is_read = policy::is_read_only_operation(op_name) && !op_name.ends_with(".init"); // .init ops do DDL writes; route through write pool
         let effective_intent = if let Some(i) = intent_ref {
             Some(i.to_string())
         } else if !is_read {
@@ -173,21 +171,20 @@ impl DbBroker {
             policy::enforce_broker_mutation_policy(store_root, actor, op_name)?;
         }
 
-        // Serialize operations per database path instead of globally.
-        // This preserves same-DB safety while allowing cross-DB parallelism.
-        let db_lock = get_db_lock(db_path)?;
-        let _lock = db_lock
-            .lock()
-            .map_err(|_| error::DecapodError::ValidationError("DbBroker lock poisoned".into()))?;
-
         let db_id = db_path
             .file_name()
             .unwrap_or_default()
             .to_string_lossy()
             .to_string();
 
-        // Two-phase logging: only for mutations (reads don't need crash recovery)
-        if !is_read {
+        if is_read {
+            // Read path: use pooled read connection (no mutex serialization)
+            let result = pool::global_pool().with_read(db_path, f);
+            let status = if result.is_ok() { "success" } else { "error" };
+            self.log_event(actor, effective_intent.as_deref(), op_name, &db_id, status)?;
+            result
+        } else {
+            // Write path: use pooled write connection with two-phase audit logging
             self.log_event(
                 actor,
                 effective_intent.as_deref(),
@@ -195,16 +192,13 @@ impl DbBroker {
                 &db_id,
                 "pending",
             )?;
+
+            let result = pool::global_pool().with_write(db_path, f);
+
+            let status = if result.is_ok() { "success" } else { "error" };
+            self.log_event(actor, effective_intent.as_deref(), op_name, &db_id, status)?;
+            result
         }
-
-        let conn = db::db_connect(&db_path.to_string_lossy())?;
-
-        let result = f(&conn);
-
-        let status = if result.is_ok() { "success" } else { "error" };
-        self.log_event(actor, effective_intent.as_deref(), op_name, &db_id, status)?;
-
-        result
     }
 
     fn log_event(
@@ -422,22 +416,6 @@ pub struct Divergence {
     pub ts: String,
     pub intent_ref: Option<String>,
     pub reason: String,
-}
-
-fn db_lock_map() -> &'static Mutex<HashMap<PathBuf, Arc<Mutex<()>>>> {
-    static DB_LOCKS: OnceLock<Mutex<HashMap<PathBuf, Arc<Mutex<()>>>>> = OnceLock::new();
-    DB_LOCKS.get_or_init(|| Mutex::new(HashMap::new()))
-}
-
-fn get_db_lock(db_path: &Path) -> Result<Arc<Mutex<()>>, error::DecapodError> {
-    let key = db_path.to_path_buf();
-    let mut map = db_lock_map()
-        .lock()
-        .map_err(|_| error::DecapodError::ValidationError("Db lock map poisoned".into()))?;
-    Ok(map
-        .entry(key)
-        .or_insert_with(|| Arc::new(Mutex::new(())))
-        .clone())
 }
 
 fn get_audit_lock() -> &'static Mutex<()> {

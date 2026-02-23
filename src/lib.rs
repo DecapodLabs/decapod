@@ -105,7 +105,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[clap(
     name = "decapod",
     version = env!("CARGO_PKG_VERSION"),
-    about = "The Intent-Driven Engineering System",
+    about = "Decapod is the daemonless, local-first control plane that agents call on demand to align intent, enforce boundaries, and produce proof-backed completion across concurrent multi-agent work. 🦀",
     disable_version_flag = true
 )]
 struct Cli {
