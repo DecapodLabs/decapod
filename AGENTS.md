@@ -42,6 +42,7 @@ decapod workspace ensure
 ## Operating Notes
 
 - Use `decapod docs show core/DECAPOD.md` and `decapod docs show core/INTERFACES.md` for binding contracts.
+- Use Decapod shared skills memory for human-taught preferences that must persist across sessions and agents: `decapod data memory add|get` (aliases: `decapod data skills`, `decapod data teammate`).
 - Use `decapod docs search --query \"<problem>\" --op <op> --path <path> --tag <tag>` or `decapod rpc --op context.scope --params '{\"query\":\"...\"}'` for scoped just-in-time constitution context.
 - Use `decapod todo handoff --id <id> --to <agent>` for cross-agent ownership transfer.
 - Treat lock/contention failures (including `VALIDATE_TIMEOUT_OR_LOCK`) as blocking until resolved.
