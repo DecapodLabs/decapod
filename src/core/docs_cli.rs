@@ -2,14 +2,6 @@
 //!
 //! This module implements the `decapod docs` command family for querying
 //! Decapod's embedded methodology documents.
-//!
-//! # For AI Agents
-//!
-//! - **Use `decapod docs show <path>` to read constitution**: Don't read from filesystem
-//! - **Three source modes**: embedded (binary), override (project), merged (both)
-//! - **List available docs**: `decapod docs list` shows all embedded docs
-//! - **Ingest command**: `decapod docs ingest` dumps full constitution for agent context
-//! - **Override validation**: `decapod docs override` validates and caches OVERRIDE.md checksum
 
 use crate::core::{assets, docs, error};
 use clap::Subcommand;
@@ -49,6 +41,27 @@ pub enum DocsCommand {
     },
     /// Dump all embedded constitution for agentic ingestion.
     Ingest,
+    /// Return scoped constitution fragments relevant to a concrete query.
+    Search {
+        /// Problem/query text to scope against constitution docs.
+        #[clap(long)]
+        query: String,
+        /// Optional operation context (e.g. workspace.ensure, store.upsert).
+        #[clap(long)]
+        op: Option<String>,
+        /// Optional touched paths (repeatable).
+        #[clap(long = "path")]
+        path: Vec<String>,
+        /// Optional intent tags (repeatable).
+        #[clap(long = "tag")]
+        tag: Vec<String>,
+        /// Max fragments to return.
+        #[clap(long, default_value_t = 5)]
+        limit: usize,
+        /// Output format: text or json.
+        #[clap(long, default_value = "text")]
+        format: String,
+    },
     /// Validate and cache OVERRIDE.md checksum.
     Override {
         /// Force re-cache even if unchanged
@@ -158,6 +171,46 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             Ok(DocsRunResult {
                 ingested_core_constitution,
             })
+        }
+        DocsCommand::Search {
+            query,
+            op,
+            path,
+            tag,
+            limit,
+            format,
+        } => {
+            let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
+            let repo_root = find_repo_root(&current_dir)?;
+            let fragments = docs::resolve_scoped_fragments(
+                &repo_root,
+                Some(&query),
+                op.as_deref(),
+                &path,
+                &tag,
+                limit,
+            );
+
+            if format.eq_ignore_ascii_case("json") {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&serde_json::json!({
+                        "query": query,
+                        "op": op,
+                        "paths": path,
+                        "tags": tag,
+                        "fragments": fragments,
+                    }))
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+                );
+            } else {
+                println!("Scoped constitution context:");
+                for (idx, fragment) in fragments.iter().enumerate() {
+                    println!("\n{}. {} ({})", idx + 1, fragment.title, fragment.r#ref);
+                    println!("{}", fragment.excerpt);
+                }
+            }
+            Ok(DocsRunResult::default())
         }
         DocsCommand::Override { force } => {
             let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
@@ -273,6 +326,18 @@ pub fn schema() -> serde_json::Value {
             "ingest": {
                 "type": "null",
                 "description": "Dump all embedded constitution for agentic ingestion"
+            },
+            "search": {
+                "type": "object",
+                "description": "Return scoped constitution fragments for a problem query",
+                "properties": {
+                    "query": { "type": "string" },
+                    "op": { "type": "string" },
+                    "path": { "type": "array", "items": { "type": "string" } },
+                    "tag": { "type": "array", "items": { "type": "string" } },
+                    "limit": { "type": "integer" },
+                    "format": { "type": "string", "enum": ["text", "json"] }
+                }
             },
             "override": {
                 "type": "object",

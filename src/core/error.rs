@@ -2,12 +2,6 @@
 //!
 //! This module defines the canonical error type used throughout Decapod.
 //! All subsystems return `Result<T, DecapodError>` for error handling.
-//!
-//! # For AI Agents
-//!
-//! - **Validation errors are fatal**: If `decapod validate` fails, do not proceed
-//! - **NotFound vs NotImplemented**: NotFound = missing data, NotImplemented = unfinished feature
-//! - **Error propagation**: Use `?` operator; errors auto-convert via `From` traits
 
 use rusqlite;
 use std::env;

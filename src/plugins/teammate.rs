@@ -8,14 +8,6 @@
 //! - Workflow conventions
 //! - Learned skills and workflows
 //! - Pattern recognition for auto-detection
-//!
-//! # For AI Agents
-//!
-//! - **Check preferences before acting**: Use `decapod teammate get <key>` to check user preferences
-//! - **Record new preferences**: When user expresses a preference, record it with `decapod teammate add`
-//! - **Observe patterns**: Use `decapod teammate observe` to capture observations for pattern matching
-//! - **Get contextual prompts**: Use `decapod teammate prompt` to get relevant reminders for your context
-//! - **Categories organize preferences**: Use categories like "git", "style", "workflow" for organization
 
 use crate::core::broker::DbBroker;
 use crate::core::error;

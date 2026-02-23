@@ -4,96 +4,44 @@ This is a Decapod-managed repository. **Strict Dependency: You are strictly boun
 
 This contract applies equally to Claude, Codex, Gemini, and any other agent operating here.
 
----
-
 ## Mandatory Initialization
 
-You MUST run this sequence before your first mutation:
-
 ```bash
-# 1. Validate (authoritative gate)
+cargo install decapod
+
 decapod validate
-
-# 2. Ingest constitution
 decapod docs ingest
-
-# 3. Acquire session credentials
 decapod session acquire
-
-# 4. Initialize session
 decapod rpc --op agent.init
-
-# 5. Resolve context
 decapod rpc --op context.resolve
-
-# 6. Create + claim your task
 decapod todo add "<task>"
 decapod todo claim --id <task-id>
-
-# 7. Enter canonical worktree
 decapod workspace ensure
 ```
 
-If any step fails, **stop and diagnose**. Do not skip steps.
-
----
-
 ## Golden Rules (Non-Negotiable)
 
-1. **ALWAYS refine intent with user BEFORE inference.** Ask clarifying questions, confirm requirements, identify exceptions. Never start coding until the request is well-understood.
-2. **NEVER work on main/master.** Use `decapod workspace ensure` and run from `.decapod/workspaces/*`.
-3. **NEVER read/write `.decapod/` files directly.** Use `decapod` CLI exclusively.
-4. **NEVER claim done without `decapod validate` passing.**
-5. **NEVER invent parallel CLIs or state roots.** Use Decapod's command surface.
-6. **NEVER bypass proofs based on self-confidence.** Evidence or nothing.
-7. **Claim a task before substantive work.** `decapod todo claim --id <task-id>`.
-8. **Record decisions in durable artifacts.** Not in transient conversation.
-9. **NEVER read `constitution/*` files directly.** Constitution is embedded in the Decapod binary; access it via `decapod docs show <embedded-path>`.
-10. **NEVER use non-canonical worktree roots.** Decapod work executes only in `.decapod/workspaces/*`.
-
----
-
-## Standard Operating Procedure
-
-- **Contextualization**: Resolve context via `agent.init` and `context.resolve` before mutations.
-- **State Mutation**: Use `decapod` CLI/RPC exclusively for state changes.
-- **Isolation**: Use `decapod workspace ensure` for worktrees and execute from `.decapod/workspaces/*`. Never work on protected branches.
-- **Verification**: `decapod validate` is the authoritative completion gate.
-- **Liveness**: Each command invocation refreshes your agent presence. Use `decapod todo heartbeat` for explicit heartbeat.
-
----
-
-## Multi-Agent Coordination
-
-- One agent per claimed task. No concurrent claims on the same task.
-- Agents MUST declare scope when delegating to subagents.
-- Subagents MUST NOT mutate shared state. They research and report.
-- Handoffs use `decapod todo handoff --id <id> --to <agent>` with artifact references.
-- Session credentials are per-agent and non-transferable.
-
----
+1. Always refine intent with the user before inference-heavy work.
+2. Never work on main/master. Use `.decapod/workspaces/*`.
+3. `.decapod files are accessed only via decapod CLI`.
+4. Never claim done without `decapod validate` passing.
+5. Never invent capabilities that are not exposed by the binary.
+6. Stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
+7. Respect the Interface abstraction boundary.
 
 ## Safety Invariants
 
-- ✅ core/DECAPOD.md: Universal router.
-- ✅ Verification: `decapod validate` must pass.
-- Stop if error or ambiguous state occurs; respect invocation heartbeat.
-- Safe Environment: Use Docker git workspaces; request elevated permissions before Docker/container workspace commands.
-- Security: DECAPOD_SESSION_PASSWORD required; .decapod files are accessed only via decapod CLI.
-- Architecture: Respect the Interface abstraction boundary.
-- Updates: cargo install decapod.
+- ✅ Router pointer: `core/DECAPOD.md`
+- ✅ Validation gate: `decapod validate`
+- ✅ Constitution ingestion gate: `decapod docs ingest`
+- ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`
+- ✅ Session auth gate: `DECAPOD_SESSION_PASSWORD`
+- ✅ Workspace gate: Docker git workspaces
+- ✅ Privilege gate: request elevated permissions before Docker/container workspace commands
 
----
+## Operating Notes
 
-## Documentation
-
-```bash
-decapod docs show core/DECAPOD.md      # Universal router
-decapod docs show core/INTERFACES.md   # Binding contracts index
-decapod docs search <query>            # Search constitution
-```
-
-For agent-specific instructions, see:
-- `CLAUDE.md` — Claude-specific operating mode
-- `CODEX.md` — Codex-specific operating mode
-- `GEMINI.md` — Gemini-specific operating mode
+- Use `decapod docs show core/DECAPOD.md` and `decapod docs show core/INTERFACES.md` for binding contracts.
+- Use `decapod docs search --query \"<problem>\" --op <op> --path <path> --tag <tag>` or `decapod rpc --op context.scope --params '{\"query\":\"...\"}'` for scoped just-in-time constitution context.
+- Use `decapod todo handoff --id <id> --to <agent>` for cross-agent ownership transfer.
+- Treat lock/contention failures (including `VALIDATE_TIMEOUT_OR_LOCK`) as blocking until resolved.

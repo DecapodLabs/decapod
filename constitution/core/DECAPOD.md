@@ -22,10 +22,11 @@ The human interfaces ONLY with the agent as the UX. The agent calls Decapod.
 3. **Completion MUST be provable.** Promotion-relevant outcomes require executable proof surfaces (`decapod validate` + required tests/gates), not narrative claims.
 4. **Decapod MUST remain daemonless and repo-native.** Promotion-relevant state must be auditable from repo artifacts and control-plane receipts.
 5. **Validation liveness is mandatory.** Validation must terminate boundedly with typed failure under contention, never hang indefinitely.
+6. **Operational agent guidance MUST live in entrypoint and constitution surfaces, not README.** README is human-facing product documentation.
 
 ## For Agents: Quick Start
 
-**You MUST call `decapod agent init` before operating.**
+**You MUST call `decapod rpc --op agent.init` before operating.**
 
 This produces a session receipt and tells you what's allowed next.
 

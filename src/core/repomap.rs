@@ -3,13 +3,6 @@
 //! This module scans a project directory and generates a structured map
 //! of manifests, entry points, build hints, and documentation topology.
 //! The map helps agents quickly understand project structure without reading every file.
-//!
-//! # For AI Agents
-//!
-//! - **Use repomap for orientation**: Understand build system and entry points
-//! - **Deterministic output**: Multiple runs on same repo produce identical maps
-//! - **Doc graph shows constitution topology**: Follow links to understand methodology
-//! - **Skill hints suggest toolchain**: E.g., "rust" → use `cargo`, "node" → use `npm`
 
 use regex::Regex;
 use serde::{Deserialize, Serialize};

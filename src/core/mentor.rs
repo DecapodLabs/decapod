@@ -12,12 +12,6 @@
 //! - Immutable sources: Never modifies existing docs/KG
 //! - Compact views: Max 5 items per obligations list
 //! - Optional LLM: Only for ranking/phrasing, never adding obligations
-//!
-//! # For AI Agents
-//!
-//! Call `mentor.obligations` to get contextually relevant obligations before acting.
-//! The engine will point you to prior decisions, specs, and commitments that may
-//! affect your current work.
 
 use crate::core::error::DecapodError;
 use crate::core::rpc::{Blocker, BlockerKind};
