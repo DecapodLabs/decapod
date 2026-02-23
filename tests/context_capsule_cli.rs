@@ -3,15 +3,16 @@ use std::path::Path;
 use std::process::Command;
 use tempfile::TempDir;
 
-fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .current_dir(dir)
-        .args(args)
-        .output()
-        .expect("run decapod")
+fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    cmd.current_dir(dir).args(args);
+    for (k, v) in envs {
+        cmd.env(k, v);
+    }
+    cmd.output().expect("run decapod")
 }
 
-fn setup_repo() -> (TempDir, std::path::PathBuf) {
+fn setup_repo() -> (TempDir, std::path::PathBuf, String) {
     let tmp = TempDir::new().expect("tmpdir");
     let dir = tmp.path().to_path_buf();
 
@@ -22,19 +23,37 @@ fn setup_repo() -> (TempDir, std::path::PathBuf) {
         .expect("git init");
     assert!(init.status.success(), "git init failed");
 
-    let decapod_init = run_decapod(&dir, &["init", "--force"]);
+    let decapod_init = run_decapod(&dir, &["init", "--force"], &[]);
     assert!(
         decapod_init.status.success(),
         "decapod init failed: {}",
         String::from_utf8_lossy(&decapod_init.stderr)
     );
 
-    (tmp, dir)
+    let acquire = run_decapod(
+        &dir,
+        &["session", "acquire"],
+        &[("DECAPOD_AGENT_ID", "unknown")],
+    );
+    assert!(
+        acquire.status.success(),
+        "session acquire failed: {}",
+        String::from_utf8_lossy(&acquire.stderr)
+    );
+    let password = String::from_utf8_lossy(&acquire.stdout)
+        .lines()
+        .find_map(|line| {
+            line.strip_prefix("Password: ")
+                .map(|s| s.trim().to_string())
+        })
+        .expect("password in session acquire output");
+
+    (tmp, dir, password)
 }
 
 #[test]
 fn context_capsule_query_is_deterministic() {
-    let (_tmp, dir) = setup_repo();
+    let (_tmp, dir, password) = setup_repo();
 
     let first = run_decapod(
         &dir,
@@ -50,6 +69,11 @@ fn context_capsule_query_is_deterministic() {
             "R_42",
             "--limit",
             "5",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
         ],
     );
     assert!(
@@ -72,6 +96,11 @@ fn context_capsule_query_is_deterministic() {
             "R_42",
             "--limit",
             "5",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
         ],
     );
     assert!(
@@ -111,7 +140,7 @@ fn context_capsule_query_is_deterministic() {
 
 #[test]
 fn context_capsule_query_rejects_invalid_scope() {
-    let (_tmp, dir) = setup_repo();
+    let (_tmp, dir, password) = setup_repo();
 
     let out = run_decapod(
         &dir,
@@ -123,6 +152,11 @@ fn context_capsule_query_rejects_invalid_scope() {
             "foo",
             "--scope",
             "methodology",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
         ],
     );
 
@@ -137,7 +171,7 @@ fn context_capsule_query_rejects_invalid_scope() {
 
 #[test]
 fn context_capsule_query_write_persists_deterministic_artifact_path() {
-    let (_tmp, dir) = setup_repo();
+    let (_tmp, dir, password) = setup_repo();
 
     let run = |task_id: &str| {
         run_decapod(
@@ -153,6 +187,11 @@ fn context_capsule_query_write_persists_deterministic_artifact_path() {
                 "--task-id",
                 task_id,
                 "--write",
+            ],
+            &[
+                ("DECAPOD_AGENT_ID", "unknown"),
+                ("DECAPOD_SESSION_PASSWORD", &password),
+                ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
             ],
         )
     };
