@@ -15,7 +15,9 @@ use crate::core::store::Store;
 use regex::Regex;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::fs;
 use std::path::{Path, PathBuf};
 
 pub const TEAMMATE_DB_NAME: &str = "teammate.db";
@@ -249,6 +251,40 @@ pub struct SkillInput {
     pub description: Option<String>,
     pub workflow: String,
     pub context: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SkillCard {
+    pub schema_version: String,
+    pub kind: String,
+    pub skill_name: String,
+    pub description: Option<String>,
+    pub source_path: String,
+    pub source_sha256: String,
+    pub dependencies: Vec<String>,
+    pub workflow_outline: Vec<String>,
+    pub tags: Vec<String>,
+    pub generated_at: String,
+    pub card_hash: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ResolvedSkill {
+    pub name: String,
+    pub score: i64,
+    pub reason: String,
+    pub workflow_preview: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SkillResolution {
+    pub schema_version: String,
+    pub kind: String,
+    pub query: String,
+    pub limit: usize,
+    pub resolved: Vec<ResolvedSkill>,
+    pub generated_at: String,
+    pub resolution_hash: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -713,6 +749,285 @@ pub fn delete_skill(store: &Store, name: &str) -> Result<bool, error::DecapodErr
     Ok(deleted)
 }
 
+fn sha256_hex(bytes: &[u8]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    format!("{:x}", hasher.finalize())
+}
+
+fn repo_root_from_store(store: &Store) -> Result<PathBuf, error::DecapodError> {
+    store
+        .root
+        .parent()
+        .and_then(|p| p.parent())
+        .map(Path::to_path_buf)
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "unable to resolve repo root from store root".to_string(),
+            )
+        })
+}
+
+fn skills_governance_dir(repo_root: &Path) -> PathBuf {
+    repo_root.join(".decapod").join("governance").join("skills")
+}
+
+fn skills_generated_dir(repo_root: &Path) -> PathBuf {
+    repo_root.join(".decapod").join("generated").join("skills")
+}
+
+fn parse_skill_md_frontmatter(raw: &str) -> Result<(String, Option<String>), error::DecapodError> {
+    let mut lines = raw.lines();
+    if lines.next().map(str::trim) != Some("---") {
+        return Err(error::DecapodError::ValidationError(
+            "SKILL.md missing YAML frontmatter start '---'".to_string(),
+        ));
+    }
+    let mut name: Option<String> = None;
+    let mut description: Option<String> = None;
+    for line in lines.by_ref() {
+        let trimmed = line.trim();
+        if trimmed == "---" {
+            break;
+        }
+        if let Some(v) = trimmed.strip_prefix("name:") {
+            name = Some(v.trim().to_string());
+        } else if let Some(v) = trimmed.strip_prefix("description:") {
+            description = Some(v.trim().to_string());
+        }
+    }
+    let name = name.ok_or_else(|| {
+        error::DecapodError::ValidationError("SKILL.md frontmatter missing 'name'".to_string())
+    })?;
+    Ok((name, description))
+}
+
+fn extract_dependencies(raw: &str) -> Vec<String> {
+    let mut deps = Vec::new();
+    let mut in_dependencies = false;
+    for line in raw.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("# Dependencies") || trimmed.starts_with("## Dependencies") {
+            in_dependencies = true;
+            continue;
+        }
+        if in_dependencies && trimmed.starts_with('#') {
+            break;
+        }
+        if in_dependencies {
+            if let Some(dep) = trimmed.strip_prefix("- ") {
+                let dep = dep.trim();
+                if !dep.is_empty() {
+                    deps.push(dep.to_string());
+                }
+            }
+        }
+    }
+    deps.sort();
+    deps.dedup();
+    deps
+}
+
+fn extract_workflow_outline(raw: &str) -> Vec<String> {
+    let mut outline: Vec<String> = raw
+        .lines()
+        .filter_map(|line| {
+            let trimmed = line.trim();
+            if trimmed.starts_with("## ") {
+                Some(trimmed.trim_start_matches("## ").to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
+    if outline.len() > 12 {
+        outline.truncate(12);
+    }
+    outline
+}
+
+fn skill_tags_from_name(name: &str) -> Vec<String> {
+    let mut tags: Vec<String> = name
+        .split(['-', '_'])
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_ascii_lowercase())
+        .collect();
+    tags.sort();
+    tags.dedup();
+    tags
+}
+
+fn sanitize_skill_name(name: &str) -> String {
+    let mut out = String::new();
+    for ch in name.chars() {
+        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
+            out.push(ch.to_ascii_lowercase());
+        } else {
+            out.push('-');
+        }
+    }
+    while out.contains("--") {
+        out = out.replace("--", "-");
+    }
+    out.trim_matches('-').to_string()
+}
+
+impl SkillCard {
+    fn with_recomputed_hash(mut self) -> Result<Self, error::DecapodError> {
+        let generated_at = self.generated_at.clone();
+        self.card_hash.clear();
+        self.generated_at.clear();
+        let canonical = serde_json::to_vec(&self)
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+        self.card_hash = sha256_hex(&canonical);
+        self.generated_at = generated_at;
+        Ok(self)
+    }
+}
+
+impl SkillResolution {
+    fn with_recomputed_hash(mut self) -> Result<Self, error::DecapodError> {
+        let generated_at = self.generated_at.clone();
+        self.resolution_hash.clear();
+        self.generated_at.clear();
+        let canonical = serde_json::to_vec(&self)
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+        self.resolution_hash = sha256_hex(&canonical);
+        self.generated_at = generated_at;
+        Ok(self)
+    }
+}
+
+pub fn import_skill_md(
+    store: &Store,
+    skill_md_path: &Path,
+    write_card: bool,
+) -> Result<(Skill, Option<PathBuf>, Option<SkillCard>), error::DecapodError> {
+    let raw = fs::read_to_string(skill_md_path).map_err(error::DecapodError::IoError)?;
+    let source_sha256 = sha256_hex(raw.as_bytes());
+    let (name, description) = parse_skill_md_frontmatter(&raw)?;
+    let workflow_outline = extract_workflow_outline(&raw);
+    let dependencies = extract_dependencies(&raw);
+    let workflow = if workflow_outline.is_empty() {
+        "No explicit workflow outline found in SKILL.md".to_string()
+    } else {
+        workflow_outline.join(" -> ")
+    };
+    let input = SkillInput {
+        name: name.clone(),
+        description: description.clone(),
+        workflow,
+        context: Some(format!("imported_from:{}", skill_md_path.display())),
+    };
+    add_skill(store, input)?;
+    let skill = get_skill(store, &name)?.ok_or_else(|| {
+        error::DecapodError::ValidationError("skill import did not persist".to_string())
+    })?;
+
+    if !write_card {
+        return Ok((skill, None, None));
+    }
+    let repo_root = repo_root_from_store(store)?;
+    let rel_source = skill_md_path
+        .strip_prefix(&repo_root)
+        .unwrap_or(skill_md_path)
+        .display()
+        .to_string();
+    let card = SkillCard {
+        schema_version: "1.0.0".to_string(),
+        kind: "skill_card".to_string(),
+        skill_name: name.clone(),
+        description,
+        source_path: rel_source,
+        source_sha256,
+        dependencies,
+        workflow_outline,
+        tags: skill_tags_from_name(&name),
+        generated_at: now_iso(),
+        card_hash: String::new(),
+    }
+    .with_recomputed_hash()?;
+
+    let out_dir = skills_governance_dir(&repo_root);
+    fs::create_dir_all(&out_dir).map_err(error::DecapodError::IoError)?;
+    let out_path = out_dir.join(format!("{}.json", sanitize_skill_name(&name)));
+    let payload = serde_json::to_string_pretty(&card)
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    fs::write(&out_path, payload).map_err(error::DecapodError::IoError)?;
+    Ok((skill, Some(out_path), Some(card)))
+}
+
+pub fn resolve_skills(
+    store: &Store,
+    query: &str,
+    limit: usize,
+    write: bool,
+) -> Result<(SkillResolution, Option<PathBuf>), error::DecapodError> {
+    let mut matches: Vec<ResolvedSkill> = list_skills(store)?
+        .into_iter()
+        .map(|skill| {
+            let q = query.to_ascii_lowercase();
+            let mut score = 0i64;
+            let mut reasons = Vec::new();
+            if skill.name.to_ascii_lowercase().contains(&q) {
+                score += 5;
+                reasons.push("name_match");
+            }
+            if skill
+                .description
+                .as_deref()
+                .unwrap_or("")
+                .to_ascii_lowercase()
+                .contains(&q)
+            {
+                score += 3;
+                reasons.push("description_match");
+            }
+            if skill.workflow.to_ascii_lowercase().contains(&q) {
+                score += 2;
+                reasons.push("workflow_match");
+            }
+            score += skill.usage_count.min(10);
+            ResolvedSkill {
+                name: skill.name,
+                score,
+                reason: if reasons.is_empty() {
+                    "usage_bias".to_string()
+                } else {
+                    reasons.join("+")
+                },
+                workflow_preview: skill.workflow.chars().take(120).collect(),
+            }
+        })
+        .collect();
+    matches.sort_by(|a, b| b.score.cmp(&a.score).then_with(|| a.name.cmp(&b.name)));
+    let max = limit.max(1);
+    matches.truncate(max);
+    let resolution = SkillResolution {
+        schema_version: "1.0.0".to_string(),
+        kind: "skill_resolution".to_string(),
+        query: query.to_string(),
+        limit: max,
+        resolved: matches,
+        generated_at: now_iso(),
+        resolution_hash: String::new(),
+    }
+    .with_recomputed_hash()?;
+
+    if !write {
+        return Ok((resolution, None));
+    }
+    let repo_root = repo_root_from_store(store)?;
+    let out_dir = skills_generated_dir(&repo_root);
+    fs::create_dir_all(&out_dir).map_err(error::DecapodError::IoError)?;
+    let query_hash = sha256_hex(query.as_bytes());
+    let out_path = out_dir.join(format!("{}.json", &query_hash[..16]));
+    let payload = serde_json::to_string_pretty(&resolution)
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    fs::write(&out_path, payload).map_err(error::DecapodError::IoError)?;
+    Ok((resolution, Some(out_path)))
+}
+
 // ============================================================================
 // PATTERN MANAGEMENT
 // ============================================================================
@@ -1160,6 +1475,8 @@ pub fn schema() -> serde_json::Value {
             { "name": "skill get", "description": "Get a skill by name", "parameters": ["name"] },
             { "name": "skill list", "description": "List all skills", "parameters": [] },
             { "name": "skill delete", "description": "Delete a skill", "parameters": ["name"] },
+            { "name": "skill import", "description": "Import SKILL.md into teammate skill memory and optional deterministic skill card", "parameters": ["path", "write-card?"] },
+            { "name": "skill resolve", "description": "Resolve best-matching skills for a query with deterministic ranking", "parameters": ["query", "limit?", "write?"] },
             { "name": "observe", "description": "Record an observation for pattern matching", "parameters": ["content", "category?"] },
             { "name": "pending", "description": "List pending observations", "parameters": ["limit?"] },
             { "name": "consolidate", "description": "Analyze and consolidate similar entries", "parameters": ["--dry-run", "--execute"] },
@@ -1320,6 +1637,27 @@ pub enum SkillCommand {
         #[clap(long)]
         name: String,
     },
+    /// Import a SKILL.md file into teammate skills and optional governed skill card
+    Import {
+        /// Path to SKILL.md
+        #[clap(long)]
+        path: PathBuf,
+        /// Persist deterministic skill card under .decapod/governance/skills
+        #[clap(long, default_value_t = true)]
+        write_card: bool,
+    },
+    /// Resolve best-matching skills for a query
+    Resolve {
+        /// Query string (task/topic)
+        #[clap(long)]
+        query: String,
+        /// Max number of skills to return
+        #[clap(long, default_value_t = 5)]
+        limit: usize,
+        /// Persist deterministic resolution artifact under .decapod/generated/skills
+        #[clap(long)]
+        write: bool,
+    },
 }
 
 pub fn run_teammate_cli(store: &Store, cli: TeammateCli) -> Result<(), error::DecapodError> {
@@ -1453,6 +1791,35 @@ pub fn run_teammate_cli(store: &Store, cli: TeammateCli) -> Result<(), error::De
                 } else {
                     println!("✗ Skill {} not found", name);
                 }
+            }
+            SkillCommand::Import { path, write_card } => {
+                let (skill, card_path, card) = import_skill_md(store, &path, write_card)?;
+                let mut out = serde_json::json!({
+                    "skill": skill,
+                    "write_card": write_card,
+                });
+                if let Some(p) = card_path {
+                    out["card_path"] = serde_json::Value::String(p.display().to_string());
+                }
+                if let Some(c) = card {
+                    out["card"] = serde_json::to_value(c).unwrap_or(serde_json::Value::Null);
+                }
+                println!("{}", serde_json::to_string_pretty(&out).unwrap());
+            }
+            SkillCommand::Resolve {
+                query,
+                limit,
+                write,
+            } => {
+                let (resolution, path) = resolve_skills(store, &query, limit, write)?;
+                let mut out = serde_json::json!({
+                    "resolution": resolution,
+                    "write": write,
+                });
+                if let Some(p) = path {
+                    out["path"] = serde_json::Value::String(p.display().to_string());
+                }
+                println!("{}", serde_json::to_string_pretty(&out).unwrap());
             }
         },
         TeammateCommand::Observe { content, category } => {
