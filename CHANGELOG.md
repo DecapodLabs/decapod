@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Other
+
+- enforce canonical local `specs/*.md` set and wire it into scaffold/validate/context.resolve
+
+### Other
+
+- schema/interface: add `interfaces/PROJECT_SPECS.md` contract and hardcoded local project spec registry mapping to constitution dependencies
+
 ## [0.39.0](https://github.com/DecapodLabs/decapod/compare/v0.38.13...v0.39.0) - 2026-02-23
 
 ### Other

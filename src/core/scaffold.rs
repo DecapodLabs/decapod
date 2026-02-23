@@ -7,6 +7,7 @@
 
 use crate::core::assets;
 use crate::core::error;
+use crate::core::project_specs::LOCAL_PROJECT_SPECS;
 use crate::plugins::container;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -69,10 +70,12 @@ fn specs_readme_template() -> String {
 
 This directory is the human+agent engineering contract for this repository.
 
-- `intent.md` captures what is being built, constraints, and done criteria.
+- `intent.md` captures why this repository exists and what outcome it must achieve.
 - `architecture.md` captures implementation topology, interfaces, and operational gates.
+- `interfaces.md` captures inbound/outbound service contracts and failure behavior.
+- `validation.md` captures proof surfaces, gate criteria, and required evidence artifacts.
 
-Keep both documents current as requirements and architecture evolve.
+Keep these documents current as requirements and implementation evolve.
 "#
     .to_string()
 }
@@ -203,6 +206,58 @@ flowchart LR
   Mitigation:
 "#
     )
+}
+
+fn specs_interfaces_template() -> String {
+    r#"# Interfaces
+
+## Inbound Contracts
+- API / RPC entrypoints:
+- CLI surfaces:
+- Event/webhook consumers:
+
+## Outbound Dependencies
+- Datastores:
+- External APIs/services:
+- Queues/brokers:
+
+## Data Ownership
+- Source-of-truth tables/collections:
+- Cross-boundary read models:
+- Consistency expectations:
+
+## Failure Semantics
+- Retry/backoff policy:
+- Timeout/circuit behavior:
+- Degradation behavior:
+"#
+    .to_string()
+}
+
+fn specs_validation_template() -> String {
+    r#"# Validation
+
+## Proof Surfaces
+- `decapod validate`
+- Required test commands:
+- Required integration/e2e commands:
+
+## Promotion Gates
+- Blocking gates:
+- Warning-only gates:
+- Kill switches:
+
+## Evidence Artifacts
+- Manifest paths:
+- Required hashes/checksums:
+- Trace/log attachments:
+
+## Regression Guardrails
+- Baseline references:
+- Statistical thresholds (if non-deterministic):
+- Rollback criteria:
+"#
+    .to_string()
 }
 
 /// Canonical .gitignore rules managed by `decapod init`.
@@ -387,14 +442,18 @@ pub fn scaffold_project_entrypoints(
         let mut preserved = 0usize;
 
         let seed = opts.specs_seed.as_ref();
-        let specs_files = vec![
-            ("specs/README.md", specs_readme_template()),
-            ("specs/intent.md", specs_intent_template(seed)),
-            (
-                "specs/architecture.md",
-                specs_architecture_template(opts.diagram_style, seed),
-            ),
-        ];
+        let mut specs_files: Vec<(&str, String)> = Vec::new();
+        for spec in LOCAL_PROJECT_SPECS {
+            let content = match spec.path {
+                "specs/README.md" => specs_readme_template(),
+                "specs/intent.md" => specs_intent_template(seed),
+                "specs/architecture.md" => specs_architecture_template(opts.diagram_style, seed),
+                "specs/interfaces.md" => specs_interfaces_template(),
+                "specs/validation.md" => specs_validation_template(),
+                _ => continue,
+            };
+            specs_files.push((spec.path, content));
+        }
 
         for (rel_path, content) in specs_files {
             match write_file(opts, rel_path, &content)? {
