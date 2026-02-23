@@ -74,8 +74,8 @@ AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
 - ✅ Work Unit manifests make `intent/spec/state/proof` explicit and durable.
 - ✅ VERIFIED is structural, not rhetorical: proof-plan results must pass before completion.
 - ✅ Promotion is gated at validate-time and publish-time, so regressions do not silently ship.
+- ✅ Variance-aware eval kernel (`eval plan/ingest-run/judge/aggregate/gate`) adds repeatable settings, judge contracts, and statistical regression gates.
 - ✅ Deterministic context capsules (`core|interfaces|plugins`) return scoped, hashable guidance.
-- ✅ Optional persisted capsules under `.decapod/generated/context/*.json` for reproducible context handoff.
 - ✅ Knowledge promotion firewall ledger (`.decapod/data/knowledge.promotions.jsonl`) controls what can become procedural truth.
 - ✅ Procedural knowledge writes require event-backed provenance, blocking unproven memory drift.
 - ✅ Local-first `.decapod/` state keeps shared traces, decisions, and proofs durable and auditable.
