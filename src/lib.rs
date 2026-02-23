@@ -30,6 +30,7 @@ use std::io::Read;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
+use std::thread;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Parser, Debug)]
@@ -1192,7 +1193,17 @@ pub fn run() -> Result<(), error::DecapodError> {
             };
 
             if should_auto_clock_in(&cli.command) {
-                todo::clock_in_agent_presence(&project_store)?;
+                if let Err(e) =
+                    retry_transient_sqlite(|| todo::clock_in_agent_presence(&project_store), 4)
+                {
+                    if is_transient_sqlite_contention_error(&e) {
+                        eprintln!(
+                            "warn: presence clock-in skipped due transient sqlite contention: {e}"
+                        );
+                    } else {
+                        return Err(e);
+                    }
+                }
             }
 
             match cli.command {
@@ -2879,6 +2890,55 @@ fn normalize_validate_error(err: error::DecapodError) -> error::DecapodError {
             error::DecapodError::ValidationError(message)
         }
         other => other,
+    }
+}
+
+fn retry_transient_sqlite<T, F>(mut op: F, max_attempts: u32) -> Result<T, error::DecapodError>
+where
+    F: FnMut() -> Result<T, error::DecapodError>,
+{
+    let mut attempt = 0u32;
+    loop {
+        match op() {
+            Ok(v) => return Ok(v),
+            Err(e) if is_transient_sqlite_contention_error(&e) && attempt + 1 < max_attempts => {
+                let delay_ms = (50u64 * 2u64.pow(attempt)).min(800);
+                attempt += 1;
+                thread::sleep(std::time::Duration::from_millis(delay_ms));
+            }
+            Err(e) => return Err(e),
+        }
+    }
+}
+
+fn is_transient_sqlite_contention_error(err: &error::DecapodError) -> bool {
+    match err {
+        error::DecapodError::RusqliteError(rusqlite::Error::SqliteFailure(code, msg)) => {
+            if matches!(
+                code.code,
+                rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked
+            ) || code.extended_code == 522
+            {
+                return true;
+            }
+            let lower = msg.as_deref().unwrap_or_default().to_ascii_lowercase();
+            lower.contains("locked") || lower.contains("disk i/o error")
+        }
+        error::DecapodError::ValidationError(message) => {
+            let lower = message.to_ascii_lowercase();
+            lower.contains("database is locked")
+                || lower.contains("databasebusy")
+                || lower.contains("sqlite contention")
+                || lower.contains("disk i/o error")
+                || lower.contains("extended_code: 522")
+        }
+        other => {
+            let lower = other.to_string().to_ascii_lowercase();
+            lower.contains("database is locked")
+                || lower.contains("databasebusy")
+                || lower.contains("disk i/o error")
+                || lower.contains("extended_code: 522")
+        }
     }
 }
 
