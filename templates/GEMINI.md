@@ -1,4 +1,4 @@
-# AGENT.md - Agent Entrypoint
+# GEMINI.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
 See `AGENTS.md` for the universal contract.
