@@ -9,7 +9,7 @@ use crate::core::error;
 use crate::core::output;
 use crate::core::plan_governance;
 use crate::core::store::{Store, StoreKind};
-use crate::core::workunit::WorkUnitManifest;
+use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::{db, primitives, todo};
 use regex::Regex;
 use serde_json;
@@ -1079,6 +1079,15 @@ fn validate_workunit_manifests_if_present(
                 e
             ))
         })?;
+        if parsed.status == WorkUnitStatus::Verified {
+            workunit::validate_verified_manifest(&parsed).map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "invalid VERIFIED workunit manifest {}: {}",
+                    path.display(),
+                    e
+                ))
+            })?;
+        }
     }
 
     pass(
