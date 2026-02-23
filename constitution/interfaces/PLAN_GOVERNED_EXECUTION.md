@@ -17,6 +17,7 @@ This interface standardizes the first kernel slice with deterministic pushback.
 ## 2. Governed Artifacts
 
 - `PLAN`: store: `<repo>/.decapod/governance/plan.json`
+- `WORK_UNIT`: store: `<repo>/.decapod/governance/workunits/<task_id>.json`
 - `TODO`: existing task ledger (`todo.db`) with proof metadata (`task_verification`)
 
 `PLAN.state` values are:
@@ -26,6 +27,29 @@ This interface standardizes the first kernel slice with deterministic pushback.
 - `APPROVED`
 - `EXECUTING`
 - `DONE`
+
+`WORK_UNIT` required fields are:
+
+- `task_id` (string)
+- `intent_ref` (string)
+- `spec_refs` (array of strings)
+- `state_refs` (array of strings)
+- `proof_plan` (array of strings)
+- `proof_results` (array of proof result records)
+- `status` (`DRAFT` | `EXECUTING` | `CLAIMED` | `VERIFIED`)
+
+`WORK_UNIT.status` allowed transitions are:
+
+- `DRAFT -> EXECUTING`
+- `EXECUTING -> CLAIMED`
+- `CLAIMED -> VERIFIED`
+- `EXECUTING -> DRAFT` (explicit rollback before claim)
+
+`VERIFIED` contract meaning:
+
+- Every proof in `proof_plan` has a corresponding `proof_results` record.
+- Every required proof result is `pass`.
+- Promotion-relevant commands (`validate`, `workspace publish`) treat non-`VERIFIED` work units as blocking.
 
 ## 3. Mandatory Pushback Markers
 

@@ -41,6 +41,31 @@ Required order:
 
 ---
 
+## 2.1 Deterministic Context Capsule Query
+
+`(Truth: SPEC)` Context retrieval for active execution MUST support deterministic capsule queries (claim: `claim.context.capsule.deterministic`).
+
+Required query inputs:
+- `topic` (required)
+- `scope` (`core` | `interfaces` | `plugins`, required)
+- `task_id` or `workunit_id` (optional, for execution scoping)
+
+Required capsule output shape:
+- `topic`
+- `scope`
+- `sources` (ordered list of canonical source refs)
+- `snippets` (ordered extracted slices or summaries)
+- `capsule_hash` (hash of canonical serialized capsule bytes)
+
+Determinism rule:
+- Same `(topic, scope, task_id/workunit_id, embedded-doc set)` input MUST produce byte-identical capsule JSON and identical `capsule_hash`.
+
+Boundaries:
+- Capsule sources MUST resolve from canonical embedded constitution surfaces.
+- Capsule queries MUST NOT infer hidden runtime state outside repo-scoped artifacts and embedded docs.
+
+---
+
 ## 3. Mutation Authority
 
 `(Truth: SPEC)` High-authority files require human-owned updates or explicit approval workflow (claim: `claim.context_pack.mutation_authority_rules`).
