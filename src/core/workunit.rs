@@ -190,3 +190,90 @@ pub fn set_proof_plan(
     write_workunit(project_root, &manifest)?;
     load_workunit(project_root, task_id)
 }
+
+pub fn record_proof_result(
+    project_root: &Path,
+    task_id: &str,
+    gate: &str,
+    status: &str,
+    artifact_ref: Option<String>,
+) -> Result<WorkUnitManifest, error::DecapodError> {
+    if !matches!(status, "pass" | "fail") {
+        return Err(error::DecapodError::ValidationError(format!(
+            "invalid proof status '{}': expected pass|fail",
+            status
+        )));
+    }
+
+    let mut manifest = load_workunit(project_root, task_id)?;
+    manifest.proof_results.retain(|r| r.gate != gate);
+    manifest.proof_results.push(WorkUnitProofResult {
+        gate: gate.to_string(),
+        status: status.to_string(),
+        artifact_ref,
+    });
+    write_workunit(project_root, &manifest)?;
+    load_workunit(project_root, task_id)
+}
+
+pub fn transition_status(
+    project_root: &Path,
+    task_id: &str,
+    to: WorkUnitStatus,
+) -> Result<WorkUnitManifest, error::DecapodError> {
+    let mut manifest = load_workunit(project_root, task_id)?;
+    let from = manifest.status.clone();
+    if !can_transition(&from, &to) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "invalid workunit transition: {:?} -> {:?}",
+            from, to
+        )));
+    }
+
+    if to == WorkUnitStatus::Verified {
+        ensure_verified_ready(&manifest)?;
+    }
+
+    manifest.status = to;
+    write_workunit(project_root, &manifest)?;
+    load_workunit(project_root, task_id)
+}
+
+fn can_transition(from: &WorkUnitStatus, to: &WorkUnitStatus) -> bool {
+    use WorkUnitStatus::*;
+    matches!(
+        (from, to),
+        (Draft, Executing)
+            | (Executing, Claimed)
+            | (Claimed, Verified)
+            | (Executing, Draft)
+            | (Draft, Draft)
+            | (Executing, Executing)
+            | (Claimed, Claimed)
+            | (Verified, Verified)
+    )
+}
+
+fn ensure_verified_ready(manifest: &WorkUnitManifest) -> Result<(), error::DecapodError> {
+    if manifest.proof_plan.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "cannot transition to VERIFIED without proof_plan gates".to_string(),
+        ));
+    }
+
+    for gate in &manifest.proof_plan {
+        let hit = manifest
+            .proof_results
+            .iter()
+            .find(|r| &r.gate == gate && r.status == "pass")
+            .is_some();
+        if !hit {
+            return Err(error::DecapodError::ValidationError(format!(
+                "cannot transition to VERIFIED: missing passing proof result for gate '{}'",
+                gate
+            )));
+        }
+    }
+
+    Ok(())
+}
