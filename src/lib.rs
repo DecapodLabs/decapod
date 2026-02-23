@@ -457,7 +457,7 @@ enum DataCommand {
     Broker(BrokerCli),
 
     /// Aptitude memory and preferences
-    #[clap(aliases = ["memory", "teammate"])]
+    #[clap(aliases = ["memory"])]
     Aptitude(aptitude::AptitudeCli),
 
     /// Governed agent memory — typed knowledge graph
