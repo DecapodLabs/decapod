@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.4](https://github.com/DecapodLabs/decapod/compare/v0.38.3...v0.38.4) - 2026-02-23
+
+### Other
+
+- enforce workunit verified gate before publish
+- *(workunit)* enforce proof recording and status transitions
+- *(workunit)* add attach-spec/state and proof-plan primitives
+
 ## [0.38.3](https://github.com/DecapodLabs/decapod/compare/v0.38.2...v0.38.3) - 2026-02-23
 
 ### Other
