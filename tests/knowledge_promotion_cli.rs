@@ -99,8 +99,7 @@ fn knowledge_promote_writes_append_only_ledger_event() {
     let lines = fs::read_to_string(&ledger_path).expect("read ledger");
     let last = lines
         .lines()
-        .filter(|l| !l.trim().is_empty())
-        .next_back()
+        .rfind(|l| !l.trim().is_empty())
         .expect("ledger last line");
     let event: Value = serde_json::from_str(last).expect("valid jsonl line");
     assert_eq!(event["source_entry_id"], "K_001");
