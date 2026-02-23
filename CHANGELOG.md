@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.12](https://github.com/DecapodLabs/decapod/compare/v0.38.11...v0.38.12) - 2026-02-23
+
+### Other
+
+- Refresh README hash in artifact manifest after feature-line split
+- Refine feature descriptions in README
+- Resolve CHANGELOG merge conflict with master release entries
+- Add eval kernel to README feature checklist
+- Add eval governance kernel and tighten decapod artifact allowlists
+
 ### Other
 
 - schema/interface: add eval governance kernel interfaces, claims, and deterministic proof tests
