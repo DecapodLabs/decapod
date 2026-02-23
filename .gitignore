@@ -45,6 +45,8 @@ dev/
 !.decapod/generated/Dockerfile
 !.decapod/generated/context/
 !.decapod/generated/context/*.json
+!.decapod/generated/specs/
+!.decapod/generated/specs/*.md
 
 # --- Environment & Secrets ---
 .env
