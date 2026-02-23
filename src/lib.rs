@@ -17,8 +17,8 @@ use core::{
     todo, trace, validate, workspace,
 };
 use plugins::{
-    archive, container, context, cron, decide, doctor, federation, feedback, health, knowledge,
-    lcm, map_ops, policy, primitives, reflex, teammate, verify, watcher, workflow,
+    archive, container, context, cron, decide, doctor, eval, federation, feedback, health,
+    knowledge, lcm, map_ops, policy, primitives, reflex, teammate, verify, watcher, workflow,
 };
 
 use clap::{CommandFactory, Parser, Subcommand};
@@ -635,6 +635,10 @@ enum Command {
     #[clap(name = "trace")]
     Trace(TraceCli),
 
+    /// Variance-aware evaluation artifacts and promotion gates
+    #[clap(name = "eval")]
+    Eval(eval::EvalCli),
+
     /// Governance Flight Recorder - render timeline from event logs
     #[clap(name = "flight-recorder")]
     FlightRecorder(flight_recorder::FlightRecorderCli),
@@ -1248,6 +1252,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Trace(trace_cli) => {
                     run_trace_command(trace_cli, &project_root)?;
                 }
+                Command::Eval(eval_cli) => {
+                    eval::run_eval_cli(&project_store, eval_cli)?;
+                }
                 Command::FlightRecorder(fr_cli) => {
                     flight_recorder::run_flight_recorder_cli(&project_store, fr_cli)?;
                 }
@@ -1298,6 +1305,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Handshake(_)
         | Command::Release(_)
         | Command::Todo(_)
+        | Command::Eval(_)
         | Command::StateCommit(_)
         | Command::Doctor(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
@@ -3766,6 +3774,7 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("deprecations", deprecation_metadata());
     schemas.insert("lcm", lcm::schema());
     schemas.insert("map", map_ops::schema());
+    schemas.insert("eval", eval::schema());
     schemas.insert(
         "command_registry",
         serde_json::json!({

@@ -33,6 +33,8 @@ dev/
 # Keep runtime state ignored by default, then allowlist deterministic artifacts.
 .decapod/data
 .decapod/data/*
+!.decapod/data/
+!.decapod/data/knowledge.promotions.jsonl
 .decapod/.stfolder
 .decapod/workspaces
 # Generated runtime outputs are non-canonical; allowlist only governed artifacts.
