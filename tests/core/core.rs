@@ -487,6 +487,15 @@ fn scaffold_store_and_docs_cli_behaviors() {
     scaffold_project_entrypoints(&live_opts).expect("live scaffold");
     assert!(live_target.join("AGENTS.md").exists());
     assert!(live_target.join(".decapod/OVERRIDE.md").exists());
+    let gitignore = fs::read_to_string(live_target.join(".gitignore")).expect("read .gitignore");
+    assert!(
+        gitignore.contains(".decapod/generated/"),
+        "decapod init must enforce generated root ignore in .gitignore"
+    );
+    assert!(
+        gitignore.contains("!.decapod/generated/Dockerfile"),
+        "decapod init must allowlist generated Dockerfile in .gitignore"
+    );
     let generated_dockerfile = live_target.join(".decapod/generated/Dockerfile");
     assert!(
         generated_dockerfile.exists(),
