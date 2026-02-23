@@ -157,3 +157,36 @@ pub fn write_workunit(
     fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
     Ok(path)
 }
+
+pub fn add_spec_ref(
+    project_root: &Path,
+    task_id: &str,
+    spec_ref: &str,
+) -> Result<WorkUnitManifest, error::DecapodError> {
+    let mut manifest = load_workunit(project_root, task_id)?;
+    manifest.spec_refs.push(spec_ref.to_string());
+    write_workunit(project_root, &manifest)?;
+    load_workunit(project_root, task_id)
+}
+
+pub fn add_state_ref(
+    project_root: &Path,
+    task_id: &str,
+    state_ref: &str,
+) -> Result<WorkUnitManifest, error::DecapodError> {
+    let mut manifest = load_workunit(project_root, task_id)?;
+    manifest.state_refs.push(state_ref.to_string());
+    write_workunit(project_root, &manifest)?;
+    load_workunit(project_root, task_id)
+}
+
+pub fn set_proof_plan(
+    project_root: &Path,
+    task_id: &str,
+    gates: &[String],
+) -> Result<WorkUnitManifest, error::DecapodError> {
+    let mut manifest = load_workunit(project_root, task_id)?;
+    manifest.proof_plan = gates.to_vec();
+    write_workunit(project_root, &manifest)?;
+    load_workunit(project_root, task_id)
+}

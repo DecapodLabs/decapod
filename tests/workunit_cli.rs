@@ -184,3 +184,112 @@ fn workunit_status_returns_deterministic_manifest_hash() {
         "manifest content should be present on disk"
     );
 }
+
+#[test]
+fn workunit_attach_spec_and_state_are_persisted() {
+    let (_tmp, dir, password) = setup_repo();
+    let _ = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "init",
+            "--task-id",
+            "R_004",
+            "--intent-ref",
+            "intent://attach",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+
+    for (subcmd, reference) in [
+        ("attach-spec", "spec://a"),
+        ("attach-spec", "spec://b"),
+        ("attach-state", "state://1"),
+        ("attach-state", "state://2"),
+    ] {
+        let out = run_decapod(
+            &dir,
+            &[
+                "govern",
+                "workunit",
+                subcmd,
+                "--task-id",
+                "R_004",
+                "--ref",
+                reference,
+            ],
+            &[
+                ("DECAPOD_AGENT_ID", "unknown"),
+                ("DECAPOD_SESSION_PASSWORD", &password),
+                ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+            ],
+        );
+        assert!(
+            out.status.success(),
+            "{} failed: {}",
+            subcmd,
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+
+    let manifest = workunit::load_workunit(&dir, "R_004").expect("load workunit");
+    assert_eq!(manifest.spec_refs, vec!["spec://a", "spec://b"]);
+    assert_eq!(manifest.state_refs, vec!["state://1", "state://2"]);
+}
+
+#[test]
+fn workunit_set_proof_plan_replaces_and_canonicalizes_gates() {
+    let (_tmp, dir, password) = setup_repo();
+    let _ = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "init",
+            "--task-id",
+            "R_005",
+            "--intent-ref",
+            "intent://proofs",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+
+    let out = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "set-proof-plan",
+            "--task-id",
+            "R_005",
+            "--gate",
+            "validate_passes",
+            "--gate",
+            "state_commit",
+            "--gate",
+            "validate_passes",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        out.status.success(),
+        "set-proof-plan failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let manifest = workunit::load_workunit(&dir, "R_005").expect("load workunit");
+    assert_eq!(manifest.proof_plan, vec!["state_commit", "validate_passes"]);
+}
