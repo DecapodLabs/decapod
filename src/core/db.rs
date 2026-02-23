@@ -65,6 +65,48 @@ pub fn db_connect_for_validate(db_path: &str) -> Result<Connection, error::Decap
     Ok(conn)
 }
 
+/// Establish a read-write SQLite connection with configurable busy_timeout, for use by the pool.
+///
+/// Same configuration as `db_connect` but with a caller-specified timeout.
+pub fn db_connect_pooled(
+    db_path: &str,
+    busy_timeout_secs: u32,
+) -> Result<Connection, error::DecapodError> {
+    let db_path = Path::new(db_path);
+    ensure_db_parent_dir(db_path)?;
+
+    let conn = Connection::open(db_path)
+        .map_err(|e| db_open_error_with_diagnostics(db_path, "open", &e))?;
+    conn.busy_timeout(std::time::Duration::from_secs(busy_timeout_secs as u64))
+        .map_err(|e| db_open_error_with_diagnostics(db_path, "busy_timeout", &e))?;
+    conn.execute("PRAGMA foreign_keys=ON;", [])
+        .map_err(|e| db_open_error_with_diagnostics(db_path, "foreign_keys", &e))?;
+    configure_journal_mode_with_fallback(&conn, db_path)?;
+    Ok(conn)
+}
+
+/// Establish a read-only SQLite connection with configurable busy_timeout, for use by the pool.
+///
+/// Enables `query_only` and `temp_store=MEMORY` for safe concurrent reads.
+pub fn db_connect_read_pooled(
+    db_path: &str,
+    busy_timeout_secs: u32,
+) -> Result<Connection, error::DecapodError> {
+    let db_path = Path::new(db_path);
+    let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX;
+    let conn = Connection::open_with_flags(db_path, flags)
+        .map_err(|e| db_open_error_with_diagnostics(db_path, "open_readonly_pooled", &e))?;
+    conn.busy_timeout(std::time::Duration::from_secs(busy_timeout_secs as u64))
+        .map_err(|e| db_open_error_with_diagnostics(db_path, "busy_timeout_pooled", &e))?;
+    conn.execute("PRAGMA query_only=ON;", [])
+        .map_err(|e| db_open_error_with_diagnostics(db_path, "query_only_pooled", &e))?;
+    conn.execute("PRAGMA temp_store=MEMORY;", [])
+        .map_err(|e| db_open_error_with_diagnostics(db_path, "temp_store_pooled", &e))?;
+    conn.execute("PRAGMA foreign_keys=ON;", [])
+        .map_err(|e| db_open_error_with_diagnostics(db_path, "foreign_keys_pooled", &e))?;
+    Ok(conn)
+}
+
 fn ensure_db_parent_dir(db_path: &Path) -> Result<(), error::DecapodError> {
     if let Some(parent) = db_path.parent() {
         fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;

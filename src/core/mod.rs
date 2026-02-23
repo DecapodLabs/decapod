@@ -46,6 +46,7 @@ pub mod migration;
 pub mod obligation;
 pub mod output;
 pub mod plan_governance;
+pub mod pool;
 pub mod proof;
 pub mod repomap;
 pub mod rpc;
