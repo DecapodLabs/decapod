@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.0](https://github.com/DecapodLabs/decapod/compare/v0.37.11...v0.38.0) - 2026-02-23
+
+### Added
+
+- *(context)* add scoped constitution query via docs search and rpc
+
+### Other
+
+- *(release)* refresh README hash in artifact manifest
+- *(entrypoints)* use file-specific headers for agent files
+- move agent guidance out of source comments
+- split human README from agent entrypoint contracts
+
 ## [0.37.11](https://github.com/DecapodLabs/decapod/compare/v0.37.10...v0.37.11) - 2026-02-23
 
 ### Fixed
