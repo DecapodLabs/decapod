@@ -227,6 +227,9 @@ enum GovernCommand {
 
     /// Work unit manifest artifacts (intent/spec/state/proof chain)
     Workunit(WorkunitCli),
+
+    /// Deterministic context capsule query over embedded constitution docs
+    Capsule(CapsuleCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -398,6 +401,31 @@ enum WorkunitCommand {
         task_id: String,
         #[clap(long, value_enum)]
         to: WorkunitStatusArg,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+struct CapsuleCli {
+    #[clap(subcommand)]
+    command: CapsuleCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum CapsuleCommand {
+    /// Query a deterministic context capsule from embedded docs
+    Query {
+        #[clap(long)]
+        topic: String,
+        #[clap(long)]
+        scope: String,
+        #[clap(long)]
+        task_id: Option<String>,
+        #[clap(long)]
+        workunit_id: Option<String>,
+        #[clap(long, default_value_t = 6)]
+        limit: usize,
+        #[clap(long, default_value_t = false)]
+        write: bool,
     },
 }
 
@@ -1357,6 +1385,7 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "mentor.obligations"
             | "context.resolve"
             | "context.scope"
+            | "context.capsule.query"
             | "context.bindings"
             | "schema.get"
             | "store.upsert"
@@ -1389,6 +1418,7 @@ fn enforce_worktree_requirement_for_rpc(
             "validate.run"
                 | "context.resolve"
                 | "context.scope"
+                | "context.capsule.query"
                 | "context.bindings"
                 | "schema.get"
         ) && !is_canonical_decapod_worktree_path(&worktree_path)
@@ -1414,6 +1444,7 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
         "agent.init"
             | "context.resolve"
             | "context.scope"
+            | "context.capsule.query"
             | "context.bindings"
             | "schema.get"
             | "store.upsert"
@@ -2906,6 +2937,17 @@ fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {
     )
 }
 
+fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
+    matches!(
+        op,
+        "context.resolve"
+            | "context.scope"
+            | "context.bindings"
+            | "context.capsule.query"
+            | "schema.get"
+    )
+}
+
 fn enforce_constitutional_awareness_for_rpc(
     op: &str,
     project_root: &Path,
@@ -3062,6 +3104,58 @@ fn run_govern_command(
         },
         GovernCommand::Plan(plan_cli) => run_plan_command(plan_cli, project_store)?,
         GovernCommand::Workunit(workunit_cli) => run_workunit_command(workunit_cli, project_store)?,
+        GovernCommand::Capsule(capsule_cli) => run_capsule_command(capsule_cli, project_store)?,
+    }
+
+    Ok(())
+}
+
+fn run_capsule_command(
+    capsule_cli: CapsuleCli,
+    project_store: &Store,
+) -> Result<(), error::DecapodError> {
+    let project_root = project_store
+        .root
+        .parent()
+        .and_then(|p| p.parent())
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "unable to resolve project root from store root".to_string(),
+            )
+        })?;
+
+    match capsule_cli.command {
+        CapsuleCommand::Query {
+            topic,
+            scope,
+            task_id,
+            workunit_id,
+            limit,
+            write,
+        } => {
+            let capsule = core::context_capsule::query_embedded_capsule(
+                project_root,
+                &topic,
+                &scope,
+                task_id.as_deref(),
+                workunit_id.as_deref(),
+                limit,
+            )?;
+            if write {
+                let path = core::context_capsule::write_context_capsule(project_root, &capsule)?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&serde_json::json!({
+                        "status": "ok",
+                        "path": path,
+                        "capsule": capsule,
+                    }))
+                    .unwrap()
+                );
+            } else {
+                println!("{}", serde_json::to_string_pretty(&capsule).unwrap());
+            }
+        }
     }
 
     Ok(())
@@ -4167,7 +4261,11 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
     };
 
     let mandates = docs::resolve_mandates(project_root, &request.op);
-    let mandate_blockers = validate::evaluate_mandates(project_root, &project_store, &mandates);
+    let mandate_blockers = if rpc_op_skips_mandate_enforcement(&request.op) {
+        Vec::new()
+    } else {
+        validate::evaluate_mandates(project_root, &project_store, &mandates)
+    };
 
     // If any mandate is blocked, we fail the operation
     let blocked_mandate = mandates.iter().find(|m| {
@@ -4472,6 +4570,64 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 Some(ContextCapsule {
                     fragments,
                     spec: None,
+                    architecture: None,
+                    security: None,
+                    standards: None,
+                }),
+                vec![],
+                mandates.clone(),
+            )
+        }
+        "context.capsule.query" => {
+            let params = &request.params;
+            let topic = params
+                .get("topic")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| {
+                    error::DecapodError::ValidationError(
+                        "context.capsule.query requires 'topic'".to_string(),
+                    )
+                })?;
+            let scope = params
+                .get("scope")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| {
+                    error::DecapodError::ValidationError(
+                        "context.capsule.query requires 'scope'".to_string(),
+                    )
+                })?;
+            let task_id = params.get("task_id").and_then(|v| v.as_str());
+            let workunit_id = params.get("workunit_id").and_then(|v| v.as_str());
+            let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(6) as usize;
+            let write = params
+                .get("write")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+
+            let capsule = core::context_capsule::query_embedded_capsule(
+                project_root,
+                topic,
+                scope,
+                task_id,
+                workunit_id,
+                limit,
+            )?;
+
+            let mut touched = Vec::new();
+            if write {
+                let path = core::context_capsule::write_context_capsule(project_root, &capsule)?;
+                touched.push(path.to_string_lossy().to_string());
+            }
+
+            success_response(
+                request.id.clone(),
+                request.op.clone(),
+                request.params.clone(),
+                Some(serde_json::to_value(&capsule).unwrap()),
+                touched,
+                Some(ContextCapsule {
+                    fragments: vec![],
+                    spec: Some("Deterministic context capsule query completed".to_string()),
                     architecture: None,
                     security: None,
                     standards: None,
