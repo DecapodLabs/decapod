@@ -36,8 +36,8 @@ fn init_with_writes_config_toml_with_schema_and_diagram_style() {
     assert!(config.contains("product_summary = "));
     assert!(config.contains("architecture_direction = "));
 
-    let intent =
-        fs::read_to_string(tmp.path().join("specs/intent.md")).expect("read specs/intent.md");
+    let intent = fs::read_to_string(tmp.path().join(".decapod/generated/specs/INTENT.md"))
+        .expect("read .decapod/generated/specs/INTENT.md");
     assert!(
         !intent.contains("Define the user-visible outcome in one paragraph."),
         "intent scaffold should be seeded with non-placeholder outcome"
@@ -64,15 +64,16 @@ fn init_uses_existing_config_for_noninteractive_defaults() {
         String::from_utf8_lossy(&out2.stderr)
     );
 
-    let architecture = fs::read_to_string(tmp.path().join("specs/architecture.md"))
-        .expect("read specs/architecture.md");
+    let architecture =
+        fs::read_to_string(tmp.path().join(".decapod/generated/specs/ARCHITECTURE.md"))
+            .expect("read .decapod/generated/specs/ARCHITECTURE.md");
     assert!(
         architecture.contains("```mermaid"),
         "existing config should keep mermaid diagram style"
     );
 
-    let intent =
-        fs::read_to_string(tmp.path().join("specs/intent.md")).expect("read specs/intent.md");
+    let intent = fs::read_to_string(tmp.path().join(".decapod/generated/specs/INTENT.md"))
+        .expect("read .decapod/generated/specs/INTENT.md");
     assert!(
         !intent.contains("Define the user-visible outcome in one paragraph."),
         "re-init should preserve intent-first seeded outcome"
