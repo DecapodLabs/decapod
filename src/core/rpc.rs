@@ -10,10 +10,6 @@
 //! - `context_capsule`: Minimal relevant spec/arch/security/standards slices
 //! - `allowed_next_ops`: Contract for what to do next
 //! - `blocked_by`: Missing answers/proofs
-//!
-//! # For AI Agents
-//!
-//! Use `decapod rpc` for programmatic access. The CLI subcommands are for human convenience.
 
 use crate::core::docs::{DocFragment, Mandate};
 use serde::{Deserialize, Serialize};
@@ -318,6 +314,14 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 name: "context.resolve".to_string(),
                 description: "Resolve relevant constitution/authority fragments for an operation"
                     .to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "context.scope".to_string(),
+                description:
+                    "Return scoped, query-matched constitution fragments for just-in-time context"
+                        .to_string(),
                 stability: "stable".to_string(),
                 cost: "low".to_string(),
             },

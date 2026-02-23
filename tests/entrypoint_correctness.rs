@@ -456,20 +456,29 @@ fn test_root_entrypoints_match_templates() {
 }
 
 #[test]
-fn test_agent_entrypoints_are_identical() {
+fn test_agent_entrypoints_are_consistent_except_header() {
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
     let root_claude = fs::read_to_string(repo_root.join("CLAUDE.md")).expect("read CLAUDE.md");
     let root_gemini = fs::read_to_string(repo_root.join("GEMINI.md")).expect("read GEMINI.md");
     let root_codex = fs::read_to_string(repo_root.join("CODEX.md")).expect("read CODEX.md");
 
-    assert_eq!(
-        root_claude, root_gemini,
-        "Root entrypoints must be identical: CLAUDE.md != GEMINI.md"
+    assert!(
+        root_claude
+            .lines()
+            .next()
+            .is_some_and(|l| l.contains("CLAUDE.md")),
+        "CLAUDE.md header should include CLAUDE.md"
     );
     assert_eq!(
-        root_claude, root_codex,
-        "Root entrypoints must be identical: CLAUDE.md != CODEX.md"
+        root_claude.lines().skip(1).collect::<Vec<_>>(),
+        root_gemini.lines().skip(1).collect::<Vec<_>>(),
+        "Root entrypoints should only differ by file-specific header: CLAUDE.md != GEMINI.md"
+    );
+    assert_eq!(
+        root_claude.lines().skip(1).collect::<Vec<_>>(),
+        root_codex.lines().skip(1).collect::<Vec<_>>(),
+        "Root entrypoints should only differ by file-specific header: CLAUDE.md != CODEX.md"
     );
 
     let tpl_claude =
@@ -480,12 +489,14 @@ fn test_agent_entrypoints_are_identical() {
         fs::read_to_string(repo_root.join("templates/CODEX.md")).expect("read template CODEX");
 
     assert_eq!(
-        tpl_claude, tpl_gemini,
-        "Template entrypoints must be identical: CLAUDE.md != GEMINI.md"
+        tpl_claude.lines().skip(1).collect::<Vec<_>>(),
+        tpl_gemini.lines().skip(1).collect::<Vec<_>>(),
+        "Template entrypoints should only differ by file-specific header: CLAUDE.md != GEMINI.md"
     );
     assert_eq!(
-        tpl_claude, tpl_codex,
-        "Template entrypoints must be identical: CLAUDE.md != CODEX.md"
+        tpl_claude.lines().skip(1).collect::<Vec<_>>(),
+        tpl_codex.lines().skip(1).collect::<Vec<_>>(),
+        "Template entrypoints should only differ by file-specific header: CLAUDE.md != CODEX.md"
     );
 }
 

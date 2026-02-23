@@ -1,17 +1,8 @@
 //! Database broker for serialized state access (The Thin Waist).
 //!
 //! This module provides the core state mutation control plane for Decapod.
-//! All agent interactions with state MUST go through the broker to ensure
+//! Stateful operations route through this layer to ensure
 //! serialization, auditability, and deterministic replay.
-//!
-//! # For AI Agents
-//!
-//! - **Never bypass the broker**: Use `decapod` CLI commands, not direct DB access
-//! - **All mutations are audited**: Every broker call logs to `broker.events.jsonl`
-//! - **Serialization guarantee**: In-process mutex ensures no race conditions
-//! - **Intent tracking**: Operations can reference intent IDs for traceability
-//! - **Write Queue**: Serializes mutations to prevent SQLite lock contention
-//! - **Read Cache**: Caches reads in-memory to reduce DB load
 
 use crate::core::error;
 use crate::core::pool;
@@ -35,10 +26,6 @@ use ulid::Ulid;
 /// - Write queue API for serialized mutation pipeline (future: background thread)
 /// - Read/write access with proper locking
 ///
-/// # Agent Contract
-///
-/// Agents MUST use the broker for ALL state access. Direct database manipulation
-/// bypasses audit trails and violates the control plane contract.
 #[allow(dead_code)]
 pub struct DbBroker {
     audit_log_path: PathBuf,

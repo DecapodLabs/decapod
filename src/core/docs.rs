@@ -1,6 +1,7 @@
 use crate::core::assets;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::{BTreeSet, HashMap};
 use std::path::Path;
 
 /// A fragment of a constitution or authority document.
@@ -28,6 +29,115 @@ pub struct Bindings {
     pub paths: std::collections::HashMap<String, String>,
     pub tags: std::collections::HashMap<String, String>,
     pub mandates: std::collections::HashMap<String, Vec<String>>, // op -> [mandate_ids]
+}
+
+/// Resolve a scoped constitution context package for a concrete problem/query.
+///
+/// This function is intentionally deterministic:
+/// - same query + same repo state => same ordered fragment list
+/// - ordering is score-desc, then ref asc
+///
+/// It combines:
+/// - explicit control-plane bindings (op/path/tag)
+/// - lexical matching across embedded/merged constitution documents
+pub fn resolve_scoped_fragments(
+    repo_root: &Path,
+    query: Option<&str>,
+    op: Option<&str>,
+    touched_paths: &[String],
+    intent_tags: &[String],
+    limit: usize,
+) -> Vec<DocFragment> {
+    let bindings = get_bindings(repo_root);
+    let mut path_boosts: HashMap<String, i64> = HashMap::new();
+    let mut preferred_anchors: HashMap<String, String> = HashMap::new();
+
+    if let Some(op_name) = op
+        && let Some(doc_ref) = bindings.ops.get(op_name)
+    {
+        let (path, anchor) = split_doc_ref(doc_ref);
+        *path_boosts.entry(path.to_string()).or_insert(0) += 60;
+        if let Some(a) = anchor {
+            preferred_anchors.insert(path.to_string(), a.to_string());
+        }
+    }
+
+    for touched in touched_paths {
+        for (prefix, doc_ref) in &bindings.paths {
+            if touched.contains(prefix) {
+                let (path, anchor) = split_doc_ref(doc_ref);
+                *path_boosts.entry(path.to_string()).or_insert(0) += 25;
+                if let Some(a) = anchor {
+                    preferred_anchors.insert(path.to_string(), a.to_string());
+                }
+            }
+        }
+    }
+
+    for tag in intent_tags {
+        if let Some(doc_ref) = bindings.tags.get(tag) {
+            let (path, anchor) = split_doc_ref(doc_ref);
+            *path_boosts.entry(path.to_string()).or_insert(0) += 30;
+            if let Some(a) = anchor {
+                preferred_anchors.insert(path.to_string(), a.to_string());
+            }
+        }
+    }
+
+    let terms = query
+        .map(tokenize)
+        .unwrap_or_default()
+        .into_iter()
+        .collect::<Vec<_>>();
+
+    let mut candidate_paths = BTreeSet::new();
+    for path in path_boosts.keys() {
+        candidate_paths.insert(path.clone());
+    }
+    if !terms.is_empty() {
+        for path in assets::list_docs() {
+            candidate_paths.insert(path);
+        }
+    }
+
+    let mut ranked: Vec<(i64, DocFragment)> = Vec::new();
+    for path in candidate_paths {
+        let Some(content) = assets::get_merged_doc(repo_root, &path) else {
+            continue;
+        };
+        let mut score = *path_boosts.get(&path).unwrap_or(&0);
+        let content_lc = content.to_lowercase();
+
+        if !terms.is_empty() {
+            for term in &terms {
+                score += (count_occurrences(&content_lc, term) as i64) * 3;
+                if path.to_lowercase().contains(term) {
+                    score += 2;
+                }
+            }
+        }
+
+        let fragment = if let Some(anchor) = preferred_anchors.get(&path) {
+            get_fragment(repo_root, &path, Some(anchor))
+        } else if !terms.is_empty() {
+            get_best_fragment_for_terms(&path, &content, &terms)
+        } else {
+            get_fragment(repo_root, &path, None)
+        };
+
+        if let Some(f) = fragment
+            && (score > 0 || !terms.is_empty() || path_boosts.contains_key(&path))
+        {
+            ranked.push((score, f));
+        }
+    }
+
+    ranked.sort_by(|(sa, fa), (sb, fb)| sb.cmp(sa).then_with(|| fa.r#ref.cmp(&fb.r#ref)));
+    ranked
+        .into_iter()
+        .map(|(_, f)| f)
+        .take(limit.max(1))
+        .collect()
 }
 
 pub fn get_bindings(_repo_root: &Path) -> Bindings {
@@ -219,4 +329,99 @@ fn extract_section(content: &str, anchor: &str) -> Option<(String, String)> {
     } else {
         None
     }
+}
+
+fn split_doc_ref(doc_ref: &str) -> (&str, Option<&str>) {
+    let parts: Vec<&str> = doc_ref.split('#').collect();
+    (parts[0], parts.get(1).copied())
+}
+
+fn tokenize(input: &str) -> Vec<String> {
+    let mut tokens = Vec::new();
+    let mut current = String::new();
+    for ch in input.chars() {
+        if ch.is_ascii_alphanumeric() {
+            current.push(ch.to_ascii_lowercase());
+        } else if !current.is_empty() {
+            if current.len() >= 3 {
+                tokens.push(current.clone());
+            }
+            current.clear();
+        }
+    }
+    if !current.is_empty() && current.len() >= 3 {
+        tokens.push(current);
+    }
+    tokens.sort();
+    tokens.dedup();
+    tokens
+}
+
+fn count_occurrences(haystack: &str, needle: &str) -> usize {
+    if needle.is_empty() {
+        return 0;
+    }
+    haystack.match_indices(needle).count()
+}
+
+fn get_best_fragment_for_terms(path: &str, content: &str, terms: &[String]) -> Option<DocFragment> {
+    let mut current_title: Option<String> = None;
+    let mut current_lines: Vec<String> = Vec::new();
+    let mut sections: Vec<(String, String)> = Vec::new();
+
+    for line in content.lines() {
+        if line.starts_with('#') {
+            if let Some(title) = current_title.take() {
+                sections.push((title, current_lines.join("\n")));
+                current_lines.clear();
+            }
+            let heading = line.trim_start_matches('#').trim().to_string();
+            current_title = Some(heading);
+        }
+        if current_title.is_some() {
+            current_lines.push(line.to_string());
+        }
+    }
+    if let Some(title) = current_title.take() {
+        sections.push((title, current_lines.join("\n")));
+    }
+
+    let mut best: Option<(i64, String, String)> = None;
+    for (title, section) in sections {
+        let lc = section.to_lowercase();
+        let mut score = 0_i64;
+        for term in terms {
+            score += count_occurrences(&lc, term) as i64;
+        }
+        if score <= 0 {
+            continue;
+        }
+        match &best {
+            Some((best_score, best_title, _)) => {
+                if score > *best_score || (score == *best_score && title < *best_title) {
+                    best = Some((score, title, section));
+                }
+            }
+            None => best = Some((score, title, section)),
+        }
+    }
+
+    let (_, title, section) = best?;
+    let mut hasher = Sha256::new();
+    hasher.update(section.as_bytes());
+    let hash = format!("{:x}", hasher.finalize());
+    let excerpt = section.lines().take(12).collect::<Vec<_>>().join("\n");
+    let excerpt = if excerpt.len() > 700 {
+        format!("{}...", &excerpt[..697])
+    } else {
+        excerpt
+    };
+
+    Some(DocFragment {
+        kind: "constitution".to_string(),
+        r#ref: format!("{}#{}", path, title),
+        title,
+        excerpt,
+        hash,
+    })
 }

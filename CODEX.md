@@ -1,11 +1,13 @@
-# AGENT.md - Agent Entrypoint
+# CODEX.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
-You are bound by the universal contract in **AGENTS.md**.
+See `AGENTS.md` for the universal contract.
 
 ## Quick Start
 
 ```bash
+cargo install decapod
+
 decapod validate
 decapod docs ingest
 decapod session acquire
@@ -18,26 +20,12 @@ decapod workspace ensure
 
 ## Operating Mode
 
-- Plan first: Non-trivial changes require a plan artifact.
-- Proof first: `decapod validate` MUST pass before claiming done.
-- Minimal changes: Only change what is directly requested.
-- Workspace isolation: run `decapod workspace ensure` and work only from `.decapod/workspaces/*`. Never main/master and never non-canonical worktree roots.
-- CLI only: All `.decapod/` access through `decapod` CLI.
-- Just-in-time context: load only the minimum required doc slices with `decapod docs show <path>`.
-- Embedded constitution only: never read `constitution/*` directly; use `decapod docs show <embedded-path>`.
+- Use Docker git workspaces and execute in `.decapod/workspaces/*`.
+- request elevated permissions before Docker/container workspace commands.
+- `.decapod files are accessed only via decapod CLI`.
+- `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
+- Read canonical router: `decapod docs show core/DECAPOD.md`.
+- Operator reference: `decapod docs show docs/PLAYBOOK.md`.
+- Scoped context feature: `decapod docs search --query "<problem>" --op <op>` or `decapod rpc --op context.scope`.
 
-## Safety Invariants
-
-- core/DECAPOD.md: Universal router.
-- `decapod validate` must pass before claiming done.
-- Stop if error or ambiguous state occurs; respect invocation heartbeat.
-- Safe Environment: Use Docker git workspaces; request elevated permissions before Docker/container workspace commands.
-- Security: DECAPOD_SESSION_PASSWORD required; .decapod files are accessed only via decapod CLI.
-- Architecture: Respect the Interface abstraction boundary.
-- Updates: cargo install decapod.
-
-See **AGENTS.md** for the full universal contract.
-
-## Optional Operator Guide
-
-`decapod docs show docs/PLAYBOOK.md`
+Stop if requirements are ambiguous or conflicting.

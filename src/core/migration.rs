@@ -2,12 +2,6 @@
 //!
 //! This module handles detecting Decapod version changes and running
 //! necessary migrations for schema updates, data transformations, etc.
-//!
-//! # For AI Agents
-//!
-//! - **Migrations run automatically**: Idempotent migrations run on every startup
-//! - **Schema evolution**: Each migration can modify databases, files, etc.
-//! - **Version management**: Install latest via `cargo install decapod`
 
 use crate::core::error;
 use crate::core::schemas;

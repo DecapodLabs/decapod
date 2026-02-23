@@ -2,14 +2,6 @@
 //!
 //! This module provides low-level database connection primitives and
 //! subsystem-specific initialization functions.
-//!
-//! # For AI Agents
-//!
-//! - **Always use DbBroker**: Don't call `db_connect` directly; use broker for mutations
-//! - **WAL mode enabled**: Write-Ahead Logging for better concurrency
-//! - **Foreign keys enforced**: Referential integrity is ON by default
-//! - **Busy timeout**: 5-second retry window for lock contention
-//! - **Subsystems own their schemas**: Each subsystem (TODO, health, etc.) has its own init function
 
 use crate::core::broker::DbBroker;
 use crate::core::error;
@@ -25,10 +17,6 @@ use std::path::{Path, PathBuf};
 /// - Foreign key constraints
 /// - 5-second busy timeout for lock contention
 ///
-/// # Agent Usage
-///
-/// Do NOT use this function directly for state mutations. Always go through
-/// `DbBroker::with_conn` to ensure serialization and audit logging.
 pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     ensure_db_parent_dir(db_path)?;

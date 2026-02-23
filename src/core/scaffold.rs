@@ -4,13 +4,6 @@
 //! - Root entrypoints (AGENTS.md, CLAUDE.md, GEMINI.md, CODEX.md)
 //! - Constitution directory (.decapod/constitution/)
 //! - Embedded methodology documents
-//!
-//! # For AI Agents
-//!
-//! - **Scaffolding is idempotent**: Safe to run multiple times with `--force`
-//! - **Dry-run mode available**: Use `--dry-run` to preview changes
-//! - **Never scaffold over existing files**: Requires explicit `--force` flag
-//! - **Constitution is embedded**: Templates come from binary, not external files
 
 use crate::core::assets;
 use crate::core::error;
