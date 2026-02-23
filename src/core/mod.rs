@@ -6,6 +6,7 @@
 pub mod assets;
 pub mod assurance;
 pub mod broker;
+pub mod context_capsule;
 pub mod coplayer;
 pub mod db;
 pub mod docs;
@@ -34,3 +35,4 @@ pub mod todo;
 pub mod trace;
 pub mod validate;
 pub mod workspace;
+pub mod workunit;
