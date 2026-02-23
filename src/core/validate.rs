@@ -1187,15 +1187,18 @@ fn validate_project_config_toml(
         );
     }
 
-    let has_architecture_intent = repo_table
-        .and_then(|t| t.get("architecture_intent"))
+    let has_architecture_direction = repo_table
+        .and_then(|t| {
+            t.get("architecture_direction")
+                .or_else(|| t.get("architecture_intent"))
+        })
         .and_then(|v| v.as_str())
         .map(|s| !s.trim().is_empty())
         .unwrap_or(false);
-    if has_architecture_intent {
-        pass("Project config captures repo.architecture_intent", ctx);
+    if has_architecture_direction {
+        pass("Project config captures repo.architecture_direction", ctx);
     } else {
-        fail("Project config missing repo.architecture_intent.", ctx);
+        fail("Project config missing repo.architecture_direction.", ctx);
     }
 
     let has_done_criteria = repo_table
@@ -1252,7 +1255,7 @@ fn validate_project_specs_docs(
         let required_sections = [
             "# Architecture",
             "## Integrated Surface",
-            "## Build Intent",
+            "## Implementation Strategy",
             "## System Topology",
             "## Service Contracts",
             "## Multi-Agent Delivery Model",
