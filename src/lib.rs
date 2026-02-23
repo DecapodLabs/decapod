@@ -217,7 +217,8 @@ struct RepoContext {
     #[serde(skip_serializing_if = "Option::is_none")]
     product_summary: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    architecture_intent: Option<String>,
+    #[serde(rename = "architecture_direction", alias = "architecture_intent")]
+    architecture_direction: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     product_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1148,7 +1149,7 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
         for line in arch.lines() {
             let trimmed = line.trim();
             if !trimmed.is_empty() && !trimmed.starts_with('#') && !trimmed.starts_with('-') {
-                ctx.architecture_intent = Some(trimmed.to_string());
+                ctx.architecture_direction = Some(trimmed.to_string());
                 break;
             }
         }
@@ -1180,7 +1181,7 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
             None => "Deliver the repository outcome against explicit user intent with proof-backed completion.".to_string(),
         });
     }
-    if ctx.architecture_intent.is_none() {
+    if ctx.architecture_direction.is_none() {
         let has_frontend = ctx.detected_surfaces.iter().any(|s| s == "frontend");
         let has_backend = ctx.detected_surfaces.iter().any(|s| s == "backend");
         let inferred = match (has_frontend, has_backend) {
@@ -1197,7 +1198,7 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
                 "Composable repository architecture with explicit boundaries and proof-backed delivery invariants."
             }
         };
-        ctx.architecture_intent = Some(inferred.to_string());
+        ctx.architecture_direction = Some(inferred.to_string());
     }
     if ctx.done_criteria.is_none() {
         ctx.done_criteria = Some(
@@ -1351,11 +1352,11 @@ fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::
         &current_summary,
     )?);
 
-    let current_arch = repo.architecture_intent.clone().unwrap_or_else(|| {
+    let current_arch = repo.architecture_direction.clone().unwrap_or_else(|| {
         "Composable repository architecture with explicit boundaries and proof-backed delivery invariants."
             .to_string()
     });
-    repo.architecture_intent = Some(prompt_line_default(
+    repo.architecture_direction = Some(prompt_line_default(
         "Architecture direction (system shape + key boundaries)",
         &current_arch,
     )?);
@@ -1373,7 +1374,7 @@ fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::
 
 fn needs_repo_context_interview(repo: &RepoContext) -> bool {
     repo.product_summary.is_none()
-        || repo.architecture_intent.is_none()
+        || repo.architecture_direction.is_none()
         || repo.done_criteria.is_none()
 }
 
@@ -1474,7 +1475,7 @@ fn run_init_apply(
         specs_seed: Some(scaffold::SpecsSeed {
             product_name: repo_ctx.product_name.clone(),
             product_summary: repo_ctx.product_summary.clone(),
-            architecture_intent: repo_ctx.architecture_intent.clone(),
+            architecture_direction: repo_ctx.architecture_direction.clone(),
             product_type: repo_ctx.product_type.clone(),
             primary_languages: repo_ctx.primary_languages.clone(),
             detected_surfaces: repo_ctx.detected_surfaces.clone(),

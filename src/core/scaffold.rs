@@ -57,7 +57,7 @@ pub enum DiagramStyle {
 pub struct SpecsSeed {
     pub product_name: Option<String>,
     pub product_summary: Option<String>,
-    pub architecture_intent: Option<String>,
+    pub architecture_direction: Option<String>,
     pub product_type: Option<String>,
     pub primary_languages: Vec<String>,
     pub detected_surfaces: Vec<String>,
@@ -116,7 +116,7 @@ fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
 
 fn specs_architecture_template(style: DiagramStyle, seed: Option<&SpecsSeed>) -> String {
     let summary = seed
-        .and_then(|s| s.architecture_intent.as_deref())
+        .and_then(|s| s.architecture_direction.as_deref())
         .unwrap_or(
             "Describe the architecture in 5-8 dense sentences focused on deployment reality, system boundaries, and operational risks.",
         );
@@ -170,7 +170,7 @@ flowchart LR
 - Infrastructure/services: {product_type}
 - External dependencies:
 
-## Build Intent
+## Implementation Strategy
 - What is being built now:
 - What is deferred:
 - Why this cut line is chosen:

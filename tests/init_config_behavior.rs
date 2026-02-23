@@ -34,7 +34,7 @@ fn init_with_writes_config_toml_with_schema_and_diagram_style() {
     assert!(config.contains("[repo]"));
     assert!(config.contains("[init]"));
     assert!(config.contains("product_summary = "));
-    assert!(config.contains("architecture_intent = "));
+    assert!(config.contains("architecture_direction = "));
 
     let intent =
         fs::read_to_string(tmp.path().join("specs/intent.md")).expect("read specs/intent.md");
