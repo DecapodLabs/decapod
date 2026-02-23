@@ -38,6 +38,23 @@ pub struct ScaffoldSummary {
     pub config_preserved: usize,
 }
 
+/// Canonical .gitignore rules managed by `decapod init`.
+///
+/// These rules are appended (if missing) to the user's root `.gitignore`.
+/// Keep this as the source of truth so new allowlists/denylists evolve through code review.
+pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
+    ".decapod/data",
+    ".decapod/data/*",
+    ".decapod/.stfolder",
+    ".decapod/workspaces",
+    ".decapod/generated/*",
+    "!.decapod/data/",
+    "!.decapod/data/knowledge.promotions.jsonl",
+    "!.decapod/generated/Dockerfile",
+    "!.decapod/generated/context/",
+    "!.decapod/generated/context/*.json",
+];
+
 /// Ensure a given entry exists in the project's .gitignore file.
 /// Creates the file if it doesn't exist. Appends the entry if not already present.
 fn ensure_gitignore_entry(target_dir: &Path, entry: &str) -> Result<(), error::DecapodError> {
@@ -126,12 +143,11 @@ pub fn scaffold_project_entrypoints(
     // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
     fs::create_dir_all(opts.target_dir.join(data_dir_rel)).map_err(error::DecapodError::IoError)?;
 
-    // Ensure .decapod/data is in .gitignore (sqlite databases should not be version controlled)
+    // Ensure Decapod-managed ignore/allowlist rules are present in the user's .gitignore.
     if !opts.dry_run {
-        ensure_gitignore_entry(&opts.target_dir, ".decapod/data")?;
-        ensure_gitignore_entry(&opts.target_dir, ".decapod/workspaces")?;
-        ensure_gitignore_entry(&opts.target_dir, ".decapod/generated/*")?;
-        ensure_gitignore_entry(&opts.target_dir, "!.decapod/generated/Dockerfile")?;
+        for rule in DECAPOD_GITIGNORE_RULES {
+            ensure_gitignore_entry(&opts.target_dir, rule)?;
+        }
     }
 
     // Determine which agent files to generate

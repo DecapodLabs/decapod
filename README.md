@@ -70,15 +70,15 @@ AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
 - ✅ Daemonless runtime: invoked on demand, exits immediately after each call.
 - ✅ Agent-agnostic CLI/RPC surface for Claude, Codex, Gemini, Cursor, and more.
 - ✅ Multi-agent-safe task/workspace coordination in the same repo.
+- ✅ Shared transient skills memory: human-taught rules persist once and resolve across agents/sessions.
 - ✅ Work Unit manifests (`intent/spec/state/proof`) with governed status transitions.
 - ✅ VERIFIED completion gating backed by explicit proof-plan pass results.
-- ✅ Publish-time and validate-time workunit enforcement.
+- ✅ Variance-aware eval kernel: repeat-run aggregation, strict judge contracts, and promotion gates.
 - ✅ Deterministic context capsule query (`core|interfaces|plugins` scoped).
 - ✅ Optional persisted context capsules in `.decapod/generated/context/*.json`.
 - ✅ Knowledge promotion firewall ledger in `.decapod/data/knowledge.promotions.jsonl`.
 - ✅ Procedural knowledge writes require event-backed promotion provenance.
-- ✅ Repo-native durable state and traces under `.decapod/` (local-first, auditable).
-- ✅ Authoritative `decapod validate` gate for promotion readiness.
+- ✅ Repo-native durable state, traces, and proof gates under `.decapod/` (local-first, auditable).
 
 And dozens more. For the full high-level and data-level surface area, see `decapod docs show core/INTERFACES.md` and the override template at `.decapod/OVERRIDE.md`.
 

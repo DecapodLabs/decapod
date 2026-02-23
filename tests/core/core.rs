@@ -496,6 +496,18 @@ fn scaffold_store_and_docs_cli_behaviors() {
         gitignore.contains("!.decapod/generated/Dockerfile"),
         "decapod init must allowlist generated Dockerfile in .gitignore"
     );
+    assert!(
+        gitignore.contains("!.decapod/generated/context/*.json"),
+        "decapod init must allowlist persisted context capsules in .gitignore"
+    );
+    assert!(
+        gitignore.contains("!.decapod/data/knowledge.promotions.jsonl"),
+        "decapod init must allowlist knowledge promotion ledger in .gitignore"
+    );
+    assert!(
+        gitignore.contains(".decapod/data/*"),
+        "decapod init must keep .decapod/data state ignored by default in .gitignore"
+    );
     let generated_dockerfile = live_target.join(".decapod/generated/Dockerfile");
     assert!(
         generated_dockerfile.exists(),

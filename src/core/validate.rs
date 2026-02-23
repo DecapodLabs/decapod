@@ -8,6 +8,7 @@ use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
 use crate::core::output;
 use crate::core::plan_governance;
+use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::{db, primitives, todo};
@@ -1059,40 +1060,24 @@ fn validate_generated_artifact_whitelist(
 
     let gitignore_path = decapod_dir.join(".gitignore");
     let gitignore = fs::read_to_string(&gitignore_path).map_err(error::DecapodError::IoError)?;
-    let required_ignore = ".decapod/generated/*";
-    let required_unignore = "!.decapod/generated/Dockerfile";
-
-    if gitignore.lines().any(|line| line.trim() == required_ignore) {
-        pass(
-            "Gitignore enforces generated wildcard ignore (.decapod/generated/*)",
-            ctx,
-        );
-    } else {
-        fail(
-            "Missing .gitignore rule '.decapod/generated/*' for generated artifact whitelist enforcement",
-            ctx,
-        );
-    }
-
-    if gitignore
-        .lines()
-        .any(|line| line.trim() == required_unignore)
-    {
-        pass(
-            "Gitignore allowlists tracked generated Dockerfile (!.decapod/generated/Dockerfile)",
-            ctx,
-        );
-    } else {
-        fail(
-            "Missing .gitignore allowlist rule '!.decapod/generated/Dockerfile'",
-            ctx,
-        );
+    for rule in DECAPOD_GITIGNORE_RULES {
+        if gitignore.lines().any(|line| line.trim() == *rule) {
+            pass(&format!("Gitignore contains required rule '{}'", rule), ctx);
+        } else {
+            fail(
+                &format!(
+                    "Missing .gitignore rule '{}' for generated/data whitelist enforcement",
+                    rule
+                ),
+                ctx,
+            );
+        }
     }
 
     let output = std::process::Command::new("git")
         .arg("-C")
         .arg(decapod_dir)
-        .args(["ls-files", ".decapod/generated"])
+        .args(["ls-files", ".decapod/generated", ".decapod/data"])
         .output();
 
     let output = match output {
@@ -1106,14 +1091,16 @@ fn validate_generated_artifact_whitelist(
         }
     };
 
-    let allowed_tracked = [".decapod/generated/Dockerfile"];
     let mut offenders = Vec::new();
     for line in String::from_utf8_lossy(&output.stdout).lines() {
         let path = line.trim();
         if path.is_empty() {
             continue;
         }
-        if !allowed_tracked.iter().any(|allowed| allowed == &path) {
+        let allowed = path == ".decapod/generated/Dockerfile"
+            || path == ".decapod/data/knowledge.promotions.jsonl"
+            || (path.starts_with(".decapod/generated/context/") && path.ends_with(".json"));
+        if !allowed {
             offenders.push(path.to_string());
         }
     }
