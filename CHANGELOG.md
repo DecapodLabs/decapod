@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.10](https://github.com/DecapodLabs/decapod/compare/v0.37.9...v0.37.10) - 2026-02-23
+
+### Other
+
+- *(readme)* remove agent-ops line and neutralize research callout
+
 ## [0.37.9](https://github.com/DecapodLabs/decapod/compare/v0.37.8...v0.37.9) - 2026-02-22
 
 ### Other
