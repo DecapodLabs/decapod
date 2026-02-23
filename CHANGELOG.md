@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.1](https://github.com/DecapodLabs/decapod/compare/v0.40.0...v0.40.1) - 2026-02-23
+
+### Other
+
+- bump Cargo.toml
+
 ## [0.40.0](https://github.com/DecapodLabs/decapod/compare/v0.39.0...v0.40.0) - 2026-02-23
 
 ### Other
