@@ -67,12 +67,20 @@ AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
 
 ## Features ✨
 
-- On-demand CLI/RPC control plane agents call during work, then exit.
-- Early intent capture and explicit task boundaries before implementation commits.
-- Deterministic policy gates that produce concrete pass/fail completion signals.
-- Repo-native durable state in `.decapod/` for historically retrievable traces and decisions.
-- Shared cross-agent context that survives sessions and handoffs.
-- Multi-agent-safe coordination for concurrent Claude/Codex/Gemini/OpenCode workflows.
+- ✅ Daemonless runtime: invoked on demand, exits immediately after each call.
+- ✅ Agent-agnostic CLI/RPC surface for Claude, Codex, Gemini, Cursor, and more.
+- ✅ Multi-agent-safe task/workspace coordination in the same repo.
+- ✅ Work Unit manifests (`intent/spec/state/proof`) with governed status transitions.
+- ✅ VERIFIED completion gating backed by explicit proof-plan pass results.
+- ✅ Publish-time and validate-time workunit enforcement.
+- ✅ Deterministic context capsule query (`core|interfaces|plugins` scoped).
+- ✅ Optional persisted context capsules in `.decapod/generated/context/*.json`.
+- ✅ Knowledge promotion firewall ledger in `.decapod/data/knowledge.promotions.jsonl`.
+- ✅ Procedural knowledge writes require event-backed promotion provenance.
+- ✅ Repo-native durable state and traces under `.decapod/` (local-first, auditable).
+- ✅ Authoritative `decapod validate` gate for promotion readiness.
+
+And dozens more. For the full high-level and data-level surface area, see `decapod docs show core/INTERFACES.md` and the override template at `.decapod/OVERRIDE.md`.
 
 ## Getting Started 🚀
 
