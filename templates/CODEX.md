@@ -1,9 +1,15 @@
-# AGENT.md - Agent Entrypoint
+# CODEX.md — Codex Entrypoint
 
-You are working in a Decapod-managed repository.
-You are bound by the universal contract in **AGENTS.md**.
+Follow `AGENTS.md` as the primary contract.
 
-## Quick Start
+Codex runtime rules in this repo:
+
+- Call Decapod before committing to a plan, before edits, and after edits for proof.
+- Use Decapod command surfaces; never mutate `.decapod/` directly.
+- Treat contention and timeout failures as hard stops until resolved.
+- Do not hallucinate capabilities: if `decapod` cannot do it, report the gap.
+
+Minimum flow:
 
 ```bash
 decapod validate
@@ -16,28 +22,11 @@ decapod todo claim --id <task-id>
 decapod workspace ensure
 ```
 
-## Operating Mode
+Before completion:
 
-- Plan first: Non-trivial changes require a plan artifact.
-- Proof first: `decapod validate` MUST pass before claiming done.
-- Minimal changes: Only change what is directly requested.
-- Workspace isolation: run `decapod workspace ensure` and work only from `.decapod/workspaces/*`. Never main/master and never non-canonical worktree roots.
-- CLI only: All `.decapod/` access through `decapod` CLI.
-- Just-in-time context: load only the minimum required doc slices with `decapod docs show <path>`.
-- Embedded constitution only: never read `constitution/*` directly; use `decapod docs show <embedded-path>`.
+```bash
+decapod validate
+# plus required tests/build checks for changed surfaces
+```
 
-## Safety Invariants
-
-- core/DECAPOD.md: Universal router.
-- `decapod validate` must pass before claiming done.
-- Stop if error or ambiguous state occurs; respect invocation heartbeat.
-- Safe Environment: Use Docker git workspaces; request elevated permissions before Docker/container workspace commands.
-- Security: DECAPOD_SESSION_PASSWORD required; .decapod files are accessed only via decapod CLI.
-- Architecture: Respect the Interface abstraction boundary.
-- Updates: cargo install decapod.
-
-See **AGENTS.md** for the full universal contract.
-
-## Optional Operator Guide
-
-`decapod docs show docs/PLAYBOOK.md`
+If requirements are ambiguous, stop and ask the human before irreversible work.
