@@ -34,7 +34,7 @@ This is the single source of truth for Decapod subsystem status.
 | watcher | `decapod govern watcher` | implemented | REAL | `plugins/WATCHER.md` | `decapod govern watcher run` |
 | feedback | `decapod govern feedback` | implemented | REAL | `plugins/FEEDBACK.md` | `decapod govern feedback propose` |
 | knowledge | `decapod data knowledge` | implemented | REAL | `plugins/KNOWLEDGE.md` | `decapod data knowledge search` |
-| teammate | `decapod data teammate` | implemented | REAL | `plugins/TEAMMATE.md` | `decapod data teammate schema` |
+| teammate | `decapod data teammate` (aliases: `memory`, `skills`) | implemented | REAL | `plugins/TEAMMATE.md` | `decapod data teammate schema` |
 | context | `decapod data context` | implemented | REAL | `plugins/CONTEXT.md` | `decapod data context audit` |
 | archive | `decapod data archive` | implemented | REAL | `plugins/ARCHIVE.md` | `decapod data archive verify` |
 | cron | `decapod auto cron` | implemented | REAL | `plugins/CRON.md` | `decapod data schema --subsystem cron` |
