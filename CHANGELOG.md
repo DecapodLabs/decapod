@@ -9,11 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
-- enforce canonical local `specs/*.md` set and wire it into scaffold/validate/context.resolve
+- init: add `decapod init with` (alias `wtih`) and `.decapod/config.toml` schema-backed repo context
+- init: infer repo purpose/architecture signals from prominent files (`README.md`, manifests, repo surfaces)
+- init: scaffold canonical local project specs set (`specs/README.md`, `intent.md`, `architecture.md`, `interfaces.md`, `validation.md`)
+- init: support diagram style selection (`ascii` or `mermaid`) for architecture topology generation
+- init: seed local specs content from inferred/config context and enforce intent-purpose vs architecture-direction separation
+- validate: add project config + canonical local specs gates, including placeholder rejection for intent/architecture content
+- runtime: surface canonical local specs context and constitution mapping from `decapod rpc --op context.resolve`
 
 ### Other
 
-- schema/interface: add `interfaces/PROJECT_SPECS.md` contract and hardcoded local project spec registry mapping to constitution dependencies
+- schema/interface: add `interfaces/PROJECT_SPECS.md` and register claim `claim.project_specs.canonical_set_enforced`
+- schema/interface: bind hardcoded local specs registry in binary to constitution dependencies and control-plane sequencing docs
 
 ## [0.39.0](https://github.com/DecapodLabs/decapod/compare/v0.38.13...v0.39.0) - 2026-02-23
 
