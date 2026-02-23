@@ -68,7 +68,8 @@ AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
 ## Features ✨
 
 - ✅ Daemonless by design: no background service, no long-lived process, no hidden control loop.
-- ✅ `cargo install decapod` + `decapod init`, then keep using your agents exactly as-is, with scoped plain-English policy overrides in `.decapod/OVERRIDE.md`.
+- ✅ `cargo install decapod` + `decapod init`, then keep using your agents exactly as-is.
+- ✅ Scoped plain-English policy overrides in `.decapod/OVERRIDE.md`.
 - ✅ Agent-agnostic control plane: one CLI/RPC contract across Claude, Codex, Gemini, Cursor, and more.
 - ✅ Multi-agent-safe in one repo with governed task and workspace coordination.
 - ✅ Work Unit manifests make `intent/spec/state/proof` explicit and durable.
