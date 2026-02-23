@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.1](https://github.com/DecapodLabs/decapod/compare/v0.38.0...v0.38.1) - 2026-02-23
+
+### Other
+
+- Harden daemonless validate startup and lock resilience
+
 ## [0.38.0](https://github.com/DecapodLabs/decapod/compare/v0.37.11...v0.38.0) - 2026-02-23
 
 ### Added
