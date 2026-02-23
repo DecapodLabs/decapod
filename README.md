@@ -6,11 +6,11 @@
 
 <p align="center">
   <strong>Decapod</strong><br />
-  The governance runtime for AI coding agents.
+  A daemonless control plane for AI coding agents.
 </p>
 
 <p align="center">
-  Local-first, repo-native, and built for verifiable delivery.
+  Called on demand inside agent loops. No background process, no new workflow, local-first state you can verify.
 </p>
 
 <p align="center">
@@ -24,21 +24,21 @@
 
 ## Why Decapod 🧠
 
-AI coding agents can write code fast. Shipping it safely is the hard part.
+AI coding agents are strong at generating code. Most failures happen before and after generation: unclear intent, fuzzy boundaries, and weak completion checks.
 
-Decapod gives agents a consistent operational contract: guided execution, enforceable boundaries, and auditable completion signals. It replaces "looks done" with explicit outcomes.
+Decapod is the missing layer in that loop. Agents call it mid-run to lock intent, enforce boundaries, and prove completion with explicit gates. It shapes inference without doing inference.
 
-Decapod is **invoked by agents; it never runs in the background**. It is a single executable binary that provides deterministic primitives:
-- Retrieve **canon (constitution .md fragments)** as context.
-- Provide authoritative schemas for **structured state** (todos, knowledge, decisions).
-- Run deterministic **validation/proof gates** to decide when work is truly done.
-  Example gate: *forbid direct pushes to protected branches* — fails if the agent has unpushed commits on main.
+Decapod is **daemonless**. There is no long-lived service. The binary starts when an agent calls it and exits immediately after the call.
 
-AGENTS.md stays tiny (entrypoint). OVERRIDE.md handles local exceptions. Everything else is pulled just-in-time.
+"Just use Decapod" is literal:
+- `cargo install decapod`
+- `decapod init`
 
-Traces: `.decapod/data/traces.jsonl`. Bindings: `context.bindings`. Architecture-agnostic (not coupled to a specific OS or CPU).
+Then continue with Claude, Codex, Gemini, OpenCode, or any other agent exactly as you already work. Decapod is agent-agnostic and safe for concurrent multi-agent execution.
 
-Recent independent research confirms this design direction: [Evaluating AGENTS.md](https://arxiv.org/pdf/2602.11988) (Gloaguen et al., ETH SRI, 2026; [AgentBench repo](https://github.com/eth-sri/agentbench)) found that LLM-generated context files tend to reduce agent performance while increasing cost by over 20 %; human-written minimal requirements can help slightly. Decapod was built independently and without knowledge of ETH SRI's AgentBench research or this paper.
+State is local and durable in `.decapod/`: shared context, decisions, and traces persist across sessions and remain retrievable over time.
+
+Related: [Evaluating AGENTS.md](https://arxiv.org/pdf/2602.11988) (ETH SRI, 2026) on context-file quality and agent cost/performance.
 
 <p align="center">
   ☕ Like Decapod? <a href="https://ko-fi.com/decapodlabs"><strong>Buy us a coffee on Ko-fi</strong></a> 💙
@@ -46,11 +46,11 @@ Recent independent research confirms this design direction: [Evaluating AGENTS.m
 
 ## Assurance Model ✅
 
-Decapod is built around three execution outcomes:
+Decapod centers execution around three outcomes:
 
-- `Advisory`: guidance toward the next high-value move.
-- `Interlock`: hard stops for unsafe or out-of-policy flow.
-- `Attestation`: structured evidence that completion criteria were met.
+- `Advisory`: clear next actions that tighten intent and reduce wasted loops.
+- `Interlock`: hard policy boundaries that block unsafe or out-of-contract flow.
+- `Attestation`: durable, structured proof that completion criteria actually passed.
 
 ## Operating Model ⚙️
 
@@ -67,12 +67,12 @@ AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
 
 ## Features ✨
 
-- Agent-native CLI and RPC surface for deterministic operation.
-- Guided project understanding through structured prompting.
-- Standards-aware execution aligned with project policy.
-- Workspace safety for isolated implementation flow.
-- Validation and completion gates with explicit pass/fail outcomes.
-- Multi-agent-ready orchestration surface for tooling integrations.
+- On-demand CLI/RPC control plane agents call during work, then exit.
+- Early intent capture and explicit task boundaries before implementation commits.
+- Deterministic policy gates that produce concrete pass/fail completion signals.
+- Repo-native durable state in `.decapod/` for historically retrievable traces and decisions.
+- Shared cross-agent context that survives sessions and handoffs.
+- Multi-agent-safe coordination for concurrent Claude/Codex/Gemini/OpenCode workflows.
 
 ## Getting Started 🚀
 
@@ -81,7 +81,7 @@ cargo install decapod
 decapod init
 ```
 
-Then use your agents as normal. Decapod works on your behalf from inside the agent.
+Then keep using your agents normally. Decapod is called from inside those agent runs when control-plane decisions are needed.
 
 Learn more about the embedded constitution via the CLI:
 
