@@ -263,3 +263,80 @@ fn validate_fails_on_non_procedural_target_class_in_promotion_ledger() {
         stderr
     );
 }
+
+#[test]
+fn validate_fails_when_gitignore_missing_generated_whitelist_rules() {
+    let (_tmp, dir, password) = setup_repo();
+    let gitignore_path = dir.join(".gitignore");
+    let content = fs::read_to_string(&gitignore_path).expect("read .gitignore");
+    let content = content
+        .lines()
+        .filter(|line| {
+            let trimmed = line.trim();
+            trimmed != ".decapod/generated/" && trimmed != "!.decapod/generated/Dockerfile"
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    fs::write(&gitignore_path, format!("{}\n", content)).expect("rewrite .gitignore");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !validate.status.success(),
+        "validate should fail when generated whitelist .gitignore rules are missing"
+    );
+    let stderr = combined_output(&validate);
+    assert!(
+        stderr.contains("Missing .gitignore rule '.decapod/generated/'")
+            || stderr
+                .contains("Missing .gitignore allowlist rule '!.decapod/generated/Dockerfile'"),
+        "expected generated whitelist .gitignore failure, got:\n{}",
+        stderr
+    );
+}
+
+#[test]
+fn validate_fails_when_non_whitelisted_generated_file_is_tracked() {
+    let (_tmp, dir, password) = setup_repo();
+    let rogue = dir.join(".decapod/generated/rogue.json");
+    fs::create_dir_all(rogue.parent().expect("rogue parent")).expect("mkdir generated");
+    fs::write(&rogue, "{}\n").expect("write rogue generated file");
+
+    let add = Command::new("git")
+        .current_dir(&dir)
+        .args(["add", "-f", ".decapod/generated/rogue.json"])
+        .output()
+        .expect("git add rogue generated");
+    assert!(
+        add.status.success(),
+        "forced git add should succeed: {}",
+        String::from_utf8_lossy(&add.stderr)
+    );
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !validate.status.success(),
+        "validate should fail when non-whitelisted generated file is tracked"
+    );
+    let stderr = combined_output(&validate);
+    assert!(
+        stderr.contains("Tracked non-whitelisted generated artifacts found"),
+        "expected generated whitelist tracked-file failure, got:\n{}",
+        stderr
+    );
+}
