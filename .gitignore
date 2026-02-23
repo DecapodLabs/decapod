@@ -32,12 +32,17 @@ dev/
 # --- Decapod Sidecar (State) ---
 # We never commit local sidecar state or databases
 .decapod/data
+!.decapod/data/
+.decapod/data/*
+!.decapod/data/knowledge.promotions.jsonl
 .decapod/.stfolder
 .decapod/workspaces
 # Generated runtime outputs are non-canonical; keep them out of version control.
 .decapod/generated/*
 # Allowlist deterministic generated artifact used as container build baseline.
 !.decapod/generated/Dockerfile
+!.decapod/generated/context/
+!.decapod/generated/context/*.json
 
 # --- Environment & Secrets ---
 .env

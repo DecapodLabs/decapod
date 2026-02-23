@@ -52,6 +52,9 @@ This registry defines the canonical binding interface surfaces.
 - `specs/SYSTEM.md` - System definition and authority doctrine
 - `specs/SECURITY.md` - Security contract
 - `specs/GIT.md` - Git etiquette contract
+- `specs/evaluations/VARIANCE_EVALS.md` - Variance-aware evaluation contract
+- `specs/evaluations/JUDGE_CONTRACT.md` - Judge JSON/timeout contract
+- `specs/engineering/FRONTEND_BACKEND_E2E.md` - Frontend/backend E2E governance contract
 - `specs/AMENDMENTS.md` - Change control
 
 ### Registry (Core Indices)

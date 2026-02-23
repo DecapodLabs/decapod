@@ -1059,40 +1059,35 @@ fn validate_generated_artifact_whitelist(
 
     let gitignore_path = decapod_dir.join(".gitignore");
     let gitignore = fs::read_to_string(&gitignore_path).map_err(error::DecapodError::IoError)?;
-    let required_ignore = ".decapod/generated/*";
-    let required_unignore = "!.decapod/generated/Dockerfile";
+    let required_rules = [
+        ".decapod/generated/*",
+        "!.decapod/generated/Dockerfile",
+        "!.decapod/generated/context/",
+        "!.decapod/generated/context/*.json",
+        ".decapod/data",
+        "!.decapod/data/",
+        ".decapod/data/*",
+        "!.decapod/data/knowledge.promotions.jsonl",
+    ];
 
-    if gitignore.lines().any(|line| line.trim() == required_ignore) {
-        pass(
-            "Gitignore enforces generated wildcard ignore (.decapod/generated/*)",
-            ctx,
-        );
-    } else {
-        fail(
-            "Missing .gitignore rule '.decapod/generated/*' for generated artifact whitelist enforcement",
-            ctx,
-        );
-    }
-
-    if gitignore
-        .lines()
-        .any(|line| line.trim() == required_unignore)
-    {
-        pass(
-            "Gitignore allowlists tracked generated Dockerfile (!.decapod/generated/Dockerfile)",
-            ctx,
-        );
-    } else {
-        fail(
-            "Missing .gitignore allowlist rule '!.decapod/generated/Dockerfile'",
-            ctx,
-        );
+    for rule in required_rules {
+        if gitignore.lines().any(|line| line.trim() == rule) {
+            pass(&format!("Gitignore contains required rule '{}'", rule), ctx);
+        } else {
+            fail(
+                &format!(
+                    "Missing .gitignore rule '{}' for generated/data whitelist enforcement",
+                    rule
+                ),
+                ctx,
+            );
+        }
     }
 
     let output = std::process::Command::new("git")
         .arg("-C")
         .arg(decapod_dir)
-        .args(["ls-files", ".decapod/generated"])
+        .args(["ls-files", ".decapod/generated", ".decapod/data"])
         .output();
 
     let output = match output {
@@ -1106,14 +1101,21 @@ fn validate_generated_artifact_whitelist(
         }
     };
 
-    let allowed_tracked = [".decapod/generated/Dockerfile"];
+    let allowed_tracked = [
+        ".decapod/generated/Dockerfile",
+        ".decapod/data/knowledge.promotions.jsonl",
+    ];
     let mut offenders = Vec::new();
     for line in String::from_utf8_lossy(&output.stdout).lines() {
         let path = line.trim();
         if path.is_empty() {
             continue;
         }
-        if !allowed_tracked.iter().any(|allowed| allowed == &path) {
+        let is_allowed_exact = allowed_tracked.iter().any(|allowed| allowed == &path);
+        let is_allowed_context_json = path.starts_with(".decapod/generated/context/")
+            && path.ends_with(".json")
+            && !path.contains("/../");
+        if !is_allowed_exact && !is_allowed_context_json {
             offenders.push(path.to_string());
         }
     }
@@ -1386,6 +1388,22 @@ fn validate_schema_determinism(
         pass("Schema output is deterministic", ctx);
     } else {
         fail("Schema output is non-deterministic or empty", ctx);
+    }
+    Ok(())
+}
+
+fn validate_eval_gate_if_required(
+    store: &Store,
+    ctx: &ValidationContext,
+) -> Result<(), error::DecapodError> {
+    info("Eval Gate Requirement");
+    let failures = crate::plugins::eval::validate_eval_gate_if_required(&store.root)?;
+    if failures.is_empty() {
+        pass("Eval gate requirement satisfied or not configured", ctx);
+    } else {
+        for failure in failures {
+            fail(&failure, ctx);
+        }
     }
     Ok(())
 }
@@ -3437,6 +3455,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_knowledge_promotions_if_present", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_eval_gate_if_required(store, ctx) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_eval_gate_if_required", start.elapsed()));
         });
         s.spawn(move |_| {
             let start = Instant::now();
