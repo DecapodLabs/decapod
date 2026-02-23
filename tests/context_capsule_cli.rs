@@ -134,3 +134,64 @@ fn context_capsule_query_rejects_invalid_scope() {
         stderr
     );
 }
+
+#[test]
+fn context_capsule_query_write_persists_deterministic_artifact_path() {
+    let (_tmp, dir) = setup_repo();
+
+    let run = |task_id: &str| {
+        run_decapod(
+            &dir,
+            &[
+                "govern",
+                "capsule",
+                "query",
+                "--topic",
+                "proof gates",
+                "--scope",
+                "core",
+                "--task-id",
+                task_id,
+                "--write",
+            ],
+        )
+    };
+
+    let first = run("R_123");
+    assert!(
+        first.status.success(),
+        "first write query failed: {}",
+        String::from_utf8_lossy(&first.stderr)
+    );
+    let first_payload: Value = serde_json::from_slice(&first.stdout).expect("parse first payload");
+    let first_path = first_payload["path"]
+        .as_str()
+        .expect("path string in first payload");
+    assert!(
+        first_path.ends_with(".decapod/generated/context/R_123.json"),
+        "unexpected capsule path: {}",
+        first_path
+    );
+    assert!(
+        std::path::Path::new(first_path).exists(),
+        "expected persisted capsule at {}",
+        first_path
+    );
+
+    let second = run("R_123");
+    assert!(
+        second.status.success(),
+        "second write query failed: {}",
+        String::from_utf8_lossy(&second.stderr)
+    );
+    let second_payload: Value =
+        serde_json::from_slice(&second.stdout).expect("parse second payload");
+    assert_eq!(
+        first_payload["path"], second_payload["path"],
+        "artifact path should be deterministic for same inputs"
+    );
+    assert_eq!(
+        first_payload["capsule"]["capsule_hash"], second_payload["capsule"]["capsule_hash"],
+        "capsule hash should stay stable for same inputs"
+    );
+}

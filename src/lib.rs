@@ -424,6 +424,8 @@ enum CapsuleCommand {
         workunit_id: Option<String>,
         #[clap(long, default_value_t = 6)]
         limit: usize,
+        #[clap(long, default_value_t = false)]
+        write: bool,
     },
 }
 
@@ -3115,6 +3117,7 @@ fn run_capsule_command(
             task_id,
             workunit_id,
             limit,
+            write,
         } => {
             let capsule = core::context_capsule::query_embedded_capsule(
                 project_root,
@@ -3124,7 +3127,20 @@ fn run_capsule_command(
                 workunit_id.as_deref(),
                 limit,
             )?;
-            println!("{}", serde_json::to_string_pretty(&capsule).unwrap());
+            if write {
+                let path = core::context_capsule::write_context_capsule(project_root, &capsule)?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&serde_json::json!({
+                        "status": "ok",
+                        "path": path,
+                        "capsule": capsule,
+                    }))
+                    .unwrap()
+                );
+            } else {
+                println!("{}", serde_json::to_string_pretty(&capsule).unwrap());
+            }
         }
     }
 
