@@ -293,3 +293,198 @@ fn workunit_set_proof_plan_replaces_and_canonicalizes_gates() {
     let manifest = workunit::load_workunit(&dir, "R_005").expect("load workunit");
     assert_eq!(manifest.proof_plan, vec!["state_commit", "validate_passes"]);
 }
+
+#[test]
+fn workunit_transition_to_verified_requires_passing_proofs() {
+    let (_tmp, dir, password) = setup_repo();
+    let envs = [
+        ("DECAPOD_AGENT_ID", "unknown"),
+        ("DECAPOD_SESSION_PASSWORD", &password),
+        ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+    ];
+
+    let _ = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "init",
+            "--task-id",
+            "R_006",
+            "--intent-ref",
+            "intent://verified",
+        ],
+        &envs,
+    );
+    let _ = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "set-proof-plan",
+            "--task-id",
+            "R_006",
+            "--gate",
+            "validate_passes",
+        ],
+        &envs,
+    );
+    let _ = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "transition",
+            "--task-id",
+            "R_006",
+            "--to",
+            "executing",
+        ],
+        &envs,
+    );
+    let _ = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "transition",
+            "--task-id",
+            "R_006",
+            "--to",
+            "claimed",
+        ],
+        &envs,
+    );
+
+    let out = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "transition",
+            "--task-id",
+            "R_006",
+            "--to",
+            "verified",
+        ],
+        &envs,
+    );
+    assert!(
+        !out.status.success(),
+        "transition should fail without passing proof results"
+    );
+    let combined = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(
+        combined.contains("missing passing proof result"),
+        "expected missing proof guard, got:\n{}",
+        combined
+    );
+}
+
+#[test]
+fn workunit_record_proof_and_transition_happy_path() {
+    let (_tmp, dir, password) = setup_repo();
+    let envs = [
+        ("DECAPOD_AGENT_ID", "unknown"),
+        ("DECAPOD_SESSION_PASSWORD", &password),
+        ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+    ];
+
+    let _ = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "init",
+            "--task-id",
+            "R_007",
+            "--intent-ref",
+            "intent://progress",
+        ],
+        &envs,
+    );
+    let _ = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "set-proof-plan",
+            "--task-id",
+            "R_007",
+            "--gate",
+            "validate_passes",
+        ],
+        &envs,
+    );
+
+    for to in ["executing", "claimed"] {
+        let step = run_decapod(
+            &dir,
+            &[
+                "govern",
+                "workunit",
+                "transition",
+                "--task-id",
+                "R_007",
+                "--to",
+                to,
+            ],
+            &envs,
+        );
+        assert!(
+            step.status.success(),
+            "transition to {} failed: {}",
+            to,
+            String::from_utf8_lossy(&step.stderr)
+        );
+    }
+
+    let proof = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "record-proof",
+            "--task-id",
+            "R_007",
+            "--gate",
+            "validate_passes",
+            "--status",
+            "pass",
+            "--artifact",
+            "sha256:abc",
+        ],
+        &envs,
+    );
+    assert!(
+        proof.status.success(),
+        "record-proof failed: {}",
+        String::from_utf8_lossy(&proof.stderr)
+    );
+
+    let final_step = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "transition",
+            "--task-id",
+            "R_007",
+            "--to",
+            "verified",
+        ],
+        &envs,
+    );
+    assert!(
+        final_step.status.success(),
+        "transition to verified failed: {}",
+        String::from_utf8_lossy(&final_step.stderr)
+    );
+
+    let manifest = workunit::load_workunit(&dir, "R_007").expect("load workunit");
+    assert_eq!(manifest.status, workunit::WorkUnitStatus::Verified);
+}
