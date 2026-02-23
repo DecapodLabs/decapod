@@ -4,10 +4,12 @@
 //! Decapod's contracts, invariants, and methodology gates.
 
 use crate::core::broker::DbBroker;
+use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
 use crate::core::output;
 use crate::core::plan_governance;
 use crate::core::store::{Store, StoreKind};
+use crate::core::workunit::WorkUnitManifest;
 use crate::{db, primitives, todo};
 use regex::Regex;
 use serde_json;
@@ -1036,6 +1038,173 @@ fn validate_project_scoped_state(
             ctx,
         );
     }
+    Ok(())
+}
+
+fn validate_workunit_manifests_if_present(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Work Unit Manifest Gate");
+
+    let workunits_dir = repo_root
+        .join(".decapod")
+        .join("governance")
+        .join("workunits");
+    if !workunits_dir.exists() {
+        skip("No workunit manifests found; skipping workunit gate", ctx);
+        return Ok(());
+    }
+
+    let mut files = 0usize;
+    for entry in fs::read_dir(&workunits_dir).map_err(error::DecapodError::IoError)? {
+        let entry = entry.map_err(error::DecapodError::IoError)?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("json") {
+            continue;
+        }
+        files += 1;
+        let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+        let parsed: WorkUnitManifest = serde_json::from_str(&raw).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "invalid workunit manifest {}: {}",
+                path.display(),
+                e
+            ))
+        })?;
+        let _ = parsed.canonical_json_bytes().map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "workunit canonicalization failed for {}: {}",
+                path.display(),
+                e
+            ))
+        })?;
+    }
+
+    pass(
+        &format!(
+            "Workunit manifest schema check passed for {} file(s)",
+            files
+        ),
+        ctx,
+    );
+    Ok(())
+}
+
+fn validate_context_capsules_if_present(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Context Capsule Gate");
+
+    let capsules_dir = repo_root.join(".decapod").join("generated").join("context");
+    if !capsules_dir.exists() {
+        skip(
+            "No context capsules found; skipping context capsule gate",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let mut files = 0usize;
+    for entry in fs::read_dir(&capsules_dir).map_err(error::DecapodError::IoError)? {
+        let entry = entry.map_err(error::DecapodError::IoError)?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("json") {
+            continue;
+        }
+        files += 1;
+        let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+        let parsed: DeterministicContextCapsule = serde_json::from_str(&raw).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "invalid context capsule {}: {}",
+                path.display(),
+                e
+            ))
+        })?;
+        let expected = parsed.computed_hash_hex().map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "context capsule hash computation failed for {}: {}",
+                path.display(),
+                e
+            ))
+        })?;
+        if parsed.capsule_hash != expected {
+            fail(
+                &format!(
+                    "Context capsule hash mismatch in {} (expected {}, got {})",
+                    path.display(),
+                    expected,
+                    parsed.capsule_hash
+                ),
+                ctx,
+            );
+        }
+    }
+
+    pass(
+        &format!("Context capsule integrity checked for {} file(s)", files),
+        ctx,
+    );
+    Ok(())
+}
+
+fn validate_knowledge_promotions_if_present(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Knowledge Promotion Ledger Gate");
+
+    let ledger = repo_root
+        .join(".decapod")
+        .join("data")
+        .join("knowledge.promotions.jsonl");
+    if !ledger.exists() {
+        skip(
+            "No knowledge promotion ledger found; skipping promotion ledger gate",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let raw = fs::read_to_string(&ledger).map_err(error::DecapodError::IoError)?;
+    for (idx, line) in raw.lines().enumerate() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let v: serde_json::Value = serde_json::from_str(line).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "invalid promotion ledger line {} in {}: {}",
+                idx + 1,
+                ledger.display(),
+                e
+            ))
+        })?;
+        for key in [
+            "event_id",
+            "ts",
+            "source_entry_id",
+            "target_class",
+            "evidence_refs",
+            "approved_by",
+            "actor",
+            "reason",
+        ] {
+            if v.get(key).is_none() {
+                fail(
+                    &format!(
+                        "Knowledge promotion ledger missing '{}' on line {} ({})",
+                        key,
+                        idx + 1,
+                        ledger.display()
+                    ),
+                    ctx,
+                );
+            }
+        }
+    }
+
+    pass("Knowledge promotion ledger schema check passed", ctx);
     Ok(())
 }
 
@@ -2990,6 +3159,36 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_project_scoped_state", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_workunit_manifests_if_present(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_workunit_manifests_if_present", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_context_capsules_if_present(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_context_capsules_if_present", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_knowledge_promotions_if_present(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_knowledge_promotions_if_present", start.elapsed()));
         });
         s.spawn(move |_| {
             let start = Instant::now();
