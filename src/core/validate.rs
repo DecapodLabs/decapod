@@ -13,6 +13,7 @@ use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::{db, primitives, todo};
 use regex::Regex;
 use serde_json;
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -1484,6 +1485,60 @@ fn validate_knowledge_integrity(
         );
     }
 
+    let procedural_missing_event_provenance: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM knowledge
+             WHERE id LIKE 'procedural/%'
+               AND (provenance IS NULL OR provenance = '' OR provenance NOT LIKE 'event:%')",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    if procedural_missing_event_provenance == 0 {
+        pass(
+            "Knowledge promotion firewall verified (procedural entries carry event provenance)",
+            ctx,
+        );
+    } else {
+        fail(
+            &format!(
+                "Found {} procedural knowledge entries without event-backed provenance",
+                procedural_missing_event_provenance
+            ),
+            ctx,
+        );
+    }
+
+    let event_ids = load_knowledge_promotion_event_ids(&store.root)?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT provenance FROM knowledge
+             WHERE id LIKE 'procedural/%' AND provenance LIKE 'event:%'",
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    let rows = stmt
+        .query_map([], |row| row.get::<_, String>(0))
+        .map_err(error::DecapodError::RusqliteError)?;
+    let mut missing_event_refs = 0usize;
+    for row in rows {
+        let prov = row.map_err(error::DecapodError::RusqliteError)?;
+        let event_id = prov.trim_start_matches("event:");
+        if !event_ids.contains(event_id) {
+            missing_event_refs += 1;
+        }
+    }
+    if missing_event_refs == 0 {
+        pass("Knowledge promotion firewall ledger linkage verified", ctx);
+    } else {
+        fail(
+            &format!(
+                "Found {} procedural knowledge entries referencing missing promotion events",
+                missing_event_refs
+            ),
+            ctx,
+        );
+    }
+
     let fallback;
     let content_opt = match pre_read_broker {
         Some(c) => Some(c),
@@ -1519,6 +1574,35 @@ fn validate_knowledge_integrity(
     }
 
     Ok(())
+}
+
+fn load_knowledge_promotion_event_ids(
+    store_root: &Path,
+) -> Result<HashSet<String>, error::DecapodError> {
+    let ledger = store_root.join("knowledge.promotions.jsonl");
+    if !ledger.exists() {
+        return Ok(HashSet::new());
+    }
+
+    let raw = fs::read_to_string(&ledger).map_err(error::DecapodError::IoError)?;
+    let mut ids = HashSet::new();
+    for (idx, line) in raw.lines().enumerate() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let v: serde_json::Value = serde_json::from_str(line).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "invalid promotion ledger line {} in {}: {}",
+                idx + 1,
+                ledger.display(),
+                e
+            ))
+        })?;
+        if let Some(id) = v.get("event_id").and_then(|x| x.as_str()) {
+            ids.insert(id.to_string());
+        }
+    }
+    Ok(ids)
 }
 
 fn validate_lineage_hard_gate(
