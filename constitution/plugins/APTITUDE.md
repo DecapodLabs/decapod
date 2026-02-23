@@ -1,4 +1,4 @@
-# TEAMMATE.md - TEAMMATE Subsystem (Embedded)
+# APTITUDE.md - APTITUDE Subsystem (Embedded)
 
 **Authority:** subsystem (REAL)
 **Layer:** Operational
@@ -7,9 +7,9 @@
 **Quick Reference:**
 | Command | Purpose |
 |---------|---------|
-| `decapod data teammate add --category git --key ssh --value "mine"` | Record a preference |
-| `decapod data teammate get --category git --key ssh` | Retrieve a preference |
-| `decapod data teammate list` | List all preferences by category |
+| `decapod data aptitude add --category git --key ssh --value "mine"` | Record a preference |
+| `decapod data aptitude get --category git --key ssh` | Retrieve a preference |
+| `decapod data aptitude list` | List all preferences by category |
 
 **Related:** `core/PLUGINS.md` (subsystem registry) | `AGENTS.md` (entrypoint)
 
@@ -18,25 +18,26 @@
 ## CLI Surface
 
 ```bash
-decapod data teammate add --category <cat> --key <key> --value <val> [--context <ctx>] [--source <src>]
-decapod data teammate get --category <cat> --key <key>
-decapod data teammate list [--category <cat>] [--format text|json]
-decapod data teammate schema  # JSON schema for programmatic use
+decapod data aptitude add --category <cat> --key <key> --value <val> [--context <ctx>] [--source <src>]
+decapod data aptitude get --category <cat> --key <key>
+decapod data aptitude list [--category <cat>] [--format text|json]
+decapod data aptitude schema  # JSON schema for programmatic use
+# Aliases: decapod data memory ..., decapod data skills ...
 ```
 
 ## Purpose
 
-The teammate plugin catalogs distinct user expectations that persist across sessions, helping AI agents work more effectively with their human collaborators. It transforms one-off instructions into remembered behaviors.
+The memory/skills subsystem catalogs distinct user expectations that persist across sessions, helping AI agents work more effectively with their human collaborators. It transforms one-off instructions into remembered behaviors.
 
 ### Why This Matters
 
-Without the teammate plugin:
+Without the memory/skills subsystem:
 - User has to repeat "use my SSH key" on every commit
 - Agent forgets preferred branch naming conventions
 - Code style preferences must be re-explained each session
 - Workflow requirements are lost between contexts
 
-With the teammate plugin:
+With the memory/skills subsystem:
 - Preferences are recorded once, remembered always
 - Agents check before acting
 - Consistent behavior across all interactions
@@ -47,12 +48,12 @@ With the teammate plugin:
 **Git Preferences:**
 ```bash
 # User says: "always use my SSH key, don't add yourself as a contributor"
-decapod data teammate add --category git --key ssh_key --value "use_mine" \
+decapod data memory add --category git --key ssh_key --value "use_mine" \
   --context "Use user's SSH key for git operations, don't add self as contributor" \
   --source "user_request"
 
 # User says: "keep commit messages concise and imperative"
-decapod data teammate add --category style --key commit_messages --value "concise_imperative" \
+decapod data memory add --category style --key commit_messages --value "concise_imperative" \
   --context "Keep commit messages under 72 chars, use imperative mood" \
   --source "user_request"
 ```
@@ -60,7 +61,7 @@ decapod data teammate add --category style --key commit_messages --value "concis
 **Workflow Conventions:**
 ```bash
 # User says: "use feature/ prefix for branches"
-decapod data teammate add --category workflow --key branch_naming --value "feature/descriptive-name" \
+decapod data memory add --category workflow --key branch_naming --value "feature/descriptive-name" \
   --context "Prefix feature branches with feature/ followed by kebab-case description" \
   --source "user_request"
 ```
@@ -97,12 +98,12 @@ When a user expresses a preference:
 
 ```bash
 # Good: Specific, contextual, actionable
-decapod data teammate add --category git --key ssh_contributor --value "user_only" \
+decapod data memory add --category git --key ssh_contributor --value "user_only" \
   --context "Use user's SSH credentials, never add self as commit contributor" \
   --source "user_request"
 
 # Bad: Vague, no context
-# decapod data teammate add --category style --key prefs --value "good"
+# decapod data memory add --category style --key prefs --value "good"
 ```
 
 ### Retrieving Preferences
@@ -111,10 +112,10 @@ Agents MUST check preferences before acting:
 
 ```bash
 # Before committing, check SSH preference
-decapod data teammate get --category git --key ssh_contributor
+decapod data memory get --category git --key ssh_contributor
 
 # Before creating a branch, check naming convention
-decapod data teammate get --category workflow --key branch_naming
+decapod data memory get --category workflow --key branch_naming
 ```
 
 ### Updating Preferences
@@ -123,14 +124,14 @@ Preferences can be updated by recording again with the same category/key:
 
 ```bash
 # User changes their mind about commit style
-decapod data teammate add --category style --key commit_messages --value "detailed_explanatory" \
+decapod data memory add --category style --key commit_messages --value "detailed_explanatory" \
   --context "Now prefer detailed commit messages with full context" \
   --source "user_request"
 ```
 
 ## Storage Model
 
-Preferences are stored in `teammate.db` with full audit trail:
+Preferences are stored in `aptitude.db` with full audit trail:
 
 | Field | Description |
 |-------|-------------|
@@ -167,19 +168,19 @@ The `(category, key)` combination is unique - recording again updates the existi
 ```bash
 # User asks to commit something
 # 1. Check for git preferences
-decapod data teammate get --category git --key ssh_contributor
+decapod data memory get --category git --key ssh_contributor
 # Returns: use user's SSH, don't add self as contributor
 
 # 2. Check commit style
-decapod data teammate get --category style --key commit_messages
+decapod data memory get --category style --key commit_messages
 # Returns: concise and imperative
 
 # 3. Perform action respecting preferences
-git commit -m "feat: add teammate plugin"  # Using user's SSH
+git commit -m "feat: add aptitude plugin"  # Using user's SSH
 
 # 4. User expresses new preference
 # User: "always push to ahr/work branch"
-decapod data teammate add --category git --key default_push_branch --value "ahr/work" \
+decapod data memory add --category git --key default_push_branch --value "ahr/work" \
   --context "Default branch for pushing work" \
   --source "user_request"
 ```

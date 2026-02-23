@@ -2,7 +2,7 @@
 //!
 //! Decapod uses 4 consolidated SQLite databases ("bins") to manage state:
 //! 1. governance.db: Rules, policies, health, feedback, and archives.
-//! 2. memory.db: Governed knowledge graph, decisions, and teammate preferences.
+//! 2. memory.db: Governed knowledge graph, decisions, and aptitude preferences.
 //! 3. automation.db: Scheduled tasks (cron) and event triggers (reflex).
 //! 4. todo.db: Transactional task tracking with event-sourcing.
 
@@ -515,7 +515,7 @@ pub const HEALTH_DB_NAME: &str = "health.db";
 pub const POLICY_DB_NAME: &str = "policy.db";
 pub const FEEDBACK_DB_NAME: &str = "feedback.db";
 pub const ARCHIVE_DB_NAME: &str = "archive.db";
-pub const TEAMMATE_DB_NAME: &str = "teammate.db";
+pub const APTITUDE_DB_NAME: &str = "aptitude.db";
 
 // --- 5. LCM Bin (Lossless Context Management) ---
 pub const LCM_DB_NAME: &str = "lcm.db";
