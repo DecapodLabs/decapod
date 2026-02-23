@@ -341,6 +341,27 @@ enum WorkunitCommand {
         #[clap(long)]
         task_id: String,
     },
+    /// Attach a spec reference to a work unit
+    AttachSpec {
+        #[clap(long)]
+        task_id: String,
+        #[clap(long = "ref")]
+        reference: String,
+    },
+    /// Attach a state reference to a work unit
+    AttachState {
+        #[clap(long)]
+        task_id: String,
+        #[clap(long = "ref")]
+        reference: String,
+    },
+    /// Replace proof plan gates for a work unit
+    SetProofPlan {
+        #[clap(long)]
+        task_id: String,
+        #[clap(long = "gate")]
+        gates: Vec<String>,
+    },
 }
 
 #[derive(clap::Args, Debug)]
@@ -3065,6 +3086,18 @@ fn run_workunit_command(
                 }))
                 .unwrap()
             );
+        }
+        WorkunitCommand::AttachSpec { task_id, reference } => {
+            let manifest = core::workunit::add_spec_ref(project_root, &task_id, &reference)?;
+            println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
+        }
+        WorkunitCommand::AttachState { task_id, reference } => {
+            let manifest = core::workunit::add_state_ref(project_root, &task_id, &reference)?;
+            println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
+        }
+        WorkunitCommand::SetProofPlan { task_id, gates } => {
+            let manifest = core::workunit::set_proof_plan(project_root, &task_id, &gates)?;
+            println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
         }
     }
 
