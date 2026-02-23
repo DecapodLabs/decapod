@@ -140,3 +140,104 @@ fn knowledge_promote_rejects_missing_evidence_refs() {
         stderr
     );
 }
+
+#[test]
+fn procedural_knowledge_add_requires_promotion_event_provenance() {
+    let (_tmp, dir, password) = setup_repo();
+
+    let out = run_decapod(
+        &dir,
+        &[
+            "data",
+            "knowledge",
+            "add",
+            "--id",
+            "procedural/commit_norms/no-event",
+            "--title",
+            "Commit norms",
+            "--text",
+            "Must include tests",
+            "--provenance",
+            "commit:abc123",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !out.status.success(),
+        "procedural add should fail without event-backed provenance"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("procedural knowledge entries require provenance"),
+        "unexpected error: {}",
+        stderr
+    );
+}
+
+#[test]
+fn procedural_knowledge_add_accepts_valid_promotion_event_provenance() {
+    let (_tmp, dir, password) = setup_repo();
+
+    let promote = run_decapod(
+        &dir,
+        &[
+            "data",
+            "knowledge",
+            "promote",
+            "--source-entry-id",
+            "K_source",
+            "--evidence-ref",
+            "commit:abc123",
+            "--approved-by",
+            "human/reviewer-3",
+            "--reason",
+            "promote proven workflow guidance",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        promote.status.success(),
+        "knowledge promote failed: {}",
+        String::from_utf8_lossy(&promote.stderr)
+    );
+    let promote_payload: Value = serde_json::from_slice(&promote.stdout).expect("promotion json");
+    let event_id = promote_payload["event_id"]
+        .as_str()
+        .expect("event_id from promotion output");
+    let provenance = format!("event:{}", event_id);
+
+    let add = run_decapod(
+        &dir,
+        &[
+            "data",
+            "knowledge",
+            "add",
+            "--id",
+            "procedural/commit_norms/with-event",
+            "--title",
+            "Commit norms",
+            "--text",
+            "Run tests before publish",
+            "--provenance",
+            &provenance,
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        add.status.success(),
+        "procedural add should succeed with valid event-backed provenance: {}",
+        String::from_utf8_lossy(&add.stderr)
+    );
+}
