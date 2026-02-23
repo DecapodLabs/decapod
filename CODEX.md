@@ -33,7 +33,7 @@ decapod data schema --deterministic
 - `.decapod files are accessed only via decapod CLI`.
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod docs show core/DECAPOD.md`.
-- Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`, `decapod data teammate`).
+- Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
 - Operator reference: `decapod docs show docs/PLAYBOOK.md`.
 - Capability authority: `decapod capabilities --format json`.
 - Scoped context feature: `decapod docs search --query "<problem>" --op <op>` or `decapod rpc --op context.scope`.
