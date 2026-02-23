@@ -5165,9 +5165,25 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
             fragments.truncate(limit.max(1));
 
+            let local_specs = core::project_specs::local_project_specs_context(project_root);
+            let canonical_paths = local_specs.canonical_paths.clone();
+            let constitution_refs = local_specs.constitution_refs.clone();
+            let local_intent = local_specs.intent.clone();
+            let local_architecture = local_specs.architecture.clone();
+            let local_interfaces = local_specs.interfaces.clone();
+            let local_validation = local_specs.validation.clone();
+
             let result = serde_json::json!({
                 "fragments": fragments,
-                "scoped_fragments": scoped_fragments
+                "scoped_fragments": scoped_fragments,
+                "local_project_specs": {
+                    "canonical_paths": canonical_paths,
+                    "constitution_refs": constitution_refs,
+                    "intent": local_intent,
+                    "architecture": local_architecture,
+                    "interfaces": local_interfaces,
+                    "validation": local_validation
+                }
             });
             mark_constitution_context_resolved(project_root)?;
 
@@ -5179,10 +5195,22 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 vec![],
                 Some(ContextCapsule {
                     fragments,
-                    spec: None,
-                    architecture: None,
+                    spec: local_specs.intent.clone(),
+                    architecture: local_specs.architecture.clone(),
                     security: None,
-                    standards: None,
+                    standards: Some({
+                        let mut m = std::collections::HashMap::new();
+                        m.insert(
+                            "local_project_specs".to_string(),
+                            serde_json::json!({
+                                "canonical_paths": local_specs.canonical_paths,
+                                "constitution_refs": local_specs.constitution_refs,
+                                "interfaces": local_specs.interfaces,
+                                "validation": local_specs.validation
+                            }),
+                        );
+                        m
+                    }),
                 }),
                 vec![],
                 mandates.clone(),

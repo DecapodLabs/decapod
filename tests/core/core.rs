@@ -528,6 +528,14 @@ fn scaffold_store_and_docs_cli_behaviors() {
         live_target.join("specs/intent.md").exists(),
         "decapod init must scaffold specs/intent.md"
     );
+    assert!(
+        live_target.join("specs/interfaces.md").exists(),
+        "decapod init must scaffold specs/interfaces.md"
+    );
+    assert!(
+        live_target.join("specs/validation.md").exists(),
+        "decapod init must scaffold specs/validation.md"
+    );
     let architecture = fs::read_to_string(live_target.join("specs/architecture.md"))
         .expect("read specs/architecture.md");
     assert!(

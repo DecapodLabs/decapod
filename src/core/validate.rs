@@ -8,6 +8,7 @@ use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
 use crate::core::output;
 use crate::core::plan_governance;
+use crate::core::project_specs::LOCAL_PROJECT_SPECS;
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
@@ -1235,14 +1236,14 @@ fn validate_project_specs_docs(
         return Ok(());
     }
 
-    let required_files = ["README.md", "intent.md", "architecture.md"];
-    for file in required_files {
-        let path = specs_dir.join(file);
+    for spec in LOCAL_PROJECT_SPECS {
+        let path = repo_root.join(spec.path);
+        let file = spec.path;
         if path.exists() {
-            pass(&format!("Project specs file present: specs/{}", file), ctx);
+            pass(&format!("Project specs file present: {}", file), ctx);
         } else {
             fail(
-                &format!("Missing required project specs file: specs/{}", file),
+                &format!("Missing required project specs file: {}", file),
                 ctx,
             );
         }
@@ -1349,6 +1350,48 @@ fn validate_project_specs_docs(
         } else {
             pass("Intent spec has non-placeholder product outcome", ctx);
         }
+    }
+
+    let interfaces_path = specs_dir.join("interfaces.md");
+    if interfaces_path.exists() {
+        let interfaces =
+            fs::read_to_string(&interfaces_path).map_err(error::DecapodError::IoError)?;
+        for section in [
+            "# Interfaces",
+            "## Inbound Contracts",
+            "## Outbound Dependencies",
+            "## Data Ownership",
+            "## Failure Semantics",
+        ] {
+            if !interfaces.contains(section) {
+                fail(
+                    &format!("Interfaces spec missing required section: {}", section),
+                    ctx,
+                );
+            }
+        }
+        pass("Interfaces spec contains required contract sections", ctx);
+    }
+
+    let validation_path = specs_dir.join("validation.md");
+    if validation_path.exists() {
+        let validation =
+            fs::read_to_string(&validation_path).map_err(error::DecapodError::IoError)?;
+        for section in [
+            "# Validation",
+            "## Proof Surfaces",
+            "## Promotion Gates",
+            "## Evidence Artifacts",
+            "## Regression Guardrails",
+        ] {
+            if !validation.contains(section) {
+                fail(
+                    &format!("Validation spec missing required section: {}", section),
+                    ctx,
+                );
+            }
+        }
+        pass("Validation spec contains required proof/gate sections", ctx);
     }
 
     Ok(())
