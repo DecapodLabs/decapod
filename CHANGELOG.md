@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.7](https://github.com/DecapodLabs/decapod/compare/v0.38.6...v0.38.7) - 2026-02-23
+
+### Other
+
+- enforce promotion firewall for procedural knowledge writes
+
 ## [0.38.6](https://github.com/DecapodLabs/decapod/compare/v0.38.5...v0.38.6) - 2026-02-23
 
 ### Fixed
