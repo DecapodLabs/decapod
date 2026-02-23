@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0](https://github.com/DecapodLabs/decapod/compare/v0.39.0...v0.40.0) - 2026-02-23
+
+### Other
+
+- consolidate unreleased changelog for init/specs kernel rollout
+- hardcode canonical local specs contract and runtime mapping
+- separate intent purpose from architecture direction
+- enforce intent-first scaffolding and config anchors
+- infer repo context into config and add interactive init with mode
+- scaffold project specs docs with diagram style and architecture gate
+
 ### Other
 
 - init: add `decapod init with` (alias `wtih`) and `.decapod/config.toml` schema-backed repo context
