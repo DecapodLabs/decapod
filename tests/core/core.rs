@@ -489,8 +489,8 @@ fn scaffold_store_and_docs_cli_behaviors() {
     assert!(live_target.join(".decapod/OVERRIDE.md").exists());
     let gitignore = fs::read_to_string(live_target.join(".gitignore")).expect("read .gitignore");
     assert!(
-        gitignore.contains(".decapod/generated/"),
-        "decapod init must enforce generated root ignore in .gitignore"
+        gitignore.contains(".decapod/generated/*"),
+        "decapod init must enforce generated wildcard ignore in .gitignore"
     );
     assert!(
         gitignore.contains("!.decapod/generated/Dockerfile"),

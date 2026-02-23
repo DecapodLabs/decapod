@@ -1059,17 +1059,17 @@ fn validate_generated_artifact_whitelist(
 
     let gitignore_path = decapod_dir.join(".gitignore");
     let gitignore = fs::read_to_string(&gitignore_path).map_err(error::DecapodError::IoError)?;
-    let required_ignore = ".decapod/generated/";
+    let required_ignore = ".decapod/generated/*";
     let required_unignore = "!.decapod/generated/Dockerfile";
 
     if gitignore.lines().any(|line| line.trim() == required_ignore) {
         pass(
-            "Gitignore enforces generated root ignore (.decapod/generated/)",
+            "Gitignore enforces generated wildcard ignore (.decapod/generated/*)",
             ctx,
         );
     } else {
         fail(
-            "Missing .gitignore rule '.decapod/generated/' for generated artifact whitelist enforcement",
+            "Missing .gitignore rule '.decapod/generated/*' for generated artifact whitelist enforcement",
             ctx,
         );
     }

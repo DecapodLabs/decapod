@@ -273,7 +273,7 @@ fn validate_fails_when_gitignore_missing_generated_whitelist_rules() {
         .lines()
         .filter(|line| {
             let trimmed = line.trim();
-            trimmed != ".decapod/generated/" && trimmed != "!.decapod/generated/Dockerfile"
+            trimmed != ".decapod/generated/*" && trimmed != "!.decapod/generated/Dockerfile"
         })
         .collect::<Vec<_>>()
         .join("\n");
@@ -294,7 +294,7 @@ fn validate_fails_when_gitignore_missing_generated_whitelist_rules() {
     );
     let stderr = combined_output(&validate);
     assert!(
-        stderr.contains("Missing .gitignore rule '.decapod/generated/'")
+        stderr.contains("Missing .gitignore rule '.decapod/generated/*'")
             || stderr
                 .contains("Missing .gitignore allowlist rule '!.decapod/generated/Dockerfile'"),
         "expected generated whitelist .gitignore failure, got:\n{}",
