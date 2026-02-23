@@ -271,10 +271,7 @@ fn validate_fails_when_gitignore_missing_generated_whitelist_rules() {
     let content = fs::read_to_string(&gitignore_path).expect("read .gitignore");
     let content = content
         .lines()
-        .filter(|line| {
-            let trimmed = line.trim();
-            trimmed != ".decapod/generated/*" && trimmed != "!.decapod/generated/Dockerfile"
-        })
+        .filter(|line| line.trim() != "!.decapod/generated/context/*.json")
         .collect::<Vec<_>>()
         .join("\n");
     fs::write(&gitignore_path, format!("{}\n", content)).expect("rewrite .gitignore");
@@ -294,9 +291,7 @@ fn validate_fails_when_gitignore_missing_generated_whitelist_rules() {
     );
     let stderr = combined_output(&validate);
     assert!(
-        stderr.contains("Missing .gitignore rule '.decapod/generated/*'")
-            || stderr
-                .contains("Missing .gitignore allowlist rule '!.decapod/generated/Dockerfile'"),
+        stderr.contains("Missing .gitignore rule '!.decapod/generated/context/*.json'"),
         "expected generated whitelist .gitignore failure, got:\n{}",
         stderr
     );

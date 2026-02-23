@@ -67,18 +67,18 @@ AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
 
 ## Features ✨
 
-- ✅ Daemonless runtime: invoked on demand, exits immediately after each call.
-- ✅ Agent-agnostic CLI/RPC surface for Claude, Codex, Gemini, Cursor, and more.
-- ✅ Multi-agent-safe task/workspace coordination in the same repo.
-- ✅ Work Unit manifests (`intent/spec/state/proof`) with governed status transitions.
-- ✅ VERIFIED completion gating backed by explicit proof-plan pass results.
-- ✅ Publish-time and validate-time workunit enforcement.
-- ✅ Deterministic context capsule query (`core|interfaces|plugins` scoped).
-- ✅ Optional persisted context capsules in `.decapod/generated/context/*.json`.
-- ✅ Knowledge promotion firewall ledger in `.decapod/data/knowledge.promotions.jsonl`.
-- ✅ Procedural knowledge writes require event-backed promotion provenance.
-- ✅ Repo-native durable state and traces under `.decapod/` (local-first, auditable).
-- ✅ Authoritative `decapod validate` gate for promotion readiness.
+- ✅ Daemonless by design: no background service, no long-lived process, no hidden control loop.
+- ✅ `cargo install decapod` + `decapod init`, then keep using your agents exactly as-is, with scoped plain-English policy overrides in `.decapod/OVERRIDE.md`.
+- ✅ Agent-agnostic control plane: one CLI/RPC contract across Claude, Codex, Gemini, Cursor, and more.
+- ✅ Multi-agent-safe in one repo with governed task and workspace coordination.
+- ✅ Work Unit manifests make `intent/spec/state/proof` explicit and durable.
+- ✅ VERIFIED is structural, not rhetorical: proof-plan results must pass before completion.
+- ✅ Promotion is gated at validate-time and publish-time, so regressions do not silently ship.
+- ✅ Deterministic context capsules (`core|interfaces|plugins`) return scoped, hashable guidance.
+- ✅ Optional persisted capsules under `.decapod/generated/context/*.json` for reproducible context handoff.
+- ✅ Knowledge promotion firewall ledger (`.decapod/data/knowledge.promotions.jsonl`) controls what can become procedural truth.
+- ✅ Procedural knowledge writes require event-backed provenance, blocking unproven memory drift.
+- ✅ Local-first `.decapod/` state keeps shared traces, decisions, and proofs durable and auditable.
 
 And dozens more. For the full high-level and data-level surface area, see `decapod docs show core/INTERFACES.md` and the override template at `.decapod/OVERRIDE.md`.
 

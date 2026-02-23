@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Other
+
+- schema/interface: add eval governance kernel interfaces, claims, and deterministic proof tests
+
 ## [0.38.10](https://github.com/DecapodLabs/decapod/compare/v0.38.9...v0.38.10) - 2026-02-23
 
 ### Other

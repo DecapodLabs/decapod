@@ -9,6 +9,7 @@ use crate::core::error::DecapodError;
 use crate::core::rpc::{AllowedOp, Blocker, BlockerKind};
 use crate::core::todo;
 use crate::core::workunit::{self, WorkUnitStatus};
+use crate::plugins::eval;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -766,6 +767,7 @@ pub fn publish_workspace(
         ));
     }
     verify_workunit_gate_for_publish(repo_root, &status.git.current_branch)?;
+    eval::verify_eval_gate_for_publish(&repo_root.join(".decapod").join("data"))?;
 
     let dir = repo_root.to_str().unwrap_or(".");
 

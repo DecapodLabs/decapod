@@ -369,6 +369,13 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 stability: "stable".to_string(),
                 cost: "low".to_string(),
             },
+            Capability {
+                name: "eval.gate".to_string(),
+                description: "Run variance-aware statistical promotion gate over eval aggregates"
+                    .to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
         ],
         subsystems: vec![
             SubsystemInfo {
@@ -411,6 +418,18 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                     "llm".to_string(),
                     "agentic".to_string(),
                     "schema".to_string(),
+                ],
+            },
+            SubsystemInfo {
+                name: "eval".to_string(),
+                status: "active".to_string(),
+                ops: vec![
+                    "plan".to_string(),
+                    "ingest-run".to_string(),
+                    "judge".to_string(),
+                    "aggregate".to_string(),
+                    "gate".to_string(),
+                    "bucket-failures".to_string(),
                 ],
             },
         ],

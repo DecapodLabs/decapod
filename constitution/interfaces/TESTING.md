@@ -61,6 +61,30 @@ If DB contention prevents progress, validate MUST fail with a typed error marker
 
 and MUST provide remediation guidance (retry with backoff / inspect concurrent processes).
 
+### 5.2 Variance Eval Proof Surfaces
+
+For frontend/backend non-deterministic promotion paths, the following deterministic tests are required:
+
+1. Golden aggregation determinism:
+   - fixed synthetic run/verdict set -> deterministic aggregate delta + CI + gate decision.
+2. Judge contract validation:
+   - malformed judge JSON fails with `EVAL_JUDGE_JSON_CONTRACT_ERROR`.
+3. Judge bounded execution:
+   - timeout path fails with `EVAL_JUDGE_TIMEOUT` and blocks eval gate.
+4. Reproducibility lineage:
+   - changing critical plan settings changes `plan_hash`;
+   - cross-plan comparison fails unless explicit acknowledge flag is provided.
+
+### 5.3 Eval Gate Contract
+
+When eval gating is marked required, `decapod validate` and workspace publish MUST fail unless:
+
+1. Referenced aggregate artifact exists.
+2. Minimum run count criteria are met.
+3. Bootstrap CI is present.
+4. No gate-level regression condition is triggered.
+5. Judge timeout failures are zero.
+
 ---
 
 ## Links
