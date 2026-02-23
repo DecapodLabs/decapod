@@ -27,6 +27,10 @@ pub struct ScaffoldOptions {
     pub created_backups: bool,
     /// Force creation of all 5 entrypoint files regardless of existing state
     pub all: bool,
+    /// Generate project-facing specs/ scaffolding.
+    pub generate_specs: bool,
+    /// Diagram style for generated architecture document.
+    pub diagram_style: DiagramStyle,
 }
 
 pub struct ScaffoldSummary {
@@ -36,6 +40,128 @@ pub struct ScaffoldSummary {
     pub config_created: usize,
     pub config_unchanged: usize,
     pub config_preserved: usize,
+    pub specs_created: usize,
+    pub specs_unchanged: usize,
+    pub specs_preserved: usize,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum DiagramStyle {
+    Ascii,
+    Mermaid,
+}
+
+fn specs_readme_template() -> String {
+    r#"# Project Specs
+
+This directory is the human+agent engineering contract for this repository.
+
+- `intent.md` captures what is being built, constraints, and done criteria.
+- `architecture.md` captures implementation topology, interfaces, and operational gates.
+
+Keep both documents current as requirements and architecture evolve.
+"#
+    .to_string()
+}
+
+fn specs_intent_template() -> String {
+    r#"# Intent
+
+## Product Outcome
+- Define the user-visible outcome in one paragraph.
+
+## Scope
+- In scope:
+- Out of scope:
+
+## Constraints
+- Technical:
+- Operational:
+- Security/compliance:
+
+## Acceptance Criteria
+- [ ] Functional behavior is demonstrably correct.
+- [ ] Non-functional targets are met (latency, reliability, cost, etc.).
+- [ ] Validation gates pass and artifacts are attached.
+
+## Open Questions
+- List unresolved decisions that block implementation confidence.
+"#
+    .to_string()
+}
+
+fn specs_architecture_template(style: DiagramStyle) -> String {
+    let diagram = match style {
+        DiagramStyle::Ascii => {
+            r#"```text
+Human Intent
+    |
+    v
+Agent Swarm(s)  <---->  Decapod Control Plane  <---->  Repo + Services
+                             |      |      |
+                             |      |      +-- Validation Gates
+                             |      +--------- Provenance + Artifacts
+                             +---------------- Work Unit / Context Governance
+```"#
+        }
+        DiagramStyle::Mermaid => {
+            r#"```mermaid
+flowchart LR
+  H[Human Intent] --> A[Agent Swarm(s)]
+  A <--> D[Decapod Control Plane]
+  D <--> R[Repo + Services]
+  D --> G[Validation Gates]
+  D --> P[Provenance + Artifacts]
+  D --> W[Work Unit and Context Governance]
+```"#
+        }
+    };
+
+    format!(
+        r#"# Architecture
+
+## Executive Summary
+Describe the architecture in 5-8 dense sentences focused on deployment reality, system boundaries, and operational risks.
+
+## Integrated Surface
+- Runtime/languages:
+- Frameworks/libraries:
+- Infrastructure/services:
+- External dependencies:
+
+## Build Intent
+- What is being built now:
+- What is deferred:
+- Why this cut line is chosen:
+
+## System Topology
+{diagram}
+
+## Service Contracts
+- Inbound interfaces (API/events/CLI):
+- Outbound interfaces (datastores/queues/third-party):
+- Data ownership and consistency boundaries:
+
+## Multi-Agent Delivery Model
+- Work partitioning strategy:
+- Shared context/proof artifacts:
+- Coordination and handoff rules:
+
+## Validation Gates
+- Unit/integration/e2e gates:
+- Statistical/variance-aware gates (if nondeterministic surfaces exist):
+- Release/promotion blockers:
+
+## Delivery Plan
+- Milestone 1:
+- Milestone 2:
+- Milestone 3:
+
+## Risks and Mitigations
+- Risk:
+  Mitigation:
+"#
+    )
 }
 
 /// Canonical .gitignore rules managed by `decapod init`.
@@ -214,6 +340,32 @@ pub fn scaffold_project_entrypoints(
         fs::write(&dockerfile_path, dockerfile_content).map_err(error::DecapodError::IoError)?;
     }
 
+    let (specs_created, specs_unchanged, specs_preserved) = if opts.generate_specs {
+        let mut created = 0usize;
+        let mut unchanged = 0usize;
+        let mut preserved = 0usize;
+
+        let specs_files = vec![
+            ("specs/README.md", specs_readme_template()),
+            ("specs/intent.md", specs_intent_template()),
+            (
+                "specs/architecture.md",
+                specs_architecture_template(opts.diagram_style),
+            ),
+        ];
+
+        for (rel_path, content) in specs_files {
+            match write_file(opts, rel_path, &content)? {
+                FileAction::Created => created += 1,
+                FileAction::Unchanged => unchanged += 1,
+                FileAction::Preserved => preserved += 1,
+            }
+        }
+        (created, unchanged, preserved)
+    } else {
+        (0usize, 0usize, 0usize)
+    };
+
     Ok(ScaffoldSummary {
         entrypoints_created: ep_created,
         entrypoints_unchanged: ep_unchanged,
@@ -221,6 +373,9 @@ pub fn scaffold_project_entrypoints(
         config_created: cfg_created,
         config_unchanged: cfg_unchanged,
         config_preserved: cfg_preserved,
+        specs_created,
+        specs_unchanged,
+        specs_preserved,
     })
 }
 
