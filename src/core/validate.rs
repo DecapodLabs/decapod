@@ -1129,6 +1129,49 @@ fn validate_generated_artifact_whitelist(
     Ok(())
 }
 
+fn validate_project_config_toml(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Project Config Gate");
+    let config_path = repo_root.join(".decapod").join("config.toml");
+    if !config_path.exists() {
+        warn(
+            "Missing .decapod/config.toml; rerun `decapod init` to scaffold repo context configuration.",
+            ctx,
+        );
+        return Ok(());
+    }
+    let raw = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
+    let value: toml::Value = toml::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Invalid .decapod/config.toml syntax: {}", e))
+    })?;
+    let schema_version = value
+        .get("schema_version")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    if schema_version == "1.0.0" {
+        pass("Project config schema_version is valid (1.0.0)", ctx);
+    } else {
+        fail(
+            "Project config schema_version must be 1.0.0 in .decapod/config.toml",
+            ctx,
+        );
+    }
+    if value.get("repo").is_some() && value.get("init").is_some() {
+        pass(
+            "Project config contains required [repo] and [init] tables",
+            ctx,
+        );
+    } else {
+        fail(
+            "Project config missing required [repo] or [init] table",
+            ctx,
+        );
+    }
+    Ok(())
+}
+
 fn validate_project_specs_docs(
     ctx: &ValidationContext,
     repo_root: &Path,
@@ -3685,6 +3728,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_generated_artifact_whitelist", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_project_config_toml(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_project_config_toml", start.elapsed()));
         });
         s.spawn(move |_| {
             let start = Instant::now();
