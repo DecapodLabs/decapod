@@ -227,6 +227,9 @@ enum GovernCommand {
 
     /// Work unit manifest artifacts (intent/spec/state/proof chain)
     Workunit(WorkunitCli),
+
+    /// Deterministic context capsule query over embedded constitution docs
+    Capsule(CapsuleCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -398,6 +401,29 @@ enum WorkunitCommand {
         task_id: String,
         #[clap(long, value_enum)]
         to: WorkunitStatusArg,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+struct CapsuleCli {
+    #[clap(subcommand)]
+    command: CapsuleCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum CapsuleCommand {
+    /// Query a deterministic context capsule from embedded docs
+    Query {
+        #[clap(long)]
+        topic: String,
+        #[clap(long)]
+        scope: String,
+        #[clap(long)]
+        task_id: Option<String>,
+        #[clap(long)]
+        workunit_id: Option<String>,
+        #[clap(long, default_value_t = 6)]
+        limit: usize,
     },
 }
 
@@ -3062,6 +3088,44 @@ fn run_govern_command(
         },
         GovernCommand::Plan(plan_cli) => run_plan_command(plan_cli, project_store)?,
         GovernCommand::Workunit(workunit_cli) => run_workunit_command(workunit_cli, project_store)?,
+        GovernCommand::Capsule(capsule_cli) => run_capsule_command(capsule_cli, project_store)?,
+    }
+
+    Ok(())
+}
+
+fn run_capsule_command(
+    capsule_cli: CapsuleCli,
+    project_store: &Store,
+) -> Result<(), error::DecapodError> {
+    let project_root = project_store
+        .root
+        .parent()
+        .and_then(|p| p.parent())
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "unable to resolve project root from store root".to_string(),
+            )
+        })?;
+
+    match capsule_cli.command {
+        CapsuleCommand::Query {
+            topic,
+            scope,
+            task_id,
+            workunit_id,
+            limit,
+        } => {
+            let capsule = core::context_capsule::query_embedded_capsule(
+                project_root,
+                &topic,
+                &scope,
+                task_id.as_deref(),
+                workunit_id.as_deref(),
+                limit,
+            )?;
+            println!("{}", serde_json::to_string_pretty(&capsule).unwrap());
+        }
     }
 
     Ok(())
