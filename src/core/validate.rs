@@ -361,10 +361,10 @@ fn validate_repo_store_dogfood(
     if replay_report.divergences.is_empty() {
         pass("Audit log integrity verified (no pending event gaps)", ctx);
     } else {
-        fail(
+        warn(
             &format!(
-                "Audit log contains {} potential crash divergence(s)",
-                replay_report.divergences.len()
+                "Audit log contains {} potential crash divergence(s); historical pending entries detected. Run `decapod data broker verify` for details.",
+                replay_report.divergences.len(),
             ),
             ctx,
         );

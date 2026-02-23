@@ -9,6 +9,12 @@ use crate::core::schemas; // Import the new schemas module
 use rusqlite::{Connection, OpenFlags};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::thread;
+use std::time::Duration;
+
+const SQLITE_CONNECT_MAX_RETRIES: u32 = 5;
+const SQLITE_CONNECT_BASE_DELAY_MS: u64 = 50;
+const SQLITE_CONNECT_MAX_DELAY_MS: u64 = 1_000;
 
 /// Establish a SQLite connection with Decapod's standard configuration.
 ///
@@ -21,8 +27,7 @@ pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     ensure_db_parent_dir(db_path)?;
 
-    let conn = Connection::open(db_path)
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "open", &e))?;
+    let conn = open_with_retry(db_path, || Connection::open(db_path), "open")?;
     conn.busy_timeout(std::time::Duration::from_secs(5))
         .map_err(|e| db_open_error_with_diagnostics(db_path, "busy_timeout", &e))?;
     conn.execute("PRAGMA foreign_keys=ON;", [])
@@ -40,8 +45,11 @@ pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
 pub fn db_connect_for_validate(db_path: &str) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX;
-    let conn = Connection::open_with_flags(db_path, flags)
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "open_readonly_validate", &e))?;
+    let conn = open_with_retry(
+        db_path,
+        || Connection::open_with_flags(db_path, flags),
+        "open_readonly_validate",
+    )?;
     conn.busy_timeout(std::time::Duration::from_secs(2))
         .map_err(|e| db_open_error_with_diagnostics(db_path, "busy_timeout_validate", &e))?;
     conn.execute("PRAGMA query_only=ON;", [])
@@ -63,8 +71,7 @@ pub fn db_connect_pooled(
     let db_path = Path::new(db_path);
     ensure_db_parent_dir(db_path)?;
 
-    let conn = Connection::open(db_path)
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "open", &e))?;
+    let conn = open_with_retry(db_path, || Connection::open(db_path), "open")?;
     conn.busy_timeout(std::time::Duration::from_secs(busy_timeout_secs as u64))
         .map_err(|e| db_open_error_with_diagnostics(db_path, "busy_timeout", &e))?;
     conn.execute("PRAGMA foreign_keys=ON;", [])
@@ -82,8 +89,11 @@ pub fn db_connect_read_pooled(
 ) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX;
-    let conn = Connection::open_with_flags(db_path, flags)
-        .map_err(|e| db_open_error_with_diagnostics(db_path, "open_readonly_pooled", &e))?;
+    let conn = open_with_retry(
+        db_path,
+        || Connection::open_with_flags(db_path, flags),
+        "open_readonly_pooled",
+    )?;
     conn.busy_timeout(std::time::Duration::from_secs(busy_timeout_secs as u64))
         .map_err(|e| db_open_error_with_diagnostics(db_path, "busy_timeout_pooled", &e))?;
     conn.execute("PRAGMA query_only=ON;", [])
@@ -100,6 +110,52 @@ fn ensure_db_parent_dir(db_path: &Path) -> Result<(), error::DecapodError> {
         fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
     }
     Ok(())
+}
+
+fn open_with_retry<F>(
+    db_path: &Path,
+    mut open_fn: F,
+    stage: &str,
+) -> Result<Connection, error::DecapodError>
+where
+    F: FnMut() -> Result<Connection, rusqlite::Error>,
+{
+    let mut attempt = 0u32;
+    loop {
+        match open_fn() {
+            Ok(conn) => return Ok(conn),
+            Err(err) => {
+                if is_retryable_sqlite_open_error(&err) && attempt < SQLITE_CONNECT_MAX_RETRIES {
+                    let delay_ms = (SQLITE_CONNECT_BASE_DELAY_MS * 2u64.pow(attempt))
+                        .min(SQLITE_CONNECT_MAX_DELAY_MS);
+                    attempt += 1;
+                    thread::sleep(Duration::from_millis(delay_ms));
+                    continue;
+                }
+                return Err(db_open_error_with_diagnostics(db_path, stage, &err));
+            }
+        }
+    }
+}
+
+fn is_retryable_sqlite_open_error(err: &rusqlite::Error) -> bool {
+    match err {
+        rusqlite::Error::SqliteFailure(code, msg) => {
+            if matches!(
+                code.code,
+                rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked
+            ) || code.extended_code == 522
+            {
+                return true;
+            }
+            let lower = msg.as_deref().unwrap_or_default().to_ascii_lowercase();
+            lower.contains("locked") || lower.contains("disk i/o error")
+        }
+        other => {
+            let lower = other.to_string().to_ascii_lowercase();
+            lower.contains("locked") || lower.contains("disk i/o error")
+        }
+    }
 }
 
 fn configure_journal_mode_with_fallback(
