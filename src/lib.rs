@@ -224,6 +224,9 @@ enum GovernCommand {
 
     /// Plan-governed execution artifacts and gates
     Plan(PlanCli),
+
+    /// Work unit manifest artifacts (intent/spec/state/proof chain)
+    Workunit(WorkunitCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -310,6 +313,33 @@ enum PlanCommand {
     CheckExecute {
         #[clap(long)]
         todo_id: Option<String>,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+struct WorkunitCli {
+    #[clap(subcommand)]
+    command: WorkunitCommand,
+}
+
+#[derive(Subcommand, Debug)]
+enum WorkunitCommand {
+    /// Initialize a work unit manifest for a task
+    Init {
+        #[clap(long)]
+        task_id: String,
+        #[clap(long)]
+        intent_ref: String,
+    },
+    /// Get full work unit manifest JSON
+    Get {
+        #[clap(long)]
+        task_id: String,
+    },
+    /// Show compact work unit status
+    Status {
+        #[clap(long)]
+        task_id: String,
     },
 }
 
@@ -2973,6 +3003,69 @@ fn run_govern_command(
             }
         },
         GovernCommand::Plan(plan_cli) => run_plan_command(plan_cli, project_store)?,
+        GovernCommand::Workunit(workunit_cli) => run_workunit_command(workunit_cli, project_store)?,
+    }
+
+    Ok(())
+}
+
+fn run_workunit_command(
+    workunit_cli: WorkunitCli,
+    project_store: &Store,
+) -> Result<(), error::DecapodError> {
+    let project_root = project_store
+        .root
+        .parent()
+        .and_then(|p| p.parent())
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "unable to resolve project root from store root".to_string(),
+            )
+        })?;
+
+    match workunit_cli.command {
+        WorkunitCommand::Init {
+            task_id,
+            intent_ref,
+        } => {
+            let manifest = core::workunit::init_workunit(project_root, &task_id, &intent_ref)?;
+            let path = core::workunit::workunit_path(project_root, &task_id)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "status": "ok",
+                    "marker": "WORKUNIT_INITIALIZED",
+                    "path": path,
+                    "workunit": manifest,
+                }))
+                .unwrap()
+            );
+        }
+        WorkunitCommand::Get { task_id } => {
+            let manifest = core::workunit::load_workunit(project_root, &task_id)?;
+            println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
+        }
+        WorkunitCommand::Status { task_id } => {
+            let manifest = core::workunit::load_workunit(project_root, &task_id)?;
+            let path = core::workunit::workunit_path(project_root, &task_id)?;
+            let hash = manifest.canonical_hash_hex().map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "failed to compute workunit hash: {}",
+                    e
+                ))
+            })?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "status": "ok",
+                    "task_id": manifest.task_id,
+                    "workunit_status": manifest.status,
+                    "manifest_hash": hash,
+                    "path": path,
+                }))
+                .unwrap()
+            );
+        }
     }
 
     Ok(())
