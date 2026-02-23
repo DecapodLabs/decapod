@@ -8,7 +8,9 @@ use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
 use crate::core::output;
 use crate::core::plan_governance;
-use crate::core::project_specs::LOCAL_PROJECT_SPECS;
+use crate::core::project_specs::{
+    LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_DIR,
+};
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
@@ -1227,10 +1229,10 @@ fn validate_project_specs_docs(
 ) -> Result<(), error::DecapodError> {
     info("Project Specs Architecture Gate");
 
-    let specs_dir = repo_root.join("specs");
+    let specs_dir = repo_root.join(LOCAL_PROJECT_SPECS_DIR);
     if !specs_dir.exists() {
         warn(
-            "Project specs directory missing (specs/). Run `decapod init --force` to scaffold intent/architecture docs.",
+            "Project specs directory missing (.decapod/generated/specs/). Run `decapod init --force` to scaffold intent/architecture docs.",
             ctx,
         );
         return Ok(());
@@ -1249,7 +1251,7 @@ fn validate_project_specs_docs(
         }
     }
 
-    let architecture_path = specs_dir.join("architecture.md");
+    let architecture_path = repo_root.join(LOCAL_PROJECT_SPECS_ARCHITECTURE);
     if architecture_path.exists() {
         let architecture =
             fs::read_to_string(&architecture_path).map_err(error::DecapodError::IoError)?;

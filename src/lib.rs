@@ -125,10 +125,10 @@ struct InitGroupCli {
     /// Show what would change without writing files.
     #[clap(long)]
     dry_run: bool,
-    /// Generate project `specs/` docs scaffolding (enabled by default).
+    /// Generate project specs docs scaffolding under `.decapod/generated/specs/` (enabled by default).
     #[clap(long = "no-specs", action = clap::ArgAction::SetFalse, default_value_t = true)]
     specs: bool,
-    /// Diagram style for generated `specs/architecture.md`.
+    /// Diagram style for generated `.decapod/generated/specs/architecture.md`.
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
     diagram_style: InitDiagramStyle,
     /// Force creation of all 3 entrypoint files (GEMINI.md, AGENTS.md, CLAUDE.md).
@@ -181,10 +181,10 @@ struct InitWithCli {
     /// Create only AGENTS.md entrypoint file.
     #[clap(long)]
     agents: bool,
-    /// Generate project `specs/` docs scaffolding (enabled by default).
+    /// Generate project specs docs scaffolding under `.decapod/generated/specs/` (enabled by default).
     #[clap(long = "no-specs", action = clap::ArgAction::SetFalse, default_value_t = true)]
     specs: bool,
-    /// Diagram style for generated `specs/architecture.md`.
+    /// Diagram style for generated `.decapod/generated/specs/architecture.md`.
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
     diagram_style: InitDiagramStyle,
 }
@@ -1130,7 +1130,7 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
         ctx.product_type = Some("service_or_library".to_string());
     }
 
-    let intent_path = target_dir.join("specs").join("intent.md");
+    let intent_path = target_dir.join(core::project_specs::LOCAL_PROJECT_SPECS_INTENT);
     if intent_path.exists()
         && let Ok(intent) = fs::read_to_string(intent_path)
     {
@@ -1142,7 +1142,7 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
             }
         }
     }
-    let architecture_path = target_dir.join("specs").join("architecture.md");
+    let architecture_path = target_dir.join(core::project_specs::LOCAL_PROJECT_SPECS_ARCHITECTURE);
     if architecture_path.exists()
         && let Ok(arch) = fs::read_to_string(architecture_path)
     {
@@ -1343,6 +1343,7 @@ fn interactive_init_with(
 }
 
 fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::DecapodError> {
+    println!("▶ init: confirm inferred repo context before scaffolding .decapod/generated/specs/");
     let current_summary = repo.product_summary.clone().unwrap_or_else(|| {
         "Deliver the repository outcome against explicit user intent with proof-backed completion."
             .to_string()
@@ -1352,30 +1353,30 @@ fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::
         &current_summary,
     )?);
 
-    let current_arch = repo.architecture_direction.clone().unwrap_or_else(|| {
-        "Composable repository architecture with explicit boundaries and proof-backed delivery invariants."
-            .to_string()
-    });
-    repo.architecture_direction = Some(prompt_line_default(
-        "Architecture direction (system shape + key boundaries)",
-        &current_arch,
-    )?);
+    let refine_now = prompt_yes_no(
+        "Refine architecture direction and done criteria now? (You can evolve .decapod/generated/specs/*.md later through normal agent workflow.)",
+        false,
+    )?;
+    if refine_now {
+        let current_arch = repo.architecture_direction.clone().unwrap_or_else(|| {
+            "Composable repository architecture with explicit boundaries and proof-backed delivery invariants."
+                .to_string()
+        });
+        repo.architecture_direction = Some(prompt_line_default(
+            "Architecture direction (system shape + key boundaries)",
+            &current_arch,
+        )?);
 
-    let current_done = repo.done_criteria.clone().unwrap_or_else(|| {
-        "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
-            .to_string()
-    });
-    repo.done_criteria = Some(prompt_line_default(
-        "Done criteria (evidence required before ship)",
-        &current_done,
-    )?);
+        let current_done = repo.done_criteria.clone().unwrap_or_else(|| {
+            "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
+                .to_string()
+        });
+        repo.done_criteria = Some(prompt_line_default(
+            "Done criteria (evidence required before ship)",
+            &current_done,
+        )?);
+    }
     Ok(())
-}
-
-fn needs_repo_context_interview(repo: &RepoContext) -> bool {
-    repo.product_summary.is_none()
-        || repo.architecture_direction.is_none()
-        || repo.done_criteria.is_none()
 }
 
 fn run_init_apply(
@@ -1560,7 +1561,6 @@ pub fn run() -> Result<(), error::DecapodError> {
         }
         Command::Init(init_group) => {
             let base_init_invocation = init_group.command.is_none();
-            let mut had_existing_config = false;
             let init_with = match init_group.command {
                 Some(InitCommand::Clean { dir }) => {
                     clean_project(dir)?;
@@ -1577,7 +1577,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                     .map_err(error::DecapodError::IoError)?;
                     let maybe_cfg = load_project_config_if_present(&target)?;
                     if let Some(cfg) = maybe_cfg {
-                        had_existing_config = true;
                         let mut with = interactive_init_with(
                             &cfg,
                             target.clone(),
@@ -1621,10 +1620,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 std::fs::canonicalize(init_with.dir.clone().unwrap_or_else(|| current_dir.clone()))
                     .map_err(error::DecapodError::IoError)?;
             let mut repo_ctx = infer_repo_context(&init_target);
-            if base_init_invocation
-                && io::stdin().is_terminal()
-                && (had_existing_config || needs_repo_context_interview(&repo_ctx))
-            {
+            if base_init_invocation && io::stdin().is_terminal() {
                 enrich_repo_context_interactive(&mut repo_ctx)?;
             }
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
@@ -5172,6 +5168,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let local_architecture = local_specs.architecture.clone();
             let local_interfaces = local_specs.interfaces.clone();
             let local_validation = local_specs.validation.clone();
+            let local_update_guidance = local_specs.update_guidance.clone();
 
             let result = serde_json::json!({
                 "fragments": fragments,
@@ -5182,7 +5179,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     "intent": local_intent,
                     "architecture": local_architecture,
                     "interfaces": local_interfaces,
-                    "validation": local_validation
+                    "validation": local_validation,
+                    "update_guidance": local_update_guidance
                 }
             });
             mark_constitution_context_resolved(project_root)?;
@@ -5206,7 +5204,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                                 "canonical_paths": local_specs.canonical_paths,
                                 "constitution_refs": local_specs.constitution_refs,
                                 "interfaces": local_specs.interfaces,
-                                "validation": local_specs.validation
+                                "validation": local_specs.validation,
+                                "update_guidance": local_specs.update_guidance
                             }),
                         );
                         m

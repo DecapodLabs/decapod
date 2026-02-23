@@ -7,7 +7,10 @@
 
 use crate::core::assets;
 use crate::core::error;
-use crate::core::project_specs::LOCAL_PROJECT_SPECS;
+use crate::core::project_specs::{
+    LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_INTENT,
+    LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_README, LOCAL_PROJECT_SPECS_VALIDATION,
+};
 use crate::plugins::container;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -68,7 +71,9 @@ pub struct SpecsSeed {
 fn specs_readme_template() -> String {
     r#"# Project Specs
 
-This directory is the human+agent engineering contract for this repository.
+This directory is managed by Decapod for the human+agent engineering contract of this repository.
+Canonical path: `.decapod/generated/specs/`.
+Decapod updates and validates these files as intent and implementation evolve.
 
 - `intent.md` captures why this repository exists and what outcome it must achieve.
 - `architecture.md` captures implementation topology, interfaces, and operational gates.
@@ -134,6 +139,25 @@ fn specs_architecture_template(style: DiagramStyle, seed: Option<&SpecsSeed>) ->
     let product_type = seed
         .and_then(|s| s.product_type.as_deref())
         .unwrap_or("to be confirmed");
+    let deployment_hint = if surfaces.contains("frontend") && surfaces.contains("backend") {
+        "Frontend runs in user-facing edge/runtime environments; backend runs in service/container environments with explicit contract boundaries."
+    } else if surfaces.contains("frontend") {
+        "Primary runtime is client/edge-facing; deployment must include CDN/edge and API dependency policy."
+    } else if surfaces.contains("backend") {
+        "Primary runtime is service/container process space; deployment must include network, persistence, and rollout topology."
+    } else {
+        "Runtime topology must be explicitly defined before promotion."
+    };
+    let execution_hint = if runtime_langs.contains("rust") {
+        "Process model should document async runtime, worker model, synchronization strategy, and blocking boundaries."
+    } else {
+        "Process model should document concurrency strategy, scheduling model, and isolation boundaries."
+    };
+    let schema_hint = if surfaces.contains("backend") {
+        "Document authoritative schema objects, ownership boundaries, migration policy, and backward-compatibility rules."
+    } else {
+        "Document data models, state ownership, and compatibility policy for persisted/shared artifacts."
+    };
 
     let diagram = match style {
         DiagramStyle::Ascii => {
@@ -160,6 +184,31 @@ flowchart LR
 ```"#
         }
     };
+    let flow_diagram = match style {
+        DiagramStyle::Ascii => {
+            r#"```text
+Input/Event --> Contract Parse --> Planning/Dispatch --> Execution --> Verification --> Promotion Gate
+      |              |                  |                  |               |                 |
+      +--------------+------------------+------------------+---------------+-----------------+
+                                Trace + Metrics + Artifacts (durable evidence)
+```"#
+        }
+        DiagramStyle::Mermaid => {
+            r#"```mermaid
+flowchart LR
+  I[Input or Event] --> C[Contract Parse]
+  C --> P[Planning or Dispatch]
+  P --> E[Execution]
+  E --> V[Verification]
+  V --> G[Promotion Gate]
+  I -.-> T[Trace + Metrics + Artifacts]
+  C -.-> T
+  P -.-> T
+  E -.-> T
+  V -.-> T
+```"#
+        }
+    };
 
     format!(
         r#"# Architecture
@@ -173,6 +222,13 @@ flowchart LR
 - Infrastructure/services: {product_type}
 - External dependencies:
 
+## Runtime and Deployment Matrix
+- Execution environments (local/dev/stage/prod):
+- Where each component runs (host/container/edge/serverless):
+- Network topology and trust zones:
+- Deployment/rollback strategy:
+- Deployment assumptions inferred from repository: {deployment_hint}
+
 ## Implementation Strategy
 - What is being built now:
 - What is deferred:
@@ -181,10 +237,32 @@ flowchart LR
 ## System Topology
 {diagram}
 
+## Execution Physics
+- End-to-end execution path (event to promoted output):
+{flow_diagram}
+- Concurrency and scheduling model:
+- Queueing, backpressure, and retry semantics:
+- Timeouts, cancellation, and idempotency model:
+- Runtime execution note: {execution_hint}
+
 ## Service Contracts
 - Inbound interfaces (API/events/CLI):
 - Outbound interfaces (datastores/queues/third-party):
 - Data ownership and consistency boundaries:
+
+## Schema and Data Contracts
+- Canonical entities and schema owners:
+- Storage engines and data lifecycle (retention/compaction/archive):
+- Migration policy (forward/backward compatibility, rollout order):
+- Data validation and invariant checks:
+- Schema responsibility note: {schema_hint}
+
+## API and ABI Contracts
+- API surface inventory (internal/external, versioning policy):
+- Request/response compatibility contract (required/optional fields, defaults):
+- Event contract compatibility rules:
+- Binary/runtime ABI boundaries (plugins, FFI, wire formats, language interop):
+- Deprecation window and breaking-change process:
 
 ## Multi-Agent Delivery Model
 - Work partitioning strategy:
@@ -196,10 +274,34 @@ flowchart LR
 - Statistical/variance-aware gates (if nondeterministic surfaces exist):
 - Release/promotion blockers:
 
+## Operational Planes
+- Observability contract (logs/metrics/traces and correlation IDs):
+- On-call/incident response expectations:
+- Capacity and scaling controls:
+- Security controls (authn/authz, secret handling, audit trail):
+
+## Failure Topology and Recovery
+- Critical failure modes by component:
+- Detection signals and health checks:
+- Automated recovery paths and manual break-glass steps:
+- Data integrity and replay strategy after faults:
+
+## Performance Envelope
+- Latency budgets (p50/p95/p99) per critical path:
+- Throughput targets and saturation indicators:
+- Cost envelope (compute/storage/network) and budget guardrails:
+- Benchmark and load-test evidence requirements:
+
 ## Delivery Plan
 - Milestone 1:
 - Milestone 2:
 - Milestone 3:
+
+## Change Management
+- Architectural Decision Record policy:
+- Contract-change review checklist:
+- Migration/release choreography:
+- Post-release verification and rollback criteria:
 
 ## Risks and Mitigations
 - Risk:
@@ -275,6 +377,8 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     "!.decapod/generated/Dockerfile",
     "!.decapod/generated/context/",
     "!.decapod/generated/context/*.json",
+    "!.decapod/generated/specs/",
+    "!.decapod/generated/specs/*.md",
 ];
 
 /// Ensure a given entry exists in the project's .gitignore file.
@@ -445,11 +549,13 @@ pub fn scaffold_project_entrypoints(
         let mut specs_files: Vec<(&str, String)> = Vec::new();
         for spec in LOCAL_PROJECT_SPECS {
             let content = match spec.path {
-                "specs/README.md" => specs_readme_template(),
-                "specs/intent.md" => specs_intent_template(seed),
-                "specs/architecture.md" => specs_architecture_template(opts.diagram_style, seed),
-                "specs/interfaces.md" => specs_interfaces_template(),
-                "specs/validation.md" => specs_validation_template(),
+                LOCAL_PROJECT_SPECS_README => specs_readme_template(),
+                LOCAL_PROJECT_SPECS_INTENT => specs_intent_template(seed),
+                LOCAL_PROJECT_SPECS_ARCHITECTURE => {
+                    specs_architecture_template(opts.diagram_style, seed)
+                }
+                LOCAL_PROJECT_SPECS_INTERFACES => specs_interfaces_template(),
+                LOCAL_PROJECT_SPECS_VALIDATION => specs_validation_template(),
                 _ => continue,
             };
             specs_files.push((spec.path, content));

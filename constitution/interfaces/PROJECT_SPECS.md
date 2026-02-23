@@ -3,7 +3,7 @@
 **Authority:** interface (local project spec contract)
 **Layer:** Interfaces
 **Binding:** Yes
-**Scope:** canonical repo-local `specs/*.md` artifact set and constitution mapping
+**Scope:** canonical repo-local `generated/specs/*.md` artifact set (stored under Decapod-managed generated outputs) and constitution mapping
 **Non-goals:** replacing constitution authority docs
 
 ---
@@ -12,11 +12,11 @@
 
 Decapod-managed projects MUST contain exactly this canonical local specs surface:
 
-1. `specs/README.md`
-2. `specs/intent.md`
-3. `specs/architecture.md`
-4. `specs/interfaces.md`
-5. `specs/validation.md`
+1. `generated/specs/README.md`
+2. `generated/specs/intent.md`
+3. `generated/specs/architecture.md`
+4. `generated/specs/interfaces.md`
+5. `generated/specs/validation.md`
 
 This set is hardcoded in the Decapod binary (`core::project_specs::LOCAL_PROJECT_SPECS`) and consumed by:
 - `decapod init` scaffolding
@@ -29,11 +29,11 @@ This set is hardcoded in the Decapod binary (`core::project_specs::LOCAL_PROJECT
 
 | Local spec | Purpose | Constitution dependency |
 |---|---|---|
-| `specs/intent.md` | Product/repo purpose and creator-maintainer outcome | `specs/INTENT.md` |
-| `specs/architecture.md` | Technical implementation architecture | `interfaces/ARCHITECTURE_FOUNDATIONS.md` |
-| `specs/interfaces.md` | Inbound/outbound contracts and failure semantics | `interfaces/CONTROL_PLANE.md` |
-| `specs/validation.md` | Proof surfaces, promotion gates, and evidence model | `interfaces/TESTING.md` |
-| `specs/README.md` | Local specs index and navigation | `core/INTERFACES.md` |
+| `generated/specs/intent.md` | Product/repo purpose and creator-maintainer outcome | `specs/INTENT.md` |
+| `generated/specs/architecture.md` | Technical implementation architecture | `interfaces/ARCHITECTURE_FOUNDATIONS.md` |
+| `generated/specs/interfaces.md` | Inbound/outbound contracts and failure semantics | `interfaces/CONTROL_PLANE.md` |
+| `generated/specs/validation.md` | Proof surfaces, promotion gates, and evidence model | `interfaces/TESTING.md` |
+| `generated/specs/README.md` | Local specs index and navigation | `core/INTERFACES.md` |
 
 ---
 
