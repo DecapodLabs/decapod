@@ -1327,6 +1327,7 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "assurance.evaluate"
             | "mentor.obligations"
             | "context.resolve"
+            | "context.scope"
             | "context.bindings"
             | "schema.get"
             | "store.upsert"
@@ -1356,7 +1357,11 @@ fn enforce_worktree_requirement_for_rpc(
             .unwrap_or_else(|| project_root.to_path_buf());
         if !matches!(
             op,
-            "validate.run" | "context.resolve" | "context.bindings" | "schema.get"
+            "validate.run"
+                | "context.resolve"
+                | "context.scope"
+                | "context.bindings"
+                | "schema.get"
         ) && !is_canonical_decapod_worktree_path(&worktree_path)
         {
             return Err(error::DecapodError::ValidationError(format!(
@@ -1379,6 +1384,7 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
         op,
         "agent.init"
             | "context.resolve"
+            | "context.scope"
             | "context.bindings"
             | "schema.get"
             | "store.upsert"
@@ -4224,12 +4230,13 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 mandates.clone(),
             )
         }
-        "context.resolve" => {
+        "context.resolve" | "context.scope" => {
             let params = &request.params;
             let op = params.get("op").and_then(|v| v.as_str());
             let touched_paths = params.get("touched_paths").and_then(|v| v.as_array());
             let intent_tags = params.get("intent_tags").and_then(|v| v.as_array());
-            let _limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(5);
+            let query = params.get("query").and_then(|v| v.as_str());
+            let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(5) as usize;
 
             let mut fragments = Vec::new();
             let bindings = docs::get_bindings(project_root);
@@ -4276,10 +4283,36 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 
             fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
             fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
-            fragments.truncate(5);
+            let touched_vec = touched_paths
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            let tags_vec = intent_tags
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            let scoped_fragments = docs::resolve_scoped_fragments(
+                project_root,
+                query,
+                op,
+                &touched_vec,
+                &tags_vec,
+                limit,
+            );
+            fragments.extend(scoped_fragments.clone());
+            fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
+            fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
+            fragments.truncate(limit.max(1));
 
             let result = serde_json::json!({
-                "fragments": fragments
+                "fragments": fragments,
+                "scoped_fragments": scoped_fragments
             });
             mark_constitution_context_resolved(project_root)?;
 
