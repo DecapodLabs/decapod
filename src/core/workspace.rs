@@ -8,6 +8,8 @@
 use crate::core::error::DecapodError;
 use crate::core::rpc::{AllowedOp, Blocker, BlockerKind};
 use crate::core::todo;
+use crate::core::workunit::{self, WorkUnitStatus};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -763,6 +765,7 @@ pub fn publish_workspace(
                 .to_string(),
         ));
     }
+    verify_workunit_gate_for_publish(repo_root, &status.git.current_branch)?;
 
     let dir = repo_root.to_str().unwrap_or(".");
 
@@ -882,6 +885,47 @@ pub fn publish_workspace(
         remote_url,
         pr_url,
     })
+}
+
+fn extract_task_ids_from_branch(branch: &str) -> Vec<String> {
+    let re = Regex::new(r"(?i)r_[a-z0-9]+").expect("static regex");
+    let mut out: Vec<String> = re
+        .find_iter(branch)
+        .map(|m| m.as_str().to_ascii_uppercase())
+        .collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
+pub fn verify_workunit_gate_for_publish(
+    repo_root: &Path,
+    branch: &str,
+) -> Result<(), DecapodError> {
+    let task_ids = extract_task_ids_from_branch(branch);
+    if task_ids.is_empty() {
+        return Ok(());
+    }
+
+    for task_id in task_ids {
+        let path = workunit::workunit_path(repo_root, &task_id)?;
+        if !path.exists() {
+            return Err(DecapodError::ValidationError(format!(
+                "Cannot publish: missing required workunit manifest for task '{}' at {}.",
+                task_id,
+                path.display()
+            )));
+        }
+        let manifest = workunit::load_workunit(repo_root, &task_id)?;
+        if manifest.status != WorkUnitStatus::Verified {
+            return Err(DecapodError::ValidationError(format!(
+                "Cannot publish: workunit '{}' is not VERIFIED (current {:?}).",
+                task_id, manifest.status
+            )));
+        }
+    }
+
+    Ok(())
 }
 
 pub fn get_allowed_ops(status: &WorkspaceStatus) -> Vec<AllowedOp> {

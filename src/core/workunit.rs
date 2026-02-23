@@ -239,6 +239,10 @@ pub fn transition_status(
     load_workunit(project_root, task_id)
 }
 
+pub fn validate_verified_manifest(manifest: &WorkUnitManifest) -> Result<(), error::DecapodError> {
+    ensure_verified_ready(manifest)
+}
+
 fn can_transition(from: &WorkUnitStatus, to: &WorkUnitStatus) -> bool {
     use WorkUnitStatus::*;
     matches!(
@@ -265,8 +269,7 @@ fn ensure_verified_ready(manifest: &WorkUnitManifest) -> Result<(), error::Decap
         let hit = manifest
             .proof_results
             .iter()
-            .find(|r| &r.gate == gate && r.status == "pass")
-            .is_some();
+            .any(|r| &r.gate == gate && r.status == "pass");
         if !hit {
             return Err(error::DecapodError::ValidationError(format!(
                 "cannot transition to VERIFIED: missing passing proof result for gate '{}'",
