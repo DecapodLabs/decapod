@@ -55,7 +55,8 @@ Then keep using your agents normally. Decapod is called from inside those agent 
 
 Agent integration: If you use Claude Code / Codex / Gemini / Cursor / similar tools, see `AGENTS.md` and the tool-specific entrypoint files (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`) for the exact operational contract.
 
-Learn more about the embedded (constitution)[constitution/core/DECAPOD.md].
+Learn more about the embedded constitution via the CLI:
+Use `decapod docs show core/DECAPOD.md` as the canonical router command.
 
 Override constitution defaults with plain English in `.decapod/OVERRIDE.md` after you initilaize Decapod in your project directory.
 
