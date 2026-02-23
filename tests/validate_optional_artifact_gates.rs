@@ -230,3 +230,36 @@ fn validate_fails_on_invalid_knowledge_promotion_ledger_if_present() {
         stderr
     );
 }
+
+#[test]
+fn validate_fails_on_non_procedural_target_class_in_promotion_ledger() {
+    let (_tmp, dir, password) = setup_repo();
+    let data_dir = dir.join(".decapod").join("data");
+    fs::create_dir_all(&data_dir).expect("create data dir");
+    fs::write(
+        data_dir.join("knowledge.promotions.jsonl"),
+        r#"{"event_id":"evt_2","ts":"1Z","source_entry_id":"K_1","target_class":"semantic","evidence_refs":["commit:abc123"],"approved_by":"human/reviewer","actor":"agent/test","reason":"bad class"}
+"#,
+    )
+    .expect("write promotions ledger with invalid target class");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !validate.status.success(),
+        "validate should fail for non-procedural target_class in promotion ledger"
+    );
+    let stderr = combined_output(&validate);
+    assert!(
+        stderr.contains("target_class='procedural'"),
+        "expected target_class guard failure in stderr, got:\n{}",
+        stderr
+    );
+}

@@ -74,6 +74,27 @@ pub struct DecayResult {
     pub event_id: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct KnowledgePromotionEvent {
+    pub event_id: String,
+    pub ts: String,
+    pub source_entry_id: String,
+    pub target_class: String,
+    pub evidence_refs: Vec<String>,
+    pub approved_by: String,
+    pub actor: String,
+    pub reason: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct KnowledgePromotionEventInput<'a> {
+    pub source_entry_id: &'a str,
+    pub evidence_refs: &'a [String],
+    pub approved_by: &'a str,
+    pub actor: &'a str,
+    pub reason: &'a str,
+}
+
 pub fn parse_conflict_policy(value: &str) -> Result<KnowledgeConflictPolicy, error::DecapodError> {
     match value {
         "merge" => Ok(KnowledgeConflictPolicy::Merge),
@@ -486,6 +507,74 @@ pub fn decay_knowledge(
     })
 }
 
+pub fn record_promotion_event(
+    store: &Store,
+    input: KnowledgePromotionEventInput<'_>,
+) -> Result<KnowledgePromotionEvent, error::DecapodError> {
+    if input.source_entry_id.trim().is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "source_entry_id is required".to_string(),
+        ));
+    }
+    if input.evidence_refs.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "at least one --evidence-ref is required".to_string(),
+        ));
+    }
+    if input.approved_by.trim().is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "approved_by is required".to_string(),
+        ));
+    }
+    if input.actor.trim().is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "actor is required".to_string(),
+        ));
+    }
+    if input.reason.trim().is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "reason is required".to_string(),
+        ));
+    }
+
+    let mut evidence_refs = input
+        .evidence_refs
+        .iter()
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>();
+    evidence_refs.sort();
+    evidence_refs.dedup();
+    if evidence_refs.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "evidence_refs cannot be empty".to_string(),
+        ));
+    }
+
+    let event = KnowledgePromotionEvent {
+        event_id: ulid::Ulid::new().to_string(),
+        ts: now_iso(),
+        source_entry_id: input.source_entry_id.trim().to_string(),
+        target_class: "procedural".to_string(),
+        evidence_refs,
+        approved_by: input.approved_by.trim().to_string(),
+        actor: input.actor.trim().to_string(),
+        reason: input.reason.trim().to_string(),
+    };
+
+    let ledger_path = store.root.join("knowledge.promotions.jsonl");
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&ledger_path)
+        .map_err(error::DecapodError::IoError)?;
+    let line = serde_json::to_string(&event)
+        .map_err(|e| error::DecapodError::ValidationError(format!("JSON error: {}", e)))?;
+    writeln!(file, "{}", line).map_err(error::DecapodError::IoError)?;
+
+    Ok(event)
+}
+
 fn parse_epoch_z(ts: &str) -> Result<u64, error::DecapodError> {
     ts.trim_end_matches('Z').parse::<u64>().map_err(|_| {
         error::DecapodError::ValidationError(format!("Invalid epoch timestamp: {}", ts))
@@ -547,8 +636,23 @@ pub fn schema() -> serde_json::Value {
                     {"name": "as_of", "required": false, "description": "Reference timestamp"},
                     {"name": "dry_run", "required": false, "description": "Preview without mutating"}
                 ]
+            },
+            {
+                "name": "promote",
+                "description": "Record a promotion firewall event to procedural knowledge class",
+                "parameters": [
+                    {"name": "source_entry_id", "required": true},
+                    {"name": "evidence_ref", "required": true, "description": "Repeatable; at least one evidence reference required"},
+                    {"name": "approved_by", "required": true, "description": "Human approver identifier"},
+                    {"name": "reason", "required": true, "description": "Promotion rationale"}
+                ]
             }
         ],
-        "storage": ["knowledge.db", "knowledge.retrieval.events.jsonl", "knowledge.decay.events.jsonl"]
+        "storage": [
+            "knowledge.db",
+            "knowledge.retrieval.events.jsonl",
+            "knowledge.decay.events.jsonl",
+            "knowledge.promotions.jsonl"
+        ]
     })
 }
