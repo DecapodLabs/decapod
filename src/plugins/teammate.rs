@@ -1464,8 +1464,9 @@ pub fn generate_contextual_reminders(
 pub fn schema() -> serde_json::Value {
     serde_json::json!({
         "name": "teammate",
+        "aliases": ["memory", "skills"],
         "version": "0.2.0",
-        "description": "User preference, skill, and behavior memory system with pattern recognition",
+        "description": "User preference, skill, and behavior recall memory with pattern recognition",
         "commands": [
             { "name": "add", "description": "Add or update a preference", "parameters": ["category", "key", "value", "context", "source", "confidence"] },
             { "name": "get", "description": "Get a specific preference", "parameters": ["category", "key"] },

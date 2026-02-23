@@ -457,6 +457,7 @@ enum DataCommand {
     Broker(BrokerCli),
 
     /// Teammate preferences and patterns
+    #[clap(aliases = ["memory", "skills"])]
     Teammate(teammate::TeammateCli),
 
     /// Governed agent memory — typed knowledge graph
@@ -3767,6 +3768,7 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("archive", archive::schema());
     schemas.insert("feedback", feedback::schema());
     schemas.insert("teammate", teammate::schema());
+    schemas.insert("memory", teammate::schema());
     schemas.insert("federation", federation::schema());
     schemas.insert("primitives", primitives::schema());
     schemas.insert("decide", decide::schema());
