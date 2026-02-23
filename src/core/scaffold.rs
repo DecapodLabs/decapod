@@ -130,7 +130,7 @@ pub fn scaffold_project_entrypoints(
     if !opts.dry_run {
         ensure_gitignore_entry(&opts.target_dir, ".decapod/data")?;
         ensure_gitignore_entry(&opts.target_dir, ".decapod/workspaces")?;
-        ensure_gitignore_entry(&opts.target_dir, ".decapod/generated/")?;
+        ensure_gitignore_entry(&opts.target_dir, ".decapod/generated/*")?;
         ensure_gitignore_entry(&opts.target_dir, "!.decapod/generated/Dockerfile")?;
     }
 
