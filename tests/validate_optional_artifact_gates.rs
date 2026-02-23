@@ -111,6 +111,46 @@ fn validate_fails_on_invalid_workunit_manifest_if_present() {
 }
 
 #[test]
+fn validate_fails_on_verified_workunit_missing_passing_proofs() {
+    let (_tmp, dir, password) = setup_repo();
+    let workunits = dir.join(".decapod").join("governance").join("workunits");
+    fs::create_dir_all(&workunits).expect("create workunits dir");
+    fs::write(
+        workunits.join("R_BAD_VERIFIED.json"),
+        r#"{
+  "task_id": "R_BAD_VERIFIED",
+  "intent_ref": "intent://bad",
+  "spec_refs": [],
+  "state_refs": [],
+  "proof_plan": ["validate_passes"],
+  "proof_results": [],
+  "status": "VERIFIED"
+}"#,
+    )
+    .expect("write malformed verified workunit");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !validate.status.success(),
+        "validate should fail for VERIFIED workunit without passing proof gates"
+    );
+    let stderr = combined_output(&validate);
+    assert!(
+        stderr.contains("invalid VERIFIED workunit manifest"),
+        "expected VERIFIED workunit gate failure in stderr, got:\n{}",
+        stderr
+    );
+}
+
+#[test]
 fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
     let (_tmp, dir, password) = setup_repo();
     let capsules = dir.join(".decapod").join("generated").join("context");
