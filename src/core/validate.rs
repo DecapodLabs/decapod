@@ -1211,6 +1211,57 @@ fn validate_knowledge_promotions_if_present(
                 );
             }
         }
+
+        if v.get("target_class").and_then(|x| x.as_str()) != Some("procedural") {
+            fail(
+                &format!(
+                    "Knowledge promotion ledger requires target_class='procedural' on line {} ({})",
+                    idx + 1,
+                    ledger.display()
+                ),
+                ctx,
+            );
+        }
+
+        let evidence_ok = v
+            .get("evidence_refs")
+            .and_then(|x| x.as_array())
+            .map(|arr| {
+                !arr.is_empty()
+                    && arr
+                        .iter()
+                        .all(|item| item.as_str().map(|s| !s.trim().is_empty()).unwrap_or(false))
+            })
+            .unwrap_or(false);
+        if !evidence_ok {
+            fail(
+                &format!(
+                    "Knowledge promotion ledger evidence_refs must be a non-empty string array on line {} ({})",
+                    idx + 1,
+                    ledger.display()
+                ),
+                ctx,
+            );
+        }
+
+        for key in ["approved_by", "actor", "reason"] {
+            let non_empty = v
+                .get(key)
+                .and_then(|x| x.as_str())
+                .map(|s| !s.trim().is_empty())
+                .unwrap_or(false);
+            if !non_empty {
+                fail(
+                    &format!(
+                        "Knowledge promotion ledger '{}' must be a non-empty string on line {} ({})",
+                        key,
+                        idx + 1,
+                        ledger.display()
+                    ),
+                    ctx,
+                );
+            }
+        }
     }
 
     pass("Knowledge promotion ledger schema check passed", ctx);
