@@ -1916,61 +1916,103 @@ pub fn validate_federation(
             let current_hash = canonical_state_hash(&conn)?;
             let (cur_nodes, cur_sources, cur_edges) = db_counts(&conn)?;
 
-            // Rebuild to temp location
-            let tmp_db = store_root.join(".federation_validate_tmp.db");
+            // Rebuild to a unique temp location to avoid collisions across parallel validates.
+            let tmp_db = std::env::temp_dir().join(format!(
+                "decapod_federation_validate_{}.db",
+                ulid::Ulid::new()
+            ));
             if tmp_db.exists() {
-                fs::remove_file(&tmp_db).map_err(error::DecapodError::IoError)?;
+                let _ = fs::remove_file(&tmp_db);
             }
 
-            let tmp_conn = crate::core::db::db_connect(&tmp_db.to_string_lossy())?;
+            let tmp_conn = match crate::core::db::db_connect(&tmp_db.to_string_lossy()) {
+                Ok(conn) => conn,
+                Err(e) => {
+                    results.push((
+                        "federation.rebuild_determinism".to_string(),
+                        false,
+                        format!(
+                            "federation.validate rebuild open failed for {}: {}",
+                            tmp_db.display(),
+                            e
+                        ),
+                    ));
+                    return Ok(results);
+                }
+            };
             tmp_conn
                 .execute("PRAGMA temp_store=MEMORY;", [])
                 .map_err(error::DecapodError::RusqliteError)?;
-            tmp_conn
-                .execute_batch(schemas::FEDERATION_DB_SCHEMA_META)
-                .map_err(|e| {
-                    error::DecapodError::ValidationError(format!(
+            if let Err(e) = tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_META) {
+                results.push((
+                    "federation.rebuild_determinism".to_string(),
+                    false,
+                    format!(
                         "federation.validate rebuild schema failed (meta) for {}: {}",
                         tmp_db.display(),
                         e
-                    ))
-                })?;
-            tmp_conn
-                .execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES)
-                .map_err(|e| {
-                    error::DecapodError::ValidationError(format!(
+                    ),
+                ));
+                drop(tmp_conn);
+                let _ = fs::remove_file(&tmp_db);
+                return Ok(results);
+            }
+            if let Err(e) = tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_NODES) {
+                results.push((
+                    "federation.rebuild_determinism".to_string(),
+                    false,
+                    format!(
                         "federation.validate rebuild schema failed (nodes) for {}: {}",
                         tmp_db.display(),
                         e
-                    ))
-                })?;
-            tmp_conn
-                .execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES)
-                .map_err(|e| {
-                    error::DecapodError::ValidationError(format!(
+                    ),
+                ));
+                drop(tmp_conn);
+                let _ = fs::remove_file(&tmp_db);
+                return Ok(results);
+            }
+            if let Err(e) = tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_SOURCES) {
+                results.push((
+                    "federation.rebuild_determinism".to_string(),
+                    false,
+                    format!(
                         "federation.validate rebuild schema failed (sources) for {}: {}",
                         tmp_db.display(),
                         e
-                    ))
-                })?;
-            tmp_conn
-                .execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES)
-                .map_err(|e| {
-                    error::DecapodError::ValidationError(format!(
+                    ),
+                ));
+                drop(tmp_conn);
+                let _ = fs::remove_file(&tmp_db);
+                return Ok(results);
+            }
+            if let Err(e) = tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EDGES) {
+                results.push((
+                    "federation.rebuild_determinism".to_string(),
+                    false,
+                    format!(
                         "federation.validate rebuild schema failed (edges) for {}: {}",
                         tmp_db.display(),
                         e
-                    ))
-                })?;
-            tmp_conn
-                .execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS)
-                .map_err(|e| {
-                    error::DecapodError::ValidationError(format!(
+                    ),
+                ));
+                drop(tmp_conn);
+                let _ = fs::remove_file(&tmp_db);
+                return Ok(results);
+            }
+            if let Err(e) = tmp_conn.execute_batch(schemas::FEDERATION_DB_SCHEMA_EVENTS) {
+                results.push((
+                    "federation.rebuild_determinism".to_string(),
+                    false,
+                    format!(
                         "federation.validate rebuild schema failed (events) for {}: {}",
                         tmp_db.display(),
                         e
-                    ))
-                })?;
+                    ),
+                ));
+                drop(tmp_conn);
+                let _ = fs::remove_file(&tmp_db);
+                return Ok(results);
+            }
 
             let file = fs::File::open(&events_path).map_err(error::DecapodError::IoError)?;
             let reader = BufReader::new(file);
