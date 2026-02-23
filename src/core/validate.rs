@@ -1091,16 +1091,21 @@ fn validate_generated_artifact_whitelist(
         }
     };
 
+    let allowed_tracked = [
+        ".decapod/generated/Dockerfile",
+        ".decapod/data/knowledge.promotions.jsonl",
+    ];
     let mut offenders = Vec::new();
     for line in String::from_utf8_lossy(&output.stdout).lines() {
         let path = line.trim();
         if path.is_empty() {
             continue;
         }
-        let allowed = path == ".decapod/generated/Dockerfile"
-            || path == ".decapod/data/knowledge.promotions.jsonl"
-            || (path.starts_with(".decapod/generated/context/") && path.ends_with(".json"));
-        if !allowed {
+        let is_allowed_exact = allowed_tracked.iter().any(|allowed| allowed == &path);
+        let is_allowed_context_json = path.starts_with(".decapod/generated/context/")
+            && path.ends_with(".json")
+            && !path.contains("/../");
+        if !is_allowed_exact && !is_allowed_context_json {
             offenders.push(path.to_string());
         }
     }
@@ -1373,6 +1378,22 @@ fn validate_schema_determinism(
         pass("Schema output is deterministic", ctx);
     } else {
         fail("Schema output is non-deterministic or empty", ctx);
+    }
+    Ok(())
+}
+
+fn validate_eval_gate_if_required(
+    store: &Store,
+    ctx: &ValidationContext,
+) -> Result<(), error::DecapodError> {
+    info("Eval Gate Requirement");
+    let failures = crate::plugins::eval::validate_eval_gate_if_required(&store.root)?;
+    if failures.is_empty() {
+        pass("Eval gate requirement satisfied or not configured", ctx);
+    } else {
+        for failure in failures {
+            fail(&failure, ctx);
+        }
     }
     Ok(())
 }
@@ -3424,6 +3445,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_knowledge_promotions_if_present", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_eval_gate_if_required(store, ctx) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_eval_gate_if_required", start.elapsed()));
         });
         s.spawn(move |_| {
             let start = Instant::now();
