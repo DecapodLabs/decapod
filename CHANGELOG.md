@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.2](https://github.com/DecapodLabs/decapod/compare/v0.38.1...v0.38.2) - 2026-02-23
+
+### Other
+
+- *(contract)* pin phase-0 kernel interfaces and embed new docs
+
 ## [0.38.1](https://github.com/DecapodLabs/decapod/compare/v0.38.0...v0.38.1) - 2026-02-23
 
 ### Other
