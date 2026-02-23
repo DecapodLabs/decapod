@@ -91,14 +91,13 @@ impl SqlitePool {
         F: FnOnce(&Connection) -> Result<R, DecapodError>,
     {
         let entry = self.get_entry(db_path)?;
-        let _guard = entry.write_lock.lock().map_err(|_| {
-            DecapodError::ValidationError("Pool write lock poisoned".to_string())
-        })?;
+        let _guard = entry
+            .write_lock
+            .lock()
+            .map_err(|_| DecapodError::ValidationError("Pool write lock poisoned".to_string()))?;
 
-        let conn = db::db_connect_pooled(
-            &entry.db_path.to_string_lossy(),
-            WRITE_BUSY_TIMEOUT_SECS,
-        )?;
+        let conn =
+            db::db_connect_pooled(&entry.db_path.to_string_lossy(), WRITE_BUSY_TIMEOUT_SECS)?;
 
         f(&conn)
     }
@@ -109,10 +108,7 @@ impl SqlitePool {
     where
         F: FnOnce(&Connection) -> Result<R, DecapodError>,
     {
-        let conn = db::db_connect_pooled(
-            &db_path.to_string_lossy(),
-            READ_BUSY_TIMEOUT_SECS,
-        )?;
+        let conn = db::db_connect_pooled(&db_path.to_string_lossy(), READ_BUSY_TIMEOUT_SECS)?;
 
         f(&conn)
     }
