@@ -80,6 +80,32 @@ Every semantic/procedural entry MUST cite:
 
 **Gate rule**: Promotion gates (PR merge, release) must verify procedural norms are satisfied.
 
+### E. Promotion Firewall (Contract)
+
+Promotion of advisory/episodic knowledge into promotion-relevant procedural knowledge MUST be explicit, auditable, and policy-bound (claim: `claim.knowledge.promotion.firewall`).
+
+Canonical promotion event ledger:
+- `.decapod/data/knowledge.promotions.jsonl` (append-only)
+
+Each promotion event MUST include:
+- `event_id`
+- `ts`
+- `source_entry_id`
+- `target_class` (`procedural`)
+- `evidence_refs` (array; commit/doc/test/transcript pointers)
+- `approved_by` (human actor id)
+- `actor` (agent or operator id issuing promote command)
+- `reason`
+
+Forbidden flows:
+- `episodic -> procedural` without an explicit promotion event.
+- Promotion without `evidence_refs`.
+- Promotion without `approved_by`.
+
+Firewall principle:
+- Knowledge may remain advisory without blocking promotion.
+- Once promoted to procedural, it becomes promotion-relevant and must satisfy proof/policy gates.
+
 ---
 
 ## 3. CLI/Skill Surfaces (Implemented)

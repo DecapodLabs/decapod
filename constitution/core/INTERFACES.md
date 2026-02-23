@@ -22,6 +22,7 @@ This registry defines the canonical binding interface surfaces.
 | `interfaces/TESTING.md` | Verification and proof claim contract | Yes |
 | `interfaces/ARCHITECTURE_FOUNDATIONS.md` | Architecture quality primitives and governed artifact contract | Yes |
 | `interfaces/KNOWLEDGE_SCHEMA.md` | Knowledge schema + invariants | Yes |
+| `interfaces/KNOWLEDGE_STORE.md` | Knowledge store semantics + promotion firewall contract | Yes |
 | `interfaces/MEMORY_SCHEMA.md` | Memory schema + retrieval-event contract | Yes |
 | `interfaces/DEMANDS_SCHEMA.md` | User-demand schema + precedence rules | Yes |
 | `interfaces/RISK_POLICY_GATE.md` | Deterministic PR risk-policy gate semantics | Yes |
@@ -68,6 +69,7 @@ This registry defines the canonical binding interface surfaces.
 - `interfaces/ARCHITECTURE_FOUNDATIONS.md` - Architecture quality primitives
 - `interfaces/RISK_POLICY_GATE.md` - Deterministic PR risk-policy gate
 - `interfaces/AGENT_CONTEXT_PACK.md` - Agent context-pack contract
+- `interfaces/KNOWLEDGE_STORE.md` - Knowledge store and promotion firewall contract
 
 ### Operations (Plugins Layer)
 - `plugins/TODO.md` - Work tracking
