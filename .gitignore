@@ -34,7 +34,8 @@ dev/
 .decapod/data
 .decapod/.stfolder
 .decapod/workspaces
-.decapod/generated/
+.decapod/generated/*
+!.decapod/generated/Dockerfile
 .decapod/generated/container_ssh_key_path
 .decapod/generated/decapod.sync-conflict-20260212-224557-Y75YA6D.version
 .decapod/generated/awareness/*
