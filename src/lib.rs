@@ -1224,8 +1224,27 @@ fn prompt_line(prompt: &str) -> Result<String, error::DecapodError> {
     Ok(buf.trim().to_string())
 }
 
-fn prompt_line_default(prompt: &str, default_value: &str) -> Result<String, error::DecapodError> {
-    let line = prompt_line(&format!("{} [{}]: ", prompt, default_value))?;
+fn print_init_block(title: &str, subtitle: &str) {
+    use colored::Colorize;
+    println!();
+    println!("{}", format!("◢ {}", title).bright_cyan().bold());
+    println!("{}", format!("  {}", subtitle).bright_black());
+}
+
+fn prompt_text_field(
+    label: &str,
+    helper: &str,
+    default_value: &str,
+) -> Result<String, error::DecapodError> {
+    use colored::Colorize;
+    println!();
+    println!("{}", format!("  {}", label).bright_white().bold());
+    println!("{}", format!("    {}", helper).bright_black());
+    println!(
+        "{}",
+        format!("    inferred: {}", default_value).bright_black()
+    );
+    let line = prompt_line(&format!("{}", "    input: ".bright_cyan().bold()))?;
     if line.trim().is_empty() {
         Ok(default_value.to_string())
     } else {
@@ -1233,9 +1252,24 @@ fn prompt_line_default(prompt: &str, default_value: &str) -> Result<String, erro
     }
 }
 
+fn prompt_line_default(prompt: &str, default_value: &str) -> Result<String, error::DecapodError> {
+    prompt_text_field(
+        prompt,
+        "Press Enter to keep inferred context.",
+        default_value,
+    )
+}
+
 fn prompt_yes_no(prompt: &str, default_yes: bool) -> Result<bool, error::DecapodError> {
+    use colored::Colorize;
     let suffix = if default_yes { "[Y/n]" } else { "[y/N]" };
-    let line = prompt_line(&format!("{} {} ", prompt, suffix))?;
+    println!();
+    println!("{}", format!("  {}", prompt).bright_white().bold());
+    let line = prompt_line(&format!(
+        "{} {} ",
+        "    choice:".bright_cyan().bold(),
+        suffix.bright_black()
+    ))?;
     if line.is_empty() {
         return Ok(default_yes);
     }
@@ -1320,9 +1354,10 @@ fn interactive_init_with(
     force: bool,
     dry_run: bool,
 ) -> Result<InitWithCli, error::DecapodError> {
-    println!();
-    println!("◢ Decapod Setup");
-    println!("  Existing .decapod/config.toml detected. Confirming setup profile.");
+    print_init_block(
+        "Decapod Setup",
+        "Existing .decapod/config.toml detected. Confirm your setup profile.",
+    );
     let mut next = init_with_from_config(config, target_dir, force, dry_run);
     if config.init.entrypoints.is_empty() {
         let all_entrypoints = prompt_yes_no(
@@ -1348,17 +1383,15 @@ fn interactive_init_with(
 }
 
 fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::DecapodError> {
-    println!();
-    println!("◢ Repository Context");
-    println!("  Confirm inferred product intent before generating .decapod/generated/specs/.");
+    print_init_block(
+        "Repository Context",
+        "Review inferred intent before generating .decapod/generated/specs/.",
+    );
     let current_summary = repo.product_summary.clone().unwrap_or_else(|| {
         "Deliver the repository outcome against explicit user intent with proof-backed completion."
             .to_string()
     });
-    repo.product_summary = Some(prompt_line_default(
-        "Intent outcome (beneficiary + expected change)",
-        &current_summary,
-    )?);
+    repo.product_summary = Some(prompt_line_default("Intent outcome", &current_summary)?);
 
     let refine_now = prompt_yes_no(
         "Refine architecture direction and done criteria now? (You can evolve .decapod/generated/specs/*.md later.)",
@@ -1370,7 +1403,7 @@ fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::
                 .to_string()
         });
         repo.architecture_direction = Some(prompt_line_default(
-            "Architecture direction (system shape + boundaries)",
+            "Architecture direction",
             &current_arch,
         )?);
 
@@ -1378,10 +1411,7 @@ fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::
             "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
                 .to_string()
         });
-        repo.done_criteria = Some(prompt_line_default(
-            "Done criteria (evidence required for ship)",
-            &current_done,
-        )?);
+        repo.done_criteria = Some(prompt_line_default("Done criteria", &current_done)?);
     }
     Ok(())
 }
@@ -1497,8 +1527,10 @@ fn run_init_apply(
         .display()
         .to_string();
     use colored::Colorize;
-    println!();
-    println!("{}", "◢ Decapod Init Summary".bright_cyan().bold());
+    print_init_block(
+        "Decapod Init Summary",
+        "Scaffold completed with the following changes.",
+    );
     println!("  Target: {}", target_display.bright_white());
     println!(
         "  Mode: {}",
