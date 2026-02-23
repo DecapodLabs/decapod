@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0](https://github.com/DecapodLabs/decapod/compare/v0.40.1...v0.41.0) - 2026-02-23
+
+### Added
+
+- *(init)* move project specs to generated path and deepen architecture scaffold
+
+### Fixed
+
+- *(readme)* link constitution note to core DECAPOD doc
+- *(readme)* correct constitution directory link
+- *(readme)* route constitution via docs show and sync sha
+- *(release)* sync README sha manifest to pinned readme
+- *(readme)* route constitution access via docs show
+- *(readme)* route constitution access through decapod docs show
+- *(release)* refresh README artifact manifest hash
+- *(validate)* allow tracked generated specs artifacts and normalize specs naming
+
+### Other
+
+- *(entrypoints)* allow README link to core constitution doc
+- *(readme)* restore pinned readme wording
+- *(readme)* restore README from eaa291ea
+- Update README.md
+- *(specs)* standardize generated specs paths to uppercase filenames
+
 ## [0.40.1](https://github.com/DecapodLabs/decapod/compare/v0.40.0...v0.40.1) - 2026-02-23
 
 ### Other
