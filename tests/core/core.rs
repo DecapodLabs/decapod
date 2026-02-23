@@ -526,31 +526,31 @@ fn scaffold_store_and_docs_cli_behaviors() {
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/architecture.md")
+            .join(".decapod/generated/specs/ARCHITECTURE.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/architecture.md"
+        "decapod init must scaffold .decapod/generated/specs/ARCHITECTURE.md"
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/intent.md")
+            .join(".decapod/generated/specs/INTENT.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/intent.md"
+        "decapod init must scaffold .decapod/generated/specs/INTENT.md"
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/interfaces.md")
+            .join(".decapod/generated/specs/INTERFACES.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/interfaces.md"
+        "decapod init must scaffold .decapod/generated/specs/INTERFACES.md"
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/validation.md")
+            .join(".decapod/generated/specs/VALIDATION.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/validation.md"
+        "decapod init must scaffold .decapod/generated/specs/VALIDATION.md"
     );
     let architecture =
-        fs::read_to_string(live_target.join(".decapod/generated/specs/architecture.md"))
-            .expect("read .decapod/generated/specs/architecture.md");
+        fs::read_to_string(live_target.join(".decapod/generated/specs/ARCHITECTURE.md"))
+            .expect("read .decapod/generated/specs/ARCHITECTURE.md");
     assert!(
         architecture.contains("```text"),
         "default diagram style should scaffold ascii topology block"
@@ -586,7 +586,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
     };
     scaffold_project_entrypoints(&mermaid_opts).expect("mermaid scaffold");
     let mermaid_arch =
-        fs::read_to_string(mermaid_target.join(".decapod/generated/specs/architecture.md"))
+        fs::read_to_string(mermaid_target.join(".decapod/generated/specs/ARCHITECTURE.md"))
             .expect("read mermaid architecture");
     assert!(
         mermaid_arch.contains("```mermaid"),
