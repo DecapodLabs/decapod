@@ -1320,10 +1320,15 @@ fn interactive_init_with(
     force: bool,
     dry_run: bool,
 ) -> Result<InitWithCli, error::DecapodError> {
-    println!("▶ init: interactive config form (.decapod/config.toml detected)");
+    println!();
+    println!("◢ Decapod Setup");
+    println!("  Existing .decapod/config.toml detected. Confirming setup profile.");
     let mut next = init_with_from_config(config, target_dir, force, dry_run);
     if config.init.entrypoints.is_empty() {
-        let all_entrypoints = prompt_yes_no("Generate all agent entrypoint files?", true)?;
+        let all_entrypoints = prompt_yes_no(
+            "Include all default agent entrypoints (AGENTS/CLAUDE/GEMINI/CODEX)?",
+            true,
+        )?;
         if all_entrypoints {
             next.all = true;
             next.agents = true;
@@ -1343,18 +1348,20 @@ fn interactive_init_with(
 }
 
 fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::DecapodError> {
-    println!("▶ init: confirm inferred repo context before scaffolding .decapod/generated/specs/");
+    println!();
+    println!("◢ Repository Context");
+    println!("  Confirm inferred product intent before generating .decapod/generated/specs/.");
     let current_summary = repo.product_summary.clone().unwrap_or_else(|| {
         "Deliver the repository outcome against explicit user intent with proof-backed completion."
             .to_string()
     });
     repo.product_summary = Some(prompt_line_default(
-        "Intent outcome (who benefits + what changes)",
+        "Intent outcome (beneficiary + expected change)",
         &current_summary,
     )?);
 
     let refine_now = prompt_yes_no(
-        "Refine architecture direction and done criteria now? (You can evolve .decapod/generated/specs/*.md later through normal agent workflow.)",
+        "Refine architecture direction and done criteria now? (You can evolve .decapod/generated/specs/*.md later.)",
         false,
     )?;
     if refine_now {
@@ -1363,7 +1370,7 @@ fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::
                 .to_string()
         });
         repo.architecture_direction = Some(prompt_line_default(
-            "Architecture direction (system shape + key boundaries)",
+            "Architecture direction (system shape + boundaries)",
             &current_arch,
         )?);
 
@@ -1372,7 +1379,7 @@ fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::
                 .to_string()
         });
         repo.done_criteria = Some(prompt_line_default(
-            "Done criteria (evidence required before ship)",
+            "Done criteria (evidence required for ship)",
             &current_done,
         )?);
     }
@@ -1490,23 +1497,19 @@ fn run_init_apply(
         .display()
         .to_string();
     use colored::Colorize;
-    print!(
-        "{} {} ",
-        "▶".bright_green().bold(),
-        "init:".bright_cyan().bold(),
-    );
+    println!();
+    println!("{}", "◢ Decapod Init Summary".bright_cyan().bold());
+    println!("  Target: {}", target_display.bright_white());
     println!(
-        "target={} mode={}",
-        target_display.bright_white(),
+        "  Mode: {}",
         if init_with.dry_run {
-            "dry-run".bright_yellow()
+            "Dry Run".bright_yellow()
         } else {
-            "apply".bright_green()
+            "Apply".bright_green()
         }
     );
     println!(
-        "  {} entry+{}={}~{} cfg+{}={}~{} specs+{}={}~{} backups={}",
-        "files:".bright_cyan(),
+        "  Entrypoints: created={}, unchanged={}, preserved={}",
         scaffold_summary
             .entrypoints_created
             .to_string()
@@ -1518,21 +1521,26 @@ fn run_init_apply(
         scaffold_summary
             .entrypoints_preserved
             .to_string()
-            .bright_white(),
+            .bright_white()
+    );
+    println!(
+        "  Config: created={}, unchanged={}, preserved={}",
         scaffold_summary.config_created.to_string().bright_green(),
         scaffold_summary
             .config_unchanged
             .to_string()
             .bright_yellow(),
-        scaffold_summary.config_preserved.to_string().bright_white(),
-        scaffold_summary.specs_created.to_string().bright_green(),
-        scaffold_summary.specs_unchanged.to_string().bright_yellow(),
-        scaffold_summary.specs_preserved.to_string().bright_white(),
-        backup_count.to_string().bright_magenta()
+        scaffold_summary.config_preserved.to_string().bright_white()
     );
     println!(
-        "  {} diagram_style={}",
-        "specs:".bright_cyan(),
+        "  Specs: created={}, unchanged={}, preserved={}",
+        scaffold_summary.specs_created.to_string().bright_green(),
+        scaffold_summary.specs_unchanged.to_string().bright_yellow(),
+        scaffold_summary.specs_preserved.to_string().bright_white()
+    );
+    println!("  Backups: {}", backup_count.to_string().bright_magenta());
+    println!(
+        "  Diagram Style: {}",
         match init_with.diagram_style {
             InitDiagramStyle::Ascii => "ascii".bright_white(),
             InitDiagramStyle::Mermaid => "mermaid".bright_white(),
@@ -1541,7 +1549,7 @@ fn run_init_apply(
     println!(
         "{} {}",
         "✓".bright_green().bold(),
-        "status=ready".bright_green().bold()
+        "Ready".bright_green().bold()
     );
 
     Ok(target_dir)
