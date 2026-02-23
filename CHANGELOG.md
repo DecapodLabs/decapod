@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0](https://github.com/DecapodLabs/decapod/compare/v0.38.13...v0.39.0) - 2026-02-23
+
+### Other
+
+- remove teammate legacy aliases; keep aptitude as sole subsystem name
+- rename teammate subsystem to aptitude and elevate README feature list
+- Merge master and resolve AGENTS entrypoint conflicts
+
 ### Other
 
 - schema/interface: rename aptitude subsystem across CLI/docs/contracts as canonical memory surface
