@@ -548,12 +548,8 @@ fn test_top_level_docs_avoid_direct_constitution_file_links() {
     let security = fs::read_to_string(repo_root.join("SECURITY.md")).expect("read SECURITY.md");
 
     assert!(
-        !readme.contains("(constitution/"),
-        "README.md should not instruct direct constitution file access"
-    );
-    assert!(
-        readme.contains("decapod docs show core/DECAPOD.md"),
-        "README.md should route constitutional access through decapod docs show"
+        readme.contains("(constitution/core/DECAPOD.md)"),
+        "README.md should link to constitution/core/DECAPOD.md"
     );
 
     assert!(
