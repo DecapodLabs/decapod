@@ -326,6 +326,14 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 cost: "low".to_string(),
             },
             Capability {
+                name: "context.capsule.query".to_string(),
+                description:
+                    "Return deterministic context capsules scoped to core/interfaces/plugins docs"
+                        .to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
                 name: "schema.get".to_string(),
                 description: "Get authoritative JSON schemas for entities".to_string(),
                 stability: "stable".to_string(),
