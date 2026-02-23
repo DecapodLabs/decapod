@@ -732,6 +732,17 @@ enum KnowledgeCommand {
         #[clap(long)]
         query: String,
     },
+    /// Record explicit promotion of advisory/episodic knowledge into procedural class
+    Promote {
+        #[clap(long)]
+        source_entry_id: String,
+        #[clap(long = "evidence-ref")]
+        evidence_refs: Vec<String>,
+        #[clap(long)]
+        approved_by: String,
+        #[clap(long)]
+        reason: String,
+    },
 }
 
 #[derive(clap::Args, Debug)]
@@ -3469,6 +3480,25 @@ fn run_data_command(
                         },
                     )?;
                     println!("{}", serde_json::to_string_pretty(&results).unwrap());
+                }
+                KnowledgeCommand::Promote {
+                    source_entry_id,
+                    evidence_refs,
+                    approved_by,
+                    reason,
+                } => {
+                    let actor = current_agent_id();
+                    let event = knowledge::record_promotion_event(
+                        project_store,
+                        knowledge::KnowledgePromotionEventInput {
+                            source_entry_id: &source_entry_id,
+                            evidence_refs: &evidence_refs,
+                            approved_by: &approved_by,
+                            actor: &actor,
+                            reason: &reason,
+                        },
+                    )?;
+                    println!("{}", serde_json::to_string_pretty(&event).unwrap());
                 }
             }
         }
