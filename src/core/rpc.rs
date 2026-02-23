@@ -10,10 +10,6 @@
 //! - `context_capsule`: Minimal relevant spec/arch/security/standards slices
 //! - `allowed_next_ops`: Contract for what to do next
 //! - `blocked_by`: Missing answers/proofs
-//!
-//! # For AI Agents
-//!
-//! Use `decapod rpc` for programmatic access. The CLI subcommands are for human convenience.
 
 use crate::core::docs::{DocFragment, Mandate};
 use serde::{Deserialize, Serialize};

@@ -3,11 +3,6 @@
 //! A read-only timeline renderer that makes the "narrow corridor" legible to humans.
 //! Renders governance events into a timeline: intent -> awareness -> mandate checks ->
 //! claim -> workspace -> edits -> proofs -> publish.
-//!
-//! # For AI Agents
-//!
-//! This is a read-only tool. It renders existing event logs and highlights gaps
-//! rather than fabricating missing structure.
 
 use crate::core::error::DecapodError;
 use crate::core::store::Store;

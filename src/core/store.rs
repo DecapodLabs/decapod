@@ -1,14 +1,7 @@
 //! Store abstraction for Decapod's state management.
 //!
 //! This module provides the fundamental data model for Decapod's dual-store architecture.
-//! Agents interact with two distinct store types: User (local, mutable) and Repo (project-scoped, deterministic).
-//!
-//! # For AI Agents
-//!
-//! - **User Store**: Personal workspace at `~/.decapod/data/` for agent-local state
-//! - **Repo Store**: Project-scoped workspace at `<repo>/.decapod/data/` for shared, audited state
-//! - All state mutations go through these stores via the broker (see `broker.rs`)
-//! - Store kind determines behavior: User stores are blank-slate, Repo stores are event-sourced
+//! Two store types are supported: User (local mutable) and Repo (project-scoped deterministic).
 
 use std::path::PathBuf;
 
@@ -30,10 +23,6 @@ pub enum StoreKind {
 /// A Store is a logical container for Decapod's state databases and event logs.
 /// All subsystem state (TODO, health, knowledge, etc.) is scoped to a store.
 ///
-/// # Agent Usage
-///
-/// Agents should never directly manipulate store files. Always use the `DbBroker`
-/// to access store state through the CLI thin waist.
 #[derive(Debug, Clone)]
 pub struct Store {
     /// Store type (User or Repo)
