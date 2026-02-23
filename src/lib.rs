@@ -26,6 +26,8 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::fs;
+use std::io;
+use std::io::IsTerminal;
 use std::io::Read;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -123,6 +125,12 @@ struct InitGroupCli {
     /// Show what would change without writing files.
     #[clap(long)]
     dry_run: bool,
+    /// Generate project `specs/` docs scaffolding (enabled by default).
+    #[clap(long = "no-specs", action = clap::ArgAction::SetFalse, default_value_t = true)]
+    specs: bool,
+    /// Diagram style for generated `specs/architecture.md`.
+    #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
+    diagram_style: InitDiagramStyle,
     /// Force creation of all 3 entrypoint files (GEMINI.md, AGENTS.md, CLAUDE.md).
     #[clap(long)]
     all: bool,
@@ -145,6 +153,99 @@ enum InitCommand {
         #[clap(short, long)]
         dir: Option<PathBuf>,
     },
+    /// Apply explicit init options (non-interactive).
+    #[clap(alias = "wtih")]
+    With(InitWithCli),
+}
+
+#[derive(clap::Args, Debug, Clone)]
+struct InitWithCli {
+    /// Directory to initialize (defaults to current working directory).
+    #[clap(short, long)]
+    dir: Option<PathBuf>,
+    /// Overwrite existing files by archiving them under `<dir>/.decapod_archive/`.
+    #[clap(long)]
+    force: bool,
+    /// Show what would change without writing files.
+    #[clap(long)]
+    dry_run: bool,
+    /// Force creation of all entrypoint files.
+    #[clap(long)]
+    all: bool,
+    /// Create only CLAUDE.md entrypoint file.
+    #[clap(long)]
+    claude: bool,
+    /// Create only GEMINI.md entrypoint file.
+    #[clap(long)]
+    gemini: bool,
+    /// Create only AGENTS.md entrypoint file.
+    #[clap(long)]
+    agents: bool,
+    /// Generate project `specs/` docs scaffolding (enabled by default).
+    #[clap(long = "no-specs", action = clap::ArgAction::SetFalse, default_value_t = true)]
+    specs: bool,
+    /// Diagram style for generated `specs/architecture.md`.
+    #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
+    diagram_style: InitDiagramStyle,
+}
+
+#[derive(clap::ValueEnum, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+enum InitDiagramStyle {
+    Ascii,
+    Mermaid,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct DecapodProjectConfig {
+    schema_version: String,
+    init: InitConfigSection,
+    repo: RepoContext,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct InitConfigSection {
+    specs: bool,
+    diagram_style: InitDiagramStyle,
+    entrypoints: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+struct RepoContext {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    product_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    product_summary: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "architecture_direction", alias = "architecture_intent")]
+    architecture_direction: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    product_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    done_criteria: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    primary_languages: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    detected_surfaces: Vec<String>,
+}
+
+impl Default for DecapodProjectConfig {
+    fn default() -> Self {
+        Self {
+            schema_version: "1.0.0".to_string(),
+            init: InitConfigSection {
+                specs: true,
+                diagram_style: InitDiagramStyle::Ascii,
+                entrypoints: vec![
+                    "AGENTS.md".to_string(),
+                    "CLAUDE.md".to_string(),
+                    "GEMINI.md".to_string(),
+                    "CODEX.md".to_string(),
+                ],
+            },
+            repo: RepoContext::default(),
+        }
+    }
 }
 
 #[derive(clap::Args, Debug)]
@@ -940,6 +1041,511 @@ fn clean_project(dir: Option<PathBuf>) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
+fn decapod_config_path(target_dir: &Path) -> PathBuf {
+    target_dir.join(".decapod").join("config.toml")
+}
+
+fn load_project_config_if_present(
+    target_dir: &Path,
+) -> Result<Option<DecapodProjectConfig>, error::DecapodError> {
+    let config_path = decapod_config_path(target_dir);
+    if !config_path.exists() {
+        return Ok(None);
+    }
+    let raw = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
+    let cfg: DecapodProjectConfig = toml::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Invalid .decapod/config.toml schema: {}", e))
+    })?;
+    Ok(Some(cfg))
+}
+
+fn write_project_config(
+    target_dir: &Path,
+    config: &DecapodProjectConfig,
+    dry_run: bool,
+) -> Result<(), error::DecapodError> {
+    if dry_run {
+        return Ok(());
+    }
+    let config_path = decapod_config_path(target_dir);
+    if let Some(parent) = config_path.parent() {
+        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    }
+    let serialized = toml::to_string_pretty(config).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Failed to serialize config.toml: {}", e))
+    })?;
+    fs::write(config_path, serialized).map_err(error::DecapodError::IoError)?;
+    Ok(())
+}
+
+fn infer_repo_context(target_dir: &Path) -> RepoContext {
+    let mut ctx = RepoContext {
+        product_name: target_dir
+            .file_name()
+            .and_then(|s| s.to_str())
+            .map(|s| s.to_string()),
+        ..RepoContext::default()
+    };
+
+    if target_dir.join("Cargo.toml").exists() {
+        ctx.primary_languages.push("rust".to_string());
+        ctx.detected_surfaces.push("cargo".to_string());
+        if let Ok(raw) = fs::read_to_string(target_dir.join("Cargo.toml"))
+            && let Ok(v) = toml::from_str::<toml::Value>(&raw)
+            && let Some(name) = v
+                .get("package")
+                .and_then(|p| p.get("name"))
+                .and_then(|n| n.as_str())
+        {
+            ctx.product_name = Some(name.to_string());
+        }
+    }
+    if target_dir.join("package.json").exists() {
+        ctx.primary_languages
+            .push("typescript/javascript".to_string());
+        ctx.detected_surfaces.push("npm".to_string());
+    }
+    if target_dir.join("pyproject.toml").exists() || target_dir.join("requirements.txt").exists() {
+        ctx.primary_languages.push("python".to_string());
+        ctx.detected_surfaces.push("python".to_string());
+    }
+    if target_dir.join("go.mod").exists() {
+        ctx.primary_languages.push("go".to_string());
+        ctx.detected_surfaces.push("go".to_string());
+    }
+
+    if target_dir.join("frontend").exists() || target_dir.join("web").exists() {
+        ctx.detected_surfaces.push("frontend".to_string());
+    }
+    if target_dir.join("api").exists()
+        || target_dir.join("server").exists()
+        || target_dir.join("backend").exists()
+    {
+        ctx.detected_surfaces.push("backend".to_string());
+    }
+
+    if !ctx.detected_surfaces.is_empty() && ctx.detected_surfaces.iter().any(|s| s == "frontend") {
+        ctx.product_type = Some("application".to_string());
+    } else {
+        ctx.product_type = Some("service_or_library".to_string());
+    }
+
+    let intent_path = target_dir.join("specs").join("intent.md");
+    if intent_path.exists()
+        && let Ok(intent) = fs::read_to_string(intent_path)
+    {
+        for line in intent.lines() {
+            let trimmed = line.trim();
+            if !trimmed.is_empty() && !trimmed.starts_with('#') && !trimmed.starts_with('-') {
+                ctx.product_summary = Some(trimmed.to_string());
+                break;
+            }
+        }
+    }
+    let architecture_path = target_dir.join("specs").join("architecture.md");
+    if architecture_path.exists()
+        && let Ok(arch) = fs::read_to_string(architecture_path)
+    {
+        for line in arch.lines() {
+            let trimmed = line.trim();
+            if !trimmed.is_empty() && !trimmed.starts_with('#') && !trimmed.starts_with('-') {
+                ctx.architecture_direction = Some(trimmed.to_string());
+                break;
+            }
+        }
+    }
+
+    if ctx.product_summary.is_none() {
+        let readme_path = target_dir.join("README.md");
+        if readme_path.exists()
+            && let Ok(readme) = fs::read_to_string(readme_path)
+        {
+            for line in readme.lines() {
+                let trimmed = line.trim();
+                if trimmed.is_empty()
+                    || trimmed.starts_with('#')
+                    || trimmed.starts_with("<")
+                    || trimmed.starts_with("![")
+                {
+                    continue;
+                }
+                ctx.product_summary = Some(trimmed.to_string());
+                break;
+            }
+        }
+    }
+
+    if ctx.product_summary.is_none() {
+        ctx.product_summary = Some(match ctx.product_name.as_deref() {
+            Some(name) => format!("Deliver {} against explicit user intent with proof-backed completion.", name),
+            None => "Deliver the repository outcome against explicit user intent with proof-backed completion.".to_string(),
+        });
+    }
+    if ctx.architecture_direction.is_none() {
+        let has_frontend = ctx.detected_surfaces.iter().any(|s| s == "frontend");
+        let has_backend = ctx.detected_surfaces.iter().any(|s| s == "backend");
+        let inferred = match (has_frontend, has_backend) {
+            (true, true) => {
+                "Layered frontend/backend system with explicit contracts, isolated mutation boundaries, and proof-gated promotion."
+            }
+            (true, false) => {
+                "Frontend-first architecture with explicit API boundaries and deterministic validation gates."
+            }
+            (false, true) => {
+                "Service-oriented backend with clear interface boundaries, durable state ownership, and proof-gated releases."
+            }
+            (false, false) => {
+                "Composable repository architecture with explicit boundaries and proof-backed delivery invariants."
+            }
+        };
+        ctx.architecture_direction = Some(inferred.to_string());
+    }
+    if ctx.done_criteria.is_none() {
+        ctx.done_criteria = Some(
+            "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
+                .to_string(),
+        );
+    }
+
+    ctx.primary_languages.sort();
+    ctx.primary_languages.dedup();
+    ctx.detected_surfaces.sort();
+    ctx.detected_surfaces.dedup();
+    ctx
+}
+
+fn prompt_line(prompt: &str) -> Result<String, error::DecapodError> {
+    print!("{}", prompt);
+    io::stdout().flush().map_err(error::DecapodError::IoError)?;
+    let mut buf = String::new();
+    io::stdin()
+        .read_line(&mut buf)
+        .map_err(error::DecapodError::IoError)?;
+    Ok(buf.trim().to_string())
+}
+
+fn prompt_line_default(prompt: &str, default_value: &str) -> Result<String, error::DecapodError> {
+    let line = prompt_line(&format!("{} [{}]: ", prompt, default_value))?;
+    if line.trim().is_empty() {
+        Ok(default_value.to_string())
+    } else {
+        Ok(line)
+    }
+}
+
+fn prompt_yes_no(prompt: &str, default_yes: bool) -> Result<bool, error::DecapodError> {
+    let suffix = if default_yes { "[Y/n]" } else { "[y/N]" };
+    let line = prompt_line(&format!("{} {} ", prompt, suffix))?;
+    if line.is_empty() {
+        return Ok(default_yes);
+    }
+    let normalized = line.to_ascii_lowercase();
+    Ok(matches!(normalized.as_str(), "y" | "yes"))
+}
+
+fn prompt_diagram_style(
+    default_style: InitDiagramStyle,
+) -> Result<InitDiagramStyle, error::DecapodError> {
+    let default_label = match default_style {
+        InitDiagramStyle::Ascii => "ascii",
+        InitDiagramStyle::Mermaid => "mermaid",
+    };
+    let line = prompt_line(&format!(
+        "Architecture diagram style [ascii/mermaid] (default: {}): ",
+        default_label
+    ))?;
+    if line.is_empty() {
+        return Ok(default_style);
+    }
+    match line.to_ascii_lowercase().as_str() {
+        "ascii" => Ok(InitDiagramStyle::Ascii),
+        "mermaid" => Ok(InitDiagramStyle::Mermaid),
+        _ => Err(error::DecapodError::ValidationError(
+            "Invalid diagram style; expected ascii or mermaid".to_string(),
+        )),
+    }
+}
+
+fn init_with_from_config(
+    config: &DecapodProjectConfig,
+    target_dir: PathBuf,
+    force: bool,
+    dry_run: bool,
+) -> InitWithCli {
+    let has = |name: &str| config.init.entrypoints.iter().any(|e| e == name);
+    let all_entrypoints =
+        has("AGENTS.md") && has("CLAUDE.md") && has("GEMINI.md") && has("CODEX.md");
+    InitWithCli {
+        dir: Some(target_dir),
+        force,
+        dry_run,
+        all: all_entrypoints,
+        claude: has("CLAUDE.md"),
+        gemini: has("GEMINI.md"),
+        agents: has("AGENTS.md"),
+        specs: config.init.specs,
+        diagram_style: config.init.diagram_style,
+    }
+}
+
+fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjectConfig {
+    let mut entrypoints = Vec::new();
+    let no_entrypoint_flags = !init.claude && !init.gemini && !init.agents;
+    if init.all || init.agents || no_entrypoint_flags {
+        entrypoints.push("AGENTS.md".to_string());
+    }
+    if init.all || init.claude || (!init.gemini && !init.agents) {
+        entrypoints.push("CLAUDE.md".to_string());
+    }
+    if init.all || init.gemini || (!init.claude && !init.agents) {
+        entrypoints.push("GEMINI.md".to_string());
+    }
+    if init.all || no_entrypoint_flags {
+        entrypoints.push("CODEX.md".to_string());
+    }
+    DecapodProjectConfig {
+        schema_version: "1.0.0".to_string(),
+        init: InitConfigSection {
+            specs: init.specs,
+            diagram_style: init.diagram_style,
+            entrypoints,
+        },
+        repo,
+    }
+}
+
+fn interactive_init_with(
+    config: &DecapodProjectConfig,
+    target_dir: PathBuf,
+    force: bool,
+    dry_run: bool,
+) -> Result<InitWithCli, error::DecapodError> {
+    println!("▶ init: interactive config form (.decapod/config.toml detected)");
+    let mut next = init_with_from_config(config, target_dir, force, dry_run);
+    if config.init.entrypoints.is_empty() {
+        let all_entrypoints = prompt_yes_no("Generate all agent entrypoint files?", true)?;
+        if all_entrypoints {
+            next.all = true;
+            next.agents = true;
+            next.claude = true;
+            next.gemini = true;
+        }
+    }
+    if config.init.specs {
+        next.specs = true;
+    }
+    if next.diagram_style != InitDiagramStyle::Ascii
+        && next.diagram_style != InitDiagramStyle::Mermaid
+    {
+        next.diagram_style = prompt_diagram_style(InitDiagramStyle::Ascii)?;
+    }
+    Ok(next)
+}
+
+fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::DecapodError> {
+    let current_summary = repo.product_summary.clone().unwrap_or_else(|| {
+        "Deliver the repository outcome against explicit user intent with proof-backed completion."
+            .to_string()
+    });
+    repo.product_summary = Some(prompt_line_default(
+        "Intent outcome (who benefits + what changes)",
+        &current_summary,
+    )?);
+
+    let current_arch = repo.architecture_direction.clone().unwrap_or_else(|| {
+        "Composable repository architecture with explicit boundaries and proof-backed delivery invariants."
+            .to_string()
+    });
+    repo.architecture_direction = Some(prompt_line_default(
+        "Architecture direction (system shape + key boundaries)",
+        &current_arch,
+    )?);
+
+    let current_done = repo.done_criteria.clone().unwrap_or_else(|| {
+        "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
+            .to_string()
+    });
+    repo.done_criteria = Some(prompt_line_default(
+        "Done criteria (evidence required before ship)",
+        &current_done,
+    )?);
+    Ok(())
+}
+
+fn needs_repo_context_interview(repo: &RepoContext) -> bool {
+    repo.product_summary.is_none()
+        || repo.architecture_direction.is_none()
+        || repo.done_criteria.is_none()
+}
+
+fn run_init_apply(
+    init_with: &InitWithCli,
+    current_dir: &Path,
+    repo_ctx: &RepoContext,
+) -> Result<PathBuf, error::DecapodError> {
+    let target_dir = match &init_with.dir {
+        Some(d) => d.clone(),
+        None => current_dir.to_path_buf(),
+    };
+    let target_dir = std::fs::canonicalize(&target_dir).map_err(error::DecapodError::IoError)?;
+
+    let setup_decapod_root = target_dir.join(".decapod");
+    if setup_decapod_root.exists() && !init_with.force {
+        use colored::Colorize;
+        println!(
+            "{} {}",
+            "init:".bright_yellow(),
+            "already initialized (.decapod exists); rerun with --force, or use `decapod init with --force`"
+                .bright_red()
+        );
+        return Ok(target_dir);
+    }
+
+    use sha2::{Digest, Sha256};
+    let mut existing_agent_files = vec![];
+    for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
+        if target_dir.join(file).exists() {
+            existing_agent_files.push(file);
+        }
+    }
+
+    let mut created_backups = false;
+    let mut backup_count = 0usize;
+    if !init_with.dry_run {
+        for file in &existing_agent_files {
+            let path = target_dir.join(file);
+            let template_content = core::assets::get_template(file).unwrap_or_default();
+            let mut hasher = Sha256::new();
+            hasher.update(template_content.as_bytes());
+            let template_hash = format!("{:x}", hasher.finalize());
+            let existing_content = fs::read_to_string(&path).unwrap_or_default();
+            let mut hasher = Sha256::new();
+            hasher.update(existing_content.as_bytes());
+            let existing_hash = format!("{:x}", hasher.finalize());
+            if template_hash != existing_hash {
+                created_backups = true;
+                backup_count += 1;
+                let backup_path = target_dir.join(format!("{}.bak", file));
+                fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
+            }
+        }
+    }
+
+    if !init_with.dry_run {
+        scaffold::blend_legacy_entrypoints(&target_dir)?;
+    }
+
+    let mut agent_files_to_generate = if init_with.claude || init_with.gemini || init_with.agents {
+        let mut files = vec![];
+        if init_with.claude {
+            files.push("CLAUDE.md".to_string());
+        }
+        if init_with.gemini {
+            files.push("GEMINI.md".to_string());
+        }
+        if init_with.agents {
+            files.push("AGENTS.md".to_string());
+        }
+        files
+    } else {
+        existing_agent_files
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect()
+    };
+
+    if !agent_files_to_generate.is_empty()
+        && !agent_files_to_generate.iter().any(|f| f == "AGENTS.md")
+    {
+        agent_files_to_generate.push("AGENTS.md".to_string());
+    }
+
+    let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
+        target_dir: target_dir.clone(),
+        force: init_with.force,
+        dry_run: init_with.dry_run,
+        agent_files: agent_files_to_generate,
+        created_backups,
+        all: init_with.all,
+        generate_specs: init_with.specs,
+        diagram_style: match init_with.diagram_style {
+            InitDiagramStyle::Ascii => scaffold::DiagramStyle::Ascii,
+            InitDiagramStyle::Mermaid => scaffold::DiagramStyle::Mermaid,
+        },
+        specs_seed: Some(scaffold::SpecsSeed {
+            product_name: repo_ctx.product_name.clone(),
+            product_summary: repo_ctx.product_summary.clone(),
+            architecture_direction: repo_ctx.architecture_direction.clone(),
+            product_type: repo_ctx.product_type.clone(),
+            primary_languages: repo_ctx.primary_languages.clone(),
+            detected_surfaces: repo_ctx.detected_surfaces.clone(),
+            done_criteria: repo_ctx.done_criteria.clone(),
+        }),
+    })?;
+
+    let target_display = setup_decapod_root
+        .parent()
+        .unwrap_or(current_dir)
+        .display()
+        .to_string();
+    use colored::Colorize;
+    print!(
+        "{} {} ",
+        "▶".bright_green().bold(),
+        "init:".bright_cyan().bold(),
+    );
+    println!(
+        "target={} mode={}",
+        target_display.bright_white(),
+        if init_with.dry_run {
+            "dry-run".bright_yellow()
+        } else {
+            "apply".bright_green()
+        }
+    );
+    println!(
+        "  {} entry+{}={}~{} cfg+{}={}~{} specs+{}={}~{} backups={}",
+        "files:".bright_cyan(),
+        scaffold_summary
+            .entrypoints_created
+            .to_string()
+            .bright_green(),
+        scaffold_summary
+            .entrypoints_unchanged
+            .to_string()
+            .bright_yellow(),
+        scaffold_summary
+            .entrypoints_preserved
+            .to_string()
+            .bright_white(),
+        scaffold_summary.config_created.to_string().bright_green(),
+        scaffold_summary
+            .config_unchanged
+            .to_string()
+            .bright_yellow(),
+        scaffold_summary.config_preserved.to_string().bright_white(),
+        scaffold_summary.specs_created.to_string().bright_green(),
+        scaffold_summary.specs_unchanged.to_string().bright_yellow(),
+        scaffold_summary.specs_preserved.to_string().bright_white(),
+        backup_count.to_string().bright_magenta()
+    );
+    println!(
+        "  {} diagram_style={}",
+        "specs:".bright_cyan(),
+        match init_with.diagram_style {
+            InitDiagramStyle::Ascii => "ascii".bright_white(),
+            InitDiagramStyle::Mermaid => "mermaid".bright_white(),
+        }
+    );
+    println!(
+        "{} {}",
+        "✓".bright_green().bold(),
+        "status=ready".bright_green().bold()
+    );
+
+    Ok(target_dir)
+}
+
 pub fn run() -> Result<(), error::DecapodError> {
     let cli = Cli::parse();
     let current_dir = std::env::current_dir()?;
@@ -953,174 +1559,77 @@ pub fn run() -> Result<(), error::DecapodError> {
             return Ok(());
         }
         Command::Init(init_group) => {
-            // Handle subcommands (clean)
-            if let Some(subcmd) = init_group.command {
-                match subcmd {
-                    InitCommand::Clean { dir } => {
-                        clean_project(dir)?;
-                        return Ok(());
+            let base_init_invocation = init_group.command.is_none();
+            let mut had_existing_config = false;
+            let init_with = match init_group.command {
+                Some(InitCommand::Clean { dir }) => {
+                    clean_project(dir)?;
+                    return Ok(());
+                }
+                Some(InitCommand::With(with)) => with,
+                None => {
+                    let target = std::fs::canonicalize(
+                        init_group
+                            .dir
+                            .clone()
+                            .unwrap_or_else(|| current_dir.clone()),
+                    )
+                    .map_err(error::DecapodError::IoError)?;
+                    let maybe_cfg = load_project_config_if_present(&target)?;
+                    if let Some(cfg) = maybe_cfg {
+                        had_existing_config = true;
+                        let mut with = interactive_init_with(
+                            &cfg,
+                            target.clone(),
+                            init_group.force,
+                            init_group.dry_run,
+                        )?;
+                        // Keep base command flags as explicit runtime overrides.
+                        if init_group.all {
+                            with.all = true;
+                            with.agents = true;
+                            with.claude = true;
+                            with.gemini = true;
+                        }
+                        if init_group.agents {
+                            with.agents = true;
+                        }
+                        if init_group.claude {
+                            with.claude = true;
+                        }
+                        if init_group.gemini {
+                            with.gemini = true;
+                        }
+                        with
+                    } else {
+                        InitWithCli {
+                            dir: Some(target),
+                            force: init_group.force,
+                            dry_run: init_group.dry_run,
+                            all: init_group.all,
+                            claude: init_group.claude,
+                            gemini: init_group.gemini,
+                            agents: init_group.agents,
+                            specs: true,
+                            diagram_style: InitDiagramStyle::Ascii,
+                        }
                     }
                 }
-            }
-
-            // Base init command
-
-            let target_dir = match init_group.dir {
-                Some(d) => d,
-                None => current_dir.clone(),
             };
-            let target_dir =
-                std::fs::canonicalize(&target_dir).map_err(error::DecapodError::IoError)?;
 
-            // Check if .decapod exists and skip if it does, unless --force
-            let setup_decapod_root = target_dir.join(".decapod");
-            if setup_decapod_root.exists() && !init_group.force {
-                use colored::Colorize;
-                println!(
-                    "{} {}",
-                    "init:".bright_yellow(),
-                    "already initialized (.decapod exists); rerun with --force to overwrite"
-                        .bright_red()
-                );
-                return Ok(());
-            }
-
-            // Check which agent files exist and track which ones to generate
-            use sha2::{Digest, Sha256};
-            let mut existing_agent_files = vec![];
-            for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
-                if target_dir.join(file).exists() {
-                    existing_agent_files.push(file);
-                }
-            }
-
-            // Safely backup root agent entrypoint files if they exist and differ from templates
-            let mut created_backups = false;
-            let mut backup_count = 0usize;
-            if !init_group.dry_run {
-                for file in &existing_agent_files {
-                    let path = target_dir.join(file);
-
-                    // Get template content for this file
-                    let template_content = core::assets::get_template(file).unwrap_or_default();
-
-                    // Compute template checksum
-                    let mut hasher = Sha256::new();
-                    hasher.update(template_content.as_bytes());
-                    let template_hash = format!("{:x}", hasher.finalize());
-
-                    // Compute existing file checksum
-                    let existing_content = fs::read_to_string(&path).unwrap_or_default();
-                    let mut hasher = Sha256::new();
-                    hasher.update(existing_content.as_bytes());
-                    let existing_hash = format!("{:x}", hasher.finalize());
-
-                    // Only backup if checksums differ
-                    if template_hash != existing_hash {
-                        created_backups = true;
-                        backup_count += 1;
-                        let backup_path = target_dir.join(format!("{}.bak", file));
-                        fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
-                    }
-                }
-            }
-
-            // Blend legacy agent entrypoints into OVERRIDE.md
-            if !init_group.dry_run {
-                scaffold::blend_legacy_entrypoints(&target_dir)?;
-            }
-
-            // Databases are created lazily on first use by runtime commands.
-            // Init only generates the project structure files for speed.
-
-            // Determine which agent files to generate based on flags
-            // Individual flags override existing files list
-            let mut agent_files_to_generate =
-                if init_group.claude || init_group.gemini || init_group.agents {
-                    let mut files = vec![];
-                    if init_group.claude {
-                        files.push("CLAUDE.md".to_string());
-                    }
-                    if init_group.gemini {
-                        files.push("GEMINI.md".to_string());
-                    }
-                    if init_group.agents {
-                        files.push("AGENTS.md".to_string());
-                    }
-                    files
-                } else {
-                    existing_agent_files
-                        .into_iter()
-                        .map(|s| s.to_string())
-                        .collect()
-                };
-
-            // AGENTS.md is mandatory whenever we are doing selective entrypoint generation.
-            // Keep empty list semantics intact so scaffold can generate the full default set.
-            if !agent_files_to_generate.is_empty()
-                && !agent_files_to_generate.iter().any(|f| f == "AGENTS.md")
+            let init_target =
+                std::fs::canonicalize(init_with.dir.clone().unwrap_or_else(|| current_dir.clone()))
+                    .map_err(error::DecapodError::IoError)?;
+            let mut repo_ctx = infer_repo_context(&init_target);
+            if base_init_invocation
+                && io::stdin().is_terminal()
+                && (had_existing_config || needs_repo_context_interview(&repo_ctx))
             {
-                agent_files_to_generate.push("AGENTS.md".to_string());
+                enrich_repo_context_interactive(&mut repo_ctx)?;
             }
-
-            let scaffold_summary =
-                scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
-                    target_dir,
-                    force: init_group.force,
-                    dry_run: init_group.dry_run,
-                    agent_files: agent_files_to_generate,
-                    created_backups,
-                    all: init_group.all,
-                })?;
-
-            let target_display = setup_decapod_root
-                .parent()
-                .unwrap_or(current_dir.as_path())
-                .display()
-                .to_string();
-            use colored::Colorize;
-            print!(
-                "{} {} ",
-                "▶".bright_green().bold(),
-                "init:".bright_cyan().bold(),
-            );
-            println!(
-                "target={} mode={}",
-                target_display.bright_white(),
-                if init_group.dry_run {
-                    "dry-run".bright_yellow()
-                } else {
-                    "apply".bright_green()
-                }
-            );
-            println!(
-                "  {} entry+{}={}~{} cfg+{}={}~{} backups={}",
-                "files:".bright_cyan(),
-                scaffold_summary
-                    .entrypoints_created
-                    .to_string()
-                    .bright_green(),
-                scaffold_summary
-                    .entrypoints_unchanged
-                    .to_string()
-                    .bright_yellow(),
-                scaffold_summary
-                    .entrypoints_preserved
-                    .to_string()
-                    .bright_white(),
-                scaffold_summary.config_created.to_string().bright_green(),
-                scaffold_summary
-                    .config_unchanged
-                    .to_string()
-                    .bright_yellow(),
-                scaffold_summary.config_preserved.to_string().bright_white(),
-                backup_count.to_string().bright_magenta()
-            );
-            println!(
-                "{} {}",
-                "✓".bright_green().bold(),
-                "status=ready".bright_green().bold()
-            );
+            let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
+            let config = config_from_init_with(&init_with, repo_ctx);
+            write_project_config(&target_dir, &config, init_with.dry_run)?;
         }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
@@ -4656,9 +5165,25 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
             fragments.truncate(limit.max(1));
 
+            let local_specs = core::project_specs::local_project_specs_context(project_root);
+            let canonical_paths = local_specs.canonical_paths.clone();
+            let constitution_refs = local_specs.constitution_refs.clone();
+            let local_intent = local_specs.intent.clone();
+            let local_architecture = local_specs.architecture.clone();
+            let local_interfaces = local_specs.interfaces.clone();
+            let local_validation = local_specs.validation.clone();
+
             let result = serde_json::json!({
                 "fragments": fragments,
-                "scoped_fragments": scoped_fragments
+                "scoped_fragments": scoped_fragments,
+                "local_project_specs": {
+                    "canonical_paths": canonical_paths,
+                    "constitution_refs": constitution_refs,
+                    "intent": local_intent,
+                    "architecture": local_architecture,
+                    "interfaces": local_interfaces,
+                    "validation": local_validation
+                }
             });
             mark_constitution_context_resolved(project_root)?;
 
@@ -4670,10 +5195,22 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 vec![],
                 Some(ContextCapsule {
                     fragments,
-                    spec: None,
-                    architecture: None,
+                    spec: local_specs.intent.clone(),
+                    architecture: local_specs.architecture.clone(),
                     security: None,
-                    standards: None,
+                    standards: Some({
+                        let mut m = std::collections::HashMap::new();
+                        m.insert(
+                            "local_project_specs".to_string(),
+                            serde_json::json!({
+                                "canonical_paths": local_specs.canonical_paths,
+                                "constitution_refs": local_specs.constitution_refs,
+                                "interfaces": local_specs.interfaces,
+                                "validation": local_specs.validation
+                            }),
+                        );
+                        m
+                    }),
                 }),
                 vec![],
                 mandates.clone(),
