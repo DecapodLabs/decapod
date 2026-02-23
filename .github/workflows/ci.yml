@@ -179,11 +179,11 @@ jobs:
           shared-key: "ci-setup"
           save-if: false
 
-      - name: Run integration tests (except agent_rpc_suite and chaos_replay)
+      - name: Run integration tests (except isolated suites)
         run: |
           set -euo pipefail
           for t in $(ls tests/*.rs | xargs -n1 basename | sed 's/\.rs$//'); do
-            if [ "$t" = "agent_rpc_suite" ] || [ "$t" = "chaos_replay" ]; then
+            if [ "$t" = "agent_rpc_suite" ] || [ "$t" = "chaos_replay" ] || [ "$t" = "daemonless_lifecycle" ]; then
               continue
             fi
             cargo test --all-features --test "$t" -- --test-threads=4
@@ -238,6 +238,31 @@ jobs:
 
       - name: Run chaos replay determinism test
         run: cargo test --test chaos_replay -- --test-threads=1
+
+  # DAEMONLESS: ensure commands do not leave background processes
+  daemonless-lifecycle:
+    name: Daemonless Lifecycle Gate
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install LLD
+        run: sudo apt-get update && sudo apt-get install -y lld
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Restore Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-setup"
+          save-if: false
+
+      - name: Run daemonless lifecycle test
+        run: cargo test --all-features --test daemonless_lifecycle -- --test-threads=1
 
   # HEALTH: Decapod validation and health checks
   health:
@@ -300,7 +325,7 @@ jobs:
     name: Release Build Check
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    needs: [fmt, clippy, test-core, test-integration, test-rpc-suite, chaos-replay, health]
+    needs: [fmt, clippy, test-core, test-integration, test-rpc-suite, chaos-replay, daemonless-lifecycle, health]
     steps:
       - uses: actions/checkout@v4
         with:
