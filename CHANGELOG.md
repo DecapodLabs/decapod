@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.11](https://github.com/DecapodLabs/decapod/compare/v0.37.10...v0.37.11) - 2026-02-23
+
+### Fixed
+
+- *(broker)* replace per-DB mutex with SqlitePool for read/write separation
+- *(release)* update README.md sha256 in artifact manifest
+
+### Other
+
+- Merge pull request #383 from DecapodLabs/fix/sqlite-pool-contention
+- run rustfmt for sqlite pool contention changes
+- update crate description and categories
+
 ## [0.37.10](https://github.com/DecapodLabs/decapod/compare/v0.37.9...v0.37.10) - 2026-02-23
 
 ### Other
