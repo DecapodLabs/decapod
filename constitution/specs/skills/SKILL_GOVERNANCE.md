@@ -31,7 +31,7 @@ To be promotion-relevant, skills must be translated into deterministic, repo-nat
 
 ## Promotion Discipline
 
-1. Promotion-relevant skill usage MUST reference a `skill_card` artifact or explicit teammate skill entry.
+1. Promotion-relevant skill usage MUST reference a `skill_card` artifact or explicit aptitude skill entry.
 2. Free-form skill prose cannot bypass proof gates.
 3. Hash mismatch in skill artifacts is a validation failure.
 

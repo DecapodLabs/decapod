@@ -127,7 +127,7 @@
 
 ### plugins/HEARTBEAT.md
 
-### plugins/TEAMMATE.md
+### plugins/APTITUDE.md
 
 ### plugins/VERIFY.md
 

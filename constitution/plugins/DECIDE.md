@@ -200,5 +200,5 @@ beginning implementation work.
 
 - `core/PLUGINS.md` — Subsystem registry
 - `plugins/FEDERATION.md` — Memory graph (cross-linked)
-- `plugins/TEAMMATE.md` — Preference system (complementary)
+- `plugins/APTITUDE.md` — Preference system (complementary)
 - `interfaces/STORE_MODEL.md` — Store semantics

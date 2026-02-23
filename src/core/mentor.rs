@@ -135,14 +135,14 @@ enum CandidateSource {
         status: String,
         category: Option<String>,
     },
-    TeammateSkill {
+    AptitudeSkill {
         name: String,
         description: String,
         workflow: String,
         context: Option<String>,
         usage_count: i64,
     },
-    TeammatePreference {
+    AptitudePreference {
         category: String,
         key: String,
         value: String,
@@ -282,11 +282,11 @@ impl MentorEngine {
         // Get todo candidates
         candidates.extend(self.get_todo_candidates()?);
 
-        // Get teammate skills
-        candidates.extend(self.get_teammate_skill_candidates()?);
+        // Get aptitude skills
+        candidates.extend(self.get_aptitude_skill_candidates()?);
 
-        // Get teammate preferences
-        candidates.extend(self.get_teammate_preference_candidates()?);
+        // Get aptitude preferences
+        candidates.extend(self.get_aptitude_preference_candidates()?);
 
         // Get federation lessons
         candidates.extend(self.get_federation_lesson_candidates()?);
@@ -516,14 +516,14 @@ impl MentorEngine {
         Ok(candidates)
     }
 
-    /// Get teammate skill candidates
-    fn get_teammate_skill_candidates(&self) -> Result<Vec<CandidateSource>, DecapodError> {
+    /// Get aptitude skill candidates
+    fn get_aptitude_skill_candidates(&self) -> Result<Vec<CandidateSource>, DecapodError> {
         let mut candidates = vec![];
         let db_path = self
             .repo_root
             .join(".decapod")
             .join("data")
-            .join("teammate.db");
+            .join("aptitude.db");
 
         if !db_path.exists() {
             return Ok(candidates);
@@ -535,7 +535,7 @@ impl MentorEngine {
         )?;
 
         let rows = stmt.query_map([], |row| {
-            Ok(CandidateSource::TeammateSkill {
+            Ok(CandidateSource::AptitudeSkill {
                 name: row.get(0)?,
                 description: row.get::<_, Option<String>>(1)?.unwrap_or_default(),
                 workflow: row.get(2)?,
@@ -551,14 +551,14 @@ impl MentorEngine {
         Ok(candidates)
     }
 
-    /// Get teammate preference candidates
-    fn get_teammate_preference_candidates(&self) -> Result<Vec<CandidateSource>, DecapodError> {
+    /// Get aptitude preference candidates
+    fn get_aptitude_preference_candidates(&self) -> Result<Vec<CandidateSource>, DecapodError> {
         let mut candidates = vec![];
         let db_path = self
             .repo_root
             .join(".decapod")
             .join("data")
-            .join("teammate.db");
+            .join("aptitude.db");
 
         if !db_path.exists() {
             return Ok(candidates);
@@ -570,7 +570,7 @@ impl MentorEngine {
         )?;
 
         let rows = stmt.query_map([], |row| {
-            Ok(CandidateSource::TeammatePreference {
+            Ok(CandidateSource::AptitudePreference {
                 category: row.get(0)?,
                 key: row.get(1)?,
                 value: row.get(2)?,
@@ -769,7 +769,7 @@ impl MentorEngine {
                     }
                 }
             }
-            CandidateSource::TeammateSkill {
+            CandidateSource::AptitudeSkill {
                 name,
                 description,
                 workflow,
@@ -799,7 +799,7 @@ impl MentorEngine {
                     }
                 }
             }
-            CandidateSource::TeammatePreference {
+            CandidateSource::AptitudePreference {
                 category,
                 key,
                 value: _,
@@ -1051,7 +1051,7 @@ impl MentorEngine {
                     relevance_score: score,
                 }
             }
-            CandidateSource::TeammateSkill {
+            CandidateSource::AptitudeSkill {
                 name,
                 description,
                 workflow,
@@ -1059,18 +1059,18 @@ impl MentorEngine {
                 usage_count: _,
             } => Obligation {
                 kind: ObligationKind::DocAnchor, // Reusing DocAnchor as it fits the "read this" model
-                ref_path: format!("teammate.db/skills/{}", name),
+                ref_path: format!("aptitude.db/skills/{}", name),
                 title: format!("Skill: {}", name),
                 why_short: description.clone(),
                 evidence: Evidence {
-                    source: "teammate.db".to_string(),
+                    source: "aptitude.db".to_string(),
                     id: name.clone(),
                     hash: Some(self.compute_hash(workflow)),
                     timestamp: None,
                 },
                 relevance_score: score,
             },
-            CandidateSource::TeammatePreference {
+            CandidateSource::AptitudePreference {
                 category,
                 key,
                 value,
@@ -1078,11 +1078,11 @@ impl MentorEngine {
                 confidence,
             } => Obligation {
                 kind: ObligationKind::DocAnchor,
-                ref_path: format!("teammate.db/preferences/{}.{}", category, key),
+                ref_path: format!("aptitude.db/preferences/{}.{}", category, key),
                 title: format!("Preference: {}.{}", category, key),
                 why_short: format!("User preference (confidence {}%): {}", confidence, value),
                 evidence: Evidence {
-                    source: "teammate.db".to_string(),
+                    source: "aptitude.db".to_string(),
                     id: format!("{}.{}", category, key),
                     hash: None,
                     timestamp: None,

@@ -258,7 +258,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
     migrate_table(&data_root, "feedback.db", &gov_conn, "feedback")?;
     migrate_table(&data_root, "archive.db", &gov_conn, "archives")?;
 
-    // 2. Consolidate Memory Bin (knowledge, federation, decisions, teammate)
+    // 2. Consolidate Memory Bin (knowledge, federation, decisions, aptitude)
     let mem_path = data_root.join(schemas::MEMORY_DB_NAME);
     let mem_conn = Connection::open(&mem_path).map_err(error::DecapodError::RusqliteError)?;
     mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
@@ -325,7 +325,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
         "knowledge.db",
         "federation.db",
         "decisions.db",
-        "teammate.db",
+        "aptitude.db",
         "cron.db",
         "reflex.db",
     ];

@@ -67,8 +67,8 @@ name = "plugins_health_tests"
 path = "tests/plugins/health.rs"
 
 [[test]]
-name = "plugins_teammate_tests"
-path = "tests/plugins/teammate.rs"
+name = "plugins_aptitude_tests"
+path = "tests/plugins/aptitude.rs"
 
 [[test]]
 name = "plugins_federation_tests"
