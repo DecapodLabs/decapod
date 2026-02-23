@@ -3,7 +3,7 @@ use crate::core::error;
 use crate::core::store::Store;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
-use std::fs::OpenOptions;
+use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -147,6 +147,39 @@ pub fn add_knowledge(
 
     if let Some(expires_ts) = args.expires_ts {
         parse_epoch_z(expires_ts)?;
+    }
+
+    if is_procedural_entry_id(args.id) {
+        let event_id = args.provenance.strip_prefix("event:").ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "procedural knowledge entries require provenance in format `event:<promotion_event_id>`"
+                    .to_string(),
+            )
+        })?;
+        let event = lookup_promotion_event(store, event_id)?.ok_or_else(|| {
+            error::DecapodError::ValidationError(format!(
+                "missing promotion firewall event '{}' in knowledge.promotions.jsonl",
+                event_id
+            ))
+        })?;
+        if event.target_class != "procedural" {
+            return Err(error::DecapodError::ValidationError(format!(
+                "promotion event '{}' target_class is '{}' (expected procedural)",
+                event_id, event.target_class
+            )));
+        }
+        if event.evidence_refs.is_empty() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "promotion event '{}' is missing evidence_refs",
+                event_id
+            )));
+        }
+        if event.approved_by.trim().is_empty() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "promotion event '{}' is missing approved_by",
+                event_id
+            )));
+        }
     }
 
     let broker = DbBroker::new(&store.root);
@@ -573,6 +606,38 @@ pub fn record_promotion_event(
     writeln!(file, "{}", line).map_err(error::DecapodError::IoError)?;
 
     Ok(event)
+}
+
+fn is_procedural_entry_id(id: &str) -> bool {
+    id.starts_with("procedural/")
+}
+
+fn lookup_promotion_event(
+    store: &Store,
+    event_id: &str,
+) -> Result<Option<KnowledgePromotionEvent>, error::DecapodError> {
+    let ledger_path = store.root.join("knowledge.promotions.jsonl");
+    if !ledger_path.exists() {
+        return Ok(None);
+    }
+    let raw = fs::read_to_string(&ledger_path).map_err(error::DecapodError::IoError)?;
+    for (idx, line) in raw.lines().enumerate() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let event: KnowledgePromotionEvent = serde_json::from_str(line).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "invalid knowledge promotion ledger line {} in {}: {}",
+                idx + 1,
+                ledger_path.display(),
+                e
+            ))
+        })?;
+        if event.event_id == event_id {
+            return Ok(Some(event));
+        }
+    }
+    Ok(None)
 }
 
 fn parse_epoch_z(ts: &str) -> Result<u64, error::DecapodError> {
