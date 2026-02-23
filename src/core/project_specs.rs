@@ -3,10 +3,10 @@ use std::path::Path;
 
 pub const LOCAL_PROJECT_SPECS_DIR: &str = ".decapod/generated/specs";
 pub const LOCAL_PROJECT_SPECS_README: &str = ".decapod/generated/specs/README.md";
-pub const LOCAL_PROJECT_SPECS_INTENT: &str = ".decapod/generated/specs/intent.md";
-pub const LOCAL_PROJECT_SPECS_ARCHITECTURE: &str = ".decapod/generated/specs/architecture.md";
-pub const LOCAL_PROJECT_SPECS_INTERFACES: &str = ".decapod/generated/specs/interfaces.md";
-pub const LOCAL_PROJECT_SPECS_VALIDATION: &str = ".decapod/generated/specs/validation.md";
+pub const LOCAL_PROJECT_SPECS_INTENT: &str = ".decapod/generated/specs/INTENT.md";
+pub const LOCAL_PROJECT_SPECS_ARCHITECTURE: &str = ".decapod/generated/specs/ARCHITECTURE.md";
+pub const LOCAL_PROJECT_SPECS_INTERFACES: &str = ".decapod/generated/specs/INTERFACES.md";
+pub const LOCAL_PROJECT_SPECS_VALIDATION: &str = ".decapod/generated/specs/VALIDATION.md";
 
 #[derive(Clone, Copy, Debug)]
 pub struct LocalProjectSpec {
