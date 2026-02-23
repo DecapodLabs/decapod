@@ -322,6 +322,25 @@ struct WorkunitCli {
     command: WorkunitCommand,
 }
 
+#[derive(clap::ValueEnum, Clone, Debug)]
+enum WorkunitStatusArg {
+    Draft,
+    Executing,
+    Claimed,
+    Verified,
+}
+
+impl From<WorkunitStatusArg> for core::workunit::WorkUnitStatus {
+    fn from(value: WorkunitStatusArg) -> Self {
+        match value {
+            WorkunitStatusArg::Draft => Self::Draft,
+            WorkunitStatusArg::Executing => Self::Executing,
+            WorkunitStatusArg::Claimed => Self::Claimed,
+            WorkunitStatusArg::Verified => Self::Verified,
+        }
+    }
+}
+
 #[derive(Subcommand, Debug)]
 enum WorkunitCommand {
     /// Initialize a work unit manifest for a task
@@ -361,6 +380,24 @@ enum WorkunitCommand {
         task_id: String,
         #[clap(long = "gate")]
         gates: Vec<String>,
+    },
+    /// Record proof result for a gate
+    RecordProof {
+        #[clap(long)]
+        task_id: String,
+        #[clap(long)]
+        gate: String,
+        #[clap(long)]
+        status: String,
+        #[clap(long)]
+        artifact: Option<String>,
+    },
+    /// Transition workunit status through governed state machine
+    Transition {
+        #[clap(long)]
+        task_id: String,
+        #[clap(long, value_enum)]
+        to: WorkunitStatusArg,
     },
 }
 
@@ -3097,6 +3134,25 @@ fn run_workunit_command(
         }
         WorkunitCommand::SetProofPlan { task_id, gates } => {
             let manifest = core::workunit::set_proof_plan(project_root, &task_id, &gates)?;
+            println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
+        }
+        WorkunitCommand::RecordProof {
+            task_id,
+            gate,
+            status,
+            artifact,
+        } => {
+            let manifest = core::workunit::record_proof_result(
+                project_root,
+                &task_id,
+                &gate,
+                &status,
+                artifact,
+            )?;
+            println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
+        }
+        WorkunitCommand::Transition { task_id, to } => {
+            let manifest = core::workunit::transition_status(project_root, &task_id, to.into())?;
             println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
         }
     }
