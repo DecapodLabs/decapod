@@ -34,7 +34,7 @@ Decapod is **daemonless**. There is no long-lived service. The binary starts whe
 - `cargo install decapod`
 - `decapod init`
 
-Then continue with Claude, Codex, Gemini, OpenCode, or any other agent exactly as you already work. Decapod is agent-agnostic and safe for concurrent multi-agent execution.
+Then continue with Claude Code, OpenAI Codex, Gemini CLI, Cursor, or any tool that can invoke a CLI command. Decapod is agent-agnostic and safe for concurrent multi-agent execution.
 
 State is local and durable in `.decapod/`: shared context, decisions, and traces persist across sessions and remain retrievable over time.
 
@@ -82,6 +82,8 @@ decapod init
 ```
 
 Then keep using your agents normally. Decapod is called from inside those agent runs when control-plane decisions are needed.
+
+Agent integration: If you use Claude Code / Codex / Gemini / Cursor / similar tools, see `AGENTS.md` and the tool-specific entrypoint files (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`) for the exact operational contract.
 
 Learn more about the embedded constitution via the CLI:
 

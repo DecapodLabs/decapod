@@ -50,6 +50,16 @@ This is the default sequence when operating in a Decapod-managed repo:
 
 If you cannot name the proof surface, you're not ready to claim correctness.
 
+### 2.1 Invocation Checkpoints (Required)
+
+For every meaningful task, agents MUST call Decapod at three checkpoints:
+
+1. **Before plan commitment**: initialize/resolve context (`decapod rpc --op agent.init`, `decapod rpc --op context.resolve`).
+2. **Before mutation**: claim work and ensure canonical workspace (`decapod todo claim`, `decapod workspace ensure`).
+3. **After mutation**: run proof surfaces (`decapod validate` plus required tests) before completion claims.
+
+Skipping a checkpoint invalidates completion claims.
+
 ---
 
 ## 3. Interoperability: The Thin Waist
@@ -126,6 +136,12 @@ Scope discipline:
   - in-flight read de-duplication
 
 The win is the protocol: once all access goes through one request layer, you can add tracing, priorities, idempotency keys, and audit trails without rewriting the world.
+
+### 5.1 Ambiguity and Capability Boundaries
+
+1. If intent is ambiguous or policy boundaries conflict, agents MUST stop and ask for clarification before irreversible implementation.
+2. Agents MUST NOT claim capabilities absent from the command surface; missing capability is a gap to report, not permission to improvise hidden behavior.
+3. Lock/contention failures (`VALIDATE_TIMEOUT_OR_LOCK` and related typed failures) are blocking failures until explicitly resolved or retried successfully.
 
 ---
 

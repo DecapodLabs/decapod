@@ -1,9 +1,15 @@
-# AGENT.md - Agent Entrypoint
+# GEMINI.md — Gemini Entrypoint
 
-You are working in a Decapod-managed repository.
-You are bound by the universal contract in **AGENTS.md**.
+Follow `AGENTS.md` as the primary contract.
 
-## Quick Start
+Gemini runtime rules in this repo:
+
+- Use Decapod as the control plane at plan, mutation, and proof checkpoints.
+- Operate only through Decapod CLI/RPC for shared state and governance.
+- Handle lock/contention failures explicitly; do not proceed on uncertain state.
+- Do not claim unsupported features or hidden workflows.
+
+Minimum flow:
 
 ```bash
 decapod validate
@@ -16,28 +22,11 @@ decapod todo claim --id <task-id>
 decapod workspace ensure
 ```
 
-## Operating Mode
+Before completion:
 
-- Plan first: Non-trivial changes require a plan artifact.
-- Proof first: `decapod validate` MUST pass before claiming done.
-- Minimal changes: Only change what is directly requested.
-- Workspace isolation: run `decapod workspace ensure` and work only from `.decapod/workspaces/*`. Never main/master and never non-canonical worktree roots.
-- CLI only: All `.decapod/` access through `decapod` CLI.
-- Just-in-time context: load only the minimum required doc slices with `decapod docs show <path>`.
-- Embedded constitution only: never read `constitution/*` directly; use `decapod docs show <embedded-path>`.
+```bash
+decapod validate
+# plus required tests/build checks for changed surfaces
+```
 
-## Safety Invariants
-
-- core/DECAPOD.md: Universal router.
-- `decapod validate` must pass before claiming done.
-- Stop if error or ambiguous state occurs; respect invocation heartbeat.
-- Safe Environment: Use Docker git workspaces; request elevated permissions before Docker/container workspace commands.
-- Security: DECAPOD_SESSION_PASSWORD required; .decapod files are accessed only via decapod CLI.
-- Architecture: Respect the Interface abstraction boundary.
-- Updates: cargo install decapod.
-
-See **AGENTS.md** for the full universal contract.
-
-## Optional Operator Guide
-
-`decapod docs show docs/PLAYBOOK.md`
+If intent or policy is unclear, stop and ask the human.
