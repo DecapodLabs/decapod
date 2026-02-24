@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.2](https://github.com/DecapodLabs/decapod/compare/v0.41.1...v0.41.2) - 2026-02-24
+
+### Added
+
+- *(broker)* enforce strict must-route guard for routed mutators
+- *(broker)* add request-id dedupe ledger and recovery retry semantics
+- *(broker)* add ephemeral CLI-boundary group broker runtime
+
+### Other
+
+- fix clippy useless_vec in broker concurrency env setup
+- *(broker)* isolate session state per worker to avoid concurrent parse race
+- *(broker)* harden concurrent mutator gate with idempotent retry
+- format strict broker guard test
+- shard integration tests across 4 runners and fix lint regressions
+- *(broker)* add protocol mismatch and phase crash injection proof harness
+- *(broker)* add phase hooks and crash-safe lease recovery primitives
+- *(broker)* add concurrency and dedupe proof tests
+- *(sqlite)* tighten routed mutator boundaries and brokered init paths
+- *(broker)* allow ephemeral local cross-process socket mode
+
 ## [0.41.1](https://github.com/DecapodLabs/decapod/compare/v0.41.0...v0.41.1) - 2026-02-24
 
 ### Other
