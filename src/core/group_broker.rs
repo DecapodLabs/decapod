@@ -1,5 +1,7 @@
+use crate::core::db;
 use crate::core::error;
 use crate::core::time;
+use rusqlite::OptionalExtension;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs::{self, File, OpenOptions};
@@ -22,6 +24,15 @@ struct BrokerRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct BrokerResponse {
+    status: String,
+    commit_marker: Option<String>,
+    result_envelope: serde_json::Value,
+    retry_after_ms_hint: Option<u64>,
+}
+
+#[derive(Debug, Clone)]
+struct DedupeRecord {
+    payload_hash: String,
     status: String,
     commit_marker: Option<String>,
     result_envelope: serde_json::Value,
@@ -74,32 +85,40 @@ fn run_unix_broker(decapod_root: &Path, argv: &[String]) -> Result<(), error::De
         return apply_response(resp);
     }
 
-    let mut attempts = 0u32;
-    loop {
-        attempts += 1;
-        match try_acquire_lock(&lock_path)? {
-            Some(lease) => {
-                let resp = run_as_leader(lease, &socket_path, request)?;
-                return apply_response(resp);
-            }
-            None => {
-                if let Ok(resp) = send_request(&socket_path, &request) {
+    for phase in 0..2u8 {
+        let mut attempts = 0u32;
+        loop {
+            attempts += 1;
+            match try_acquire_lock(&lock_path)? {
+                Some(lease) => {
+                    let resp = run_as_leader(lease, decapod_root, &socket_path, request.clone())?;
                     return apply_response(resp);
                 }
-                if attempts >= 40 {
-                    return Err(error::DecapodError::ValidationError(
-                        "BROKER_UNKNOWN: unable to reach or acquire group broker".to_string(),
-                    ));
+                None => {
+                    if let Ok(resp) = send_request(&socket_path, &request) {
+                        return apply_response(resp);
+                    }
+                    if attempts >= 40 {
+                        break;
+                    }
+                    std::thread::sleep(Duration::from_millis(10 + jitter_ms(30)));
                 }
-                std::thread::sleep(Duration::from_millis(10 + jitter_ms(30)));
             }
         }
+        if phase == 0 {
+            std::thread::sleep(Duration::from_millis(4000 + jitter_ms(2000)));
+        }
     }
+    Err(error::DecapodError::ValidationError(
+        "BROKER_UNKNOWN: no final confirmation; retry with same request_id after backoff"
+            .to_string(),
+    ))
 }
 
 #[cfg(unix)]
 fn run_as_leader(
     _lease: BrokerLease,
+    decapod_root: &Path,
     socket_path: &Path,
     local_request: BrokerRequest,
 ) -> Result<BrokerResponse, error::DecapodError> {
@@ -113,7 +132,7 @@ fn run_as_leader(
         .set_nonblocking(true)
         .map_err(error::DecapodError::IoError)?;
 
-    let local_response = execute_request(&local_request)?;
+    let local_response = execute_request(decapod_root, &local_request)?;
 
     let idle_timeout = Duration::from_secs(
         std::env::var(BROKER_IDLE_SECS_ENV)
@@ -131,7 +150,7 @@ fn run_as_leader(
 
         match listener.accept() {
             Ok((stream, _)) => {
-                if handle_client(stream).is_ok() {
+                if handle_client(decapod_root, stream).is_ok() {
                     last_activity = Instant::now();
                 }
             }
@@ -149,7 +168,10 @@ fn run_as_leader(
 }
 
 #[cfg(unix)]
-fn handle_client(stream: std::os::unix::net::UnixStream) -> Result<(), error::DecapodError> {
+fn handle_client(
+    decapod_root: &Path,
+    stream: std::os::unix::net::UnixStream,
+) -> Result<(), error::DecapodError> {
     let mut reader = BufReader::new(
         stream
             .try_clone()
@@ -163,7 +185,7 @@ fn handle_client(stream: std::os::unix::net::UnixStream) -> Result<(), error::De
         error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_INVALID_REQUEST: {}", e))
     })?;
 
-    let resp = execute_request(&req)?;
+    let resp = execute_request(decapod_root, &req)?;
     let mut writer = stream;
     let body = serde_json::to_string(&resp).map_err(|e| {
         error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_ENCODE_ERROR: {}", e))
@@ -214,16 +236,55 @@ fn send_request(
     })
 }
 
-fn execute_request(request: &BrokerRequest) -> Result<BrokerResponse, error::DecapodError> {
+fn execute_request(
+    decapod_root: &Path,
+    request: &BrokerRequest,
+) -> Result<BrokerResponse, error::DecapodError> {
+    if let Some(existing) = dedupe_lookup(decapod_root, request)? {
+        if existing.payload_hash != request.payload_hash {
+            return Ok(BrokerResponse {
+                status: "NOT_COMMITTED".to_string(),
+                commit_marker: existing.commit_marker,
+                result_envelope: serde_json::json!({
+                    "request_id": request.request_id,
+                    "payload_hash": request.payload_hash,
+                    "error": "BROKER_DEDUPE_PAYLOAD_MISMATCH",
+                }),
+                retry_after_ms_hint: Some(5000),
+            });
+        }
+        return Ok(BrokerResponse {
+            status: existing.status,
+            commit_marker: existing.commit_marker,
+            result_envelope: existing.result_envelope,
+            retry_after_ms_hint: existing.retry_after_ms_hint,
+        });
+    }
+
     let exe = std::env::current_exe().map_err(error::DecapodError::IoError)?;
-    let output = Command::new(exe)
+    let output = match Command::new(exe)
         .args(&request.argv)
         .env(BROKER_INTERNAL_ENV, "1")
         .env("DECAPOD_GROUP_BROKER_REQUEST_ID", &request.request_id)
         .output()
-        .map_err(error::DecapodError::IoError)?;
+    {
+        Ok(output) => output,
+        Err(err) => {
+            return Ok(BrokerResponse {
+                status: "UNKNOWN".to_string(),
+                commit_marker: None,
+                result_envelope: serde_json::json!({
+                    "request_id": request.request_id,
+                    "payload_hash": request.payload_hash,
+                    "error": format!("BROKER_EXEC_SPAWN_FAILED: {}", err),
+                }),
+                retry_after_ms_hint: Some(5000),
+            })
+        }
+    };
 
-    let code = output.status.code().unwrap_or(1);
+    let code_opt = output.status.code();
+    let code = code_opt.unwrap_or(1);
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
     let result_envelope = serde_json::json!({
@@ -234,18 +295,22 @@ fn execute_request(request: &BrokerRequest) -> Result<BrokerResponse, error::Dec
         "stderr": stderr,
     });
 
-    let status = if code == 0 {
+    let status = if code_opt.is_none() {
+        "UNKNOWN"
+    } else if code == 0 {
         "COMMITTED"
     } else {
         "NOT_COMMITTED"
     };
 
-    Ok(BrokerResponse {
+    let response = BrokerResponse {
         status: status.to_string(),
         commit_marker: Some(format!("{}:{}", time::now_epoch_z(), Ulid::new())),
-        result_envelope,
-        retry_after_ms_hint: if code == 0 { None } else { Some(5000) },
-    })
+        result_envelope: result_envelope.clone(),
+        retry_after_ms_hint: if status == "COMMITTED" { None } else { Some(5000) },
+    };
+    dedupe_store(decapod_root, request, &response)?;
+    Ok(response)
 }
 
 fn apply_response(resp: BrokerResponse) -> Result<(), error::DecapodError> {
@@ -294,6 +359,100 @@ fn broker_lock_path(decapod_root: &Path) -> PathBuf {
 
 fn broker_socket_path(decapod_root: &Path) -> PathBuf {
     decapod_root.join("broker.sock")
+}
+
+fn dedupe_db_path(decapod_root: &Path) -> PathBuf {
+    decapod_root.join("data").join("broker_dedupe.db")
+}
+
+fn dedupe_lookup(
+    decapod_root: &Path,
+    request: &BrokerRequest,
+) -> Result<Option<DedupeRecord>, error::DecapodError> {
+    let db_path = dedupe_db_path(decapod_root);
+    if !db_path.exists() {
+        return Ok(None);
+    }
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    ensure_dedupe_schema(&conn)?;
+
+    let mut stmt = conn.prepare(
+        "SELECT payload_hash, status, commit_marker, result_envelope, retry_after_ms_hint
+         FROM request_dedupe WHERE request_id = ?1",
+    )?;
+    let row = stmt
+        .query_row([request.request_id.as_str()], |r| {
+            let payload_hash: String = r.get(0)?;
+            let status: String = r.get(1)?;
+            let commit_marker: Option<String> = r.get(2)?;
+            let result_json: String = r.get(3)?;
+            let retry_hint_i64: Option<i64> = r.get(4)?;
+            let retry_hint = retry_hint_i64.and_then(|v| u64::try_from(v).ok());
+            Ok((payload_hash, status, commit_marker, result_json, retry_hint))
+        })
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    let Some((payload_hash, status, commit_marker, result_json, retry_after_ms_hint)) = row else {
+        return Ok(None);
+    };
+    let result_envelope: serde_json::Value = serde_json::from_str(&result_json).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "BROKER_DEDUPE_DECODE_FAILED for request_id={}: {}",
+            request.request_id, e
+        ))
+    })?;
+    Ok(Some(DedupeRecord {
+        payload_hash,
+        status,
+        commit_marker,
+        result_envelope,
+        retry_after_ms_hint,
+    }))
+}
+
+fn dedupe_store(
+    decapod_root: &Path,
+    request: &BrokerRequest,
+    response: &BrokerResponse,
+) -> Result<(), error::DecapodError> {
+    let db_path = dedupe_db_path(decapod_root);
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    ensure_dedupe_schema(&conn)?;
+    let result_json = serde_json::to_string(&response.result_envelope).map_err(|e| {
+        error::DecapodError::ValidationError(format!("BROKER_DEDUPE_ENCODE_FAILED: {}", e))
+    })?;
+
+    conn.execute(
+        "INSERT OR REPLACE INTO request_dedupe(request_id, payload_hash, status, commit_marker, result_envelope, retry_after_ms_hint, created_at)
+         VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        rusqlite::params![
+            request.request_id,
+            request.payload_hash,
+            response.status,
+            response.commit_marker,
+            result_json,
+            response.retry_after_ms_hint.map(|v| v as i64),
+            time::now_epoch_z(),
+        ],
+    )?;
+    Ok(())
+}
+
+fn ensure_dedupe_schema(conn: &rusqlite::Connection) -> Result<(), error::DecapodError> {
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS request_dedupe(
+            request_id TEXT PRIMARY KEY,
+            payload_hash TEXT NOT NULL,
+            status TEXT NOT NULL,
+            commit_marker TEXT,
+            result_envelope TEXT NOT NULL,
+            retry_after_ms_hint INTEGER,
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_request_dedupe_created_at ON request_dedupe(created_at);",
+    )?;
+    Ok(())
 }
 
 fn try_acquire_lock(lock_path: &Path) -> Result<Option<BrokerLease>, error::DecapodError> {
