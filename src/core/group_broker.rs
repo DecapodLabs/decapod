@@ -53,7 +53,10 @@ pub fn is_internal_invocation() -> bool {
         .unwrap_or(false)
 }
 
-pub fn maybe_route_mutation(decapod_root: &Path, argv: &[String]) -> Result<bool, error::DecapodError> {
+pub fn maybe_route_mutation(
+    decapod_root: &Path,
+    argv: &[String],
+) -> Result<bool, error::DecapodError> {
     if std::env::var(BROKER_DISABLE_ENV)
         .map(|v| v == "1")
         .unwrap_or(false)
@@ -67,14 +70,14 @@ pub fn maybe_route_mutation(decapod_root: &Path, argv: &[String]) -> Result<bool
     #[cfg(unix)]
     {
         match run_unix_broker(decapod_root, argv) {
-            Ok(()) => return Ok(true),
+            Ok(()) => Ok(true),
             // Some constrained sandboxes disallow AF_UNIX sockets. Fall back to direct path.
             Err(error::DecapodError::IoError(io_err))
                 if io_err.kind() == std::io::ErrorKind::PermissionDenied =>
             {
-                return Ok(false);
+                Ok(false)
             }
-            Err(e) => return Err(e),
+            Err(e) => Err(e),
         }
     }
 
@@ -94,7 +97,8 @@ fn run_unix_broker(decapod_root: &Path, argv: &[String]) -> Result<(), error::De
 
     let request = BrokerRequest {
         protocol_version: client_protocol_version(),
-        request_id: std::env::var(BROKER_REQUEST_ID_ENV).unwrap_or_else(|_| Ulid::new().to_string()),
+        request_id: std::env::var(BROKER_REQUEST_ID_ENV)
+            .unwrap_or_else(|_| Ulid::new().to_string()),
         argv: argv.to_vec(),
         payload_hash: hash_payload(argv),
     };
@@ -210,11 +214,7 @@ fn handle_client(
     decapod_root: &Path,
     stream: std::os::unix::net::UnixStream,
 ) -> Result<(), error::DecapodError> {
-    let mut reader = BufReader::new(
-        stream
-            .try_clone()
-            .map_err(error::DecapodError::IoError)?,
-    );
+    let mut reader = BufReader::new(stream.try_clone().map_err(error::DecapodError::IoError)?);
     let mut line = String::new();
     reader
         .read_line(&mut line)
@@ -339,7 +339,7 @@ fn execute_request(
                     "error": format!("BROKER_EXEC_SPAWN_FAILED: {}", err),
                 }),
                 retry_after_ms_hint: Some(5000),
-            })
+            });
         }
     };
 
@@ -369,7 +369,11 @@ fn execute_request(
         status: status.to_string(),
         commit_marker: Some(format!("{}:{}", time::now_epoch_z(), Ulid::new())),
         result_envelope: result_envelope.clone(),
-        retry_after_ms_hint: if status == "COMMITTED" { None } else { Some(5000) },
+        retry_after_ms_hint: if status == "COMMITTED" {
+            None
+        } else {
+            Some(5000)
+        },
     };
     dedupe_store(decapod_root, request, &response)?;
     Ok(response)
@@ -563,11 +567,7 @@ fn emit_phase_hook(phase: &str, request_id: &str) {
             let _ = writeln!(file, "{}|{}", phase, request_id);
         }
     }
-    if std::env::var(BROKER_HALT_PHASE_ENV)
-        .ok()
-        .as_deref()
-        == Some(phase)
-    {
+    if std::env::var(BROKER_HALT_PHASE_ENV).ok().as_deref() == Some(phase) {
         loop {
             std::thread::sleep(Duration::from_millis(100));
         }

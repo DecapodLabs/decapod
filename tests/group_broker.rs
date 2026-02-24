@@ -46,7 +46,10 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
     let stdout = String::from_utf8_lossy(&acquire.stdout);
     let password = stdout
         .lines()
-        .find_map(|line| line.strip_prefix("Password: ").map(|s| s.trim().to_string()))
+        .find_map(|line| {
+            line.strip_prefix("Password: ")
+                .map(|s| s.trim().to_string())
+        })
         .expect("session password");
 
     (tmp, dir, password)
@@ -62,7 +65,10 @@ fn broker_socket_supported(dir: &Path, password: &str) -> bool {
             ("DECAPOD_SESSION_PASSWORD", password),
             ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
             ("DECAPOD_GROUP_BROKER_REQUEST_ID", "BROKER_SOCKET_PROBE"),
-            ("DECAPOD_GROUP_BROKER_TEST_HOOK_FILE", hook.to_string_lossy().as_ref()),
+            (
+                "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE",
+                hook.to_string_lossy().as_ref(),
+            ),
         ],
     );
     if !probe.status.success() {
@@ -131,9 +137,9 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
         return;
     }
 
-    let mut outputs = Vec::new();
+    let mut children = Vec::new();
     for i in 0..20 {
-        outputs.push(run_decapod(
+        let child = spawn_decapod(
             &dir,
             &["todo", "add", &format!("concurrent-task-{}", i)],
             &[
@@ -142,10 +148,12 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
                 ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
                 ("DECAPOD_GROUP_BROKER_IDLE_SECS", "3"),
             ],
-        ));
+        );
+        children.push(child);
     }
 
-    for output in &outputs {
+    for child in children {
+        let output = child.wait_with_output().expect("wait for mutator");
         assert!(
             output.status.success(),
             "mutator failed: {}",
@@ -297,12 +305,15 @@ fn broker_protocol_mismatch_returns_typed_failure() {
             ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
             ("DECAPOD_GROUP_BROKER_IDLE_SECS", "30"),
             ("DECAPOD_GROUP_BROKER_REQUEST_ID", "PROTO_LEADER_REQ"),
-            ("DECAPOD_GROUP_BROKER_TEST_HOOK_FILE", hook.to_string_lossy().as_ref()),
-            ("DECAPOD_GROUP_BROKER_TEST_HALT_PHASE", "queued"),
+            (
+                "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE",
+                hook.to_string_lossy().as_ref(),
+            ),
         ],
     );
     let hook_ok = wait_for_hook_line(&hook, "queued|PROTO_LEADER_REQ", Duration::from_secs(5));
     assert!(hook_ok, "leader never entered queued phase");
+    std::thread::sleep(Duration::from_millis(150));
     let lock_path = dir.join(".decapod").join("broker.lock");
     let pid = wait_for_lock_pid(&lock_path, Duration::from_secs(5)).expect("leader pid");
     assert!(pid > 0);
@@ -324,9 +335,7 @@ fn broker_protocol_mismatch_returns_typed_failure() {
         "expected typed protocol mismatch error, got: {stderr}"
     );
 
-    let _ = Command::new("kill")
-        .args(["-9", &pid.to_string()])
-        .status();
+    let _ = Command::new("kill").args(["-9", &pid.to_string()]).status();
     let _ = leader.wait();
 }
 
@@ -359,7 +368,10 @@ fn broker_crash_injection_phases_retry_to_exactly_once() {
                 ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
                 ("DECAPOD_GROUP_BROKER_REQUEST_ID", &req_id),
                 ("DECAPOD_GROUP_BROKER_IDLE_SECS", "30"),
-                ("DECAPOD_GROUP_BROKER_TEST_HOOK_FILE", hook.to_string_lossy().as_ref()),
+                (
+                    "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE",
+                    hook.to_string_lossy().as_ref(),
+                ),
                 ("DECAPOD_GROUP_BROKER_TEST_HALT_PHASE", phase),
             ],
         );
@@ -368,9 +380,7 @@ fn broker_crash_injection_phases_retry_to_exactly_once() {
         assert!(hook_ok, "phase hook never emitted for {phase}");
         let lock_path = dir.join(".decapod").join("broker.lock");
         let pid = wait_for_lock_pid(&lock_path, Duration::from_secs(3)).expect("broker pid");
-        let _ = Command::new("kill")
-            .args(["-9", &pid.to_string()])
-            .status();
+        let _ = Command::new("kill").args(["-9", &pid.to_string()]).status();
         let _ = child.wait();
 
         let retry = run_decapod(
