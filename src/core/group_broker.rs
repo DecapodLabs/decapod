@@ -15,9 +15,15 @@ const BROKER_INTERNAL_ENV: &str = "DECAPOD_GROUP_BROKER_INTERNAL";
 const BROKER_DISABLE_ENV: &str = "DECAPOD_GROUP_BROKER_DISABLE";
 const BROKER_IDLE_SECS_ENV: &str = "DECAPOD_GROUP_BROKER_IDLE_SECS";
 const BROKER_REQUEST_ID_ENV: &str = "DECAPOD_GROUP_BROKER_REQUEST_ID";
+const BROKER_PROTOCOL_CLIENT_OVERRIDE_ENV: &str = "DECAPOD_GROUP_BROKER_PROTOCOL_CLIENT_OVERRIDE";
+const BROKER_PROTOCOL_SERVER_OVERRIDE_ENV: &str = "DECAPOD_GROUP_BROKER_PROTOCOL_SERVER_OVERRIDE";
+const BROKER_PHASE_HOOK_FILE_ENV: &str = "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE";
+const BROKER_HALT_PHASE_ENV: &str = "DECAPOD_GROUP_BROKER_TEST_HALT_PHASE";
+const BROKER_PROTOCOL_DEFAULT: u32 = 1;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct BrokerRequest {
+    protocol_version: u32,
     request_id: String,
     argv: Vec<String>,
     payload_hash: String,
@@ -25,6 +31,7 @@ struct BrokerRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct BrokerResponse {
+    protocol_version: u32,
     status: String,
     commit_marker: Option<String>,
     result_envelope: serde_json::Value,
@@ -86,13 +93,20 @@ fn run_unix_broker(decapod_root: &Path, argv: &[String]) -> Result<(), error::De
     let lock_path = broker_lock_path(decapod_root);
 
     let request = BrokerRequest {
+        protocol_version: client_protocol_version(),
         request_id: std::env::var(BROKER_REQUEST_ID_ENV).unwrap_or_else(|_| Ulid::new().to_string()),
         argv: argv.to_vec(),
         payload_hash: hash_payload(argv),
     };
 
-    if let Ok(resp) = send_request(&socket_path, &request) {
-        return apply_response(resp);
+    match send_request(&socket_path, &request) {
+        Ok(resp) => return apply_response(resp),
+        Err(error::DecapodError::ValidationError(msg))
+            if msg.contains("BROKER_PROTOCOL_MISMATCH") =>
+        {
+            return Err(error::DecapodError::ValidationError(msg));
+        }
+        Err(_) => {}
     }
 
     for phase in 0..2u8 {
@@ -105,8 +119,14 @@ fn run_unix_broker(decapod_root: &Path, argv: &[String]) -> Result<(), error::De
                     return apply_response(resp);
                 }
                 None => {
-                    if let Ok(resp) = send_request(&socket_path, &request) {
-                        return apply_response(resp);
+                    match send_request(&socket_path, &request) {
+                        Ok(resp) => return apply_response(resp),
+                        Err(error::DecapodError::ValidationError(msg))
+                            if msg.contains("BROKER_PROTOCOL_MISMATCH") =>
+                        {
+                            return Err(error::DecapodError::ValidationError(msg));
+                        }
+                        Err(_) => {}
                     }
                     if attempts >= 40 {
                         break;
@@ -137,11 +157,19 @@ fn run_as_leader(
     if socket_path.exists() {
         let _ = fs::remove_file(socket_path);
     }
-    let listener = UnixListener::bind(socket_path).map_err(error::DecapodError::IoError)?;
+    let listener = match UnixListener::bind(socket_path) {
+        Ok(listener) => listener,
+        Err(err) if err.kind() == std::io::ErrorKind::AddrInUse => {
+            let _ = fs::remove_file(socket_path);
+            UnixListener::bind(socket_path).map_err(error::DecapodError::IoError)?
+        }
+        Err(err) => return Err(error::DecapodError::IoError(err)),
+    };
     listener
         .set_nonblocking(true)
         .map_err(error::DecapodError::IoError)?;
 
+    emit_phase_hook("queued", &local_request.request_id);
     let local_response = execute_request(decapod_root, &local_request)?;
 
     let idle_timeout = Duration::from_secs(
@@ -194,19 +222,27 @@ fn handle_client(
     let req: BrokerRequest = serde_json::from_str(line.trim()).map_err(|e| {
         error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_INVALID_REQUEST: {}", e))
     })?;
+    let server_version = server_protocol_version();
+    if req.protocol_version != server_version {
+        let resp = BrokerResponse {
+            protocol_version: server_version,
+            status: "NOT_COMMITTED".to_string(),
+            commit_marker: None,
+            result_envelope: serde_json::json!({
+                "request_id": req.request_id,
+                "error": "BROKER_PROTOCOL_MISMATCH",
+                "expected_protocol_version": server_version,
+                "received_protocol_version": req.protocol_version,
+            }),
+            retry_after_ms_hint: Some(5000),
+        };
+        write_response(stream, &resp)?;
+        return Ok(());
+    }
+    emit_phase_hook("queued", &req.request_id);
 
     let resp = execute_request(decapod_root, &req)?;
-    let mut writer = stream;
-    let body = serde_json::to_string(&resp).map_err(|e| {
-        error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_ENCODE_ERROR: {}", e))
-    })?;
-    writer
-        .write_all(body.as_bytes())
-        .map_err(error::DecapodError::IoError)?;
-    writer
-        .write_all(b"\n")
-        .map_err(error::DecapodError::IoError)?;
-    writer.flush().map_err(error::DecapodError::IoError)?;
+    write_response(stream, &resp)?;
     Ok(())
 }
 
@@ -241,9 +277,17 @@ fn send_request(
     reader
         .read_line(&mut line)
         .map_err(error::DecapodError::IoError)?;
-    serde_json::from_str(line.trim()).map_err(|e| {
+    let resp: BrokerResponse = serde_json::from_str(line.trim()).map_err(|e| {
         error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_INVALID_RESPONSE: {}", e))
-    })
+    })?;
+    if resp.protocol_version != client_protocol_version() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "BROKER_PROTOCOL_MISMATCH: client={} broker={}",
+            client_protocol_version(),
+            resp.protocol_version
+        )));
+    }
+    Ok(resp)
 }
 
 fn execute_request(
@@ -253,6 +297,7 @@ fn execute_request(
     if let Some(existing) = dedupe_lookup(decapod_root, request)? {
         if existing.payload_hash != request.payload_hash {
             return Ok(BrokerResponse {
+                protocol_version: server_protocol_version(),
                 status: "NOT_COMMITTED".to_string(),
                 commit_marker: existing.commit_marker,
                 result_envelope: serde_json::json!({
@@ -264,6 +309,7 @@ fn execute_request(
             });
         }
         return Ok(BrokerResponse {
+            protocol_version: server_protocol_version(),
             status: existing.status,
             commit_marker: existing.commit_marker,
             result_envelope: existing.result_envelope,
@@ -274,6 +320,7 @@ fn execute_request(
     let exe = std::env::args()
         .next()
         .ok_or_else(|| error::DecapodError::ValidationError("BROKER_EXEC_PATH_MISSING".into()))?;
+    emit_phase_hook("pre_exec", &request.request_id);
     let output = match Command::new(exe)
         .args(&request.argv)
         .env(BROKER_INTERNAL_ENV, "1")
@@ -283,6 +330,7 @@ fn execute_request(
         Ok(output) => output,
         Err(err) => {
             return Ok(BrokerResponse {
+                protocol_version: server_protocol_version(),
                 status: "UNKNOWN".to_string(),
                 commit_marker: None,
                 result_envelope: serde_json::json!({
@@ -315,7 +363,9 @@ fn execute_request(
         "NOT_COMMITTED"
     };
 
+    emit_phase_hook("post_exec_pre_ack", &request.request_id);
     let response = BrokerResponse {
+        protocol_version: server_protocol_version(),
         status: status.to_string(),
         commit_marker: Some(format!("{}:{}", time::now_epoch_z(), Ulid::new())),
         result_envelope: result_envelope.clone(),
@@ -345,10 +395,17 @@ fn apply_response(resp: BrokerResponse) -> Result<(), error::DecapodError> {
 
     match resp.status.as_str() {
         "COMMITTED" => Ok(()),
-        "NOT_COMMITTED" => Err(error::DecapodError::ValidationError(format!(
-            "BROKER_NOT_COMMITTED: request failed (commit_marker={})",
-            resp.commit_marker.unwrap_or_else(|| "<none>".to_string())
-        ))),
+        "NOT_COMMITTED" => {
+            let typed_error = resp
+                .result_envelope
+                .get("error")
+                .and_then(|v| v.as_str())
+                .unwrap_or("BROKER_NOT_COMMITTED");
+            Err(error::DecapodError::ValidationError(format!(
+                "{typed_error}: request failed (commit_marker={})",
+                resp.commit_marker.unwrap_or_else(|| "<none>".to_string())
+            )))
+        }
         _ => Err(error::DecapodError::ValidationError(format!(
             "BROKER_UNKNOWN: no final confirmation (retry_after_ms_hint={})",
             resp.retry_after_ms_hint.unwrap_or(5000)
@@ -467,6 +524,56 @@ fn ensure_dedupe_schema(conn: &rusqlite::Connection) -> Result<(), error::Decapo
     Ok(())
 }
 
+fn write_response(
+    mut stream: std::os::unix::net::UnixStream,
+    response: &BrokerResponse,
+) -> Result<(), error::DecapodError> {
+    let body = serde_json::to_string(response).map_err(|e| {
+        error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_ENCODE_ERROR: {}", e))
+    })?;
+    stream
+        .write_all(body.as_bytes())
+        .map_err(error::DecapodError::IoError)?;
+    stream
+        .write_all(b"\n")
+        .map_err(error::DecapodError::IoError)?;
+    stream.flush().map_err(error::DecapodError::IoError)?;
+    Ok(())
+}
+
+fn client_protocol_version() -> u32 {
+    std::env::var(BROKER_PROTOCOL_CLIENT_OVERRIDE_ENV)
+        .ok()
+        .and_then(|v| v.parse::<u32>().ok())
+        .filter(|v| *v > 0)
+        .unwrap_or(BROKER_PROTOCOL_DEFAULT)
+}
+
+fn server_protocol_version() -> u32 {
+    std::env::var(BROKER_PROTOCOL_SERVER_OVERRIDE_ENV)
+        .ok()
+        .and_then(|v| v.parse::<u32>().ok())
+        .filter(|v| *v > 0)
+        .unwrap_or(BROKER_PROTOCOL_DEFAULT)
+}
+
+fn emit_phase_hook(phase: &str, request_id: &str) {
+    if let Ok(path) = std::env::var(BROKER_PHASE_HOOK_FILE_ENV) {
+        if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path) {
+            let _ = writeln!(file, "{}|{}", phase, request_id);
+        }
+    }
+    if std::env::var(BROKER_HALT_PHASE_ENV)
+        .ok()
+        .as_deref()
+        == Some(phase)
+    {
+        loop {
+            std::thread::sleep(Duration::from_millis(100));
+        }
+    }
+}
+
 fn try_acquire_lock(lock_path: &Path) -> Result<Option<BrokerLease>, error::DecapodError> {
     // Leader election lock: create_new gives single-winner semantics per path.
     let file = match OpenOptions::new()
@@ -477,14 +584,59 @@ fn try_acquire_lock(lock_path: &Path) -> Result<Option<BrokerLease>, error::Deca
         .open(lock_path)
     {
         Ok(file) => file,
-        Err(err) if err.kind() == std::io::ErrorKind::AlreadyExists => return Ok(None),
+        Err(err) if err.kind() == std::io::ErrorKind::AlreadyExists => {
+            if cleanup_stale_lock(lock_path)? {
+                return try_acquire_lock(lock_path);
+            }
+            return Ok(None);
+        }
         Err(err) => return Err(error::DecapodError::IoError(err)),
     };
+    let pid = std::process::id();
+    let _ = file.set_len(0);
+    let _ = (&file).write_all(format!("{}\n", pid).as_bytes());
+    let _ = (&file).flush();
 
     Ok(Some(BrokerLease {
         path: lock_path.to_path_buf(),
         _file: file,
     }))
+}
+
+fn cleanup_stale_lock(lock_path: &Path) -> Result<bool, error::DecapodError> {
+    let raw = match fs::read_to_string(lock_path) {
+        Ok(raw) => raw,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(false),
+        Err(err) => return Err(error::DecapodError::IoError(err)),
+    };
+    let pid = match raw.trim().parse::<u32>() {
+        Ok(pid) if pid > 0 => pid,
+        _ => return Ok(false),
+    };
+    if is_pid_alive(pid) {
+        return Ok(false);
+    }
+    match fs::remove_file(lock_path) {
+        Ok(()) => Ok(true),
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        Err(err) => Err(error::DecapodError::IoError(err)),
+    }
+}
+
+fn is_pid_alive(pid: u32) -> bool {
+    #[cfg(unix)]
+    {
+        std::process::Command::new("kill")
+            .args(["-0", &pid.to_string()])
+            .status()
+            .map(|status| status.success())
+            .unwrap_or(false)
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = pid;
+        false
+    }
 }
 
 fn jitter_ms(max_exclusive: u64) -> u64 {
