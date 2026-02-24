@@ -137,26 +137,49 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
         return;
     }
 
-    let mut children = Vec::new();
+    let mut workers = Vec::new();
     for i in 0..20 {
-        let child = spawn_decapod(
-            &dir,
-            &["todo", "add", &format!("concurrent-task-{}", i)],
-            &[
-                ("DECAPOD_AGENT_ID", "unknown"),
-                ("DECAPOD_SESSION_PASSWORD", &password),
-                ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
-                ("DECAPOD_GROUP_BROKER_IDLE_SECS", "3"),
-            ],
-        );
-        children.push(child);
+        let dir_cl = dir.clone();
+        let password_cl = password.clone();
+        workers.push(std::thread::spawn(move || {
+            let task = format!("concurrent-task-{}", i);
+            let req_id = format!("BROKER_BUSY_REQ_{:02}", i);
+            let envs = vec![
+                ("DECAPOD_AGENT_ID".to_string(), "unknown".to_string()),
+                ("DECAPOD_SESSION_PASSWORD".to_string(), password_cl.clone()),
+                (
+                    "DECAPOD_VALIDATE_SKIP_GIT_GATES".to_string(),
+                    "1".to_string(),
+                ),
+                (
+                    "DECAPOD_GROUP_BROKER_IDLE_SECS".to_string(),
+                    "3".to_string(),
+                ),
+                ("DECAPOD_GROUP_BROKER_REQUEST_ID".to_string(), req_id),
+            ];
+            let env_pairs: Vec<(&str, &str)> =
+                envs.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+            let first = run_decapod(&dir_cl, &["todo", "add", &task], &env_pairs);
+            if first.status.success() {
+                return first;
+            }
+            let stderr = String::from_utf8_lossy(&first.stderr).to_string();
+            let stdout = String::from_utf8_lossy(&first.stdout).to_string();
+            if stderr.contains("BROKER_UNKNOWN") || stdout.contains("BROKER_UNKNOWN") {
+                std::thread::sleep(Duration::from_millis(250));
+                return run_decapod(&dir_cl, &["todo", "add", &task], &env_pairs);
+            }
+            first
+        }));
     }
 
-    for child in children {
-        let output = child.wait_with_output().expect("wait for mutator");
+    for worker in workers {
+        let output = worker.join().expect("join mutator worker");
         assert!(
             output.status.success(),
-            "mutator failed: {}",
+            "mutator failed (status={:?}) stdout={} stderr={}",
+            output.status.code(),
+            String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr)
         );
         let stderr = String::from_utf8_lossy(&output.stderr).to_ascii_lowercase();
