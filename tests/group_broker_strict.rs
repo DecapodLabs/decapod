@@ -44,7 +44,10 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
     let stdout = String::from_utf8_lossy(&acquire.stdout);
     let password = stdout
         .lines()
-        .find_map(|line| line.strip_prefix("Password: ").map(|s| s.trim().to_string()))
+        .find_map(|line| {
+            line.strip_prefix("Password: ")
+                .map(|s| s.trim().to_string())
+        })
         .expect("session password");
     (tmp, dir, password)
 }
