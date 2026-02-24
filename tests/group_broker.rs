@@ -175,7 +175,7 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
         workers.push(std::thread::spawn(move || {
             let task = format!("concurrent-task-{}", i);
             let req_id = format!("BROKER_BUSY_REQ_{:02}", i);
-            let envs = vec![
+            let envs = [
                 ("DECAPOD_AGENT_ID".to_string(), agent_id),
                 ("DECAPOD_SESSION_PASSWORD".to_string(), agent_pw),
                 (
