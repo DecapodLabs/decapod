@@ -561,3 +561,28 @@ fn test_top_level_docs_avoid_direct_constitution_file_links() {
         "SECURITY.md should route constitutional access through decapod docs show"
     );
 }
+
+#[test]
+fn test_intent_context_spec_contract_alignment() {
+    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let readme = fs::read_to_string(repo_root.join("README.md")).expect("read README.md");
+    let core_decapod = fs::read_to_string(repo_root.join("constitution/core/DECAPOD.md"))
+        .expect("read constitution/core/DECAPOD.md");
+    let lib_rs = fs::read_to_string(repo_root.join("src/lib.rs")).expect("read src/lib.rs");
+
+    let contract_phrase =
+        "turn intent into context, then context into explicit specifications before inference";
+
+    assert!(
+        readme.contains(contract_phrase),
+        "README.md must state the intent->context->specifications flow"
+    );
+    assert!(
+        core_decapod.contains(contract_phrase),
+        "constitution/core/DECAPOD.md must state the intent->context->specifications flow"
+    );
+    assert!(
+        lib_rs.contains(contract_phrase),
+        "src/lib.rs CLI about text must state the intent->context->specifications flow"
+    );
+}
