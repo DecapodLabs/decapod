@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  Called on demand inside agent loops. No background process, no new workflow, local-first state you can verify.
+  Called on demand inside agent loops to turn intent into context, then context into explicit specifications before inference. No background process, no new workflow, local-first state you can verify.
 </p>
 
 <p align="center">

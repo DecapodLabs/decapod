@@ -9,6 +9,8 @@ Decapod is a repo-native helper for humans that makes an agent:
 
 The human interfaces ONLY with the agent as the UX. The agent calls Decapod.
 
+Decapod is called on demand inside agent loops to turn intent into context, then context into explicit specifications before inference.
+
 ## What Decapod Is Not
 
 - Not an agent framework.
@@ -33,6 +35,7 @@ This produces a session receipt and tells you what's allowed next.
 ## Core Posture
 
 - **Local-first**: Everything is on disk, auditable, versioned
+- **No workflow replacement**: Keep using your existing agent flow; Decapod is called inside it
 - **Deterministic**: Same inputs produce same outputs
 - **Agent-native**: Designed for programmatic access via `decapod rpc`
 - **Daemonless**: No required long-lived control-plane process
