@@ -850,17 +850,17 @@ fn decide_db_path(root: &Path) -> PathBuf {
 
 pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = decide_db_path(root);
-    let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
-
-    conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
-    conn.execute_batch(schemas::DECIDE_DB_SCHEMA_SESSIONS)?;
-    conn.execute_batch(schemas::DECIDE_DB_SCHEMA_DECISIONS)?;
-    conn.execute_batch(schemas::DECIDE_DB_INDEX_DECISIONS_SESSION)?;
-    conn.execute_batch(schemas::DECIDE_DB_INDEX_DECISIONS_TREE)?;
-    conn.execute_batch(schemas::DECIDE_DB_INDEX_SESSIONS_TREE)?;
-    conn.execute_batch(schemas::DECIDE_DB_INDEX_SESSIONS_STATUS)?;
-
-    Ok(())
+    let broker = DbBroker::new(root);
+    broker.with_conn(&db_path, "decapod", None, "decide.init", |conn| {
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
+        conn.execute_batch(schemas::DECIDE_DB_SCHEMA_SESSIONS)?;
+        conn.execute_batch(schemas::DECIDE_DB_SCHEMA_DECISIONS)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_DECISIONS_SESSION)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_DECISIONS_TREE)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_SESSIONS_TREE)?;
+        conn.execute_batch(schemas::DECIDE_DB_INDEX_SESSIONS_STATUS)?;
+        Ok(())
+    })
 }
 
 fn find_tree(tree_id: &str) -> Result<&'static DecisionTree, error::DecapodError> {
