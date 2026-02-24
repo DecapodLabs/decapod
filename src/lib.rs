@@ -1589,6 +1589,7 @@ fn run_init_apply(
 
 pub fn run() -> Result<(), error::DecapodError> {
     let cli = Cli::parse();
+    let argv: Vec<String> = std::env::args().skip(1).collect();
     let current_dir = std::env::current_dir()?;
     let decapod_root_option = find_decapod_project_root(&current_dir);
     let store_root: PathBuf;
@@ -1695,6 +1696,22 @@ pub fn run() -> Result<(), error::DecapodError> {
             let decapod_root_path = project_root.join(".decapod");
             store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
+            if should_route_via_group_broker(&cli.command, &argv) {
+                if let Err(e) = core::group_broker::maybe_route_mutation(&decapod_root_path, &argv)
+                {
+                    if !core::group_broker::is_internal_invocation() {
+                        return Err(e);
+                    }
+                } else if !core::group_broker::is_internal_invocation() {
+                    if enforce_route_strict_mode() {
+                        return Err(error::DecapodError::ValidationError(
+                            "BROKER_ROUTE_REQUIRED: routed mutator cannot bypass broker in strict mode"
+                                .to_string(),
+                        ));
+                    }
+                    return Ok(());
+                }
+            }
 
             // Check for version/schema changes and run protected migrations if needed.
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
@@ -1821,6 +1838,79 @@ pub fn run() -> Result<(), error::DecapodError> {
         }
     }
     Ok(())
+}
+
+fn should_route_via_group_broker(command: &Command, argv: &[String]) -> bool {
+    if core::group_broker::is_internal_invocation() {
+        return false;
+    }
+    match command {
+        Command::Todo(_) => todo_argv_is_mutating(argv),
+        Command::Decide(decide_cli) => decide_command_is_mutating(decide_cli),
+        Command::Data(data_cli) => match &data_cli.command {
+            DataCommand::Federation(_) => federation_argv_is_mutating(argv),
+            DataCommand::Knowledge(_) => knowledge_argv_is_mutating(argv),
+            _ => false,
+        },
+        _ => false,
+    }
+}
+
+fn enforce_route_strict_mode() -> bool {
+    std::env::var("DECAPOD_GROUP_BROKER_ENFORCE_ROUTE")
+        .ok()
+        .map(|v| v == "1")
+        .unwrap_or(false)
+}
+
+fn todo_argv_is_mutating(argv: &[String]) -> bool {
+    let Some(sub) = argv.get(1).map(|s| s.as_str()) else {
+        return false;
+    };
+    !matches!(
+        sub,
+        "list"
+            | "get"
+            | "show"
+            | "categories"
+            | "ownerships"
+            | "claim-status"
+            | "presence"
+            | "list-owners"
+            | "expertise"
+    )
+}
+
+fn decide_command_is_mutating(decide_cli: &decide::DecideCli) -> bool {
+    matches!(
+        decide_cli.command,
+        decide::DecideCommand::Start { .. }
+            | decide::DecideCommand::Record { .. }
+            | decide::DecideCommand::Complete { .. }
+            | decide::DecideCommand::Init
+    )
+}
+
+fn knowledge_argv_is_mutating(argv: &[String]) -> bool {
+    matches!(argv.get(2).map(|s| s.as_str()), Some("add" | "promote"))
+}
+
+fn federation_argv_is_mutating(argv: &[String]) -> bool {
+    matches!(
+        argv.get(2).map(|s| s.as_str()),
+        Some(
+            "add"
+                | "edit"
+                | "supersede"
+                | "deprecate"
+                | "dispute"
+                | "link"
+                | "unlink"
+                | "sources-add"
+                | "init"
+                | "rebuild"
+        )
+    )
 }
 
 fn should_auto_clock_in(command: &Command) -> bool {

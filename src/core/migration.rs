@@ -3,6 +3,7 @@
 //! This module handles detecting Decapod version changes and running
 //! necessary migrations for schema updates, data transformations, etc.
 
+use crate::core::db;
 use crate::core::error;
 use crate::core::schemas;
 use rusqlite::Connection;
@@ -91,7 +92,7 @@ fn schema_upgrade_pending(data_root: &Path) -> Result<bool, error::DecapodError>
     if !todo_db.exists() {
         return Ok(false);
     }
-    let conn = Connection::open(&todo_db).map_err(error::DecapodError::RusqliteError)?;
+    let conn = db::db_connect(&todo_db.to_string_lossy())?;
     let version_res: Result<String, _> = conn.query_row(
         "SELECT value FROM meta WHERE key = 'schema_version'",
         [],
@@ -178,7 +179,7 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
         return Ok(()); // Already has events
     }
 
-    let conn = Connection::open(&db_path).map_err(error::DecapodError::RusqliteError)?;
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
 
     // Read all tasks from database
     let mut stmt = conn
@@ -242,7 +243,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
 
     // 1. Consolidate Governance Bin (health, policy, feedback, archive)
     let gov_path = data_root.join(schemas::GOVERNANCE_DB_NAME);
-    let gov_conn = Connection::open(&gov_path).map_err(error::DecapodError::RusqliteError)?;
+    let gov_conn = db::db_connect(&gov_path.to_string_lossy())?;
     gov_conn.execute_batch(schemas::HEALTH_DB_SCHEMA_CLAIMS)?;
     gov_conn.execute_batch(schemas::HEALTH_DB_SCHEMA_PROOF_EVENTS)?;
     gov_conn.execute_batch(schemas::HEALTH_DB_SCHEMA_HEALTH_CACHE)?;
@@ -260,7 +261,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
 
     // 2. Consolidate Memory Bin (knowledge, federation, decisions, aptitude)
     let mem_path = data_root.join(schemas::MEMORY_DB_NAME);
-    let mem_conn = Connection::open(&mem_path).map_err(error::DecapodError::RusqliteError)?;
+    let mem_conn = db::db_connect(&mem_path.to_string_lossy())?;
     mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
     mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODES)?;
     mem_conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
@@ -275,7 +276,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
     // Legacy knowledge to nodes migration (simplified)
     let knowledge_db = data_root.join("knowledge.db");
     if knowledge_db.exists() {
-        let k_conn = Connection::open(&knowledge_db).map_err(error::DecapodError::RusqliteError)?;
+        let k_conn = db::db_connect(&knowledge_db.to_string_lossy())?;
         // Guard against concurrent processes that may have created the file
         // but not yet populated the schema (race between Connection::open and
         // CREATE TABLE in initialize_knowledge_db).
@@ -309,7 +310,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
 
     // 3. Consolidate Automation Bin (cron, reflex)
     let auto_path = data_root.join(schemas::AUTOMATION_DB_NAME);
-    let auto_conn = Connection::open(&auto_path).map_err(error::DecapodError::RusqliteError)?;
+    let auto_conn = db::db_connect(&auto_path.to_string_lossy())?;
     auto_conn.execute_batch(schemas::CRON_DB_SCHEMA)?;
     auto_conn.execute_batch(schemas::REFLEX_DB_SCHEMA)?;
 

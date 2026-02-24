@@ -15,6 +15,7 @@ pub mod error;
 pub mod external_action;
 pub mod flight_recorder;
 pub mod gatekeeper;
+pub mod group_broker;
 pub mod interview;
 pub mod mentor;
 pub mod migration;
