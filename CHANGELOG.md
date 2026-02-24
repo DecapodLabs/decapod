@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.1](https://github.com/DecapodLabs/decapod/compare/v0.41.0...v0.41.1) - 2026-02-24
+
+### Other
+
+- *(intent)* enforce intent->context->spec flow across runtime and constitution
+- *(readme)* encode intent->context->spec flow in hero line
+- *(init)* elevate interactive form to product-grade prompt flow
+- *(init)* polish interactive setup prompts and summary
+
 ## [0.41.0](https://github.com/DecapodLabs/decapod/compare/v0.40.1...v0.41.0) - 2026-02-23
 
 ### Added
