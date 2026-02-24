@@ -20,6 +20,14 @@ fn run_decapod_with_env(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std
     cmd.output().expect("run decapod with env")
 }
 
+fn run_git(dir: &Path, args: &[&str]) -> std::process::Output {
+    Command::new("git")
+        .current_dir(dir)
+        .args(args)
+        .output()
+        .expect("run git")
+}
+
 fn setup_repo() -> (TempDir, std::path::PathBuf) {
     let tmp = TempDir::new().expect("tmpdir");
     let dir = tmp.path().to_path_buf();
@@ -36,6 +44,30 @@ fn setup_repo() -> (TempDir, std::path::PathBuf) {
         decapod_init.status.success(),
         "decapod init failed: {}",
         String::from_utf8_lossy(&decapod_init.stderr)
+    );
+    let git_name = run_git(&dir, &["config", "user.name", "Decapod Test"]);
+    assert!(
+        git_name.status.success(),
+        "git config user.name failed: {}",
+        String::from_utf8_lossy(&git_name.stderr)
+    );
+    let git_email = run_git(&dir, &["config", "user.email", "test@decapod.local"]);
+    assert!(
+        git_email.status.success(),
+        "git config user.email failed: {}",
+        String::from_utf8_lossy(&git_email.stderr)
+    );
+    let git_add = run_git(&dir, &["add", "-A"]);
+    assert!(
+        git_add.status.success(),
+        "git add failed: {}",
+        String::from_utf8_lossy(&git_add.stderr)
+    );
+    let git_commit = run_git(&dir, &["commit", "-m", "test fixture bootstrap"]);
+    assert!(
+        git_commit.status.success(),
+        "git commit failed: {}",
+        String::from_utf8_lossy(&git_commit.stderr)
     );
 
     let validate = run_decapod_with_env(

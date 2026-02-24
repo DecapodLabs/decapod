@@ -5,6 +5,7 @@
 //! - protected-branch safeguards
 //! - optional containerized execution for reproducible builds
 
+use crate::core::db;
 use crate::core::error::DecapodError;
 use crate::core::rpc::{AllowedOp, Blocker, BlockerKind};
 use crate::core::todo;
@@ -201,6 +202,14 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
             resolve_hint: "Run `decapod todo claim --id <task-id>` then `decapod workspace ensure` to create a todo-scoped isolated worktree.".to_string(),
         });
         required_actions.push("Switch to working branch".to_string());
+        if git.has_local_mods {
+            blockers.push(Blocker {
+                kind: BlockerKind::WorkspaceRequired,
+                message: "Protected branch has local modifications. Creating an isolated worktree from a dirty protected branch is blocked.".to_string(),
+                resolve_hint: "Commit/stash/discard local changes on protected branch, then run `decapod workspace ensure`.".to_string(),
+            });
+            required_actions.push("Commit/stash/discard local modifications".to_string());
+        }
     }
 
     // Mandate: Should use worktree for isolation
@@ -274,7 +283,18 @@ pub fn ensure_workspace(
     config: Option<WorkspaceConfig>,
     agent_id: &str,
 ) -> Result<WorkspaceStatus, DecapodError> {
+    let main_repo = get_main_repo_root(repo_root)?;
+    let store_root = main_repo.join(".decapod").join("data");
+    db::storage_health_preflight(&store_root).map_err(|e| {
+        DecapodError::ValidationError(format!("WORKSPACE_STORAGE_PREFLIGHT_FAILED: {}", e))
+    })?;
+
     let mut status = get_workspace_status(repo_root)?;
+    if status.git.is_protected && status.git.has_local_mods && !status.git.in_worktree {
+        return Err(DecapodError::ValidationError(
+            "WORKSPACE_INTERLOCK_DIRTY_PROTECTED: protected branch has local modifications. Commit/stash/discard changes before creating a Decapod worktree.".to_string(),
+        ));
+    }
     let assigned_task_ids = get_assigned_open_task_ids(repo_root, agent_id)?;
     if assigned_task_ids.is_empty() {
         return Err(DecapodError::ValidationError(format!(

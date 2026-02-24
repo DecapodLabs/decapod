@@ -10,11 +10,14 @@ use rusqlite::{Connection, OpenFlags};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 const SQLITE_CONNECT_MAX_RETRIES: u32 = 5;
 const SQLITE_CONNECT_BASE_DELAY_MS: u64 = 50;
 const SQLITE_CONNECT_MAX_DELAY_MS: u64 = 1_000;
+const SQLITE_CONNECT_JITTER_MS: u64 = 37;
+
+const UNSUPPORTED_FS_TYPES: &[&str] = &["nfs", "nfs4", "cifs", "smbfs", "9p", "vboxsf"];
 
 /// Establish a SQLite connection with Decapod's standard configuration.
 ///
@@ -26,6 +29,7 @@ const SQLITE_CONNECT_MAX_DELAY_MS: u64 = 1_000;
 pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     ensure_db_parent_dir(db_path)?;
+    storage_preflight_for_db(db_path, true)?;
 
     let conn = open_with_retry(db_path, || Connection::open(db_path), "open")?;
     conn.busy_timeout(std::time::Duration::from_secs(5))
@@ -44,6 +48,7 @@ pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
 /// - enabling query_only mode
 pub fn db_connect_for_validate(db_path: &str) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
+    storage_preflight_for_db(db_path, false)?;
     let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX;
     let conn = open_with_retry(
         db_path,
@@ -70,6 +75,7 @@ pub fn db_connect_pooled(
 ) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     ensure_db_parent_dir(db_path)?;
+    storage_preflight_for_db(db_path, true)?;
 
     let conn = open_with_retry(db_path, || Connection::open(db_path), "open")?;
     conn.busy_timeout(std::time::Duration::from_secs(busy_timeout_secs as u64))
@@ -88,6 +94,7 @@ pub fn db_connect_read_pooled(
     busy_timeout_secs: u32,
 ) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
+    storage_preflight_for_db(db_path, false)?;
     let flags = OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX;
     let conn = open_with_retry(
         db_path,
@@ -122,12 +129,16 @@ where
 {
     let mut attempt = 0u32;
     loop {
+        if let Some(injected) = injected_fault(stage, db_path) {
+            return Err(injected);
+        }
         match open_fn() {
             Ok(conn) => return Ok(conn),
             Err(err) => {
                 if is_retryable_sqlite_open_error(&err) && attempt < SQLITE_CONNECT_MAX_RETRIES {
-                    let delay_ms = (SQLITE_CONNECT_BASE_DELAY_MS * 2u64.pow(attempt))
-                        .min(SQLITE_CONNECT_MAX_DELAY_MS);
+                    let delay_ms = ((SQLITE_CONNECT_BASE_DELAY_MS * 2u64.pow(attempt))
+                        .min(SQLITE_CONNECT_MAX_DELAY_MS))
+                        + retry_jitter_ms(attempt);
                     attempt += 1;
                     thread::sleep(Duration::from_millis(delay_ms));
                     continue;
@@ -162,6 +173,9 @@ fn configure_journal_mode_with_fallback(
     conn: &Connection,
     db_path: &Path,
 ) -> Result<(), error::DecapodError> {
+    if let Some(injected) = injected_fault("journal_mode_wal", db_path) {
+        return Err(injected);
+    }
     match conn.query_row("PRAGMA journal_mode=WAL;", [], |_| Ok(())) {
         Ok(_) => Ok(()),
         Err(wal_err) => {
@@ -277,6 +291,149 @@ fn format_db_open_diagnostics(db_path: &Path, stage: &str, err: &rusqlite::Error
         sqlite_codes,
         hints.join("; ")
     )
+}
+
+fn retry_jitter_ms(attempt: u32) -> u64 {
+    let now_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64;
+    (now_ms + (attempt as u64 * 13)) % SQLITE_CONNECT_JITTER_MS
+}
+
+fn injected_fault(stage: &str, db_path: &Path) -> Option<error::DecapodError> {
+    let injected = std::env::var("DECAPOD_SQLITE_FAULT_STAGE").ok()?;
+    if injected != "*" && injected != stage {
+        return None;
+    }
+    let err = rusqlite::Error::SqliteFailure(
+        rusqlite::ffi::Error {
+            code: rusqlite::ErrorCode::SystemIoFailure,
+            extended_code: 522,
+        },
+        Some(format!("fault injected at stage '{}'", stage)),
+    );
+    Some(error::DecapodError::ValidationError(format!(
+        "SQLITE_FAULT_INJECTED: {}",
+        format_db_open_diagnostics(db_path, stage, &err)
+    )))
+}
+
+pub fn storage_health_preflight(store_root: &Path) -> Result<(), error::DecapodError> {
+    if let Some(injected) = injected_fault("storage_preflight", store_root) {
+        return Err(injected);
+    }
+    if !store_root.exists() {
+        fs::create_dir_all(store_root).map_err(error::DecapodError::IoError)?;
+    }
+    if !store_root.is_dir() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "STORAGE_PREFLIGHT_FAILED: store root '{}' is not a directory.",
+            store_root.display()
+        )));
+    }
+    if let Some(fs_type) = detect_fs_type(store_root) {
+        let fs_type_l = fs_type.to_ascii_lowercase();
+        if UNSUPPORTED_FS_TYPES.iter().any(|t| *t == fs_type_l) {
+            return Err(error::DecapodError::ValidationError(format!(
+                "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod SQLite state. Use a local filesystem (ext4/xfs/apfs) and re-run.",
+                store_root.display(),
+                fs_type
+            )));
+        }
+    }
+    write_probe(store_root)?;
+    Ok(())
+}
+
+fn storage_preflight_for_db(
+    db_path: &Path,
+    require_write: bool,
+) -> Result<(), error::DecapodError> {
+    let parent = db_path.parent().unwrap_or_else(|| Path::new("."));
+    if require_write {
+        storage_health_preflight(parent)?;
+    } else {
+        if let Some(fs_type) = detect_fs_type(parent) {
+            let fs_type_l = fs_type.to_ascii_lowercase();
+            if UNSUPPORTED_FS_TYPES.iter().any(|t| *t == fs_type_l) {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "STORAGE_PREFLIGHT_UNSUPPORTED_FS: path='{}' fs_type='{}' is not supported for Decapod SQLite state. Use a local filesystem and retry.",
+                    parent.display(),
+                    fs_type
+                )));
+            }
+        }
+        if !parent.exists() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "STORAGE_PREFLIGHT_FAILED: parent directory '{}' does not exist.",
+                parent.display()
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn write_probe(dir: &Path) -> Result<(), error::DecapodError> {
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let probe = dir.join(format!(
+        ".decapod-write-probe-{}-{}.tmp",
+        std::process::id(),
+        nanos
+    ));
+    fs::write(&probe, b"ok").map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "STORAGE_PREFLIGHT_FAILED: write probe failed at '{}': {}. Check directory permissions, mount mode, and available disk/inodes.",
+            probe.display(),
+            e
+        ))
+    })?;
+    fs::remove_file(&probe).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "STORAGE_PREFLIGHT_FAILED: cleanup probe failed at '{}': {}. Check filesystem health.",
+            probe.display(),
+            e
+        ))
+    })?;
+    Ok(())
+}
+
+fn detect_fs_type(path: &Path) -> Option<String> {
+    let canon = path.canonicalize().ok()?;
+    let text = fs::read_to_string("/proc/self/mountinfo").ok()?;
+    let mut best: Option<(usize, String)> = None;
+    for line in text.lines() {
+        let mut parts = line.split(" - ");
+        let Some(left) = parts.next() else {
+            continue;
+        };
+        let Some(right) = parts.next() else {
+            continue;
+        };
+        let left_parts: Vec<&str> = left.split_whitespace().collect();
+        if left_parts.len() < 5 {
+            continue;
+        }
+        let mount_point = left_parts[4].replace("\\040", " ");
+        let mount_point_path = Path::new(&mount_point);
+        if !canon.starts_with(mount_point_path) {
+            continue;
+        }
+        let right_parts: Vec<&str> = right.split_whitespace().collect();
+        if right_parts.is_empty() {
+            continue;
+        }
+        let fs_type = right_parts[0].to_string();
+        let mlen = mount_point_path.as_os_str().len();
+        match &best {
+            Some((best_len, _)) if *best_len >= mlen => {}
+            _ => best = Some((mlen, fs_type)),
+        }
+    }
+    best.map(|(_, fs)| fs)
 }
 
 pub fn knowledge_db_path(root: &Path) -> PathBuf {

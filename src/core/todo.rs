@@ -4104,6 +4104,41 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         ],
                     )?;
                 }
+                "task.proof.claimed" => {
+                    let id = ev.task_id.clone().ok_or_else(|| {
+                        error::DecapodError::ValidationError(
+                            "task.proof.claimed missing task_id".to_string(),
+                        )
+                    })?;
+                    let proof_plan = ev
+                        .payload
+                        .get("proof_plan")
+                        .cloned()
+                        .unwrap_or_else(|| serde_json::json!(["validate_passes"]));
+                    let last_verified_notes = ev
+                        .payload
+                        .get("last_verified_notes")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("Proof hooks pending verification");
+
+                    conn.execute(
+                        "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
+                         VALUES(?1, ?2, NULL, ?3, 'CLAIMED', ?4, 90, ?3)
+                         ON CONFLICT(todo_id) DO UPDATE SET
+                           proof_plan=excluded.proof_plan,
+                           last_verified_at=excluded.last_verified_at,
+                           last_verified_status=excluded.last_verified_status,
+                           last_verified_notes=excluded.last_verified_notes,
+                           verification_policy_days=excluded.verification_policy_days,
+                           updated_at=excluded.updated_at",
+                        rusqlite::params![
+                            id,
+                            serde_json::to_string(&proof_plan).unwrap(),
+                            ev.ts,
+                            last_verified_notes,
+                        ],
+                    )?;
+                }
                 _ => {
                     return Err(error::DecapodError::ValidationError(format!(
                         "Unknown event_type '{}'",
