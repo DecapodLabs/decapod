@@ -55,6 +55,30 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
     (tmp, dir, password)
 }
 
+fn acquire_session_password(dir: &Path, agent_id: &str) -> String {
+    let acquire = run_decapod(
+        dir,
+        &["session", "acquire"],
+        &[
+            ("DECAPOD_AGENT_ID", agent_id),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        acquire.status.success(),
+        "session acquire failed for {agent_id}: {}",
+        String::from_utf8_lossy(&acquire.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&acquire.stdout);
+    stdout
+        .lines()
+        .find_map(|line| {
+            line.strip_prefix("Password: ")
+                .map(|s| s.trim().to_string())
+        })
+        .expect("session password")
+}
+
 fn broker_socket_supported(dir: &Path, password: &str) -> bool {
     let hook = dir.join("broker-socket-probe.log");
     let probe = run_decapod(
@@ -137,16 +161,23 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
         return;
     }
 
+    let creds: Vec<(String, String)> = (0..20)
+        .map(|i| {
+            let agent_id = format!("agent-{:02}", i);
+            let agent_pw = acquire_session_password(&dir, &agent_id);
+            (agent_id, agent_pw)
+        })
+        .collect();
+
     let mut workers = Vec::new();
-    for i in 0..20 {
+    for (i, (agent_id, agent_pw)) in creds.into_iter().enumerate() {
         let dir_cl = dir.clone();
-        let password_cl = password.clone();
         workers.push(std::thread::spawn(move || {
             let task = format!("concurrent-task-{}", i);
             let req_id = format!("BROKER_BUSY_REQ_{:02}", i);
             let envs = vec![
-                ("DECAPOD_AGENT_ID".to_string(), "unknown".to_string()),
-                ("DECAPOD_SESSION_PASSWORD".to_string(), password_cl.clone()),
+                ("DECAPOD_AGENT_ID".to_string(), agent_id),
+                ("DECAPOD_SESSION_PASSWORD".to_string(), agent_pw),
                 (
                     "DECAPOD_VALIDATE_SKIP_GIT_GATES".to_string(),
                     "1".to_string(),
