@@ -14,6 +14,7 @@ use ulid::Ulid;
 const BROKER_INTERNAL_ENV: &str = "DECAPOD_GROUP_BROKER_INTERNAL";
 const BROKER_DISABLE_ENV: &str = "DECAPOD_GROUP_BROKER_DISABLE";
 const BROKER_IDLE_SECS_ENV: &str = "DECAPOD_GROUP_BROKER_IDLE_SECS";
+const BROKER_REQUEST_ID_ENV: &str = "DECAPOD_GROUP_BROKER_REQUEST_ID";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct BrokerRequest {
@@ -58,7 +59,16 @@ pub fn maybe_route_mutation(decapod_root: &Path, argv: &[String]) -> Result<bool
 
     #[cfg(unix)]
     {
-        return run_unix_broker(decapod_root, argv).map(|_| true);
+        match run_unix_broker(decapod_root, argv) {
+            Ok(()) => return Ok(true),
+            // Some constrained sandboxes disallow AF_UNIX sockets. Fall back to direct path.
+            Err(error::DecapodError::IoError(io_err))
+                if io_err.kind() == std::io::ErrorKind::PermissionDenied =>
+            {
+                return Ok(false);
+            }
+            Err(e) => return Err(e),
+        }
     }
 
     #[cfg(not(unix))]
@@ -76,7 +86,7 @@ fn run_unix_broker(decapod_root: &Path, argv: &[String]) -> Result<(), error::De
     let lock_path = broker_lock_path(decapod_root);
 
     let request = BrokerRequest {
-        request_id: Ulid::new().to_string(),
+        request_id: std::env::var(BROKER_REQUEST_ID_ENV).unwrap_or_else(|_| Ulid::new().to_string()),
         argv: argv.to_vec(),
         payload_hash: hash_payload(argv),
     };
@@ -261,7 +271,9 @@ fn execute_request(
         });
     }
 
-    let exe = std::env::current_exe().map_err(error::DecapodError::IoError)?;
+    let exe = std::env::args()
+        .next()
+        .ok_or_else(|| error::DecapodError::ValidationError("BROKER_EXEC_PATH_MISSING".into()))?;
     let output = match Command::new(exe)
         .args(&request.argv)
         .env(BROKER_INTERNAL_ENV, "1")
