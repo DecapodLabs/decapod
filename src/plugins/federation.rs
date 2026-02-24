@@ -495,31 +495,33 @@ fn read_node_full(conn: &Connection, id: &str) -> Result<FederationNode, error::
 
 pub fn initialize_federation_db(root: &Path) -> Result<(), error::DecapodError> {
     let db_path = federation_db_path(root);
-    let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
+    let broker = DbBroker::new(root);
+    broker.with_conn(&db_path, "decapod", None, "federation.init", |conn| {
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODES)?;
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EDGES)?;
+        conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EVENTS)?;
 
-    conn.execute_batch(schemas::MEMORY_DB_SCHEMA_META)?;
-    conn.execute_batch(schemas::MEMORY_DB_SCHEMA_NODES)?;
-    conn.execute_batch(schemas::MEMORY_DB_SCHEMA_SOURCES)?;
-    conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EDGES)?;
-    conn.execute_batch(schemas::MEMORY_DB_SCHEMA_EVENTS)?;
+        // Indexes
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_TYPE)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_STATUS)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_SCOPE)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_PRIORITY)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_UPDATED)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_SOURCES_NODE)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_SOURCE)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_TARGET)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_TYPE)?;
+        conn.execute_batch(schemas::MEMORY_DB_INDEX_EVENTS_NODE)?;
 
-    // Indexes
-    conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_TYPE)?;
-    conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_STATUS)?;
-    conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_SCOPE)?;
-    conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_PRIORITY)?;
-    conn.execute_batch(schemas::MEMORY_DB_INDEX_NODES_UPDATED)?;
-    conn.execute_batch(schemas::MEMORY_DB_INDEX_SOURCES_NODE)?;
-    conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_SOURCE)?;
-    conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_TARGET)?;
-    conn.execute_batch(schemas::MEMORY_DB_INDEX_EDGES_TYPE)?;
-    conn.execute_batch(schemas::MEMORY_DB_INDEX_EVENTS_NODE)?;
-
-    // Version tracking
-    conn.execute(
-        "INSERT OR IGNORE INTO meta(key, value) VALUES('schema_version', ?1)",
-        params![schemas::MEMORY_SCHEMA_VERSION.to_string()],
-    )?;
+        // Version tracking
+        conn.execute(
+            "INSERT OR IGNORE INTO meta(key, value) VALUES('schema_version', ?1)",
+            params![schemas::MEMORY_SCHEMA_VERSION.to_string()],
+        )?;
+        Ok(())
+    })?;
 
     // Create events file if missing
     let events_path = federation_events_path(root);
