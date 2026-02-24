@@ -39,7 +39,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 #[clap(
     name = "decapod",
     version = env!("CARGO_PKG_VERSION"),
-    about = "Decapod is the daemonless, local-first control plane that agents call on demand to align intent, enforce boundaries, and produce proof-backed completion across concurrent multi-agent work. 🦀",
+    about = "Decapod is the daemonless, local-first control plane that agents call on demand to turn intent into context, then context into explicit specifications before inference, enforce boundaries, and produce proof-backed completion across concurrent multi-agent work. 🦀",
     disable_version_flag = true
 )]
 struct Cli {
