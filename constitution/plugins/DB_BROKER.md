@@ -4,7 +4,7 @@
 **Layer:** Interfaces
 **Binding:** No
 **Scope:** intended broker interface and invariants for multi-agent SQLite safety
-**Non-goals:** distributed system semantics or networked IPC (until proven)
+**Non-goals:** distributed system semantics, networked broker infrastructure, or required always-on service
 
 This doc scopes the DB broker subsystem that sits in front of SQLite for multi-agent correctness.
 
@@ -22,9 +22,19 @@ The broker is a *thin, local-first* request layer. It solves two problems first:
 - Distributed system semantics.
 - Networked “universal” broker.
 - Pluggable everything.
-- Cross-process IPC (until the in-process design proves out).
+- Required daemonized broker process.
 
-If we need cross-process later, we add a Unix socket front-end after the in-process broker is stable.
+## Ephemeral Cross-Process Mode (Allowed)
+
+To preserve daemonless invocation semantics while reducing SQLite lock contention, Decapod MAY use a
+local ephemeral broker mode:
+
+- leader election via local OS lock file
+- local-only request routing via Unix domain socket / Windows named pipe
+- broker role is transient and attached to normal command invocation
+- broker exits after bounded idle time; no required always-on service
+
+This mode is local-first and repo-native. It does not introduce a standing background control-plane dependency.
 
 ## Architecture (Phase 1: In-Process)
 
