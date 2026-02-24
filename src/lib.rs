@@ -1703,6 +1703,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                         return Err(e);
                     }
                 } else if !core::group_broker::is_internal_invocation() {
+                    if enforce_route_strict_mode() {
+                        return Err(error::DecapodError::ValidationError(
+                            "BROKER_ROUTE_REQUIRED: routed mutator cannot bypass broker in strict mode"
+                                .to_string(),
+                        ));
+                    }
                     return Ok(());
                 }
             }
@@ -1848,6 +1854,13 @@ fn should_route_via_group_broker(command: &Command, argv: &[String]) -> bool {
         },
         _ => false,
     }
+}
+
+fn enforce_route_strict_mode() -> bool {
+    std::env::var("DECAPOD_GROUP_BROKER_ENFORCE_ROUTE")
+        .ok()
+        .map(|v| v == "1")
+        .unwrap_or(false)
 }
 
 fn todo_argv_is_mutating(argv: &[String]) -> bool {
