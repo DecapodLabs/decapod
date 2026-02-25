@@ -284,8 +284,29 @@ fn ensure_verified_ready(manifest: &WorkUnitManifest) -> Result<(), error::Decap
 
 pub fn verify_capsule_policy_lineage_for_task(
     project_root: &Path,
-    task_id: &str,
+    manifest: &WorkUnitManifest,
 ) -> Result<(), error::DecapodError> {
+    let task_id = manifest.task_id.as_str();
+    let expected_rel = format!(".decapod/generated/context/{task_id}.json");
+    let expected_abs = project_root
+        .join(&expected_rel)
+        .to_string_lossy()
+        .to_string()
+        .replace('\\', "/");
+    let expected_rel_norm = expected_rel.replace('\\', "/");
+    let has_capsule_state_ref = manifest.state_refs.iter().any(|state_ref| {
+        let normalized = state_ref.replace('\\', "/");
+        normalized == expected_rel_norm
+            || normalized == expected_abs
+            || normalized.ends_with(&format!("/{expected_rel_norm}"))
+    });
+    if !has_capsule_state_ref {
+        return Err(error::DecapodError::ValidationError(format!(
+            "WORKUNIT_CAPSULE_POLICY_LINEAGE_STATE_REF_MISSING: expected state_ref '{}' for task '{}'",
+            expected_rel, task_id
+        )));
+    }
+
     let capsule_path = project_root
         .join(".decapod")
         .join("generated")
