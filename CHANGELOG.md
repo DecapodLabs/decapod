@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.5](https://github.com/DecapodLabs/decapod/compare/v0.44.4...v0.44.5) - 2026-02-25
+
+### Added
+
+- Interlock - preflight + impact for predictive governance
+
+### Fixed
+
+- make preflight/impact work without worktree, skip git gates in tests
+- test setup with worktree
+- test error handling
+
+### Other
+
+- fmt
+
 ## [0.44.4](https://github.com/DecapodLabs/decapod/compare/v0.44.3...v0.44.4) - 2026-02-25
 
 ### Added
