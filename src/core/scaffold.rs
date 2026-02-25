@@ -9,7 +9,10 @@ use crate::core::assets;
 use crate::core::error;
 use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_INTENT,
-    LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_README, LOCAL_PROJECT_SPECS_VALIDATION,
+    LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
+    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_README,
+    LOCAL_PROJECT_SPECS_VALIDATION, ProjectSpecManifestEntry, ProjectSpecsManifest, hash_text,
+    repo_signal_fingerprint,
 };
 use crate::plugins::container;
 use std::fs;
@@ -421,6 +424,7 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     "!.decapod/generated/context/*.json",
     "!.decapod/generated/specs/",
     "!.decapod/generated/specs/*.md",
+    "!.decapod/generated/specs/.manifest.json",
 ];
 
 /// Ensure a given entry exists in the project's .gitignore file.
@@ -586,6 +590,7 @@ pub fn scaffold_project_entrypoints(
         let mut created = 0usize;
         let mut unchanged = 0usize;
         let mut preserved = 0usize;
+        let mut manifest_entries: Vec<ProjectSpecManifestEntry> = Vec::new();
 
         let seed = opts.specs_seed.as_ref();
         let mut specs_files: Vec<(&str, String)> = Vec::new();
@@ -604,11 +609,36 @@ pub fn scaffold_project_entrypoints(
         }
 
         for (rel_path, content) in specs_files {
+            let template_hash = hash_text(&content);
             match write_file(opts, rel_path, &content)? {
                 FileAction::Created => created += 1,
                 FileAction::Unchanged => unchanged += 1,
                 FileAction::Preserved => preserved += 1,
             }
+            manifest_entries.push(ProjectSpecManifestEntry {
+                path: rel_path.to_string(),
+                template_hash: template_hash.clone(),
+                content_hash: template_hash,
+            });
+        }
+
+        if !opts.dry_run {
+            let manifest = ProjectSpecsManifest {
+                schema_version: LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA.to_string(),
+                template_version: "scaffold-v1".to_string(),
+                generated_at: crate::core::time::now_epoch_z(),
+                repo_signal_fingerprint: repo_signal_fingerprint(&opts.target_dir)?,
+                files: manifest_entries,
+            };
+            let manifest_path = opts.target_dir.join(LOCAL_PROJECT_SPECS_MANIFEST);
+            ensure_parent(&manifest_path)?;
+            let manifest_body = serde_json::to_string_pretty(&manifest).map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "Failed to serialize specs manifest: {}",
+                    e
+                ))
+            })?;
+            fs::write(manifest_path, manifest_body).map_err(error::DecapodError::IoError)?;
         }
         (created, unchanged, preserved)
     } else {

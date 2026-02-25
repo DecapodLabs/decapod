@@ -192,24 +192,342 @@ fn merge_override_content(embedded_content: &str, override_content: &str) -> Str
     )
 }
 
-// Root templates (agent entrypoints) - embedded for scaffolding
-pub const TEMPLATE_AGENTS: &str = include_str!("../../templates/AGENTS.md");
-pub const TEMPLATE_CLAUDE: &str = include_str!("../../templates/CLAUDE.md");
-pub const TEMPLATE_GEMINI: &str = include_str!("../../templates/GEMINI.md");
-pub const TEMPLATE_CODEX: &str = include_str!("../../templates/CODEX.md");
+fn agent_entrypoint_body() -> &'static str {
+    r#"You are working in a Decapod-managed repository.
+See `AGENTS.md` for the universal contract.
 
-pub const TEMPLATE_README: &str = include_str!("../../templates/README.md");
-pub const TEMPLATE_OVERRIDE: &str = include_str!("../../templates/OVERRIDE.md");
+## Quick Start
+
+```bash
+cargo install decapod
+
+decapod validate
+decapod docs ingest
+decapod session acquire
+decapod rpc --op agent.init
+decapod rpc --op context.resolve
+decapod todo add "<task>"
+decapod todo claim --id <task-id>
+decapod workspace ensure
+```
+
+## Control-Plane First
+
+```bash
+decapod capabilities --format json
+decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
+decapod data schema --deterministic
+```
+
+## Operating Mode
+
+- Use Docker git workspaces and execute in `.decapod/workspaces/*`.
+- request elevated permissions before Docker/container workspace commands.
+- `.decapod files are accessed only via decapod CLI`.
+- `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
+- Read canonical router: `decapod docs show core/DECAPOD.md`.
+- Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
+- Operator reference: `decapod docs show docs/PLAYBOOK.md`.
+- Capability authority: `decapod capabilities --format json`.
+- Scoped context feature: `decapod docs search --query "<problem>" --op <op>` or `decapod rpc --op context.scope`.
+
+Stop if requirements are ambiguous or conflicting.
+"#
+}
+
+fn template_agents() -> String {
+    r#"# AGENTS.md — Universal Agent Contract
+
+This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod control plane.**
+
+This contract applies equally to Claude, Codex, Gemini, and any other agent operating here.
+
+## Mandatory Initialization
+
+```bash
+cargo install decapod
+
+decapod validate
+decapod docs ingest
+decapod session acquire
+decapod rpc --op agent.init
+decapod rpc --op context.resolve
+decapod todo add "<task>"
+decapod todo claim --id <task-id>
+decapod workspace ensure
+```
+
+## Control-Plane First Loop
+
+```bash
+# Discover what this binary actually supports in this repo
+decapod capabilities --format json
+decapod data schema --deterministic
+
+# Resolve scoped governance context before implementation
+decapod docs search --query "<problem>" --op <op> --path <path> --tag <tag>
+decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
+
+# Convergence/proof surfaces (call when relevant)
+decapod workunit init --task-id <task-id> --intent-ref <intent>
+decapod govern capsule query --topic "<topic>" --scope interfaces --task-id <task-id>
+decapod eval plan --task-set-id <id> --task-ref <task-id> --model-id <model> --prompt-hash <hash> --judge-model-id <judge> --judge-prompt-hash <hash>
+```
+
+## Golden Rules (Non-Negotiable)
+
+1. Always refine intent with the user before inference-heavy work.
+2. Never work on main/master. Use `.decapod/workspaces/*`.
+3. `.decapod files are accessed only via decapod CLI`.
+4. Never claim done without `decapod validate` passing.
+5. Never invent capabilities that are not exposed by the binary.
+6. Stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
+7. Respect the Interface abstraction boundary.
+
+## Safety Invariants
+
+- ✅ Router pointer: `core/DECAPOD.md`
+- ✅ Validation gate: `decapod validate`
+- ✅ Constitution ingestion gate: `decapod docs ingest`
+- ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`
+- ✅ Session auth gate: `DECAPOD_SESSION_PASSWORD`
+- ✅ Workspace gate: Docker git workspaces
+- ✅ Privilege gate: request elevated permissions before Docker/container workspace commands
+
+## Operating Notes
+
+- Use `decapod docs show core/DECAPOD.md` and `decapod docs show core/INTERFACES.md` for binding contracts.
+- Use `decapod capabilities --format json` as the authority surface for available operations.
+- Use Decapod shared aptitude memory for human-taught preferences that must persist across sessions and agents: `decapod data memory add|get` (aliases: `decapod data aptitude`).
+- Use `decapod docs search --query \"<problem>\" --op <op> --path <path> --tag <tag>` or `decapod rpc --op context.scope --params '{\"query\":\"...\"}'` for scoped just-in-time constitution context.
+- Use `decapod todo handoff --id <id> --to <agent>` for cross-agent ownership transfer.
+- Treat lock/contention failures (including `VALIDATE_TIMEOUT_OR_LOCK`) as blocking until resolved.
+"#
+    .to_string()
+}
+
+fn template_named_agent(file_stem: &str) -> String {
+    format!(
+        "# {}.md - Agent Entrypoint\n\n{}",
+        file_stem,
+        agent_entrypoint_body()
+    )
+}
+
+fn template_readme() -> String {
+    r#"# .decapod - Decapod Project Metadata 🦀✨
+
+Welcome to the control-plane directory for this repo.
+
+## Quick Start
+
+1. **Initialize**: Run `decapod init` to set up your project
+2. **Configure overrides**: Edit `.decapod/OVERRIDE.md` to customize behavior
+3. **Read docs**: Use `decapod docs show <path>` to read constitution docs
+
+## Summary
+
+The `.decapod/OVERRIDES.md` file is your project-local override layer for Decapod's embedded constitution.
+
+The embedded constitution (shipped with Decapod) is read-only baseline policy.
+`.decapod/OVERRIDE.md` is where you add project-specific behavior without forking Decapod.
+
+Keep overrides in the correct section, minimal and explicit.
+
+## How to Use Overrides
+
+The embedded constitution (read-only, shipped with Decapod) provides the base methodology. The `.decapod/OVERRIDE.md` file lets you customize behavior without forking Decapod.
+
+**To add an override:**
+
+1. Find the component section in `OVERRIDE.md` (Core, Specs, Interfaces, Methodology, Architecture, or Plugins)
+2. Scroll to the specific component you want to override (e.g., `### plugins/TODO.md`)
+3. Write your override content under that heading
+4. Use markdown formatting for your overrides
+5. Commit this file to version control
+
+**Example override:**
+
+```markdown
+### plugins/TODO.md
+
+## Priority Levels (Project Override)
+
+For this project, we use a 5-level priority system:
+- **critical**: Production down, blocking release
+- **high**: Sprint commitment, must complete this iteration
+- **medium**: Backlog, next sprint candidate
+- **low**: Nice-to-have, future consideration
+- **idea**: Exploration, needs refinement before actionable
+```
+
+## Available Override Sections
+
+- **Core**: DECAPOD.md, INTERFACES.md, METHODOLOGY.md, PLUGINS.md, GAPS.md, DEMANDS.md, DEPRECATION.md
+- **Specs**: INTENT.md, SYSTEM.md, AMENDMENTS.md, SECURITY.md, GIT.md
+- **Interfaces**: CLAIMS.md, CONTROL_PLANE.md, DOC_RULES.md, GLOSSARY.md, STORE_MODEL.md
+- **Methodology**: ARCHITECTURE.md, SOUL.md, KNOWLEDGE.md, MEMORY.md
+- **Architecture**: DATA.md, CACHING.md, MEMORY.md, WEB.md, CLOUD.md, FRONTEND.md, ALGORITHMS.md, SECURITY.md, OBSERVABILITY.md, CONCURRENCY.md
+- **Plugins**: TODO.md, MANIFEST.md, EMERGENCY_PROTOCOL.md, DB_BROKER.md, CRON.md, REFLEX.md, HEALTH.md, POLICY.md, WATCHER.md, KNOWLEDGE.md, ARCHIVE.md, FEDERATION.md, FEEDBACK.md, TRUST.md, CONTEXT.md, HEARTBEAT.md, APTITUDE.md, VERIFY.md, DECIDE.md, AUTOUPDATE.md
+
+## Contents
+
+- `OVERRIDE.md`: **Edit this file** to override the embedded decapod constitution for project-specific needs.
+- `data/`: **DO NOT TOUCH**. This is persistent storage (SQLite databases and event logs) used by your agent(s) and decapod.
+- `generated/`: **DO NOT TOUCH**. Artifacts generated by decapod.
+"#
+    .to_string()
+}
+
+fn template_override() -> String {
+    r#"# OVERRIDE.md - Project-Specific Decapod Overrides
+
+> **IMPORTANT:** For detailed usage instructions and examples, see [README.md](README.md).
+
+**Canonical:** OVERRIDE.md
+**Authority:** override
+**Layer:** Project
+**Binding:** Yes (overrides embedded constitution)
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- ⚠️  CHANGES ARE NOT PERMITTED ABOVE THIS LINE                           -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+## Core Overrides (Routers and Indices)
+
+### core/DECAPOD.md
+
+### core/INTERFACES.md
+
+### core/METHODOLOGY.md
+
+### core/PLUGINS.md
+
+### core/GAPS.md
+
+### core/DEMANDS.md
+
+### core/DEPRECATION.md
+
+---
+
+## Specs Overrides (System Contracts)
+
+### specs/INTENT.md
+
+### specs/SYSTEM.md
+
+### specs/AMENDMENTS.md
+
+### specs/SECURITY.md
+
+### specs/GIT.md
+
+---
+
+## Interfaces Overrides (Binding Contracts)
+
+### interfaces/CLAIMS.md
+
+### interfaces/CONTROL_PLANE.md
+
+### interfaces/DOC_RULES.md
+
+### interfaces/GLOSSARY.md
+
+### interfaces/STORE_MODEL.md
+
+---
+
+## Methodology Overrides (Practice Guides)
+
+### methodology/ARCHITECTURE.md
+
+### methodology/SOUL.md
+
+### methodology/KNOWLEDGE.md
+
+### methodology/MEMORY.md
+
+---
+
+## Architecture Overrides (Domain Patterns)
+
+### architecture/DATA.md
+
+### architecture/CACHING.md
+
+### architecture/MEMORY.md
+
+### architecture/WEB.md
+
+### architecture/CLOUD.md
+
+### architecture/FRONTEND.md
+
+### architecture/ALGORITHMS.md
+
+### architecture/SECURITY.md
+
+### architecture/OBSERVABILITY.md
+
+### architecture/CONCURRENCY.md
+
+---
+
+## Plugins Overrides (Operational Subsystems)
+
+### plugins/TODO.md
+
+### plugins/MANIFEST.md
+
+### plugins/EMERGENCY_PROTOCOL.md
+
+### plugins/DB_BROKER.md
+
+### plugins/CRON.md
+
+### plugins/REFLEX.md
+
+### plugins/HEALTH.md
+
+### plugins/POLICY.md
+
+### plugins/WATCHER.md
+
+### plugins/KNOWLEDGE.md
+
+### plugins/ARCHIVE.md
+
+### plugins/FEDERATION.md
+
+### plugins/FEEDBACK.md
+
+### plugins/TRUST.md
+
+### plugins/CONTEXT.md
+
+### plugins/HEARTBEAT.md
+
+### plugins/APTITUDE.md
+
+### plugins/VERIFY.md
+
+### plugins/DECIDE.md
+
+### plugins/AUTOUPDATE.md
+"#
+    .to_string()
+}
 
 pub fn get_template(name: &str) -> Option<String> {
     match name {
-        "AGENTS.md" => Some(TEMPLATE_AGENTS.to_string()),
-        "CLAUDE.md" => Some(TEMPLATE_CLAUDE.to_string()),
-        "GEMINI.md" => Some(TEMPLATE_GEMINI.to_string()),
-        "CODEX.md" => Some(TEMPLATE_CODEX.to_string()),
-
-        "README.md" => Some(TEMPLATE_README.to_string()),
-        "OVERRIDE.md" => Some(TEMPLATE_OVERRIDE.to_string()),
+        "AGENTS.md" => Some(template_agents()),
+        "CLAUDE.md" => Some(template_named_agent("CLAUDE")),
+        "GEMINI.md" => Some(template_named_agent("GEMINI")),
+        "CODEX.md" => Some(template_named_agent("CODEX")),
+        "README.md" => Some(template_readme()),
+        "OVERRIDE.md" => Some(template_override()),
         _ => None,
     }
 }
