@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.3](https://github.com/DecapodLabs/decapod/compare/v0.44.2...v0.44.3) - 2026-02-25
+
+### Fixed
+
+- allowlist kcr trend artifact and hard-shard integration tests
+
+### Other
+
+- add generated decapod specs and fix interop evidence test paths
+
 ## [0.44.2](https://github.com/DecapodLabs/decapod/compare/v0.44.1...v0.44.2) - 2026-02-25
 
 ### Other
