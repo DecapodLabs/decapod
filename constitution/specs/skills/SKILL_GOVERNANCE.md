@@ -40,3 +40,39 @@ To be promotion-relevant, skills must be translated into deterministic, repo-nat
 - No orchestrator behavior.
 - No provider-specific skill runtime.
 - No remote registry as canonical source of truth.
+
+---
+
+## Meta-Skills (Agent Training)
+
+Decapod includes meta-skills that train external agents how to interface with the control plane. These live in `metadata/skills/` and are Constitution-native.
+
+### Classification
+
+| Type | Purpose | Location |
+|------|---------|----------|
+| **Interface** | How to call Decapod RPC | `metadata/skills/agent-decapod-interface/` |
+| **UX** | How to interact with humans | `metadata/skills/human-agent-ux/` |
+| **Refinement** | How to turn intent into specs | `metadata/skills/intent-refinement/` |
+
+### Activation
+
+Meta-skills activate when:
+- Agent initializes (`agent.init` triggers interface skill)
+- Human gives vague intent (triggers refinement)
+- Agent needs to communicate with human (triggers UX)
+
+### Agent Onboarding
+
+For new agents, ensure these meta-skills are loaded:
+1. `agent-decapod-interface` - Required for any Decapod interaction
+2. `human-agent-ux` - Required for human-facing work
+3. `intent-refinement` - Required for any task involving intent
+
+### Custom Skills
+
+To add domain-specific skills:
+1. Create `metadata/skills/<skill-name>/SKILL.md`
+2. Add YAML frontmatter with `name`, `description`, `allowed-tools`
+3. Run `decapod docs ingest` to register
+4. Skills become available via `decapod context.capsule.query`
