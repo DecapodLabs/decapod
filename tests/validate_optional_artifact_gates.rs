@@ -151,6 +151,48 @@ fn validate_fails_on_verified_workunit_missing_passing_proofs() {
 }
 
 #[test]
+fn validate_fails_on_verified_workunit_missing_capsule_policy_lineage() {
+    let (_tmp, dir, password) = setup_repo();
+    let workunits = dir.join(".decapod").join("governance").join("workunits");
+    fs::create_dir_all(&workunits).expect("create workunits dir");
+    fs::write(
+        workunits.join("R_BAD_NO_CAPSULE.json"),
+        r#"{
+  "task_id": "R_BAD_NO_CAPSULE",
+  "intent_ref": "intent://missing-capsule",
+  "spec_refs": [],
+  "state_refs": [],
+  "proof_plan": ["validate_passes"],
+  "proof_results": [
+    {"gate":"validate_passes","status":"pass","artifact_ref":null}
+  ],
+  "status": "VERIFIED"
+}"#,
+    )
+    .expect("write verified workunit missing capsule");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !validate.status.success(),
+        "validate should fail for VERIFIED workunit without capsule lineage"
+    );
+    let stderr = combined_output(&validate);
+    assert!(
+        stderr.contains("WORKUNIT_CAPSULE_POLICY_LI"),
+        "expected missing capsule lineage marker in stderr, got:\n{}",
+        stderr
+    );
+}
+
+#[test]
 fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
     let (_tmp, dir, password) = setup_repo();
     let capsules = dir.join(".decapod").join("generated").join("context");

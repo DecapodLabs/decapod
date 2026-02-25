@@ -3,6 +3,7 @@ use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -276,6 +277,70 @@ fn ensure_verified_ready(manifest: &WorkUnitManifest) -> Result<(), error::Decap
                 gate
             )));
         }
+    }
+
+    Ok(())
+}
+
+pub fn verify_capsule_policy_lineage_for_task(
+    project_root: &Path,
+    task_id: &str,
+) -> Result<(), error::DecapodError> {
+    let capsule_path = project_root
+        .join(".decapod")
+        .join("generated")
+        .join("context")
+        .join(format!("{task_id}.json"));
+    if !capsule_path.exists() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "WORKUNIT_CAPSULE_POLICY_LINEAGE_MISSING: expected context capsule for task '{}' at {}",
+            task_id,
+            capsule_path.display()
+        )));
+    }
+
+    let raw = fs::read_to_string(&capsule_path).map_err(error::DecapodError::IoError)?;
+    let capsule: DeterministicContextCapsule = serde_json::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "WORKUNIT_CAPSULE_POLICY_LINEAGE_INVALID: invalid capsule JSON at {}: {}",
+            capsule_path.display(),
+            e
+        ))
+    })?;
+    let expected_hash = capsule.computed_hash_hex().map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "WORKUNIT_CAPSULE_POLICY_LINEAGE_INVALID: hash compute failed at {}: {}",
+            capsule_path.display(),
+            e
+        ))
+    })?;
+    if capsule.capsule_hash != expected_hash {
+        return Err(error::DecapodError::ValidationError(format!(
+            "WORKUNIT_CAPSULE_POLICY_LINEAGE_INVALID: capsule hash mismatch at {}",
+            capsule_path.display()
+        )));
+    }
+
+    let task_match = capsule.task_id.as_deref() == Some(task_id)
+        || capsule.workunit_id.as_deref() == Some(task_id);
+    if !task_match {
+        return Err(error::DecapodError::ValidationError(format!(
+            "WORKUNIT_CAPSULE_POLICY_LINEAGE_INVALID: capsule task/workunit binding mismatch for task '{}'",
+            task_id
+        )));
+    }
+
+    let policy = capsule.policy;
+    if policy.risk_tier.trim().is_empty()
+        || policy.policy_hash.trim().is_empty()
+        || policy.policy_version.trim().is_empty()
+        || policy.policy_path.trim().is_empty()
+        || policy.repo_revision.trim().is_empty()
+    {
+        return Err(error::DecapodError::ValidationError(format!(
+            "WORKUNIT_CAPSULE_POLICY_LINEAGE_INVALID: missing policy lineage fields in {}",
+            capsule_path.display()
+        )));
     }
 
     Ok(())
