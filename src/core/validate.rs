@@ -1109,6 +1109,7 @@ fn validate_generated_artifact_whitelist(
         ".decapod/data/knowledge.promotions.jsonl",
         ".decapod/generated/specs/.manifest.json",
         ".decapod/generated/policy/context_capsule_policy.json",
+        ".decapod/generated/artifacts/provenance/kcr_trend.jsonl",
     ];
     let mut offenders = Vec::new();
     for line in String::from_utf8_lossy(&output.stdout).lines() {
