@@ -66,7 +66,7 @@ fn context_capsule_query_is_deterministic() {
             "--scope",
             "interfaces",
             "--task-id",
-            "R_42",
+            "test_42",
             "--limit",
             "5",
         ],
@@ -93,7 +93,7 @@ fn context_capsule_query_is_deterministic() {
             "--scope",
             "interfaces",
             "--task-id",
-            "R_42",
+            "test_42",
             "--limit",
             "5",
         ],
@@ -239,7 +239,7 @@ fn context_capsule_query_write_persists_deterministic_artifact_path() {
         )
     };
 
-    let first = run("R_123");
+    let first = run("test_123");
     assert!(
         first.status.success(),
         "first write query failed: {}",
@@ -250,7 +250,7 @@ fn context_capsule_query_write_persists_deterministic_artifact_path() {
         .as_str()
         .expect("path string in first payload");
     assert!(
-        first_path.ends_with(".decapod/generated/context/R_123.json"),
+        first_path.ends_with(".decapod/generated/context/test_123.json"),
         "unexpected capsule path: {}",
         first_path
     );
@@ -260,7 +260,7 @@ fn context_capsule_query_write_persists_deterministic_artifact_path() {
         first_path
     );
 
-    let second = run("R_123");
+    let second = run("test_123");
     assert!(
         second.status.success(),
         "second write query failed: {}",
@@ -294,7 +294,7 @@ fn context_capsule_query_write_auto_binds_workunit_state_ref() {
             "workunit",
             "init",
             "--task-id",
-            "R_321",
+            "test_321",
             "--intent-ref",
             "intent://capsule-bind",
         ],
@@ -317,7 +317,7 @@ fn context_capsule_query_write_auto_binds_workunit_state_ref() {
             "--scope",
             "interfaces",
             "--task-id",
-            "R_321",
+            "test_321",
             "--write",
         ],
         &envs,
@@ -337,7 +337,7 @@ fn context_capsule_query_write_auto_binds_workunit_state_ref() {
 
     let workunit = run_decapod(
         &dir,
-        &["govern", "workunit", "get", "--task-id", "R_321"],
+        &["govern", "workunit", "get", "--task-id", "test_321"],
         &envs,
     );
     assert!(
@@ -349,7 +349,7 @@ fn context_capsule_query_write_auto_binds_workunit_state_ref() {
     let state_refs = workunit_payload["state_refs"]
         .as_array()
         .expect("state refs array");
-    let expected_rel = ".decapod/generated/context/R_321.json";
+    let expected_rel = ".decapod/generated/context/test_321.json";
     let has_ref = state_refs.iter().any(|v| {
         let s = v.as_str().unwrap_or_default();
         s == expected_rel || s.ends_with(expected_rel) || s == capsule_path

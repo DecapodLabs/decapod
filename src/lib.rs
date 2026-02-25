@@ -2017,17 +2017,16 @@ pub fn run() -> Result<(), error::DecapodError> {
                 root: store_root.clone(),
             };
 
-            if should_auto_clock_in(&cli.command) {
-                if let Err(e) =
+            if should_auto_clock_in(&cli.command)
+                && let Err(e) =
                     retry_transient_sqlite(|| todo::clock_in_agent_presence(&project_store), 4)
-                {
-                    if is_transient_sqlite_contention_error(&e) {
-                        eprintln!(
-                            "warn: presence clock-in skipped due transient sqlite contention: {e}"
-                        );
-                    } else {
-                        return Err(e);
-                    }
+            {
+                if is_transient_sqlite_contention_error(&e) {
+                    eprintln!(
+                        "warn: presence clock-in skipped due transient sqlite contention: {e}"
+                    );
+                } else {
+                    return Err(e);
                 }
             }
 
@@ -2272,10 +2271,10 @@ fn branch_contains_todo_ticket_id(branch: &str) -> bool {
     if branch.contains("r_") {
         return true;
     }
-    if let Ok(hash_re) = regex::Regex::new(r"todo-[a-z0-9]{6}(\b|-|$)") {
-        if hash_re.is_match(&branch) {
-            return true;
-        }
+    if let Ok(hash_re) = regex::Regex::new(r"todo-[a-z0-9]{6}(\b|-|$)")
+        && hash_re.is_match(&branch)
+    {
+        return true;
     }
     let chars: Vec<char> = branch.chars().collect();
     if chars.len() < 21 {
@@ -5610,13 +5609,13 @@ fn run_state_commit_command(
             println!();
 
             // Try to extract version and SHAs from the CBOR structure
-            if let Some(version_pos) = content.find("state_commit.") {
-                if let Some(end_pos) = content[version_pos..].find('\0') {
-                    println!(
-                        "  algo_version: {}",
-                        &content[version_pos..version_pos + end_pos]
-                    );
-                }
+            if let Some(version_pos) = content.find("state_commit.")
+                && let Some(end_pos) = content[version_pos..].find('\0')
+            {
+                println!(
+                    "  algo_version: {}",
+                    &content[version_pos..version_pos + end_pos]
+                );
             }
 
             // Count entries (looking for patterns in the binary data)
@@ -5718,35 +5717,35 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 
             // Add mandatory todo ops if no active tasks
             let agent_id = current_agent_id();
-            if agent_id != "unknown" {
-                if let Ok(mut tasks) = todo::list_tasks(
+            if agent_id != "unknown"
+                && let Ok(mut tasks) = todo::list_tasks(
                     &project_store.root,
                     Some("open".to_string()),
                     None,
                     None,
                     None,
                     None,
-                ) {
-                    tasks.retain(|t| t.assigned_to == agent_id);
-                    if tasks.is_empty() {
-                        allowed_ops.insert(
-                            0,
-                            AllowedOp {
-                                op: "todo.add".to_string(),
-                                reason: "MANDATORY: Create a task for your work".to_string(),
-                                required_params: vec!["title".to_string()],
-                            },
-                        );
-                    } else if tasks.iter().any(|t| t.assigned_to.is_empty()) {
-                        allowed_ops.insert(
-                            0,
-                            AllowedOp {
-                                op: "todo.claim".to_string(),
-                                reason: "MANDATORY: Claim your assigned task".to_string(),
-                                required_params: vec!["id".to_string()],
-                            },
-                        );
-                    }
+                )
+            {
+                tasks.retain(|t| t.assigned_to == agent_id);
+                if tasks.is_empty() {
+                    allowed_ops.insert(
+                        0,
+                        AllowedOp {
+                            op: "todo.add".to_string(),
+                            reason: "MANDATORY: Create a task for your work".to_string(),
+                            required_params: vec!["title".to_string()],
+                        },
+                    );
+                } else if tasks.iter().any(|t| t.assigned_to.is_empty()) {
+                    allowed_ops.insert(
+                        0,
+                        AllowedOp {
+                            op: "todo.claim".to_string(),
+                            reason: "MANDATORY: Claim your assigned task".to_string(),
+                            required_params: vec!["id".to_string()],
+                        },
+                    );
                 }
             }
 
@@ -5905,14 +5904,14 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let bindings = docs::get_bindings(project_root);
 
             // Deterministic relevance mapping
-            if let Some(o) = op {
-                if let Some(doc_ref) = bindings.ops.get(o) {
-                    let parts: Vec<&str> = doc_ref.split('#').collect();
-                    let path = parts[0];
-                    let anchor = parts.get(1).copied();
-                    if let Some(f) = docs::get_fragment(project_root, path, anchor) {
-                        fragments.push(f);
-                    }
+            if let Some(o) = op
+                && let Some(doc_ref) = bindings.ops.get(o)
+            {
+                let parts: Vec<&str> = doc_ref.split('#').collect();
+                let path = parts[0];
+                let anchor = parts.get(1).copied();
+                if let Some(f) = docs::get_fragment(project_root, path, anchor) {
+                    fragments.push(f);
                 }
             }
 

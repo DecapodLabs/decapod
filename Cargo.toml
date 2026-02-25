@@ -2,14 +2,14 @@
 name = "decapod"
 version = "0.44.5"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.90"
 build = "build/constitution_index.rs"
 description = "Decapod is the daemonless, local-first control plane that agents call on demand to align intent, enforce boundaries, and produce proof-backed completion across concurrent multi-agent work. 🦀"
 license = "MIT"
 repository = "https://github.com/DecapodLabs/decapod"
 homepage = "https://github.com/DecapodLabs/decapod"
 readme = "README.md"
-keywords = ["rust", "ai", "ai-agents", "control-plane", "orchestration"]
+keywords = ["governance", "ai", "ai-agents", "control-plane", "orchestration"]
 categories = ["artificial-intelligence", "command-line-utilities", "development-tools"]
 exclude = [
     ".decapod/*",
@@ -46,6 +46,7 @@ rust-embed = { version = "8.5", features = ["include-exclude"] }
 toml = "1.0"
 rayon = "1.10"
 colored = "3.1"
+rustc-hash = "2.0"
 
 [dev-dependencies]
 tempfile = "3.10"

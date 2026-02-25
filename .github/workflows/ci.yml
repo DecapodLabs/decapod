@@ -206,7 +206,7 @@ jobs:
       - name: Run unit tests
         run: cargo test --all-features --lib --bins -- --test-threads=4
 
-  # TEST: integration tests except RPC suite and chaos replay
+  # TEST: integration tests - 10 parallel runners, round-robin distribution
   test-integration:
     name: Tests (Integration ${{ matrix.shard }}/10)
     runs-on: ubuntu-latest
@@ -214,7 +214,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -232,30 +232,25 @@ jobs:
           shared-key: "ci-setup"
           save-if: false
 
-      - name: Run integration tests (except isolated suites)
+      - name: Run integration tests (round-robin by test index)
         run: |
           set -euo pipefail
           mapfile -t all_tests < <(
-            ls tests/*.rs \
-              | xargs -n1 basename \
-              | sed 's/\.rs$//' \
-              | sort
+            ls tests/*.rs | xargs -n1 basename | sed 's/\.rs$//' | sort
           )
-          shard_index=$(( ${{ matrix.shard }} - 1 ))
-          shard_total=10
-          selected=0
+          shard=${{ matrix.shard }}
           for i in "${!all_tests[@]}"; do
+            if [ $(( i % 10 )) -ne "$shard" ]; then
+              continue
+            fi
             t="${all_tests[$i]}"
+            # Skip isolated suites (they run in their own jobs)
             if [ "$t" = "agent_rpc_suite" ] || [ "$t" = "chaos_replay" ] || [ "$t" = "daemonless_lifecycle" ]; then
               continue
             fi
-            if [ $(( i % shard_total )) -ne "$shard_index" ]; then
-              continue
-            fi
-            selected=$(( selected + 1 ))
+            echo "Shard $shard running: $t"
             cargo test --all-features --test "$t" -- --test-threads=4
           done
-          echo "Selected integration tests on shard ${{ matrix.shard }}/10: $selected"
 
   # RPC SUITE: isolated job to avoid contention with other integration tests
   test-rpc-suite:
