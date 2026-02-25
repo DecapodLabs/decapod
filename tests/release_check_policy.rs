@@ -178,19 +178,21 @@ fn release_check_allows_schema_changes_with_changelog_note() {
 }
 
 #[test]
-fn release_check_requires_policy_lineage() {
+fn release_check_autostamps_missing_policy_lineage() {
     let (_tmp, root) = setup_release_fixture("- schema: bump todo shape for v2");
     write(
         &root.join(".decapod/generated/artifacts/provenance/proof_manifest.json"),
         "{\n  \"schema_version\": \"1.0.0\",\n  \"kind\": \"proof_manifest\",\n  \"proofs\": [{\"command\": \"decapod validate\", \"result\": \"pass\"}],\n  \"environment\": {\"os\": \"linux\", \"rust\": \"stable\"}\n}\n",
     );
     let output = run_release_check(&root);
-    assert!(!output.status.success(), "release check should fail");
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(output.status.success(), "release check should pass");
+    let proof_path = root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    let proof: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&proof_path).expect("read proof manifest"))
+            .expect("parse proof manifest");
     assert!(
-        stderr.contains("missing policy_lineage object"),
-        "release check should require policy lineage; stderr:\n{}",
-        stderr
+        proof.get("policy_lineage").is_some(),
+        "release check should auto-stamp missing lineage"
     );
 }
 
@@ -208,17 +210,29 @@ fn release_check_requires_consistent_policy_lineage_across_manifests() {
     );
 
     let output = run_release_check(&root);
-    assert!(!output.status.success(), "release check should fail");
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(output.status.success(), "release check should pass");
+    let proof_after: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(
+            root.join(".decapod/generated/artifacts/provenance/proof_manifest.json"),
+        )
+        .expect("read stamped proof"),
+    )
+    .expect("parse stamped proof");
+    let artifact_after: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(
+            root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json"),
+        )
+        .expect("read stamped artifact"),
+    )
+    .expect("parse stamped artifact");
     assert!(
-        stderr.contains("policy lineage mismatch"),
-        "release check should require lineage consistency; stderr:\n{}",
-        stderr
+        proof_after["policy_lineage"] == artifact_after["policy_lineage"],
+        "release check should normalize lineage consistency across manifests"
     );
 }
 
 #[test]
-fn release_check_fails_when_lineage_capsule_drifted() {
+fn release_check_repairs_lineage_capsule_drift() {
     let (_tmp, root) = setup_release_fixture("- schema: bump todo shape for v2");
     let capsule_path = root.join(".decapod/generated/context/R_FIXTURE.json");
     let mut capsule: serde_json::Value =
@@ -231,11 +245,41 @@ fn release_check_fails_when_lineage_capsule_drifted() {
     );
 
     let output = run_release_check(&root);
+    assert!(output.status.success(), "release check should pass");
+    let proof_after: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(
+            root.join(".decapod/generated/artifacts/provenance/proof_manifest.json"),
+        )
+        .expect("read stamped proof"),
+    )
+    .expect("parse stamped proof");
+    let lineage_capsule_path = proof_after["policy_lineage"]["capsule_path"]
+        .as_str()
+        .expect("lineage capsule path");
+    let capsule_after: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(root.join(lineage_capsule_path)).expect("read stamped capsule"),
+    )
+    .expect("parse stamped capsule");
+    assert!(
+        proof_after["policy_lineage"]["capsule_hash"] == capsule_after["capsule_hash"],
+        "release check should repair lineage to the deterministic capsule hash"
+    );
+}
+
+#[test]
+fn release_check_fails_closed_for_invalid_release_risk_tier_env() {
+    let (_tmp, root) = setup_release_fixture("- schema: bump todo shape for v2");
+    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .current_dir(&root)
+        .env("DECAPOD_RELEASE_RISK_TIER", "invalid")
+        .args(["release", "check"])
+        .output()
+        .expect("run release check");
     assert!(!output.status.success(), "release check should fail");
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("internal hash mismatch") || stderr.contains("capsule_hash mismatch"),
-        "release check should fail on capsule hash drift; stderr:\n{}",
+        stderr.contains("invalid DECAPOD_RELEASE_RISK_TIER"),
+        "release check should fail closed with typed error for invalid risk tier env; stderr:\n{}",
         stderr
     );
 }
