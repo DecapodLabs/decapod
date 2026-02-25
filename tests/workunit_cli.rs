@@ -62,7 +62,7 @@ fn workunit_init_creates_manifest_file() {
             "workunit",
             "init",
             "--task-id",
-            "R_001",
+            "test_001",
             "--intent-ref",
             "intent://test",
         ],
@@ -84,7 +84,7 @@ fn workunit_init_creates_manifest_file() {
         .join(".decapod")
         .join("governance")
         .join("workunits")
-        .join("R_001.json");
+        .join("test_001.json");
     assert!(manifest_path.exists(), "manifest file should exist");
 }
 
@@ -98,7 +98,7 @@ fn workunit_get_returns_expected_manifest_shape() {
             "workunit",
             "init",
             "--task-id",
-            "R_002",
+            "test_002",
             "--intent-ref",
             "intent://shape",
         ],
@@ -111,7 +111,7 @@ fn workunit_get_returns_expected_manifest_shape() {
 
     let out = run_decapod(
         &dir,
-        &["govern", "workunit", "get", "--task-id", "R_002"],
+        &["govern", "workunit", "get", "--task-id", "test_002"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -124,7 +124,7 @@ fn workunit_get_returns_expected_manifest_shape() {
         String::from_utf8_lossy(&out.stderr)
     );
     let payload: serde_json::Value = serde_json::from_slice(&out.stdout).expect("json");
-    assert_eq!(payload["task_id"], "R_002");
+    assert_eq!(payload["task_id"], "test_002");
     assert_eq!(payload["intent_ref"], "intent://shape");
     assert!(payload["spec_refs"].is_array());
     assert!(payload["state_refs"].is_array());
@@ -143,7 +143,7 @@ fn workunit_status_returns_deterministic_manifest_hash() {
             "workunit",
             "init",
             "--task-id",
-            "R_003",
+            "test_003",
             "--intent-ref",
             "intent://hash",
         ],
@@ -156,7 +156,7 @@ fn workunit_status_returns_deterministic_manifest_hash() {
 
     let out = run_decapod(
         &dir,
-        &["govern", "workunit", "status", "--task-id", "R_003"],
+        &["govern", "workunit", "status", "--task-id", "test_003"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -169,15 +169,15 @@ fn workunit_status_returns_deterministic_manifest_hash() {
         String::from_utf8_lossy(&out.stderr)
     );
     let payload: serde_json::Value = serde_json::from_slice(&out.stdout).expect("json");
-    assert_eq!(payload["task_id"], "R_003");
+    assert_eq!(payload["task_id"], "test_003");
     assert_eq!(payload["workunit_status"], "DRAFT");
     let hash_cli = payload["manifest_hash"].as_str().expect("hash string");
 
-    let manifest = workunit::load_workunit(&dir, "R_003").expect("load workunit");
+    let manifest = workunit::load_workunit(&dir, "test_003").expect("load workunit");
     let hash_expected = manifest.canonical_hash_hex().expect("hash expected");
     assert_eq!(hash_cli, hash_expected);
 
-    let path = workunit::workunit_path(&dir, "R_003").expect("path");
+    let path = workunit::workunit_path(&dir, "test_003").expect("path");
     let on_disk = fs::read_to_string(path).expect("read manifest");
     assert!(
         !on_disk.is_empty(),
@@ -195,7 +195,7 @@ fn workunit_attach_spec_and_state_are_persisted() {
             "workunit",
             "init",
             "--task-id",
-            "R_004",
+            "test_004",
             "--intent-ref",
             "intent://attach",
         ],
@@ -219,7 +219,7 @@ fn workunit_attach_spec_and_state_are_persisted() {
                 "workunit",
                 subcmd,
                 "--task-id",
-                "R_004",
+                "test_004",
                 "--ref",
                 reference,
             ],
@@ -237,7 +237,7 @@ fn workunit_attach_spec_and_state_are_persisted() {
         );
     }
 
-    let manifest = workunit::load_workunit(&dir, "R_004").expect("load workunit");
+    let manifest = workunit::load_workunit(&dir, "test_004").expect("load workunit");
     assert_eq!(manifest.spec_refs, vec!["spec://a", "spec://b"]);
     assert_eq!(manifest.state_refs, vec!["state://1", "state://2"]);
 }
@@ -252,7 +252,7 @@ fn workunit_set_proof_plan_replaces_and_canonicalizes_gates() {
             "workunit",
             "init",
             "--task-id",
-            "R_005",
+            "test_005",
             "--intent-ref",
             "intent://proofs",
         ],
@@ -270,7 +270,7 @@ fn workunit_set_proof_plan_replaces_and_canonicalizes_gates() {
             "workunit",
             "set-proof-plan",
             "--task-id",
-            "R_005",
+            "test_005",
             "--gate",
             "validate_passes",
             "--gate",
@@ -290,7 +290,7 @@ fn workunit_set_proof_plan_replaces_and_canonicalizes_gates() {
         String::from_utf8_lossy(&out.stderr)
     );
 
-    let manifest = workunit::load_workunit(&dir, "R_005").expect("load workunit");
+    let manifest = workunit::load_workunit(&dir, "test_005").expect("load workunit");
     assert_eq!(manifest.proof_plan, vec!["state_commit", "validate_passes"]);
 }
 
@@ -310,7 +310,7 @@ fn workunit_transition_to_verified_requires_passing_proofs() {
             "workunit",
             "init",
             "--task-id",
-            "R_006",
+            "test_006",
             "--intent-ref",
             "intent://verified",
         ],
@@ -323,7 +323,7 @@ fn workunit_transition_to_verified_requires_passing_proofs() {
             "workunit",
             "set-proof-plan",
             "--task-id",
-            "R_006",
+            "test_006",
             "--gate",
             "validate_passes",
         ],
@@ -336,7 +336,7 @@ fn workunit_transition_to_verified_requires_passing_proofs() {
             "workunit",
             "transition",
             "--task-id",
-            "R_006",
+            "test_006",
             "--to",
             "executing",
         ],
@@ -349,7 +349,7 @@ fn workunit_transition_to_verified_requires_passing_proofs() {
             "workunit",
             "transition",
             "--task-id",
-            "R_006",
+            "test_006",
             "--to",
             "claimed",
         ],
@@ -363,7 +363,7 @@ fn workunit_transition_to_verified_requires_passing_proofs() {
             "workunit",
             "transition",
             "--task-id",
-            "R_006",
+            "test_006",
             "--to",
             "verified",
         ],
@@ -401,7 +401,7 @@ fn workunit_record_proof_and_transition_happy_path() {
             "workunit",
             "init",
             "--task-id",
-            "R_007",
+            "test_007",
             "--intent-ref",
             "intent://progress",
         ],
@@ -414,7 +414,7 @@ fn workunit_record_proof_and_transition_happy_path() {
             "workunit",
             "set-proof-plan",
             "--task-id",
-            "R_007",
+            "test_007",
             "--gate",
             "validate_passes",
         ],
@@ -429,7 +429,7 @@ fn workunit_record_proof_and_transition_happy_path() {
                 "workunit",
                 "transition",
                 "--task-id",
-                "R_007",
+                "test_007",
                 "--to",
                 to,
             ],
@@ -450,7 +450,7 @@ fn workunit_record_proof_and_transition_happy_path() {
             "workunit",
             "record-proof",
             "--task-id",
-            "R_007",
+            "test_007",
             "--gate",
             "validate_passes",
             "--status",
@@ -473,7 +473,7 @@ fn workunit_record_proof_and_transition_happy_path() {
             "workunit",
             "transition",
             "--task-id",
-            "R_007",
+            "test_007",
             "--to",
             "verified",
         ],
@@ -485,6 +485,6 @@ fn workunit_record_proof_and_transition_happy_path() {
         String::from_utf8_lossy(&final_step.stderr)
     );
 
-    let manifest = workunit::load_workunit(&dir, "R_007").expect("load workunit");
+    let manifest = workunit::load_workunit(&dir, "test_007").expect("load workunit");
     assert_eq!(manifest.status, workunit::WorkUnitStatus::Verified);
 }

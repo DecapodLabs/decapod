@@ -8,8 +8,8 @@ fn context_capsule_canonical_serialization_is_deterministic() {
         schema_version: "1.1.0".to_string(),
         topic: "auth provider boundary".to_string(),
         scope: "interfaces".to_string(),
-        task_id: Some("R_03".to_string()),
-        workunit_id: Some("R_03".to_string()),
+        task_id: Some("test_03".to_string()),
+        workunit_id: Some("test_03".to_string()),
         sources: vec![
             ContextCapsuleSource {
                 path: "interfaces/CONTROL_PLANE.md".to_string(),
