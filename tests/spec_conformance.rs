@@ -5,6 +5,7 @@ use tempfile::TempDir;
 fn run_decapod(dir: &PathBuf, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(dir)
+        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .args(args)
         .output()
         .expect("run decapod")
