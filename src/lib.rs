@@ -5411,7 +5411,23 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         m
                     }),
                 }),
-                vec![],
+                vec![
+                    AllowedOp {
+                        op: "store.upsert".to_string(),
+                        reason: "Persist significant decisions for audit trail before proceeding".to_string(),
+                        required_params: vec!["kind".to_string(), "data".to_string()],
+                    },
+                    AllowedOp {
+                        op: "validate.run".to_string(),
+                        reason: "Validate your changes against constitution before claiming done".to_string(),
+                        required_params: vec![],
+                    },
+                    AllowedOp {
+                        op: "store.query".to_string(),
+                        reason: "Retrieve prior decisions and knowledge relevant to current task".to_string(),
+                        required_params: vec!["kind".to_string()],
+                    },
+                ],
                 mandates.clone(),
             )
         }
