@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0](https://github.com/DecapodLabs/decapod/compare/v0.41.2...v0.42.0) - 2026-02-25
+
+### Added
+
+- *(init)* dynamic scaffolds and validate-driven living spec tasks
+- *(init)* upgrade generated specs templates for day-0 onboarding
+
+### Fixed
+
+- enforce strict broker bypass and skip user-store schema gate
+
+### Other
+
+- split hot integration shards 3 and 5 into 7 and 8
+- rename integration shard labels to 1..6
+- Merge remote-tracking branch 'origin/master' into agent/unknown/todo-r_01kj8n80zyk4qamd4v8g4bpfe0-1771964773
+- enforce versioned db schema checks and ordered migrations
+- scale plan metadata and catalog for long histories
+- run migration-script tests only when sql migrations change
+- add version-gated ledger and generated version counter
+- scope worktree and branch naming by todo hash
+- auto-upgrade legacy todo ids on activate/startup
+- typed ids with hash ledger and refresh decapod readme template
+- normalize .decapod layout and enforce startup workspace flow
+- split slow integration shards 3 and 4 into subshards
+- stabilize group broker test and relocate project support dirs
+
 ### Other
 
 - todo: migrate task IDs to typed format `<type4>_<16-alnum>`, add task `hash` field, and align workspace scope checks
