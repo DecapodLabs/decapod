@@ -247,7 +247,7 @@ fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
             "expected typed failure marker; got: {stderr}"
         );
         assert!(
-            stderr.contains("artifacts/diagnostics/validate/"),
+            stderr.contains(".decapod/generated/artifacts/diagnostics/validate/"),
             "expected diagnostics artifact path in stderr; got: {stderr}"
         );
     }
@@ -255,7 +255,7 @@ fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
     let diagnostics_dir = dir.join("artifacts").join("diagnostics").join("validate");
     assert!(
         diagnostics_dir.exists(),
-        "diagnostics directory should be created under artifacts/diagnostics/validate"
+        "diagnostics directory should be created under .decapod/generated/artifacts/diagnostics/validate"
     );
 
     let mut diagnostic_count = 0usize;

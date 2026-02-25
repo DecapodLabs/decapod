@@ -60,17 +60,17 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
     let readme = fs::read(root.join("README.md")).expect("read readme");
     let readme_hash = sha256_hex(&readme);
     write(
-        &root.join("artifacts/provenance/artifact_manifest.json"),
+        &root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json"),
         &format!(
             "{{\n  \"schema_version\": \"1.0.0\",\n  \"kind\": \"artifact_manifest\",\n  \"artifacts\": [{{\"path\": \"README.md\", \"sha256\": \"{readme_hash}\"}}]\n}}\n"
         ),
     );
     write(
-        &root.join("artifacts/provenance/proof_manifest.json"),
+        &root.join(".decapod/generated/artifacts/provenance/proof_manifest.json"),
         "{\n  \"schema_version\": \"1.0.0\",\n  \"kind\": \"proof_manifest\",\n  \"proofs\": [{\"command\": \"decapod validate\", \"result\": \"pass\"}],\n  \"environment\": {\"os\": \"linux\", \"rust\": \"stable\"}\n}\n",
     );
     write(
-        &root.join("artifacts/provenance/intent_convergence_checklist.json"),
+        &root.join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json"),
         "{\n  \"schema_version\": \"1.0.0\",\n  \"kind\": \"intent_convergence_checklist\",\n  \"pr\": {\"base\": \"master\", \"scope\": \"fixture\"},\n  \"intent\": \"Keep proofs and intent converged\",\n  \"scope\": \"release\",\n  \"checklist\": [\n    {\"name\": \"intent\", \"status\": \"pass\", \"evidence\": \"INTENT.md\"}\n  ]\n}\n",
     );
 
