@@ -218,3 +218,23 @@ fn rpc_context_capsule_query_write_tracks_touched_path() {
         touched_path
     );
 }
+
+#[test]
+fn rpc_context_capsule_query_rejects_unknown_risk_tier() {
+    let (_tmp, dir) = setup_repo();
+    let params = r#"{"topic":"policy","scope":"interfaces","risk_tier":"unknown-tier"}"#;
+    let out = run_decapod(
+        &dir,
+        &["rpc", "--op", "context.capsule.query", "--params", params],
+    );
+    assert!(
+        !out.status.success(),
+        "rpc capsule query should fail for unknown risk tier"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("CAPSULE_RISK_TIER_UNKNOWN"),
+        "expected typed risk-tier error, got: {}",
+        stderr
+    );
+}
