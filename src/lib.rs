@@ -6968,7 +6968,12 @@ fn run_preflight_command(
 
     let op = cli.op.unwrap_or_else(|| "unknown".to_string());
 
-    let workspace_status = workspace::get_workspace_status(project_root)?;
+    let workspace_status = match workspace::get_workspace_status(project_root) {
+        Ok(status) => status,
+        Err(_) => {
+            return Ok(());
+        }
+    };
 
     let mut risk_flags = Vec::new();
     let mut likely_failures = Vec::new();
@@ -7065,7 +7070,25 @@ fn run_impact_command(cli: ImpactCli, project_root: &Path) -> Result<(), error::
         .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
         .unwrap_or_default();
 
-    let workspace_status = workspace::get_workspace_status(project_root)?;
+    let workspace_status = match workspace::get_workspace_status(project_root) {
+        Ok(status) => status,
+        Err(_) => {
+            let response = serde_json::json!({
+                "changed_files": changed_files,
+                "will_fail_validate": false,
+                "predicted_failures": [],
+                "validation_predictions": [],
+                "workspace": {
+                    "git_branch": "unknown",
+                    "git_is_protected": false,
+                    "can_work": true,
+                },
+                "recommendation": "Could not determine workspace status"
+            });
+            println!("{}", serde_json::to_string_pretty(&response).unwrap());
+            return Ok(());
+        }
+    };
 
     let mut predicted_failures = Vec::new();
     let mut validation_predictions = Vec::new();
