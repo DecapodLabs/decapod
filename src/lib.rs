@@ -661,6 +661,10 @@ enum TraceCommand {
 
 #[derive(Subcommand, Debug)]
 enum Command {
+    /// Activate local control plane state and run startup migrations
+    #[clap(name = "activate")]
+    Activate,
+
     /// Bootstrap system and manage lifecycle
     #[clap(name = "init", visible_alias = "i")]
     Init(InitGroupCli),
@@ -1124,9 +1128,9 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
         ctx.detected_surfaces.push("backend".to_string());
     }
 
-    if !ctx.detected_surfaces.is_empty() && ctx.detected_surfaces.iter().any(|s| s == "frontend") {
+    if ctx.detected_surfaces.iter().any(|s| s == "frontend") {
         ctx.product_type = Some("application".to_string());
-    } else {
+    } else if !ctx.detected_surfaces.is_empty() || !ctx.primary_languages.is_empty() {
         ctx.product_type = Some("service_or_library".to_string());
     }
 
@@ -1697,19 +1701,27 @@ pub fn run() -> Result<(), error::DecapodError> {
             store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
             if should_route_via_group_broker(&cli.command, &argv) {
-                if let Err(e) = core::group_broker::maybe_route_mutation(&decapod_root_path, &argv)
-                {
-                    if !core::group_broker::is_internal_invocation() {
-                        return Err(e);
+                match core::group_broker::maybe_route_mutation(&decapod_root_path, &argv) {
+                    Err(e) => {
+                        if !core::group_broker::is_internal_invocation() {
+                            return Err(e);
+                        }
                     }
-                } else if !core::group_broker::is_internal_invocation() {
-                    if enforce_route_strict_mode() {
-                        return Err(error::DecapodError::ValidationError(
-                            "BROKER_ROUTE_REQUIRED: routed mutator cannot bypass broker in strict mode"
-                                .to_string(),
-                        ));
+                    Ok(routed) if routed && !core::group_broker::is_internal_invocation() => {
+                        // Routed mutation completed via broker path.
+                        return Ok(());
                     }
-                    return Ok(());
+                    Ok(routed) => {
+                        if !routed
+                            && !core::group_broker::is_internal_invocation()
+                            && enforce_route_strict_mode()
+                        {
+                            return Err(error::DecapodError::ValidationError(
+                                "BROKER_ROUTE_REQUIRED: routed mutator cannot bypass broker in strict mode"
+                                    .to_string(),
+                            ));
+                        }
+                    }
                 }
             }
 
@@ -1774,6 +1786,9 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
 
             match cli.command {
+                Command::Activate => {
+                    println!("decapod.activate: ok");
+                }
                 Command::Validate(validate_cli) => {
                     run_validate_command(validate_cli, &project_root, &project_store)?;
                 }
@@ -1917,6 +1932,7 @@ fn should_auto_clock_in(command: &Command) -> bool {
     match command {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
         Command::Version
+        | Command::Activate
         | Command::Init(_)
         | Command::Setup(_)
         | Command::Session(_)
@@ -1930,6 +1946,7 @@ fn should_auto_clock_in(command: &Command) -> bool {
 fn command_requires_worktree(command: &Command) -> bool {
     match command {
         Command::Init(_)
+        | Command::Activate
         | Command::Setup(_)
         | Command::Session(_)
         | Command::Version
@@ -1969,6 +1986,7 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
     !matches!(
         command,
         Command::Validate(_)
+            | Command::Activate
             | Command::Docs(_)
             | Command::Release(_)
             | Command::Trace(_)
@@ -1983,6 +2001,7 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
     !matches!(
         command,
         Command::Validate(_)
+            | Command::Activate
             | Command::Docs(_)
             | Command::Release(_)
             | Command::Trace(_)
@@ -1991,6 +2010,33 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
             | Command::StateCommit(_)
             | Command::Qa(_)
     )
+}
+
+fn branch_contains_todo_ticket_id(branch: &str) -> bool {
+    let branch = branch.to_ascii_lowercase();
+    if branch.contains("r_") {
+        return true;
+    }
+    if let Ok(hash_re) = regex::Regex::new(r"todo-[a-z0-9]{6}(\b|-|$)") {
+        if hash_re.is_match(&branch) {
+            return true;
+        }
+    }
+    let chars: Vec<char> = branch.chars().collect();
+    if chars.len() < 21 {
+        return false;
+    }
+    for i in 0..=(chars.len() - 21) {
+        let type_ok = chars[i..i + 4].iter().all(|c| c.is_ascii_lowercase());
+        let sep_ok = chars[i + 4] == '_';
+        let body_ok = chars[i + 5..i + 21]
+            .iter()
+            .all(|c| c.is_ascii_alphanumeric());
+        if type_ok && sep_ok && body_ok {
+            return true;
+        }
+    }
+    false
 }
 
 fn enforce_worktree_requirement(
@@ -2021,11 +2067,7 @@ fn enforce_worktree_requirement(
         }
 
         if command_requires_todo_scoped_worktree(command)
-            && !status
-                .git
-                .current_branch
-                .to_ascii_lowercase()
-                .contains("r_")
+            && !branch_contains_todo_ticket_id(&status.git.current_branch)
         {
             return Err(error::DecapodError::ValidationError(format!(
                 "SCOPE_VIOLATION: branch '{}' is not todo-scoped. Run `decapod todo add \"<task>\"`, `decapod todo claim --id <task-id>`, then `decapod workspace ensure`.",
@@ -2128,6 +2170,7 @@ fn requires_session_token(command: &Command) -> bool {
         Command::Init(_)
         | Command::Session(_)
         | Command::Version
+        | Command::Activate
         | Command::Docs(_)
         | Command::Capabilities(_)
         | Command::Release(_)
@@ -2267,6 +2310,43 @@ fn read_agent_session(
     Ok(Some(rec))
 }
 
+fn atomic_write_file(path: &Path, body: &str) -> Result<(), error::DecapodError> {
+    let parent = path.parent().ok_or_else(|| {
+        error::DecapodError::IoError(std::io::Error::other(
+            "target path is missing parent directory",
+        ))
+    })?;
+    fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+
+    let file_name = path
+        .file_name()
+        .and_then(|v| v.to_str())
+        .unwrap_or("file")
+        .to_string();
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let tmp = parent.join(format!(
+        ".{}.tmp-{}-{}",
+        file_name,
+        std::process::id(),
+        nonce
+    ));
+    fs::write(&tmp, body).map_err(error::DecapodError::IoError)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&tmp)
+            .map_err(error::DecapodError::IoError)?
+            .permissions();
+        perms.set_mode(0o600);
+        fs::set_permissions(&tmp, perms).map_err(error::DecapodError::IoError)?;
+    }
+    fs::rename(&tmp, path).map_err(error::DecapodError::IoError)?;
+    Ok(())
+}
+
 fn write_agent_session(
     project_root: &Path,
     rec: &AgentSessionRecord,
@@ -2276,16 +2356,7 @@ fn write_agent_session(
     let path = session_file_for_agent(project_root, &rec.agent_id);
     let body = serde_json::to_string_pretty(rec)
         .map_err(|e| error::DecapodError::SessionError(format!("session encode error: {}", e)))?;
-    fs::write(&path, body).map_err(error::DecapodError::IoError)?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = fs::metadata(&path)
-            .map_err(error::DecapodError::IoError)?
-            .permissions();
-        perms.set_mode(0o600);
-        fs::set_permissions(&path, perms).map_err(error::DecapodError::IoError)?;
-    }
+    atomic_write_file(&path, &body)?;
     Ok(())
 }
 
@@ -2325,16 +2396,7 @@ fn write_awareness_record(
     let body = serde_json::to_string_pretty(rec).map_err(|e| {
         error::DecapodError::ValidationError(format!("awareness encode error: {}", e))
     })?;
-    fs::write(&path, body).map_err(error::DecapodError::IoError)?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = fs::metadata(&path)
-            .map_err(error::DecapodError::IoError)?
-            .permissions();
-        perms.set_mode(0o600);
-        fs::set_permissions(&path, perms).map_err(error::DecapodError::IoError)?;
-    }
+    atomic_write_file(&path, &body)?;
     Ok(())
 }
 
@@ -2866,10 +2928,12 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     let cargo_toml = project_root.join("Cargo.toml");
     let rpc_golden_req = project_root.join("tests/golden/rpc/v1/agent_init.request.json");
     let rpc_golden_res = project_root.join("tests/golden/rpc/v1/agent_init.response.json");
-    let artifact_manifest = project_root.join("artifacts/provenance/artifact_manifest.json");
-    let proof_manifest = project_root.join("artifacts/provenance/proof_manifest.json");
-    let intent_convergence_manifest =
-        project_root.join("artifacts/provenance/intent_convergence_checklist.json");
+    let artifact_manifest =
+        project_root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+    let proof_manifest =
+        project_root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    let intent_convergence_manifest = project_root
+        .join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
 
     if !changelog.exists() {
         failures.push("CHANGELOG.md missing".to_string());
@@ -2894,19 +2958,19 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     }
     if !artifact_manifest.exists() {
         failures.push(
-            "artifact provenance manifest missing: artifacts/provenance/artifact_manifest.json"
+            "artifact provenance manifest missing: .decapod/generated/artifacts/provenance/artifact_manifest.json"
                 .to_string(),
         );
     }
     if !proof_manifest.exists() {
         failures.push(
-            "proof provenance manifest missing: artifacts/provenance/proof_manifest.json"
+            "proof provenance manifest missing: .decapod/generated/artifacts/provenance/proof_manifest.json"
                 .to_string(),
         );
     }
     if !intent_convergence_manifest.exists() {
         failures.push(
-            "intent convergence manifest missing: artifacts/provenance/intent_convergence_checklist.json"
+            "intent convergence manifest missing: .decapod/generated/artifacts/provenance/intent_convergence_checklist.json"
                 .to_string(),
         );
     }
@@ -2970,7 +3034,11 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
 
 fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError> {
     let inventory = build_release_inventory(project_root)?;
-    let out_dir = project_root.join("artifacts").join("inventory");
+    let out_dir = project_root
+        .join(".decapod")
+        .join("generated")
+        .join("artifacts")
+        .join("inventory");
     fs::create_dir_all(&out_dir).map_err(error::DecapodError::IoError)?;
     let out_path = out_dir.join("repo_inventory.json");
     let payload = serde_json::to_vec_pretty(&inventory).map_err(|e| {
@@ -2985,7 +3053,7 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
         serde_json::json!({
             "cmd": "release.inventory",
             "status": "ok",
-            "artifact": "artifacts/inventory/repo_inventory.json",
+            "artifact": ".decapod/generated/artifacts/inventory/repo_inventory.json",
             "summary": inventory["totals"]
         })
     );
@@ -3441,7 +3509,7 @@ fn write_validate_diagnostic_artifact(
     let mut run_id_hasher = Sha256::new();
     run_id_hasher.update(ulid::Ulid::new().to_string().as_bytes());
     let run_id = hash_bytes_hex(&run_id_hasher.finalize())[..32].to_string();
-    let diagnostics_dir = project_root.join("artifacts/diagnostics/validate");
+    let diagnostics_dir = project_root.join(".decapod/generated/artifacts/diagnostics/validate");
     fs::create_dir_all(&diagnostics_dir).map_err(error::DecapodError::IoError)?;
 
     let mut payload = serde_json::json!({
@@ -3464,7 +3532,9 @@ fn write_validate_diagnostic_artifact(
     let artifact_hash = hash_bytes_hex(&hasher.finalize());
     payload["artifact_hash"] = serde_json::json!(artifact_hash);
 
-    let relative_path = PathBuf::from(format!("artifacts/diagnostics/validate/{run_id}.json"));
+    let relative_path = PathBuf::from(format!(
+        ".decapod/generated/artifacts/diagnostics/validate/{run_id}.json"
+    ));
     let artifact_path = project_root.join(&relative_path);
     let pretty = serde_json::to_vec_pretty(&payload).map_err(|e| {
         error::DecapodError::ValidationError(format!(

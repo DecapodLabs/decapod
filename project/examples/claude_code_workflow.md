@@ -10,6 +10,6 @@
 
 ## Expected Outcomes
 
-- Session stubs (`tasks/todo.md`, `INTENT.md`, `HANDSHAKE.md`) are present.
+- Session/context docs are present (`.decapod/generated/specs/*.md`, `INTENT.md`, `HANDSHAKE.md`).
 - Handshake record is emitted into `.decapod/records/handshakes/`.
 - Publish is blocked unless provenance manifests exist.
