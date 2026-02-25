@@ -136,6 +136,14 @@ struct MigrationCatalog {
     migrations: Vec<MigrationCatalogEntry>,
 }
 
+#[derive(Debug, Clone)]
+pub struct DbSchemaVersionCheck {
+    pub db_name: String,
+    pub expected_version: u32,
+    pub actual_version: Option<u32>,
+    pub exists: bool,
+}
+
 /// Run any pending migrations (idempotent — safe to call every startup)
 pub fn check_and_migrate(decapod_root: &Path) -> Result<(), error::DecapodError> {
     run_migrations(decapod_root)?;
@@ -240,7 +248,8 @@ fn restore_data_backup(data_root: &Path, backup_dir: &Path) -> Result<(), error:
 
 /// Run all idempotent migrations
 fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
-    let migrations = all_migrations();
+    let mut migrations = all_migrations();
+    migrations.sort_by_key(|m| m.sequence);
     validate_migration_plan(&migrations)?;
     touch_generated_version_counter(decapod_root)?;
     touch_generated_migration_catalog(decapod_root, &migrations)?;
@@ -272,6 +281,42 @@ fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
         store_applied_migrations(decapod_root, &applied)?;
     }
     Ok(())
+}
+
+pub fn check_versioned_db_schema_expectations(
+    data_root: &Path,
+) -> Result<Vec<DbSchemaVersionCheck>, error::DecapodError> {
+    let expectations = vec![(schemas::TODO_DB_NAME, schemas::TODO_SCHEMA_VERSION)];
+    let mut checks = Vec::with_capacity(expectations.len());
+    for (db_name, expected) in expectations {
+        let db_path = data_root.join(db_name);
+        if !db_path.exists() {
+            checks.push(DbSchemaVersionCheck {
+                db_name: db_name.to_string(),
+                expected_version: expected,
+                actual_version: None,
+                exists: false,
+            });
+            continue;
+        }
+        let conn = db::db_connect(&db_path.to_string_lossy())?;
+        let raw: Option<String> = conn
+            .query_row(
+                "SELECT value FROM meta WHERE key = 'schema_version'",
+                [],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(error::DecapodError::RusqliteError)?;
+        let actual = raw.and_then(|s| s.parse::<u32>().ok());
+        checks.push(DbSchemaVersionCheck {
+            db_name: db_name.to_string(),
+            expected_version: expected,
+            actual_version: actual,
+            exists: true,
+        });
+    }
+    Ok(checks)
 }
 
 fn parse_version(v: &str) -> [u64; 3] {

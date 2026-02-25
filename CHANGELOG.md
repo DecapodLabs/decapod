@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - init: seed `.decapod/generated/version_counter.json` and track binary-version transitions for safe migration orchestration
 - ci: add PR-only migration script test gate that runs migration tests only when `src/core/sql/*.sql` changes
 - migration: add sequence/scope metadata, duplicate/order guards, and generated migration catalog for long-horizon schema evolution
+- validate: add database schema version gate to verify versioned DBs match this decapod binary expectations
 - schema/interface: update TODO schema contract with typed ID and hash invariants
 - docs/scaffold: refresh `.decapod/README.md` template with Decapod harness positioning and canonical control-plane layout
 
