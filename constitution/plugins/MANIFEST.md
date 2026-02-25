@@ -54,11 +54,11 @@ This file answers two questions:
 - `architecture/ALGORITHMS.md` - Algorithms and data structures
 - `architecture/SECURITY.md` - Security architecture
 
-### Agent Entrypoints (Templates)
-- `AGENTS.md` (or `templates/AGENTS.md`)
-- `CLAUDE.md` (or `templates/CLAUDE.md`)
-- `GEMINI.md` (or `templates/GEMINI.md`)
-- `CODEX.md` (or `templates/CODEX.md`)
+### Agent Entrypoints (Embedded in Rust)
+- `AGENTS.md` - Universal agent contract (embedded via `template_agents()`)
+- `CLAUDE.md` - Claude Code-specific entrypoint (embedded via `template_named_agent("CLAUDE")`)
+- `GEMINI.md` - Gemini CLI entrypoint (embedded via `template_named_agent("GEMINI")`)
+- `CODEX.md` - Codex entrypoint (embedded via `template_named_agent("CODEX")`)
 
 
 ---
@@ -79,7 +79,7 @@ These are generated from canonical sources:
 State roots contain runtime data, not documentation:
 
 - User store: `~/.decapod/` (blank slate by default)
-- Repo store: `<repo>/.decapod/project/`
+- Repo store: `<repo>/.decapod/data/`
 - Override: `<repo>/.decapod/OVERRIDE.md`
 - Checksums: `<repo>/.decapod/data/`
 

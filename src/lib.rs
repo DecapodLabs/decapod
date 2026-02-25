@@ -3083,11 +3083,7 @@ fn run_session_init(
             "skipped": skipped,
             "handshake_record": artifact_path,
             "template_refs": [
-                "templates/INTENT.md",
-                "templates/SPEC.md",
-                "templates/ADR.md",
-                "templates/CLAIM_NODE.md",
-                "templates/DRIFT_ROW.md"
+                "Embedded: templates now in Rust via template_agents(), template_named_agent(), template_readme()"
             ]
         })
     );
