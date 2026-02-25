@@ -20,6 +20,7 @@ This guide defines how to verify Decapod behavior using reproducible commands, t
 - JIT capsule policy contract: `.decapod/generated/policy/context_capsule_policy.json` (override path: `.decapod/policy/context_capsule_policy.json`)
 - Promotion provenance gate: `.decapod/generated/artifacts/provenance/artifact_manifest.json`, `.decapod/generated/artifacts/provenance/proof_manifest.json`
 - Policy lineage anchor: each provenance manifest includes `policy_lineage.{policy_hash,policy_revision,risk_tier,capsule_path,capsule_hash}`
+- `decapod release check` deterministically normalizes `policy_lineage` (shared across all provenance manifests) before enforcing release gates.
 
 ## Validate Diagnostics (Safe Mode)
 

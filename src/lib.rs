@@ -2977,6 +2977,20 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
                 .to_string(),
         );
     }
+    if artifact_manifest.exists()
+        && proof_manifest.exists()
+        && intent_convergence_manifest.exists()
+        && let Err(e) = stamp_release_policy_lineage(
+            project_root,
+            [
+                &artifact_manifest,
+                &proof_manifest,
+                &intent_convergence_manifest,
+            ],
+        )
+    {
+        failures.push(format!("provenance lineage stamping failed: {}", e));
+    }
     if artifact_manifest.exists() {
         match validate_artifact_manifest(project_root, &artifact_manifest) {
             Ok(lineage) => lineage_records.push(("artifact manifest".to_string(), lineage)),
@@ -3086,6 +3100,12 @@ fn sha256_file(path: &Path) -> Result<String, error::DecapodError> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
+fn sha256_text(input: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(input.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct PolicyLineage {
     policy_hash: String,
@@ -3093,6 +3113,128 @@ struct PolicyLineage {
     risk_tier: String,
     capsule_path: String,
     capsule_hash: String,
+}
+
+fn resolve_release_risk_tier() -> Result<String, error::DecapodError> {
+    let tier = std::env::var("DECAPOD_RELEASE_RISK_TIER").unwrap_or_else(|_| "medium".to_string());
+    let normalized = tier.trim().to_ascii_lowercase();
+    if !matches!(normalized.as_str(), "low" | "medium" | "high" | "critical") {
+        return Err(error::DecapodError::ValidationError(format!(
+            "invalid DECAPOD_RELEASE_RISK_TIER '{}': expected low|medium|high|critical",
+            tier
+        )));
+    }
+    Ok(normalized)
+}
+
+fn resolve_release_capsule(project_root: &Path) -> Result<(String, String), error::DecapodError> {
+    let fallback = core::context_capsule::query_embedded_capsule(
+        project_root,
+        "release provenance",
+        "interfaces",
+        Some("R_releasecheck"),
+        None,
+        8,
+    )?;
+    let fallback_path = core::context_capsule::context_capsule_path(project_root, &fallback);
+    let capsule = if fallback_path.exists() {
+        let raw = fs::read_to_string(&fallback_path).map_err(error::DecapodError::IoError)?;
+        let parsed: core::context_capsule::DeterministicContextCapsule = serde_json::from_str(&raw)
+            .map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "invalid release capsule JSON at '{}': {}",
+                    fallback_path.display(),
+                    e
+                ))
+            })?;
+        parsed.with_recomputed_hash().map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "failed to recompute release capsule hash at '{}': {}",
+                fallback_path.display(),
+                e
+            ))
+        })?
+    } else {
+        fallback
+    };
+    let path = core::context_capsule::write_context_capsule(project_root, &capsule)?;
+    let rel_path = path
+        .strip_prefix(project_root)
+        .map_err(|_| {
+            error::DecapodError::ValidationError(format!(
+                "release capsule path '{}' is outside project root",
+                path.display()
+            ))
+        })?
+        .to_string_lossy()
+        .replace('\\', "/");
+    Ok((rel_path, capsule.capsule_hash))
+}
+
+fn stamp_release_policy_lineage<const N: usize>(
+    project_root: &Path,
+    manifest_paths: [&Path; N],
+) -> Result<PolicyLineage, error::DecapodError> {
+    let policy_revision = "policy.release@v1".to_string();
+    let risk_tier = resolve_release_risk_tier()?;
+    let (capsule_path, capsule_hash) = resolve_release_capsule(project_root)?;
+    let policy_hash = sha256_text(&format!(
+        "{}|{}|{}",
+        policy_revision, risk_tier, capsule_hash
+    ));
+    let lineage_json = serde_json::json!({
+        "policy_hash": policy_hash,
+        "policy_revision": policy_revision,
+        "risk_tier": risk_tier,
+        "capsule_path": capsule_path,
+        "capsule_hash": capsule_hash
+    });
+
+    for manifest_path in manifest_paths {
+        let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
+        let mut v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "failed to parse JSON manifest '{}': {}",
+                manifest_path.display(),
+                e
+            ))
+        })?;
+        let obj = v.as_object_mut().ok_or_else(|| {
+            error::DecapodError::ValidationError(format!(
+                "manifest '{}' must be a JSON object",
+                manifest_path.display()
+            ))
+        })?;
+        obj.insert("policy_lineage".to_string(), lineage_json.clone());
+        let updated = serde_json::to_vec_pretty(&v).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "failed to serialize stamped manifest '{}': {}",
+                manifest_path.display(),
+                e
+            ))
+        })?;
+        fs::write(manifest_path, updated).map_err(error::DecapodError::IoError)?;
+    }
+
+    Ok(PolicyLineage {
+        policy_hash: lineage_json["policy_hash"]
+            .as_str()
+            .unwrap_or("")
+            .to_string(),
+        policy_revision: lineage_json["policy_revision"]
+            .as_str()
+            .unwrap_or("")
+            .to_string(),
+        risk_tier: lineage_json["risk_tier"].as_str().unwrap_or("").to_string(),
+        capsule_path: lineage_json["capsule_path"]
+            .as_str()
+            .unwrap_or("")
+            .to_string(),
+        capsule_hash: lineage_json["capsule_hash"]
+            .as_str()
+            .unwrap_or("")
+            .to_string(),
+    })
 }
 
 fn validate_policy_lineage(

@@ -1,30 +1,30 @@
 {
-  "schema_version": "1.0.0",
-  "kind": "artifact_manifest",
-  "policy_lineage": {
-    "policy_hash": "ea4805a3e38308c0d24c86eb89106e9e476854ae02836cc4c5e8af25372af9ef",
-    "policy_revision": "policy.release@v1",
-    "risk_tier": "medium",
-    "capsule_path": ".decapod/generated/context/R_releasecheck.json",
-    "capsule_hash": "e2a3486cc42fe8803a8d4e347d02618ca43138eaca9ef41741e4ed73dd4b019f"
-  },
-  "links": {
-    "intent": "INTENT.md",
-    "spec": "SPEC.md",
-    "diff": "git",
-    "tests": [
-      "cargo test --test validate_termination",
-      "cargo test --test rpc_golden_vectors",
-      "cargo test --test examples_interop"
-    ],
-    "artifacts": [
-      "README.md"
-    ]
-  },
   "artifacts": [
     {
       "path": "README.md",
       "sha256": "fb05033fec85ee6e57f6e1dd21c2e81eaff3e33d4a3bef30408a133de008ce2f"
     }
-  ]
+  ],
+  "kind": "artifact_manifest",
+  "links": {
+    "artifacts": [
+      "README.md"
+    ],
+    "diff": "git",
+    "intent": "INTENT.md",
+    "spec": "SPEC.md",
+    "tests": [
+      "cargo test --test validate_termination",
+      "cargo test --test rpc_golden_vectors",
+      "cargo test --test examples_interop"
+    ]
+  },
+  "policy_lineage": {
+    "capsule_hash": "e2a3486cc42fe8803a8d4e347d02618ca43138eaca9ef41741e4ed73dd4b019f",
+    "capsule_path": ".decapod/generated/context/R_releasecheck.json",
+    "policy_hash": "a47cd69f1f0d3ab330cdf5c512eb018ecf3e3dc8a74de32a828bbe2fcaafaf7f",
+    "policy_revision": "policy.release@v1",
+    "risk_tier": "medium"
+  },
+  "schema_version": "1.0.0"
 }
