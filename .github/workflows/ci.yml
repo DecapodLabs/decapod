@@ -159,14 +159,43 @@ jobs:
 
   # TEST: integration tests except RPC suite and chaos replay
   test-integration:
-    name: Tests (Integration ${{ matrix.shard }}/${{ matrix.total_shards }})
+    name: Tests (Integration ${{ matrix.label }}/6)
     runs-on: ubuntu-latest
     needs: setup
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
-        total_shards: [4]
+        include:
+          - label: "1"
+            base_shard: 1
+            base_total: 4
+            sub_shard: 1
+            sub_total: 1
+          - label: "2"
+            base_shard: 2
+            base_total: 4
+            sub_shard: 1
+            sub_total: 1
+          - label: "3a"
+            base_shard: 3
+            base_total: 4
+            sub_shard: 1
+            sub_total: 2
+          - label: "3b"
+            base_shard: 3
+            base_total: 4
+            sub_shard: 2
+            sub_total: 2
+          - label: "4a"
+            base_shard: 4
+            base_total: 4
+            sub_shard: 1
+            sub_total: 2
+          - label: "4b"
+            base_shard: 4
+            base_total: 4
+            sub_shard: 2
+            sub_total: 2
     steps:
       - uses: actions/checkout@v4
         with:
@@ -193,16 +222,24 @@ jobs:
               | sed 's/\.rs$//' \
               | sort
           )
-          shard_index=$(( ${{ matrix.shard }} - 1 ))
-          total_shards=${{ matrix.total_shards }}
+          base_shard_index=$(( ${{ matrix.base_shard }} - 1 ))
+          base_total=${{ matrix.base_total }}
+          sub_shard_index=$(( ${{ matrix.sub_shard }} - 1 ))
+          sub_total=${{ matrix.sub_total }}
+          base_rank=0
           for i in "${!all_tests[@]}"; do
             t="${all_tests[$i]}"
             if [ "$t" = "agent_rpc_suite" ] || [ "$t" = "chaos_replay" ] || [ "$t" = "daemonless_lifecycle" ]; then
               continue
             fi
-            if [ $(( i % total_shards )) -ne "$shard_index" ]; then
+            if [ $(( i % base_total )) -ne "$base_shard_index" ]; then
               continue
             fi
+            if [ "$sub_total" -gt 1 ] && [ $(( base_rank % sub_total )) -ne "$sub_shard_index" ]; then
+              base_rank=$(( base_rank + 1 ))
+              continue
+            fi
+            base_rank=$(( base_rank + 1 ))
             cargo test --all-features --test "$t" -- --test-threads=4
           done
 
