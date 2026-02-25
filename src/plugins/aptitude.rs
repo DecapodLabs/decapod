@@ -769,7 +769,7 @@ fn repo_root_from_store(store: &Store) -> Result<PathBuf, error::DecapodError> {
 }
 
 fn skills_governance_dir(repo_root: &Path) -> PathBuf {
-    repo_root.join(".decapod").join("governance").join("skills")
+    repo_root.join(".decapod").join("skills")
 }
 
 fn skills_generated_dir(repo_root: &Path) -> PathBuf {
@@ -1643,7 +1643,7 @@ pub enum SkillCommand {
         /// Path to SKILL.md
         #[clap(long)]
         path: PathBuf,
-        /// Persist deterministic skill card under .decapod/governance/skills
+        /// Persist deterministic skill card under .decapod/skills
         #[clap(long, default_value_t = true)]
         write_card: bool,
     },

@@ -53,6 +53,8 @@ dev/
 !.decapod/generated/specs/
 !.decapod/generated/specs/*.md
 !.decapod/generated/specs/.manifest.json
+# Allowlist skills - imported skill cards for reproducibility
+!.decapod/skills/
 
 # --- Environment & Secrets ---
 .env

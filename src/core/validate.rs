@@ -1809,7 +1809,7 @@ fn validate_skill_cards_if_present(
 ) -> Result<(), error::DecapodError> {
     info("Skill Card Artifact Gate");
 
-    let dir = repo_root.join(".decapod").join("governance").join("skills");
+    let dir = repo_root.join(".decapod").join("skills");
     if !dir.exists() {
         skip("No skill cards found; skipping skill card gate", ctx);
         return Ok(());
