@@ -541,14 +541,15 @@ pub fn validate_ledger_integrity(root: &Path) -> Result<Vec<String>, error::Deca
 
         // Check monotonic timestamps
         if let Some(ref prev) = prev_ts
-            && event.ts < *prev {
-                failures.push(format!(
-                    "Line {}: non-monotonic timestamp (prev={}, current={})",
-                    i + 1,
-                    prev,
-                    event.ts
-                ));
-            }
+            && event.ts < *prev
+        {
+            failures.push(format!(
+                "Line {}: non-monotonic timestamp (prev={}, current={})",
+                i + 1,
+                prev,
+                event.ts
+            ));
+        }
         prev_ts = Some(event.ts.clone());
     }
 

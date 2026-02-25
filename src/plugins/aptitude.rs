@@ -814,13 +814,12 @@ fn extract_dependencies(raw: &str) -> Vec<String> {
         if in_dependencies && trimmed.starts_with('#') {
             break;
         }
-        if in_dependencies
-            && let Some(dep) = trimmed.strip_prefix("- ") {
-                let dep = dep.trim();
-                if !dep.is_empty() {
-                    deps.push(dep.to_string());
-                }
+        if in_dependencies && let Some(dep) = trimmed.strip_prefix("- ") {
+            let dep = dep.trim();
+            if !dep.is_empty() {
+                deps.push(dep.to_string());
             }
+        }
     }
     deps.sort();
     deps.dedup();

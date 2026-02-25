@@ -42,21 +42,21 @@ pub fn resolve_snapshot(
 
     for line in content.lines() {
         if let Ok(event) = serde_json::from_str::<TraceEvent>(line)
-            && event.actor == agent_id {
-                total += 1;
-                last_ts = event.ts.clone();
-                *ops_count.entry(event.op.clone()).or_insert(0) += 1;
+            && event.actor == agent_id
+        {
+            total += 1;
+            last_ts = event.ts.clone();
+            *ops_count.entry(event.op.clone()).or_insert(0) += 1;
 
-                // Simple success detection from RpcResponse format
-                if let Some(resp_success) = event.response.get("success").and_then(|v| v.as_bool())
-                {
-                    if resp_success {
-                        success += 1;
-                    } else {
-                        fail += 1;
-                    }
+            // Simple success detection from RpcResponse format
+            if let Some(resp_success) = event.response.get("success").and_then(|v| v.as_bool()) {
+                if resp_success {
+                    success += 1;
+                } else {
+                    fail += 1;
                 }
             }
+        }
     }
 
     let reliability = if total > 0 {

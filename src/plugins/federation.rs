@@ -2277,22 +2277,21 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                     }
                     println!("Actor:      {}", node.actor);
                     if let Some(ref sources) = node.sources
-                        && !sources.is_empty() {
-                            println!("Sources:");
-                            for s in sources {
-                                println!("  - {}", s);
-                            }
+                        && !sources.is_empty()
+                    {
+                        println!("Sources:");
+                        for s in sources {
+                            println!("  - {}", s);
                         }
+                    }
                     if let Some(ref edges) = node.edges
-                        && !edges.is_empty() {
-                            println!("Edges:");
-                            for e in edges {
-                                println!(
-                                    "  {} --[{}]--> {}",
-                                    e.source_id, e.edge_type, e.target_id
-                                );
-                            }
+                        && !edges.is_empty()
+                    {
+                        println!("Edges:");
+                        for e in edges {
+                            println!("  {} --[{}]--> {}", e.source_id, e.edge_type, e.target_id);
                         }
+                    }
                     if !node.body.is_empty() {
                         println!("\n{}", node.body);
                     }

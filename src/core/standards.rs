@@ -130,9 +130,10 @@ fn read_override_file(project_root: &Path) -> Option<HashMap<String, StandardVal
         if let Some(stripped) = trimmed.strip_prefix("## ") {
             // Save previous section if any
             if let Some(section) = current_section.take()
-                && !section_content.is_empty() {
-                    overrides.insert(section, serde_json::Value::Object(section_content.clone()));
-                }
+                && !section_content.is_empty()
+            {
+                overrides.insert(section, serde_json::Value::Object(section_content.clone()));
+            }
 
             current_section = Some(stripped.trim().to_lowercase().replace(" ", "_"));
             section_content = serde_json::Map::new();
@@ -153,9 +154,10 @@ fn read_override_file(project_root: &Path) -> Option<HashMap<String, StandardVal
 
     // Save last section
     if let Some(section) = current_section
-        && !section_content.is_empty() {
-            overrides.insert(section, serde_json::Value::Object(section_content));
-        }
+        && !section_content.is_empty()
+    {
+        overrides.insert(section, serde_json::Value::Object(section_content));
+    }
 
     Some(overrides)
 }

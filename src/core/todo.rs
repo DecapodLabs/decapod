@@ -2691,23 +2691,22 @@ fn edit_task(
 
         // Validate category if provided
         if let Some(cat) = category
-            && !cat.is_empty() {
-                let valid: bool = conn
-                    .query_row(
-                        "SELECT 1 FROM categories WHERE name = ?",
-                        [cat],
-                        |_| Ok(true),
-                    )
-                    .optional()
-                    .map_err(error::DecapodError::RusqliteError)?
-                    .unwrap_or(false);
-                if !valid {
-                    return Err(error::DecapodError::ValidationError(format!(
-                        "Unknown category '{}'. Run `decapod todo categories` to see valid categories.",
-                        cat
-                    )));
-                }
+            && !cat.is_empty()
+        {
+            let valid: bool = conn
+                .query_row("SELECT 1 FROM categories WHERE name = ?", [cat], |_| {
+                    Ok(true)
+                })
+                .optional()
+                .map_err(error::DecapodError::RusqliteError)?
+                .unwrap_or(false);
+            if !valid {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Unknown category '{}'. Run `decapod todo categories` to see valid categories.",
+                    cat
+                )));
             }
+        }
 
         // Build update fields and track what changed
         let mut updates = vec![];
