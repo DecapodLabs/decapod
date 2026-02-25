@@ -137,6 +137,15 @@ These files are the project-local contract for humans and agents.
 - `INTERFACES.md`: API/CLI/events/storage contracts and failure behavior.
 - `VALIDATION.md`: required proof commands and promotion gates.
 
+## Canonical `.decapod/` Layout
+- `.decapod/data/`: canonical control-plane state (SQLite + ledgers).
+- `.decapod/generated/specs/`: living project specs for humans and agents.
+- `.decapod/generated/context/`: deterministic context capsules.
+- `.decapod/generated/artifacts/provenance/`: promotion manifests and convergence checklist.
+- `.decapod/generated/artifacts/inventory/`: deterministic release inventory.
+- `.decapod/generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
+- `.decapod/workspaces/`: isolated todo-scoped git worktrees.
+
 ## Day-0 Onboarding Checklist
 - [ ] Replace all placeholder bullets in each spec file.
 - [ ] Confirm primary user outcome and acceptance criteria in `INTENT.md`.
@@ -583,6 +592,18 @@ pub fn scaffold_project_entrypoints(
     // Generate .decapod/generated/Dockerfile from Rust-owned template component.
     let generated_dir = opts.target_dir.join(".decapod/generated");
     fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(generated_dir.join("context")).map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(generated_dir.join("artifacts").join("provenance"))
+        .map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(generated_dir.join("artifacts").join("inventory"))
+        .map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(
+        generated_dir
+            .join("artifacts")
+            .join("diagnostics")
+            .join("validate"),
+    )
+    .map_err(error::DecapodError::IoError)?;
     let dockerfile_path = generated_dir.join("Dockerfile");
     if !dockerfile_path.exists() {
         let dockerfile_content = container::generated_dockerfile_for_repo(&opts.target_dir);
