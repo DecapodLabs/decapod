@@ -6,6 +6,7 @@
 use crate::core::broker::DbBroker;
 use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
+use crate::core::migration;
 use crate::core::output;
 use crate::core::plan_governance;
 use crate::core::project_specs::{
@@ -1898,6 +1899,56 @@ fn validate_schema_determinism(
         pass("Schema output is deterministic", ctx);
     } else {
         fail("Schema output is non-deterministic or empty", ctx);
+    }
+    Ok(())
+}
+
+fn validate_database_schema_versions(
+    store: &Store,
+    ctx: &ValidationContext,
+) -> Result<(), error::DecapodError> {
+    info("Database Schema Version Gate");
+    let checks = migration::check_versioned_db_schema_expectations(&store.root)?;
+    for check in checks {
+        if !check.exists {
+            fail(
+                &format!(
+                    "Versioned database {} is missing (expected schema_version={})",
+                    check.db_name, check.expected_version
+                ),
+                ctx,
+            );
+            continue;
+        }
+        match check.actual_version {
+            Some(actual) if actual == check.expected_version => {
+                pass(
+                    &format!(
+                        "{} schema_version matches expected {}",
+                        check.db_name, check.expected_version
+                    ),
+                    ctx,
+                );
+            }
+            Some(actual) => {
+                fail(
+                    &format!(
+                        "{} schema_version mismatch: actual={}, expected={}",
+                        check.db_name, actual, check.expected_version
+                    ),
+                    ctx,
+                );
+            }
+            None => {
+                fail(
+                    &format!(
+                        "{} missing readable schema_version in meta table (expected {})",
+                        check.db_name, check.expected_version
+                    ),
+                    ctx,
+                );
+            }
+        }
     }
     Ok(())
 }
@@ -4025,6 +4076,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_schema_determinism", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_database_schema_versions(store, ctx) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_database_schema_versions", start.elapsed()));
         });
         s.spawn(move |_| {
             let start = Instant::now();
