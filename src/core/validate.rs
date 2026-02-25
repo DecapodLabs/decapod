@@ -1542,11 +1542,20 @@ fn validate_workunit_manifests_if_present(
         if parsed.status == WorkUnitStatus::Verified {
             workunit::validate_verified_manifest(&parsed).map_err(|e| {
                 error::DecapodError::ValidationError(format!(
-                    "invalid VERIFIED workunit manifest {}: {}",
-                    path.display(),
-                    e
+                    "invalid VERIFIED workunit manifest: {} ({})",
+                    e,
+                    path.display()
                 ))
             })?;
+            workunit::verify_capsule_policy_lineage_for_task(repo_root, &parsed.task_id).map_err(
+                |e| {
+                    error::DecapodError::ValidationError(format!(
+                        "invalid VERIFIED workunit manifest: {} ({})",
+                        e,
+                        path.display()
+                    ))
+                },
+            )?;
         }
     }
 

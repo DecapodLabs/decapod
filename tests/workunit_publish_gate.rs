@@ -1,3 +1,7 @@
+use decapod::core::capsule_policy::CapsulePolicyBinding;
+use decapod::core::context_capsule::{
+    ContextCapsuleSnippet, ContextCapsuleSource, DeterministicContextCapsule, write_context_capsule,
+};
 use decapod::core::{workspace, workunit};
 use tempfile::tempdir;
 
@@ -26,6 +30,33 @@ fn write_manifest(
     };
 
     workunit::write_workunit(root, &manifest).expect("write workunit manifest");
+}
+
+fn write_capsule(root: &std::path::Path, task_id: &str) {
+    let capsule = DeterministicContextCapsule {
+        schema_version: "1.1.0".to_string(),
+        topic: "publish".to_string(),
+        scope: "interfaces".to_string(),
+        task_id: Some(task_id.to_string()),
+        workunit_id: None,
+        sources: vec![ContextCapsuleSource {
+            path: "interfaces/PLAN_GOVERNED_EXECUTION.md".to_string(),
+            section: "Contract".to_string(),
+        }],
+        snippets: vec![ContextCapsuleSnippet {
+            source_path: "interfaces/PLAN_GOVERNED_EXECUTION.md".to_string(),
+            text: "promotion path is proof-gated".to_string(),
+        }],
+        policy: CapsulePolicyBinding {
+            risk_tier: "medium".to_string(),
+            policy_hash: "abc123".to_string(),
+            policy_version: "jit-capsule-policy-v1".to_string(),
+            policy_path: ".decapod/generated/policy/context_capsule_policy.json".to_string(),
+            repo_revision: "UNBORN:master".to_string(),
+        },
+        capsule_hash: String::new(),
+    };
+    write_context_capsule(root, &capsule).expect("write capsule");
 }
 
 #[test]
@@ -70,6 +101,7 @@ fn publish_gate_fails_when_branch_task_not_verified() {
 #[test]
 fn publish_gate_passes_when_branch_task_verified() {
     let dir = tempdir().expect("tempdir");
+    write_capsule(dir.path(), "R_01ABCD2");
     write_manifest(
         dir.path(),
         "R_01ABCD2",
@@ -83,4 +115,24 @@ fn publish_gate_passes_when_branch_task_verified() {
 
     let result = workspace::verify_workunit_gate_for_publish(dir.path(), "agent/codex/r_01ABCD2");
     assert!(result.is_ok(), "expected verified branch task to pass");
+}
+
+#[test]
+fn publish_gate_fails_when_verified_task_missing_capsule_lineage() {
+    let dir = tempdir().expect("tempdir");
+    write_manifest(
+        dir.path(),
+        "R_01ABCD3",
+        workunit::WorkUnitStatus::Verified,
+        vec!["validate_passes"],
+        vec![("validate_passes", "pass")],
+    );
+
+    let err = workspace::verify_workunit_gate_for_publish(dir.path(), "agent/codex/r_01ABCD3")
+        .expect_err("expected missing capsule lineage failure");
+    let msg = err.to_string();
+    assert!(
+        msg.contains("WORKUNIT_CAPSULE_POLICY_LINEAGE_MISSING"),
+        "unexpected error message: {msg}"
+    );
 }

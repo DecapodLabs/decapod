@@ -49,6 +49,8 @@ This interface standardizes the first kernel slice with deterministic pushback.
 
 - Every proof in `proof_plan` has a corresponding `proof_results` record.
 - Every required proof result is `pass`.
+- A deterministic context capsule artifact must exist at `.decapod/generated/context/<task_id>.json`.
+- The capsule must carry non-empty policy lineage fields (`risk_tier`, `policy_hash`, `policy_version`, `policy_path`, `repo_revision`).
 - Promotion-relevant commands (`validate`, `workspace publish`) treat non-`VERIFIED` work units as blocking.
 
 ## 3. Mandatory Pushback Markers
