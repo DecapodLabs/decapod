@@ -542,6 +542,30 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
             assert_eq!(parts[1].len(), 16);
         }
     }
+
+    let version_counter = fs::read_to_string(decapod_root.join("generated/version_counter.json"))
+        .expect("read version counter");
+    let version_counter: serde_json::Value =
+        serde_json::from_str(&version_counter).expect("version counter json");
+    assert_eq!(version_counter["version_count"], 1);
+    assert_eq!(
+        version_counter["last_seen_version"],
+        migration::DECAPOD_VERSION
+    );
+
+    let applied = fs::read_to_string(decapod_root.join("generated/migrations/applied.json"))
+        .expect("read applied migration ledger");
+    let applied: serde_json::Value = serde_json::from_str(&applied).expect("applied json");
+    let ids: Vec<String> = applied["entries"]
+        .as_array()
+        .expect("entries array")
+        .iter()
+        .filter_map(|v| v["id"].as_str().map(|s| s.to_string()))
+        .collect();
+    assert!(
+        ids.iter().any(|id| id == "todo.ids.typed.v015"),
+        "applied ledger must include todo typed-id migration"
+    );
 }
 
 #[test]
