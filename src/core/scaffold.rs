@@ -604,10 +604,29 @@ pub fn scaffold_project_entrypoints(
             .join("validate"),
     )
     .map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(generated_dir.join("migrations")).map_err(error::DecapodError::IoError)?;
     let dockerfile_path = generated_dir.join("Dockerfile");
     if !dockerfile_path.exists() {
         let dockerfile_content = container::generated_dockerfile_for_repo(&opts.target_dir);
         fs::write(&dockerfile_path, dockerfile_content).map_err(error::DecapodError::IoError)?;
+    }
+    let version_counter_path = generated_dir.join("version_counter.json");
+    if !version_counter_path.exists() {
+        let now = crate::core::time::now_epoch_z();
+        let version_counter = serde_json::json!({
+            "schema_version": "1.0.0",
+            "version_count": 1,
+            "initialized_with_version": env!("CARGO_PKG_VERSION"),
+            "last_seen_version": env!("CARGO_PKG_VERSION"),
+            "updated_at": now,
+        });
+        let body = serde_json::to_string_pretty(&version_counter).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "Failed to serialize version counter: {}",
+                e
+            ))
+        })?;
+        fs::write(version_counter_path, body).map_err(error::DecapodError::IoError)?;
     }
 
     let (specs_created, specs_unchanged, specs_preserved) = if opts.generate_specs {

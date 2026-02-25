@@ -7,6 +7,7 @@ use crate::core::db;
 use crate::core::error;
 use crate::core::schemas;
 use rusqlite::{Connection, OptionalExtension};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
@@ -16,9 +17,15 @@ use ulid::Ulid;
 
 /// Current Decapod version from Cargo.toml
 pub const DECAPOD_VERSION: &str = env!("CARGO_PKG_VERSION");
+const GENERATED_VERSION_COUNTER: &str = "generated/version_counter.json";
+const GENERATED_APPLIED_MIGRATIONS: &str = "generated/migrations/applied.json";
 
 /// Migration definition
 pub struct Migration {
+    /// Stable migration identifier for durable applied-ledger tracking.
+    pub id: &'static str,
+    /// Minimum decapod version where this migration is valid to run.
+    pub min_version: &'static str,
     /// Version this migration targets (e.g., "0.1.6")
     pub target_version: &'static str,
     /// Human-readable description
@@ -32,21 +39,51 @@ pub fn all_migrations() -> Vec<Migration> {
     vec![
         // Reconstruct event log from legacy databases
         Migration {
+            id: "todo.events.reconstruct.v001",
+            min_version: "0.1.7",
             target_version: "0.1.7",
             description: "Reconstruct todo event log from database state",
             up: migrate_reconstruct_todo_events,
         },
         Migration {
+            id: "db.consolidate.core_bins.v001",
+            min_version: "0.27.0",
             target_version: "0.27.0",
             description: "Consolidate fragmented databases into core bins",
             up: migrate_consolidate_databases,
         },
         Migration {
-            target_version: "0.41.2",
+            id: "todo.ids.typed.v015",
+            min_version: "0.41.1",
+            target_version: "0.41.1",
             description: "Migrate legacy todo IDs to typed <type4>_<16> format",
             up: migrate_todo_ids_to_typed_format,
         },
     ]
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct GeneratedVersionCounter {
+    schema_version: String,
+    version_count: u64,
+    initialized_with_version: String,
+    last_seen_version: String,
+    updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct AppliedMigrationEntry {
+    id: String,
+    min_version: String,
+    target_version: String,
+    applied_at: String,
+    applied_by_version: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+struct AppliedMigrationLedger {
+    schema_version: String,
+    entries: Vec<AppliedMigrationEntry>,
 }
 
 /// Run any pending migrations (idempotent — safe to call every startup)
@@ -153,10 +190,109 @@ fn restore_data_backup(data_root: &Path, backup_dir: &Path) -> Result<(), error:
 
 /// Run all idempotent migrations
 fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    touch_generated_version_counter(decapod_root)?;
+    let mut applied = load_applied_migrations(decapod_root)?;
     for migration in all_migrations() {
-        // All migrations are idempotent — they check internally if work is needed
+        if !version_gte(DECAPOD_VERSION, migration.min_version) {
+            continue;
+        }
+        if !version_gte(DECAPOD_VERSION, migration.target_version) {
+            continue;
+        }
+        if applied.entries.iter().any(|e| e.id == migration.id) {
+            continue;
+        }
         (migration.up)(decapod_root)?;
+        applied.entries.push(AppliedMigrationEntry {
+            id: migration.id.to_string(),
+            min_version: migration.min_version.to_string(),
+            target_version: migration.target_version.to_string(),
+            applied_at: crate::core::time::now_epoch_z(),
+            applied_by_version: DECAPOD_VERSION.to_string(),
+        });
+        store_applied_migrations(decapod_root, &applied)?;
     }
+    Ok(())
+}
+
+fn parse_version(v: &str) -> [u64; 3] {
+    let mut out = [0u64; 3];
+    for (idx, part) in v.split('.').take(3).enumerate() {
+        let digits: String = part.chars().take_while(|c| c.is_ascii_digit()).collect();
+        out[idx] = digits.parse::<u64>().unwrap_or(0);
+    }
+    out
+}
+
+fn version_gte(left: &str, right: &str) -> bool {
+    parse_version(left) >= parse_version(right)
+}
+
+fn touch_generated_version_counter(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    let path = decapod_root.join(GENERATED_VERSION_COUNTER);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    }
+    let now = crate::core::time::now_epoch_z();
+    let mut counter = if path.exists() {
+        let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+        serde_json::from_str::<GeneratedVersionCounter>(&raw).unwrap_or(GeneratedVersionCounter {
+            schema_version: "1.0.0".to_string(),
+            version_count: 1,
+            initialized_with_version: DECAPOD_VERSION.to_string(),
+            last_seen_version: DECAPOD_VERSION.to_string(),
+            updated_at: now.clone(),
+        })
+    } else {
+        GeneratedVersionCounter {
+            schema_version: "1.0.0".to_string(),
+            version_count: 1,
+            initialized_with_version: DECAPOD_VERSION.to_string(),
+            last_seen_version: DECAPOD_VERSION.to_string(),
+            updated_at: now.clone(),
+        }
+    };
+
+    if counter.last_seen_version != DECAPOD_VERSION {
+        counter.version_count = counter.version_count.saturating_add(1);
+        counter.last_seen_version = DECAPOD_VERSION.to_string();
+    }
+    counter.updated_at = now;
+    let body = serde_json::to_string_pretty(&counter)
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    fs::write(path, body).map_err(error::DecapodError::IoError)?;
+    Ok(())
+}
+
+fn load_applied_migrations(
+    decapod_root: &Path,
+) -> Result<AppliedMigrationLedger, error::DecapodError> {
+    let path = decapod_root.join(GENERATED_APPLIED_MIGRATIONS);
+    if !path.exists() {
+        return Ok(AppliedMigrationLedger {
+            schema_version: "1.0.0".to_string(),
+            entries: vec![],
+        });
+    }
+    let raw = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
+    let mut ledger = serde_json::from_str::<AppliedMigrationLedger>(&raw).unwrap_or_default();
+    if ledger.schema_version.is_empty() {
+        ledger.schema_version = "1.0.0".to_string();
+    }
+    Ok(ledger)
+}
+
+fn store_applied_migrations(
+    decapod_root: &Path,
+    ledger: &AppliedMigrationLedger,
+) -> Result<(), error::DecapodError> {
+    let path = decapod_root.join(GENERATED_APPLIED_MIGRATIONS);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    }
+    let body = serde_json::to_string_pretty(ledger)
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    fs::write(path, body).map_err(error::DecapodError::IoError)?;
     Ok(())
 }
 
