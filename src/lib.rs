@@ -5608,6 +5608,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                         depends_on: "".to_string(),
                         blocks: "".to_string(),
                         parent: None,
+                        one_shot: 0,
                     };
                     let res = todo::add_task(&project_store.root, &args)?;
                     success_response(

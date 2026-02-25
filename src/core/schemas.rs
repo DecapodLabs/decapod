@@ -359,7 +359,8 @@ pub const TODO_DB_SCHEMA_TASKS: &str = "
         category TEXT DEFAULT '',
         component TEXT DEFAULT '',
         assigned_to TEXT DEFAULT '',
-        assigned_at TEXT
+        assigned_at TEXT,
+        one_shot INTEGER DEFAULT 0
     )
 ";
 
