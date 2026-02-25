@@ -143,6 +143,27 @@ struct InitGroupCli {
     /// Create only AGENTS.md entrypoint file.
     #[clap(long)]
     agents: bool,
+    /// Seed product name for generated specs (non-interactive safe).
+    #[clap(long)]
+    product_name: Option<String>,
+    /// Seed product summary/outcome for generated specs (non-interactive safe).
+    #[clap(long)]
+    product_summary: Option<String>,
+    /// Seed architecture direction for generated specs (non-interactive safe).
+    #[clap(long)]
+    architecture_direction: Option<String>,
+    /// Seed product type for generated specs (e.g. service_or_library/application).
+    #[clap(long)]
+    product_type: Option<String>,
+    /// Seed done criteria for generated specs (non-interactive safe).
+    #[clap(long)]
+    done_criteria: Option<String>,
+    /// Seed primary languages (repeatable and/or comma-separated).
+    #[clap(long = "primary-language", value_delimiter = ',')]
+    primary_languages: Vec<String>,
+    /// Seed detected surfaces (repeatable and/or comma-separated).
+    #[clap(long = "surface", value_delimiter = ',')]
+    detected_surfaces: Vec<String>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -187,6 +208,27 @@ struct InitWithCli {
     /// Diagram style for generated `.decapod/generated/specs/ARCHITECTURE.md`.
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
     diagram_style: InitDiagramStyle,
+    /// Seed product name for generated specs (non-interactive safe).
+    #[clap(long)]
+    product_name: Option<String>,
+    /// Seed product summary/outcome for generated specs (non-interactive safe).
+    #[clap(long)]
+    product_summary: Option<String>,
+    /// Seed architecture direction for generated specs (non-interactive safe).
+    #[clap(long)]
+    architecture_direction: Option<String>,
+    /// Seed product type for generated specs (e.g. service_or_library/application).
+    #[clap(long)]
+    product_type: Option<String>,
+    /// Seed done criteria for generated specs (non-interactive safe).
+    #[clap(long)]
+    done_criteria: Option<String>,
+    /// Seed primary languages (repeatable and/or comma-separated).
+    #[clap(long = "primary-language", value_delimiter = ',')]
+    primary_languages: Vec<String>,
+    /// Seed detected surfaces (repeatable and/or comma-separated).
+    #[clap(long = "surface", value_delimiter = ',')]
+    detected_surfaces: Vec<String>,
 }
 
 #[derive(clap::ValueEnum, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -1222,6 +1264,115 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
     ctx
 }
 
+fn read_seed_list_env(var: &str) -> Vec<String> {
+    std::env::var(var)
+        .ok()
+        .map(|v| {
+            v.split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default()
+}
+
+fn dedupe_sorted(list: &mut Vec<String>) {
+    list.sort();
+    list.dedup();
+}
+
+fn apply_repo_context_env_overrides(ctx: &mut RepoContext) {
+    if let Ok(v) = std::env::var("DECAPOD_INIT_PRODUCT_NAME") {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_name = Some(trimmed.to_string());
+        }
+    }
+    if let Ok(v) = std::env::var("DECAPOD_INIT_PRODUCT_SUMMARY") {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_summary = Some(trimmed.to_string());
+        }
+    }
+    if let Ok(v) = std::env::var("DECAPOD_INIT_ARCHITECTURE_DIRECTION") {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.architecture_direction = Some(trimmed.to_string());
+        }
+    }
+    if let Ok(v) = std::env::var("DECAPOD_INIT_PRODUCT_TYPE") {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_type = Some(trimmed.to_string());
+        }
+    }
+    if let Ok(v) = std::env::var("DECAPOD_INIT_DONE_CRITERIA") {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.done_criteria = Some(trimmed.to_string());
+        }
+    }
+    if std::env::var("DECAPOD_INIT_PRIMARY_LANGUAGES").is_ok() {
+        ctx.primary_languages = read_seed_list_env("DECAPOD_INIT_PRIMARY_LANGUAGES");
+    }
+    if std::env::var("DECAPOD_INIT_SURFACES").is_ok() {
+        ctx.detected_surfaces = read_seed_list_env("DECAPOD_INIT_SURFACES");
+    }
+    dedupe_sorted(&mut ctx.primary_languages);
+    dedupe_sorted(&mut ctx.detected_surfaces);
+}
+
+fn apply_repo_context_cli_overrides(ctx: &mut RepoContext, init_with: &InitWithCli) {
+    if let Some(v) = init_with.product_name.as_ref() {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_name = Some(trimmed.to_string());
+        }
+    }
+    if let Some(v) = init_with.product_summary.as_ref() {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_summary = Some(trimmed.to_string());
+        }
+    }
+    if let Some(v) = init_with.architecture_direction.as_ref() {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.architecture_direction = Some(trimmed.to_string());
+        }
+    }
+    if let Some(v) = init_with.product_type.as_ref() {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_type = Some(trimmed.to_string());
+        }
+    }
+    if let Some(v) = init_with.done_criteria.as_ref() {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.done_criteria = Some(trimmed.to_string());
+        }
+    }
+    if !init_with.primary_languages.is_empty() {
+        ctx.primary_languages = init_with
+            .primary_languages
+            .iter()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+    }
+    if !init_with.detected_surfaces.is_empty() {
+        ctx.detected_surfaces = init_with
+            .detected_surfaces
+            .iter()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+    }
+    dedupe_sorted(&mut ctx.primary_languages);
+    dedupe_sorted(&mut ctx.detected_surfaces);
+}
+
 fn prompt_line(prompt: &str) -> Result<String, error::DecapodError> {
     print!("{}", prompt);
     io::stdout().flush().map_err(error::DecapodError::IoError)?;
@@ -1327,6 +1478,13 @@ fn init_with_from_config(
         agents: has("AGENTS.md"),
         specs: config.init.specs,
         diagram_style: config.init.diagram_style,
+        product_name: None,
+        product_summary: None,
+        architecture_direction: None,
+        product_type: None,
+        done_criteria: None,
+        primary_languages: Vec::new(),
+        detected_surfaces: Vec::new(),
     }
 }
 
@@ -1626,12 +1784,21 @@ pub fn run() -> Result<(), error::DecapodError> {
                     .map_err(error::DecapodError::IoError)?;
                     let maybe_cfg = load_project_config_if_present(&target)?;
                     if let Some(cfg) = maybe_cfg {
-                        let mut with = interactive_init_with(
-                            &cfg,
-                            target.clone(),
-                            init_group.force,
-                            init_group.dry_run,
-                        )?;
+                        let mut with = if io::stdin().is_terminal() {
+                            interactive_init_with(
+                                &cfg,
+                                target.clone(),
+                                init_group.force,
+                                init_group.dry_run,
+                            )?
+                        } else {
+                            init_with_from_config(
+                                &cfg,
+                                target.clone(),
+                                init_group.force,
+                                init_group.dry_run,
+                            )
+                        };
                         // Keep base command flags as explicit runtime overrides.
                         if init_group.all {
                             with.all = true;
@@ -1648,6 +1815,27 @@ pub fn run() -> Result<(), error::DecapodError> {
                         if init_group.gemini {
                             with.gemini = true;
                         }
+                        if init_group.product_name.is_some() {
+                            with.product_name = init_group.product_name.clone();
+                        }
+                        if init_group.product_summary.is_some() {
+                            with.product_summary = init_group.product_summary.clone();
+                        }
+                        if init_group.architecture_direction.is_some() {
+                            with.architecture_direction = init_group.architecture_direction.clone();
+                        }
+                        if init_group.product_type.is_some() {
+                            with.product_type = init_group.product_type.clone();
+                        }
+                        if init_group.done_criteria.is_some() {
+                            with.done_criteria = init_group.done_criteria.clone();
+                        }
+                        if !init_group.primary_languages.is_empty() {
+                            with.primary_languages = init_group.primary_languages.clone();
+                        }
+                        if !init_group.detected_surfaces.is_empty() {
+                            with.detected_surfaces = init_group.detected_surfaces.clone();
+                        }
                         with
                     } else {
                         InitWithCli {
@@ -1660,6 +1848,13 @@ pub fn run() -> Result<(), error::DecapodError> {
                             agents: init_group.agents,
                             specs: true,
                             diagram_style: InitDiagramStyle::Ascii,
+                            product_name: init_group.product_name.clone(),
+                            product_summary: init_group.product_summary.clone(),
+                            architecture_direction: init_group.architecture_direction.clone(),
+                            product_type: init_group.product_type.clone(),
+                            done_criteria: init_group.done_criteria.clone(),
+                            primary_languages: init_group.primary_languages.clone(),
+                            detected_surfaces: init_group.detected_surfaces.clone(),
                         }
                     }
                 }
@@ -1669,6 +1864,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                 std::fs::canonicalize(init_with.dir.clone().unwrap_or_else(|| current_dir.clone()))
                     .map_err(error::DecapodError::IoError)?;
             let mut repo_ctx = infer_repo_context(&init_target);
+            apply_repo_context_env_overrides(&mut repo_ctx);
+            apply_repo_context_cli_overrides(&mut repo_ctx, &init_with);
             if base_init_invocation && io::stdin().is_terminal() {
                 enrich_repo_context_interactive(&mut repo_ctx)?;
             }
@@ -1705,7 +1902,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
             if should_route_via_group_broker(&cli.command, &argv) {
-                match core::group_broker::maybe_route_mutation(&decapod_root_path, &argv) {
+                match core::group_broker::maybe_route_mutation(&store_root, &argv) {
                     Err(e) => {
                         if !core::group_broker::is_internal_invocation() {
                             return Err(e);
