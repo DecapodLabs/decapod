@@ -57,3 +57,22 @@ fn release_inventory_surface_exists_and_writes_artifact() {
     std::fs::remove_file(root.join(".decapod/generated/artifacts/inventory/repo_inventory.json"))
         .expect("cleanup generated inventory artifact");
 }
+
+#[test]
+fn verification_guide_pins_jit_capsule_flow() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let guide =
+        std::fs::read_to_string(root.join("docs/VERIFICATION.md")).expect("read verification doc");
+    assert!(
+        guide.contains("decapod govern capsule query"),
+        "verification guide must include governed capsule query flow"
+    );
+    assert!(
+        guide.contains(".decapod/generated/policy/context_capsule_policy.json"),
+        "verification guide must pin capsule policy contract artifact path"
+    );
+    assert!(
+        guide.contains("CAPSULE_SCOPE_DENIED"),
+        "verification guide must include fail-closed policy denial marker"
+    );
+}
