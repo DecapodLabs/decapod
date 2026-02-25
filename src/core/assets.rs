@@ -346,11 +346,83 @@ It keeps Decapod-owned state, generated artifacts, and isolated workspaces separ
 7. `decapod todo add \"<task>\" && decapod todo claim --id <task-id>`
 8. `decapod workspace ensure`
 
+## Skills - Your Personal Optimization Layer
+
+**Skills are how you shape agent behavior.** Import skills to train agents how to interact with your codebase, your conventions, and your preferences.
+
+### Why Skills Matter
+
+- **Controls**: Add security reviews, code quality checks, or custom validation
+- **Optimization**: Encode your team's conventions, patterns, and best practices
+- **Context**: Give agents project-specific knowledge that persists across sessions
+
+### Quick Skills Workflow
+
+```bash
+# Import a skill from a SKILL.md file
+decapod data aptitude skill import --path path/to/your/SKILL.md
+
+# List available skills
+decapod data aptitude skill list
+
+# Resolve skills for a specific task
+decapod data aptitude skill resolve --query "how to write tests"
+
+# Query aptitude memory for learned preferences
+decapod data aptitude prompt --query "git"
+```
+
+### Creating Your Own Skills
+
+Skills are just Markdown files with YAML frontmatter:
+
+```yaml
+---
+name: my-security-review
+description: Custom security checks for our codebase
+allowed-tools: Bash
+---
+
+# Security Review Skill
+
+## Triggers
+- "check security"
+- "review for vulnerabilities"
+
+## Workflow
+1. Run `semgrep --config=auto .`
+2. Check for hardcoded secrets
+3. Validate dependency vulnerabilities
+4. Report findings
+```
+
+Place SKILL.md files in `constitution/metadata/skills/` and import them:
+
+```bash
+decapod data aptitude skill import --path constitution/metadata/skills/my-security-review/SKILL.md
+```
+
+### Aptitude Memory
+
+Decapod learns from interactions. Use aptitude to record preferences:
+
+```bash
+# Record a preference
+decapod data aptitude add --category git --key branch_prefix --value "feature/" --confidence 90
+
+# Get contextual prompts
+decapod data aptitude prompt --query "commit"
+
+# Record an observation
+decapod data aptitude observe --category code_style --content "Team prefers async/await over tokio::spawn"
+```
+
 ## Canonical Layout
 
 - `README.md`: operator onboarding and control-plane map.
 - `OVERRIDE.md`: project-local override layer for embedded constitution.
 - `data/`: canonical control-plane state (SQLite + ledgers).
+- `skills/`: imported skill cards (auto-generated, tracked for reproducibility).
 - `generated/specs/`: living project specs scaffolded by `decapod init`.
 - `generated/context/`: deterministic context capsule artifacts.
 - `generated/artifacts/provenance/`: promotion manifests and convergence checklist.
