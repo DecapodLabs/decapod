@@ -971,7 +971,7 @@ pub fn verify_workunit_gate_for_publish(
                 task_id, manifest.status
             )));
         }
-        workunit::verify_capsule_policy_lineage_for_task(repo_root, &task_id)?;
+        workunit::verify_capsule_policy_lineage_for_task(repo_root, &manifest)?;
     }
 
     Ok(())
