@@ -79,8 +79,8 @@ pub enum TodoCommand {
     },
     /// List tasks.
     List {
-        #[clap(long)]
-        status: Option<String>,
+        #[clap(long, default_value = "open")]
+        status: String,
         #[clap(long)]
         scope: Option<String>,
         #[clap(long)]
@@ -4353,7 +4353,7 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
         } => {
             let items = list_tasks(
                 root,
-                status.clone(),
+                Some(status.clone()),
                 scope.clone(),
                 tags.clone(),
                 title_search.clone(),
