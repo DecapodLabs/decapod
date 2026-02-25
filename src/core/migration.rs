@@ -598,6 +598,36 @@ fn rewrite_json_task_ids(value: &mut Value, id_map: &HashMap<String, String>) {
     }
 }
 
+fn table_has_column(
+    conn: &Connection,
+    table: &str,
+    column: &str,
+) -> Result<bool, error::DecapodError> {
+    let pragma = format!("PRAGMA table_info({})", table);
+    let mut stmt = conn
+        .prepare(&pragma)
+        .map_err(error::DecapodError::RusqliteError)?;
+    let mut rows = stmt.query([]).map_err(error::DecapodError::RusqliteError)?;
+    while let Some(row) = rows.next().map_err(error::DecapodError::RusqliteError)? {
+        let name: String = row.get(1).map_err(error::DecapodError::RusqliteError)?;
+        if name == column {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+fn table_exists(conn: &Connection, table: &str) -> Result<bool, error::DecapodError> {
+    conn.query_row(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?1",
+        [table],
+        |_| Ok(true),
+    )
+    .optional()
+    .map_err(error::DecapodError::RusqliteError)
+    .map(|v| v.unwrap_or(false))
+}
+
 fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::DecapodError> {
     let data_root = decapod_root.join("data");
     let todo_db = data_root.join(schemas::TODO_DB_NAME);
@@ -622,8 +652,18 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
     let mut existing_ids = HashSet::new();
     let mut legacy_rows = Vec::new();
     {
+        let has_category = table_has_column(&conn, "tasks", "category")?;
+        let has_title = table_has_column(&conn, "tasks", "title")?;
+        let select_sql = match (has_category, has_title) {
+            (true, true) => "SELECT id, category, title FROM tasks ORDER BY created_at, id",
+            (true, false) => "SELECT id, category, '' as title FROM tasks ORDER BY created_at, id",
+            (false, true) => "SELECT id, '' as category, title FROM tasks ORDER BY created_at, id",
+            (false, false) => {
+                "SELECT id, '' as category, '' as title FROM tasks ORDER BY created_at, id"
+            }
+        };
         let mut stmt = conn
-            .prepare("SELECT id, category, title FROM tasks ORDER BY created_at, id")
+            .prepare(select_sql)
             .map_err(error::DecapodError::RusqliteError)?;
         let rows = stmt
             .query_map([], |row| {
@@ -693,12 +733,101 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
         .map_err(error::DecapodError::RusqliteError)?;
     }
 
-    tx.execute_batch(sql)
+    let full_schema_compatible = table_has_column(&tx, "tasks", "parent_task_id")?
+        && table_exists(&tx, "task_verification")?
+        && table_has_column(&tx, "task_verification", "todo_id")?
+        && table_exists(&tx, "task_owners")?
+        && table_has_column(&tx, "task_owners", "task_id")?
+        && table_exists(&tx, "task_dependencies")?
+        && table_has_column(&tx, "task_dependencies", "task_id")?
+        && table_has_column(&tx, "task_dependencies", "depends_on_task_id")?
+        && table_exists(&tx, "task_events")?
+        && table_has_column(&tx, "task_events", "task_id")?;
+
+    if full_schema_compatible {
+        tx.execute_batch(sql)
+            .map_err(error::DecapodError::RusqliteError)?;
+    } else {
+        let run_if = |cond: bool, statement: &str| -> Result<(), error::DecapodError> {
+            if cond {
+                tx.execute(statement, [])
+                    .map_err(error::DecapodError::RusqliteError)?;
+            }
+            Ok(())
+        };
+        run_if(
+            table_has_column(&tx, "tasks", "parent_task_id")?,
+            "UPDATE tasks
+             SET parent_task_id = (
+                 SELECT m.new_id FROM task_id_migration_map m WHERE m.old_id = tasks.parent_task_id
+             )
+             WHERE parent_task_id IN (SELECT old_id FROM task_id_migration_map)",
+        )?;
+        run_if(
+            table_exists(&tx, "task_verification")?
+                && table_has_column(&tx, "task_verification", "todo_id")?,
+            "UPDATE task_verification
+             SET todo_id = (
+                 SELECT m.new_id FROM task_id_migration_map m WHERE m.old_id = task_verification.todo_id
+             )
+             WHERE todo_id IN (SELECT old_id FROM task_id_migration_map)",
+        )?;
+        run_if(
+            table_exists(&tx, "task_owners")? && table_has_column(&tx, "task_owners", "task_id")?,
+            "UPDATE task_owners
+             SET task_id = (
+                 SELECT m.new_id FROM task_id_migration_map m WHERE m.old_id = task_owners.task_id
+             )
+             WHERE task_id IN (SELECT old_id FROM task_id_migration_map)",
+        )?;
+        run_if(
+            table_exists(&tx, "task_dependencies")?
+                && table_has_column(&tx, "task_dependencies", "task_id")?,
+            "UPDATE task_dependencies
+             SET task_id = (
+                 SELECT m.new_id FROM task_id_migration_map m WHERE m.old_id = task_dependencies.task_id
+             )
+             WHERE task_id IN (SELECT old_id FROM task_id_migration_map)",
+        )?;
+        run_if(
+            table_exists(&tx, "task_dependencies")?
+                && table_has_column(&tx, "task_dependencies", "depends_on_task_id")?,
+            "UPDATE task_dependencies
+             SET depends_on_task_id = (
+                 SELECT m.new_id FROM task_id_migration_map m WHERE m.old_id = task_dependencies.depends_on_task_id
+             )
+             WHERE depends_on_task_id IN (SELECT old_id FROM task_id_migration_map)",
+        )?;
+        run_if(
+            table_exists(&tx, "task_events")? && table_has_column(&tx, "task_events", "task_id")?,
+            "UPDATE task_events
+             SET task_id = (
+                 SELECT m.new_id FROM task_id_migration_map m WHERE m.old_id = task_events.task_id
+             )
+             WHERE task_id IN (SELECT old_id FROM task_id_migration_map)",
+        )?;
+        tx.execute(
+            "UPDATE tasks
+             SET id = (
+                 SELECT m.new_id FROM task_id_migration_map m WHERE m.old_id = tasks.id
+             )
+             WHERE id IN (SELECT old_id FROM task_id_migration_map)",
+            [],
+        )
         .map_err(error::DecapodError::RusqliteError)?;
+    }
 
     {
+        let has_depends_on = table_has_column(&tx, "tasks", "depends_on")?;
+        let has_blocks = table_has_column(&tx, "tasks", "blocks")?;
+        let select_sql = match (has_depends_on, has_blocks) {
+            (true, true) => "SELECT id, depends_on, blocks FROM tasks",
+            (true, false) => "SELECT id, depends_on, '' as blocks FROM tasks",
+            (false, true) => "SELECT id, '' as depends_on, blocks FROM tasks",
+            (false, false) => "SELECT id, '' as depends_on, '' as blocks FROM tasks",
+        };
         let mut stmt = tx
-            .prepare("SELECT id, depends_on, blocks FROM tasks")
+            .prepare(select_sql)
             .map_err(error::DecapodError::RusqliteError)?;
         let rows = stmt
             .query_map([], |row| {
@@ -719,12 +848,33 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
             }
         }
         drop(stmt);
-        for (task_id, depends_on, blocks) in rewrites {
-            tx.execute(
-                "UPDATE tasks SET depends_on = ?1, blocks = ?2 WHERE id = ?3",
-                rusqlite::params![depends_on, blocks, task_id],
-            )
-            .map_err(error::DecapodError::RusqliteError)?;
+        if has_depends_on || has_blocks {
+            for (task_id, depends_on, blocks) in rewrites {
+                match (has_depends_on, has_blocks) {
+                    (true, true) => {
+                        tx.execute(
+                            "UPDATE tasks SET depends_on = ?1, blocks = ?2 WHERE id = ?3",
+                            rusqlite::params![depends_on, blocks, task_id],
+                        )
+                        .map_err(error::DecapodError::RusqliteError)?;
+                    }
+                    (true, false) => {
+                        tx.execute(
+                            "UPDATE tasks SET depends_on = ?1 WHERE id = ?2",
+                            rusqlite::params![depends_on, task_id],
+                        )
+                        .map_err(error::DecapodError::RusqliteError)?;
+                    }
+                    (false, true) => {
+                        tx.execute(
+                            "UPDATE tasks SET blocks = ?1 WHERE id = ?2",
+                            rusqlite::params![blocks, task_id],
+                        )
+                        .map_err(error::DecapodError::RusqliteError)?;
+                    }
+                    (false, false) => {}
+                }
+            }
         }
     }
 
@@ -747,7 +897,7 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
         .map_err(error::DecapodError::RusqliteError)?;
     }
 
-    {
+    if table_exists(&tx, "task_events")? && table_has_column(&tx, "task_events", "payload")? {
         let mut stmt = tx
             .prepare("SELECT event_id, payload FROM task_events")
             .map_err(error::DecapodError::RusqliteError)?;

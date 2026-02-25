@@ -351,6 +351,7 @@ fn worktree_config_prune_preserves_live_section() {
 }
 
 #[test]
+#[ignore = "run in PR migration-script gate when migration scripts change"]
 fn migration_reconstructs_legacy_events_from_fixture() {
     let tmp = tempdir().expect("tempdir");
     let decapod_root = tmp.path();
@@ -389,6 +390,7 @@ fn migration_reconstructs_legacy_events_from_fixture() {
 }
 
 #[test]
+#[ignore = "run in PR migration-script gate when migration scripts change"]
 fn migration_preserves_existing_event_log() {
     let tmp = tempdir().expect("tempdir");
     let decapod_root = tmp.path();
@@ -415,6 +417,7 @@ fn migration_preserves_existing_event_log() {
 }
 
 #[test]
+#[ignore = "run in PR migration-script gate when migration scripts change"]
 fn migration_rewrites_legacy_todo_ids_and_references() {
     let tmp = tempdir().expect("tempdir");
     let decapod_root = tmp.path();
