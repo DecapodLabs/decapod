@@ -216,3 +216,26 @@ fn release_check_requires_consistent_policy_lineage_across_manifests() {
         stderr
     );
 }
+
+#[test]
+fn release_check_fails_when_lineage_capsule_drifted() {
+    let (_tmp, root) = setup_release_fixture("- schema: bump todo shape for v2");
+    let capsule_path = root.join(".decapod/generated/context/R_FIXTURE.json");
+    let mut capsule: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&capsule_path).expect("read capsule"))
+            .expect("parse capsule");
+    capsule["topic"] = serde_json::Value::String("tampered release fixture".to_string());
+    write(
+        &capsule_path,
+        &serde_json::to_string_pretty(&capsule).expect("serialize capsule"),
+    );
+
+    let output = run_release_check(&root);
+    assert!(!output.status.success(), "release check should fail");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("internal hash mismatch") || stderr.contains("capsule_hash mismatch"),
+        "release check should fail on capsule hash drift; stderr:\n{}",
+        stderr
+    );
+}
