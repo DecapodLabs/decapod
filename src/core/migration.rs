@@ -80,6 +80,17 @@ pub fn all_migrations() -> Vec<Migration> {
             description: "Migrate legacy todo IDs to typed <type4>_<16> format",
             up: migrate_todo_ids_to_typed_format,
         },
+        Migration {
+            id: "todo.one_shot.column.v001",
+            sequence: 400,
+            scope: "todo",
+            kind: "sql",
+            script_path: Some("src/core/sql/todo_one_shot_column_migration.sql"),
+            min_version: "0.42.0",
+            target_version: "0.42.0",
+            description: "Add one_shot column to tasks table for 1-shot task tracking",
+            up: migrate_todo_one_shot_column,
+        },
     ]
 }
 
@@ -1133,6 +1144,39 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
             fs::write(events_path, rewritten.join("\n") + "\n")
                 .map_err(error::DecapodError::IoError)?;
         }
+    }
+
+    Ok(())
+}
+
+fn migrate_todo_one_shot_column(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    let data_root = decapod_root.join("data");
+    let todo_db = data_root.join(schemas::TODO_DB_NAME);
+    if !todo_db.exists() {
+        return Ok(());
+    }
+
+    let conn = db::db_connect(&todo_db.to_string_lossy())?;
+    let tasks_exists: bool = conn
+        .query_row(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='tasks'",
+            [],
+            |_| Ok(true),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?
+        .unwrap_or(false);
+    if !tasks_exists {
+        return Ok(());
+    }
+
+    let has_one_shot = table_has_column(&conn, "tasks", "one_shot")?;
+    if !has_one_shot {
+        conn.execute(
+            "ALTER TABLE tasks ADD COLUMN one_shot INTEGER DEFAULT 0",
+            [],
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
     }
 
     Ok(())
