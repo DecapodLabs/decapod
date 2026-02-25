@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0.0",
+  "policy_version": "jit-capsule-policy-v1",
+  "repo_revision_binding": "HEAD",
+  "default_risk_tier": "medium",
+  "tiers": {
+    "critical": {
+      "allowed_scopes": [
+        "core",
+        "interfaces",
+        "plugins"
+      ],
+      "max_limit": 20,
+      "allow_write": true
+    },
+    "high": {
+      "allowed_scopes": [
+        "core",
+        "interfaces",
+        "plugins"
+      ],
+      "max_limit": 12,
+      "allow_write": true
+    },
+    "low": {
+      "allowed_scopes": [
+        "interfaces"
+      ],
+      "max_limit": 4,
+      "allow_write": false
+    },
+    "medium": {
+      "allowed_scopes": [
+        "core",
+        "interfaces"
+      ],
+      "max_limit": 6,
+      "allow_write": true
+    }
+  }
+}

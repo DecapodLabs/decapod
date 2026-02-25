@@ -1,9 +1,27 @@
 use serde::Deserialize;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+}
+
+fn read_kcr_trend(root: &Path) -> String {
+    let candidates = [
+        ".decapod/generated/artifacts/provenance/kcr_trend.jsonl",
+        "docs/metrics/KCR_TREND.jsonl",
+    ];
+    for rel in candidates {
+        let path = root.join(rel);
+        if path.exists() {
+            return fs::read_to_string(&path)
+                .unwrap_or_else(|e| panic!("read KCR trend at {}: {e}", path.display()));
+        }
+    }
+    panic!(
+        "read KCR trend: none of the candidate files exist: {}",
+        candidates.join(", ")
+    );
 }
 
 fn split_md_row(line: &str) -> Vec<String> {
@@ -74,8 +92,7 @@ fn enforced_claims_must_have_gate_mapping_and_kcr_trend_must_match() {
     assert!(enforced_total > 0, "No enforced claims found in CLAIMS.md");
     let kcr = enforced_with_gate as f64 / enforced_total as f64;
 
-    let trend_path = root.join("docs/metrics/KCR_TREND.jsonl");
-    let trend = fs::read_to_string(&trend_path).expect("read KCR trend");
+    let trend = read_kcr_trend(&root);
     let last = trend
         .lines()
         .rfind(|l| !l.trim().is_empty())
