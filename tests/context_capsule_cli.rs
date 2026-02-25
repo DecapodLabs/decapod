@@ -125,6 +125,13 @@ fn context_capsule_query_is_deterministic() {
             .unwrap_or_default()
             .is_empty()
     );
+    assert_eq!(payload["policy"]["risk_tier"], "medium");
+    assert!(
+        !payload["policy"]["policy_hash"]
+            .as_str()
+            .unwrap_or_default()
+            .is_empty()
+    );
 
     let sources = payload["sources"].as_array().expect("sources array");
     assert!(!sources.is_empty(), "expected at least one source");
@@ -165,6 +172,42 @@ fn context_capsule_query_rejects_invalid_scope() {
     assert!(
         stderr.contains("invalid scope"),
         "expected invalid scope error in stderr, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn context_capsule_query_fails_closed_on_policy_scope_violation() {
+    let (_tmp, dir, password) = setup_repo();
+
+    let out = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "capsule",
+            "query",
+            "--topic",
+            "foo",
+            "--scope",
+            "plugins",
+            "--risk-tier",
+            "low",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+
+    assert!(
+        !out.status.success(),
+        "query should fail when risk tier denies scope"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("CAPSULE_SCOPE_DENIED"),
+        "expected typed policy denial error, got: {}",
         stderr
     );
 }

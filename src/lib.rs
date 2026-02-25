@@ -521,6 +521,8 @@ enum CapsuleCommand {
         #[clap(long)]
         scope: String,
         #[clap(long)]
+        risk_tier: Option<String>,
+        #[clap(long)]
         task_id: Option<String>,
         #[clap(long)]
         workunit_id: Option<String>,
@@ -3913,18 +3915,27 @@ fn run_capsule_command(
         CapsuleCommand::Query {
             topic,
             scope,
+            risk_tier,
             task_id,
             workunit_id,
             limit,
             write,
         } => {
-            let capsule = core::context_capsule::query_embedded_capsule(
+            let resolved_policy = core::capsule_policy::resolve_capsule_policy(
+                project_root,
+                &scope,
+                risk_tier.as_deref(),
+                limit,
+                write,
+            )?;
+            let capsule = core::context_capsule::query_embedded_capsule_governed(
                 project_root,
                 &topic,
                 &scope,
                 task_id.as_deref(),
                 workunit_id.as_deref(),
-                limit,
+                resolved_policy.effective_limit,
+                resolved_policy.binding,
             )?;
             if write {
                 let path = core::context_capsule::write_context_capsule(project_root, &capsule)?;
@@ -5452,18 +5463,27 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let task_id = params.get("task_id").and_then(|v| v.as_str());
             let workunit_id = params.get("workunit_id").and_then(|v| v.as_str());
             let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(6) as usize;
+            let risk_tier = params.get("risk_tier").and_then(|v| v.as_str());
             let write = params
                 .get("write")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(false);
 
-            let capsule = core::context_capsule::query_embedded_capsule(
+            let resolved_policy = core::capsule_policy::resolve_capsule_policy(
+                project_root,
+                scope,
+                risk_tier,
+                limit,
+                write,
+            )?;
+            let capsule = core::context_capsule::query_embedded_capsule_governed(
                 project_root,
                 topic,
                 scope,
                 task_id,
                 workunit_id,
-                limit,
+                resolved_policy.effective_limit,
+                resolved_policy.binding,
             )?;
 
             let mut touched = Vec::new();

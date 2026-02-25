@@ -157,6 +157,7 @@ fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
     fs::create_dir_all(&capsules).expect("create capsules dir");
 
     let mut capsule = DeterministicContextCapsule {
+        schema_version: "1.1.0".to_string(),
         topic: "phase0".to_string(),
         scope: "interfaces".to_string(),
         task_id: Some("R_1".to_string()),
@@ -169,6 +170,7 @@ fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
             source_path: "interfaces/CLAIMS.md".to_string(),
             text: "claim.context.capsule.deterministic".to_string(),
         }],
+        policy: Default::default(),
         capsule_hash: String::new(),
     };
     capsule.capsule_hash = "wrong_hash".to_string();
@@ -332,6 +334,54 @@ fn validate_fails_when_non_whitelisted_generated_file_is_tracked() {
     assert!(
         stderr.contains("Tracked non-whitelisted generated artifacts found"),
         "expected generated whitelist tracked-file failure, got:\n{}",
+        stderr
+    );
+}
+
+#[test]
+fn validate_fails_on_invalid_context_capsule_policy_contract_if_present() {
+    let (_tmp, dir, password) = setup_repo();
+    let policy_path = dir
+        .join(".decapod")
+        .join("generated")
+        .join("policy")
+        .join("context_capsule_policy.json");
+    let invalid = serde_json::json!({
+        "schema_version": "1.0.0",
+        "policy_version": "jit-capsule-policy-v1",
+        "repo_revision_binding": "HEAD",
+        "default_risk_tier": "medium",
+        "tiers": {
+            "medium": {
+                "allowed_scopes": [],
+                "max_limit": 6,
+                "allow_write": true
+            }
+        }
+    });
+    fs::write(
+        &policy_path,
+        serde_json::to_vec_pretty(&invalid).expect("serialize invalid policy"),
+    )
+    .expect("write invalid policy");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !validate.status.success(),
+        "validate should fail for invalid capsule policy contract"
+    );
+    let stderr = combined_output(&validate);
+    assert!(
+        stderr.contains("has no allowed_scopes"),
+        "expected context capsule policy gate failure, got:\n{}",
         stderr
     );
 }

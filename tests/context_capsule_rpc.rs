@@ -175,6 +175,12 @@ fn rpc_context_capsule_query_is_deterministic() {
 
     let capsule_hash = first_result["capsule_hash"].as_str().unwrap_or_default();
     assert!(!capsule_hash.is_empty(), "capsule hash missing");
+    assert_eq!(
+        first_result["policy"]["risk_tier"]
+            .as_str()
+            .unwrap_or_default(),
+        "medium"
+    );
 }
 
 #[test]
