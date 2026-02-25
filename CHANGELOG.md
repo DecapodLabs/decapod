@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.6](https://github.com/DecapodLabs/decapod/compare/v0.44.5...v0.44.6) - 2026-02-25
+
+### Fixed
+
+- update branch task ID extraction to support task_type_ prefix
+- fix tests: use task_type prefix instead of deprecated R_ prefix
+- replace legacy R_ ID prefix with test_ in test files
+- formatting
+- clippy in test files
+- formatting and clippy
+- clippy warnings
+- handle missing task in test_todo_state_machine gracefully
+- optimize spec_conformance tests and todo list default to open
+- optimize spec_conformance tests and todo list default to open
+
+### Other
+
+- optimize with rustc-hash and inline hints
+- update Rust version to 1.90 and edition to 2026
+- 10 parallel shards for test execution with --test-threads=4
+- run all integration tests in single runner with high parallelism
+
 ## [0.44.5](https://github.com/DecapodLabs/decapod/compare/v0.44.4...v0.44.5) - 2026-02-25
 
 ### Added
