@@ -200,14 +200,13 @@ fn collect_md_files(root: &Path, dir: &Path, out: &mut Vec<String>) {
                     continue;
                 }
                 collect_md_files(root, &path, out);
-            } else if path.is_file() && path.extension().is_some_and(|e| e == "md") {
-                if let Ok(rel) = path.strip_prefix(root) {
+            } else if path.is_file() && path.extension().is_some_and(|e| e == "md")
+                && let Ok(rel) = path.strip_prefix(root) {
                     let rel_str = rel.to_string_lossy().to_string();
                     if rel_str != "docs/DOC_MAP.md" {
                         out.push(rel_str);
                     }
                 }
-            }
         }
     }
 }

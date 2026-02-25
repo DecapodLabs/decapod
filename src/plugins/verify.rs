@@ -247,11 +247,10 @@ fn mirror_verification_to_federation(
         "repo",
         None,
         "decapod",
-    ) {
-        if let Some(intent_or_commitment) = anchor {
+    )
+        && let Some(intent_or_commitment) = anchor {
             let _ = federation::add_edge(store, &intent_or_commitment, &node.id, "depends_on");
         }
-    }
     let _ = federation::refresh_derived_files(store);
 }
 

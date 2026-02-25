@@ -2276,16 +2276,15 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                         println!("Expired:    {}", et);
                     }
                     println!("Actor:      {}", node.actor);
-                    if let Some(ref sources) = node.sources {
-                        if !sources.is_empty() {
+                    if let Some(ref sources) = node.sources
+                        && !sources.is_empty() {
                             println!("Sources:");
                             for s in sources {
                                 println!("  - {}", s);
                             }
                         }
-                    }
-                    if let Some(ref edges) = node.edges {
-                        if !edges.is_empty() {
+                    if let Some(ref edges) = node.edges
+                        && !edges.is_empty() {
                             println!("Edges:");
                             for e in edges {
                                 println!(
@@ -2294,7 +2293,6 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                                 );
                             }
                         }
-                    }
                     if !node.body.is_empty() {
                         println!("\n{}", node.body);
                     }

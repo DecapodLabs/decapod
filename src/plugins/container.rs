@@ -1014,12 +1014,11 @@ fn build_docker_spec(
     args.push("-e".to_string());
     args.push("GIT_CONFIG_GLOBAL=/tmp/decapod-home/.gitconfig".to_string());
 
-    if env_bool("DECAPOD_CONTAINER_MAP_HOST_USER", true) {
-        if let Some((uid, gid)) = current_uid_gid() {
+    if env_bool("DECAPOD_CONTAINER_MAP_HOST_USER", true)
+        && let Some((uid, gid)) = current_uid_gid() {
             args.push("--user".to_string());
             args.push(format!("{}:{}", uid, gid));
         }
-    }
 
     if runtime != "docker" && runtime != "podman" {
         return Err(error::DecapodError::ValidationError(format!(

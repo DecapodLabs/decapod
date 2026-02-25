@@ -450,11 +450,10 @@ pub fn get_autonomy(store: &Store, actor_id: &str) -> Result<AutonomyStatus, err
     if audit_log.exists() {
         let content = std::fs::read_to_string(audit_log).unwrap_or_default();
         for line in content.lines() {
-            if let Ok(v) = serde_json::from_str::<serde_json::Value>(line) {
-                if let Some(a) = v.get("actor").and_then(|x| x.as_str()) {
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(line)
+                && let Some(a) = v.get("actor").and_then(|x| x.as_str()) {
                     known_actors.insert(a.to_string());
                 }
-            }
         }
     }
 
