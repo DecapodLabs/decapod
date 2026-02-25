@@ -1124,9 +1124,9 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
         ctx.detected_surfaces.push("backend".to_string());
     }
 
-    if !ctx.detected_surfaces.is_empty() && ctx.detected_surfaces.iter().any(|s| s == "frontend") {
+    if ctx.detected_surfaces.iter().any(|s| s == "frontend") {
         ctx.product_type = Some("application".to_string());
-    } else {
+    } else if !ctx.detected_surfaces.is_empty() || !ctx.primary_languages.is_empty() {
         ctx.product_type = Some("service_or_library".to_string());
     }
 

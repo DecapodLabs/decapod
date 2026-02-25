@@ -68,21 +68,79 @@ pub struct SpecsSeed {
     pub done_criteria: Option<String>,
 }
 
-fn specs_readme_template() -> String {
-    r#"# Project Specs
+fn joined_or_fallback(items: &[String], fallback: &str) -> String {
+    if items.is_empty() {
+        fallback.to_string()
+    } else {
+        items.join(", ")
+    }
+}
 
-This directory is managed by Decapod for the human+agent engineering contract of this repository.
+fn default_test_commands(seed: Option<&SpecsSeed>) -> Vec<String> {
+    let mut commands = Vec::new();
+    let langs = seed.map(|s| s.primary_languages.as_slice()).unwrap_or(&[]);
+    let surfaces = seed.map(|s| s.detected_surfaces.as_slice()).unwrap_or(&[]);
+
+    if langs.iter().any(|l| l.contains("rust")) {
+        commands.push("cargo test".to_string());
+    }
+    if surfaces.iter().any(|s| s == "npm")
+        || langs
+            .iter()
+            .any(|l| l.contains("typescript") || l.contains("javascript"))
+    {
+        commands.push("npm test".to_string());
+    }
+    if langs.iter().any(|l| l == "python") {
+        commands.push("pytest".to_string());
+    }
+    if langs.iter().any(|l| l == "go") {
+        commands.push("go test ./...".to_string());
+    }
+    commands
+}
+
+fn specs_readme_template(seed: Option<&SpecsSeed>) -> String {
+    let product = seed
+        .and_then(|s| s.product_name.as_deref())
+        .unwrap_or("this repository");
+    let summary = seed
+        .and_then(|s| s.product_summary.as_deref())
+        .unwrap_or("Define the intended user-visible outcome.");
+    let languages = joined_or_fallback(
+        seed.map(|s| s.primary_languages.as_slice()).unwrap_or(&[]),
+        "not detected yet",
+    );
+    let surfaces = joined_or_fallback(
+        seed.map(|s| s.detected_surfaces.as_slice()).unwrap_or(&[]),
+        "not detected yet",
+    );
+
+    format!(
+        r#"# Project Specs
+
 Canonical path: `.decapod/generated/specs/`.
-Decapod updates and validates these files as intent and implementation evolve.
+These files are the project-local contract for humans and agents.
 
-- `INTENT.md` captures why this repository exists and what outcome it must achieve.
-- `ARCHITECTURE.md` captures implementation topology, interfaces, and operational gates.
-- `INTERFACES.md` captures inbound/outbound service contracts and failure behavior.
-- `VALIDATION.md` captures proof surfaces, gate criteria, and required evidence artifacts.
+## Snapshot
+- Project: {product}
+- Outcome: {summary}
+- Detected languages: {languages}
+- Detected surfaces: {surfaces}
 
-Keep these documents current as requirements and implementation evolve.
+## How to use this folder
+- `INTENT.md`: what success means and what is explicitly out of scope.
+- `ARCHITECTURE.md`: the current implementation shape and planned evolution.
+- `INTERFACES.md`: API/CLI/events/storage contracts and failure behavior.
+- `VALIDATION.md`: required proof commands and promotion gates.
+
+## Day-0 Onboarding Checklist
+- [ ] Replace all placeholder bullets in each spec file.
+- [ ] Confirm primary user outcome and acceptance criteria in `INTENT.md`.
+- [ ] Document real interfaces and data boundaries in `INTERFACES.md`.
+- [ ] Run and record validation commands listed in `VALIDATION.md`.
 "#
-    .to_string()
+    )
 }
 
 fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
@@ -95,12 +153,29 @@ fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
     let product_name = seed
         .and_then(|s| s.product_name.as_deref())
         .unwrap_or("this repository");
+    let product_type = seed
+        .and_then(|s| s.product_type.as_deref())
+        .unwrap_or("not classified yet");
+    let languages = joined_or_fallback(
+        seed.map(|s| s.primary_languages.as_slice()).unwrap_or(&[]),
+        "not detected yet",
+    );
+    let surfaces = joined_or_fallback(
+        seed.map(|s| s.detected_surfaces.as_slice()).unwrap_or(&[]),
+        "not detected yet",
+    );
 
     format!(
         r#"# Intent
 
 ## Product Outcome
 - {product_outcome}
+
+## Inferred Baseline
+- Repository: {product_name}
+- Product type: {product_type}
+- Primary languages: {languages}
+- Detected surfaces: {surfaces}
 
 ## Scope
 - In scope for {product_name}:
@@ -111,10 +186,15 @@ fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
 - Operational:
 - Security/compliance:
 
-## Acceptance Criteria
+## Acceptance Criteria (must be objectively testable)
 - [ ] {done_criteria}
 - [ ] Non-functional targets are met (latency, reliability, cost, etc.).
 - [ ] Validation gates pass and artifacts are attached.
+
+## First Implementation Slice
+- [ ] Define the smallest user-visible workflow to ship first.
+- [ ] Define what data/contracts are required for that workflow.
+- [ ] Define what is intentionally postponed until v2.
 
 ## Open Questions
 - List unresolved decisions that block implementation confidence.
@@ -213,95 +293,32 @@ flowchart LR
     format!(
         r#"# Architecture
 
-## Executive Summary
+## Direction
 {summary}
 
-## Integrated Surface
+## Current Facts
 - Runtime/languages: {runtime_langs}
-- Frameworks/libraries: {surfaces}
-- Infrastructure/services: {product_type}
-- External dependencies:
+- Detected surfaces/framework hints: {surfaces}
+- Product type: {product_type}
 
-## Runtime and Deployment Matrix
-- Execution environments (local/dev/stage/prod):
-- Where each component runs (host/container/edge/serverless):
-- Network topology and trust zones:
-- Deployment/rollback strategy:
-- Deployment assumptions inferred from repository: {deployment_hint}
-
-## Implementation Strategy
-- What is being built now:
-- What is deferred:
-- Why this cut line is chosen:
-
-## System Topology
+## Topology
 {diagram}
 
-## Execution Physics
-- End-to-end execution path (event to promoted output):
+## Execution Path
 {flow_diagram}
-- Concurrency and scheduling model:
-- Queueing, backpressure, and retry semantics:
-- Timeouts, cancellation, and idempotency model:
-- Runtime execution note: {execution_hint}
+- Deployment assumptions: {deployment_hint}
+- Concurrency/runtime note: {execution_hint}
 
-## Service Contracts
-- Inbound interfaces (API/events/CLI):
-- Outbound interfaces (datastores/queues/third-party):
-- Data ownership and consistency boundaries:
-
-## Schema and Data Contracts
-- Canonical entities and schema owners:
-- Storage engines and data lifecycle (retention/compaction/archive):
-- Migration policy (forward/backward compatibility, rollout order):
-- Data validation and invariant checks:
+## Data and Contracts
+- Inbound contracts (CLI/API/events):
+- Outbound dependencies (datastores/queues/external APIs):
+- Data ownership boundaries:
 - Schema responsibility note: {schema_hint}
 
-## API and ABI Contracts
-- API surface inventory (internal/external, versioning policy):
-- Request/response compatibility contract (required/optional fields, defaults):
-- Event contract compatibility rules:
-- Binary/runtime ABI boundaries (plugins, FFI, wire formats, language interop):
-- Deprecation window and breaking-change process:
-
-## Multi-Agent Delivery Model
-- Work partitioning strategy:
-- Shared context/proof artifacts:
-- Coordination and handoff rules:
-
-## Validation Gates
-- Unit/integration/e2e gates:
-- Statistical/variance-aware gates (if nondeterministic surfaces exist):
-- Release/promotion blockers:
-
-## Operational Planes
-- Observability contract (logs/metrics/traces and correlation IDs):
-- On-call/incident response expectations:
-- Capacity and scaling controls:
-- Security controls (authn/authz, secret handling, audit trail):
-
-## Failure Topology and Recovery
-- Critical failure modes by component:
-- Detection signals and health checks:
-- Automated recovery paths and manual break-glass steps:
-- Data integrity and replay strategy after faults:
-
-## Performance Envelope
-- Latency budgets (p50/p95/p99) per critical path:
-- Throughput targets and saturation indicators:
-- Cost envelope (compute/storage/network) and budget guardrails:
-- Benchmark and load-test evidence requirements:
-
-## Delivery Plan
-- Milestone 1:
-- Milestone 2:
-- Milestone 3:
-
-## Change Management
-- Architectural Decision Record policy:
-- Contract-change review checklist:
-- Migration/release choreography:
-- Post-release verification and rollback criteria:
+## Delivery Plan (first 3 slices)
+- Slice 1 (ship first):
+- Slice 2:
+- Slice 3:
 
 ## Risks and Mitigations
 - Risk:
@@ -310,13 +327,22 @@ flowchart LR
     )
 }
 
-fn specs_interfaces_template() -> String {
-    r#"# Interfaces
+fn specs_interfaces_template(seed: Option<&SpecsSeed>) -> String {
+    let surfaces = joined_or_fallback(
+        seed.map(|s| s.detected_surfaces.as_slice()).unwrap_or(&[]),
+        "not detected yet",
+    );
+    let product_type = seed
+        .and_then(|s| s.product_type.as_deref())
+        .unwrap_or("not classified yet");
+    format!(
+        r#"# Interfaces
 
 ## Inbound Contracts
 - API / RPC entrypoints:
 - CLI surfaces:
 - Event/webhook consumers:
+- Repository-detected surfaces: {surfaces}
 
 ## Outbound Dependencies
 - Datastores:
@@ -332,16 +358,32 @@ fn specs_interfaces_template() -> String {
 - Retry/backoff policy:
 - Timeout/circuit behavior:
 - Degradation behavior:
+
+## Interface Notes
+- Product type hint: {product_type}
+- Enumerate explicit error codes for each mutating interface.
 "#
-    .to_string()
+    )
 }
 
-fn specs_validation_template() -> String {
-    r#"# Validation
+fn specs_validation_template(seed: Option<&SpecsSeed>) -> String {
+    let commands = default_test_commands(seed);
+    let test_commands = if commands.is_empty() {
+        "- Add repository-specific test command(s) here.".to_string()
+    } else {
+        commands
+            .into_iter()
+            .map(|c| format!("- `{}`", c))
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+    format!(
+        r#"# Validation
 
 ## Proof Surfaces
 - `decapod validate`
 - Required test commands:
+{test_commands}
 - Required integration/e2e commands:
 
 ## Promotion Gates
@@ -359,7 +401,7 @@ fn specs_validation_template() -> String {
 - Statistical thresholds (if non-deterministic):
 - Rollback criteria:
 "#
-    .to_string()
+    )
 }
 
 /// Canonical .gitignore rules managed by `decapod init`.
@@ -549,13 +591,13 @@ pub fn scaffold_project_entrypoints(
         let mut specs_files: Vec<(&str, String)> = Vec::new();
         for spec in LOCAL_PROJECT_SPECS {
             let content = match spec.path {
-                LOCAL_PROJECT_SPECS_README => specs_readme_template(),
+                LOCAL_PROJECT_SPECS_README => specs_readme_template(seed),
                 LOCAL_PROJECT_SPECS_INTENT => specs_intent_template(seed),
                 LOCAL_PROJECT_SPECS_ARCHITECTURE => {
                     specs_architecture_template(opts.diagram_style, seed)
                 }
-                LOCAL_PROJECT_SPECS_INTERFACES => specs_interfaces_template(),
-                LOCAL_PROJECT_SPECS_VALIDATION => specs_validation_template(),
+                LOCAL_PROJECT_SPECS_INTERFACES => specs_interfaces_template(seed),
+                LOCAL_PROJECT_SPECS_VALIDATION => specs_validation_template(seed),
                 _ => continue,
             };
             specs_files.push((spec.path, content));
