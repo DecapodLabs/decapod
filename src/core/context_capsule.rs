@@ -1,3 +1,4 @@
+use crate::core::capsule_policy::CapsulePolicyBinding;
 use crate::core::{assets, docs, error};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -18,12 +19,16 @@ pub struct ContextCapsuleSnippet {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct DeterministicContextCapsule {
+    #[serde(default = "capsule_schema_version_default")]
+    pub schema_version: String,
     pub topic: String,
     pub scope: String,
     pub task_id: Option<String>,
     pub workunit_id: Option<String>,
     pub sources: Vec<ContextCapsuleSource>,
     pub snippets: Vec<ContextCapsuleSnippet>,
+    #[serde(default)]
+    pub policy: CapsulePolicyBinding,
     pub capsule_hash: String,
 }
 
@@ -38,12 +43,14 @@ impl DeterministicContextCapsule {
         snippets.dedup();
 
         CanonicalCapsule {
+            schema_version: self.schema_version.clone(),
             topic: self.topic.clone(),
             scope: self.scope.clone(),
             task_id: self.task_id.clone(),
             workunit_id: self.workunit_id.clone(),
             sources,
             snippets,
+            policy: self.policy.clone(),
         }
     }
 
@@ -67,12 +74,18 @@ impl DeterministicContextCapsule {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 struct CanonicalCapsule {
+    schema_version: String,
     topic: String,
     scope: String,
     task_id: Option<String>,
     workunit_id: Option<String>,
     sources: Vec<ContextCapsuleSource>,
     snippets: Vec<ContextCapsuleSnippet>,
+    policy: CapsulePolicyBinding,
+}
+
+fn capsule_schema_version_default() -> String {
+    "1.1.0".to_string()
 }
 
 pub fn query_embedded_capsule(
@@ -82,6 +95,26 @@ pub fn query_embedded_capsule(
     task_id: Option<&str>,
     workunit_id: Option<&str>,
     limit: usize,
+) -> Result<DeterministicContextCapsule, error::DecapodError> {
+    query_embedded_capsule_governed(
+        repo_root,
+        topic,
+        scope,
+        task_id,
+        workunit_id,
+        limit,
+        CapsulePolicyBinding::default(),
+    )
+}
+
+pub fn query_embedded_capsule_governed(
+    repo_root: &Path,
+    topic: &str,
+    scope: &str,
+    task_id: Option<&str>,
+    workunit_id: Option<&str>,
+    limit: usize,
+    policy: CapsulePolicyBinding,
 ) -> Result<DeterministicContextCapsule, error::DecapodError> {
     validate_scope(scope)?;
     if topic.trim().is_empty() {
@@ -139,12 +172,14 @@ pub fn query_embedded_capsule(
     }
 
     let capsule = DeterministicContextCapsule {
+        schema_version: capsule_schema_version_default(),
         topic: topic.to_string(),
         scope: scope.to_string(),
         task_id: task_id.map(str::to_string),
         workunit_id: workunit_id.map(str::to_string),
         sources,
         snippets,
+        policy,
         capsule_hash: String::new(),
     };
 

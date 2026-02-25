@@ -4,6 +4,7 @@
 //! Decapod's contracts, invariants, and methodology gates.
 
 use crate::core::broker::DbBroker;
+use crate::core::capsule_policy::{self, POLICY_SCHEMA_VERSION};
 use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
 use crate::core::migration;
@@ -222,7 +223,10 @@ fn validate_embedded_self_contained(
                     || line.contains(".decapod/knowledge/")
                     || line.contains(".decapod/data/")
                     || line.contains(".decapod/workspaces/")
+                    || line.contains(".decapod/generated/")
                     || line.contains(".decapod/generated/specs/")
+                    || line.contains(".decapod/generated/policy/")
+                    || line.contains(".decapod/policy/")
                     || line.contains("repo-scoped");
                 if is_legitimate_line {
                     legitimate_ref_count += refs_on_line;
@@ -1104,6 +1108,7 @@ fn validate_generated_artifact_whitelist(
         ".decapod/generated/Dockerfile",
         ".decapod/data/knowledge.promotions.jsonl",
         ".decapod/generated/specs/.manifest.json",
+        ".decapod/generated/policy/context_capsule_policy.json",
     ];
     let mut offenders = Vec::new();
     for line in String::from_utf8_lossy(&output.stdout).lines() {
@@ -1537,9 +1542,16 @@ fn validate_workunit_manifests_if_present(
         if parsed.status == WorkUnitStatus::Verified {
             workunit::validate_verified_manifest(&parsed).map_err(|e| {
                 error::DecapodError::ValidationError(format!(
-                    "invalid VERIFIED workunit manifest {}: {}",
-                    path.display(),
-                    e
+                    "invalid VERIFIED workunit manifest: {} ({})",
+                    e,
+                    path.display()
+                ))
+            })?;
+            workunit::verify_capsule_policy_lineage_for_task(repo_root, &parsed).map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "invalid VERIFIED workunit manifest: {} ({})",
+                    e,
+                    path.display()
                 ))
             })?;
         }
@@ -1608,6 +1620,74 @@ fn validate_context_capsules_if_present(
 
     pass(
         &format!("Context capsule integrity checked for {} file(s)", files),
+        ctx,
+    );
+    Ok(())
+}
+
+fn validate_context_capsule_policy_contract(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Context Capsule Policy Gate");
+    let (policy, path) = match capsule_policy::load_policy_contract(repo_root) {
+        Ok(v) => v,
+        Err(error::DecapodError::ValidationError(msg))
+            if msg.starts_with("CAPSULE_POLICY_MISSING:") =>
+        {
+            warn(
+                "Context capsule policy contract missing; run `decapod init --force` to scaffold .decapod/generated/policy/context_capsule_policy.json",
+                ctx,
+            );
+            return Ok(());
+        }
+        Err(e) => return Err(e),
+    };
+    if policy.schema_version != POLICY_SCHEMA_VERSION {
+        fail(
+            &format!(
+                "Context capsule policy schema mismatch at {} (actual={}, expected={})",
+                path.display(),
+                policy.schema_version,
+                POLICY_SCHEMA_VERSION
+            ),
+            ctx,
+        );
+    }
+    if !policy.tiers.contains_key(&policy.default_risk_tier) {
+        fail(
+            &format!(
+                "Context capsule policy default_risk_tier '{}' is not declared in tiers",
+                policy.default_risk_tier
+            ),
+            ctx,
+        );
+    }
+    for (tier, rule) in &policy.tiers {
+        if rule.allowed_scopes.is_empty() {
+            fail(
+                &format!(
+                    "Context capsule policy tier '{}' has no allowed_scopes (fail closed)",
+                    tier
+                ),
+                ctx,
+            );
+        }
+        if rule.max_limit == 0 {
+            fail(
+                &format!(
+                    "Context capsule policy tier '{}' has max_limit=0 (invalid)",
+                    tier
+                ),
+                ctx,
+            );
+        }
+    }
+    pass(
+        &format!(
+            "Context capsule policy contract parsed and validated ({})",
+            path.display()
+        ),
         ctx,
     );
     Ok(())
@@ -4023,6 +4103,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_workunit_manifests_if_present", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_context_capsule_policy_contract(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_context_capsule_policy_contract", start.elapsed()));
         });
         s.spawn(move |_| {
             let start = Instant::now();

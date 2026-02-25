@@ -1,27 +1,34 @@
 {
-  "schema_version": "1.0.0",
+  "checklist": [
+    {
+      "evidence": "INTENT.md",
+      "name": "intent-linked-spec",
+      "status": "pass"
+    },
+    {
+      "evidence": "decapod validate",
+      "name": "proof-gates-green",
+      "status": "pass"
+    },
+    {
+      "evidence": "artifacts/provenance/*.json",
+      "name": "provenance-manifests-present",
+      "status": "pass"
+    }
+  ],
+  "intent": "Each merge MUST preserve user intent traceability and proof-gated completion.",
   "kind": "intent_convergence_checklist",
+  "policy_lineage": {
+    "capsule_hash": "b6f1500dfc743ac3a104c905a041bd165ea8cf6c31efd152a2ebcef3da217934",
+    "capsule_path": ".decapod/generated/context/R_releasecheck.json",
+    "policy_hash": "b4a75518f1afed0870b27325b691d13360d99133868df1a7ef3feacc15f4f30e",
+    "policy_revision": "policy.release@v1",
+    "risk_tier": "medium"
+  },
   "pr": {
     "base": "master",
     "scope": "governance-kernel"
   },
-  "intent": "Each merge MUST preserve user intent traceability and proof-gated completion.",
-  "scope": "release-ready repository state",
-  "checklist": [
-    {
-      "name": "intent-linked-spec",
-      "status": "pass",
-      "evidence": "INTENT.md"
-    },
-    {
-      "name": "proof-gates-green",
-      "status": "pass",
-      "evidence": "decapod validate"
-    },
-    {
-      "name": "provenance-manifests-present",
-      "status": "pass",
-      "evidence": "artifacts/provenance/*.json"
-    }
-  ]
+  "schema_version": "1.0.0",
+  "scope": "release-ready repository state"
 }

@@ -77,6 +77,15 @@ The broker emits an append-only audit trail for every request:
 
 This is a proof surface: “show me every mutation and who did it.”
 
+## Enforcement Checkpoints (JIT Capsule Integration)
+
+For governed autonomy flows, enforcement happens at four boundaries:
+
+1. Capsule issuance: deny non-policy scopes/tier combinations before artifact minting.
+2. Mutating command routing: routed mutators must pass through broker path or fail with typed error.
+3. Commit: write + dedupe ledger commit marker is authoritative completion signal.
+4. Promotion: promote/release surfaces must consume proof artifacts derived from the same policy/capsule lineage.
+
 ## Incremental Rollout Plan
 
 1. Add broker module with in-process queue and explicit request types for existing subsystems.

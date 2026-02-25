@@ -175,6 +175,12 @@ fn rpc_context_capsule_query_is_deterministic() {
 
     let capsule_hash = first_result["capsule_hash"].as_str().unwrap_or_default();
     assert!(!capsule_hash.is_empty(), "capsule hash missing");
+    assert_eq!(
+        first_result["policy"]["risk_tier"]
+            .as_str()
+            .unwrap_or_default(),
+        "medium"
+    );
 }
 
 #[test]
@@ -210,5 +216,72 @@ fn rpc_context_capsule_query_write_tracks_touched_path() {
         std::path::Path::new(touched_path).exists(),
         "expected persisted capsule at {}",
         touched_path
+    );
+}
+
+#[test]
+fn rpc_context_capsule_query_rejects_unknown_risk_tier() {
+    let (_tmp, dir) = setup_repo();
+    let params = r#"{"topic":"policy","scope":"interfaces","risk_tier":"unknown-tier"}"#;
+    let out = run_decapod(
+        &dir,
+        &["rpc", "--op", "context.capsule.query", "--params", params],
+    );
+    assert!(
+        !out.status.success(),
+        "rpc capsule query should fail for unknown risk tier"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("CAPSULE_RISK_TIER_UNKNOWN"),
+        "expected typed risk-tier error, got: {}",
+        stderr
+    );
+}
+
+#[test]
+fn rpc_context_capsule_query_write_auto_binds_workunit_state_ref() {
+    let (_tmp, dir) = setup_repo();
+
+    let init = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "init",
+            "--task-id",
+            "R_654",
+            "--intent-ref",
+            "intent://rpc-capsule-bind",
+        ],
+    );
+    assert!(
+        init.status.success(),
+        "workunit init failed: {}",
+        String::from_utf8_lossy(&init.stderr)
+    );
+
+    let params = r#"{"topic":"rpc bind","scope":"interfaces","task_id":"R_654","write":true}"#;
+    let out = run_decapod(
+        &dir,
+        &["rpc", "--op", "context.capsule.query", "--params", params],
+    );
+    assert!(
+        out.status.success(),
+        "rpc write failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let payload: Value = serde_json::from_slice(&out.stdout).expect("parse payload");
+    let touched = payload["receipt"]["touched_paths"]
+        .as_array()
+        .expect("touched paths array");
+    let has_workunit_path = touched.iter().any(|v| {
+        v.as_str()
+            .unwrap_or_default()
+            .ends_with(".decapod/governance/workunits/R_654.json")
+    });
+    assert!(
+        has_workunit_path,
+        "expected touched paths to include bound workunit manifest path"
     );
 }

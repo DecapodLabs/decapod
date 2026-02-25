@@ -143,6 +143,27 @@ struct InitGroupCli {
     /// Create only AGENTS.md entrypoint file.
     #[clap(long)]
     agents: bool,
+    /// Seed product name for generated specs (non-interactive safe).
+    #[clap(long)]
+    product_name: Option<String>,
+    /// Seed product summary/outcome for generated specs (non-interactive safe).
+    #[clap(long)]
+    product_summary: Option<String>,
+    /// Seed architecture direction for generated specs (non-interactive safe).
+    #[clap(long)]
+    architecture_direction: Option<String>,
+    /// Seed product type for generated specs (e.g. service_or_library/application).
+    #[clap(long)]
+    product_type: Option<String>,
+    /// Seed done criteria for generated specs (non-interactive safe).
+    #[clap(long)]
+    done_criteria: Option<String>,
+    /// Seed primary languages (repeatable and/or comma-separated).
+    #[clap(long = "primary-language", value_delimiter = ',')]
+    primary_languages: Vec<String>,
+    /// Seed detected surfaces (repeatable and/or comma-separated).
+    #[clap(long = "surface", value_delimiter = ',')]
+    detected_surfaces: Vec<String>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -187,6 +208,27 @@ struct InitWithCli {
     /// Diagram style for generated `.decapod/generated/specs/ARCHITECTURE.md`.
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
     diagram_style: InitDiagramStyle,
+    /// Seed product name for generated specs (non-interactive safe).
+    #[clap(long)]
+    product_name: Option<String>,
+    /// Seed product summary/outcome for generated specs (non-interactive safe).
+    #[clap(long)]
+    product_summary: Option<String>,
+    /// Seed architecture direction for generated specs (non-interactive safe).
+    #[clap(long)]
+    architecture_direction: Option<String>,
+    /// Seed product type for generated specs (e.g. service_or_library/application).
+    #[clap(long)]
+    product_type: Option<String>,
+    /// Seed done criteria for generated specs (non-interactive safe).
+    #[clap(long)]
+    done_criteria: Option<String>,
+    /// Seed primary languages (repeatable and/or comma-separated).
+    #[clap(long = "primary-language", value_delimiter = ',')]
+    primary_languages: Vec<String>,
+    /// Seed detected surfaces (repeatable and/or comma-separated).
+    #[clap(long = "surface", value_delimiter = ',')]
+    detected_surfaces: Vec<String>,
 }
 
 #[derive(clap::ValueEnum, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -521,6 +563,8 @@ enum CapsuleCommand {
         #[clap(long)]
         scope: String,
         #[clap(long)]
+        risk_tier: Option<String>,
+        #[clap(long)]
         task_id: Option<String>,
         #[clap(long)]
         workunit_id: Option<String>,
@@ -639,6 +683,8 @@ enum ReleaseCommand {
     Check,
     /// Emit deterministic repository inventory JSON for CI artifacts
     Inventory,
+    /// Normalize and stamp deterministic policy lineage across provenance manifests
+    LineageSync,
 }
 
 // ===== Main Command Enum =====
@@ -1218,6 +1264,115 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
     ctx
 }
 
+fn read_seed_list_env(var: &str) -> Vec<String> {
+    std::env::var(var)
+        .ok()
+        .map(|v| {
+            v.split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default()
+}
+
+fn dedupe_sorted(list: &mut Vec<String>) {
+    list.sort();
+    list.dedup();
+}
+
+fn apply_repo_context_env_overrides(ctx: &mut RepoContext) {
+    if let Ok(v) = std::env::var("DECAPOD_INIT_PRODUCT_NAME") {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_name = Some(trimmed.to_string());
+        }
+    }
+    if let Ok(v) = std::env::var("DECAPOD_INIT_PRODUCT_SUMMARY") {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_summary = Some(trimmed.to_string());
+        }
+    }
+    if let Ok(v) = std::env::var("DECAPOD_INIT_ARCHITECTURE_DIRECTION") {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.architecture_direction = Some(trimmed.to_string());
+        }
+    }
+    if let Ok(v) = std::env::var("DECAPOD_INIT_PRODUCT_TYPE") {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_type = Some(trimmed.to_string());
+        }
+    }
+    if let Ok(v) = std::env::var("DECAPOD_INIT_DONE_CRITERIA") {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.done_criteria = Some(trimmed.to_string());
+        }
+    }
+    if std::env::var("DECAPOD_INIT_PRIMARY_LANGUAGES").is_ok() {
+        ctx.primary_languages = read_seed_list_env("DECAPOD_INIT_PRIMARY_LANGUAGES");
+    }
+    if std::env::var("DECAPOD_INIT_SURFACES").is_ok() {
+        ctx.detected_surfaces = read_seed_list_env("DECAPOD_INIT_SURFACES");
+    }
+    dedupe_sorted(&mut ctx.primary_languages);
+    dedupe_sorted(&mut ctx.detected_surfaces);
+}
+
+fn apply_repo_context_cli_overrides(ctx: &mut RepoContext, init_with: &InitWithCli) {
+    if let Some(v) = init_with.product_name.as_ref() {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_name = Some(trimmed.to_string());
+        }
+    }
+    if let Some(v) = init_with.product_summary.as_ref() {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_summary = Some(trimmed.to_string());
+        }
+    }
+    if let Some(v) = init_with.architecture_direction.as_ref() {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.architecture_direction = Some(trimmed.to_string());
+        }
+    }
+    if let Some(v) = init_with.product_type.as_ref() {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.product_type = Some(trimmed.to_string());
+        }
+    }
+    if let Some(v) = init_with.done_criteria.as_ref() {
+        let trimmed = v.trim();
+        if !trimmed.is_empty() {
+            ctx.done_criteria = Some(trimmed.to_string());
+        }
+    }
+    if !init_with.primary_languages.is_empty() {
+        ctx.primary_languages = init_with
+            .primary_languages
+            .iter()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+    }
+    if !init_with.detected_surfaces.is_empty() {
+        ctx.detected_surfaces = init_with
+            .detected_surfaces
+            .iter()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+    }
+    dedupe_sorted(&mut ctx.primary_languages);
+    dedupe_sorted(&mut ctx.detected_surfaces);
+}
+
 fn prompt_line(prompt: &str) -> Result<String, error::DecapodError> {
     print!("{}", prompt);
     io::stdout().flush().map_err(error::DecapodError::IoError)?;
@@ -1323,6 +1478,13 @@ fn init_with_from_config(
         agents: has("AGENTS.md"),
         specs: config.init.specs,
         diagram_style: config.init.diagram_style,
+        product_name: None,
+        product_summary: None,
+        architecture_direction: None,
+        product_type: None,
+        done_criteria: None,
+        primary_languages: Vec::new(),
+        detected_surfaces: Vec::new(),
     }
 }
 
@@ -1622,12 +1784,21 @@ pub fn run() -> Result<(), error::DecapodError> {
                     .map_err(error::DecapodError::IoError)?;
                     let maybe_cfg = load_project_config_if_present(&target)?;
                     if let Some(cfg) = maybe_cfg {
-                        let mut with = interactive_init_with(
-                            &cfg,
-                            target.clone(),
-                            init_group.force,
-                            init_group.dry_run,
-                        )?;
+                        let mut with = if io::stdin().is_terminal() {
+                            interactive_init_with(
+                                &cfg,
+                                target.clone(),
+                                init_group.force,
+                                init_group.dry_run,
+                            )?
+                        } else {
+                            init_with_from_config(
+                                &cfg,
+                                target.clone(),
+                                init_group.force,
+                                init_group.dry_run,
+                            )
+                        };
                         // Keep base command flags as explicit runtime overrides.
                         if init_group.all {
                             with.all = true;
@@ -1644,6 +1815,27 @@ pub fn run() -> Result<(), error::DecapodError> {
                         if init_group.gemini {
                             with.gemini = true;
                         }
+                        if init_group.product_name.is_some() {
+                            with.product_name = init_group.product_name.clone();
+                        }
+                        if init_group.product_summary.is_some() {
+                            with.product_summary = init_group.product_summary.clone();
+                        }
+                        if init_group.architecture_direction.is_some() {
+                            with.architecture_direction = init_group.architecture_direction.clone();
+                        }
+                        if init_group.product_type.is_some() {
+                            with.product_type = init_group.product_type.clone();
+                        }
+                        if init_group.done_criteria.is_some() {
+                            with.done_criteria = init_group.done_criteria.clone();
+                        }
+                        if !init_group.primary_languages.is_empty() {
+                            with.primary_languages = init_group.primary_languages.clone();
+                        }
+                        if !init_group.detected_surfaces.is_empty() {
+                            with.detected_surfaces = init_group.detected_surfaces.clone();
+                        }
                         with
                     } else {
                         InitWithCli {
@@ -1656,6 +1848,13 @@ pub fn run() -> Result<(), error::DecapodError> {
                             agents: init_group.agents,
                             specs: true,
                             diagram_style: InitDiagramStyle::Ascii,
+                            product_name: init_group.product_name.clone(),
+                            product_summary: init_group.product_summary.clone(),
+                            architecture_direction: init_group.architecture_direction.clone(),
+                            product_type: init_group.product_type.clone(),
+                            done_criteria: init_group.done_criteria.clone(),
+                            primary_languages: init_group.primary_languages.clone(),
+                            detected_surfaces: init_group.detected_surfaces.clone(),
                         }
                     }
                 }
@@ -1665,6 +1864,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                 std::fs::canonicalize(init_with.dir.clone().unwrap_or_else(|| current_dir.clone()))
                     .map_err(error::DecapodError::IoError)?;
             let mut repo_ctx = infer_repo_context(&init_target);
+            apply_repo_context_env_overrides(&mut repo_ctx);
+            apply_repo_context_cli_overrides(&mut repo_ctx, &init_with);
             if base_init_invocation && io::stdin().is_terminal() {
                 enrich_repo_context_interactive(&mut repo_ctx)?;
             }
@@ -1701,7 +1902,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
             if should_route_via_group_broker(&cli.command, &argv) {
-                match core::group_broker::maybe_route_mutation(&decapod_root_path, &argv) {
+                match core::group_broker::maybe_route_mutation(&store_root, &argv) {
                     Err(e) => {
                         if !core::group_broker::is_internal_invocation() {
                             return Err(e);
@@ -2913,11 +3114,13 @@ fn run_release_command(cli: ReleaseCli, project_root: &Path) -> Result<(), error
     match cli.command {
         ReleaseCommand::Check => run_release_check(project_root),
         ReleaseCommand::Inventory => run_release_inventory(project_root),
+        ReleaseCommand::LineageSync => run_release_lineage_sync(project_root),
     }
 }
 
 fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     let mut failures = Vec::new();
+    let mut lineage_records: Vec<(String, PolicyLineage)> = Vec::new();
     let mut changelog_raw: Option<String> = None;
     let changelog = project_root.join("CHANGELOG.md");
     let migrations = project_root
@@ -2974,20 +3177,50 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
                 .to_string(),
         );
     }
-    if artifact_manifest.exists()
-        && let Err(e) = validate_artifact_manifest(project_root, &artifact_manifest)
+    if artifact_manifest.exists() && proof_manifest.exists() && intent_convergence_manifest.exists()
     {
-        failures.push(format!("artifact manifest invalid: {}", e));
+        match stamp_release_policy_lineage(
+            project_root,
+            [
+                &artifact_manifest,
+                &proof_manifest,
+                &intent_convergence_manifest,
+            ],
+        ) {
+            Ok(lineage) => lineage_records.push(("lineage stamp baseline".to_string(), lineage)),
+            Err(e) => failures.push(format!("provenance lineage stamping failed: {}", e)),
+        }
     }
-    if proof_manifest.exists()
-        && let Err(e) = validate_proof_manifest(&proof_manifest)
-    {
-        failures.push(format!("proof manifest invalid: {}", e));
+    if artifact_manifest.exists() {
+        match validate_artifact_manifest(project_root, &artifact_manifest) {
+            Ok(lineage) => lineage_records.push(("artifact manifest".to_string(), lineage)),
+            Err(e) => failures.push(format!("artifact manifest invalid: {}", e)),
+        }
     }
-    if intent_convergence_manifest.exists()
-        && let Err(e) = validate_intent_convergence_manifest(&intent_convergence_manifest)
-    {
-        failures.push(format!("intent convergence manifest invalid: {}", e));
+    if proof_manifest.exists() {
+        match validate_proof_manifest(project_root, &proof_manifest) {
+            Ok(lineage) => lineage_records.push(("proof manifest".to_string(), lineage)),
+            Err(e) => failures.push(format!("proof manifest invalid: {}", e)),
+        }
+    }
+    if intent_convergence_manifest.exists() {
+        match validate_intent_convergence_manifest(project_root, &intent_convergence_manifest) {
+            Ok(lineage) => {
+                lineage_records.push(("intent convergence manifest".to_string(), lineage))
+            }
+            Err(e) => failures.push(format!("intent convergence manifest invalid: {}", e)),
+        }
+    }
+
+    if let Some((baseline_name, baseline)) = lineage_records.first() {
+        for (name, lineage) in lineage_records.iter().skip(1) {
+            if lineage != baseline {
+                failures.push(format!(
+                    "policy lineage mismatch: '{}' differs from '{}' ({:?} != {:?})",
+                    name, baseline_name, lineage, baseline
+                ));
+            }
+        }
     }
 
     let changed_paths = git_changed_paths(project_root);
@@ -3060,6 +3293,61 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
     Ok(())
 }
 
+fn run_release_lineage_sync(project_root: &Path) -> Result<(), error::DecapodError> {
+    let artifact_manifest =
+        project_root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+    let proof_manifest =
+        project_root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    let intent_convergence_manifest = project_root
+        .join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
+
+    let mut missing = Vec::new();
+    if !artifact_manifest.exists() {
+        missing.push(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+    }
+    if !proof_manifest.exists() {
+        missing.push(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    }
+    if !intent_convergence_manifest.exists() {
+        missing.push(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
+    }
+    if !missing.is_empty() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "release.lineage_sync missing required provenance manifests: {}",
+            missing.join(", ")
+        )));
+    }
+
+    let lineage = stamp_release_policy_lineage(
+        project_root,
+        [
+            &artifact_manifest,
+            &proof_manifest,
+            &intent_convergence_manifest,
+        ],
+    )?;
+    println!(
+        "{}",
+        serde_json::json!({
+            "cmd": "release.lineage_sync",
+            "status": "ok",
+            "policy_lineage": {
+                "policy_hash": lineage.policy_hash,
+                "policy_revision": lineage.policy_revision,
+                "risk_tier": lineage.risk_tier,
+                "capsule_path": lineage.capsule_path,
+                "capsule_hash": lineage.capsule_hash
+            },
+            "manifests": [
+                ".decapod/generated/artifacts/provenance/artifact_manifest.json",
+                ".decapod/generated/artifacts/provenance/proof_manifest.json",
+                ".decapod/generated/artifacts/provenance/intent_convergence_checklist.json"
+            ]
+        })
+    );
+    Ok(())
+}
+
 fn sha256_file(path: &Path) -> Result<String, error::DecapodError> {
     let bytes = fs::read(path).map_err(error::DecapodError::IoError)?;
     let mut hasher = Sha256::new();
@@ -3067,10 +3355,260 @@ fn sha256_file(path: &Path) -> Result<String, error::DecapodError> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
+fn sha256_text(input: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(input.as_bytes());
+    format!("{:x}", hasher.finalize())
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct PolicyLineage {
+    policy_hash: String,
+    policy_revision: String,
+    risk_tier: String,
+    capsule_path: String,
+    capsule_hash: String,
+}
+
+fn resolve_release_risk_tier() -> Result<String, error::DecapodError> {
+    let tier = std::env::var("DECAPOD_RELEASE_RISK_TIER").unwrap_or_else(|_| "medium".to_string());
+    let normalized = tier.trim().to_ascii_lowercase();
+    if !matches!(normalized.as_str(), "low" | "medium" | "high" | "critical") {
+        return Err(error::DecapodError::ValidationError(format!(
+            "invalid DECAPOD_RELEASE_RISK_TIER '{}': expected low|medium|high|critical",
+            tier
+        )));
+    }
+    Ok(normalized)
+}
+
+fn resolve_release_capsule(project_root: &Path) -> Result<(String, String), error::DecapodError> {
+    let fallback = core::context_capsule::query_embedded_capsule(
+        project_root,
+        "release provenance",
+        "interfaces",
+        Some("R_releasecheck"),
+        None,
+        8,
+    )?;
+    let fallback_path = core::context_capsule::context_capsule_path(project_root, &fallback);
+    let capsule = if fallback_path.exists() {
+        let raw = fs::read_to_string(&fallback_path).map_err(error::DecapodError::IoError)?;
+        let parsed: core::context_capsule::DeterministicContextCapsule = serde_json::from_str(&raw)
+            .map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "invalid release capsule JSON at '{}': {}",
+                    fallback_path.display(),
+                    e
+                ))
+            })?;
+        parsed.with_recomputed_hash().map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "failed to recompute release capsule hash at '{}': {}",
+                fallback_path.display(),
+                e
+            ))
+        })?
+    } else {
+        fallback
+    };
+    let path = core::context_capsule::write_context_capsule(project_root, &capsule)?;
+    let rel_path = path
+        .strip_prefix(project_root)
+        .map_err(|_| {
+            error::DecapodError::ValidationError(format!(
+                "release capsule path '{}' is outside project root",
+                path.display()
+            ))
+        })?
+        .to_string_lossy()
+        .replace('\\', "/");
+    Ok((rel_path, capsule.capsule_hash))
+}
+
+fn stamp_release_policy_lineage<const N: usize>(
+    project_root: &Path,
+    manifest_paths: [&Path; N],
+) -> Result<PolicyLineage, error::DecapodError> {
+    let policy_revision = "policy.release@v1".to_string();
+    let risk_tier = resolve_release_risk_tier()?;
+    let (capsule_path, capsule_hash) = resolve_release_capsule(project_root)?;
+    let policy_hash = sha256_text(&format!(
+        "{}|{}|{}",
+        policy_revision, risk_tier, capsule_hash
+    ));
+    let lineage_json = serde_json::json!({
+        "policy_hash": policy_hash,
+        "policy_revision": policy_revision,
+        "risk_tier": risk_tier,
+        "capsule_path": capsule_path,
+        "capsule_hash": capsule_hash
+    });
+
+    for manifest_path in manifest_paths {
+        let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
+        let mut v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "failed to parse JSON manifest '{}': {}",
+                manifest_path.display(),
+                e
+            ))
+        })?;
+        let obj = v.as_object_mut().ok_or_else(|| {
+            error::DecapodError::ValidationError(format!(
+                "manifest '{}' must be a JSON object",
+                manifest_path.display()
+            ))
+        })?;
+        obj.insert("policy_lineage".to_string(), lineage_json.clone());
+        let updated = serde_json::to_vec_pretty(&v).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "failed to serialize stamped manifest '{}': {}",
+                manifest_path.display(),
+                e
+            ))
+        })?;
+        fs::write(manifest_path, updated).map_err(error::DecapodError::IoError)?;
+    }
+
+    Ok(PolicyLineage {
+        policy_hash: lineage_json["policy_hash"]
+            .as_str()
+            .unwrap_or("")
+            .to_string(),
+        policy_revision: lineage_json["policy_revision"]
+            .as_str()
+            .unwrap_or("")
+            .to_string(),
+        risk_tier: lineage_json["risk_tier"].as_str().unwrap_or("").to_string(),
+        capsule_path: lineage_json["capsule_path"]
+            .as_str()
+            .unwrap_or("")
+            .to_string(),
+        capsule_hash: lineage_json["capsule_hash"]
+            .as_str()
+            .unwrap_or("")
+            .to_string(),
+    })
+}
+
+fn validate_policy_lineage(
+    project_root: &Path,
+    v: &serde_json::Value,
+    manifest_label: &str,
+) -> Result<PolicyLineage, error::DecapodError> {
+    let lineage = v
+        .get("policy_lineage")
+        .and_then(|x| x.as_object())
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(format!(
+                "{manifest_label} missing policy_lineage object"
+            ))
+        })?;
+
+    let required = [
+        "policy_hash",
+        "policy_revision",
+        "risk_tier",
+        "capsule_path",
+        "capsule_hash",
+    ];
+    for key in required {
+        let value = lineage.get(key).and_then(|x| x.as_str()).unwrap_or("");
+        if value.is_empty() || value.contains("TO_BE_FILLED") {
+            return Err(error::DecapodError::ValidationError(format!(
+                "{manifest_label} policy_lineage.{key} must be non-empty and non-placeholder"
+            )));
+        }
+    }
+
+    let policy_hash = lineage
+        .get("policy_hash")
+        .and_then(|x| x.as_str())
+        .unwrap_or("");
+    if policy_hash.len() != 64 || !policy_hash.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage.policy_hash must be a 64-char hex digest"
+        )));
+    }
+
+    let capsule_hash = lineage
+        .get("capsule_hash")
+        .and_then(|x| x.as_str())
+        .unwrap_or("");
+    if capsule_hash.len() != 64 || !capsule_hash.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage.capsule_hash must be a 64-char hex digest"
+        )));
+    }
+
+    let risk_tier = lineage
+        .get("risk_tier")
+        .and_then(|x| x.as_str())
+        .unwrap_or("");
+    if !matches!(risk_tier, "low" | "medium" | "high" | "critical") {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage.risk_tier invalid: expected low|medium|high|critical"
+        )));
+    }
+
+    let capsule_path = lineage
+        .get("capsule_path")
+        .and_then(|x| x.as_str())
+        .unwrap_or("");
+    let abs = project_root.join(capsule_path);
+    if !abs.exists() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage.capsule_path '{}' does not exist",
+            capsule_path
+        )));
+    }
+
+    let raw_capsule = fs::read_to_string(&abs).map_err(error::DecapodError::IoError)?;
+    let parsed: core::context_capsule::DeterministicContextCapsule =
+        serde_json::from_str(&raw_capsule).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "{manifest_label} policy_lineage capsule at '{}' is not valid deterministic capsule JSON: {}",
+                capsule_path, e
+            ))
+        })?;
+    let normalized = parsed.with_recomputed_hash().map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage capsule hash computation failed for '{}': {}",
+            capsule_path, e
+        ))
+    })?;
+
+    if parsed.capsule_hash != normalized.capsule_hash {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage capsule file '{}' has internal hash mismatch",
+            capsule_path
+        )));
+    }
+    if capsule_hash != normalized.capsule_hash {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage capsule_hash mismatch for '{}'",
+            capsule_path
+        )));
+    }
+
+    Ok(PolicyLineage {
+        policy_hash: policy_hash.to_string(),
+        policy_revision: lineage
+            .get("policy_revision")
+            .and_then(|x| x.as_str())
+            .unwrap_or("")
+            .to_string(),
+        risk_tier: risk_tier.to_string(),
+        capsule_path: capsule_path.to_string(),
+        capsule_hash: capsule_hash.to_string(),
+    })
+}
+
 fn validate_artifact_manifest(
     project_root: &Path,
     manifest_path: &Path,
-) -> Result<(), error::DecapodError> {
+) -> Result<PolicyLineage, error::DecapodError> {
     let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
     let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!("artifact manifest is not valid JSON: {e}"))
@@ -3085,6 +3623,7 @@ fn validate_artifact_manifest(
             "artifact manifest kind must be artifact_manifest".to_string(),
         ));
     }
+    let lineage = validate_policy_lineage(project_root, &v, "artifact manifest")?;
 
     let artifacts = v
         .get("artifacts")
@@ -3131,10 +3670,13 @@ fn validate_artifact_manifest(
             )));
         }
     }
-    Ok(())
+    Ok(lineage)
 }
 
-fn validate_proof_manifest(manifest_path: &Path) -> Result<(), error::DecapodError> {
+fn validate_proof_manifest(
+    project_root: &Path,
+    manifest_path: &Path,
+) -> Result<PolicyLineage, error::DecapodError> {
     let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
     let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!("proof manifest is not valid JSON: {e}"))
@@ -3149,6 +3691,7 @@ fn validate_proof_manifest(manifest_path: &Path) -> Result<(), error::DecapodErr
             "proof manifest kind must be proof_manifest".to_string(),
         ));
     }
+    let lineage = validate_policy_lineage(project_root, &v, "proof manifest")?;
     let proofs = v.get("proofs").and_then(|x| x.as_array()).ok_or_else(|| {
         error::DecapodError::ValidationError("proof manifest proofs[] required".to_string())
     })?;
@@ -3186,10 +3729,13 @@ fn validate_proof_manifest(manifest_path: &Path) -> Result<(), error::DecapodErr
             )));
         }
     }
-    Ok(())
+    Ok(lineage)
 }
 
-fn validate_intent_convergence_manifest(manifest_path: &Path) -> Result<(), error::DecapodError> {
+fn validate_intent_convergence_manifest(
+    project_root: &Path,
+    manifest_path: &Path,
+) -> Result<PolicyLineage, error::DecapodError> {
     let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
     let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!(
@@ -3206,6 +3752,7 @@ fn validate_intent_convergence_manifest(manifest_path: &Path) -> Result<(), erro
             "intent convergence manifest kind must be intent_convergence_checklist".to_string(),
         ));
     }
+    let lineage = validate_policy_lineage(project_root, &v, "intent convergence manifest")?;
 
     for key in ["pr", "intent", "scope", "checklist"] {
         if v.get(key).is_none() {
@@ -3246,7 +3793,7 @@ fn validate_intent_convergence_manifest(manifest_path: &Path) -> Result<(), erro
             )));
         }
     }
-    Ok(())
+    Ok(lineage)
 }
 
 fn build_release_inventory(project_root: &Path) -> Result<serde_json::Value, error::DecapodError> {
@@ -3913,26 +4460,41 @@ fn run_capsule_command(
         CapsuleCommand::Query {
             topic,
             scope,
+            risk_tier,
             task_id,
             workunit_id,
             limit,
             write,
         } => {
-            let capsule = core::context_capsule::query_embedded_capsule(
+            let resolved_policy = core::capsule_policy::resolve_capsule_policy(
+                project_root,
+                &scope,
+                risk_tier.as_deref(),
+                limit,
+                write,
+            )?;
+            let capsule = core::context_capsule::query_embedded_capsule_governed(
                 project_root,
                 &topic,
                 &scope,
                 task_id.as_deref(),
                 workunit_id.as_deref(),
-                limit,
+                resolved_policy.effective_limit,
+                resolved_policy.binding,
             )?;
             if write {
                 let path = core::context_capsule::write_context_capsule(project_root, &capsule)?;
+                let workunit_binding = maybe_bind_capsule_to_workunit_state_ref(
+                    project_root,
+                    task_id.as_deref().or(workunit_id.as_deref()),
+                    &path,
+                )?;
                 println!(
                     "{}",
                     serde_json::to_string_pretty(&serde_json::json!({
                         "status": "ok",
                         "path": path,
+                        "workunit_state_ref_binding": workunit_binding,
                         "capsule": capsule,
                     }))
                     .unwrap()
@@ -5414,17 +5976,20 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                 vec![
                     AllowedOp {
                         op: "store.upsert".to_string(),
-                        reason: "Persist significant decisions for audit trail before proceeding".to_string(),
+                        reason: "Persist significant decisions for audit trail before proceeding"
+                            .to_string(),
                         required_params: vec!["kind".to_string(), "data".to_string()],
                     },
                     AllowedOp {
                         op: "validate.run".to_string(),
-                        reason: "Validate your changes against constitution before claiming done".to_string(),
+                        reason: "Validate your changes against constitution before claiming done"
+                            .to_string(),
                         required_params: vec![],
                     },
                     AllowedOp {
                         op: "store.query".to_string(),
-                        reason: "Retrieve prior decisions and knowledge relevant to current task".to_string(),
+                        reason: "Retrieve prior decisions and knowledge relevant to current task"
+                            .to_string(),
                         required_params: vec!["kind".to_string()],
                     },
                 ],
@@ -5452,24 +6017,40 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             let task_id = params.get("task_id").and_then(|v| v.as_str());
             let workunit_id = params.get("workunit_id").and_then(|v| v.as_str());
             let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(6) as usize;
+            let risk_tier = params.get("risk_tier").and_then(|v| v.as_str());
             let write = params
                 .get("write")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(false);
 
-            let capsule = core::context_capsule::query_embedded_capsule(
+            let resolved_policy = core::capsule_policy::resolve_capsule_policy(
+                project_root,
+                scope,
+                risk_tier,
+                limit,
+                write,
+            )?;
+            let capsule = core::context_capsule::query_embedded_capsule_governed(
                 project_root,
                 topic,
                 scope,
                 task_id,
                 workunit_id,
-                limit,
+                resolved_policy.effective_limit,
+                resolved_policy.binding,
             )?;
 
             let mut touched = Vec::new();
             if write {
                 let path = core::context_capsule::write_context_capsule(project_root, &capsule)?;
                 touched.push(path.to_string_lossy().to_string());
+                if let Some(workunit_path) = maybe_bind_capsule_to_workunit_state_ref(
+                    project_root,
+                    task_id.or(workunit_id),
+                    &path,
+                )? {
+                    touched.push(workunit_path.to_string_lossy().to_string());
+                }
             }
 
             success_response(
@@ -6223,6 +6804,30 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 
     println!("{}", serde_json::to_string_pretty(&response).unwrap());
     Ok(())
+}
+
+fn maybe_bind_capsule_to_workunit_state_ref(
+    project_root: &Path,
+    workunit_task_id: Option<&str>,
+    capsule_path: &Path,
+) -> Result<Option<PathBuf>, error::DecapodError> {
+    let Some(task_id) = workunit_task_id else {
+        return Ok(None);
+    };
+    match core::workunit::load_workunit(project_root, task_id) {
+        Ok(_) => {
+            let state_ref = capsule_path
+                .strip_prefix(project_root)
+                .unwrap_or(capsule_path)
+                .to_string_lossy()
+                .replace('\\', "/");
+            core::workunit::add_state_ref(project_root, task_id, &state_ref)?;
+            let path = core::workunit::workunit_path(project_root, task_id)?;
+            Ok(Some(path))
+        }
+        Err(error::DecapodError::NotFound(_)) => Ok(None),
+        Err(e) => Err(e),
+    }
 }
 
 /// Run capabilities command
