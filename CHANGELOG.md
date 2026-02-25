@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Other
 
 - todo: migrate task IDs to typed format `<type4>_<16-alnum>`, add task `hash` field, and align workspace scope checks
+- migration: add startup SQL-backed todo ID rewrite for legacy stores (DB + events log) on first post-upgrade activation
+- cli: add `decapod activate` as explicit first-run activation surface to trigger migrations/bootstrap
 - schema/interface: update TODO schema contract with typed ID and hash invariants
 - docs/scaffold: refresh `.decapod/README.md` template with Decapod harness positioning and canonical control-plane layout
 

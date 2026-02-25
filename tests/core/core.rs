@@ -415,6 +415,136 @@ fn migration_preserves_existing_event_log() {
 }
 
 #[test]
+fn migration_rewrites_legacy_todo_ids_and_references() {
+    let tmp = tempdir().expect("tempdir");
+    let decapod_root = tmp.path();
+    let data_dir = decapod_root.join("data");
+    fs::create_dir_all(&data_dir).expect("data dir");
+
+    let conn = rusqlite::Connection::open(data_dir.join("todo.db")).expect("open db");
+    conn.execute_batch(
+        r#"
+        CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+        INSERT INTO meta(key, value) VALUES ('schema_version', '14');
+        CREATE TABLE tasks (
+            id TEXT PRIMARY KEY,
+            hash TEXT NOT NULL DEFAULT '',
+            title TEXT NOT NULL,
+            category TEXT DEFAULT '',
+            parent_task_id TEXT,
+            depends_on TEXT DEFAULT '',
+            blocks TEXT DEFAULT '',
+            created_at TEXT NOT NULL
+        );
+        CREATE TABLE task_events (
+            event_id TEXT PRIMARY KEY,
+            ts TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            task_id TEXT,
+            payload TEXT NOT NULL,
+            actor TEXT NOT NULL
+        );
+        CREATE TABLE task_dependencies (
+            id TEXT PRIMARY KEY,
+            task_id TEXT NOT NULL,
+            depends_on_task_id TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        );
+        CREATE TABLE task_verification (
+            todo_id TEXT PRIMARY KEY,
+            proof_plan TEXT NOT NULL DEFAULT '[]',
+            updated_at TEXT NOT NULL
+        );
+        CREATE TABLE task_owners (
+            id TEXT PRIMARY KEY,
+            task_id TEXT NOT NULL,
+            agent_id TEXT NOT NULL,
+            claimed_at TEXT NOT NULL,
+            claim_type TEXT NOT NULL DEFAULT 'primary'
+        );
+        INSERT INTO tasks(id, hash, title, category, parent_task_id, depends_on, blocks, created_at)
+        VALUES
+            ('R_LEGACY_A', '', 'Fix race in broker', 'bugs', NULL, '', '', '2026-02-25T00:00:00Z'),
+            ('R_LEGACY_B', '', 'Add docs for bootstrap', 'docs', 'R_LEGACY_A', 'R_LEGACY_A', '', '2026-02-25T00:01:00Z');
+        INSERT INTO task_dependencies(id, task_id, depends_on_task_id, created_at)
+        VALUES ('dep1', 'R_LEGACY_B', 'R_LEGACY_A', '2026-02-25T00:02:00Z');
+        INSERT INTO task_verification(todo_id, proof_plan, updated_at)
+        VALUES ('R_LEGACY_B', '[]', '2026-02-25T00:03:00Z');
+        INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
+        VALUES ('owner1', 'R_LEGACY_B', 'agent-x', '2026-02-25T00:04:00Z', 'primary');
+        INSERT INTO task_events(event_id, ts, event_type, task_id, payload, actor)
+        VALUES
+            ('evt1', '2026-02-25T00:00:00Z', 'task.add', 'R_LEGACY_A', '{"title":"Fix race in broker"}', 'tester'),
+            ('evt2', '2026-02-25T00:01:00Z', 'task.add', 'R_LEGACY_B', '{"title":"Add docs","depends_on":"R_LEGACY_A","parent_task_id":"R_LEGACY_A"}', 'tester');
+        "#,
+    )
+    .expect("seed schema");
+
+    fs::write(
+        data_dir.join("todo.events.jsonl"),
+        "{\"event_id\":\"evt1\",\"event_type\":\"task.add\",\"task_id\":\"R_LEGACY_A\",\"payload\":{\"title\":\"Fix race\"}}\n{\"event_id\":\"evt2\",\"event_type\":\"task.add\",\"task_id\":\"R_LEGACY_B\",\"payload\":{\"depends_on\":\"R_LEGACY_A\",\"parent_task_id\":\"R_LEGACY_A\"}}\n",
+    )
+    .expect("write events jsonl");
+
+    migration::check_and_migrate(decapod_root).expect("migration");
+
+    let conn = rusqlite::Connection::open(data_dir.join("todo.db")).expect("reopen db");
+    let ids: Vec<String> = {
+        let mut stmt = conn
+            .prepare("SELECT id FROM tasks ORDER BY created_at")
+            .expect("prepare ids");
+        stmt.query_map([], |row| row.get::<_, String>(0))
+            .expect("query ids")
+            .map(|r| r.expect("id row"))
+            .collect()
+    };
+    assert_eq!(ids.len(), 2);
+    for id in &ids {
+        let parts: Vec<&str> = id.split('_').collect();
+        assert_eq!(parts.len(), 2);
+        assert_eq!(parts[0].len(), 4);
+        assert_eq!(parts[1].len(), 16);
+    }
+    let legacy_count: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM tasks WHERE id LIKE 'R_LEGACY_%'",
+            [],
+            |row| row.get(0),
+        )
+        .expect("legacy count");
+    assert_eq!(legacy_count, 0);
+
+    let csv_refs: Vec<(String, String)> = {
+        let mut stmt = conn
+            .prepare(
+                "SELECT depends_on, COALESCE(parent_task_id, '') FROM tasks ORDER BY created_at",
+            )
+            .expect("prepare refs");
+        stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?)))
+            .expect("query refs")
+            .map(|r| r.expect("ref row"))
+            .collect()
+    };
+    assert!(
+        !csv_refs
+            .iter()
+            .any(|(a, b)| a.contains("R_LEGACY_") || b.contains("R_LEGACY_"))
+    );
+
+    let events_content = fs::read_to_string(data_dir.join("todo.events.jsonl")).expect("events");
+    assert!(!events_content.contains("R_LEGACY_"));
+    for line in events_content.lines() {
+        let parsed: serde_json::Value = serde_json::from_str(line).expect("event json");
+        if let Some(task_id) = parsed.get("task_id").and_then(|v| v.as_str()) {
+            let parts: Vec<&str> = task_id.split('_').collect();
+            assert_eq!(parts.len(), 2);
+            assert_eq!(parts[0].len(), 4);
+            assert_eq!(parts[1].len(), 16);
+        }
+    }
+}
+
+#[test]
 fn repomap_detects_manifests_entrypoints_and_docs() {
     let tmp = tempdir().expect("tempdir");
     let root = tmp.path();
