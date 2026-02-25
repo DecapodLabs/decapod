@@ -28,7 +28,7 @@
 use crate::core::db;
 use crate::core::error::DecapodError;
 use rusqlite::Connection;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 use std::thread;
@@ -58,16 +58,17 @@ struct PoolEntry {
 /// - Read operations create fresh connections without mutex serialization (WAL concurrent reads).
 /// - Both paths use increased `busy_timeout` for cross-process contention.
 pub struct SqlitePool {
-    entries: Mutex<HashMap<PathBuf, &'static PoolEntry>>,
+    entries: Mutex<FxHashMap<PathBuf, &'static PoolEntry>>,
 }
 
 impl SqlitePool {
     fn new() -> Self {
         Self {
-            entries: Mutex::new(HashMap::new()),
+            entries: Mutex::new(FxHashMap::default()),
         }
     }
 
+    #[inline]
     fn get_entry(&self, db_path: &Path) -> Result<&'static PoolEntry, DecapodError> {
         let canonical = db_path.to_path_buf();
         let mut entries = self.entries.lock().map_err(|_| {
@@ -86,6 +87,7 @@ impl SqlitePool {
 
     /// Execute a closure with a write connection for the given DB path.
     /// Write access is serialized per-DB via mutex.
+    #[inline]
     pub fn with_write<F, R>(&self, db_path: &Path, f: F) -> Result<R, DecapodError>
     where
         F: FnOnce(&Connection) -> Result<R, DecapodError>,
@@ -104,6 +106,7 @@ impl SqlitePool {
 
     /// Execute a closure with a read connection (no mutex serialization).
     /// WAL mode allows concurrent readers across threads and processes.
+    #[inline]
     pub fn with_read<F, R>(&self, db_path: &Path, f: F) -> Result<R, DecapodError>
     where
         F: FnOnce(&Connection) -> Result<R, DecapodError>,
