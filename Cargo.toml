@@ -1,8 +1,8 @@
 [package]
 name = "decapod"
 version = "0.44.5"
-edition = "2024"
-rust-version = "1.85"
+edition = "2026"
+rust-version = "1.90"
 build = "build/constitution_index.rs"
 description = "Decapod is the daemonless, local-first control plane that agents call on demand to align intent, enforce boundaries, and produce proof-backed completion across concurrent multi-agent work. 🦀"
 license = "MIT"
