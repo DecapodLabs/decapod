@@ -12,6 +12,7 @@
 
 Each task record MUST include:
 - `id`
+- `hash`
 - `title`
 - `status` (`open` | `done` | `archived`)
 - `priority` (`low` | `medium` | `high`)
@@ -59,7 +60,12 @@ Unknown event types are validation errors.
 2. `status=done` SHOULD set `completed_at`.
 3. `status=archived` SHOULD retain audit trail history.
 4. Task IDs MUST be stable and unique.
-5. Event log replay MUST deterministically rebuild current state.
+5. Task IDs MUST use `<type4>_<16-alnum>` format (for example: `docs_a1b2c3d4e5f6g7h8`).
+6. `hash` MUST equal the first 6 characters after `<type4>_` in `id`.
+7. Event log replay MUST deterministically rebuild current state.
+
+Canonical `type4` values:
+`aiml`, `apis`, `appl`, `arch`, `bend`, `bugs`, `cicd`, `code`, `data`, `desn`, `devx`, `docs`, `feat`, `fend`, `lang`, `perf`, `plat`, `proj`, `refa`, `root`, `secu`, `spec`, `test`.
 
 ---
 

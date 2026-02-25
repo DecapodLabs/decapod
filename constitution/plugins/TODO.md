@@ -77,10 +77,10 @@ decapod todo add "Implement feature X" --priority high
 # ... implementation ...
 
 # 3. Mark as done (sets completed_at)
-decapod todo done --id R_XXXXXXXX
+decapod todo done --id docs_a1b2c3d4e5f6g7h8
 
 # 4. Optional archive (sets closed_at) when required/approved
-decapod todo archive --id R_XXXXXXXX
+decapod todo archive --id code_a1b2c3d4e5f6g7h8
 ```
 
 **Rule**: Use `todo done --id` for normal closeout. Use `todo archive --id` only when the workflow requires archival and approvals are satisfied.

@@ -61,7 +61,7 @@ Error: ValidationError("Unknown event_type 'task.edit'")
 **Severity:** Medium — functional but affects tooling interoperability
 **Test IDs:** T051 (indirect — caused task ID to be `UNKNOWN`)
 
-**Root cause:** The JSON output from `todo --format json list` wraps tasks in a `{"items": [...]}` envelope. The task IDs use the format `R_01KHDB64XNXW2ZA81AF8C6MX4H`. Simple `grep -o '"id":"[^"]*"'` extraction can fail depending on JSON formatting. In the test, the second task ID extraction returned empty, causing `todo done --id --validated` to fail with "a value is required for '--id'".
+**Root cause:** The JSON output from `todo --format json list` wraps tasks in a `{"items": [...]}` envelope. The task IDs use typed format like `docs_a1b2c3d4e5f6g7h8`. Simple `grep -o '"id":"[^"]*"'` extraction can fail depending on JSON formatting. In the test, the second task ID extraction returned empty, causing `todo done --id --validated` to fail with "a value is required for '--id'".
 
 This is not a CLI bug per se, but the JSON format makes programmatic extraction fragile. Consider adding a `--quiet` or `--ids-only` mode for scripting.
 

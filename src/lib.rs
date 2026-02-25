@@ -1697,19 +1697,22 @@ pub fn run() -> Result<(), error::DecapodError> {
             store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
             if should_route_via_group_broker(&cli.command, &argv) {
-                if let Err(e) = core::group_broker::maybe_route_mutation(&decapod_root_path, &argv)
-                {
-                    if !core::group_broker::is_internal_invocation() {
-                        return Err(e);
+                match core::group_broker::maybe_route_mutation(&decapod_root_path, &argv) {
+                    Err(e) => {
+                        if !core::group_broker::is_internal_invocation() {
+                            return Err(e);
+                        }
                     }
-                } else if !core::group_broker::is_internal_invocation() {
-                    if enforce_route_strict_mode() {
-                        return Err(error::DecapodError::ValidationError(
-                            "BROKER_ROUTE_REQUIRED: routed mutator cannot bypass broker in strict mode"
-                                .to_string(),
-                        ));
+                    Ok(routed) if routed && !core::group_broker::is_internal_invocation() => {
+                        if enforce_route_strict_mode() {
+                            return Err(error::DecapodError::ValidationError(
+                                "BROKER_ROUTE_REQUIRED: routed mutator cannot bypass broker in strict mode"
+                                    .to_string(),
+                            ));
+                        }
+                        return Ok(());
                     }
-                    return Ok(());
+                    Ok(_) => {}
                 }
             }
 
@@ -1993,6 +1996,28 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
     )
 }
 
+fn branch_contains_todo_ticket_id(branch: &str) -> bool {
+    let branch = branch.to_ascii_lowercase();
+    if branch.contains("r_") {
+        return true;
+    }
+    let chars: Vec<char> = branch.chars().collect();
+    if chars.len() < 21 {
+        return false;
+    }
+    for i in 0..=(chars.len() - 21) {
+        let type_ok = chars[i..i + 4].iter().all(|c| c.is_ascii_lowercase());
+        let sep_ok = chars[i + 4] == '_';
+        let body_ok = chars[i + 5..i + 21]
+            .iter()
+            .all(|c| c.is_ascii_alphanumeric());
+        if type_ok && sep_ok && body_ok {
+            return true;
+        }
+    }
+    false
+}
+
 fn enforce_worktree_requirement(
     command: &Command,
     project_root: &Path,
@@ -2021,11 +2046,7 @@ fn enforce_worktree_requirement(
         }
 
         if command_requires_todo_scoped_worktree(command)
-            && !status
-                .git
-                .current_branch
-                .to_ascii_lowercase()
-                .contains("r_")
+            && !branch_contains_todo_ticket_id(&status.git.current_branch)
         {
             return Err(error::DecapodError::ValidationError(format!(
                 "SCOPE_VIOLATION: branch '{}' is not todo-scoped. Run `decapod todo add \"<task>\"`, `decapod todo claim --id <task-id>`, then `decapod workspace ensure`.",
