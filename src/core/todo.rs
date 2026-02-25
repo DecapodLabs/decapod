@@ -73,6 +73,9 @@ pub enum TodoCommand {
         blocks: String,
         #[clap(long)]
         parent: Option<String>,
+        /// Mark task as one-shot (1) or recurring (0)
+        #[clap(long, default_value = "0")]
+        one_shot: i32,
     },
     /// List tasks.
     List {
@@ -301,6 +304,7 @@ pub struct Task {
     pub assigned_at: Option<String>,
     #[serde(default)]
     pub owners: Vec<TaskOwner>,
+    pub one_shot: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -2321,6 +2325,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         depends_on,
         blocks,
         parent,
+        one_shot,
     } = args
     else {
         return Err(error::DecapodError::ValidationError(
@@ -2378,8 +2383,8 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         }
 
         conn.execute(
-            "INSERT INTO tasks(id, hash, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, assigned_to, assigned_at)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'open', ?9, ?10, NULL, NULL, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)",
+            "INSERT INTO tasks(id, hash, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, assigned_to, assigned_at, one_shot)
+             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'open', ?9, ?10, NULL, NULL, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)",
             rusqlite::params![
                 task_id,
                 task_hash,
@@ -2399,7 +2404,8 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 blocks,
                 category,
                 assigned_to,
-                assigned_at
+                assigned_at,
+                one_shot
             ],
         )?;
         sync_task_dependencies(conn, &task_id, depends_on, &ts)?;
@@ -3678,6 +3684,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
                 assigned_to: row.get(21).unwrap_or_default(),
                 assigned_at: row.get(22)?,
                 owners,
+                one_shot: row.get(23).unwrap_or(0),
             }))
         } else {
             Ok(None)
@@ -3767,6 +3774,7 @@ pub fn list_tasks(
                     .unwrap_or_default(),
                 assigned_at: row.get(22).map_err(error::DecapodError::RusqliteError)?,
                 owners,
+                one_shot: row.get(23).map_err(error::DecapodError::RusqliteError).unwrap_or(0),
             });
         }
         Ok(out)
@@ -4301,7 +4309,7 @@ pub fn schema() -> serde_json::Value {
         ],
         "task_columns": [
             "id", "hash", "title", "description", "tags", "owner", "status", "created_at", "updated_at",
-            "priority", "depends_on", "blocks", "category", "assigned_to", "parent_task_id"
+            "priority", "depends_on", "blocks", "category", "assigned_to", "parent_task_id", "one_shot"
         ],
         "id_format": "<type4>_<16-alnum>",
         "hash_format": "first 6 chars after '<type4>_'",

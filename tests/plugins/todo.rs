@@ -47,6 +47,7 @@ fn test_todo_lifecycle() {
         depends_on: "".to_string(),
         blocks: "".to_string(),
         parent: None,
+        one_shot: 0,
     };
     let res = add_task(&root, &add_args).unwrap();
     let task_id = res.get("id").unwrap().as_str().unwrap();
@@ -98,6 +99,7 @@ fn test_todo_rebuild() {
             depends_on: "".to_string(),
             blocks: "".to_string(),
             parent: None,
+            one_shot: 0,
         };
         add_task(&root, &add_args).unwrap();
     }
