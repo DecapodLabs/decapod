@@ -555,7 +555,7 @@ fn command_exists(cmd: &str) -> bool {
 
 fn default_image_for_profile(profile: ImageProfile) -> &'static str {
     match profile {
-        ImageProfile::DebianSlim => "rust:1.85",
+        ImageProfile::DebianSlim => "rust:1.90",
         ImageProfile::Alpine => "alpine:3.20",
     }
 }
@@ -635,7 +635,7 @@ struct DockerfileTemplateSchemaComponent {
 fn dockerfile_template_schema_component() -> DockerfileTemplateSchemaComponent {
     let mut base_images = BTreeMap::new();
     base_images.insert("default", "alpine:3.20");
-    base_images.insert("rust", "rust:1.85-alpine");
+    base_images.insert("rust", "rust:1.90-alpine");
 
     let mut stack_packages = BTreeMap::new();
     stack_packages.insert("node", vec!["nodejs", "npm"]);
@@ -718,7 +718,7 @@ fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
             .base_images
             .get("rust")
             .copied()
-            .unwrap_or("rust:1.85-alpine")
+            .unwrap_or("rust:1.90-alpine")
     } else {
         component
             .base_images
@@ -1180,7 +1180,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "run", "parameters": ["agent", "cmd", "branch", "task_id", "push", "pr", "pr_base", "pr_title", "pr_body", "image_profile", "image", "timeout_seconds", "memory", "cpus", "repo", "keep_worktree", "inherit_env", "local_only"] }
         ],
         "profiles": {
-            "debian-slim": "rust:1.85",
+            "debian-slim": "rust:1.90",
             "alpine": "local build from .decapod/generated/Dockerfile (alpine + detected project dependencies)"
         },
         "components": {
@@ -1208,7 +1208,7 @@ mod tests {
             "docker",
             &repo,
             &workspace,
-            "rust:1.85",
+            "rust:1.90",
             "agent-a",
             "cargo test -q",
             "ahr/branch",
@@ -1247,7 +1247,7 @@ mod tests {
             "docker",
             &repo,
             &workspace,
-            "rust:1.85",
+            "rust:1.90",
             "agent-a",
             "cargo test -q",
             "ahr/branch",
@@ -1290,7 +1290,7 @@ mod tests {
             python: false,
             go: false,
         });
-        assert!(content.contains("FROM rust:1.85-alpine"));
+        assert!(content.contains("FROM rust:1.90-alpine"));
         assert!(content.contains("git"));
         assert!(content.contains("openssh-client"));
     }
@@ -1305,7 +1305,7 @@ mod tests {
         });
         assert!(content.contains("FROM alpine:3.20"));
         assert!(content.contains("git"));
-        assert!(!content.contains("rust:1.85-alpine"));
+        assert!(!content.contains("rust:1.90-alpine"));
     }
 
     #[test]
