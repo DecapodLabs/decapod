@@ -936,10 +936,10 @@ pub fn publish_workspace(
 }
 
 fn extract_task_ids_from_branch(branch: &str) -> Vec<String> {
-    let re = Regex::new(r"(?i)r_[a-z0-9]+").expect("static regex");
+    let re = Regex::new(r"(?i)(?:r_|test_|docs_|fix_|feat_)[a-z0-9]+").expect("static regex");
     let mut out: Vec<String> = re
         .find_iter(branch)
-        .map(|m| m.as_str().to_ascii_uppercase())
+        .map(|m| m.as_str().to_string())
         .collect();
     out.sort();
     out.dedup();

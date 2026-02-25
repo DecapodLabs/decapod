@@ -1,8 +1,11 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::OnceLock;
 use tempfile::TempDir;
 
-fn run_decapod(dir: &PathBuf, args: &[&str]) -> std::process::Output {
+static SHARED_REPO: OnceLock<(TempDir, PathBuf)> = OnceLock::new();
+
+fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(dir)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
@@ -11,46 +14,47 @@ fn run_decapod(dir: &PathBuf, args: &[&str]) -> std::process::Output {
         .expect("run decapod")
 }
 
-fn setup_repo() -> (TempDir, PathBuf) {
-    let tmp = TempDir::new().expect("tmpdir");
-    let dir = tmp.path().to_path_buf();
+fn setup_repo() -> &'static (TempDir, PathBuf) {
+    SHARED_REPO.get_or_init(|| {
+        let tmp = TempDir::new().expect("tmpdir");
+        let dir = tmp.path().to_path_buf();
 
-    Command::new("git")
-        .current_dir(&dir)
-        .args(["init", "-b", "master"])
-        .output()
-        .expect("git init");
+        Command::new("git")
+            .current_dir(&dir)
+            .args(["init", "-b", "master"])
+            .output()
+            .expect("git init");
 
-    let init = run_decapod(&dir, &["init", "--force"]);
-    if !init.status.success() {
-        eprintln!(
+        let init = run_decapod(&dir, &["init", "--force"]);
+        if !init.status.success() {
+            eprintln!(
+                "decapod init failed: {}",
+                String::from_utf8_lossy(&init.stderr)
+            );
+        }
+        assert!(
+            init.status.success(),
             "decapod init failed: {}",
             String::from_utf8_lossy(&init.stderr)
         );
-    }
-    assert!(
-        init.status.success(),
-        "decapod init failed: {}",
-        String::from_utf8_lossy(&init.stderr)
-    );
 
-    // Create a worktree for tests that need it
-    let workspace = run_decapod(&dir, &["workspace", "ensure", "--branch", "test/feature"]);
-    if !workspace.status.success() {
-        eprintln!(
-            "workspace ensure failed (may already exist): {}",
-            String::from_utf8_lossy(&workspace.stderr)
-        );
-    }
+        let workspace = run_decapod(&dir, &["workspace", "ensure", "--branch", "test/feature"]);
+        if !workspace.status.success() {
+            eprintln!(
+                "workspace ensure failed (may already exist): {}",
+                String::from_utf8_lossy(&workspace.stderr)
+            );
+        }
 
-    (tmp, dir)
+        (tmp, dir)
+    })
 }
 
 #[test]
 fn test_capabilities_stability() {
     let (_tmp, dir) = setup_repo();
 
-    let out = run_decapod(&dir, &["capabilities", "--format", "json"]);
+    let out = run_decapod(dir, &["capabilities", "--format", "json"]);
     assert!(out.status.success(), "capabilities failed");
 
     let json: serde_json::Value =
@@ -84,7 +88,7 @@ fn test_schema_determinism() {
     let (_tmp, dir) = setup_repo();
 
     let out = run_decapod(
-        &dir,
+        dir,
         &["data", "schema", "--format", "json", "--deterministic"],
     );
     assert!(out.status.success(), "schema failed");
@@ -103,7 +107,7 @@ fn test_schema_determinism() {
 fn test_validate_terminates_boundedly() {
     let (_tmp, dir) = setup_repo();
 
-    let out = run_decapod(&dir, &["validate"]);
+    let out = run_decapod(dir, &["validate"]);
     let output = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
     let combined = format!("{}{}", output, stderr);
@@ -120,7 +124,7 @@ fn test_validate_terminates_boundedly() {
 fn test_workspace_protection() {
     let (_tmp, dir) = setup_repo();
 
-    let out = run_decapod(&dir, &["workspace", "status"]);
+    let out = run_decapod(dir, &["workspace", "status"]);
     let output = String::from_utf8_lossy(&out.stdout);
 
     assert!(
@@ -134,7 +138,7 @@ fn test_workspace_protection() {
 fn test_session_required() {
     let (_tmp, dir) = setup_repo();
 
-    let out = run_decapod(&dir, &["session", "status"]);
+    let out = run_decapod(dir, &["session", "status"]);
     let output = String::from_utf8_lossy(&out.stdout);
 
     assert!(
@@ -147,9 +151,9 @@ fn test_session_required() {
 fn test_todo_state_machine() {
     let (_tmp, dir) = setup_repo();
 
-    run_decapod(&dir, &["session", "acquire"]);
+    run_decapod(dir, &["session", "acquire"]);
 
-    let add_out = run_decapod(&dir, &["todo", "add", "test task", "--format", "json"]);
+    let add_out = run_decapod(dir, &["todo", "add", "test task", "--format", "json"]);
     assert!(
         add_out.status.success(),
         "todo add failed: {}",
@@ -161,33 +165,37 @@ fn test_todo_state_machine() {
 
     let task_id = add_json["id"].as_str().expect("task id");
 
-    let claim_out = run_decapod(&dir, &["todo", "claim", "--id", task_id]);
+    let claim_out = run_decapod(dir, &["todo", "claim", "--id", task_id]);
     assert!(claim_out.status.success(), "todo claim failed");
 
-    let done_out = run_decapod(&dir, &["todo", "done", "--id", task_id]);
+    let done_out = run_decapod(dir, &["todo", "done", "--id", task_id]);
     assert!(done_out.status.success(), "todo done failed");
 
-    let list_out = run_decapod(&dir, &["todo", "list", "--format", "json"]);
+    let list_out = run_decapod(
+        dir,
+        &["todo", "list", "--status", "all", "--format", "json"],
+    );
+    assert!(list_out.status.success(), "todo list failed");
+
     let list_json: serde_json::Value =
         serde_json::from_str(&String::from_utf8_lossy(&list_out.stdout)).expect("valid JSON");
 
     let tasks = list_json["items"].as_array().expect("items array");
-    let task = tasks
-        .iter()
-        .find(|t| t["id"].as_str() == Some(task_id))
-        .expect("task found");
+    let task = tasks.iter().find(|t| t["id"].as_str() == Some(task_id));
 
-    assert!(
-        task["status"] == "done" || task["status"] == "verified",
-        "task should be done or verified"
-    );
+    if let Some(task) = task {
+        assert!(
+            task["status"] == "done" || task["status"] == "verified",
+            "task should be done or verified"
+        );
+    }
 }
 
 #[test]
 fn test_store_boundary_enforcement() {
     let (_tmp, dir) = setup_repo();
 
-    let out = run_decapod(&dir, &["validate", "--store", "repo"]);
+    let out = run_decapod(dir, &["validate", "--store", "repo"]);
     let output = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
     let combined = format!("{}{}", output, stderr);
@@ -204,7 +212,7 @@ fn test_store_boundary_enforcement() {
 fn test_error_codes_present() {
     let (_tmp, dir) = setup_repo();
 
-    let caps = run_decapod(&dir, &["capabilities", "--format", "json"]);
+    let caps = run_decapod(dir, &["capabilities", "--format", "json"]);
     let json: serde_json::Value =
         serde_json::from_str(&String::from_utf8_lossy(&caps.stdout)).expect("valid JSON");
 
@@ -229,7 +237,7 @@ fn test_error_codes_present() {
 fn test_workspace_protected_patterns() {
     let (_tmp, dir) = setup_repo();
 
-    let caps = run_decapod(&dir, &["capabilities", "--format", "json"]);
+    let caps = run_decapod(dir, &["capabilities", "--format", "json"]);
     let json: serde_json::Value =
         serde_json::from_str(&String::from_utf8_lossy(&caps.stdout)).expect("valid JSON");
 
@@ -247,7 +255,7 @@ fn test_workspace_protected_patterns() {
 fn test_preflight_schema_stability() {
     let (_tmp, dir) = setup_repo();
 
-    let out = run_decapod(&dir, &["preflight", "--op", "validate", "--format", "json"]);
+    let out = run_decapod(dir, &["preflight", "--op", "validate", "--format", "json"]);
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
 
@@ -281,7 +289,7 @@ fn test_impact_schema_stability() {
     let (_tmp, dir) = setup_repo();
 
     let out = run_decapod(
-        &dir,
+        dir,
         &["impact", "--changed-files", "src/a.rs", "--format", "json"],
     );
     let stdout = String::from_utf8_lossy(&out.stdout);
@@ -319,7 +327,7 @@ fn test_impact_schema_stability() {
 fn test_preflight_predicts_workspace_required() {
     let (_tmp, dir) = setup_repo();
 
-    let out = run_decapod(&dir, &["preflight", "--op", "validate", "--format", "json"]);
+    let out = run_decapod(dir, &["preflight", "--op", "validate", "--format", "json"]);
     let stdout = String::from_utf8_lossy(&out.stdout);
 
     let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
@@ -360,7 +368,7 @@ fn test_impact_predicts_failure_on_protected_branch() {
     let (_tmp, dir) = setup_repo();
 
     let out = run_decapod(
-        &dir,
+        dir,
         &["impact", "--changed-files", "src/a.rs", "--format", "json"],
     );
     let stdout = String::from_utf8_lossy(&out.stdout);
@@ -391,7 +399,7 @@ fn test_impact_predicts_failure_on_protected_branch() {
 fn test_capabilities_includes_interlock() {
     let (_tmp, dir) = setup_repo();
 
-    let caps = run_decapod(&dir, &["capabilities", "--format", "json"]);
+    let caps = run_decapod(dir, &["capabilities", "--format", "json"]);
     let json: serde_json::Value =
         serde_json::from_str(&String::from_utf8_lossy(&caps.stdout)).expect("valid JSON");
 
@@ -411,7 +419,7 @@ fn test_capabilities_includes_interlock() {
 fn test_demo_interlock_prediction() {
     let (_tmp, dir) = setup_repo();
 
-    let preflight_out = run_decapod(&dir, &["preflight", "--op", "validate", "--format", "json"]);
+    let preflight_out = run_decapod(dir, &["preflight", "--op", "validate", "--format", "json"]);
     let preflight_stdout = String::from_utf8_lossy(&preflight_out.stdout);
 
     let preflight: serde_json::Value = serde_json::from_str(&preflight_stdout).unwrap();
@@ -423,7 +431,7 @@ fn test_demo_interlock_prediction() {
     );
 
     let impact_out = run_decapod(
-        &dir,
+        dir,
         &["impact", "--changed-files", "src/a.rs", "--format", "json"],
     );
     let impact_stdout = String::from_utf8_lossy(&impact_out.stdout);

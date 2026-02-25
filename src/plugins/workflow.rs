@@ -110,11 +110,11 @@ fn run_workflow(
     if autoclose {
         worker_args.push("--autoclose");
     }
-    if let Some(ref lesson_text) = lesson {
-        if !lesson_text.trim().is_empty() {
-            worker_args.push("--lesson");
-            worker_args.push(lesson_text);
-        }
+    if let Some(ref lesson_text) = lesson
+        && !lesson_text.trim().is_empty()
+    {
+        worker_args.push("--lesson");
+        worker_args.push(lesson_text);
     }
     let _worker = run_decapod_json(&store.root, &worker_args)?;
     println!(

@@ -114,14 +114,12 @@ fn extract_task_id(dir: &PathBuf) -> String {
         .expect("failed to run decapod");
     let stdout = String::from_utf8_lossy(&out.stdout);
     // Parse stdout-only (no stderr contamination) as JSON.
-    if let Ok(v) = serde_json::from_str::<serde_json::Value>(stdout.trim()) {
-        if let Some(items) = v.get("items").and_then(|i| i.as_array()) {
-            if let Some(first) = items.first() {
-                if let Some(id) = first.get("id").and_then(|i| i.as_str()) {
-                    return id.to_string();
-                }
-            }
-        }
+    if let Ok(v) = serde_json::from_str::<serde_json::Value>(stdout.trim())
+        && let Some(items) = v.get("items").and_then(|i| i.as_array())
+        && let Some(first) = items.first()
+        && let Some(id) = first.get("id").and_then(|i| i.as_str())
+    {
+        return id.to_string();
     }
     // Fallback: extract ULID-style ID with regex from anywhere in the output
     let re = regex::Regex::new(r"R_[0-9A-Z]{26}").unwrap();

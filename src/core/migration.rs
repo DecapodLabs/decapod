@@ -1095,10 +1095,10 @@ fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::De
             let (event_id, payload_raw) = row.map_err(error::DecapodError::RusqliteError)?;
             if let Ok(mut payload_json) = serde_json::from_str::<Value>(&payload_raw) {
                 rewrite_json_task_ids(&mut payload_json, &id_map);
-                if let Ok(next_raw) = serde_json::to_string(&payload_json) {
-                    if next_raw != payload_raw {
-                        payload_rewrites.push((event_id, next_raw));
-                    }
+                if let Ok(next_raw) = serde_json::to_string(&payload_json)
+                    && next_raw != payload_raw
+                {
+                    payload_rewrites.push((event_id, next_raw));
                 }
             }
         }

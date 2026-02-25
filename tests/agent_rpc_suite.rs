@@ -222,10 +222,10 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
                 }
             };
 
-            if output.status.success() {
-                if let Ok(json) = serde_json::from_slice::<serde_json::Value>(&output.stdout) {
-                    return json;
-                }
+            if output.status.success()
+                && let Ok(json) = serde_json::from_slice::<serde_json::Value>(&output.stdout)
+            {
+                return json;
             }
 
             let stderr = String::from_utf8_lossy(&output.stderr).to_ascii_lowercase();

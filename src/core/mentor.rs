@@ -225,15 +225,14 @@ impl MentorEngine {
             }
 
             for actor in actors {
-                if actor != agent_id {
-                    if let Ok(snap) =
+                if actor != agent_id
+                    && let Ok(snap) =
                         crate::core::coplayer::resolve_snapshot(&self.repo_root, &actor)
-                    {
-                        if snap.risk_profile == "high" {
-                            has_high_risk_coplayer = true;
-                        }
-                        coplayer_snapshots.push(snap);
+                {
+                    if snap.risk_profile == "high" {
+                        has_high_risk_coplayer = true;
                     }
+                    coplayer_snapshots.push(snap);
                 }
             }
         }
@@ -659,14 +658,14 @@ impl MentorEngine {
                 score += 0.8;
 
                 // Check for recency (newer ADRs slightly higher)
-                if let Some(filename) = path.file_stem().and_then(|s| s.to_str()) {
-                    if filename.starts_with("ADR-") {
-                        // Parse ADR number (lower number = older, slight penalty)
-                        if let Some(num_str) = filename.split('-').nth(1) {
-                            if let Ok(num) = num_str.parse::<u32>() {
-                                score += (100.0 - num as f64).max(0.0) * 0.001;
-                            }
-                        }
+                if let Some(filename) = path.file_stem().and_then(|s| s.to_str())
+                    && filename.starts_with("ADR-")
+                {
+                    // Parse ADR number (lower number = older, slight penalty)
+                    if let Some(num_str) = filename.split('-').nth(1)
+                        && let Ok(num) = num_str.parse::<u32>()
+                    {
+                        score += (100.0 - num as f64).max(0.0) * 0.001;
                     }
                 }
 
@@ -785,10 +784,10 @@ impl MentorEngine {
                 }
 
                 // Check context match (e.g. "git", "style")
-                if let Some(ctx) = skill_context {
-                    if context.op.contains(ctx) {
-                        score += 0.3;
-                    }
+                if let Some(ctx) = skill_context
+                    && context.op.contains(ctx)
+                {
+                    score += 0.3;
                 }
 
                 // Check content relevance
@@ -820,10 +819,10 @@ impl MentorEngine {
                 }
 
                 // Context match
-                if let Some(ctx) = pref_context {
-                    if context.op.contains(ctx) {
-                        score += 0.2;
-                    }
+                if let Some(ctx) = pref_context
+                    && context.op.contains(ctx)
+                {
+                    score += 0.2;
                 }
 
                 // Key relevance

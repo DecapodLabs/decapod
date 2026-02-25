@@ -79,8 +79,8 @@ pub enum TodoCommand {
     },
     /// List tasks.
     List {
-        #[clap(long)]
-        status: Option<String>,
+        #[clap(long, default_value = "open")]
+        status: String,
         #[clap(long)]
         scope: Option<String>,
         #[clap(long)]
@@ -2376,11 +2376,10 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         };
 
 
-        if let Some(cat) = inferred_category.as_deref() {
-            if !assigned_to.is_empty() {
+        if let Some(cat) = inferred_category.as_deref()
+            && !assigned_to.is_empty() {
                 claim_category_if_unowned(conn, cat, &assigned_to, &ts)?;
             }
-        }
 
         conn.execute(
             "INSERT INTO tasks(id, hash, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, assigned_to, assigned_at, one_shot)
@@ -2431,12 +2430,11 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         });
 
         // Add auto-assignment info if applicable
-        if !assigned_to.is_empty() {
-            if let Some(obj) = payload.as_object_mut() {
+        if !assigned_to.is_empty()
+            && let Some(obj) = payload.as_object_mut() {
                 obj.insert("assigned_to".to_string(), serde_json::json!(assigned_to));
                 obj.insert("auto_assigned".to_string(), serde_json::json!(true));
             }
-        }
 
         let ev = TodoEvent {
             ts: ts.clone(),
@@ -2692,23 +2690,21 @@ fn edit_task(
         ensure_schema(conn)?;
 
         // Validate category if provided
-        if let Some(cat) = category {
-            if !cat.is_empty() {
-                let valid: bool = conn
-                    .query_row(
-                        "SELECT 1 FROM categories WHERE name = ?",
-                        [cat],
-                        |_| Ok(true),
-                    )
-                    .optional()
-                    .map_err(error::DecapodError::RusqliteError)?
-                    .unwrap_or(false);
-                if !valid {
-                    return Err(error::DecapodError::ValidationError(format!(
-                        "Unknown category '{}'. Run `decapod todo categories` to see valid categories.",
-                        cat
-                    )));
-                }
+        if let Some(cat) = category
+            && !cat.is_empty()
+        {
+            let valid: bool = conn
+                .query_row("SELECT 1 FROM categories WHERE name = ?", [cat], |_| {
+                    Ok(true)
+                })
+                .optional()
+                .map_err(error::DecapodError::RusqliteError)?
+                .unwrap_or(false);
+            if !valid {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Unknown category '{}'. Run `decapod todo categories` to see valid categories.",
+                    cat
+                )));
             }
         }
 
@@ -3176,14 +3172,13 @@ fn handoff_task(
                 "message": format!("Task {} is already {}", id, status)
             }), String::new()));
         }
-        if let Some(expected_from) = from {
-            if !assigned_to.is_empty() && assigned_to != expected_from {
+        if let Some(expected_from) = from
+            && !assigned_to.is_empty() && assigned_to != expected_from {
                 return Ok((serde_json::json!({
                     "status": "error",
                     "message": format!("Task {} assigned_to is {}, expected {}", id, assigned_to, expected_from)
                 }), String::new()));
             }
-        }
         if !category.is_empty() {
             conn.execute(
                 "INSERT INTO agent_category_claims(id, agent_id, category, claimed_at, updated_at)
@@ -3329,14 +3324,13 @@ fn add_task_owner(
                 .optional()
                 .map_err(error::DecapodError::RusqliteError)?;
 
-            if let Some(primary_agent) = existing_primary {
-                if primary_agent != agent_id {
+            if let Some(primary_agent) = existing_primary
+                && primary_agent != agent_id {
                 return Ok(serde_json::json!({
                     "status": "conflict",
                     "message": "Task already has a primary owner. Use 'secondary' or resolve conflict."
                 }));
                 }
-            }
         }
 
         let claim_id = upsert_task_owner(conn, task_id, agent_id, claim_type, &ts)?;
@@ -4353,7 +4347,7 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
         } => {
             let items = list_tasks(
                 root,
-                status.clone(),
+                Some(status.clone()),
                 scope.clone(),
                 tags.clone(),
                 title_search.clone(),

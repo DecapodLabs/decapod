@@ -87,7 +87,7 @@ fn validate_fails_on_invalid_workunit_manifest_if_present() {
     let (_tmp, dir, password) = setup_repo();
     let workunits = dir.join(".decapod").join("governance").join("workunits");
     fs::create_dir_all(&workunits).expect("create workunits dir");
-    fs::write(workunits.join("R_BAD.json"), "{not-json").expect("write malformed workunit");
+    fs::write(workunits.join("test_BAD.json"), "{not-json").expect("write malformed workunit");
 
     let validate = run_decapod(
         &dir,
@@ -116,9 +116,9 @@ fn validate_fails_on_verified_workunit_missing_passing_proofs() {
     let workunits = dir.join(".decapod").join("governance").join("workunits");
     fs::create_dir_all(&workunits).expect("create workunits dir");
     fs::write(
-        workunits.join("R_BAD_VERIFIED.json"),
+        workunits.join("test_BAD_VERIFIED.json"),
         r#"{
-  "task_id": "R_BAD_VERIFIED",
+  "task_id": "test_BAD_VERIFIED",
   "intent_ref": "intent://bad",
   "spec_refs": [],
   "state_refs": [],
@@ -156,9 +156,9 @@ fn validate_fails_on_verified_workunit_missing_capsule_policy_lineage() {
     let workunits = dir.join(".decapod").join("governance").join("workunits");
     fs::create_dir_all(&workunits).expect("create workunits dir");
     fs::write(
-        workunits.join("R_BAD_NO_CAPSULE.json"),
+        workunits.join("test_BAD_NO_CAPSULE.json"),
         r#"{
-  "task_id": "R_BAD_NO_CAPSULE",
+  "task_id": "test_BAD_NO_CAPSULE",
   "intent_ref": "intent://missing-capsule",
   "spec_refs": [],
   "state_refs": [],
@@ -204,7 +204,7 @@ fn validate_fails_on_verified_workunit_capsule_without_state_ref_binding() {
         schema_version: "1.1.0".to_string(),
         topic: "lineage".to_string(),
         scope: "interfaces".to_string(),
-        task_id: Some("R_BAD_STATE_REF".to_string()),
+        task_id: Some("test_BAD_STATE_REF".to_string()),
         workunit_id: None,
         sources: vec![ContextCapsuleSource {
             path: "interfaces/PLAN_GOVERNED_EXECUTION.md".to_string(),
@@ -221,15 +221,15 @@ fn validate_fails_on_verified_workunit_capsule_without_state_ref_binding() {
         .with_recomputed_hash()
         .expect("recompute capsule hash");
     fs::write(
-        capsules.join("R_BAD_STATE_REF.json"),
+        capsules.join("test_BAD_STATE_REF.json"),
         serde_json::to_vec_pretty(&capsule).expect("serialize capsule"),
     )
     .expect("write capsule");
 
     fs::write(
-        workunits.join("R_BAD_STATE_REF.json"),
+        workunits.join("test_BAD_STATE_REF.json"),
         r#"{
-  "task_id": "R_BAD_STATE_REF",
+  "task_id": "test_BAD_STATE_REF",
   "intent_ref": "intent://missing-state-ref",
   "spec_refs": [],
   "state_refs": [],
@@ -273,8 +273,8 @@ fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
         schema_version: "1.1.0".to_string(),
         topic: "phase0".to_string(),
         scope: "interfaces".to_string(),
-        task_id: Some("R_1".to_string()),
-        workunit_id: Some("R_1".to_string()),
+        task_id: Some("test_1".to_string()),
+        workunit_id: Some("test_1".to_string()),
         sources: vec![ContextCapsuleSource {
             path: "interfaces/CLAIMS.md".to_string(),
             section: "2. Claims".to_string(),
@@ -288,7 +288,7 @@ fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
     };
     capsule.capsule_hash = "wrong_hash".to_string();
     fs::write(
-        capsules.join("R_1.json"),
+        capsules.join("test_1.json"),
         serde_json::to_vec_pretty(&capsule).expect("serialize capsule"),
     )
     .expect("write capsule");
