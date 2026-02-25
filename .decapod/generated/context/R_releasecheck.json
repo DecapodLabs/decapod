@@ -1,4 +1,5 @@
 {
+  "schema_version": "1.1.0",
   "topic": "release provenance",
   "scope": "interfaces",
   "task_id": "R_releasecheck",
@@ -39,5 +40,12 @@
       "text": "## 2. Assets (What We Protect)\n\n- user store privacy: a user starts blank and should not inherit repo ideology or backlog\n- repo store reproducibility: repo state should be deterministically rebuildable from repo-tracked artifacts where declared\n- derived state integrity: derived artifacts should never be treated as source-of-truth\n- provenance: every mutation should be attributable to an actor and a store context (planned: audit trail)\n\n---"
     }
   ],
-  "capsule_hash": "e2a3486cc42fe8803a8d4e347d02618ca43138eaca9ef41741e4ed73dd4b019f"
+  "policy": {
+    "risk_tier": "",
+    "policy_hash": "",
+    "policy_version": "",
+    "policy_path": "",
+    "repo_revision": ""
+  },
+  "capsule_hash": "b6f1500dfc743ac3a104c905a041bd165ea8cf6c31efd152a2ebcef3da217934"
 }

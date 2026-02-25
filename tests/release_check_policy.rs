@@ -1,3 +1,4 @@
+use decapod::core::capsule_policy::CapsulePolicyBinding;
 use decapod::core::context_capsule::{
     ContextCapsuleSnippet, ContextCapsuleSource, DeterministicContextCapsule,
 };
@@ -64,6 +65,7 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
     let readme_hash = sha256_hex(&readme);
     let policy_hash = sha256_hex(b"fixture-policy-v1");
     let capsule = DeterministicContextCapsule {
+        schema_version: "1.1.0".to_string(),
         topic: "release fixture".to_string(),
         scope: "interfaces".to_string(),
         task_id: Some("R_FIXTURE".to_string()),
@@ -76,6 +78,7 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
             source_path: "interfaces/CONTROL_PLANE.md".to_string(),
             text: "fixture snippet".to_string(),
         }],
+        policy: CapsulePolicyBinding::default(),
         capsule_hash: String::new(),
     }
     .with_recomputed_hash()
