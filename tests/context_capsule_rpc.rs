@@ -208,7 +208,7 @@ fn rpc_context_capsule_query_write_tracks_touched_path() {
 
     let touched_path = touched[0].as_str().expect("touched path as str");
     assert!(
-        touched_path.ends_with(".decapod/generated/context/R_88.json"),
+        touched_path.ends_with(".decapod/generated/context/test_88.json"),
         "unexpected touched path: {}",
         touched_path
     );
@@ -278,7 +278,7 @@ fn rpc_context_capsule_query_write_auto_binds_workunit_state_ref() {
     let has_workunit_path = touched.iter().any(|v| {
         v.as_str()
             .unwrap_or_default()
-            .ends_with(".decapod/governance/workunits/R_654.json")
+            .ends_with(".decapod/governance/workunits/test_654.json")
     });
     assert!(
         has_workunit_path,
