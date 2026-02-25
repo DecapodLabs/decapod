@@ -6,7 +6,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-env-changed=DECAPOD_CONSTITUTION_DIR");
     println!("cargo:rerun-if-changed=constitution");
     println!("cargo:rerun-if-changed=templates");
-    println!("cargo:rerun-if-changed=crates/build/constitution_index.rs");
+    println!("cargo:rerun-if-changed=build/constitution_index.rs");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
 

@@ -6,10 +6,14 @@
 use crate::core::broker::DbBroker;
 use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
+use crate::core::migration;
 use crate::core::output;
 use crate::core::plan_governance;
 use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_DIR,
+    LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
+    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_VALIDATION, hash_text,
+    read_specs_manifest, repo_signal_fingerprint,
 };
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
@@ -1099,6 +1103,7 @@ fn validate_generated_artifact_whitelist(
     let allowed_tracked = [
         ".decapod/generated/Dockerfile",
         ".decapod/data/knowledge.promotions.jsonl",
+        ".decapod/generated/specs/.manifest.json",
     ];
     let mut offenders = Vec::new();
     for line in String::from_utf8_lossy(&output.stdout).lines() {
@@ -1110,10 +1115,18 @@ fn validate_generated_artifact_whitelist(
         let is_allowed_context_json = path.starts_with(".decapod/generated/context/")
             && path.ends_with(".json")
             && !path.contains("/../");
+        let is_allowed_provenance_json = path
+            .starts_with(".decapod/generated/artifacts/provenance/")
+            && path.ends_with(".json")
+            && !path.contains("/../");
         let is_allowed_specs_md = path.starts_with(".decapod/generated/specs/")
             && path.ends_with(".md")
             && !path.contains("/../");
-        if !is_allowed_exact && !is_allowed_context_json && !is_allowed_specs_md {
+        if !is_allowed_exact
+            && !is_allowed_context_json
+            && !is_allowed_provenance_json
+            && !is_allowed_specs_md
+        {
             offenders.push(path.to_string());
         }
     }
@@ -1255,35 +1268,104 @@ fn validate_project_specs_docs(
         }
     }
 
+    let manifest_path = repo_root.join(LOCAL_PROJECT_SPECS_MANIFEST);
+    let manifest = read_specs_manifest(repo_root)?;
+    if manifest.is_none() {
+        warn(
+            &format!(
+                "TASK: Project specs manifest missing at {}. Run `decapod init --force` to generate scaffold metadata, then hydrate `.decapod/generated/specs/*.md`.",
+                manifest_path.display()
+            ),
+            ctx,
+        );
+    }
+    if let Some(manifest) = manifest {
+        if manifest.schema_version == LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA {
+            pass("Project specs manifest schema is current", ctx);
+        } else {
+            warn(
+                &format!(
+                    "TASK: Project specs manifest schema mismatch (found {}, expected {}). Re-run `decapod init --force` then refresh specs.",
+                    manifest.schema_version, LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA
+                ),
+                ctx,
+            );
+        }
+
+        let mut untouched_templates = Vec::new();
+        for entry in &manifest.files {
+            let path = repo_root.join(&entry.path);
+            if !path.exists() {
+                continue;
+            }
+            let body = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+            let current_hash = hash_text(&body);
+            if current_hash == entry.template_hash {
+                untouched_templates.push(entry.path.clone());
+            }
+        }
+        if untouched_templates.is_empty() {
+            pass(
+                "Project specs are not raw scaffold templates (content evolved)",
+                ctx,
+            );
+        } else {
+            warn(
+                &format!(
+                    "TASK: Generated specs still match scaffold template for {:?}. Hydrate these docs with repo-specific details before implementation promotion.",
+                    untouched_templates
+                ),
+                ctx,
+            );
+        }
+
+        let current_repo_fp = repo_signal_fingerprint(repo_root)?;
+        if current_repo_fp == manifest.repo_signal_fingerprint {
+            pass(
+                "Project specs manifest repo-signal fingerprint is current",
+                ctx,
+            );
+        } else {
+            warn(
+                "TASK: Significant repo surfaces changed since specs scaffold/hydration. Review and update INTENT/ARCHITECTURE/INTERFACES/VALIDATION accordingly.",
+                ctx,
+            );
+        }
+    }
+
     let architecture_path = repo_root.join(LOCAL_PROJECT_SPECS_ARCHITECTURE);
     if architecture_path.exists() {
         let architecture =
             fs::read_to_string(&architecture_path).map_err(error::DecapodError::IoError)?;
-        let required_sections = [
+        let required_new = [
+            "# Architecture",
+            "## Direction",
+            "## Current Facts",
+            "## Topology",
+            "## Execution Path",
+            "## Data and Contracts",
+            "## Delivery Plan",
+            "## Risks and Mitigations",
+        ];
+        let required_legacy = [
             "# Architecture",
             "## Integrated Surface",
             "## Implementation Strategy",
             "## System Topology",
             "## Service Contracts",
-            "## Multi-Agent Delivery Model",
-            "## Validation Gates",
             "## Delivery Plan",
             "## Risks and Mitigations",
         ];
-        let mut missing = Vec::new();
-        for section in required_sections {
-            if !architecture.contains(section) {
-                missing.push(section);
-            }
-        }
-        if missing.is_empty() {
+        let has_new = required_new.iter().all(|s| architecture.contains(s));
+        let has_legacy = required_legacy.iter().all(|s| architecture.contains(s));
+        if has_new || has_legacy {
             pass(
                 "Architecture spec contains required engineering sections",
                 ctx,
             );
         } else {
             fail(
-                &format!("Architecture spec missing required sections: {:?}", missing),
+                "Architecture spec missing required section groups (expected new or legacy scaffold structure).",
                 ctx,
             );
         }
@@ -1324,7 +1406,7 @@ fn validate_project_specs_docs(
         }
     }
 
-    let intent_path = specs_dir.join("intent.md");
+    let intent_path = repo_root.join(LOCAL_PROJECT_SPECS_INTENT);
     if intent_path.exists() {
         let intent = fs::read_to_string(intent_path).map_err(error::DecapodError::IoError)?;
         let required_intent_sections = [
@@ -1353,12 +1435,17 @@ fn validate_project_specs_docs(
                 "Intent spec still has placeholder product outcome; capture explicit intent before implementation.",
                 ctx,
             );
+        } else if intent.contains("against explicit user intent with proof-backed completion.") {
+            warn(
+                "TASK: Intent outcome still reads as generic scaffold text; replace it with explicit user/problem outcome.",
+                ctx,
+            );
         } else {
             pass("Intent spec has non-placeholder product outcome", ctx);
         }
     }
 
-    let interfaces_path = specs_dir.join("interfaces.md");
+    let interfaces_path = repo_root.join(LOCAL_PROJECT_SPECS_INTERFACES);
     if interfaces_path.exists() {
         let interfaces =
             fs::read_to_string(&interfaces_path).map_err(error::DecapodError::IoError)?;
@@ -1379,7 +1466,7 @@ fn validate_project_specs_docs(
         pass("Interfaces spec contains required contract sections", ctx);
     }
 
-    let validation_path = specs_dir.join("validation.md");
+    let validation_path = repo_root.join(LOCAL_PROJECT_SPECS_VALIDATION);
     if validation_path.exists() {
         let validation =
             fs::read_to_string(&validation_path).map_err(error::DecapodError::IoError)?;
@@ -1398,6 +1485,12 @@ fn validate_project_specs_docs(
             }
         }
         pass("Validation spec contains required proof/gate sections", ctx);
+        if validation.contains("Add repository-specific test command(s) here.") {
+            warn(
+                "TASK: Validation spec still has placeholder test command guidance; add concrete test/integration commands.",
+                ctx,
+            );
+        }
     }
 
     Ok(())
@@ -1806,6 +1899,63 @@ fn validate_schema_determinism(
         pass("Schema output is deterministic", ctx);
     } else {
         fail("Schema output is non-deterministic or empty", ctx);
+    }
+    Ok(())
+}
+
+fn validate_database_schema_versions(
+    store: &Store,
+    ctx: &ValidationContext,
+) -> Result<(), error::DecapodError> {
+    info("Database Schema Version Gate");
+    if !matches!(store.kind, StoreKind::Repo) {
+        skip(
+            "Database schema version gate applies to repo store only",
+            ctx,
+        );
+        return Ok(());
+    }
+    let checks = migration::check_versioned_db_schema_expectations(&store.root)?;
+    for check in checks {
+        if !check.exists {
+            fail(
+                &format!(
+                    "Versioned database {} is missing (expected schema_version={})",
+                    check.db_name, check.expected_version
+                ),
+                ctx,
+            );
+            continue;
+        }
+        match check.actual_version {
+            Some(actual) if actual == check.expected_version => {
+                pass(
+                    &format!(
+                        "{} schema_version matches expected {}",
+                        check.db_name, check.expected_version
+                    ),
+                    ctx,
+                );
+            }
+            Some(actual) => {
+                fail(
+                    &format!(
+                        "{} schema_version mismatch: actual={}, expected={}",
+                        check.db_name, actual, check.expected_version
+                    ),
+                    ctx,
+                );
+            }
+            None => {
+                fail(
+                    &format!(
+                        "{} missing readable schema_version in meta table (expected {})",
+                        check.db_name, check.expected_version
+                    ),
+                    ctx,
+                );
+            }
+        }
     }
     Ok(())
 }
@@ -3933,6 +4083,16 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_schema_determinism", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_database_schema_versions(store, ctx) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_database_schema_versions", start.elapsed()));
         });
         s.spawn(move |_| {
             let start = Instant::now();

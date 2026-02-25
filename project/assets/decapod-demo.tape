@@ -1,4 +1,4 @@
-Output assets/decapod-demo.gif
+Output project/assets/decapod-demo.gif
 
 Set FontSize 20
 Set FontFamily "JetBrainsMono Nerd Font Mono"

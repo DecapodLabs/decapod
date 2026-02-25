@@ -12,6 +12,22 @@ use std::path::Path;
 use std::process::Command;
 use tempfile::tempdir;
 
+fn assert_typed_todo_id(id: &str) {
+    let (task_type, body) = id
+        .split_once('_')
+        .expect("id should contain type separator");
+    assert_eq!(task_type.len(), 4, "type prefix must be 4 chars");
+    assert_eq!(body.len(), 16, "id body must be 16 chars");
+    assert!(
+        task_type.chars().all(|c| c.is_ascii_lowercase()),
+        "type prefix should be lowercase letters"
+    );
+    assert!(
+        body.chars().all(|c| c.is_ascii_alphanumeric()),
+        "id body should be alphanumeric"
+    );
+}
+
 #[test]
 fn test_todo_lifecycle() {
     let tmp = tempdir().unwrap();
@@ -34,10 +50,13 @@ fn test_todo_lifecycle() {
     };
     let res = add_task(&root, &add_args).unwrap();
     let task_id = res.get("id").unwrap().as_str().unwrap();
-    assert!(task_id.contains("_"));
+    let task_hash = res.get("hash").and_then(|v| v.as_str()).unwrap_or_default();
+    assert_typed_todo_id(task_id);
+    assert_eq!(task_hash, &task_id.split_once('_').unwrap().1[..6]);
 
     // 2. Get task
     let task = get_task(&root, task_id).unwrap().expect("Task not found");
+    assert_eq!(task.hash, task_hash);
     assert_eq!(task.title, "Test task");
     assert_eq!(task.status, "open");
     assert_eq!(task.owners.len(), 1);

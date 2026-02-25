@@ -3,7 +3,7 @@ name = "decapod"
 version = "0.41.2"
 edition = "2024"
 rust-version = "1.85"
-build = "crates/build/constitution_index.rs"
+build = "build/constitution_index.rs"
 description = "Decapod is the daemonless, local-first control plane that agents call on demand to align intent, enforce boundaries, and produce proof-backed completion across concurrent multi-agent work. 🦀"
 license = "MIT"
 repository = "https://github.com/DecapodLabs/decapod"
@@ -16,7 +16,7 @@ exclude = [
     "dist/*",
     "target/*",
     "constitution_embed/*",
-    "assets/*.mp4",
+    "project/assets/*.mp4",
     "tests/fixtures/*",
     "tests/golden_vectors/*"
 ]
@@ -92,15 +92,15 @@ path = "tests/core/core.rs"
 
 [[bench]]
 name = "perf_1_1"
-path = "benches/perf_1_1.rs"
+path = "project/benches/perf_1_1.rs"
 harness = false
 
 [[bench]]
 name = "perf_1_2"
-path = "benches/perf_1_2.rs"
+path = "project/benches/perf_1_2.rs"
 harness = false
 
 [[bench]]
 name = "perf_1_3"
-path = "benches/perf_1_3.rs"
+path = "project/benches/perf_1_3.rs"
 harness = false

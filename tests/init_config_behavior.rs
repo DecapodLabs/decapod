@@ -42,6 +42,13 @@ fn init_with_writes_config_toml_with_schema_and_diagram_style() {
         !intent.contains("Define the user-visible outcome in one paragraph."),
         "intent scaffold should be seeded with non-placeholder outcome"
     );
+    let version_counter =
+        fs::read_to_string(tmp.path().join(".decapod/generated/version_counter.json"))
+            .expect("read .decapod/generated/version_counter.json");
+    let version_counter: serde_json::Value =
+        serde_json::from_str(&version_counter).expect("parse version_counter json");
+    assert_eq!(version_counter["version_count"], 1);
+    assert_eq!(version_counter["schema_version"], "1.0.0");
 }
 
 #[test]

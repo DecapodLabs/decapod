@@ -3,6 +3,7 @@
 //! These tests ensure that `decapod init` creates correct entrypoint files
 //! and that `decapod validate` enforces invariants and detects tampering.
 
+use decapod::core::assets;
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
@@ -190,6 +191,7 @@ fn test_expired_session_releases_assigned_tasks() {
     let auth_env = [
         ("DECAPOD_AGENT_ID", "agent-expire"),
         ("DECAPOD_SESSION_PASSWORD", password.as_str()),
+        ("DECAPOD_GROUP_BROKER_INTERNAL", "1"),
     ];
 
     let add_out = run_raw(
@@ -254,21 +256,17 @@ fn test_expired_session_releases_assigned_tasks() {
         out_unknown_acquire
     );
 
-    let get_out = run_raw(
-        &temp_path,
-        &["todo", "--format", "json", "get", "--id", &task_id],
-        &[],
-    );
-    assert!(
-        get_out.status.success(),
-        "todo get should succeed: {}",
-        String::from_utf8_lossy(&get_out.stderr)
-    );
-    let get_json: serde_json::Value =
-        serde_json::from_slice(&get_out.stdout).expect("todo get should return json");
+    let todo_db = temp_path.join(".decapod").join("data").join("todo.db");
+    let conn = rusqlite::Connection::open(todo_db).expect("open todo db");
+    let assigned_to: String = conn
+        .query_row(
+            "SELECT assigned_to FROM tasks WHERE id = ?1",
+            [task_id.as_str()],
+            |row| row.get(0),
+        )
+        .expect("query task owner");
     assert_eq!(
-        get_json["task"]["assigned_to"].as_str().unwrap_or(""),
-        "",
+        assigned_to, "",
         "expired session cleanup should unassign task"
     );
 }
@@ -437,20 +435,19 @@ fn test_agent_specific_files_defer_to_agents() {
 }
 
 #[test]
-fn test_root_entrypoints_match_templates() {
+fn test_root_entrypoints_match_scaffold_generators() {
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let root_path = repo_root.join(file);
-        let template_path = repo_root.join("templates").join(file);
         let root_content =
             fs::read_to_string(&root_path).unwrap_or_else(|_| panic!("Failed to read {}", file));
-        let template_content = fs::read_to_string(&template_path)
-            .unwrap_or_else(|_| panic!("Failed to read templates/{}", file));
+        let template_content =
+            assets::get_template(file).unwrap_or_else(|| panic!("Missing generated {}", file));
 
         assert_eq!(
             root_content, template_content,
-            "Entrypoint drift detected: {} differs from templates/{}. Keep root and template in sync.",
-            file, file
+            "Entrypoint drift detected: {} differs from Rust scaffold generator output.",
+            file
         );
     }
 }
@@ -481,12 +478,9 @@ fn test_agent_entrypoints_are_consistent_except_header() {
         "Root entrypoints should only differ by file-specific header: CLAUDE.md != CODEX.md"
     );
 
-    let tpl_claude =
-        fs::read_to_string(repo_root.join("templates/CLAUDE.md")).expect("read template CLAUDE");
-    let tpl_gemini =
-        fs::read_to_string(repo_root.join("templates/GEMINI.md")).expect("read template GEMINI");
-    let tpl_codex =
-        fs::read_to_string(repo_root.join("templates/CODEX.md")).expect("read template CODEX");
+    let tpl_claude = assets::get_template("CLAUDE.md").expect("generated CLAUDE");
+    let tpl_gemini = assets::get_template("GEMINI.md").expect("generated GEMINI");
+    let tpl_codex = assets::get_template("CODEX.md").expect("generated CODEX");
 
     assert_eq!(
         tpl_claude.lines().skip(1).collect::<Vec<_>>(),
@@ -503,14 +497,7 @@ fn test_agent_entrypoints_are_consistent_except_header() {
 #[test]
 fn test_entrypoints_use_embedded_docs_paths_only() {
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    for file in [
-        "CLAUDE.md",
-        "GEMINI.md",
-        "CODEX.md",
-        "templates/CLAUDE.md",
-        "templates/GEMINI.md",
-        "templates/CODEX.md",
-    ] {
+    for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let content =
             fs::read_to_string(repo_root.join(file)).unwrap_or_else(|_| panic!("read {}", file));
         assert!(

@@ -192,24 +192,336 @@ fn merge_override_content(embedded_content: &str, override_content: &str) -> Str
     )
 }
 
-// Root templates (agent entrypoints) - embedded for scaffolding
-pub const TEMPLATE_AGENTS: &str = include_str!("../../templates/AGENTS.md");
-pub const TEMPLATE_CLAUDE: &str = include_str!("../../templates/CLAUDE.md");
-pub const TEMPLATE_GEMINI: &str = include_str!("../../templates/GEMINI.md");
-pub const TEMPLATE_CODEX: &str = include_str!("../../templates/CODEX.md");
+fn agent_entrypoint_body() -> &'static str {
+    r#"You are working in a Decapod-managed repository.
+See `AGENTS.md` for the universal contract.
 
-pub const TEMPLATE_README: &str = include_str!("../../templates/README.md");
-pub const TEMPLATE_OVERRIDE: &str = include_str!("../../templates/OVERRIDE.md");
+## Quick Start
+
+```bash
+cargo install decapod
+
+decapod validate
+decapod docs ingest
+decapod session acquire
+decapod rpc --op agent.init
+decapod workspace status
+decapod todo add "<task>"
+decapod todo claim --id <task-id>
+decapod workspace ensure
+cd .decapod/workspaces/<your-worktree>
+decapod rpc --op context.resolve
+```
+
+## Control-Plane First
+
+```bash
+decapod capabilities --format json
+decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
+decapod data schema --deterministic
+```
+
+## Operating Mode
+
+- Use Docker git workspaces and execute in `.decapod/workspaces/*`.
+- Call `decapod workspace status` at startup and before implementation work.
+- request elevated permissions before Docker/container workspace commands.
+- `.decapod files are accessed only via decapod CLI`.
+- `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
+- Read canonical router: `decapod docs show core/DECAPOD.md`.
+- Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
+- Operator reference: `decapod docs show docs/PLAYBOOK.md`.
+- Capability authority: `decapod capabilities --format json`.
+- Scoped context feature: `decapod docs search --query "<problem>" --op <op>` or `decapod rpc --op context.scope`.
+
+Stop if requirements are ambiguous or conflicting.
+"#
+}
+
+fn template_agents() -> String {
+    r#"# AGENTS.md — Universal Agent Contract
+
+This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod control plane.**
+
+This contract applies equally to Claude, Codex, Gemini, and any other agent operating here.
+
+## Mandatory Initialization
+
+```bash
+cargo install decapod
+
+decapod validate
+decapod docs ingest
+decapod session acquire
+decapod rpc --op agent.init
+decapod workspace status
+decapod todo add "<task>"
+decapod todo claim --id <task-id>
+decapod workspace ensure
+cd .decapod/workspaces/<your-worktree>
+decapod rpc --op context.resolve
+```
+
+## Control-Plane First Loop
+
+```bash
+# Discover what this binary actually supports in this repo
+decapod capabilities --format json
+decapod data schema --deterministic
+
+# Resolve scoped governance context before implementation
+decapod docs search --query "<problem>" --op <op> --path <path> --tag <tag>
+decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
+
+# Convergence/proof surfaces (call when relevant)
+decapod workunit init --task-id <task-id> --intent-ref <intent>
+decapod govern capsule query --topic "<topic>" --scope interfaces --task-id <task-id>
+decapod eval plan --task-set-id <id> --task-ref <task-id> --model-id <model> --prompt-hash <hash> --judge-model-id <judge> --judge-prompt-hash <hash>
+```
+
+## Golden Rules (Non-Negotiable)
+
+1. Always refine intent with the user before inference-heavy work.
+2. Never work on main/master. Use `.decapod/workspaces/*`.
+3. `.decapod files are accessed only via decapod CLI`.
+4. Never claim done without `decapod validate` passing.
+5. Never invent capabilities that are not exposed by the binary.
+6. Stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
+7. Respect the Interface abstraction boundary.
+
+## Safety Invariants
+
+- ✅ Router pointer: `core/DECAPOD.md`
+- ✅ Validation gate: `decapod validate`
+- ✅ Constitution ingestion gate: `decapod docs ingest`
+- ✅ Workspace status gate: `decapod workspace status`
+- ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`
+- ✅ Session auth gate: `DECAPOD_SESSION_PASSWORD`
+- ✅ Workspace gate: Docker git workspaces
+- ✅ Privilege gate: request elevated permissions before Docker/container workspace commands
+
+## Operating Notes
+
+- Use `decapod docs show core/DECAPOD.md` and `decapod docs show core/INTERFACES.md` for binding contracts.
+- Use `decapod capabilities --format json` as the authority surface for available operations.
+- Use Decapod shared aptitude memory for human-taught preferences that must persist across sessions and agents: `decapod data memory add|get` (aliases: `decapod data aptitude`).
+- Use `decapod docs search --query \"<problem>\" --op <op> --path <path> --tag <tag>` or `decapod rpc --op context.scope --params '{\"query\":\"...\"}'` for scoped just-in-time constitution context.
+- Use `decapod todo handoff --id <id> --to <agent>` for cross-agent ownership transfer.
+- Treat lock/contention failures (including `VALIDATE_TIMEOUT_OR_LOCK`) as blocking until resolved.
+"#
+    .to_string()
+}
+
+fn template_named_agent(file_stem: &str) -> String {
+    format!(
+        "# {}.md - Agent Entrypoint\n\n{}",
+        file_stem,
+        agent_entrypoint_body()
+    )
+}
+
+fn template_readme() -> String {
+    r#"# .decapod - Decapod Control Plane
+
+Decapod is a software engineering harness interfaced through AI coding agents.
+You get governed execution, proof-backed delivery, and integrated project management with near-zero operator overhead.
+
+GitHub: https://github.com/DecapodLabs/decapod
+
+## What This Directory Is
+
+This `.decapod/` directory is the local control plane for this repository.
+It keeps Decapod-owned state, generated artifacts, and isolated workspaces separate from your product source tree.
+
+`OVERRIDE.md` and `README.md` intentionally stay at this top level.
+
+## Quick Start
+
+1. `decapod init`
+2. `decapod validate`
+3. `decapod docs ingest`
+4. `decapod session acquire`
+5. `decapod rpc --op agent.init`
+6. `decapod workspace status`
+7. `decapod todo add \"<task>\" && decapod todo claim --id <task-id>`
+8. `decapod workspace ensure`
+
+## Canonical Layout
+
+- `README.md`: operator onboarding and control-plane map.
+- `OVERRIDE.md`: project-local override layer for embedded constitution.
+- `data/`: canonical control-plane state (SQLite + ledgers).
+- `generated/specs/`: living project specs scaffolded by `decapod init`.
+- `generated/context/`: deterministic context capsule artifacts.
+- `generated/artifacts/provenance/`: promotion manifests and convergence checklist.
+- `generated/artifacts/inventory/`: deterministic release inventory artifacts.
+- `generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
+- `workspaces/`: isolated todo-scoped git worktrees for implementation.
+
+## Why Teams Use This
+
+- Agent-first interface with explicit governance.
+- Local-first execution without daemon overhead.
+- Integrated TODO, claims, context, validation, and proof in one harness.
+- Cleaner repos: Decapod concerns stay in `.decapod/`.
+
+## Override Workflow
+
+Edit `.decapod/OVERRIDE.md` to add project-specific policy overlays without forking Decapod.
+Keep overrides minimal, explicit, and committed.
+"#
+    .to_string()
+}
+
+fn template_override() -> String {
+    r#"# OVERRIDE.md - Project-Specific Decapod Overrides
+
+> **IMPORTANT:** For detailed usage instructions and examples, see [README.md](README.md).
+
+**Canonical:** OVERRIDE.md
+**Authority:** override
+**Layer:** Project
+**Binding:** Yes (overrides embedded constitution)
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- ⚠️  CHANGES ARE NOT PERMITTED ABOVE THIS LINE                           -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+## Core Overrides (Routers and Indices)
+
+### core/DECAPOD.md
+
+### core/INTERFACES.md
+
+### core/METHODOLOGY.md
+
+### core/PLUGINS.md
+
+### core/GAPS.md
+
+### core/DEMANDS.md
+
+### core/DEPRECATION.md
+
+---
+
+## Specs Overrides (System Contracts)
+
+### specs/INTENT.md
+
+### specs/SYSTEM.md
+
+### specs/AMENDMENTS.md
+
+### specs/SECURITY.md
+
+### specs/GIT.md
+
+---
+
+## Interfaces Overrides (Binding Contracts)
+
+### interfaces/CLAIMS.md
+
+### interfaces/CONTROL_PLANE.md
+
+### interfaces/DOC_RULES.md
+
+### interfaces/GLOSSARY.md
+
+### interfaces/STORE_MODEL.md
+
+---
+
+## Methodology Overrides (Practice Guides)
+
+### methodology/ARCHITECTURE.md
+
+### methodology/SOUL.md
+
+### methodology/KNOWLEDGE.md
+
+### methodology/MEMORY.md
+
+---
+
+## Architecture Overrides (Domain Patterns)
+
+### architecture/DATA.md
+
+### architecture/CACHING.md
+
+### architecture/MEMORY.md
+
+### architecture/WEB.md
+
+### architecture/CLOUD.md
+
+### architecture/FRONTEND.md
+
+### architecture/ALGORITHMS.md
+
+### architecture/SECURITY.md
+
+### architecture/OBSERVABILITY.md
+
+### architecture/CONCURRENCY.md
+
+---
+
+## Plugins Overrides (Operational Subsystems)
+
+### plugins/TODO.md
+
+### plugins/MANIFEST.md
+
+### plugins/EMERGENCY_PROTOCOL.md
+
+### plugins/DB_BROKER.md
+
+### plugins/CRON.md
+
+### plugins/REFLEX.md
+
+### plugins/HEALTH.md
+
+### plugins/POLICY.md
+
+### plugins/WATCHER.md
+
+### plugins/KNOWLEDGE.md
+
+### plugins/ARCHIVE.md
+
+### plugins/FEDERATION.md
+
+### plugins/FEEDBACK.md
+
+### plugins/TRUST.md
+
+### plugins/CONTEXT.md
+
+### plugins/HEARTBEAT.md
+
+### plugins/APTITUDE.md
+
+### plugins/VERIFY.md
+
+### plugins/DECIDE.md
+
+### plugins/AUTOUPDATE.md
+"#
+    .to_string()
+}
 
 pub fn get_template(name: &str) -> Option<String> {
     match name {
-        "AGENTS.md" => Some(TEMPLATE_AGENTS.to_string()),
-        "CLAUDE.md" => Some(TEMPLATE_CLAUDE.to_string()),
-        "GEMINI.md" => Some(TEMPLATE_GEMINI.to_string()),
-        "CODEX.md" => Some(TEMPLATE_CODEX.to_string()),
-
-        "README.md" => Some(TEMPLATE_README.to_string()),
-        "OVERRIDE.md" => Some(TEMPLATE_OVERRIDE.to_string()),
+        "AGENTS.md" => Some(template_agents()),
+        "CLAUDE.md" => Some(template_named_agent("CLAUDE")),
+        "GEMINI.md" => Some(template_named_agent("GEMINI")),
+        "CODEX.md" => Some(template_named_agent("CODEX")),
+        "README.md" => Some(template_readme()),
+        "OVERRIDE.md" => Some(template_override()),
         _ => None,
     }
 }

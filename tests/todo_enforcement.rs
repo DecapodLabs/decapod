@@ -127,7 +127,7 @@ fn add_and_claim_task(
     agent_id: &str,
     password: &str,
     title: &str,
-) -> String {
+) -> (String, String) {
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args([
             "todo", "add", title, "--owner", agent_id, "--format", "json",
@@ -145,6 +145,7 @@ fn add_and_claim_task(
     let add_json: serde_json::Value =
         serde_json::from_slice(&out.stdout).expect("parse todo add json");
     let task_id = add_json["id"].as_str().expect("task id").to_string();
+    let task_hash = add_json["hash"].as_str().expect("task hash").to_string();
 
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["todo", "claim", "--id", &task_id, "--agent", agent_id])
@@ -158,7 +159,7 @@ fn add_and_claim_task(
         "todo claim failed: {}",
         String::from_utf8_lossy(&out.stderr)
     );
-    task_id
+    (task_id, task_hash)
 }
 
 #[test]
@@ -303,7 +304,8 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
         no_todo_stderr
     );
 
-    let task_id = add_and_claim_task(&dir, agent_id, &password, "Workspace Scoped Task");
+    let (task_id, task_hash) =
+        add_and_claim_task(&dir, agent_id, &password, "Workspace Scoped Task");
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["workspace", "ensure"])
         .current_dir(&dir)
@@ -324,15 +326,21 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
     let sanitized_todo = sanitize_todo_component(&task_id);
 
     assert!(
-        branch.contains(&task_id) || branch.contains(&sanitized_todo),
-        "branch '{}' must contain todo id '{}'",
+        branch.contains(&task_hash)
+            || branch.contains(&task_id)
+            || branch.contains(&sanitized_todo),
+        "branch '{}' must contain todo hash '{}' (or id '{}')",
         branch,
+        task_hash,
         task_id
     );
     assert!(
-        worktree_path.contains(&task_id) || worktree_path.contains(&sanitized_todo),
-        "worktree path '{}' must contain todo id '{}'",
+        worktree_path.contains(&task_hash)
+            || worktree_path.contains(&task_id)
+            || worktree_path.contains(&sanitized_todo),
+        "worktree path '{}' must contain todo hash '{}' (or id '{}')",
         worktree_path,
+        task_hash,
         task_id
     );
 }

@@ -9,7 +9,10 @@ use crate::core::assets;
 use crate::core::error;
 use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_INTENT,
-    LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_README, LOCAL_PROJECT_SPECS_VALIDATION,
+    LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
+    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_README,
+    LOCAL_PROJECT_SPECS_VALIDATION, ProjectSpecManifestEntry, ProjectSpecsManifest, hash_text,
+    repo_signal_fingerprint,
 };
 use crate::plugins::container;
 use std::fs;
@@ -68,21 +71,88 @@ pub struct SpecsSeed {
     pub done_criteria: Option<String>,
 }
 
-fn specs_readme_template() -> String {
-    r#"# Project Specs
+fn joined_or_fallback(items: &[String], fallback: &str) -> String {
+    if items.is_empty() {
+        fallback.to_string()
+    } else {
+        items.join(", ")
+    }
+}
 
-This directory is managed by Decapod for the human+agent engineering contract of this repository.
+fn default_test_commands(seed: Option<&SpecsSeed>) -> Vec<String> {
+    let mut commands = Vec::new();
+    let langs = seed.map(|s| s.primary_languages.as_slice()).unwrap_or(&[]);
+    let surfaces = seed.map(|s| s.detected_surfaces.as_slice()).unwrap_or(&[]);
+
+    if langs.iter().any(|l| l.contains("rust")) {
+        commands.push("cargo test".to_string());
+    }
+    if surfaces.iter().any(|s| s == "npm")
+        || langs
+            .iter()
+            .any(|l| l.contains("typescript") || l.contains("javascript"))
+    {
+        commands.push("npm test".to_string());
+    }
+    if langs.iter().any(|l| l == "python") {
+        commands.push("pytest".to_string());
+    }
+    if langs.iter().any(|l| l == "go") {
+        commands.push("go test ./...".to_string());
+    }
+    commands
+}
+
+fn specs_readme_template(seed: Option<&SpecsSeed>) -> String {
+    let product = seed
+        .and_then(|s| s.product_name.as_deref())
+        .unwrap_or("this repository");
+    let summary = seed
+        .and_then(|s| s.product_summary.as_deref())
+        .unwrap_or("Define the intended user-visible outcome.");
+    let languages = joined_or_fallback(
+        seed.map(|s| s.primary_languages.as_slice()).unwrap_or(&[]),
+        "not detected yet",
+    );
+    let surfaces = joined_or_fallback(
+        seed.map(|s| s.detected_surfaces.as_slice()).unwrap_or(&[]),
+        "not detected yet",
+    );
+
+    format!(
+        r#"# Project Specs
+
 Canonical path: `.decapod/generated/specs/`.
-Decapod updates and validates these files as intent and implementation evolve.
+These files are the project-local contract for humans and agents.
 
-- `INTENT.md` captures why this repository exists and what outcome it must achieve.
-- `ARCHITECTURE.md` captures implementation topology, interfaces, and operational gates.
-- `INTERFACES.md` captures inbound/outbound service contracts and failure behavior.
-- `VALIDATION.md` captures proof surfaces, gate criteria, and required evidence artifacts.
+## Snapshot
+- Project: {product}
+- Outcome: {summary}
+- Detected languages: {languages}
+- Detected surfaces: {surfaces}
 
-Keep these documents current as requirements and implementation evolve.
+## How to use this folder
+- `INTENT.md`: what success means and what is explicitly out of scope.
+- `ARCHITECTURE.md`: the current implementation shape and planned evolution.
+- `INTERFACES.md`: API/CLI/events/storage contracts and failure behavior.
+- `VALIDATION.md`: required proof commands and promotion gates.
+
+## Canonical `.decapod/` Layout
+- `.decapod/data/`: canonical control-plane state (SQLite + ledgers).
+- `.decapod/generated/specs/`: living project specs for humans and agents.
+- `.decapod/generated/context/`: deterministic context capsules.
+- `.decapod/generated/artifacts/provenance/`: promotion manifests and convergence checklist.
+- `.decapod/generated/artifacts/inventory/`: deterministic release inventory.
+- `.decapod/generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
+- `.decapod/workspaces/`: isolated todo-scoped git worktrees.
+
+## Day-0 Onboarding Checklist
+- [ ] Replace all placeholder bullets in each spec file.
+- [ ] Confirm primary user outcome and acceptance criteria in `INTENT.md`.
+- [ ] Document real interfaces and data boundaries in `INTERFACES.md`.
+- [ ] Run and record validation commands listed in `VALIDATION.md`.
 "#
-    .to_string()
+    )
 }
 
 fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
@@ -95,12 +165,29 @@ fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
     let product_name = seed
         .and_then(|s| s.product_name.as_deref())
         .unwrap_or("this repository");
+    let product_type = seed
+        .and_then(|s| s.product_type.as_deref())
+        .unwrap_or("not classified yet");
+    let languages = joined_or_fallback(
+        seed.map(|s| s.primary_languages.as_slice()).unwrap_or(&[]),
+        "not detected yet",
+    );
+    let surfaces = joined_or_fallback(
+        seed.map(|s| s.detected_surfaces.as_slice()).unwrap_or(&[]),
+        "not detected yet",
+    );
 
     format!(
         r#"# Intent
 
 ## Product Outcome
 - {product_outcome}
+
+## Inferred Baseline
+- Repository: {product_name}
+- Product type: {product_type}
+- Primary languages: {languages}
+- Detected surfaces: {surfaces}
 
 ## Scope
 - In scope for {product_name}:
@@ -111,10 +198,15 @@ fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
 - Operational:
 - Security/compliance:
 
-## Acceptance Criteria
+## Acceptance Criteria (must be objectively testable)
 - [ ] {done_criteria}
 - [ ] Non-functional targets are met (latency, reliability, cost, etc.).
 - [ ] Validation gates pass and artifacts are attached.
+
+## First Implementation Slice
+- [ ] Define the smallest user-visible workflow to ship first.
+- [ ] Define what data/contracts are required for that workflow.
+- [ ] Define what is intentionally postponed until v2.
 
 ## Open Questions
 - List unresolved decisions that block implementation confidence.
@@ -213,95 +305,32 @@ flowchart LR
     format!(
         r#"# Architecture
 
-## Executive Summary
+## Direction
 {summary}
 
-## Integrated Surface
+## Current Facts
 - Runtime/languages: {runtime_langs}
-- Frameworks/libraries: {surfaces}
-- Infrastructure/services: {product_type}
-- External dependencies:
+- Detected surfaces/framework hints: {surfaces}
+- Product type: {product_type}
 
-## Runtime and Deployment Matrix
-- Execution environments (local/dev/stage/prod):
-- Where each component runs (host/container/edge/serverless):
-- Network topology and trust zones:
-- Deployment/rollback strategy:
-- Deployment assumptions inferred from repository: {deployment_hint}
-
-## Implementation Strategy
-- What is being built now:
-- What is deferred:
-- Why this cut line is chosen:
-
-## System Topology
+## Topology
 {diagram}
 
-## Execution Physics
-- End-to-end execution path (event to promoted output):
+## Execution Path
 {flow_diagram}
-- Concurrency and scheduling model:
-- Queueing, backpressure, and retry semantics:
-- Timeouts, cancellation, and idempotency model:
-- Runtime execution note: {execution_hint}
+- Deployment assumptions: {deployment_hint}
+- Concurrency/runtime note: {execution_hint}
 
-## Service Contracts
-- Inbound interfaces (API/events/CLI):
-- Outbound interfaces (datastores/queues/third-party):
-- Data ownership and consistency boundaries:
-
-## Schema and Data Contracts
-- Canonical entities and schema owners:
-- Storage engines and data lifecycle (retention/compaction/archive):
-- Migration policy (forward/backward compatibility, rollout order):
-- Data validation and invariant checks:
+## Data and Contracts
+- Inbound contracts (CLI/API/events):
+- Outbound dependencies (datastores/queues/external APIs):
+- Data ownership boundaries:
 - Schema responsibility note: {schema_hint}
 
-## API and ABI Contracts
-- API surface inventory (internal/external, versioning policy):
-- Request/response compatibility contract (required/optional fields, defaults):
-- Event contract compatibility rules:
-- Binary/runtime ABI boundaries (plugins, FFI, wire formats, language interop):
-- Deprecation window and breaking-change process:
-
-## Multi-Agent Delivery Model
-- Work partitioning strategy:
-- Shared context/proof artifacts:
-- Coordination and handoff rules:
-
-## Validation Gates
-- Unit/integration/e2e gates:
-- Statistical/variance-aware gates (if nondeterministic surfaces exist):
-- Release/promotion blockers:
-
-## Operational Planes
-- Observability contract (logs/metrics/traces and correlation IDs):
-- On-call/incident response expectations:
-- Capacity and scaling controls:
-- Security controls (authn/authz, secret handling, audit trail):
-
-## Failure Topology and Recovery
-- Critical failure modes by component:
-- Detection signals and health checks:
-- Automated recovery paths and manual break-glass steps:
-- Data integrity and replay strategy after faults:
-
-## Performance Envelope
-- Latency budgets (p50/p95/p99) per critical path:
-- Throughput targets and saturation indicators:
-- Cost envelope (compute/storage/network) and budget guardrails:
-- Benchmark and load-test evidence requirements:
-
-## Delivery Plan
-- Milestone 1:
-- Milestone 2:
-- Milestone 3:
-
-## Change Management
-- Architectural Decision Record policy:
-- Contract-change review checklist:
-- Migration/release choreography:
-- Post-release verification and rollback criteria:
+## Delivery Plan (first 3 slices)
+- Slice 1 (ship first):
+- Slice 2:
+- Slice 3:
 
 ## Risks and Mitigations
 - Risk:
@@ -310,13 +339,22 @@ flowchart LR
     )
 }
 
-fn specs_interfaces_template() -> String {
-    r#"# Interfaces
+fn specs_interfaces_template(seed: Option<&SpecsSeed>) -> String {
+    let surfaces = joined_or_fallback(
+        seed.map(|s| s.detected_surfaces.as_slice()).unwrap_or(&[]),
+        "not detected yet",
+    );
+    let product_type = seed
+        .and_then(|s| s.product_type.as_deref())
+        .unwrap_or("not classified yet");
+    format!(
+        r#"# Interfaces
 
 ## Inbound Contracts
 - API / RPC entrypoints:
 - CLI surfaces:
 - Event/webhook consumers:
+- Repository-detected surfaces: {surfaces}
 
 ## Outbound Dependencies
 - Datastores:
@@ -332,16 +370,32 @@ fn specs_interfaces_template() -> String {
 - Retry/backoff policy:
 - Timeout/circuit behavior:
 - Degradation behavior:
+
+## Interface Notes
+- Product type hint: {product_type}
+- Enumerate explicit error codes for each mutating interface.
 "#
-    .to_string()
+    )
 }
 
-fn specs_validation_template() -> String {
-    r#"# Validation
+fn specs_validation_template(seed: Option<&SpecsSeed>) -> String {
+    let commands = default_test_commands(seed);
+    let test_commands = if commands.is_empty() {
+        "- Add repository-specific test command(s) here.".to_string()
+    } else {
+        commands
+            .into_iter()
+            .map(|c| format!("- `{}`", c))
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+    format!(
+        r#"# Validation
 
 ## Proof Surfaces
 - `decapod validate`
 - Required test commands:
+{test_commands}
 - Required integration/e2e commands:
 
 ## Promotion Gates
@@ -359,7 +413,7 @@ fn specs_validation_template() -> String {
 - Statistical thresholds (if non-deterministic):
 - Rollback criteria:
 "#
-    .to_string()
+    )
 }
 
 /// Canonical .gitignore rules managed by `decapod init`.
@@ -377,8 +431,12 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     "!.decapod/generated/Dockerfile",
     "!.decapod/generated/context/",
     "!.decapod/generated/context/*.json",
+    "!.decapod/generated/artifacts/",
+    "!.decapod/generated/artifacts/provenance/",
+    "!.decapod/generated/artifacts/provenance/*.json",
     "!.decapod/generated/specs/",
     "!.decapod/generated/specs/*.md",
+    "!.decapod/generated/specs/.manifest.json",
 ];
 
 /// Ensure a given entry exists in the project's .gitignore file.
@@ -534,39 +592,96 @@ pub fn scaffold_project_entrypoints(
     // Generate .decapod/generated/Dockerfile from Rust-owned template component.
     let generated_dir = opts.target_dir.join(".decapod/generated");
     fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(generated_dir.join("context")).map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(generated_dir.join("artifacts").join("provenance"))
+        .map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(generated_dir.join("artifacts").join("inventory"))
+        .map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(
+        generated_dir
+            .join("artifacts")
+            .join("diagnostics")
+            .join("validate"),
+    )
+    .map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(generated_dir.join("migrations")).map_err(error::DecapodError::IoError)?;
     let dockerfile_path = generated_dir.join("Dockerfile");
     if !dockerfile_path.exists() {
         let dockerfile_content = container::generated_dockerfile_for_repo(&opts.target_dir);
         fs::write(&dockerfile_path, dockerfile_content).map_err(error::DecapodError::IoError)?;
+    }
+    let version_counter_path = generated_dir.join("version_counter.json");
+    if !version_counter_path.exists() {
+        let now = crate::core::time::now_epoch_z();
+        let version_counter = serde_json::json!({
+            "schema_version": "1.0.0",
+            "version_count": 1,
+            "initialized_with_version": env!("CARGO_PKG_VERSION"),
+            "last_seen_version": env!("CARGO_PKG_VERSION"),
+            "updated_at": now,
+        });
+        let body = serde_json::to_string_pretty(&version_counter).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "Failed to serialize version counter: {}",
+                e
+            ))
+        })?;
+        fs::write(version_counter_path, body).map_err(error::DecapodError::IoError)?;
     }
 
     let (specs_created, specs_unchanged, specs_preserved) = if opts.generate_specs {
         let mut created = 0usize;
         let mut unchanged = 0usize;
         let mut preserved = 0usize;
+        let mut manifest_entries: Vec<ProjectSpecManifestEntry> = Vec::new();
 
         let seed = opts.specs_seed.as_ref();
         let mut specs_files: Vec<(&str, String)> = Vec::new();
         for spec in LOCAL_PROJECT_SPECS {
             let content = match spec.path {
-                LOCAL_PROJECT_SPECS_README => specs_readme_template(),
+                LOCAL_PROJECT_SPECS_README => specs_readme_template(seed),
                 LOCAL_PROJECT_SPECS_INTENT => specs_intent_template(seed),
                 LOCAL_PROJECT_SPECS_ARCHITECTURE => {
                     specs_architecture_template(opts.diagram_style, seed)
                 }
-                LOCAL_PROJECT_SPECS_INTERFACES => specs_interfaces_template(),
-                LOCAL_PROJECT_SPECS_VALIDATION => specs_validation_template(),
+                LOCAL_PROJECT_SPECS_INTERFACES => specs_interfaces_template(seed),
+                LOCAL_PROJECT_SPECS_VALIDATION => specs_validation_template(seed),
                 _ => continue,
             };
             specs_files.push((spec.path, content));
         }
 
         for (rel_path, content) in specs_files {
+            let template_hash = hash_text(&content);
             match write_file(opts, rel_path, &content)? {
                 FileAction::Created => created += 1,
                 FileAction::Unchanged => unchanged += 1,
                 FileAction::Preserved => preserved += 1,
             }
+            manifest_entries.push(ProjectSpecManifestEntry {
+                path: rel_path.to_string(),
+                template_hash: template_hash.clone(),
+                content_hash: template_hash,
+            });
+        }
+
+        if !opts.dry_run {
+            let manifest = ProjectSpecsManifest {
+                schema_version: LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA.to_string(),
+                template_version: "scaffold-v1".to_string(),
+                generated_at: crate::core::time::now_epoch_z(),
+                repo_signal_fingerprint: repo_signal_fingerprint(&opts.target_dir)?,
+                files: manifest_entries,
+            };
+            let manifest_path = opts.target_dir.join(LOCAL_PROJECT_SPECS_MANIFEST);
+            ensure_parent(&manifest_path)?;
+            let manifest_body = serde_json::to_string_pretty(&manifest).map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "Failed to serialize specs manifest: {}",
+                    e
+                ))
+            })?;
+            fs::write(manifest_path, manifest_body).map_err(error::DecapodError::IoError)?;
         }
         (created, unchanged, preserved)
     } else {

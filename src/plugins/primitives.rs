@@ -261,9 +261,10 @@ fn render_task_markdown(t: &todo::Task) -> String {
             .join(", ")
     };
     format!(
-        "# Task: {}\n\n- id: {}\n- status: {}\n- priority: {}\n- owner: {}\n- assigned_to: {}\n- owners: {}\n- depends_on: {}\n- blocks: {}\n- category: {}\n- scope: {}\n- created_at: {}\n- updated_at: {}\n\n## Description\n{}\n\n## Tags\n{}\n",
+        "# Task: {}\n\n- id: {}\n- hash: {}\n- status: {}\n- priority: {}\n- owner: {}\n- assigned_to: {}\n- owners: {}\n- depends_on: {}\n- blocks: {}\n- category: {}\n- scope: {}\n- created_at: {}\n- updated_at: {}\n\n## Description\n{}\n\n## Tags\n{}\n",
         t.title,
         t.id,
+        t.hash,
         t.status,
         t.priority,
         empty_dash(&t.owner),

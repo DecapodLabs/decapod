@@ -247,15 +247,20 @@ fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
             "expected typed failure marker; got: {stderr}"
         );
         assert!(
-            stderr.contains("artifacts/diagnostics/validate/"),
+            stderr.contains(".decapod/generated/artifacts/diagnostics/validate/"),
             "expected diagnostics artifact path in stderr; got: {stderr}"
         );
     }
 
-    let diagnostics_dir = dir.join("artifacts").join("diagnostics").join("validate");
+    let diagnostics_dir = dir
+        .join(".decapod")
+        .join("generated")
+        .join("artifacts")
+        .join("diagnostics")
+        .join("validate");
     assert!(
         diagnostics_dir.exists(),
-        "diagnostics directory should be created under artifacts/diagnostics/validate"
+        "diagnostics directory should be created under .decapod/generated/artifacts/diagnostics/validate"
     );
 
     let mut diagnostic_count = 0usize;
@@ -325,8 +330,28 @@ fn validate_diagnostics_disabled_does_not_write_artifacts() {
         !stderr.contains("Diagnostics:"),
         "diagnostics path should not be emitted when DECAPOD_DIAGNOSTICS is disabled"
     );
+    let diagnostics_validate_dir = dir
+        .join(".decapod")
+        .join("generated")
+        .join("artifacts")
+        .join("diagnostics")
+        .join("validate");
+    let has_diagnostics_files = diagnostics_validate_dir.exists()
+        && fs::read_dir(&diagnostics_validate_dir)
+            .expect("read diagnostics dir")
+            .any(|entry| {
+                entry
+                    .ok()
+                    .and_then(|e| {
+                        e.path()
+                            .extension()
+                            .and_then(|ext| ext.to_str())
+                            .map(|ext| ext == "json")
+                    })
+                    .unwrap_or(false)
+            });
     assert!(
-        !dir.join("artifacts").join("diagnostics").exists(),
+        !has_diagnostics_files,
         "diagnostics artifacts must not be written unless explicitly enabled"
     );
 }
@@ -358,7 +383,12 @@ fn validate_diagnostics_payload_is_sanitized() {
         "validate should fail under forced lock contention"
     );
 
-    let diagnostics_dir = dir.join("artifacts").join("diagnostics").join("validate");
+    let diagnostics_dir = dir
+        .join(".decapod")
+        .join("generated")
+        .join("artifacts")
+        .join("diagnostics")
+        .join("validate");
     let artifact_path = fs::read_dir(&diagnostics_dir)
         .expect("read diagnostics dir")
         .find_map(|entry| {

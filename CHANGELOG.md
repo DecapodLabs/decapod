@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Other
+
+- todo: migrate task IDs to typed format `<type4>_<16-alnum>`, add task `hash` field, and align workspace scope checks
+- migration: add startup SQL-backed todo ID rewrite for legacy stores (DB + events log) on first post-upgrade activation
+- cli: add `decapod activate` as explicit first-run activation surface to trigger migrations/bootstrap
+- migration: add version-gated migration registry (`min_version` + `target_version`) with applied ledger at `.decapod/generated/migrations/applied.json`
+- init: seed `.decapod/generated/version_counter.json` and track binary-version transitions for safe migration orchestration
+- ci: add PR-only migration script test gate that runs migration tests only when `src/core/sql/*.sql` changes
+- migration: add sequence/scope metadata, duplicate/order guards, and generated migration catalog for long-horizon schema evolution
+- validate: add database schema version gate to verify versioned DBs match this decapod binary expectations
+- schema/interface: update TODO schema contract with typed ID and hash invariants
+- docs/scaffold: refresh `.decapod/README.md` template with Decapod harness positioning and canonical control-plane layout
+
 ## [0.41.2](https://github.com/DecapodLabs/decapod/compare/v0.41.1...v0.41.2) - 2026-02-24
 
 ### Added

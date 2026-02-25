@@ -78,6 +78,55 @@ jobs:
       - name: Check Cargo.lock is up to date
         run: cargo generate-lockfile && git diff --quiet Cargo.lock || echo "⚠️ Cargo.lock outdated - run cargo update locally"
 
+  detect-migration-script-changes:
+    name: Detect Migration Script Changes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changed migration scripts
+        id: diff
+        run: |
+          set -euo pipefail
+          base_ref="${{ github.base_ref }}"
+          git fetch --no-tags --prune origin "$base_ref"
+          changed_files="$(git diff --name-only "origin/$base_ref"...HEAD)"
+          echo "$changed_files"
+          if echo "$changed_files" | grep -qE '^src/core/sql/.*\.sql$'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  migration-script-tests:
+    name: Migration Script Tests
+    runs-on: ubuntu-latest
+    needs: [setup, detect-migration-script-changes]
+    if: github.event_name == 'pull_request' && needs.detect-migration-script-changes.outputs.changed == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install LLD
+        run: sudo apt-get update && sudo apt-get install -y lld
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Restore Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-setup"
+          save-if: false
+
+      - name: Run migration tests
+        run: cargo test --all-features --test core_tests migration_ -- --ignored --test-threads=1
+
   # LINT: Format check
   fmt:
     name: Lint (fmt)
@@ -159,14 +208,69 @@ jobs:
 
   # TEST: integration tests except RPC suite and chaos replay
   test-integration:
-    name: Tests (Integration ${{ matrix.shard }}/${{ matrix.total_shards }})
+    name: Tests (Integration ${{ matrix.label }}/8)
     runs-on: ubuntu-latest
     needs: setup
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
-        total_shards: [4]
+        include:
+          - label: "1"
+            base_shard: 1
+            base_total: 4
+            sub_shard: 1
+            sub_total: 1
+            hot_split_shard: 1
+            hot_split_total: 1
+          - label: "2"
+            base_shard: 2
+            base_total: 4
+            sub_shard: 1
+            sub_total: 1
+            hot_split_shard: 1
+            hot_split_total: 1
+          - label: "3"
+            base_shard: 3
+            base_total: 4
+            sub_shard: 1
+            sub_total: 2
+            hot_split_shard: 1
+            hot_split_total: 2
+          - label: "4"
+            base_shard: 3
+            base_total: 4
+            sub_shard: 2
+            sub_total: 2
+            hot_split_shard: 1
+            hot_split_total: 1
+          - label: "5"
+            base_shard: 4
+            base_total: 4
+            sub_shard: 1
+            sub_total: 2
+            hot_split_shard: 1
+            hot_split_total: 2
+          - label: "6"
+            base_shard: 4
+            base_total: 4
+            sub_shard: 2
+            sub_total: 2
+            hot_split_shard: 1
+            hot_split_total: 1
+          - label: "7"
+            base_shard: 3
+            base_total: 4
+            sub_shard: 1
+            sub_total: 2
+            hot_split_shard: 2
+            hot_split_total: 2
+          - label: "8"
+            base_shard: 4
+            base_total: 4
+            sub_shard: 1
+            sub_total: 2
+            hot_split_shard: 2
+            hot_split_total: 2
     steps:
       - uses: actions/checkout@v4
         with:
@@ -193,16 +297,32 @@ jobs:
               | sed 's/\.rs$//' \
               | sort
           )
-          shard_index=$(( ${{ matrix.shard }} - 1 ))
-          total_shards=${{ matrix.total_shards }}
+          base_shard_index=$(( ${{ matrix.base_shard }} - 1 ))
+          base_total=${{ matrix.base_total }}
+          sub_shard_index=$(( ${{ matrix.sub_shard }} - 1 ))
+          sub_total=${{ matrix.sub_total }}
+          hot_split_index=$(( ${{ matrix.hot_split_shard }} - 1 ))
+          hot_split_total=${{ matrix.hot_split_total }}
+          base_rank=0
+          hot_rank=0
           for i in "${!all_tests[@]}"; do
             t="${all_tests[$i]}"
             if [ "$t" = "agent_rpc_suite" ] || [ "$t" = "chaos_replay" ] || [ "$t" = "daemonless_lifecycle" ]; then
               continue
             fi
-            if [ $(( i % total_shards )) -ne "$shard_index" ]; then
+            if [ $(( i % base_total )) -ne "$base_shard_index" ]; then
               continue
             fi
+            if [ "$sub_total" -gt 1 ] && [ $(( base_rank % sub_total )) -ne "$sub_shard_index" ]; then
+              base_rank=$(( base_rank + 1 ))
+              continue
+            fi
+            base_rank=$(( base_rank + 1 ))
+            if [ "$hot_split_total" -gt 1 ] && [ $(( hot_rank % hot_split_total )) -ne "$hot_split_index" ]; then
+              hot_rank=$(( hot_rank + 1 ))
+              continue
+            fi
+            hot_rank=$(( hot_rank + 1 ))
             cargo test --all-features --test "$t" -- --test-threads=4
           done
 

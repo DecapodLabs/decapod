@@ -277,6 +277,7 @@ pub enum TodoCommand {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Task {
     pub id: String,
+    pub hash: String,
     pub title: String,
     pub description: String,
     pub tags: String,
@@ -618,6 +619,22 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
         backfill_task_dependencies(conn)?;
+    }
+
+    if current_version < 14 {
+        let _ = conn.execute("ALTER TABLE tasks ADD COLUMN hash TEXT DEFAULT ''", []);
+        conn.execute(
+            "UPDATE tasks
+             SET hash = lower(
+                CASE
+                    WHEN instr(id, '_') > 0 THEN substr(id, instr(id, '_') + 1, 6)
+                    ELSE substr(id, 1, 6)
+                END
+             )
+             WHERE hash = '' OR hash IS NULL",
+            [],
+        )?;
+        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_HASH, [])?;
     }
     conn.execute(
         "INSERT INTO meta(key, value) VALUES('schema_version', ?1)
@@ -1766,20 +1783,103 @@ fn scope_from_dir(p: &str) -> String {
     "root".to_string()
 }
 
-fn task_prefix_from_scope(scope: &str) -> &'static str {
+const TODO_TASK_TYPES: &[&str] = &[
+    "aiml", "apis", "appl", "arch", "bend", "bugs", "cicd", "code", "data", "desn", "devx", "docs",
+    "feat", "fend", "lang", "perf", "plat", "proj", "refa", "root", "secu", "spec", "test",
+];
+
+fn task_type_from_scope(scope: &str) -> &'static str {
     match scope {
-        "application_development" => "AD",
-        "architecture" => "AR",
-        "artificial_intelligence" => "AI",
-        "design_and_style" => "DS",
-        "development_lifecycle" => "DL",
-        "documentation" => "DO",
-        "languages" => "LA",
-        "platform_engineering" => "PE",
-        "project_management" => "PM",
-        "specialized_domains" => "SD",
-        _ => "R",
+        "application_development" => "appl",
+        "architecture" => "arch",
+        "artificial_intelligence" => "aiml",
+        "design_and_style" => "desn",
+        "development_lifecycle" => "devx",
+        "documentation" => "docs",
+        "languages" => "lang",
+        "platform_engineering" => "plat",
+        "project_management" => "proj",
+        "specialized_domains" => "spec",
+        _ => "root",
     }
+}
+
+fn task_type_from_category(category: &str) -> Option<&'static str> {
+    match category {
+        "features" => Some("feat"),
+        "bugs" => Some("bugs"),
+        "docs" => Some("docs"),
+        "ci" => Some("cicd"),
+        "refactor" => Some("refa"),
+        "tests" => Some("test"),
+        "security" => Some("secu"),
+        "performance" => Some("perf"),
+        "backend" => Some("bend"),
+        "frontend" => Some("fend"),
+        "api" => Some("apis"),
+        "database" => Some("data"),
+        _ => None,
+    }
+}
+
+fn task_type_from_content(title: &str, tags: &str) -> &'static str {
+    let text = format!("{title} {tags}").to_ascii_lowercase();
+    if text.contains("test") || text.contains("spec") || text.contains("qa") {
+        return "test";
+    }
+    if text.contains("doc") || text.contains("readme") {
+        return "docs";
+    }
+    if text.contains("arch") || text.contains("design") {
+        return "arch";
+    }
+    if text.contains("perf") || text.contains("latency") || text.contains("optimiz") {
+        return "perf";
+    }
+    if text.contains("security") || text.contains("auth") {
+        return "secu";
+    }
+    if text.contains("ci") || text.contains("pipeline") || text.contains("workflow") {
+        return "cicd";
+    }
+    if text.contains("bug") || text.contains("fix") {
+        return "bugs";
+    }
+    "code"
+}
+
+fn infer_task_type(scope: &str, category: &str, title: &str, tags: &str) -> String {
+    task_type_from_category(category)
+        .unwrap_or_else(|| {
+            let from_scope = task_type_from_scope(scope);
+            if from_scope == "root" {
+                task_type_from_content(title, tags)
+            } else {
+                from_scope
+            }
+        })
+        .to_string()
+}
+
+fn make_task_id(task_type: &str) -> String {
+    let body: String = Ulid::new()
+        .to_string()
+        .to_ascii_lowercase()
+        .chars()
+        .take(16)
+        .collect();
+    format!("{task_type}_{body}")
+}
+
+fn task_hash_from_id(task_id: &str) -> String {
+    let body = task_id
+        .split_once('_')
+        .map(|(_, suffix)| suffix)
+        .unwrap_or(task_id);
+    body.chars()
+        .take(6)
+        .collect::<String>()
+        .to_ascii_lowercase()
 }
 
 fn validate_priority(s: &str) -> Result<String, String> {
@@ -2237,8 +2337,6 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         .to_string_lossy()
         .to_string();
     let scope = scope_from_dir(&dir_abs);
-    let prefix = task_prefix_from_scope(&scope);
-    let task_id = format!("{}_{}", prefix, Ulid::new());
     let ts = now_iso();
     let intent_ref = format!("intent:todo.add:{}", Ulid::new());
     let owner_list = parse_owners_input(owner);
@@ -2247,11 +2345,16 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
-    broker.with_conn(&db_path, "decapod", Some(&intent_ref), "todo.add", |conn| {
+    let (task_id, task_hash) =
+        broker.with_conn(&db_path, "decapod", Some(&intent_ref), "todo.add", |conn| {
         ensure_schema(conn)?;
 
         // Infer category from tags or title for auto-assignment
         let inferred_category = infer_category_from_task(conn, title, tags)?;
+        let category = inferred_category.clone().unwrap_or_default();
+        let task_type = infer_task_type(&scope, &category, title, tags);
+        let task_id = make_task_id(&task_type);
+        let task_hash = task_hash_from_id(&task_id);
 
         // Check if there's an agent already working on tasks in this category
         let auto_assigned_agent = if let Some(cat) = &inferred_category {
@@ -2275,10 +2378,11 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         }
 
         conn.execute(
-            "INSERT INTO tasks(id, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, assigned_to, assigned_at)
-             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, 'open', ?8, ?9, NULL, NULL, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)",
+            "INSERT INTO tasks(id, hash, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, assigned_to, assigned_at)
+             VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'open', ?9, ?10, NULL, NULL, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19)",
             rusqlite::params![
                 task_id,
+                task_hash,
                 title,
                 description,
                 tags,
@@ -2293,7 +2397,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 priority,
                 depends_on,
                 blocks,
-                inferred_category.clone().unwrap_or_default(),
+                category,
                 assigned_to,
                 assigned_at
             ],
@@ -2315,7 +2419,9 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             "priority": priority,
             "depends_on": depends_on,
             "blocks": blocks,
-            "category": inferred_category.clone().unwrap_or_default(),
+            "category": category,
+            "hash": task_hash,
+            "task_type": task_type,
         });
 
         // Add auto-assignment info if applicable
@@ -2355,7 +2461,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             )?;
         }
         sync_legacy_owner_column(conn, &task_id)?;
-        Ok(())
+        Ok((task_id, task_hash))
     })?;
 
     // Create federation node for intent→change→proof chain
@@ -2391,6 +2497,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         "status": "ok",
         "root": root.to_string_lossy(),
         "id": task_id,
+        "hash": task_hash,
     }))
 }
 
@@ -3541,34 +3648,35 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
 
     broker.with_conn(&db_path, "decapod", None, "todo.get", |conn| {
         ensure_schema(conn)?;
-        let mut stmt = conn.prepare("SELECT id,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at FROM tasks WHERE id = ?1")?;
+        let mut stmt = conn.prepare("SELECT id,hash,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at FROM tasks WHERE id = ?1")?;
         let mut rows = stmt.query(rusqlite::params![id])?;
         if let Some(row) = rows.next()? {
             let task_id: String = row.get(0)?;
             let owners = fetch_task_owners(conn, &task_id)?;
             Ok(Some(Task {
                 id: task_id,
-                title: row.get(1)?,
-                description: row.get(2)?,
-                tags: row.get(3)?,
-                owner: primary_owner_from_owners(&owners).unwrap_or_else(|| row.get(4).unwrap_or_default()),
-                due: row.get(5)?,
-                r#ref: row.get(6)?,
-                status: row.get(7)?,
-                created_at: row.get(8)?,
-                updated_at: row.get(9)?,
-                completed_at: row.get(10)?,
-                closed_at: row.get(11)?,
-                dir_path: row.get(12)?,
-                scope: row.get(13)?,
-                parent_task_id: row.get(14)?,
-                priority: row.get(15)?,
-                depends_on: row.get(16)?,
-                blocks: row.get(17)?,
-                category: row.get(18)?,
-                component: row.get(19)?,
-                assigned_to: row.get(20).unwrap_or_default(),
-                assigned_at: row.get(21)?,
+                hash: row.get(1)?,
+                title: row.get(2)?,
+                description: row.get(3)?,
+                tags: row.get(4)?,
+                owner: primary_owner_from_owners(&owners).unwrap_or_else(|| row.get(5).unwrap_or_default()),
+                due: row.get(6)?,
+                r#ref: row.get(7)?,
+                status: row.get(8)?,
+                created_at: row.get(9)?,
+                updated_at: row.get(10)?,
+                completed_at: row.get(11)?,
+                closed_at: row.get(12)?,
+                dir_path: row.get(13)?,
+                scope: row.get(14)?,
+                parent_task_id: row.get(15)?,
+                priority: row.get(16)?,
+                depends_on: row.get(17)?,
+                blocks: row.get(18)?,
+                category: row.get(19)?,
+                component: row.get(20)?,
+                assigned_to: row.get(21).unwrap_or_default(),
+                assigned_at: row.get(22)?,
                 owners,
             }))
         } else {
@@ -3591,7 +3699,7 @@ pub fn list_tasks(
     broker.with_conn(&db_path, "decapod", None, "todo.list", |conn| {
         ensure_schema(conn)?;
 
-        let mut query = "SELECT id,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at FROM tasks WHERE 1=1".to_string();
+        let mut query = "SELECT id,hash,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at FROM tasks WHERE 1=1".to_string();
         let mut params: Vec<Box<dyn ToSql>> = Vec::new();
 
         if let Some(s) = status {
@@ -3633,30 +3741,31 @@ pub fn list_tasks(
             let owners = fetch_task_owners(conn, &task_id)?;
             out.push(Task {
                 id: task_id,
-                title: row.get(1).map_err(error::DecapodError::RusqliteError)?,
-                description: row.get(2).map_err(error::DecapodError::RusqliteError)?,
-                tags: row.get(3).map_err(error::DecapodError::RusqliteError)?,
-                owner: primary_owner_from_owners(&owners).unwrap_or_else(|| row.get(4).unwrap_or_default()),
-                due: row.get(5).map_err(error::DecapodError::RusqliteError)?,
-                r#ref: row.get(6).map_err(error::DecapodError::RusqliteError)?,
-                status: row.get(7).map_err(error::DecapodError::RusqliteError)?,
-                created_at: row.get(8).map_err(error::DecapodError::RusqliteError)?,
-                updated_at: row.get(9).map_err(error::DecapodError::RusqliteError)?,
-                completed_at: row.get(10).map_err(error::DecapodError::RusqliteError)?,
-                closed_at: row.get(11).map_err(error::DecapodError::RusqliteError)?,
-                dir_path: row.get(12).map_err(error::DecapodError::RusqliteError)?,
-                scope: row.get(13).map_err(error::DecapodError::RusqliteError)?,
-                parent_task_id: row.get(14).map_err(error::DecapodError::RusqliteError)?,
-                priority: row.get(15).map_err(error::DecapodError::RusqliteError)?,
-                depends_on: row.get(16).map_err(error::DecapodError::RusqliteError)?,
-                blocks: row.get(17).map_err(error::DecapodError::RusqliteError)?,
-                category: row.get(18).map_err(error::DecapodError::RusqliteError)?,
-                component: row.get(19).map_err(error::DecapodError::RusqliteError)?,
+                hash: row.get(1).map_err(error::DecapodError::RusqliteError)?,
+                title: row.get(2).map_err(error::DecapodError::RusqliteError)?,
+                description: row.get(3).map_err(error::DecapodError::RusqliteError)?,
+                tags: row.get(4).map_err(error::DecapodError::RusqliteError)?,
+                owner: primary_owner_from_owners(&owners).unwrap_or_else(|| row.get(5).unwrap_or_default()),
+                due: row.get(6).map_err(error::DecapodError::RusqliteError)?,
+                r#ref: row.get(7).map_err(error::DecapodError::RusqliteError)?,
+                status: row.get(8).map_err(error::DecapodError::RusqliteError)?,
+                created_at: row.get(9).map_err(error::DecapodError::RusqliteError)?,
+                updated_at: row.get(10).map_err(error::DecapodError::RusqliteError)?,
+                completed_at: row.get(11).map_err(error::DecapodError::RusqliteError)?,
+                closed_at: row.get(12).map_err(error::DecapodError::RusqliteError)?,
+                dir_path: row.get(13).map_err(error::DecapodError::RusqliteError)?,
+                scope: row.get(14).map_err(error::DecapodError::RusqliteError)?,
+                parent_task_id: row.get(15).map_err(error::DecapodError::RusqliteError)?,
+                priority: row.get(16).map_err(error::DecapodError::RusqliteError)?,
+                depends_on: row.get(17).map_err(error::DecapodError::RusqliteError)?,
+                blocks: row.get(18).map_err(error::DecapodError::RusqliteError)?,
+                category: row.get(19).map_err(error::DecapodError::RusqliteError)?,
+                component: row.get(20).map_err(error::DecapodError::RusqliteError)?,
                 assigned_to: row
-                    .get(20)
+                    .get(21)
                     .map_err(error::DecapodError::RusqliteError)
                     .unwrap_or_default(),
-                assigned_at: row.get(21).map_err(error::DecapodError::RusqliteError)?,
+                assigned_at: row.get(22).map_err(error::DecapodError::RusqliteError)?,
                 owners,
             });
         }
@@ -3740,6 +3849,13 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     let id = ev.task_id.clone().ok_or_else(|| {
                         error::DecapodError::ValidationError("task.add missing task_id".into())
                     })?;
+                    let hash = ev
+                        .payload
+                        .get("hash")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string())
+                        .filter(|s| !s.is_empty())
+                        .unwrap_or_else(|| task_hash_from_id(&id));
                     let title = ev
                         .payload
                         .get("title")
@@ -3835,9 +3951,9 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                     };
 
                     conn.execute(
-                        "INSERT OR REPLACE INTO tasks(id,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at)
-                         VALUES(?1,?2,?3,?4,?5,?6,?7,'open',?8,?9,NULL,NULL,?10,?11,?12,?13,?14,?15,?16,?17,?18,?19)",
-                        rusqlite::params![id, title, description, tags, owner, due, r#ref, ev.ts, ev.ts, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, component, assigned_to, assigned_at],
+                        "INSERT OR REPLACE INTO tasks(id,hash,title,description,tags,owner,due,ref,status,created_at,updated_at,completed_at,closed_at,dir_path,scope,parent_task_id,priority,depends_on,blocks,category,component,assigned_to,assigned_at)
+                         VALUES(?1,?2,?3,?4,?5,?6,?7,?8,'open',?9,?10,NULL,NULL,?11,?12,?13,?14,?15,?16,?17,?18,?19,?20)",
+                        rusqlite::params![id, hash, title, description, tags, owner, due, r#ref, ev.ts, ev.ts, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, component, assigned_to, assigned_at],
                     )?;
 
                     if let Some(owners) = ev.payload.get("owners").and_then(|v| v.as_array()) {
@@ -4184,9 +4300,12 @@ pub fn schema() -> serde_json::Value {
             { "name": "rebuild", "parameters": [] }
         ],
         "task_columns": [
-            "id", "title", "description", "tags", "owner", "status", "created_at", "updated_at",
+            "id", "hash", "title", "description", "tags", "owner", "status", "created_at", "updated_at",
             "priority", "depends_on", "blocks", "category", "assigned_to", "parent_task_id"
         ],
+        "id_format": "<type4>_<16-alnum>",
+        "hash_format": "first 6 chars after '<type4>_'",
+        "task_id_types": TODO_TASK_TYPES,
         "dependency_tables": [
             "task_dependencies(task_id, depends_on_task_id, created_at)"
         ],

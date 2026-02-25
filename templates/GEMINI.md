@@ -12,10 +12,12 @@ decapod validate
 decapod docs ingest
 decapod session acquire
 decapod rpc --op agent.init
-decapod rpc --op context.resolve
+decapod workspace status
 decapod todo add "<task>"
 decapod todo claim --id <task-id>
 decapod workspace ensure
+cd .decapod/workspaces/<your-worktree>
+decapod rpc --op context.resolve
 ```
 
 ## Control-Plane First
@@ -29,6 +31,7 @@ decapod data schema --deterministic
 ## Operating Mode
 
 - Use Docker git workspaces and execute in `.decapod/workspaces/*`.
+- Call `decapod workspace status` at startup and before implementation work.
 - request elevated permissions before Docker/container workspace commands.
 - `.decapod files are accessed only via decapod CLI`.
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
