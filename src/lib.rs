@@ -2982,12 +2982,13 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
         failures.push(format!("artifact manifest invalid: {}", e));
     }
     if proof_manifest.exists()
-        && let Err(e) = validate_proof_manifest(&proof_manifest)
+        && let Err(e) = validate_proof_manifest(project_root, &proof_manifest)
     {
         failures.push(format!("proof manifest invalid: {}", e));
     }
     if intent_convergence_manifest.exists()
-        && let Err(e) = validate_intent_convergence_manifest(&intent_convergence_manifest)
+        && let Err(e) =
+            validate_intent_convergence_manifest(project_root, &intent_convergence_manifest)
     {
         failures.push(format!("intent convergence manifest invalid: {}", e));
     }
@@ -3069,6 +3070,109 @@ fn sha256_file(path: &Path) -> Result<String, error::DecapodError> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
+fn validate_policy_lineage(
+    project_root: &Path,
+    v: &serde_json::Value,
+    manifest_label: &str,
+) -> Result<(), error::DecapodError> {
+    let lineage = v
+        .get("policy_lineage")
+        .and_then(|x| x.as_object())
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(format!(
+                "{manifest_label} missing policy_lineage object"
+            ))
+        })?;
+
+    let required = [
+        "policy_hash",
+        "policy_revision",
+        "risk_tier",
+        "capsule_path",
+        "capsule_hash",
+    ];
+    for key in required {
+        let value = lineage.get(key).and_then(|x| x.as_str()).unwrap_or("");
+        if value.is_empty() || value.contains("TO_BE_FILLED") {
+            return Err(error::DecapodError::ValidationError(format!(
+                "{manifest_label} policy_lineage.{key} must be non-empty and non-placeholder"
+            )));
+        }
+    }
+
+    let policy_hash = lineage
+        .get("policy_hash")
+        .and_then(|x| x.as_str())
+        .unwrap_or("");
+    if policy_hash.len() != 64 || !policy_hash.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage.policy_hash must be a 64-char hex digest"
+        )));
+    }
+
+    let capsule_hash = lineage
+        .get("capsule_hash")
+        .and_then(|x| x.as_str())
+        .unwrap_or("");
+    if capsule_hash.len() != 64 || !capsule_hash.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage.capsule_hash must be a 64-char hex digest"
+        )));
+    }
+
+    let risk_tier = lineage
+        .get("risk_tier")
+        .and_then(|x| x.as_str())
+        .unwrap_or("");
+    if !matches!(risk_tier, "low" | "medium" | "high" | "critical") {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage.risk_tier invalid: expected low|medium|high|critical"
+        )));
+    }
+
+    let capsule_path = lineage
+        .get("capsule_path")
+        .and_then(|x| x.as_str())
+        .unwrap_or("");
+    let abs = project_root.join(capsule_path);
+    if !abs.exists() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage.capsule_path '{}' does not exist",
+            capsule_path
+        )));
+    }
+
+    let raw_capsule = fs::read_to_string(&abs).map_err(error::DecapodError::IoError)?;
+    let parsed: core::context_capsule::DeterministicContextCapsule =
+        serde_json::from_str(&raw_capsule).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "{manifest_label} policy_lineage capsule at '{}' is not valid deterministic capsule JSON: {}",
+                capsule_path, e
+            ))
+        })?;
+    let normalized = parsed.with_recomputed_hash().map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage capsule hash computation failed for '{}': {}",
+            capsule_path, e
+        ))
+    })?;
+
+    if parsed.capsule_hash != normalized.capsule_hash {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage capsule file '{}' has internal hash mismatch",
+            capsule_path
+        )));
+    }
+    if capsule_hash != normalized.capsule_hash {
+        return Err(error::DecapodError::ValidationError(format!(
+            "{manifest_label} policy_lineage capsule_hash mismatch for '{}'",
+            capsule_path
+        )));
+    }
+
+    Ok(())
+}
+
 fn validate_artifact_manifest(
     project_root: &Path,
     manifest_path: &Path,
@@ -3087,6 +3191,7 @@ fn validate_artifact_manifest(
             "artifact manifest kind must be artifact_manifest".to_string(),
         ));
     }
+    validate_policy_lineage(project_root, &v, "artifact manifest")?;
 
     let artifacts = v
         .get("artifacts")
@@ -3136,7 +3241,10 @@ fn validate_artifact_manifest(
     Ok(())
 }
 
-fn validate_proof_manifest(manifest_path: &Path) -> Result<(), error::DecapodError> {
+fn validate_proof_manifest(
+    project_root: &Path,
+    manifest_path: &Path,
+) -> Result<(), error::DecapodError> {
     let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
     let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!("proof manifest is not valid JSON: {e}"))
@@ -3151,6 +3259,7 @@ fn validate_proof_manifest(manifest_path: &Path) -> Result<(), error::DecapodErr
             "proof manifest kind must be proof_manifest".to_string(),
         ));
     }
+    validate_policy_lineage(project_root, &v, "proof manifest")?;
     let proofs = v.get("proofs").and_then(|x| x.as_array()).ok_or_else(|| {
         error::DecapodError::ValidationError("proof manifest proofs[] required".to_string())
     })?;
@@ -3191,7 +3300,10 @@ fn validate_proof_manifest(manifest_path: &Path) -> Result<(), error::DecapodErr
     Ok(())
 }
 
-fn validate_intent_convergence_manifest(manifest_path: &Path) -> Result<(), error::DecapodError> {
+fn validate_intent_convergence_manifest(
+    project_root: &Path,
+    manifest_path: &Path,
+) -> Result<(), error::DecapodError> {
     let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
     let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!(
@@ -3208,6 +3320,7 @@ fn validate_intent_convergence_manifest(manifest_path: &Path) -> Result<(), erro
             "intent convergence manifest kind must be intent_convergence_checklist".to_string(),
         ));
     }
+    validate_policy_lineage(project_root, &v, "intent convergence manifest")?;
 
     for key in ["pr", "intent", "scope", "checklist"] {
         if v.get(key).is_none() {

@@ -1,6 +1,13 @@
 {
   "schema_version": "1.0.0",
   "kind": "artifact_manifest",
+  "policy_lineage": {
+    "policy_hash": "ea4805a3e38308c0d24c86eb89106e9e476854ae02836cc4c5e8af25372af9ef",
+    "policy_revision": "policy.release@v1",
+    "risk_tier": "medium",
+    "capsule_path": ".decapod/generated/context/R_releasecheck.json",
+    "capsule_hash": "e2a3486cc42fe8803a8d4e347d02618ca43138eaca9ef41741e4ed73dd4b019f"
+  },
   "links": {
     "intent": "INTENT.md",
     "spec": "SPEC.md",
