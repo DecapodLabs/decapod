@@ -1908,6 +1908,13 @@ fn validate_database_schema_versions(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("Database Schema Version Gate");
+    if !matches!(store.kind, StoreKind::Repo) {
+        skip(
+            "Database schema version gate applies to repo store only",
+            ctx,
+        );
+        return Ok(());
+    }
     let checks = migration::check_versioned_db_schema_expectations(&store.root)?;
     for check in checks {
         if !check.exists {

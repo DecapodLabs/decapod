@@ -1708,15 +1708,20 @@ pub fn run() -> Result<(), error::DecapodError> {
                         }
                     }
                     Ok(routed) if routed && !core::group_broker::is_internal_invocation() => {
-                        if enforce_route_strict_mode() {
+                        // Routed mutation completed via broker path.
+                        return Ok(());
+                    }
+                    Ok(routed) => {
+                        if !routed
+                            && !core::group_broker::is_internal_invocation()
+                            && enforce_route_strict_mode()
+                        {
                             return Err(error::DecapodError::ValidationError(
                                 "BROKER_ROUTE_REQUIRED: routed mutator cannot bypass broker in strict mode"
                                     .to_string(),
                             ));
                         }
-                        return Ok(());
                     }
-                    Ok(_) => {}
                 }
             }
 
