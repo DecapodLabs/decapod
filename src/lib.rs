@@ -2991,7 +2991,11 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
 
 fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError> {
     let inventory = build_release_inventory(project_root)?;
-    let out_dir = project_root.join("artifacts").join("inventory");
+    let out_dir = project_root
+        .join(".decapod")
+        .join("generated")
+        .join("artifacts")
+        .join("inventory");
     fs::create_dir_all(&out_dir).map_err(error::DecapodError::IoError)?;
     let out_path = out_dir.join("repo_inventory.json");
     let payload = serde_json::to_vec_pretty(&inventory).map_err(|e| {

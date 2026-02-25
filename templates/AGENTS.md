@@ -13,10 +13,12 @@ decapod validate
 decapod docs ingest
 decapod session acquire
 decapod rpc --op agent.init
-decapod rpc --op context.resolve
+decapod workspace status
 decapod todo add "<task>"
 decapod todo claim --id <task-id>
 decapod workspace ensure
+cd .decapod/workspaces/<your-worktree>
+decapod rpc --op context.resolve
 ```
 
 ## Control-Plane First Loop
@@ -51,6 +53,7 @@ decapod eval plan --task-set-id <id> --task-ref <task-id> --model-id <model> --p
 - ✅ Router pointer: `core/DECAPOD.md`
 - ✅ Validation gate: `decapod validate`
 - ✅ Constitution ingestion gate: `decapod docs ingest`
+- ✅ Workspace status gate: `decapod workspace status`
 - ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`
 - ✅ Session auth gate: `DECAPOD_SESSION_PASSWORD`
 - ✅ Workspace gate: Docker git workspaces
