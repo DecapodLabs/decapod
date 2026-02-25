@@ -3,7 +3,7 @@ use decapod::core::workunit::{WorkUnitManifest, WorkUnitProofResult, WorkUnitSta
 #[test]
 fn workunit_canonical_serialization_is_deterministic() {
     let manifest = WorkUnitManifest {
-        task_id: "R_01".to_string(),
+        task_id: "test_01".to_string(),
         intent_ref: "intent://alpha".to_string(),
         spec_refs: vec![
             "spec://b".to_string(),
@@ -47,7 +47,7 @@ fn workunit_canonical_serialization_is_deterministic() {
 #[test]
 fn workunit_canonicalization_sorts_and_dedups_contract_arrays() {
     let manifest = WorkUnitManifest {
-        task_id: "R_02".to_string(),
+        task_id: "test_02".to_string(),
         intent_ref: "intent://beta".to_string(),
         spec_refs: vec!["spec://b".to_string(), "spec://a".to_string()],
         state_refs: vec!["state://2".to_string(), "state://1".to_string()],

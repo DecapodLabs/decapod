@@ -140,7 +140,7 @@ fn setup_repo() -> (TempDir, std::path::PathBuf) {
 #[test]
 fn rpc_context_capsule_query_is_deterministic() {
     let (_tmp, dir) = setup_repo();
-    let params = r#"{"topic":"proof gates","scope":"interfaces","task_id":"R_77","limit":4}"#;
+    let params = r#"{"topic":"proof gates","scope":"interfaces","task_id":"test_77","limit":4}"#;
 
     let first = run_decapod(
         &dir,
@@ -186,7 +186,7 @@ fn rpc_context_capsule_query_is_deterministic() {
 #[test]
 fn rpc_context_capsule_query_write_tracks_touched_path() {
     let (_tmp, dir) = setup_repo();
-    let params = r#"{"topic":"workspace rules","scope":"core","task_id":"R_88","write":true}"#;
+    let params = r#"{"topic":"workspace rules","scope":"core","task_id":"test_88","write":true}"#;
 
     let out = run_decapod(
         &dir,
@@ -250,7 +250,7 @@ fn rpc_context_capsule_query_write_auto_binds_workunit_state_ref() {
             "workunit",
             "init",
             "--task-id",
-            "R_654",
+            "test_654",
             "--intent-ref",
             "intent://rpc-capsule-bind",
         ],
@@ -261,7 +261,7 @@ fn rpc_context_capsule_query_write_auto_binds_workunit_state_ref() {
         String::from_utf8_lossy(&init.stderr)
     );
 
-    let params = r#"{"topic":"rpc bind","scope":"interfaces","task_id":"R_654","write":true}"#;
+    let params = r#"{"topic":"rpc bind","scope":"interfaces","task_id":"test_654","write":true}"#;
     let out = run_decapod(
         &dir,
         &["rpc", "--op", "context.capsule.query", "--params", params],
