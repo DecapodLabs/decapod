@@ -141,8 +141,8 @@ fn wait_for_lock_pid(lock_path: &Path, timeout: Duration) -> Option<u32> {
 }
 
 fn wait_for_no_broker_artifacts(dir: &Path, timeout: Duration) -> bool {
-    let lock_path = dir.join(".decapod").join("broker.lock");
-    let sock_path = dir.join(".decapod").join("broker.sock");
+    let lock_path = dir.join(".decapod").join("data").join("broker.lock");
+    let sock_path = dir.join(".decapod").join("data").join("broker.sock");
     let start = Instant::now();
     while start.elapsed() < timeout {
         if !lock_path.exists() && !sock_path.exists() {
@@ -223,8 +223,8 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
         );
     }
 
-    let lock_path = dir.join(".decapod").join("broker.lock");
-    let sock_path = dir.join(".decapod").join("broker.sock");
+    let lock_path = dir.join(".decapod").join("data").join("broker.lock");
+    let sock_path = dir.join(".decapod").join("data").join("broker.sock");
     assert!(
         !lock_path.exists() && !sock_path.exists(),
         "ephemeral broker artifacts should be cleaned up"
@@ -329,8 +329,8 @@ fn broker_election_uniqueness_no_residual_lock_after_burst() {
         assert!(out.status.success(), "mutator should succeed");
     }
 
-    let lock_path = dir.join(".decapod").join("broker.lock");
-    let sock_path = dir.join(".decapod").join("broker.sock");
+    let lock_path = dir.join(".decapod").join("data").join("broker.lock");
+    let sock_path = dir.join(".decapod").join("data").join("broker.sock");
     assert!(
         !lock_path.exists() && !sock_path.exists(),
         "broker lease/socket should expire and disappear"
@@ -368,7 +368,7 @@ fn broker_protocol_mismatch_returns_typed_failure() {
     let hook_ok = wait_for_hook_line(&hook, "queued|PROTO_LEADER_REQ", Duration::from_secs(5));
     assert!(hook_ok, "leader never entered queued phase");
     std::thread::sleep(Duration::from_millis(150));
-    let lock_path = dir.join(".decapod").join("broker.lock");
+    let lock_path = dir.join(".decapod").join("data").join("broker.lock");
     let pid = wait_for_lock_pid(&lock_path, Duration::from_secs(5)).expect("leader pid");
     assert!(pid > 0);
 
@@ -432,7 +432,7 @@ fn broker_crash_injection_phases_retry_to_exactly_once() {
 
         let hook_ok = wait_for_hook_line(&hook, &req_id, Duration::from_secs(8));
         assert!(hook_ok, "phase hook never emitted for {phase}");
-        let lock_path = dir.join(".decapod").join("broker.lock");
+        let lock_path = dir.join(".decapod").join("data").join("broker.lock");
         let pid = wait_for_lock_pid(&lock_path, Duration::from_secs(3)).expect("broker pid");
         let _ = Command::new("kill").args(["-9", &pid.to_string()]).status();
         let _ = child.wait();

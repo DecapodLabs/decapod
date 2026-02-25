@@ -86,3 +86,85 @@ fn init_uses_existing_config_for_noninteractive_defaults() {
         "re-init should preserve intent-first seeded outcome"
     );
 }
+
+#[test]
+fn init_with_accepts_noninteractive_spec_seed_flags() {
+    let tmp = tempdir().expect("tempdir");
+    let out = run_decapod(
+        tmp.path(),
+        &[
+            "init",
+            "with",
+            "--force",
+            "--product-name",
+            "pincher",
+            "--product-summary",
+            "Track brokerage intents with deterministic proofs.",
+            "--architecture-direction",
+            "Broker-gated mutation path with deterministic context capsules.",
+            "--done-criteria",
+            "validate passes and proofs are green",
+            "--primary-language",
+            "rust,sql",
+            "--surface",
+            "backend,cli",
+        ],
+    );
+    assert!(
+        out.status.success(),
+        "decapod init with flags failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let intent = fs::read_to_string(tmp.path().join(".decapod/generated/specs/INTENT.md"))
+        .expect("read intent");
+    assert!(
+        intent.contains("Track brokerage intents with deterministic proofs."),
+        "intent spec should include seeded summary"
+    );
+    let architecture =
+        fs::read_to_string(tmp.path().join(".decapod/generated/specs/ARCHITECTURE.md"))
+            .expect("read architecture");
+    assert!(
+        architecture.contains("Broker-gated mutation path with deterministic context capsules."),
+        "architecture spec should include seeded architecture direction"
+    );
+}
+
+#[test]
+fn init_with_accepts_noninteractive_spec_seed_env() {
+    let tmp = tempdir().expect("tempdir");
+    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["init", "with", "--force"])
+        .current_dir(tmp.path())
+        .env("DECAPOD_INIT_PRODUCT_NAME", "pincher-env")
+        .env(
+            "DECAPOD_INIT_PRODUCT_SUMMARY",
+            "Seed from env for non-interactive init.",
+        )
+        .env(
+            "DECAPOD_INIT_ARCHITECTURE_DIRECTION",
+            "Capsule-first architecture with broker-enforced writes.",
+        )
+        .output()
+        .expect("run decapod");
+    assert!(
+        out.status.success(),
+        "decapod init with env failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let intent = fs::read_to_string(tmp.path().join(".decapod/generated/specs/INTENT.md"))
+        .expect("read intent");
+    assert!(
+        intent.contains("Seed from env for non-interactive init."),
+        "intent spec should include env-seeded summary"
+    );
+    let architecture =
+        fs::read_to_string(tmp.path().join(".decapod/generated/specs/ARCHITECTURE.md"))
+            .expect("read architecture");
+    assert!(
+        architecture.contains("Capsule-first architecture with broker-enforced writes."),
+        "architecture spec should include env-seeded architecture direction"
+    );
+}

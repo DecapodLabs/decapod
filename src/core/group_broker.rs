@@ -54,7 +54,7 @@ pub fn is_internal_invocation() -> bool {
 }
 
 pub fn maybe_route_mutation(
-    decapod_root: &Path,
+    broker_root: &Path,
     argv: &[String],
 ) -> Result<bool, error::DecapodError> {
     if std::env::var(BROKER_DISABLE_ENV)
@@ -69,7 +69,7 @@ pub fn maybe_route_mutation(
 
     #[cfg(unix)]
     {
-        match run_unix_broker(decapod_root, argv) {
+        match run_unix_broker(broker_root, argv) {
             Ok(()) => Ok(true),
             // Some constrained sandboxes disallow AF_UNIX sockets. Fall back to direct path.
             Err(error::DecapodError::IoError(io_err))
@@ -83,17 +83,17 @@ pub fn maybe_route_mutation(
 
     #[cfg(not(unix))]
     {
-        let _ = decapod_root;
+        let _ = broker_root;
         let _ = argv;
         Ok(false)
     }
 }
 
 #[cfg(unix)]
-fn run_unix_broker(decapod_root: &Path, argv: &[String]) -> Result<(), error::DecapodError> {
-    fs::create_dir_all(decapod_root).map_err(error::DecapodError::IoError)?;
-    let socket_path = broker_socket_path(decapod_root);
-    let lock_path = broker_lock_path(decapod_root);
+fn run_unix_broker(broker_root: &Path, argv: &[String]) -> Result<(), error::DecapodError> {
+    fs::create_dir_all(broker_root).map_err(error::DecapodError::IoError)?;
+    let socket_path = broker_socket_path(broker_root);
+    let lock_path = broker_lock_path(broker_root);
 
     let request = BrokerRequest {
         protocol_version: client_protocol_version(),
@@ -119,7 +119,7 @@ fn run_unix_broker(decapod_root: &Path, argv: &[String]) -> Result<(), error::De
             attempts += 1;
             match try_acquire_lock(&lock_path)? {
                 Some(lease) => {
-                    let resp = run_as_leader(lease, decapod_root, &socket_path, request.clone())?;
+                    let resp = run_as_leader(lease, broker_root, &socket_path, request.clone())?;
                     return apply_response(resp);
                 }
                 None => {
@@ -152,7 +152,7 @@ fn run_unix_broker(decapod_root: &Path, argv: &[String]) -> Result<(), error::De
 #[cfg(unix)]
 fn run_as_leader(
     _lease: BrokerLease,
-    decapod_root: &Path,
+    broker_root: &Path,
     socket_path: &Path,
     local_request: BrokerRequest,
 ) -> Result<BrokerResponse, error::DecapodError> {
@@ -174,7 +174,7 @@ fn run_as_leader(
         .map_err(error::DecapodError::IoError)?;
 
     emit_phase_hook("queued", &local_request.request_id);
-    let local_response = execute_request(decapod_root, &local_request)?;
+    let local_response = execute_request(broker_root, &local_request)?;
 
     let idle_timeout = Duration::from_secs(
         std::env::var(BROKER_IDLE_SECS_ENV)
@@ -192,7 +192,7 @@ fn run_as_leader(
 
         match listener.accept() {
             Ok((stream, _)) => {
-                if handle_client(decapod_root, stream).is_ok() {
+                if handle_client(broker_root, stream).is_ok() {
                     last_activity = Instant::now();
                 }
             }
@@ -211,7 +211,7 @@ fn run_as_leader(
 
 #[cfg(unix)]
 fn handle_client(
-    decapod_root: &Path,
+    broker_root: &Path,
     stream: std::os::unix::net::UnixStream,
 ) -> Result<(), error::DecapodError> {
     let mut reader = BufReader::new(stream.try_clone().map_err(error::DecapodError::IoError)?);
@@ -241,7 +241,7 @@ fn handle_client(
     }
     emit_phase_hook("queued", &req.request_id);
 
-    let resp = execute_request(decapod_root, &req)?;
+    let resp = execute_request(broker_root, &req)?;
     write_response(stream, &resp)?;
     Ok(())
 }
@@ -291,10 +291,10 @@ fn send_request(
 }
 
 fn execute_request(
-    decapod_root: &Path,
+    broker_root: &Path,
     request: &BrokerRequest,
 ) -> Result<BrokerResponse, error::DecapodError> {
-    if let Some(existing) = dedupe_lookup(decapod_root, request)? {
+    if let Some(existing) = dedupe_lookup(broker_root, request)? {
         if existing.payload_hash != request.payload_hash {
             return Ok(BrokerResponse {
                 protocol_version: server_protocol_version(),
@@ -375,7 +375,7 @@ fn execute_request(
             Some(5000)
         },
     };
-    dedupe_store(decapod_root, request, &response)?;
+    dedupe_store(broker_root, request, &response)?;
     Ok(response)
 }
 
@@ -426,23 +426,23 @@ fn hash_payload(argv: &[String]) -> String {
     format!("{:x}", hasher.finalize())
 }
 
-fn broker_lock_path(decapod_root: &Path) -> PathBuf {
-    decapod_root.join("broker.lock")
+fn broker_lock_path(broker_root: &Path) -> PathBuf {
+    broker_root.join("broker.lock")
 }
 
-fn broker_socket_path(decapod_root: &Path) -> PathBuf {
-    decapod_root.join("broker.sock")
+fn broker_socket_path(broker_root: &Path) -> PathBuf {
+    broker_root.join("broker.sock")
 }
 
-fn dedupe_db_path(decapod_root: &Path) -> PathBuf {
-    decapod_root.join("data").join("broker_dedupe.db")
+fn dedupe_db_path(broker_root: &Path) -> PathBuf {
+    broker_root.join("broker_dedupe.db")
 }
 
 fn dedupe_lookup(
-    decapod_root: &Path,
+    broker_root: &Path,
     request: &BrokerRequest,
 ) -> Result<Option<DedupeRecord>, error::DecapodError> {
-    let db_path = dedupe_db_path(decapod_root);
+    let db_path = dedupe_db_path(broker_root);
     if !db_path.exists() {
         return Ok(None);
     }
@@ -485,11 +485,11 @@ fn dedupe_lookup(
 }
 
 fn dedupe_store(
-    decapod_root: &Path,
+    broker_root: &Path,
     request: &BrokerRequest,
     response: &BrokerResponse,
 ) -> Result<(), error::DecapodError> {
-    let db_path = dedupe_db_path(decapod_root);
+    let db_path = dedupe_db_path(broker_root);
     let conn = db::db_connect(&db_path.to_string_lossy())?;
     ensure_dedupe_schema(&conn)?;
     let result_json = serde_json::to_string(&response.result_envelope).map_err(|e| {
