@@ -7,6 +7,7 @@ Run:
 ```bash
 decapod release check
 decapod release inventory
+decapod release lineage-sync
 ```
 
 Release readiness requires:
@@ -18,7 +19,8 @@ Release readiness requires:
 - Provenance manifests present in `artifacts/provenance/`.
 - Intent-convergence checklist present and valid (`artifacts/provenance/intent_convergence_checklist.json`).
 - Every provenance manifest carries `policy_lineage` with a valid capsule reference and hash.
-- `decapod release check` auto-stamps/normalizes `policy_lineage` across all three manifests before validation.
+- `decapod release lineage-sync` stamps/normalizes `policy_lineage` across all three manifests.
+- `decapod release check` runs the same lineage sync path before validation.
 - If schema/interface surfaces changed in the working tree, `CHANGELOG.md` `## [Unreleased]` MUST include a schema/interface note.
 
 Risk-tier override for stamping:

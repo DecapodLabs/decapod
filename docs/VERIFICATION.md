@@ -52,6 +52,7 @@ cargo test --all-features --test validate_termination -- --test-threads=1
 cargo test --all-features --test rpc_golden_vectors -- --test-threads=1
 cargo test --all-features --test canonical_evidence_gate -- --test-threads=1
 decapod release check
+decapod release lineage-sync
 ```
 
 ## 10-Minute JIT Capsule Verification
