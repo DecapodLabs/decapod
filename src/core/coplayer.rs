@@ -41,8 +41,8 @@ pub fn resolve_snapshot(
     let mut ops_count = std::collections::HashMap::new();
 
     for line in content.lines() {
-        if let Ok(event) = serde_json::from_str::<TraceEvent>(line) {
-            if event.actor == agent_id {
+        if let Ok(event) = serde_json::from_str::<TraceEvent>(line)
+            && event.actor == agent_id {
                 total += 1;
                 last_ts = event.ts.clone();
                 *ops_count.entry(event.op.clone()).or_insert(0) += 1;
@@ -57,7 +57,6 @@ pub fn resolve_snapshot(
                     }
                 }
             }
-        }
     }
 
     let reliability = if total > 0 {

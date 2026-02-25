@@ -562,11 +562,10 @@ fn server_protocol_version() -> u32 {
 }
 
 fn emit_phase_hook(phase: &str, request_id: &str) {
-    if let Ok(path) = std::env::var(BROKER_PHASE_HOOK_FILE_ENV) {
-        if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path) {
+    if let Ok(path) = std::env::var(BROKER_PHASE_HOOK_FILE_ENV)
+        && let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path) {
             let _ = writeln!(file, "{}|{}", phase, request_id);
         }
-    }
     if std::env::var(BROKER_HALT_PHASE_ENV).ok().as_deref() == Some(phase) {
         loop {
             std::thread::sleep(Duration::from_millis(100));

@@ -224,8 +224,8 @@ pub fn eval_risk(
     }
 
     // Zone-based risk (only if not already CRITICAL from linter config)
-    if level != RiskLevel::CRITICAL {
-        if let Some(path) = target_path {
+    if level != RiskLevel::CRITICAL
+        && let Some(path) = target_path {
             for zone in &risk_map.zones {
                 if path.contains(&zone.path) {
                     if zone.level as u8 > level as u8 {
@@ -237,7 +237,6 @@ pub fn eval_risk(
                 }
             }
         }
-    }
 
     if level == RiskLevel::HIGH || level == RiskLevel::CRITICAL {
         requirements.push("Requires matching entry in approval ledger".to_string());
@@ -347,26 +346,22 @@ fn parse_hitl_override_rules(override_section: &str) -> Vec<HitlRule> {
 }
 
 fn rule_matches(rule: &HitlRule, scope: &str, level: RiskLevel) -> bool {
-    if let Some(required_scope) = &rule.scope {
-        if required_scope != scope {
+    if let Some(required_scope) = &rule.scope
+        && required_scope != scope {
             return false;
         }
-    }
-    if let Some(exact) = rule.risk_exact {
-        if exact != level {
+    if let Some(exact) = rule.risk_exact
+        && exact != level {
             return false;
         }
-    }
-    if let Some(min) = rule.min_risk {
-        if (level as u8) < (min as u8) {
+    if let Some(min) = rule.min_risk
+        && (level as u8) < (min as u8) {
             return false;
         }
-    }
-    if let Some(max) = rule.max_risk {
-        if (level as u8) > (max as u8) {
+    if let Some(max) = rule.max_risk
+        && (level as u8) > (max as u8) {
             return false;
         }
-    }
     true
 }
 
