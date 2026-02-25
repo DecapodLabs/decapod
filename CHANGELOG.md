@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.2](https://github.com/DecapodLabs/decapod/compare/v0.44.1...v0.44.2) - 2026-02-25
+
+### Other
+
+- consolidate repo - remove stale templates/, docs/, project/, crates/, artifacts/ dirs
+
 ## [0.44.1](https://github.com/DecapodLabs/decapod/compare/v0.44.0...v0.44.1) - 2026-02-25
 
 ### Added
