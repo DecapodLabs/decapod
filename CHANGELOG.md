@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.4](https://github.com/DecapodLabs/decapod/compare/v0.44.3...v0.44.4) - 2026-02-25
+
+### Added
+
+- Interlock - preflight + impact for predictive governance
+
 ## [0.44.3](https://github.com/DecapodLabs/decapod/compare/v0.44.2...v0.44.3) - 2026-02-25
 
 ### Fixed

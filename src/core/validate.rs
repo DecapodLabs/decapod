@@ -11,10 +11,10 @@ use crate::core::migration;
 use crate::core::output;
 use crate::core::plan_governance;
 use crate::core::project_specs::{
-    LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_DIR,
-    LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
-    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_VALIDATION, hash_text,
-    read_specs_manifest, repo_signal_fingerprint,
+    hash_text, read_specs_manifest, repo_signal_fingerprint, LOCAL_PROJECT_SPECS,
+    LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_DIR, LOCAL_PROJECT_SPECS_INTENT,
+    LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
+    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_VALIDATION,
 };
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
@@ -26,8 +26,8 @@ use serde_json;
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::Mutex;
 use std::time::{Duration, Instant};
 use ulid::Ulid;
 
@@ -3988,7 +3988,7 @@ fn validate_coplayer_policy_tightening(
 ) -> Result<(), error::DecapodError> {
     info("Co-Player Policy Tightening Gate");
 
-    use crate::core::coplayer::{CoPlayerSnapshot, derive_policy};
+    use crate::core::coplayer::{derive_policy, CoPlayerSnapshot};
 
     // Test the invariant: unknown → high → medium → low reliability
     // Each step must be equal or tighter than the next.
