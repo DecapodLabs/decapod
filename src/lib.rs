@@ -3939,11 +3939,17 @@ fn run_capsule_command(
             )?;
             if write {
                 let path = core::context_capsule::write_context_capsule(project_root, &capsule)?;
+                let workunit_binding = maybe_bind_capsule_to_workunit_state_ref(
+                    project_root,
+                    task_id.as_deref().or(workunit_id.as_deref()),
+                    &path,
+                )?;
                 println!(
                     "{}",
                     serde_json::to_string_pretty(&serde_json::json!({
                         "status": "ok",
                         "path": path,
+                        "workunit_state_ref_binding": workunit_binding,
                         "capsule": capsule,
                     }))
                     .unwrap()
@@ -5490,6 +5496,13 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             if write {
                 let path = core::context_capsule::write_context_capsule(project_root, &capsule)?;
                 touched.push(path.to_string_lossy().to_string());
+                if let Some(workunit_path) = maybe_bind_capsule_to_workunit_state_ref(
+                    project_root,
+                    task_id.or(workunit_id),
+                    &path,
+                )? {
+                    touched.push(workunit_path.to_string_lossy().to_string());
+                }
             }
 
             success_response(
@@ -6243,6 +6256,30 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 
     println!("{}", serde_json::to_string_pretty(&response).unwrap());
     Ok(())
+}
+
+fn maybe_bind_capsule_to_workunit_state_ref(
+    project_root: &Path,
+    workunit_task_id: Option<&str>,
+    capsule_path: &Path,
+) -> Result<Option<PathBuf>, error::DecapodError> {
+    let Some(task_id) = workunit_task_id else {
+        return Ok(None);
+    };
+    match core::workunit::load_workunit(project_root, task_id) {
+        Ok(_) => {
+            let state_ref = capsule_path
+                .strip_prefix(project_root)
+                .unwrap_or(capsule_path)
+                .to_string_lossy()
+                .replace('\\', "/");
+            core::workunit::add_state_ref(project_root, task_id, &state_ref)?;
+            let path = core::workunit::workunit_path(project_root, task_id)?;
+            Ok(Some(path))
+        }
+        Err(error::DecapodError::NotFound(_)) => Ok(None),
+        Err(e) => Err(e),
+    }
 }
 
 /// Run capabilities command
