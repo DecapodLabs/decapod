@@ -2012,6 +2012,11 @@ fn branch_contains_todo_ticket_id(branch: &str) -> bool {
     if branch.contains("r_") {
         return true;
     }
+    if let Ok(hash_re) = regex::Regex::new(r"todo-[a-z0-9]{6}(\b|-|$)") {
+        if hash_re.is_match(&branch) {
+            return true;
+        }
+    }
     let chars: Vec<char> = branch.chars().collect();
     if chars.len() < 21 {
         return false;

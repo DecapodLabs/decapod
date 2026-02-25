@@ -73,6 +73,12 @@ pub struct WorkspaceConfig {
     pub base_image: Option<String>,
 }
 
+#[derive(Debug, Clone)]
+struct AssignedTodoRef {
+    id: String,
+    hash: String,
+}
+
 /// Protected branch patterns
 const PROTECTED_PATTERNS: &[&str] = &[
     "main",
@@ -295,8 +301,8 @@ pub fn ensure_workspace(
             "WORKSPACE_INTERLOCK_DIRTY_PROTECTED: protected branch has local modifications. Commit/stash/discard changes before creating a Decapod worktree.".to_string(),
         ));
     }
-    let assigned_task_ids = get_assigned_open_task_ids(repo_root, agent_id)?;
-    if assigned_task_ids.is_empty() {
+    let assigned_todos = get_assigned_open_tasks(repo_root, agent_id)?;
+    if assigned_todos.is_empty() {
         return Err(DecapodError::ValidationError(format!(
             "No claimed/open todo assigned to agent '{}'. Claim a todo first with `decapod todo claim --id <task-id>` before spawning a worktree.",
             agent_id
@@ -308,12 +314,12 @@ pub fn ensure_workspace(
 
     // If we're already in a valid worktree, on todo-scoped branch, and no upgrade needed, we're good.
     if status.git.in_worktree
-        && !branch_contains_any_todo_id(&status.git.current_branch, &assigned_task_ids)
+        && !branch_contains_any_todo_id_or_hash(&status.git.current_branch, &assigned_todos)
     {
         return Err(DecapodError::ValidationError(format!(
-            "Current worktree branch '{}' is not todo-scoped. Branch must include one of assigned todo IDs: {}.",
+            "Current worktree branch '{}' is not todo-scoped. Branch must include one of assigned todo IDs or hashes: {}.",
             status.git.current_branch,
-            assigned_task_ids.join(", ")
+            render_todo_refs(&assigned_todos)
         )));
     }
 
@@ -325,13 +331,13 @@ pub fn ensure_workspace(
         return Ok(status);
     }
 
-    let todo_scope = build_todo_scope_component(&assigned_task_ids);
+    let todo_scope = build_todo_scope_component(&assigned_todos);
     let config = if let Some(cfg) = config {
-        if !branch_contains_any_todo_id(&cfg.branch, &assigned_task_ids) {
+        if !branch_contains_any_todo_id_or_hash(&cfg.branch, &assigned_todos) {
             return Err(DecapodError::ValidationError(format!(
-                "Requested branch '{}' must include an assigned todo ID (one of: {}).",
+                "Requested branch '{}' must include an assigned todo ID/hash (one of: {}).",
                 cfg.branch,
-                assigned_task_ids.join(", ")
+                render_todo_refs(&assigned_todos)
             )));
         }
         cfg
@@ -703,30 +709,34 @@ fn sanitize_todo_component(todo_id: &str) -> String {
         .to_string()
 }
 
-fn build_todo_scope_component(todo_ids: &[String]) -> String {
-    if todo_ids.is_empty() {
+fn build_todo_scope_component(todo_refs: &[AssignedTodoRef]) -> String {
+    if todo_refs.is_empty() {
         return "todo-unassigned".to_string();
     }
-    let head = sanitize_todo_component(&todo_ids[0]);
-    if todo_ids.len() == 1 {
+    let head = sanitize_todo_component(&todo_refs[0].hash);
+    if todo_refs.len() == 1 {
         return format!("todo-{}", head);
     }
-    format!("todo-{}-plus-{}", head, todo_ids.len() - 1)
+    format!("todo-{}-plus-{}", head, todo_refs.len() - 1)
 }
 
-fn branch_contains_any_todo_id(branch: &str, todo_ids: &[String]) -> bool {
+fn branch_contains_any_todo_id_or_hash(branch: &str, todo_refs: &[AssignedTodoRef]) -> bool {
     let branch_lower = branch.to_lowercase();
-    todo_ids.iter().any(|id| {
+    todo_refs.iter().any(|todo| {
+        let id = &todo.id;
         let id_lower = id.to_lowercase();
         let id_sanitized = sanitize_todo_component(id);
-        branch_lower.contains(&id_lower) || branch_lower.contains(&id_sanitized)
+        let hash_lower = todo.hash.to_lowercase();
+        branch_lower.contains(&id_lower)
+            || branch_lower.contains(&id_sanitized)
+            || branch_lower.contains(&hash_lower)
     })
 }
 
-fn get_assigned_open_task_ids(
+fn get_assigned_open_tasks(
     repo_root: &Path,
     agent_id: &str,
-) -> Result<Vec<String>, DecapodError> {
+) -> Result<Vec<AssignedTodoRef>, DecapodError> {
     let main_repo = get_main_repo_root(repo_root)?;
     let store_root = main_repo.join(".decapod").join("data");
     let mut tasks = todo::list_tasks(
@@ -738,10 +748,24 @@ fn get_assigned_open_task_ids(
         None,
     )?;
     tasks.retain(|t| t.assigned_to == agent_id);
-    let mut ids: Vec<String> = tasks.into_iter().map(|t| t.id).collect();
-    ids.sort();
-    ids.dedup();
-    Ok(ids)
+    let mut refs: Vec<AssignedTodoRef> = tasks
+        .into_iter()
+        .map(|t| AssignedTodoRef {
+            id: t.id,
+            hash: t.hash,
+        })
+        .collect();
+    refs.sort_by(|a, b| a.id.cmp(&b.id));
+    refs.dedup_by(|a, b| a.id == b.id);
+    Ok(refs)
+}
+
+fn render_todo_refs(todo_refs: &[AssignedTodoRef]) -> String {
+    todo_refs
+        .iter()
+        .map(|t| format!("{} ({})", t.id, t.hash))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// Result from publishing a workspace
