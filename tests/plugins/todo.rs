@@ -1,8 +1,8 @@
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::core::todo::{
-    add_task, check_trust_level, get_task, initialize_todo_db, list_tasks, rebuild_from_events,
-    todo_db_path, update_status, TodoCommand,
+    TodoCommand, add_task, check_trust_level, get_task, initialize_todo_db, list_tasks,
+    rebuild_from_events, todo_db_path, update_status,
 };
 use decapod::plugins::policy;
 use rusqlite::Connection;
@@ -251,12 +251,16 @@ fn test_claim_modes_and_owner_consolidation() {
     assert_eq!(got["item"]["owner"], "agent-a");
     let owners = got["item"]["owners"].as_array().unwrap();
     assert_eq!(owners.len(), 2);
-    assert!(owners
-        .iter()
-        .any(|o| o["agent_id"] == "agent-a" && o["claim_type"] == "primary"));
-    assert!(owners
-        .iter()
-        .any(|o| o["agent_id"] == "agent-b" && o["claim_type"] == "secondary"));
+    assert!(
+        owners
+            .iter()
+            .any(|o| o["agent_id"] == "agent-a" && o["claim_type"] == "primary")
+    );
+    assert!(
+        owners
+            .iter()
+            .any(|o| o["agent_id"] == "agent-b" && o["claim_type"] == "secondary")
+    );
 
     let _ = run_cmd(
         repo,
@@ -274,15 +278,21 @@ fn test_claim_modes_and_owner_consolidation() {
     let got_after_edit = run_cmd(repo, &["todo", "--format", "json", "get", "--id", &task_id]);
     assert_eq!(got_after_edit["item"]["owner"], "agent-c");
     let owners_after_edit = got_after_edit["item"]["owners"].as_array().unwrap();
-    assert!(owners_after_edit
-        .iter()
-        .any(|o| o["agent_id"] == "agent-c" && o["claim_type"] == "primary"));
-    assert!(owners_after_edit
-        .iter()
-        .any(|o| o["agent_id"] == "agent-d" && o["claim_type"] == "secondary"));
-    assert!(!owners_after_edit
-        .iter()
-        .any(|o| o["agent_id"] == "agent-a" || o["agent_id"] == "agent-b"));
+    assert!(
+        owners_after_edit
+            .iter()
+            .any(|o| o["agent_id"] == "agent-c" && o["claim_type"] == "primary")
+    );
+    assert!(
+        owners_after_edit
+            .iter()
+            .any(|o| o["agent_id"] == "agent-d" && o["claim_type"] == "secondary")
+    );
+    assert!(
+        !owners_after_edit
+            .iter()
+            .any(|o| o["agent_id"] == "agent-a" || o["agent_id"] == "agent-b")
+    );
 }
 
 #[test]
