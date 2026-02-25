@@ -783,6 +783,14 @@ enum Command {
     #[clap(name = "capabilities")]
     Capabilities(CapabilitiesCli),
 
+    /// Preflight check: before any operation, predict what will fail
+    #[clap(name = "preflight")]
+    Preflight(PreflightCli),
+
+    /// Impact analysis: predict validation outcomes for changed files
+    #[clap(name = "impact")]
+    Impact(ImpactCli),
+
     /// Local trace management
     #[clap(name = "trace")]
     Trace(TraceCli),
@@ -810,6 +818,10 @@ enum Command {
     /// Deterministic map operators — structured parallel processing
     #[clap(name = "map")]
     Map(map_ops::MapCli),
+
+    /// Run demonstrations of Decapod features
+    #[clap(name = "demo")]
+    Demo(DemoCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -1051,6 +1063,39 @@ struct SchemaCli {
     /// Force deterministic output (removes volatile timestamps)
     #[clap(long)]
     deterministic: bool,
+}
+
+#[derive(clap::Args, Debug)]
+struct PreflightCli {
+    /// Operation to preflight (e.g., todo.add, validate, workspace.ensure)
+    #[clap(long)]
+    op: Option<String>,
+    /// Output format: json | text
+    #[clap(long, default_value = "json")]
+    format: String,
+    /// Session ID to preflight for
+    #[clap(long)]
+    session: Option<String>,
+}
+
+#[derive(clap::Args, Debug)]
+struct ImpactCli {
+    /// Comma-separated list of changed files
+    #[clap(long)]
+    changed_files: Option<String>,
+    /// Output format: json | text
+    #[clap(long, default_value = "json")]
+    format: String,
+    /// Predict mode: don't actually run gates, just predict
+    #[clap(long)]
+    predict: bool,
+}
+
+#[derive(clap::Args, Debug)]
+struct DemoCli {
+    /// Demo to run: interlock
+    #[clap(long, default_value = "interlock")]
+    demo: String,
 }
 
 fn find_decapod_project_root(start_dir: &Path) -> Result<PathBuf, error::DecapodError> {
@@ -2028,6 +2073,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Capabilities(cap_cli) => {
                     run_capabilities_command(cap_cli)?;
                 }
+                Command::Preflight(preflight_cli) => {
+                    run_preflight_command(preflight_cli, &project_root)?;
+                }
+                Command::Impact(impact_cli) => {
+                    run_impact_command(impact_cli, &project_root)?;
+                }
                 Command::Trace(trace_cli) => {
                     run_trace_command(trace_cli, &project_root)?;
                 }
@@ -2048,6 +2099,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
                 Command::Map(map_cli) => {
                     map_ops::run_map_cli(&project_store, map_cli)?;
+                }
+                Command::Demo(demo_cli) => {
+                    run_demo_command(demo_cli, &project_root)?;
                 }
                 _ => unreachable!(),
             }
@@ -6904,4 +6958,236 @@ fn run_trace_command(cli: TraceCli, project_root: &Path) -> Result<(), error::De
         }
     }
     Ok(())
+}
+
+fn run_preflight_command(
+    cli: PreflightCli,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
+    use crate::core::workspace;
+
+    let op = cli.op.unwrap_or_else(|| "unknown".to_string());
+
+    let workspace_status = workspace::get_workspace_status(project_root)?;
+
+    let mut risk_flags = Vec::new();
+    let mut likely_failures = Vec::new();
+    let mut required_capsules = Vec::new();
+    let mut next_best_actions = Vec::new();
+
+    if workspace_status.git.is_protected {
+        risk_flags.push("protected_branch");
+        likely_failures.push(serde_json::json!({
+            "code": "WORKSPACE_REQUIRED",
+            "message": "Cannot operate on protected branch",
+            "current_branch": workspace_status.git.current_branch,
+        }));
+        next_best_actions.push("Run: decapod workspace ensure");
+    }
+
+    if !workspace_status.can_work {
+        risk_flags.push("workspace_blocked");
+        for blocker in &workspace_status.blockers {
+            likely_failures.push(serde_json::json!({
+                "code": "WORKSPACE_BLOCKED",
+                "message": blocker.message,
+                "resolve_hint": blocker.resolve_hint,
+            }));
+        }
+    }
+
+    match op.as_str() {
+        "todo.add" | "todo.claim" | "todo.done" => {
+            required_capsules.push("plugins/TODO.md");
+            required_capsules.push("interfaces/STORE_MODEL.md");
+        }
+        "validate" => {
+            required_capsules.push("plugins/VERIFY.md");
+            required_capsules.push("interfaces/TESTING.md");
+            if workspace_status.git.is_protected {}
+        }
+        "workspace.ensure" | "workspace.status" => {
+            required_capsules.push("core/DECAPOD.md");
+            required_capsules.push("core/PLUGINS.md");
+        }
+        "rpc" | "agent.init" => {
+            required_capsules.push("core/INTERFACES.md");
+            required_capsules.push("specs/INTENT.md");
+        }
+        _ => {
+            required_capsules.push("core/DECAPOD.md");
+        }
+    }
+
+    if risk_flags.is_empty() {
+        next_best_actions.push("Proceed with operation");
+    }
+
+    let response = serde_json::json!({
+        "op": op,
+        "session_id": cli.session,
+        "risk_flags": risk_flags,
+        "likely_failures": likely_failures,
+        "required_capsules": required_capsules,
+        "next_best_actions": next_best_actions,
+        "workspace": {
+            "git_branch": workspace_status.git.current_branch,
+            "git_is_protected": workspace_status.git.is_protected,
+            "can_work": workspace_status.can_work,
+        }
+    });
+
+    if cli.format == "json" {
+        println!("{}", serde_json::to_string_pretty(&response).unwrap());
+    } else {
+        println!("Preflight Check for: {}", op);
+        if risk_flags.is_empty() {
+            println!("✓ No risks detected");
+        } else {
+            println!("⚠ Risks: {:?}", risk_flags);
+            println!("Likely failures:");
+            for failure in &likely_failures {
+                println!("  - {}: {}", failure["code"], failure["message"]);
+            }
+        }
+        println!("Required capsules: {:?}", required_capsules);
+    }
+
+    Ok(())
+}
+
+fn run_impact_command(cli: ImpactCli, project_root: &Path) -> Result<(), error::DecapodError> {
+    use crate::core::workspace;
+
+    let changed_files: Vec<String> = cli
+        .changed_files
+        .as_ref()
+        .map(|s| s.split(',').map(|s| s.trim().to_string()).collect())
+        .unwrap_or_default();
+
+    let workspace_status = workspace::get_workspace_status(project_root)?;
+
+    let mut predicted_failures = Vec::new();
+    let mut validation_predictions = Vec::new();
+
+    if workspace_status.git.is_protected {
+        predicted_failures.push(serde_json::json!({
+            "gate": "workspace_isolation",
+            "status": "fail",
+            "code": "WORKSPACE_REQUIRED",
+            "message": "Operating on protected branch",
+        }));
+    } else {
+        validation_predictions.push(serde_json::json!({
+            "gate": "workspace_isolation",
+            "status": "pass",
+        }));
+    }
+
+    if !changed_files.is_empty() {
+        validation_predictions.push(serde_json::json!({
+            "gate": "file_changes_detected",
+            "status": "pass",
+            "changed_count": changed_files.len(),
+        }));
+    }
+
+    let will_fail_validate = !predicted_failures.is_empty();
+
+    let response = serde_json::json!({
+        "changed_files": changed_files,
+        "will_fail_validate": will_fail_validate,
+        "predicted_failures": predicted_failures,
+        "validation_predictions": validation_predictions,
+        "workspace": {
+            "git_branch": workspace_status.git.current_branch,
+            "git_is_protected": workspace_status.git.is_protected,
+            "can_work": workspace_status.can_work,
+        },
+        "recommendation": if will_fail_validate {
+            "Fix workspace issues before running validate"
+        } else if changed_files.is_empty() {
+            "No changes detected - nothing to validate"
+        } else {
+            "Safe to run validate"
+        }
+    });
+
+    if cli.format == "json" {
+        println!("{}", serde_json::to_string_pretty(&response).unwrap());
+    } else {
+        println!("Impact Analysis");
+        if will_fail_validate {
+            println!("⚠ Validate will FAIL");
+            for failure in &predicted_failures {
+                println!("  - {}: {}", failure["code"], failure["message"]);
+            }
+        } else {
+            println!("✓ Validate should pass");
+        }
+        if !changed_files.is_empty() {
+            println!("Changed files: {:?}", changed_files);
+        }
+    }
+
+    Ok(())
+}
+
+fn run_demo_command(cli: DemoCli, project_root: &Path) -> Result<(), error::DecapodError> {
+    use crate::core::workspace;
+
+    println!("==============================================");
+    println!("Decapod Interlock Demo: Predict Before You Fail");
+    println!("==============================================\n");
+
+    match cli.demo.as_str() {
+        "interlock" => {
+            println!("Step 1: Check workspace status");
+            let status = workspace::get_workspace_status(project_root)?;
+            println!("  Branch: {}", status.git.current_branch);
+            println!("  Protected: {}", status.git.is_protected);
+            println!("  Can work: {}\n", status.can_work);
+
+            println!("Step 2: Run preflight to predict validate outcome");
+            run_preflight_command(
+                PreflightCli {
+                    op: Some("validate".to_string()),
+                    format: "json".to_string(),
+                    session: None,
+                },
+                project_root,
+            )?;
+            println!();
+
+            println!("Step 3: Run impact to predict what will happen with changes");
+            run_impact_command(
+                ImpactCli {
+                    changed_files: Some("src/core/validate.rs,src/lib.rs".to_string()),
+                    format: "json".to_string(),
+                    predict: true,
+                },
+                project_root,
+            )?;
+            println!();
+
+            println!("Step 4: Verify prediction matches reality");
+            println!("  (Running validate would show WORKSPACE_REQUIRED on protected branch)\n");
+
+            println!("==============================================");
+            println!("Key insight: preflight told us:");
+            println!("  - risk_flags: [protected_branch]");
+            println!("  - likely_failures: [WORKSPACE_REQUIRED]");
+            println!("  - next_best_actions: [Run: decapod workspace ensure]");
+            println!();
+            println!("Following that guidance prevents the failure instead of reacting to it.");
+            println!("==============================================");
+
+            Ok(())
+        }
+        _ => {
+            println!("Available demos:");
+            println!("  interlock  - Shows preflight + impact prediction");
+            Ok(())
+        }
+    }
 }

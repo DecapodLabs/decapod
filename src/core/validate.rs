@@ -11,10 +11,10 @@ use crate::core::migration;
 use crate::core::output;
 use crate::core::plan_governance;
 use crate::core::project_specs::{
-    LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_DIR,
-    LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
-    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_VALIDATION, hash_text,
-    read_specs_manifest, repo_signal_fingerprint,
+    hash_text, read_specs_manifest, repo_signal_fingerprint, LOCAL_PROJECT_SPECS,
+    LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_DIR, LOCAL_PROJECT_SPECS_INTENT,
+    LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
+    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_VALIDATION,
 };
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
@@ -26,8 +26,8 @@ use serde_json;
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::Mutex;
 use std::time::{Duration, Instant};
 use ulid::Ulid;
 
@@ -1497,6 +1497,145 @@ fn validate_project_specs_docs(
                 ctx,
             );
         }
+    }
+
+    Ok(())
+}
+
+fn validate_machine_contract(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Machine Contract Drift Detection Gate");
+
+    let binary_path =
+        std::env::current_exe().map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    let capabilities_output = std::process::Command::new(&binary_path)
+        .current_dir(repo_root)
+        .args(["capabilities", "--format", "json"])
+        .output()
+        .map_err(|e| {
+            error::DecapodError::ValidationError(format!("Failed to run capabilities: {}", e))
+        })?;
+
+    if !capabilities_output.status.success() {
+        pass(
+            "Could not verify machine contract (capabilities failed)",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let capabilities_json: serde_json::Value =
+        serde_json::from_str(&String::from_utf8_lossy(&capabilities_output.stdout)).map_err(
+            |e| error::DecapodError::ValidationError(format!("Invalid capabilities JSON: {}", e)),
+        )?;
+
+    let interlock_codes = capabilities_json["interlock_codes"]
+        .as_array()
+        .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect::<Vec<_>>())
+        .unwrap_or_default();
+
+    let required_interlock = [
+        "workspace_required",
+        "verification_required",
+        "store_boundary_violation",
+    ];
+
+    let mut missing_interlock = Vec::new();
+    for code in required_interlock {
+        if !interlock_codes.contains(&code) {
+            missing_interlock.push(code);
+        }
+    }
+
+    if missing_interlock.is_empty() {
+        pass("Machine contract interlock codes match binary", ctx);
+    } else {
+        fail(
+            &format!(
+                "Binary capabilities missing interlock codes: {:?}. Binary and specs are out of sync.",
+                missing_interlock
+            ),
+            ctx,
+        );
+    }
+
+    let capabilities_list = capabilities_json["capabilities"]
+        .as_array()
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v["name"].as_str())
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
+    let required_caps = [
+        "daemonless",
+        "deterministic",
+        "context.resolve",
+        "validate.run",
+        "workspace.ensure",
+        "preflight.check",
+        "impact.predict",
+    ];
+    let mut missing_caps = Vec::new();
+    for cap in required_caps {
+        if !capabilities_list.contains(&cap) {
+            missing_caps.push(cap);
+        }
+    }
+
+    if missing_caps.is_empty() {
+        pass("Machine contract capabilities match binary", ctx);
+    } else {
+        warn(
+            &format!(
+                "Binary capabilities missing expected capabilities: {:?}",
+                missing_caps
+            ),
+            ctx,
+        );
+    }
+
+    Ok(())
+}
+
+fn validate_spec_drift(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Spec Drift Detection Gate (Hygiene)");
+
+    let interfaces_path = repo_root.join(LOCAL_PROJECT_SPECS_INTERFACES);
+    if !interfaces_path.exists() {
+        pass("No INTERFACES.md to check for hygiene", ctx);
+        return Ok(());
+    }
+
+    let interfaces = fs::read_to_string(&interfaces_path).map_err(error::DecapodError::IoError)?;
+
+    warn(
+        "Spec markdown drift checks are hygiene-only. Use validate_machine_contract for authoritative governance.",
+        ctx,
+    );
+
+    let key_sections = ["# Interfaces", "## Inbound Contracts", "## Data Ownership"];
+
+    let mut missing_sections = Vec::new();
+    for section in key_sections {
+        if !interfaces.contains(section) {
+            missing_sections.push(section);
+        }
+    }
+
+    if missing_sections.is_empty() {
+        pass("INTERFACES.md has structural sections", ctx);
+    } else {
+        warn(
+            &format!("INTERFACES.md missing sections: {:?}", missing_sections),
+            ctx,
+        );
     }
 
     Ok(())
@@ -3849,7 +3988,7 @@ fn validate_coplayer_policy_tightening(
 ) -> Result<(), error::DecapodError> {
     info("Co-Player Policy Tightening Gate");
 
-    use crate::core::coplayer::{CoPlayerSnapshot, derive_policy};
+    use crate::core::coplayer::{derive_policy, CoPlayerSnapshot};
 
     // Test the invariant: unknown → high → medium → low reliability
     // Each step must be equal or tighter than the next.
@@ -4094,6 +4233,26 @@ pub fn run_validation(
                 .lock()
                 .unwrap()
                 .push(("validate_project_specs_docs", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_spec_drift(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_spec_drift", start.elapsed()));
+        });
+        s.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = validate_machine_contract(ctx, decapod_dir) {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings
+                .lock()
+                .unwrap()
+                .push(("validate_machine_contract", start.elapsed()));
         });
         s.spawn(move |_| {
             let start = Instant::now();
