@@ -6,6 +6,7 @@
 //! - Embedded methodology documents
 
 use crate::core::assets;
+use crate::core::capsule_policy::{GENERATED_POLICY_REL_PATH, default_policy_json_pretty};
 use crate::core::error;
 use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_INTENT,
@@ -141,6 +142,7 @@ These files are the project-local contract for humans and agents.
 - `.decapod/data/`: canonical control-plane state (SQLite + ledgers).
 - `.decapod/generated/specs/`: living project specs for humans and agents.
 - `.decapod/generated/context/`: deterministic context capsules.
+- `.decapod/generated/policy/context_capsule_policy.json`: repo-native JIT context policy contract.
 - `.decapod/generated/artifacts/provenance/`: promotion manifests and convergence checklist.
 - `.decapod/generated/artifacts/inventory/`: deterministic release inventory.
 - `.decapod/generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
@@ -431,6 +433,8 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     "!.decapod/generated/Dockerfile",
     "!.decapod/generated/context/",
     "!.decapod/generated/context/*.json",
+    "!.decapod/generated/policy/",
+    "!.decapod/generated/policy/context_capsule_policy.json",
     "!.decapod/generated/artifacts/",
     "!.decapod/generated/artifacts/provenance/",
     "!.decapod/generated/artifacts/provenance/*.json",
@@ -593,6 +597,7 @@ pub fn scaffold_project_entrypoints(
     let generated_dir = opts.target_dir.join(".decapod/generated");
     fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
     fs::create_dir_all(generated_dir.join("context")).map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(generated_dir.join("policy")).map_err(error::DecapodError::IoError)?;
     fs::create_dir_all(generated_dir.join("artifacts").join("provenance"))
         .map_err(error::DecapodError::IoError)?;
     fs::create_dir_all(generated_dir.join("artifacts").join("inventory"))
@@ -627,6 +632,12 @@ pub fn scaffold_project_entrypoints(
             ))
         })?;
         fs::write(version_counter_path, body).map_err(error::DecapodError::IoError)?;
+    }
+
+    let generated_policy_path = opts.target_dir.join(GENERATED_POLICY_REL_PATH);
+    if !generated_policy_path.exists() {
+        let policy_body = default_policy_json_pretty()?;
+        fs::write(generated_policy_path, policy_body).map_err(error::DecapodError::IoError)?;
     }
 
     let (specs_created, specs_unchanged, specs_preserved) = if opts.generate_specs {

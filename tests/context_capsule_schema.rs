@@ -5,6 +5,7 @@ use decapod::core::context_capsule::{
 #[test]
 fn context_capsule_canonical_serialization_is_deterministic() {
     let capsule = DeterministicContextCapsule {
+        schema_version: "1.1.0".to_string(),
         topic: "auth provider boundary".to_string(),
         scope: "interfaces".to_string(),
         task_id: Some("R_03".to_string()),
@@ -33,6 +34,7 @@ fn context_capsule_canonical_serialization_is_deterministic() {
                 text: "Control-plane operations MUST remain daemonless".to_string(),
             },
         ],
+        policy: Default::default(),
         capsule_hash: String::new(),
     };
 
@@ -48,6 +50,7 @@ fn context_capsule_canonical_serialization_is_deterministic() {
 #[test]
 fn context_capsule_with_recomputed_hash_is_stable() {
     let base = DeterministicContextCapsule {
+        schema_version: "1.1.0".to_string(),
         topic: "promotion firewall".to_string(),
         scope: "interfaces".to_string(),
         task_id: None,
@@ -60,6 +63,7 @@ fn context_capsule_with_recomputed_hash_is_stable() {
             source_path: "interfaces/KNOWLEDGE_STORE.md".to_string(),
             text: "episodic -> procedural requires explicit promotion event".to_string(),
         }],
+        policy: Default::default(),
         capsule_hash: "wrong".to_string(),
     };
 
