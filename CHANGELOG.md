@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Other
+
+- todo: migrate task IDs to typed format `<type4>_<16-alnum>`, add task `hash` field, and align workspace scope checks
+- schema/interface: update TODO schema contract with typed ID and hash invariants
+- docs/scaffold: refresh `.decapod/README.md` template with Decapod harness positioning and canonical control-plane layout
+
 ## [0.41.1](https://github.com/DecapodLabs/decapod/compare/v0.41.0...v0.41.1) - 2026-02-24
 
 ### Other

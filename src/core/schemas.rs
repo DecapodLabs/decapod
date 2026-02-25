@@ -326,7 +326,7 @@ pub const REFLEX_DB_SCHEMA: &str = "
 // --- 4. Transactional Bin (TODO) ---
 pub const TODO_DB_NAME: &str = "todo.db";
 pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
-pub const TODO_SCHEMA_VERSION: u32 = 13;
+pub const TODO_SCHEMA_VERSION: u32 = 14;
 
 pub const TODO_DB_SCHEMA_META: &str = "
     CREATE TABLE IF NOT EXISTS meta (
@@ -338,6 +338,7 @@ pub const TODO_DB_SCHEMA_META: &str = "
 pub const TODO_DB_SCHEMA_TASKS: &str = "
     CREATE TABLE IF NOT EXISTS tasks (
         id TEXT PRIMARY KEY,
+        hash TEXT NOT NULL,
         title TEXT NOT NULL,
         description TEXT DEFAULT '',
         tags TEXT DEFAULT '',
@@ -379,6 +380,8 @@ pub const TODO_DB_SCHEMA_INDEX_SCOPE: &str =
     "CREATE INDEX IF NOT EXISTS idx_tasks_scope ON tasks(scope)";
 pub const TODO_DB_SCHEMA_INDEX_DIR: &str =
     "CREATE INDEX IF NOT EXISTS idx_tasks_dir ON tasks(dir_path)";
+pub const TODO_DB_SCHEMA_INDEX_HASH: &str =
+    "CREATE INDEX IF NOT EXISTS idx_tasks_hash ON tasks(hash)";
 pub const TODO_DB_SCHEMA_INDEX_EVENTS_TASK: &str =
     "CREATE INDEX IF NOT EXISTS idx_events_task ON task_events(task_id)";
 
