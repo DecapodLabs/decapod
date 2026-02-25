@@ -438,6 +438,7 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     "!.decapod/generated/artifacts/",
     "!.decapod/generated/artifacts/provenance/",
     "!.decapod/generated/artifacts/provenance/*.json",
+    "!.decapod/generated/artifacts/provenance/kcr_trend.jsonl",
     "!.decapod/generated/specs/",
     "!.decapod/generated/specs/*.md",
     "!.decapod/generated/specs/.manifest.json",
