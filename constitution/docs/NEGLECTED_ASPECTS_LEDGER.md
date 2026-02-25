@@ -8,7 +8,7 @@ Key surfaces:
 - Control plane code: `src/lib.rs`, `src/core/rpc.rs`, `src/core/workspace.rs`
 - Constitution contracts: `constitution/interfaces/*`, `constitution/core/*`
 - Proof/tests: `tests/*`, golden vectors
-- Templates/examples: `templates/`, `examples/`
+- Templates/examples: `templates/`, `project/examples/`
 
 ## Phase 1: Gap Map
 

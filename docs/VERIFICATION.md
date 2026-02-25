@@ -16,7 +16,7 @@ This guide defines how to verify Decapod behavior using reproducible commands, t
 - RPC contract anchors: `tests/golden/rpc/v1/agent_init.request.json`, `tests/golden/rpc/v1/agent_init.response.json`
 - Validate contention semantics: `tests/validate_termination.rs`
 - Canonical evidence mapping: `tests/canonical_evidence_gate.rs`
-- Promotion provenance gate: `artifacts/provenance/artifact_manifest.json`, `artifacts/provenance/proof_manifest.json`
+- Promotion provenance gate: `.decapod/generated/artifacts/provenance/artifact_manifest.json`, `.decapod/generated/artifacts/provenance/proof_manifest.json`
 
 ## Validate Diagnostics (Safe Mode)
 
@@ -28,7 +28,7 @@ DECAPOD_DIAGNOSTICS=1 decapod validate
 
 If `VALIDATE_TIMEOUT_OR_LOCK` occurs, Decapod emits a sanitized diagnostic artifact:
 
-- `artifacts/diagnostics/validate/<run_id>.json`
+- `.decapod/generated/artifacts/diagnostics/validate/<run_id>.json`
 
 Expected fields:
 

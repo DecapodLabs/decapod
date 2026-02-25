@@ -4,7 +4,7 @@ use std::process::Command;
 #[test]
 fn claude_workflow_example_contains_required_ops() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let workflow = std::fs::read_to_string(root.join("examples/claude_code_workflow.md"))
+    let workflow = std::fs::read_to_string(root.join("project/examples/claude_code_workflow.md"))
         .expect("read claude workflow example");
     assert!(workflow.contains("decapod session init"));
     assert!(workflow.contains("decapod validate"));
@@ -50,10 +50,10 @@ fn release_inventory_surface_exists_and_writes_artifact() {
         "release inventory should emit envelope"
     );
     assert!(
-        root.join("artifacts/inventory/repo_inventory.json")
+        root.join(".decapod/generated/artifacts/inventory/repo_inventory.json")
             .exists(),
         "release inventory should write deterministic artifact"
     );
-    std::fs::remove_file(root.join("artifacts/inventory/repo_inventory.json"))
+    std::fs::remove_file(root.join(".decapod/generated/artifacts/inventory/repo_inventory.json"))
         .expect("cleanup generated inventory artifact");
 }

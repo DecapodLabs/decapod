@@ -2267,6 +2267,43 @@ fn read_agent_session(
     Ok(Some(rec))
 }
 
+fn atomic_write_file(path: &Path, body: &str) -> Result<(), error::DecapodError> {
+    let parent = path.parent().ok_or_else(|| {
+        error::DecapodError::IoError(std::io::Error::other(
+            "target path is missing parent directory",
+        ))
+    })?;
+    fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+
+    let file_name = path
+        .file_name()
+        .and_then(|v| v.to_str())
+        .unwrap_or("file")
+        .to_string();
+    let nonce = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let tmp = parent.join(format!(
+        ".{}.tmp-{}-{}",
+        file_name,
+        std::process::id(),
+        nonce
+    ));
+    fs::write(&tmp, body).map_err(error::DecapodError::IoError)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(&tmp)
+            .map_err(error::DecapodError::IoError)?
+            .permissions();
+        perms.set_mode(0o600);
+        fs::set_permissions(&tmp, perms).map_err(error::DecapodError::IoError)?;
+    }
+    fs::rename(&tmp, path).map_err(error::DecapodError::IoError)?;
+    Ok(())
+}
+
 fn write_agent_session(
     project_root: &Path,
     rec: &AgentSessionRecord,
@@ -2276,16 +2313,7 @@ fn write_agent_session(
     let path = session_file_for_agent(project_root, &rec.agent_id);
     let body = serde_json::to_string_pretty(rec)
         .map_err(|e| error::DecapodError::SessionError(format!("session encode error: {}", e)))?;
-    fs::write(&path, body).map_err(error::DecapodError::IoError)?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = fs::metadata(&path)
-            .map_err(error::DecapodError::IoError)?
-            .permissions();
-        perms.set_mode(0o600);
-        fs::set_permissions(&path, perms).map_err(error::DecapodError::IoError)?;
-    }
+    atomic_write_file(&path, &body)?;
     Ok(())
 }
 
@@ -2325,16 +2353,7 @@ fn write_awareness_record(
     let body = serde_json::to_string_pretty(rec).map_err(|e| {
         error::DecapodError::ValidationError(format!("awareness encode error: {}", e))
     })?;
-    fs::write(&path, body).map_err(error::DecapodError::IoError)?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = fs::metadata(&path)
-            .map_err(error::DecapodError::IoError)?
-            .permissions();
-        perms.set_mode(0o600);
-        fs::set_permissions(&path, perms).map_err(error::DecapodError::IoError)?;
-    }
+    atomic_write_file(&path, &body)?;
     Ok(())
 }
 
@@ -2866,10 +2885,12 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     let cargo_toml = project_root.join("Cargo.toml");
     let rpc_golden_req = project_root.join("tests/golden/rpc/v1/agent_init.request.json");
     let rpc_golden_res = project_root.join("tests/golden/rpc/v1/agent_init.response.json");
-    let artifact_manifest = project_root.join("artifacts/provenance/artifact_manifest.json");
-    let proof_manifest = project_root.join("artifacts/provenance/proof_manifest.json");
-    let intent_convergence_manifest =
-        project_root.join("artifacts/provenance/intent_convergence_checklist.json");
+    let artifact_manifest =
+        project_root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+    let proof_manifest =
+        project_root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    let intent_convergence_manifest = project_root
+        .join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
 
     if !changelog.exists() {
         failures.push("CHANGELOG.md missing".to_string());
@@ -2894,19 +2915,19 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     }
     if !artifact_manifest.exists() {
         failures.push(
-            "artifact provenance manifest missing: artifacts/provenance/artifact_manifest.json"
+            "artifact provenance manifest missing: .decapod/generated/artifacts/provenance/artifact_manifest.json"
                 .to_string(),
         );
     }
     if !proof_manifest.exists() {
         failures.push(
-            "proof provenance manifest missing: artifacts/provenance/proof_manifest.json"
+            "proof provenance manifest missing: .decapod/generated/artifacts/provenance/proof_manifest.json"
                 .to_string(),
         );
     }
     if !intent_convergence_manifest.exists() {
         failures.push(
-            "intent convergence manifest missing: artifacts/provenance/intent_convergence_checklist.json"
+            "intent convergence manifest missing: .decapod/generated/artifacts/provenance/intent_convergence_checklist.json"
                 .to_string(),
         );
     }
@@ -2985,7 +3006,7 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
         serde_json::json!({
             "cmd": "release.inventory",
             "status": "ok",
-            "artifact": "artifacts/inventory/repo_inventory.json",
+            "artifact": ".decapod/generated/artifacts/inventory/repo_inventory.json",
             "summary": inventory["totals"]
         })
     );
@@ -3441,7 +3462,7 @@ fn write_validate_diagnostic_artifact(
     let mut run_id_hasher = Sha256::new();
     run_id_hasher.update(ulid::Ulid::new().to_string().as_bytes());
     let run_id = hash_bytes_hex(&run_id_hasher.finalize())[..32].to_string();
-    let diagnostics_dir = project_root.join("artifacts/diagnostics/validate");
+    let diagnostics_dir = project_root.join(".decapod/generated/artifacts/diagnostics/validate");
     fs::create_dir_all(&diagnostics_dir).map_err(error::DecapodError::IoError)?;
 
     let mut payload = serde_json::json!({
@@ -3464,7 +3485,9 @@ fn write_validate_diagnostic_artifact(
     let artifact_hash = hash_bytes_hex(&hasher.finalize());
     payload["artifact_hash"] = serde_json::json!(artifact_hash);
 
-    let relative_path = PathBuf::from(format!("artifacts/diagnostics/validate/{run_id}.json"));
+    let relative_path = PathBuf::from(format!(
+        ".decapod/generated/artifacts/diagnostics/validate/{run_id}.json"
+    ));
     let artifact_path = project_root.join(&relative_path);
     let pretty = serde_json::to_vec_pretty(&payload).map_err(|e| {
         error::DecapodError::ValidationError(format!(

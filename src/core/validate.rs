@@ -1114,10 +1114,18 @@ fn validate_generated_artifact_whitelist(
         let is_allowed_context_json = path.starts_with(".decapod/generated/context/")
             && path.ends_with(".json")
             && !path.contains("/../");
+        let is_allowed_provenance_json = path
+            .starts_with(".decapod/generated/artifacts/provenance/")
+            && path.ends_with(".json")
+            && !path.contains("/../");
         let is_allowed_specs_md = path.starts_with(".decapod/generated/specs/")
             && path.ends_with(".md")
             && !path.contains("/../");
-        if !is_allowed_exact && !is_allowed_context_json && !is_allowed_specs_md {
+        if !is_allowed_exact
+            && !is_allowed_context_json
+            && !is_allowed_provenance_json
+            && !is_allowed_specs_md
+        {
             offenders.push(path.to_string());
         }
     }

@@ -778,11 +778,13 @@ pub fn publish_workspace(
             status.git.current_branch
         )));
     }
-    let artifact_manifest = repo_root.join("artifacts/provenance/artifact_manifest.json");
-    let proof_manifest = repo_root.join("artifacts/provenance/proof_manifest.json");
+    let artifact_manifest =
+        repo_root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+    let proof_manifest =
+        repo_root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
     if !artifact_manifest.exists() || !proof_manifest.exists() {
         return Err(DecapodError::ValidationError(
-            "Cannot publish: provenance manifests are required for promotion. Missing `artifacts/provenance/artifact_manifest.json` and/or `artifacts/provenance/proof_manifest.json`."
+            "Cannot publish: provenance manifests are required for promotion. Missing `.decapod/generated/artifacts/provenance/artifact_manifest.json` and/or `.decapod/generated/artifacts/provenance/proof_manifest.json`."
                 .to_string(),
         ));
     }
