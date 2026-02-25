@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.0](https://github.com/DecapodLabs/decapod/compare/v0.42.1...v0.43.0) - 2026-02-25
+
+### Added
+
+- add migration for one_shot column
+- add one_shot column to TODO schema
+
+### Fixed
+
+- update migration sequence test to expect 400
+- add one_shot field to test TodoCommand::Add initializers
+
+### Other
+
+- run cargo fmt
+- run cargo fmt
+- bump integration test runners from 8 to 10
+
 ## [0.42.1](https://github.com/DecapodLabs/decapod/compare/v0.42.0...v0.42.1) - 2026-02-25
 
 ### Added
