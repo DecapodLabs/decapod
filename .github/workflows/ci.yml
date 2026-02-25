@@ -225,22 +225,22 @@ jobs:
             base_total: 4
             sub_shard: 1
             sub_total: 1
-          - label: "3a"
+          - label: "3"
             base_shard: 3
             base_total: 4
             sub_shard: 1
             sub_total: 2
-          - label: "3b"
+          - label: "4"
             base_shard: 3
             base_total: 4
             sub_shard: 2
             sub_total: 2
-          - label: "4a"
+          - label: "5"
             base_shard: 4
             base_total: 4
             sub_shard: 1
             sub_total: 2
-          - label: "4b"
+          - label: "6"
             base_shard: 4
             base_total: 4
             sub_shard: 2
