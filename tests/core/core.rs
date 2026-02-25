@@ -569,6 +569,24 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
         ids.iter().any(|id| id == "todo.ids.typed.v015"),
         "applied ledger must include todo typed-id migration"
     );
+
+    let catalog = fs::read_to_string(decapod_root.join("generated/migrations/catalog.json"))
+        .expect("read migration catalog");
+    let catalog: serde_json::Value = serde_json::from_str(&catalog).expect("catalog json");
+    assert!(catalog["count"].as_u64().unwrap_or(0) >= 3);
+    assert_eq!(catalog["latest_sequence"], 300);
+    let sequences: Vec<u64> = catalog["migrations"]
+        .as_array()
+        .expect("catalog migrations")
+        .iter()
+        .filter_map(|v| v["sequence"].as_u64())
+        .collect();
+    let mut sorted = sequences.clone();
+    sorted.sort_unstable();
+    assert_eq!(
+        sequences, sorted,
+        "migration catalog must be sequence-sorted"
+    );
 }
 
 #[test]

@@ -19,11 +19,20 @@ use ulid::Ulid;
 pub const DECAPOD_VERSION: &str = env!("CARGO_PKG_VERSION");
 const GENERATED_VERSION_COUNTER: &str = "generated/version_counter.json";
 const GENERATED_APPLIED_MIGRATIONS: &str = "generated/migrations/applied.json";
+const GENERATED_MIGRATION_CATALOG: &str = "generated/migrations/catalog.json";
 
 /// Migration definition
 pub struct Migration {
     /// Stable migration identifier for durable applied-ledger tracking.
     pub id: &'static str,
+    /// Deterministic sequence index used for stable ordering over long migration histories.
+    pub sequence: u32,
+    /// Logical migration scope (todo/governance/memory/automation/global).
+    pub scope: &'static str,
+    /// Migration implementation kind (rust/sql/replay).
+    pub kind: &'static str,
+    /// Optional script path when migration is script-backed.
+    pub script_path: Option<&'static str>,
     /// Minimum decapod version where this migration is valid to run.
     pub min_version: &'static str,
     /// Version this migration targets (e.g., "0.1.6")
@@ -40,6 +49,10 @@ pub fn all_migrations() -> Vec<Migration> {
         // Reconstruct event log from legacy databases
         Migration {
             id: "todo.events.reconstruct.v001",
+            sequence: 100,
+            scope: "todo",
+            kind: "rust",
+            script_path: None,
             min_version: "0.1.7",
             target_version: "0.1.7",
             description: "Reconstruct todo event log from database state",
@@ -47,6 +60,10 @@ pub fn all_migrations() -> Vec<Migration> {
         },
         Migration {
             id: "db.consolidate.core_bins.v001",
+            sequence: 200,
+            scope: "global",
+            kind: "rust",
+            script_path: None,
             min_version: "0.27.0",
             target_version: "0.27.0",
             description: "Consolidate fragmented databases into core bins",
@@ -54,6 +71,10 @@ pub fn all_migrations() -> Vec<Migration> {
         },
         Migration {
             id: "todo.ids.typed.v015",
+            sequence: 300,
+            scope: "todo",
+            kind: "sql",
+            script_path: Some("src/core/sql/todo_task_id_v15_migration.sql"),
             min_version: "0.41.1",
             target_version: "0.41.1",
             description: "Migrate legacy todo IDs to typed <type4>_<16> format",
@@ -74,6 +95,14 @@ struct GeneratedVersionCounter {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct AppliedMigrationEntry {
     id: String,
+    #[serde(default)]
+    sequence: u32,
+    #[serde(default)]
+    scope: String,
+    #[serde(default)]
+    kind: String,
+    #[serde(default)]
+    script_path: Option<String>,
     min_version: String,
     target_version: String,
     applied_at: String,
@@ -84,6 +113,27 @@ struct AppliedMigrationEntry {
 struct AppliedMigrationLedger {
     schema_version: String,
     entries: Vec<AppliedMigrationEntry>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct MigrationCatalogEntry {
+    id: String,
+    sequence: u32,
+    scope: String,
+    kind: String,
+    script_path: Option<String>,
+    min_version: String,
+    target_version: String,
+    description: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct MigrationCatalog {
+    schema_version: String,
+    generated_at: String,
+    latest_sequence: u32,
+    count: usize,
+    migrations: Vec<MigrationCatalogEntry>,
 }
 
 /// Run any pending migrations (idempotent — safe to call every startup)
@@ -190,26 +240,35 @@ fn restore_data_backup(data_root: &Path, backup_dir: &Path) -> Result<(), error:
 
 /// Run all idempotent migrations
 fn run_migrations(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    let migrations = all_migrations();
+    validate_migration_plan(&migrations)?;
     touch_generated_version_counter(decapod_root)?;
+    touch_generated_migration_catalog(decapod_root, &migrations)?;
     let mut applied = load_applied_migrations(decapod_root)?;
-    for migration in all_migrations() {
+    let mut applied_ids: HashSet<String> = applied.entries.iter().map(|e| e.id.clone()).collect();
+    for migration in migrations {
         if !version_gte(DECAPOD_VERSION, migration.min_version) {
             continue;
         }
         if !version_gte(DECAPOD_VERSION, migration.target_version) {
             continue;
         }
-        if applied.entries.iter().any(|e| e.id == migration.id) {
+        if applied_ids.contains(migration.id) {
             continue;
         }
         (migration.up)(decapod_root)?;
         applied.entries.push(AppliedMigrationEntry {
             id: migration.id.to_string(),
+            sequence: migration.sequence,
+            scope: migration.scope.to_string(),
+            kind: migration.kind.to_string(),
+            script_path: migration.script_path.map(|s| s.to_string()),
             min_version: migration.min_version.to_string(),
             target_version: migration.target_version.to_string(),
             applied_at: crate::core::time::now_epoch_z(),
             applied_by_version: DECAPOD_VERSION.to_string(),
         });
+        applied_ids.insert(migration.id.to_string());
         store_applied_migrations(decapod_root, &applied)?;
     }
     Ok(())
@@ -222,6 +281,40 @@ fn parse_version(v: &str) -> [u64; 3] {
         out[idx] = digits.parse::<u64>().unwrap_or(0);
     }
     out
+}
+
+fn validate_migration_plan(migrations: &[Migration]) -> Result<(), error::DecapodError> {
+    let mut ids = HashSet::new();
+    let mut sequences = HashSet::new();
+    let mut prev = 0u32;
+    for migration in migrations {
+        if !ids.insert(migration.id) {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Duplicate migration id detected: {}",
+                migration.id
+            )));
+        }
+        if !sequences.insert(migration.sequence) {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Duplicate migration sequence detected: {}",
+                migration.sequence
+            )));
+        }
+        if migration.sequence <= prev {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Migration sequence is not strictly increasing at {} ({} <= {})",
+                migration.id, migration.sequence, prev
+            )));
+        }
+        if !version_gte(migration.target_version, migration.min_version) {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Migration {} has invalid version range min={} target={}",
+                migration.id, migration.min_version, migration.target_version
+            )));
+        }
+        prev = migration.sequence;
+    }
+    Ok(())
 }
 
 fn version_gte(left: &str, right: &str) -> bool {
@@ -291,6 +384,41 @@ fn store_applied_migrations(
         fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
     }
     let body = serde_json::to_string_pretty(ledger)
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    fs::write(path, body).map_err(error::DecapodError::IoError)?;
+    Ok(())
+}
+
+fn touch_generated_migration_catalog(
+    decapod_root: &Path,
+    migrations: &[Migration],
+) -> Result<(), error::DecapodError> {
+    let path = decapod_root.join(GENERATED_MIGRATION_CATALOG);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    }
+    let entries = migrations
+        .iter()
+        .map(|m| MigrationCatalogEntry {
+            id: m.id.to_string(),
+            sequence: m.sequence,
+            scope: m.scope.to_string(),
+            kind: m.kind.to_string(),
+            script_path: m.script_path.map(|s| s.to_string()),
+            min_version: m.min_version.to_string(),
+            target_version: m.target_version.to_string(),
+            description: m.description.to_string(),
+        })
+        .collect::<Vec<_>>();
+    let latest_sequence = migrations.iter().map(|m| m.sequence).max().unwrap_or(0);
+    let catalog = MigrationCatalog {
+        schema_version: "1.0.0".to_string(),
+        generated_at: crate::core::time::now_epoch_z(),
+        latest_sequence,
+        count: entries.len(),
+        migrations: entries,
+    };
+    let body = serde_json::to_string_pretty(&catalog)
         .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
     fs::write(path, body).map_err(error::DecapodError::IoError)?;
     Ok(())
