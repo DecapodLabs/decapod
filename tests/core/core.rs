@@ -6,7 +6,7 @@ use decapod::core::error::DecapodError;
 use decapod::core::external_action::{self, ExternalCapability};
 use decapod::core::migration;
 use decapod::core::repomap;
-use decapod::core::scaffold::{ScaffoldOptions, scaffold_project_entrypoints};
+use decapod::core::scaffold::{scaffold_project_entrypoints, ScaffoldOptions};
 use decapod::core::schemas;
 use decapod::core::store::{Store, StoreKind};
 use decapod::core::validate;
@@ -98,11 +98,9 @@ fn db_and_broker_round_trip_and_audit() {
         .collect();
     assert!(events.iter().any(|ev| ev.status == "success"));
     assert!(events.iter().any(|ev| ev.status == "error"));
-    assert!(
-        events
-            .iter()
-            .all(|ev| ev.schema_version == "1.0.0" && !ev.request_id.is_empty())
-    );
+    assert!(events
+        .iter()
+        .all(|ev| ev.schema_version == "1.0.0" && !ev.request_id.is_empty()));
     assert!(events.iter().all(|ev| ev.actor == ev.actor_id));
 
     let schema = broker::schema();
@@ -528,11 +526,9 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
             .map(|r| r.expect("ref row"))
             .collect()
     };
-    assert!(
-        !csv_refs
-            .iter()
-            .any(|(a, b)| a.contains("R_LEGACY_") || b.contains("R_LEGACY_"))
-    );
+    assert!(!csv_refs
+        .iter()
+        .any(|(a, b)| a.contains("R_LEGACY_") || b.contains("R_LEGACY_")));
 
     let events_content = fs::read_to_string(data_dir.join("todo.events.jsonl")).expect("events");
     assert!(!events_content.contains("R_LEGACY_"));
@@ -574,7 +570,7 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
         .expect("read migration catalog");
     let catalog: serde_json::Value = serde_json::from_str(&catalog).expect("catalog json");
     assert!(catalog["count"].as_u64().unwrap_or(0) >= 3);
-    assert_eq!(catalog["latest_sequence"], 300);
+    assert_eq!(catalog["latest_sequence"], 400);
     let sequences: Vec<u64> = catalog["migrations"]
         .as_array()
         .expect("catalog migrations")
@@ -623,12 +619,10 @@ fn repomap_detects_manifests_entrypoints_and_docs() {
     let graph = map.doc_graph.expect("doc graph");
     assert!(graph.nodes.iter().any(|n| n == "docs/a.md"));
     assert!(graph.nodes.iter().any(|n| n == "docs/b.md"));
-    assert!(
-        graph
-            .edges
-            .iter()
-            .any(|(src, dst)| src == "docs/a.md" && dst == "docs/b.md")
-    );
+    assert!(graph
+        .edges
+        .iter()
+        .any(|(src, dst)| src == "docs/a.md" && dst == "docs/b.md"));
 
     let schema = repomap::schema();
     assert_eq!(schema["name"], "repomap");
@@ -932,11 +926,9 @@ This is a test override for CONTROL_PLANE.md
 
     let control_plane_override = assets::get_override_doc(root, "core/CONTROL_PLANE.md");
     assert!(control_plane_override.is_some());
-    assert!(
-        control_plane_override
-            .unwrap()
-            .contains("Custom Control Plane")
-    );
+    assert!(control_plane_override
+        .unwrap()
+        .contains("Custom Control Plane"));
 
     let todo_override = assets::get_override_doc(root, "plugins/TODO.md");
     assert!(todo_override.is_some());
