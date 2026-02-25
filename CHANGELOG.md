@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.1](https://github.com/DecapodLabs/decapod/compare/v0.43.0...v0.43.1) - 2026-02-25
+
+### Added
+
+- add allowed_next_ops to context.resolve RPC response
+
 ## [0.43.0](https://github.com/DecapodLabs/decapod/compare/v0.42.1...v0.43.0) - 2026-02-25
 
 ### Added
