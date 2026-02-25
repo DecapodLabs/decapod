@@ -2,7 +2,7 @@ schema_version = "1.0.0"
 
 [init]
 specs = true
-diagram_style = "ascii"
+diagram_style = "mermaid"
 entrypoints = [
     "AGENTS.md",
     "CLAUDE.md",

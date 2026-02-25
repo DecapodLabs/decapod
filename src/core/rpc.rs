@@ -376,6 +376,22 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 stability: "beta".to_string(),
                 cost: "medium".to_string(),
             },
+            Capability {
+                name: "preflight.check".to_string(),
+                description:
+                    "Before any operation, predict what will fail and what context is needed"
+                        .to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "impact.predict".to_string(),
+                description:
+                    "Predict validation outcomes for changed files before running validate"
+                        .to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
         ],
         subsystems: vec![
             SubsystemInfo {
