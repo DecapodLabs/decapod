@@ -193,3 +193,26 @@ fn release_check_requires_policy_lineage() {
         stderr
     );
 }
+
+#[test]
+fn release_check_requires_consistent_policy_lineage_across_manifests() {
+    let (_tmp, root) = setup_release_fixture("- schema: bump todo shape for v2");
+    let proof_path = root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    let mut proof: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&proof_path).expect("read proof manifest"))
+            .expect("parse proof manifest");
+    proof["policy_lineage"]["risk_tier"] = serde_json::Value::String("high".to_string());
+    write(
+        &proof_path,
+        &serde_json::to_string_pretty(&proof).expect("serialize proof manifest"),
+    );
+
+    let output = run_release_check(&root);
+    assert!(!output.status.success(), "release check should fail");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("policy lineage mismatch"),
+        "release check should require lineage consistency; stderr:\n{}",
+        stderr
+    );
+}

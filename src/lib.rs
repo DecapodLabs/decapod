@@ -2920,6 +2920,7 @@ fn run_release_command(cli: ReleaseCli, project_root: &Path) -> Result<(), error
 
 fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     let mut failures = Vec::new();
+    let mut lineage_records: Vec<(String, PolicyLineage)> = Vec::new();
     let mut changelog_raw: Option<String> = None;
     let changelog = project_root.join("CHANGELOG.md");
     let migrations = project_root
@@ -2976,21 +2977,36 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
                 .to_string(),
         );
     }
-    if artifact_manifest.exists()
-        && let Err(e) = validate_artifact_manifest(project_root, &artifact_manifest)
-    {
-        failures.push(format!("artifact manifest invalid: {}", e));
+    if artifact_manifest.exists() {
+        match validate_artifact_manifest(project_root, &artifact_manifest) {
+            Ok(lineage) => lineage_records.push(("artifact manifest".to_string(), lineage)),
+            Err(e) => failures.push(format!("artifact manifest invalid: {}", e)),
+        }
     }
-    if proof_manifest.exists()
-        && let Err(e) = validate_proof_manifest(project_root, &proof_manifest)
-    {
-        failures.push(format!("proof manifest invalid: {}", e));
+    if proof_manifest.exists() {
+        match validate_proof_manifest(project_root, &proof_manifest) {
+            Ok(lineage) => lineage_records.push(("proof manifest".to_string(), lineage)),
+            Err(e) => failures.push(format!("proof manifest invalid: {}", e)),
+        }
     }
-    if intent_convergence_manifest.exists()
-        && let Err(e) =
-            validate_intent_convergence_manifest(project_root, &intent_convergence_manifest)
-    {
-        failures.push(format!("intent convergence manifest invalid: {}", e));
+    if intent_convergence_manifest.exists() {
+        match validate_intent_convergence_manifest(project_root, &intent_convergence_manifest) {
+            Ok(lineage) => {
+                lineage_records.push(("intent convergence manifest".to_string(), lineage))
+            }
+            Err(e) => failures.push(format!("intent convergence manifest invalid: {}", e)),
+        }
+    }
+
+    if let Some((baseline_name, baseline)) = lineage_records.first() {
+        for (name, lineage) in lineage_records.iter().skip(1) {
+            if lineage != baseline {
+                failures.push(format!(
+                    "policy lineage mismatch: '{}' differs from '{}' ({:?} != {:?})",
+                    name, baseline_name, lineage, baseline
+                ));
+            }
+        }
     }
 
     let changed_paths = git_changed_paths(project_root);
@@ -3070,11 +3086,20 @@ fn sha256_file(path: &Path) -> Result<String, error::DecapodError> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct PolicyLineage {
+    policy_hash: String,
+    policy_revision: String,
+    risk_tier: String,
+    capsule_path: String,
+    capsule_hash: String,
+}
+
 fn validate_policy_lineage(
     project_root: &Path,
     v: &serde_json::Value,
     manifest_label: &str,
-) -> Result<(), error::DecapodError> {
+) -> Result<PolicyLineage, error::DecapodError> {
     let lineage = v
         .get("policy_lineage")
         .and_then(|x| x.as_object())
@@ -3170,13 +3195,23 @@ fn validate_policy_lineage(
         )));
     }
 
-    Ok(())
+    Ok(PolicyLineage {
+        policy_hash: policy_hash.to_string(),
+        policy_revision: lineage
+            .get("policy_revision")
+            .and_then(|x| x.as_str())
+            .unwrap_or("")
+            .to_string(),
+        risk_tier: risk_tier.to_string(),
+        capsule_path: capsule_path.to_string(),
+        capsule_hash: capsule_hash.to_string(),
+    })
 }
 
 fn validate_artifact_manifest(
     project_root: &Path,
     manifest_path: &Path,
-) -> Result<(), error::DecapodError> {
+) -> Result<PolicyLineage, error::DecapodError> {
     let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
     let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!("artifact manifest is not valid JSON: {e}"))
@@ -3191,7 +3226,7 @@ fn validate_artifact_manifest(
             "artifact manifest kind must be artifact_manifest".to_string(),
         ));
     }
-    validate_policy_lineage(project_root, &v, "artifact manifest")?;
+    let lineage = validate_policy_lineage(project_root, &v, "artifact manifest")?;
 
     let artifacts = v
         .get("artifacts")
@@ -3238,13 +3273,13 @@ fn validate_artifact_manifest(
             )));
         }
     }
-    Ok(())
+    Ok(lineage)
 }
 
 fn validate_proof_manifest(
     project_root: &Path,
     manifest_path: &Path,
-) -> Result<(), error::DecapodError> {
+) -> Result<PolicyLineage, error::DecapodError> {
     let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
     let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!("proof manifest is not valid JSON: {e}"))
@@ -3259,7 +3294,7 @@ fn validate_proof_manifest(
             "proof manifest kind must be proof_manifest".to_string(),
         ));
     }
-    validate_policy_lineage(project_root, &v, "proof manifest")?;
+    let lineage = validate_policy_lineage(project_root, &v, "proof manifest")?;
     let proofs = v.get("proofs").and_then(|x| x.as_array()).ok_or_else(|| {
         error::DecapodError::ValidationError("proof manifest proofs[] required".to_string())
     })?;
@@ -3297,13 +3332,13 @@ fn validate_proof_manifest(
             )));
         }
     }
-    Ok(())
+    Ok(lineage)
 }
 
 fn validate_intent_convergence_manifest(
     project_root: &Path,
     manifest_path: &Path,
-) -> Result<(), error::DecapodError> {
+) -> Result<PolicyLineage, error::DecapodError> {
     let raw = fs::read_to_string(manifest_path).map_err(error::DecapodError::IoError)?;
     let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!(
@@ -3320,7 +3355,7 @@ fn validate_intent_convergence_manifest(
             "intent convergence manifest kind must be intent_convergence_checklist".to_string(),
         ));
     }
-    validate_policy_lineage(project_root, &v, "intent convergence manifest")?;
+    let lineage = validate_policy_lineage(project_root, &v, "intent convergence manifest")?;
 
     for key in ["pr", "intent", "scope", "checklist"] {
         if v.get(key).is_none() {
@@ -3361,7 +3396,7 @@ fn validate_intent_convergence_manifest(
             )));
         }
     }
-    Ok(())
+    Ok(lineage)
 }
 
 fn build_release_inventory(project_root: &Path) -> Result<serde_json::Value, error::DecapodError> {
