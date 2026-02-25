@@ -1,0 +1,43 @@
+{
+  "topic": "release provenance",
+  "scope": "interfaces",
+  "task_id": "R_releasecheck",
+  "workunit_id": null,
+  "sources": [
+    {
+      "path": "interfaces/KNOWLEDGE_STORE.md",
+      "section": "[test]"
+    },
+    {
+      "path": "interfaces/CLAIMS.md",
+      "section": "2. Claims (Binding Registry)"
+    },
+    {
+      "path": "interfaces/KNOWLEDGE_SCHEMA.md",
+      "section": "3. Storage Contract"
+    },
+    {
+      "path": "interfaces/STORE_MODEL.md",
+      "section": "2. Assets (What We Protect)"
+    }
+  ],
+  "snippets": [
+    {
+      "source_path": "interfaces/KNOWLEDGE_STORE.md",
+      "text": "#[test]\nfn test_provenance_required_for_procedural() {\n    // Try to add procedural norm without evidence\n    let entry = serde_json::json!({\n        \"id\": \"norm.commit.001\",\n        \"type\": \"commit_norm\",\n        \"rule\": \"Use conventional commits\",\n        // Missing provenance!\n    });\n    let output = run_decapod(&dir, &[\"knowledge\", \"add\", \"--type\", \"procedural\", \"--norm-type\", \"commit\", \"--content\", &entry.to_string()]);\n    assert!(!output.status.success());\n    assert!(output.stderr.contains(\"provenance required\"));"
+    },
+    {
+      "source_path": "interfaces/CLAIMS.md",
+      "text": "## 2. Claims (Binding Registry)\n\n| Claim ID | Claim (normative) | Owner Doc | Enforcement | Proof Surface | Notes |\n|---|---|---|---|---|---|\n| claim.doc.decapod_is_router_only | `core/DECAPOD.md` routes and prioritizes canonical docs but does not define or override behavioral rules. | `core/DECAPOD.md` | partially_enforced | `decapod validate` (doc graph + canon headers) | Social + doc-layer boundary; code enforcement is limited. |\n| claim.doc.no_shadow_policy | If a rule is not declared in canonical docs, it is not enforceable. | `interfaces/DOC_RULES.md` | partially_enforced | `decapod validate` (doc graph) | Enforcement of \"shadow policy\" is largely procedural. |\n| claim.doc.real_requ..."
+    },
+    {
+      "source_path": "interfaces/KNOWLEDGE_SCHEMA.md",
+      "text": "## 3. Storage Contract\n\nKnowledge entries are persisted in `knowledge.db` table `knowledge` with store-scoped fields:\n- `id` (TEXT, primary key)\n- `title` (TEXT, required)\n- `content` (TEXT, required)\n- `provenance` (TEXT, required)\n- `claim_id` (TEXT, optional)\n- `tags` (TEXT, optional serialized list)\n- `created_at` (TEXT, required)\n- `updated_at` (TEXT, optional)\n- `dir_path` (TEXT, required)"
+    },
+    {
+      "source_path": "interfaces/STORE_MODEL.md",
+      "text": "## 2. Assets (What We Protect)\n\n- user store privacy: a user starts blank and should not inherit repo ideology or backlog\n- repo store reproducibility: repo state should be deterministically rebuildable from repo-tracked artifacts where declared\n- derived state integrity: derived artifacts should never be treated as source-of-truth\n- provenance: every mutation should be attributable to an actor and a store context (planned: audit trail)\n\n---"
+    }
+  ],
+  "capsule_hash": "e2a3486cc42fe8803a8d4e347d02618ca43138eaca9ef41741e4ed73dd4b019f"
+}

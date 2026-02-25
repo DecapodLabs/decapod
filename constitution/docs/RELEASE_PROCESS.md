@@ -17,6 +17,7 @@ Release readiness requires:
 - RPC golden vectors present (`tests/golden/rpc/v1`).
 - Provenance manifests present in `artifacts/provenance/`.
 - Intent-convergence checklist present and valid (`artifacts/provenance/intent_convergence_checklist.json`).
+- Every provenance manifest carries `policy_lineage` with a valid capsule reference and hash.
 - If schema/interface surfaces changed in the working tree, `CHANGELOG.md` `## [Unreleased]` MUST include a schema/interface note.
 
 `decapod release inventory` writes deterministic CI inventory output to:
