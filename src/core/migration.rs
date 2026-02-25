@@ -6,7 +6,10 @@
 use crate::core::db;
 use crate::core::error;
 use crate::core::schemas;
-use rusqlite::Connection;
+use rusqlite::{Connection, OptionalExtension};
+use serde_json::Value;
+use sha2::{Digest, Sha256};
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 use ulid::Ulid;
@@ -37,6 +40,11 @@ pub fn all_migrations() -> Vec<Migration> {
             target_version: "0.27.0",
             description: "Consolidate fragmented databases into core bins",
             up: migrate_consolidate_databases,
+        },
+        Migration {
+            target_version: "0.41.2",
+            description: "Migrate legacy todo IDs to typed <type4>_<16> format",
+            up: migrate_todo_ids_to_typed_format,
         },
     ]
 }
@@ -338,6 +346,333 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
         let bak = data_root.join(format!("{}.bak", f));
         if bak.exists() {
             let _ = fs::remove_file(&bak);
+        }
+    }
+
+    Ok(())
+}
+
+fn is_typed_todo_id(id: &str) -> bool {
+    let mut parts = id.split('_');
+    let Some(prefix) = parts.next() else {
+        return false;
+    };
+    let Some(suffix) = parts.next() else {
+        return false;
+    };
+    if parts.next().is_some() {
+        return false;
+    }
+    prefix.len() == 4
+        && prefix.chars().all(|c| c.is_ascii_lowercase())
+        && suffix.len() == 16
+        && suffix.chars().all(|c| c.is_ascii_alphanumeric())
+}
+
+fn typed_todo_type(category: &str, title: &str, old_id: &str) -> &'static str {
+    let c = category.to_ascii_lowercase();
+    let t = title.to_ascii_lowercase();
+    let all = format!("{c} {t} {old_id}").to_ascii_lowercase();
+    if c.contains("test") || all.contains("test") {
+        "test"
+    } else if c.contains("doc") || all.contains("readme") || all.contains("doc") {
+        "docs"
+    } else if c.contains("bug") || all.contains("fix") || all.contains("bug") {
+        "bugs"
+    } else if c.contains("sec") || all.contains("security") || all.contains("auth") {
+        "secu"
+    } else if c.contains("perf") || all.contains("perf") {
+        "perf"
+    } else if c.contains("infra") || all.contains("infra") || all.contains("deploy") {
+        "infr"
+    } else if c.contains("backend") || c == "database" || all.contains("server") {
+        "bend"
+    } else if c.contains("frontend") || all.contains("ui") || all.contains("web") {
+        "fend"
+    } else if c == "ci" || all.contains("ci") || all.contains("pipeline") {
+        "cicd"
+    } else if c.contains("refactor") || all.contains("cleanup") {
+        "reft"
+    } else if c.contains("tool") || all.contains("cli") {
+        "tool"
+    } else if c.contains("feature") || all.contains("feature") || all.contains("implement") {
+        "feat"
+    } else {
+        "arch"
+    }
+}
+
+fn typed_todo_suffix(seed: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(seed.as_bytes());
+    let digest = hasher.finalize();
+    let mut out = String::with_capacity(16);
+    for b in digest {
+        out.push_str(&format!("{:02x}", b));
+        if out.len() >= 16 {
+            out.truncate(16);
+            break;
+        }
+    }
+    out
+}
+
+fn rewrite_csv_task_ids(csv: &str, id_map: &HashMap<String, String>) -> String {
+    let mut changed = false;
+    let mut mapped = Vec::new();
+    for part in csv.split(',') {
+        let token = part.trim();
+        if token.is_empty() {
+            continue;
+        }
+        if let Some(new_id) = id_map.get(token) {
+            changed = true;
+            mapped.push(new_id.clone());
+        } else {
+            mapped.push(token.to_string());
+        }
+    }
+    if changed {
+        mapped.join(",")
+    } else {
+        csv.to_string()
+    }
+}
+
+fn rewrite_json_task_ids(value: &mut Value, id_map: &HashMap<String, String>) {
+    match value {
+        Value::String(s) => {
+            if let Some(mapped) = id_map.get(s) {
+                *s = mapped.clone();
+            } else if s.contains(',') {
+                *s = rewrite_csv_task_ids(s, id_map);
+            }
+        }
+        Value::Array(items) => {
+            for item in items {
+                rewrite_json_task_ids(item, id_map);
+            }
+        }
+        Value::Object(obj) => {
+            for v in obj.values_mut() {
+                rewrite_json_task_ids(v, id_map);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn migrate_todo_ids_to_typed_format(decapod_root: &Path) -> Result<(), error::DecapodError> {
+    let data_root = decapod_root.join("data");
+    let todo_db = data_root.join(schemas::TODO_DB_NAME);
+    if !todo_db.exists() {
+        return Ok(());
+    }
+
+    let mut conn = db::db_connect(&todo_db.to_string_lossy())?;
+    let tasks_exists: bool = conn
+        .query_row(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='tasks'",
+            [],
+            |_| Ok(true),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?
+        .unwrap_or(false);
+    if !tasks_exists {
+        return Ok(());
+    }
+
+    let mut existing_ids = HashSet::new();
+    let mut legacy_rows = Vec::new();
+    {
+        let mut stmt = conn
+            .prepare("SELECT id, category, title FROM tasks ORDER BY created_at, id")
+            .map_err(error::DecapodError::RusqliteError)?;
+        let rows = stmt
+            .query_map([], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1).unwrap_or_default(),
+                    row.get::<_, String>(2).unwrap_or_default(),
+                ))
+            })
+            .map_err(error::DecapodError::RusqliteError)?;
+        for row in rows {
+            let (id, category, title) = row.map_err(error::DecapodError::RusqliteError)?;
+            existing_ids.insert(id.clone());
+            if !is_typed_todo_id(&id) {
+                legacy_rows.push((id, category, title));
+            }
+        }
+    }
+    if legacy_rows.is_empty() {
+        return Ok(());
+    }
+
+    let mut id_map: HashMap<String, String> = HashMap::new();
+    for (old_id, category, title) in legacy_rows {
+        let task_type = typed_todo_type(&category, &title, &old_id);
+        let mut attempt = 0usize;
+        loop {
+            let seed = if attempt == 0 {
+                old_id.clone()
+            } else {
+                format!("{old_id}:{attempt}")
+            };
+            let candidate = format!("{}_{}", task_type, typed_todo_suffix(&seed));
+            if candidate == old_id {
+                id_map.insert(old_id.clone(), candidate);
+                break;
+            }
+            if !existing_ids.contains(&candidate) && !id_map.values().any(|v| v == &candidate) {
+                id_map.insert(old_id.clone(), candidate.clone());
+                existing_ids.insert(candidate);
+                break;
+            }
+            attempt += 1;
+        }
+    }
+
+    let sql = include_str!("sql/todo_task_id_v15_migration.sql");
+    conn.execute_batch("PRAGMA foreign_keys=OFF;")
+        .map_err(error::DecapodError::RusqliteError)?;
+    let tx = conn
+        .transaction()
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    tx.execute(
+        "CREATE TEMP TABLE task_id_migration_map(
+            old_id TEXT PRIMARY KEY,
+            new_id TEXT NOT NULL UNIQUE
+        )",
+        [],
+    )
+    .map_err(error::DecapodError::RusqliteError)?;
+    for (old_id, new_id) in &id_map {
+        tx.execute(
+            "INSERT INTO task_id_migration_map(old_id, new_id) VALUES(?1, ?2)",
+            [old_id, new_id],
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    }
+
+    tx.execute_batch(sql)
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    {
+        let mut stmt = tx
+            .prepare("SELECT id, depends_on, blocks FROM tasks")
+            .map_err(error::DecapodError::RusqliteError)?;
+        let rows = stmt
+            .query_map([], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1).unwrap_or_default(),
+                    row.get::<_, String>(2).unwrap_or_default(),
+                ))
+            })
+            .map_err(error::DecapodError::RusqliteError)?;
+        let mut rewrites = Vec::new();
+        for row in rows {
+            let (task_id, depends_on, blocks) = row.map_err(error::DecapodError::RusqliteError)?;
+            let next_depends = rewrite_csv_task_ids(&depends_on, &id_map);
+            let next_blocks = rewrite_csv_task_ids(&blocks, &id_map);
+            if next_depends != depends_on || next_blocks != blocks {
+                rewrites.push((task_id, next_depends, next_blocks));
+            }
+        }
+        drop(stmt);
+        for (task_id, depends_on, blocks) in rewrites {
+            tx.execute(
+                "UPDATE tasks SET depends_on = ?1, blocks = ?2 WHERE id = ?3",
+                rusqlite::params![depends_on, blocks, task_id],
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        }
+    }
+
+    if tx
+        .query_row(
+            "SELECT 1 FROM pragma_table_info('tasks') WHERE name='hash'",
+            [],
+            |_| Ok(true),
+        )
+        .optional()
+        .map_err(error::DecapodError::RusqliteError)?
+        .unwrap_or(false)
+    {
+        tx.execute(
+            "UPDATE tasks
+             SET hash = lower(substr(id, instr(id, '_') + 1, 6))
+             WHERE instr(id, '_') > 0",
+            [],
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    }
+
+    {
+        let mut stmt = tx
+            .prepare("SELECT event_id, payload FROM task_events")
+            .map_err(error::DecapodError::RusqliteError)?;
+        let rows = stmt
+            .query_map([], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+            })
+            .map_err(error::DecapodError::RusqliteError)?;
+        let mut payload_rewrites = Vec::new();
+        for row in rows {
+            let (event_id, payload_raw) = row.map_err(error::DecapodError::RusqliteError)?;
+            if let Ok(mut payload_json) = serde_json::from_str::<Value>(&payload_raw) {
+                rewrite_json_task_ids(&mut payload_json, &id_map);
+                if let Ok(next_raw) = serde_json::to_string(&payload_json) {
+                    if next_raw != payload_raw {
+                        payload_rewrites.push((event_id, next_raw));
+                    }
+                }
+            }
+        }
+        drop(stmt);
+        for (event_id, payload) in payload_rewrites {
+            tx.execute(
+                "UPDATE task_events SET payload = ?1 WHERE event_id = ?2",
+                rusqlite::params![payload, event_id],
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
+        }
+    }
+
+    tx.commit().map_err(error::DecapodError::RusqliteError)?;
+    conn.execute_batch("PRAGMA foreign_keys=ON;")
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    let events_path = data_root.join(schemas::TODO_EVENTS_NAME);
+    if events_path.exists() {
+        let content = fs::read_to_string(&events_path).map_err(error::DecapodError::IoError)?;
+        let mut rewritten = Vec::new();
+        let mut changed = false;
+        for line in content.lines() {
+            if line.trim().is_empty() {
+                continue;
+            }
+            let mut value: Value = match serde_json::from_str(line) {
+                Ok(v) => v,
+                Err(_) => {
+                    rewritten.push(line.to_string());
+                    continue;
+                }
+            };
+            rewrite_json_task_ids(&mut value, &id_map);
+            let next = serde_json::to_string(&value)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+            if next != line {
+                changed = true;
+            }
+            rewritten.push(next);
+        }
+        if changed {
+            fs::write(events_path, rewritten.join("\n") + "\n")
+                .map_err(error::DecapodError::IoError)?;
         }
     }
 

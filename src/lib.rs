@@ -661,6 +661,10 @@ enum TraceCommand {
 
 #[derive(Subcommand, Debug)]
 enum Command {
+    /// Activate local control plane state and run startup migrations
+    #[clap(name = "activate")]
+    Activate,
+
     /// Bootstrap system and manage lifecycle
     #[clap(name = "init", visible_alias = "i")]
     Init(InitGroupCli),
@@ -1777,6 +1781,9 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
 
             match cli.command {
+                Command::Activate => {
+                    println!("decapod.activate: ok");
+                }
                 Command::Validate(validate_cli) => {
                     run_validate_command(validate_cli, &project_root, &project_store)?;
                 }
@@ -1920,6 +1927,7 @@ fn should_auto_clock_in(command: &Command) -> bool {
     match command {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
         Command::Version
+        | Command::Activate
         | Command::Init(_)
         | Command::Setup(_)
         | Command::Session(_)
@@ -1933,6 +1941,7 @@ fn should_auto_clock_in(command: &Command) -> bool {
 fn command_requires_worktree(command: &Command) -> bool {
     match command {
         Command::Init(_)
+        | Command::Activate
         | Command::Setup(_)
         | Command::Session(_)
         | Command::Version
@@ -1972,6 +1981,7 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
     !matches!(
         command,
         Command::Validate(_)
+            | Command::Activate
             | Command::Docs(_)
             | Command::Release(_)
             | Command::Trace(_)
@@ -1986,6 +1996,7 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
     !matches!(
         command,
         Command::Validate(_)
+            | Command::Activate
             | Command::Docs(_)
             | Command::Release(_)
             | Command::Trace(_)
@@ -2149,6 +2160,7 @@ fn requires_session_token(command: &Command) -> bool {
         Command::Init(_)
         | Command::Session(_)
         | Command::Version
+        | Command::Activate
         | Command::Docs(_)
         | Command::Capabilities(_)
         | Command::Release(_)

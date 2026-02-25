@@ -326,7 +326,7 @@ pub const REFLEX_DB_SCHEMA: &str = "
 // --- 4. Transactional Bin (TODO) ---
 pub const TODO_DB_NAME: &str = "todo.db";
 pub const TODO_EVENTS_NAME: &str = "todo.events.jsonl";
-pub const TODO_SCHEMA_VERSION: u32 = 14;
+pub const TODO_SCHEMA_VERSION: u32 = 15;
 
 pub const TODO_DB_SCHEMA_META: &str = "
     CREATE TABLE IF NOT EXISTS meta (
