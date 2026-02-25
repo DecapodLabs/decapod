@@ -250,7 +250,7 @@ fn context_capsule_query_write_persists_deterministic_artifact_path() {
         .as_str()
         .expect("path string in first payload");
     assert!(
-        first_path.ends_with(".decapod/generated/context/R_123.json"),
+        first_path.ends_with(".decapod/generated/context/test_123.json"),
         "unexpected capsule path: {}",
         first_path
     );
@@ -349,7 +349,7 @@ fn context_capsule_query_write_auto_binds_workunit_state_ref() {
     let state_refs = workunit_payload["state_refs"]
         .as_array()
         .expect("state refs array");
-    let expected_rel = ".decapod/generated/context/R_321.json";
+    let expected_rel = ".decapod/generated/context/test_321.json";
     let has_ref = state_refs.iter().any(|v| {
         let s = v.as_str().unwrap_or_default();
         s == expected_rel || s.ends_with(expected_rel) || s == capsule_path

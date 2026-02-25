@@ -1,6 +1,6 @@
 use decapod::core::capsule_policy::CapsulePolicyBinding;
 use decapod::core::context_capsule::{
-    write_context_capsule, ContextCapsuleSnippet, ContextCapsuleSource, DeterministicContextCapsule,
+    ContextCapsuleSnippet, ContextCapsuleSource, DeterministicContextCapsule, write_context_capsule,
 };
 use decapod::core::{workspace, workunit};
 use tempfile::tempdir;
