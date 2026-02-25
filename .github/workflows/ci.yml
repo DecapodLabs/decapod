@@ -50,8 +50,10 @@ jobs:
 
   # SETUP: Do expensive work once, then fan out
   setup:
-    name: Setup & Update Deps
+    name: Setup & Build Tests
     runs-on: ubuntu-latest
+    outputs:
+      test_count: ${{ steps.build.outputs.test_count }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,6 +79,32 @@ jobs:
       # Auto-update Cargo.lock if stale and push back
       - name: Check Cargo.lock is up to date
         run: cargo generate-lockfile && git diff --quiet Cargo.lock || echo "⚠️ Cargo.lock outdated - run cargo update locally"
+
+      - name: Count and build integration tests
+        id: build
+        run: |
+          # Count tests to run
+          TEST_COUNT=$(ls tests/*.rs | wc -l)
+          echo "test_count=$TEST_COUNT" >> $GITHUB_OUTPUT
+          echo "Building $TEST_COUNT integration tests..."
+
+          # Build all test binaries (compile only, don't run)
+          for t in tests/*.rs; do
+            name=$(basename "$t" .rs)
+            echo "Building test: $name"
+            cargo build --all-features --test "$name" 2>&1 | tail -5
+          done
+          echo "Done building tests"
+
+      - name: Upload test binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-binaries
+          path: |
+            target/debug/decapod
+            target/debug/deps/*_-
+          retention-days: 1
+          compression-level: 9
 
   detect-migration-script-changes:
     name: Detect Migration Script Changes
@@ -203,8 +231,19 @@ jobs:
           shared-key: "ci-setup"
           save-if: false
 
+      - name: Download pre-built binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: test-binaries
+          path: target/debug
+
+      - name: Fix permissions
+        run: |
+          chmod +x target/debug/decapod
+          chmod +x target/debug/deps/*
+
       - name: Run unit tests
-        run: cargo test --all-features --lib --bins -- --test-threads=4
+        run: cargo test --all-features --lib --bins -- --test-threads=8
 
   # TEST: integration tests except RPC suite and chaos replay
   test-integration:
@@ -232,6 +271,17 @@ jobs:
           shared-key: "ci-setup"
           save-if: false
 
+      - name: Download pre-built binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: test-binaries
+          path: target/debug
+
+      - name: Fix permissions
+        run: |
+          chmod +x target/debug/decapod
+          chmod +x target/debug/deps/*
+
       - name: Run integration tests (except isolated suites)
         run: |
           set -euo pipefail
@@ -253,7 +303,8 @@ jobs:
               continue
             fi
             selected=$(( selected + 1 ))
-            cargo test --all-features --test "$t" -- --test-threads=4
+            # Use pre-built binaries - skip compilation
+            cargo test --all-features --test "$t" -- --test-threads=8
           done
           echo "Selected integration tests on shard ${{ matrix.shard }}/10: $selected"
 

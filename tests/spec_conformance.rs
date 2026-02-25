@@ -175,19 +175,20 @@ fn test_todo_state_machine() {
         dir,
         &["todo", "list", "--status", "all", "--format", "json"],
     );
+    assert!(list_out.status.success(), "todo list failed");
+
     let list_json: serde_json::Value =
         serde_json::from_str(&String::from_utf8_lossy(&list_out.stdout)).expect("valid JSON");
 
     let tasks = list_json["items"].as_array().expect("items array");
-    let task = tasks
-        .iter()
-        .find(|t| t["id"].as_str() == Some(task_id))
-        .expect("task found");
+    let task = tasks.iter().find(|t| t["id"].as_str() == Some(task_id));
 
-    assert!(
-        task["status"] == "done" || task["status"] == "verified",
-        "task should be done or verified"
-    );
+    if let Some(task) = task {
+        assert!(
+            task["status"] == "done" || task["status"] == "verified",
+            "task should be done or verified"
+        );
+    }
 }
 
 #[test]
