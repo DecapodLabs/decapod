@@ -140,6 +140,14 @@ fn run_release_check(root: &Path) -> std::process::Output {
         .expect("run release check")
 }
 
+fn run_release_lineage_sync(root: &Path) -> std::process::Output {
+    Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .current_dir(root)
+        .args(["release", "lineage-sync"])
+        .output()
+        .expect("run release lineage-sync")
+}
+
 #[test]
 fn release_check_blocks_schema_changes_without_changelog_note() {
     let (_tmp, root) = setup_release_fixture("- housekeeping only");
@@ -281,5 +289,58 @@ fn release_check_fails_closed_for_invalid_release_risk_tier_env() {
         stderr.contains("invalid DECAPOD_RELEASE_RISK_TIER"),
         "release check should fail closed with typed error for invalid risk tier env; stderr:\n{}",
         stderr
+    );
+}
+
+#[test]
+fn release_lineage_sync_stamps_all_provenance_manifests() {
+    let (_tmp, root) = setup_release_fixture("- schema: bump todo shape for v2");
+    let proof_path = root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    write(
+        &proof_path,
+        "{\n  \"schema_version\": \"1.0.0\",\n  \"kind\": \"proof_manifest\",\n  \"proofs\": [{\"command\": \"decapod validate\", \"result\": \"pass\"}],\n  \"environment\": {\"os\": \"linux\", \"rust\": \"stable\"}\n}\n",
+    );
+    let output = run_release_lineage_sync(&root);
+    assert!(
+        output.status.success(),
+        "lineage sync should pass.\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("\"cmd\":\"release.lineage_sync\""),
+        "lineage sync should emit envelope"
+    );
+
+    let artifact: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(
+            root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json"),
+        )
+        .expect("read artifact manifest"),
+    )
+    .expect("parse artifact");
+    let proof: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&proof_path).expect("read proof manifest"))
+            .expect("parse proof");
+    let intent: serde_json::Value = serde_json::from_str(
+        &fs::read_to_string(
+            root.join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json"),
+        )
+        .expect("read intent manifest"),
+    )
+    .expect("parse intent");
+
+    assert!(
+        proof.get("policy_lineage").is_some(),
+        "proof should be stamped"
+    );
+    assert_eq!(
+        artifact["policy_lineage"], proof["policy_lineage"],
+        "artifact/proof lineage should match"
+    );
+    assert_eq!(
+        artifact["policy_lineage"], intent["policy_lineage"],
+        "artifact/intent lineage should match"
     );
 }

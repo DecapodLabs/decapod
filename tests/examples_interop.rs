@@ -76,3 +76,21 @@ fn verification_guide_pins_jit_capsule_flow() {
         "verification guide must include fail-closed policy denial marker"
     );
 }
+
+#[test]
+fn release_lineage_sync_surface_exists_and_runs() {
+    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["release", "lineage-sync"])
+        .output()
+        .expect("run release lineage sync");
+    assert!(
+        output.status.success(),
+        "release lineage sync failed:\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stdout).contains("\"cmd\":\"release.lineage_sync\""),
+        "release lineage sync should emit ok envelope"
+    );
+}

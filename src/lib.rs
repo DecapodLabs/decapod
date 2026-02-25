@@ -641,6 +641,8 @@ enum ReleaseCommand {
     Check,
     /// Emit deterministic repository inventory JSON for CI artifacts
     Inventory,
+    /// Normalize and stamp deterministic policy lineage across provenance manifests
+    LineageSync,
 }
 
 // ===== Main Command Enum =====
@@ -2915,6 +2917,7 @@ fn run_release_command(cli: ReleaseCli, project_root: &Path) -> Result<(), error
     match cli.command {
         ReleaseCommand::Check => run_release_check(project_root),
         ReleaseCommand::Inventory => run_release_inventory(project_root),
+        ReleaseCommand::LineageSync => run_release_lineage_sync(project_root),
     }
 }
 
@@ -2977,19 +2980,19 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
                 .to_string(),
         );
     }
-    if artifact_manifest.exists()
-        && proof_manifest.exists()
-        && intent_convergence_manifest.exists()
-        && let Err(e) = stamp_release_policy_lineage(
+    if artifact_manifest.exists() && proof_manifest.exists() && intent_convergence_manifest.exists()
+    {
+        match stamp_release_policy_lineage(
             project_root,
             [
                 &artifact_manifest,
                 &proof_manifest,
                 &intent_convergence_manifest,
             ],
-        )
-    {
-        failures.push(format!("provenance lineage stamping failed: {}", e));
+        ) {
+            Ok(lineage) => lineage_records.push(("lineage stamp baseline".to_string(), lineage)),
+            Err(e) => failures.push(format!("provenance lineage stamping failed: {}", e)),
+        }
     }
     if artifact_manifest.exists() {
         match validate_artifact_manifest(project_root, &artifact_manifest) {
@@ -3088,6 +3091,61 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
             "status": "ok",
             "artifact": ".decapod/generated/artifacts/inventory/repo_inventory.json",
             "summary": inventory["totals"]
+        })
+    );
+    Ok(())
+}
+
+fn run_release_lineage_sync(project_root: &Path) -> Result<(), error::DecapodError> {
+    let artifact_manifest =
+        project_root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+    let proof_manifest =
+        project_root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    let intent_convergence_manifest = project_root
+        .join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
+
+    let mut missing = Vec::new();
+    if !artifact_manifest.exists() {
+        missing.push(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+    }
+    if !proof_manifest.exists() {
+        missing.push(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    }
+    if !intent_convergence_manifest.exists() {
+        missing.push(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
+    }
+    if !missing.is_empty() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "release.lineage_sync missing required provenance manifests: {}",
+            missing.join(", ")
+        )));
+    }
+
+    let lineage = stamp_release_policy_lineage(
+        project_root,
+        [
+            &artifact_manifest,
+            &proof_manifest,
+            &intent_convergence_manifest,
+        ],
+    )?;
+    println!(
+        "{}",
+        serde_json::json!({
+            "cmd": "release.lineage_sync",
+            "status": "ok",
+            "policy_lineage": {
+                "policy_hash": lineage.policy_hash,
+                "policy_revision": lineage.policy_revision,
+                "risk_tier": lineage.risk_tier,
+                "capsule_path": lineage.capsule_path,
+                "capsule_hash": lineage.capsule_hash
+            },
+            "manifests": [
+                ".decapod/generated/artifacts/provenance/artifact_manifest.json",
+                ".decapod/generated/artifacts/provenance/proof_manifest.json",
+                ".decapod/generated/artifacts/provenance/intent_convergence_checklist.json"
+            ]
         })
     );
     Ok(())
