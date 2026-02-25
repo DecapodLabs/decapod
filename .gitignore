@@ -45,6 +45,8 @@ dev/
 !.decapod/generated/Dockerfile
 !.decapod/generated/context/
 !.decapod/generated/context/*.json
+!.decapod/generated/policy/
+!.decapod/generated/policy/context_capsule_policy.json
 !.decapod/generated/artifacts/
 !.decapod/generated/artifacts/provenance/
 !.decapod/generated/artifacts/provenance/*.json

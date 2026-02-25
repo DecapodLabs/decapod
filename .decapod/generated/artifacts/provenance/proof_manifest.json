@@ -1,14 +1,21 @@
 {
-  "schema_version": "1.0.0",
+  "environment": {
+    "os": "linux",
+    "rust": "stable"
+  },
   "kind": "proof_manifest",
+  "policy_lineage": {
+    "capsule_hash": "b6f1500dfc743ac3a104c905a041bd165ea8cf6c31efd152a2ebcef3da217934",
+    "capsule_path": ".decapod/generated/context/R_releasecheck.json",
+    "policy_hash": "b4a75518f1afed0870b27325b691d13360d99133868df1a7ef3feacc15f4f30e",
+    "policy_revision": "policy.release@v1",
+    "risk_tier": "medium"
+  },
   "proofs": [
     {
       "command": "decapod validate",
       "result": "pass"
     }
   ],
-  "environment": {
-    "os": "linux",
-    "rust": "stable"
-  }
+  "schema_version": "1.0.0"
 }

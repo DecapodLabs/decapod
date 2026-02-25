@@ -1,23 +1,30 @@
 {
-  "schema_version": "1.0.0",
-  "kind": "artifact_manifest",
-  "links": {
-    "intent": "INTENT.md",
-    "spec": "SPEC.md",
-    "diff": "git",
-    "tests": [
-      "cargo test --test validate_termination",
-      "cargo test --test rpc_golden_vectors",
-      "cargo test --test examples_interop"
-    ],
-    "artifacts": [
-      "README.md"
-    ]
-  },
   "artifacts": [
     {
       "path": "README.md",
       "sha256": "fb05033fec85ee6e57f6e1dd21c2e81eaff3e33d4a3bef30408a133de008ce2f"
     }
-  ]
+  ],
+  "kind": "artifact_manifest",
+  "links": {
+    "artifacts": [
+      "README.md"
+    ],
+    "diff": "git",
+    "intent": "INTENT.md",
+    "spec": "SPEC.md",
+    "tests": [
+      "cargo test --test validate_termination",
+      "cargo test --test rpc_golden_vectors",
+      "cargo test --test examples_interop"
+    ]
+  },
+  "policy_lineage": {
+    "capsule_hash": "b6f1500dfc743ac3a104c905a041bd165ea8cf6c31efd152a2ebcef3da217934",
+    "capsule_path": ".decapod/generated/context/R_releasecheck.json",
+    "policy_hash": "b4a75518f1afed0870b27325b691d13360d99133868df1a7ef3feacc15f4f30e",
+    "policy_revision": "policy.release@v1",
+    "risk_tier": "medium"
+  },
+  "schema_version": "1.0.0"
 }

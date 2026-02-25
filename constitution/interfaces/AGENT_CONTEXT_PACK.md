@@ -64,6 +64,36 @@ Boundaries:
 - Capsule sources MUST resolve from canonical embedded constitution surfaces.
 - Capsule queries MUST NOT infer hidden runtime state outside repo-scoped artifacts and embedded docs.
 
+## 2.2 Policy-Bound Capsule Issuance
+
+`(Truth: SPEC)` Capsule issuance MUST be policy-bound and fail closed at issuance time (claim: `claim.context.capsule.policy_enforced`).
+
+Policy source precedence:
+1. `.decapod/policy/context_capsule_policy.json` (operator override)
+2. `.decapod/generated/policy/context_capsule_policy.json` (repo-native generated contract)
+
+Policy contract requirements:
+- `schema_version`
+- `policy_version`
+- `repo_revision_binding` (`HEAD` for v1)
+- `default_risk_tier`
+- `tiers.<risk_tier>.allowed_scopes`
+- `tiers.<risk_tier>.max_limit`
+- `tiers.<risk_tier>.allow_write`
+
+Risk-tier behavior:
+- Requested scope must be in the allowed scope set for the effective risk tier.
+- Requested limit is clamped to `max_limit` for that tier.
+- `write=true` is denied when `allow_write=false`.
+
+Typed failure taxonomy (minimum):
+- `CAPSULE_POLICY_MISSING`
+- `CAPSULE_POLICY_INVALID`
+- `CAPSULE_RISK_TIER_UNKNOWN`
+- `CAPSULE_SCOPE_DENIED`
+- `CAPSULE_WRITE_DENIED`
+- `CAPSULE_POLICY_REPO_REVISION_UNRESOLVED`
+
 ---
 
 ## 3. Mutation Authority

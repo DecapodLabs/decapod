@@ -151,12 +151,126 @@ fn validate_fails_on_verified_workunit_missing_passing_proofs() {
 }
 
 #[test]
+fn validate_fails_on_verified_workunit_missing_capsule_policy_lineage() {
+    let (_tmp, dir, password) = setup_repo();
+    let workunits = dir.join(".decapod").join("governance").join("workunits");
+    fs::create_dir_all(&workunits).expect("create workunits dir");
+    fs::write(
+        workunits.join("R_BAD_NO_CAPSULE.json"),
+        r#"{
+  "task_id": "R_BAD_NO_CAPSULE",
+  "intent_ref": "intent://missing-capsule",
+  "spec_refs": [],
+  "state_refs": [],
+  "proof_plan": ["validate_passes"],
+  "proof_results": [
+    {"gate":"validate_passes","status":"pass","artifact_ref":null}
+  ],
+  "status": "VERIFIED"
+}"#,
+    )
+    .expect("write verified workunit missing capsule");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !validate.status.success(),
+        "validate should fail for VERIFIED workunit without capsule lineage"
+    );
+    let stderr = combined_output(&validate);
+    assert!(
+        stderr.contains("WORKUNIT_CAPSULE_POLICY_LI"),
+        "expected missing capsule lineage marker in stderr, got:\n{}",
+        stderr
+    );
+}
+
+#[test]
+fn validate_fails_on_verified_workunit_capsule_without_state_ref_binding() {
+    let (_tmp, dir, password) = setup_repo();
+    let workunits = dir.join(".decapod").join("governance").join("workunits");
+    let capsules = dir.join(".decapod").join("generated").join("context");
+    fs::create_dir_all(&workunits).expect("create workunits dir");
+    fs::create_dir_all(&capsules).expect("create context dir");
+
+    let mut capsule = DeterministicContextCapsule {
+        schema_version: "1.1.0".to_string(),
+        topic: "lineage".to_string(),
+        scope: "interfaces".to_string(),
+        task_id: Some("R_BAD_STATE_REF".to_string()),
+        workunit_id: None,
+        sources: vec![ContextCapsuleSource {
+            path: "interfaces/PLAN_GOVERNED_EXECUTION.md".to_string(),
+            section: "Contract".to_string(),
+        }],
+        snippets: vec![ContextCapsuleSnippet {
+            source_path: "interfaces/PLAN_GOVERNED_EXECUTION.md".to_string(),
+            text: "promotion path is proof-gated".to_string(),
+        }],
+        policy: Default::default(),
+        capsule_hash: String::new(),
+    };
+    capsule = capsule
+        .with_recomputed_hash()
+        .expect("recompute capsule hash");
+    fs::write(
+        capsules.join("R_BAD_STATE_REF.json"),
+        serde_json::to_vec_pretty(&capsule).expect("serialize capsule"),
+    )
+    .expect("write capsule");
+
+    fs::write(
+        workunits.join("R_BAD_STATE_REF.json"),
+        r#"{
+  "task_id": "R_BAD_STATE_REF",
+  "intent_ref": "intent://missing-state-ref",
+  "spec_refs": [],
+  "state_refs": [],
+  "proof_plan": ["validate_passes"],
+  "proof_results": [
+    {"gate":"validate_passes","status":"pass","artifact_ref":null}
+  ],
+  "status": "VERIFIED"
+}"#,
+    )
+    .expect("write verified workunit missing state_ref binding");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !validate.status.success(),
+        "validate should fail for VERIFIED workunit without capsule state_ref binding"
+    );
+    let stderr = combined_output(&validate);
+    assert!(
+        stderr.contains("WORKUNIT_CAPSULE_POLICY_LI"),
+        "expected missing capsule state_ref marker in stderr, got:\n{}",
+        stderr
+    );
+}
+
+#[test]
 fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
     let (_tmp, dir, password) = setup_repo();
     let capsules = dir.join(".decapod").join("generated").join("context");
     fs::create_dir_all(&capsules).expect("create capsules dir");
 
     let mut capsule = DeterministicContextCapsule {
+        schema_version: "1.1.0".to_string(),
         topic: "phase0".to_string(),
         scope: "interfaces".to_string(),
         task_id: Some("R_1".to_string()),
@@ -169,6 +283,7 @@ fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
             source_path: "interfaces/CLAIMS.md".to_string(),
             text: "claim.context.capsule.deterministic".to_string(),
         }],
+        policy: Default::default(),
         capsule_hash: String::new(),
     };
     capsule.capsule_hash = "wrong_hash".to_string();
@@ -332,6 +447,54 @@ fn validate_fails_when_non_whitelisted_generated_file_is_tracked() {
     assert!(
         stderr.contains("Tracked non-whitelisted generated artifacts found"),
         "expected generated whitelist tracked-file failure, got:\n{}",
+        stderr
+    );
+}
+
+#[test]
+fn validate_fails_on_invalid_context_capsule_policy_contract_if_present() {
+    let (_tmp, dir, password) = setup_repo();
+    let policy_path = dir
+        .join(".decapod")
+        .join("generated")
+        .join("policy")
+        .join("context_capsule_policy.json");
+    let invalid = serde_json::json!({
+        "schema_version": "1.0.0",
+        "policy_version": "jit-capsule-policy-v1",
+        "repo_revision_binding": "HEAD",
+        "default_risk_tier": "medium",
+        "tiers": {
+            "medium": {
+                "allowed_scopes": [],
+                "max_limit": 6,
+                "allow_write": true
+            }
+        }
+    });
+    fs::write(
+        &policy_path,
+        serde_json::to_vec_pretty(&invalid).expect("serialize invalid policy"),
+    )
+    .expect("write invalid policy");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !validate.status.success(),
+        "validate should fail for invalid capsule policy contract"
+    );
+    let stderr = combined_output(&validate);
+    assert!(
+        stderr.contains("has no allowed_scopes"),
+        "expected context capsule policy gate failure, got:\n{}",
         stderr
     );
 }

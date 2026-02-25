@@ -6,6 +6,7 @@
 pub mod assets;
 pub mod assurance;
 pub mod broker;
+pub mod capsule_policy;
 pub mod context_capsule;
 pub mod coplayer;
 pub mod db;
