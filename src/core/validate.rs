@@ -2522,10 +2522,11 @@ fn validate_lineage_hard_gate(
 
     // Quick check: if todo events is empty or very small, skip
     if let Ok(metadata) = fs::metadata(&todo_events)
-        && metadata.len() < 100 {
-            skip("todo.events.jsonl too small; skipping", ctx);
-            return Ok(());
-        }
+        && metadata.len() < 100
+    {
+        skip("todo.events.jsonl too small; skipping", ctx);
+        return Ok(());
+    }
 
     let content = match fs::read_to_string(&todo_events) {
         Ok(c) => c,
@@ -2808,15 +2809,15 @@ fn validate_control_plane_contract(
         if let Ok(output) = Command::new("timeout")
             .args(["3s", "lsof", "+D", data_dir.to_string_lossy().as_ref()])
             .output()
-            && output.status.success() {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                for line in stdout.lines() {
-                    if line.contains("sqlite") && !line.contains("decapod") {
-                        violations
-                            .push(format!("External SQLite process accessing store: {}", line));
-                    }
+            && output.status.success()
+        {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            for line in stdout.lines() {
+                if line.contains("sqlite") && !line.contains("decapod") {
+                    violations.push(format!("External SQLite process accessing store: {}", line));
                 }
             }
+        }
     }
 
     if violations.is_empty() {
@@ -3312,39 +3313,40 @@ fn validate_git_protected_branch(
             .output();
 
         if let Ok(out) = ahead_behind
-            && out.status.success() {
-                let counts = String::from_utf8_lossy(&out.stdout);
-                let parts: Vec<&str> = counts.split_whitespace().collect();
-                if parts.len() >= 2 {
-                    let ahead: u32 = parts[0].parse().unwrap_or(0);
-                    if ahead > 0 {
-                        let output = std::process::Command::new("git")
-                            .args(["rev-list", "--format=%s", "-n1", "HEAD"])
-                            .current_dir(repo_root)
-                            .output();
-                        let commit_msg = output
-                            .ok()
-                            .and_then(|o| {
-                                if o.status.success() {
-                                    Some(String::from_utf8_lossy(&o.stdout).trim().to_string())
-                                } else {
-                                    None
-                                }
-                            })
-                            .unwrap_or_else(|| "unknown".to_string());
+            && out.status.success()
+        {
+            let counts = String::from_utf8_lossy(&out.stdout);
+            let parts: Vec<&str> = counts.split_whitespace().collect();
+            if parts.len() >= 2 {
+                let ahead: u32 = parts[0].parse().unwrap_or(0);
+                if ahead > 0 {
+                    let output = std::process::Command::new("git")
+                        .args(["rev-list", "--format=%s", "-n1", "HEAD"])
+                        .current_dir(repo_root)
+                        .output();
+                    let commit_msg = output
+                        .ok()
+                        .and_then(|o| {
+                            if o.status.success() {
+                                Some(String::from_utf8_lossy(&o.stdout).trim().to_string())
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap_or_else(|| "unknown".to_string());
 
-                        fail(
-                            &format!(
-                                "Protected branch has {} unpushed commit(s) - direct push to protected branch detected (commit: {})",
-                                ahead, commit_msg
-                            ),
-                            ctx,
-                        );
-                    } else {
-                        pass("No unpushed commits to protected branches", ctx);
-                    }
+                    fail(
+                        &format!(
+                            "Protected branch has {} unpushed commit(s) - direct push to protected branch detected (commit: {})",
+                            ahead, commit_msg
+                        ),
+                        ctx,
+                    );
+                } else {
+                    pass("No unpushed commits to protected branches", ctx);
                 }
             }
+        }
     }
 
     Ok(())
@@ -3692,29 +3694,31 @@ fn validate_state_commit_gate(
 
         if let Ok(actual_hash) =
             std::fs::read_to_string(golden_v1_dir.join("scope_record_hash.txt"))
-            && actual_hash.trim() != expected_scope_hash {
-                fail(
-                    &format!(
-                        "STATE_COMMIT v1 scope_record_hash changed! Expected {}, got {}. This requires a SPEC_VERSION bump to v2.",
-                        expected_scope_hash,
-                        actual_hash.trim()
-                    ),
-                    ctx,
-                );
-            }
+            && actual_hash.trim() != expected_scope_hash
+        {
+            fail(
+                &format!(
+                    "STATE_COMMIT v1 scope_record_hash changed! Expected {}, got {}. This requires a SPEC_VERSION bump to v2.",
+                    expected_scope_hash,
+                    actual_hash.trim()
+                ),
+                ctx,
+            );
+        }
 
         if let Ok(actual_root) =
             std::fs::read_to_string(golden_v1_dir.join("state_commit_root.txt"))
-            && actual_root.trim() != expected_root {
-                fail(
-                    &format!(
-                        "STATE_COMMIT v1 state_commit_root changed! Expected {}, got {}. This requires a SPEC_VERSION bump to v2.",
-                        expected_root,
-                        actual_root.trim()
-                    ),
-                    ctx,
-                );
-            }
+            && actual_root.trim() != expected_root
+        {
+            fail(
+                &format!(
+                    "STATE_COMMIT v1 state_commit_root changed! Expected {}, got {}. This requires a SPEC_VERSION bump to v2.",
+                    expected_root,
+                    actual_root.trim()
+                ),
+                ctx,
+            );
+        }
     }
 
     Ok(())
@@ -3892,28 +3896,29 @@ pub fn evaluate_mandates(
             "gate.worktree.no_master" => {
                 let status = crate::core::workspace::get_workspace_status(project_root);
                 if let Ok(s) = status
-                    && s.git.is_protected {
-                        blockers.push(Blocker {
-                            kind: BlockerKind::ProtectedBranch,
-                            message: format!("Mandate Violation: {}", mandate.fragment.title),
-                            resolve_hint:
-                                "Run `decapod workspace ensure` to create a working branch."
-                                    .to_string(),
-                        });
-                    }
+                    && s.git.is_protected
+                {
+                    blockers.push(Blocker {
+                        kind: BlockerKind::ProtectedBranch,
+                        message: format!("Mandate Violation: {}", mandate.fragment.title),
+                        resolve_hint: "Run `decapod workspace ensure` to create a working branch."
+                            .to_string(),
+                    });
+                }
             }
             "gate.worktree.isolated" => {
                 let status = crate::core::workspace::get_workspace_status(project_root);
                 if let Ok(s) = status
-                    && !s.git.in_worktree {
-                        blockers.push(Blocker {
-                            kind: BlockerKind::WorkspaceRequired,
-                            message: format!("Mandate Violation: {}", mandate.fragment.title),
-                            resolve_hint:
-                                "Run `decapod workspace ensure` to create an isolated git worktree."
-                                    .to_string(),
-                        });
-                    }
+                    && !s.git.in_worktree
+                {
+                    blockers.push(Blocker {
+                        kind: BlockerKind::WorkspaceRequired,
+                        message: format!("Mandate Violation: {}", mandate.fragment.title),
+                        resolve_hint:
+                            "Run `decapod workspace ensure` to create an isolated git worktree."
+                                .to_string(),
+                    });
+                }
             }
             "gate.session.active" => {
                 // This is usually handled by the RPC kernel session check,

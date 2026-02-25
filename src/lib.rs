@@ -2020,15 +2020,15 @@ pub fn run() -> Result<(), error::DecapodError> {
             if should_auto_clock_in(&cli.command)
                 && let Err(e) =
                     retry_transient_sqlite(|| todo::clock_in_agent_presence(&project_store), 4)
-                {
-                    if is_transient_sqlite_contention_error(&e) {
-                        eprintln!(
-                            "warn: presence clock-in skipped due transient sqlite contention: {e}"
-                        );
-                    } else {
-                        return Err(e);
-                    }
+            {
+                if is_transient_sqlite_contention_error(&e) {
+                    eprintln!(
+                        "warn: presence clock-in skipped due transient sqlite contention: {e}"
+                    );
+                } else {
+                    return Err(e);
                 }
+            }
 
             match cli.command {
                 Command::Activate => {
@@ -2272,9 +2272,10 @@ fn branch_contains_todo_ticket_id(branch: &str) -> bool {
         return true;
     }
     if let Ok(hash_re) = regex::Regex::new(r"todo-[a-z0-9]{6}(\b|-|$)")
-        && hash_re.is_match(&branch) {
-            return true;
-        }
+        && hash_re.is_match(&branch)
+    {
+        return true;
+    }
     let chars: Vec<char> = branch.chars().collect();
     if chars.len() < 21 {
         return false;
@@ -5609,12 +5610,13 @@ fn run_state_commit_command(
 
             // Try to extract version and SHAs from the CBOR structure
             if let Some(version_pos) = content.find("state_commit.")
-                && let Some(end_pos) = content[version_pos..].find('\0') {
-                    println!(
-                        "  algo_version: {}",
-                        &content[version_pos..version_pos + end_pos]
-                    );
-                }
+                && let Some(end_pos) = content[version_pos..].find('\0')
+            {
+                println!(
+                    "  algo_version: {}",
+                    &content[version_pos..version_pos + end_pos]
+                );
+            }
 
             // Count entries (looking for patterns in the binary data)
             let entry_count = content.matches("kind=").count();
@@ -5723,28 +5725,29 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
                     None,
                     None,
                     None,
-                ) {
-                    tasks.retain(|t| t.assigned_to == agent_id);
-                    if tasks.is_empty() {
-                        allowed_ops.insert(
-                            0,
-                            AllowedOp {
-                                op: "todo.add".to_string(),
-                                reason: "MANDATORY: Create a task for your work".to_string(),
-                                required_params: vec!["title".to_string()],
-                            },
-                        );
-                    } else if tasks.iter().any(|t| t.assigned_to.is_empty()) {
-                        allowed_ops.insert(
-                            0,
-                            AllowedOp {
-                                op: "todo.claim".to_string(),
-                                reason: "MANDATORY: Claim your assigned task".to_string(),
-                                required_params: vec!["id".to_string()],
-                            },
-                        );
-                    }
+                )
+            {
+                tasks.retain(|t| t.assigned_to == agent_id);
+                if tasks.is_empty() {
+                    allowed_ops.insert(
+                        0,
+                        AllowedOp {
+                            op: "todo.add".to_string(),
+                            reason: "MANDATORY: Create a task for your work".to_string(),
+                            required_params: vec!["title".to_string()],
+                        },
+                    );
+                } else if tasks.iter().any(|t| t.assigned_to.is_empty()) {
+                    allowed_ops.insert(
+                        0,
+                        AllowedOp {
+                            op: "todo.claim".to_string(),
+                            reason: "MANDATORY: Claim your assigned task".to_string(),
+                            required_params: vec!["id".to_string()],
+                        },
+                    );
                 }
+            }
 
             let context_capsule = if workspace_status.can_work {
                 Some(ContextCapsule {
@@ -5902,14 +5905,15 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 
             // Deterministic relevance mapping
             if let Some(o) = op
-                && let Some(doc_ref) = bindings.ops.get(o) {
-                    let parts: Vec<&str> = doc_ref.split('#').collect();
-                    let path = parts[0];
-                    let anchor = parts.get(1).copied();
-                    if let Some(f) = docs::get_fragment(project_root, path, anchor) {
-                        fragments.push(f);
-                    }
+                && let Some(doc_ref) = bindings.ops.get(o)
+            {
+                let parts: Vec<&str> = doc_ref.split('#').collect();
+                let path = parts[0];
+                let anchor = parts.get(1).copied();
+                if let Some(f) = docs::get_fragment(project_root, path, anchor) {
+                    fragments.push(f);
                 }
+            }
 
             if let Some(paths) = touched_paths {
                 for p in paths.iter().filter_map(|v| v.as_str()) {

@@ -325,28 +325,30 @@ impl AssuranceEngine {
         let repeated_gate = interlock_counts.into_iter().max_by_key(|(_, c)| *c);
 
         if let Some((path, count)) = repeated_file
-            && count >= 3 {
-                return Ok(Some(LoopSignal {
-                    code: "file_edit_loop".to_string(),
-                    message: format!("Detected repeated edits on '{}'", path),
-                    suggested_redirect_ops: vec![
-                        "assurance.evaluate".to_string(),
-                        "scaffold.next_question".to_string(),
-                    ],
-                }));
-            }
+            && count >= 3
+        {
+            return Ok(Some(LoopSignal {
+                code: "file_edit_loop".to_string(),
+                message: format!("Detected repeated edits on '{}'", path),
+                suggested_redirect_ops: vec![
+                    "assurance.evaluate".to_string(),
+                    "scaffold.next_question".to_string(),
+                ],
+            }));
+        }
 
         if let Some((code, count)) = repeated_gate
-            && count >= 3 {
-                return Ok(Some(LoopSignal {
-                    code: "failing_gate_loop".to_string(),
-                    message: format!("Detected repeated interlock '{}'", code),
-                    suggested_redirect_ops: vec![
-                        "mentor.obligations".to_string(),
-                        "assurance.evaluate".to_string(),
-                    ],
-                }));
-            }
+            && count >= 3
+        {
+            return Ok(Some(LoopSignal {
+                code: "failing_gate_loop".to_string(),
+                message: format!("Detected repeated interlock '{}'", code),
+                suggested_redirect_ops: vec![
+                    "mentor.obligations".to_string(),
+                    "assurance.evaluate".to_string(),
+                ],
+            }));
+        }
 
         Ok(None)
     }

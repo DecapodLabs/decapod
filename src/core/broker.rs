@@ -252,9 +252,10 @@ impl DbBroker {
         let cache = broker_read_cache();
         let mut map = cache.lock().ok()?;
         if let Some(entry) = map.get(&compound)
-            && entry.expires_at > Instant::now() {
-                return Some(entry.value.clone());
-            }
+            && entry.expires_at > Instant::now()
+        {
+            return Some(entry.value.clone());
+        }
         map.remove(&compound);
         None
     }

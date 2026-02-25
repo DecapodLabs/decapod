@@ -254,16 +254,18 @@ fn render_transcript(
 
     for (name, path) in &event_files {
         if path.exists()
-            && let Ok(events) = read_events(path, 10000) {
-                for mut ev in events {
-                    if let Some(filter) = actor_filter
-                        && ev.actor.as_deref() != Some(filter) {
-                            continue;
-                        }
-                    ev.source = name.to_string();
-                    all_events.push(ev);
+            && let Ok(events) = read_events(path, 10000)
+        {
+            for mut ev in events {
+                if let Some(filter) = actor_filter
+                    && ev.actor.as_deref() != Some(filter)
+                {
+                    continue;
                 }
+                ev.source = name.to_string();
+                all_events.push(ev);
             }
+        }
     }
 
     all_events.sort_by(|a, b| a.ts.cmp(&b.ts));
