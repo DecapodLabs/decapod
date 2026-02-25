@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.0](https://github.com/DecapodLabs/decapod/compare/v0.43.1...v0.44.0) - 2026-02-25
+
+### Added
+
+- move broker sockets to data and add noninteractive spec seeds
+- add release lineage-sync command
+- auto-stamp release provenance policy lineage
+- require lineage consistency across release manifests
+- enforce release provenance policy lineage
+- auto-bind written capsules into workunit state refs
+- require workunit state_ref binding for capsule lineage
+- enforce capsule policy lineage at workunit promotion gate
+- policy-bound deterministic context capsule issuance
+
+### Fixed
+
+- reconcile merged capsule schema and lineage artifacts
+
+### Other
+
+- run cargo fmt after rebase
+- fail release check on lineage capsule drift
+- harden capsule verification and RPC fail-closed coverage
+- pin JIT capsule policy verification flow
+
 ## [0.43.1](https://github.com/DecapodLabs/decapod/compare/v0.43.0...v0.43.1) - 2026-02-25
 
 ### Added
