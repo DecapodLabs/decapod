@@ -1,4 +1,0 @@
-{"date":"2026-02-19","commit":"32e584e","source":"constitution/interfaces/CLAIMS.md","enforced_claims":13,"enforced_with_gate":13,"kcr":1.0,"notes":"Baseline: all enforced claims have gate mappings"}
-{"date":"2026-02-21","commit":"2943faa","source":"constitution/interfaces/CLAIMS.md","enforced_claims":14,"enforced_with_gate":14,"kcr":1.0,"notes":"Added validate bounded-termination enforced claim with gate mapping"}
-{"date":"2026-02-21","commit":"fe80f22","source":"constitution/interfaces/CLAIMS.md","enforced_claims":19,"enforced_with_gate":19,"kcr":1.0,"notes":"Added 5 LCM/Map enforced claims: all have gate mappings"}
-{"date":"2026-02-22","commit":"358a62b","source":"constitution/interfaces/CLAIMS.md","enforced_claims":20,"enforced_with_gate":20,"kcr":1.0,"notes":"Added knowledge provenance claim (gate exists)"}

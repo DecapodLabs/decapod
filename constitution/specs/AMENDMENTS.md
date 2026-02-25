@@ -154,7 +154,7 @@ Each entry MUST include:
   - `interfaces/CONTROL_PLANE.md` (added claim-before-work requirement in golden rules and standard sequence)
   - `interfaces/CLAIMS.md` (registered `claim.todo.claim_before_work`)
   - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md` (entrypoint reminder)
-  - `templates/AGENTS.md`, `templates/CLAUDE.md`, `templates/GEMINI.md`, `templates/CODEX.md` (template-source reminder)
+  - Templates now embedded in Rust via `template_agents()`, `template_named_agent()` - no longer in `templates/`
 - Summary:
   - Codified a task-claim gate: agents must claim TODO work before substantive implementation.
 - Claims added/changed:
@@ -170,7 +170,7 @@ Each entry MUST include:
   - `specs/GIT.md` (added binding container-workspace execution requirement)
   - `interfaces/CLAIMS.md` (registered `claim.git.container_workspace_required`)
   - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md` (entrypoint mandate)
-  - `templates/AGENTS.md`, `templates/CLAUDE.md`, `templates/GEMINI.md`, `templates/CODEX.md` (template-source mandate)
+  - Templates now embedded in Rust
 - Summary:
   - Established a binding rule that git-tracked implementation work must occur in Docker-isolated git workspaces.
 - Claims added/changed:
@@ -187,7 +187,7 @@ Each entry MUST include:
   - `interfaces/CLAIMS.md` (registered `claim.git.container_runtime_preflight_required`)
   - `plugins/CONTAINER.md` (documented runtime-access preflight behavior)
   - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md` (entrypoint mandate)
-  - `templates/AGENTS.md`, `templates/CLAUDE.md`, `templates/GEMINI.md`, `templates/CODEX.md` (template-source mandate)
+  - Templates now embedded in Rust
 - Summary:
   - Codified and implemented runtime-access preflight so container workspace runs fail fast with actionable elevated-permission guidance instead of ambiguous downstream git errors.
 - Claims added/changed:
@@ -204,7 +204,7 @@ Each entry MUST include:
   - `interfaces/CONTROL_PLANE.md` (added control-plane session authorization rule)
   - `interfaces/CLAIMS.md` (registered `claim.session.agent_password_required`)
   - `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md` (entrypoint start-sequence credential export requirement)
-  - `templates/AGENTS.md`, `templates/CLAUDE.md`, `templates/GEMINI.md`, `templates/CODEX.md` (template-source requirement)
+  - Templates now embedded in Rust
 - Summary:
   - Introduced per-agent, ephemeral password-bound sessions and stale-session cleanup semantics that revoke active assignments when sessions expire.
 - Claims added/changed:
