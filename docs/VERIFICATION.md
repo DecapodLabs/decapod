@@ -9,6 +9,7 @@ This guide defines how to verify Decapod behavior using reproducible commands, t
 | Validate must terminate under lock contention with a typed failure marker | `tests/validate_termination.rs` | `cargo test --all-features --test validate_termination -- --test-threads=1` |
 | RPC envelope compatibility is pinned to golden vectors | `tests/rpc_golden_vectors.rs`, `tests/golden/rpc/v1/*` | `cargo test --all-features --test rpc_golden_vectors -- --test-threads=1` |
 | Enforced claims must map to gates and KCR trend counts | `tests/canonical_evidence_gate.rs` | `cargo test --all-features --test canonical_evidence_gate -- --test-threads=1` |
+| JIT context capsules are deterministic and policy-bound | `tests/context_capsule_cli.rs`, `tests/context_capsule_rpc.rs`, `tests/context_capsule_schema.rs`, `tests/validate_optional_artifact_gates.rs` | `cargo test --test context_capsule_cli --test context_capsule_rpc --test context_capsule_schema --test validate_optional_artifact_gates` |
 | Promotion requires provenance manifests | `src/core/workspace.rs`, `decapod workspace publish` gate | `decapod workspace publish` (fails if manifests missing) |
 
 ## Proof Surfaces
@@ -16,6 +17,7 @@ This guide defines how to verify Decapod behavior using reproducible commands, t
 - RPC contract anchors: `tests/golden/rpc/v1/agent_init.request.json`, `tests/golden/rpc/v1/agent_init.response.json`
 - Validate contention semantics: `tests/validate_termination.rs`
 - Canonical evidence mapping: `tests/canonical_evidence_gate.rs`
+- JIT capsule policy contract: `.decapod/generated/policy/context_capsule_policy.json` (override path: `.decapod/policy/context_capsule_policy.json`)
 - Promotion provenance gate: `.decapod/generated/artifacts/provenance/artifact_manifest.json`, `.decapod/generated/artifacts/provenance/proof_manifest.json`
 
 ## Validate Diagnostics (Safe Mode)
@@ -49,3 +51,18 @@ cargo test --all-features --test rpc_golden_vectors -- --test-threads=1
 cargo test --all-features --test canonical_evidence_gate -- --test-threads=1
 decapod release check
 ```
+
+## 10-Minute JIT Capsule Verification
+
+```bash
+decapod init --force
+decapod session acquire
+decapod govern capsule query --topic "policy bound context" --scope interfaces --risk-tier low --task-id R_demo --write
+decapod govern capsule query --topic "denied scope" --scope plugins --risk-tier low
+decapod validate
+```
+
+Expected:
+- success for interfaces/low query and artifact write at `.decapod/generated/context/R_demo.json`
+- fail-closed denial on plugins/low query (`CAPSULE_SCOPE_DENIED`)
+- policy contract present at `.decapod/generated/policy/context_capsule_policy.json`
