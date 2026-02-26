@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.0](https://github.com/DecapodLabs/decapod/compare/v0.45.0...v0.46.0) - 2026-02-26
+
+### Other
+
+- Merge branch 'master' into agent/codex/test-01kjc4cm11smbmz1
+- ship scaffold-v2 Ferrari project specs surface
+
 ### Added
 
 - schema/interface: expand canonical project specs set to include `SEMANTICS.md`, `OPERATIONS.md`, and `SECURITY.md`
