@@ -1,201 +1,78 @@
 # Validation
 
-## Proof Surfaces (Authoritative)
+## Validation Philosophy
+> Validation is a mandatory release gate: if proof is missing, completion is invalid.
 
-### Validation Decision Tree
-
+## Validation Decision Tree
 ```mermaid
 flowchart TD
-    Start[decapod validate] --> Workspace{git_is_protected?}
-
-    Workspace -->|"true (main/master)"| WFail[FAIL: WORKSPACE_REQUIRED]
-    Workspace -->|"false"| Session{Session active?}
-
-    Session -->|"no session"| SFail[FAIL: SESSION_REQUIRED]
-    Session -->|"yes"| DB{DB available?}
-
-    DB -->|"timeout/contention"| DBFail[FAIL: VALIDATE_TIMEOUT_OR_LOCK]
-    DB -->|"yes"| Gates[Run validation gates]
-
-    Gates --> AllPass{All gates pass?}
-    AllPass -->|"yes"| Receipt[Generate receipt with hash]
-    AllPass -->|"no"| GFail[FAIL: gate details in results]
-
-    Receipt --> Done[exit 0]
-    WFail --> Done
-    SFail --> Done
-    DBFail --> Done
-    GFail --> Done
-
-    style WFail fill:#f99,stroke:#333
-    style SFail fill:#f99,stroke:#333
-    style DBFail fill:#f99,stroke:#333
-    style GFail fill:#f99,stroke:#333
-    style Receipt fill:#9f9,stroke:#333
+  S[Start] --> W{Workspace isolated?}
+  W -->|No| F1[Fail: WORKSPACE_REQUIRED]
+  W -->|Yes| T{Tests pass?}
+  T -->|No| F2[Fail: test gate]
+  T -->|Yes| D{Docs + diagram + changelog updated?}
+  D -->|No| F3[Fail: docs gate]
+  D -->|Yes| V[Run decapod validate]
+  V --> P{Blocking gates pass?}
+  P -->|No| F4[Promotion blocked]
+  P -->|Yes| E[Emit evidence artifacts]
 ```
 
-### Primary Gate: `decapod validate`
-
-```bash
-decapod validate [--store repo|user] [--format json|text] [-v]
+## Promotion Flow
+```mermaid
+flowchart LR
+  Plan --> Implement --> Test --> Validate --> Evidence --> Promote
 ```
 
-**Exit codes**:
-- `0`: All gates passed
-- `non-zero`: At least one gate failed
-
-**Output shape** (JSON):
-```json
-{
-  "gate": "validate",
-  "timestamp": "2024-01-15T10:30:00Z",
-  "results": [
-    { "name": "workspace_isolation", "status": "pass", "detail": "branch: feature/task-123" },
-    { "name": "session_active", "status": "pass", "detail": "session_id: 01ARZ3NDEKTSV4RRFFQ69G5FAV" },
-    { "name": "todo_chain_complete", "status": "fail", "detail": "2 tasks in draft state" }
-  ],
-  "receipt": {
-    "hash": "sha256:...",
-    "touched_paths": [".decapod/data/todos.jsonl"]
-  }
-}
-```
-
-### Required Test Commands
-
-| Command | Purpose | Expected Output |
-|---------|---------|-----------------|
-| `cargo test` | Unit/integration tests | Exit 0 = pass |
-| `cargo build` | Compilation | Exit 0 = pass |
-| `cargo clippy` | Linting | Exit 0 = pass |
-| `cargo fmt --check` | Format check | Exit 0 = pass |
-
-### Integration Test Suite
-
-```bash
-# All integration tests
-cargo test --test '*'
-
-# Specific subsystems
-cargo test --test plugins_todo_tests
-cargo test --test plugins_policy_tests
-cargo test --test core_tests
-```
+## Proof Surfaces
+- `decapod validate`
+- Required test commands:
+- `cargo test`
+- `cargo clippy -- -D warnings`
+- `cargo fmt --check`
+- Required integration/e2e commands:
+- `cargo test --test '*'`
 
 ## Promotion Gates
 
-### Promotion Flow
+## Blocking Gates
+| Gate | Command | Evidence |
+|---|---|---|
+| Workspace/session interlocks | `decapod validate` | validate output |
+| Test suite pass | cargo commands | test logs |
+| Docs + architecture + changelog coverage | repo checks | PR diff |
+| Security critical checks | security scanner set | scanner artifacts |
 
-```mermaid
-flowchart LR
-    subgraph Prepare["Preparation"]
-        A[Agent<br/>starts]
-        I[agent.init]
-        W[workspace.ensure]
-        T[todo.add]
-        C[todo.claim]
-    end
-
-    subgraph Work["Work Phase"]
-        E[Edit files]
-        T1[Run tests]
-    end
-
-    subgraph Validate["Validation Phase"]
-        V[decapod validate]
-        R{Result}
-    end
-
-    subgraph Publish["Publish"]
-        P[workspace.publish]
-        PR[Pull Request]
-    end
-
-    subgraph Gate["Promotion Gate"]
-        G1[Workspace<br/>Isolation]
-        G2[Session<br/>Active]
-        G3[Tests<br/>Pass]
-        G4[Validate<br/>Pass]
-    end
-
-    A --> I --> W --> T --> C
-    C --> E --> T1 --> V
-    V --> R
-    R -->|pass| G1
-    R -->|fail| R
-    
-    G1 --> G2 --> G3 --> G4
-    G4 --> P --> PR
-    
-    style V fill:#f99,stroke:#333
-    style G4 fill:#9f9,stroke:#333
-```
-
-### Blocking Gates (Must Pass)
-
-| Gate | Command | Failure Mode |
-|------|---------|--------------|
-| Workspace isolation | `decapod validate` | `WORKSPACE_REQUIRED` if on main/master |
-| Session active | `decapod session status` | Exit non-zero if no session |
-| Validation pass | `decapod validate` | Exit non-zero with gate details |
-| Required tests | `cargo test` | Exit non-zero on failure |
-
-### Warning Gates (Non-Blocking)
-
-| Gate | Command | Warning Code |
-|------|---------|---------------|
-| Schema drift | `decapod data schema --deterministic` | Schema version mismatch |
-| Knowledge gap | `decapod data knowledge search --query "..."` | No relevant entries |
+## Warning Gates
+| Gate | Trigger | Follow-up SLA |
+|---|---|---|
+| Coverage drift | coverage below target but above floor | 48h |
+| Non-critical performance regression | p95 drift below hard limit | 72h |
+| Non-blocking spec staleness | section drift detected | next task cycle |
 
 ## Evidence Artifacts
-
-### Required for Promotion
-
 | Artifact | Path | Purpose |
-|----------|------|---------|
-| Validation receipt | stdout/stderr of `decapod validate` | Proof of gate pass |
-| Session receipt | `decapod session status --format json` | Agent identity |
-| Worktree state | `decapod workspace status --format json` | Branch isolation |
-
-### Provenance Tracking
-
-All mutations are logged to:
-- `<store>/data/todos.jsonl` - Task events
-- `<store>/data/knowledge.promotions.jsonl` - Knowledge promotions
-- `<store>/data/decisions.jsonl` - Agent decisions
+|---|---|---|
+| Validation receipt | `.decapod/generated/artifacts/provenance/` | gate pass/fail proof |
+| Test output | CI artifacts | reproducible verification |
+| Architecture/docs proof | spec files + changelog | design/runtime traceability |
+| Task completion linkage | todo/workunit records | intent-to-evidence chain |
 
 ## Regression Guardrails
+- Baseline references:
+- Statistical thresholds (if non-deterministic):
+- Rollback criteria:
 
-### Baseline References
+## Bounded Execution
+| Operation | Timeout | Failure Mode |
+|---|---|---|
+| `decapod validate` | 30s | `VALIDATE_TIMEOUT_OR_LOCK` |
+| `cargo test` | CI bounded timeout | non-zero exit |
+| Integration suite | CI bounded timeout | non-zero exit |
 
-```bash
-# Capture baseline
-decapod validate --format json > baseline.json
-
-# Compare against baseline
-diff <(jq -S '.results' baseline.json) <(jq -S '.results' <(decapod validate --format json))
-```
-
-### Bounded Execution
-
-| Operation | Timeout | Failure |
-|-----------|---------|---------|
-| `decapod validate` | 30s default | `VALIDATE_TIMEOUT_OR_LOCK` |
-| `decapod session acquire` | 10s | Session acquisition failure |
-| `decapod workspace ensure` | 60s | Git worktree failure |
-
-### Rollback Criteria
-
-- Validation receipt hash mismatch → reject promotion
-- Session not active → reject promotion  
-- Operating on protected branch (main/master) → reject
-
-## Typed Error Codes
-
-| Code | Trigger | Remediation |
-|------|---------|-------------|
-| `VALIDATE_TIMEOUT_OR_LOCK` | DB contention | Retry with backoff |
-| `WORKSPACE_REQUIRED` | On main/master | `decapod workspace ensure` |
-| `VERIFICATION_REQUIRED` | Claiming done | `decapod validate` |
-| `STORE_BOUNDARY_VIOLATION` | Cross-store write | Use explicit `--store` |
-| `SESSION_REQUIRED` | No session | `decapod session acquire` |
+## Coverage Checklist
+- [ ] Unit tests cover critical branches and interlocks.
+- [ ] Integration tests cover end-to-end task lifecycle.
+- [ ] Failure-path tests cover lock contention and policy failures.
+- [ ] Docs, architecture diagram, and changelog updated for behavior changes.
+- [ ] Local and CI validation receipts attached before promotion.
