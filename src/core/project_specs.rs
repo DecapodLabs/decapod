@@ -12,6 +12,9 @@ pub const LOCAL_PROJECT_SPECS_INTENT: &str = ".decapod/generated/specs/INTENT.md
 pub const LOCAL_PROJECT_SPECS_ARCHITECTURE: &str = ".decapod/generated/specs/ARCHITECTURE.md";
 pub const LOCAL_PROJECT_SPECS_INTERFACES: &str = ".decapod/generated/specs/INTERFACES.md";
 pub const LOCAL_PROJECT_SPECS_VALIDATION: &str = ".decapod/generated/specs/VALIDATION.md";
+pub const LOCAL_PROJECT_SPECS_SEMANTICS: &str = ".decapod/generated/specs/SEMANTICS.md";
+pub const LOCAL_PROJECT_SPECS_OPERATIONS: &str = ".decapod/generated/specs/OPERATIONS.md";
+pub const LOCAL_PROJECT_SPECS_SECURITY: &str = ".decapod/generated/specs/SECURITY.md";
 pub const LOCAL_PROJECT_SPECS_MANIFEST: &str = ".decapod/generated/specs/.manifest.json";
 pub const LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA: &str = "1.0.0";
 
@@ -48,6 +51,21 @@ pub const LOCAL_PROJECT_SPECS: &[LocalProjectSpec] = &[
         role: "proof_and_gate_plan",
         constitution_ref: "interfaces/TESTING.md",
     },
+    LocalProjectSpec {
+        path: LOCAL_PROJECT_SPECS_SEMANTICS,
+        role: "state_machines_and_invariants",
+        constitution_ref: "interfaces/PROJECT_SPECS.md",
+    },
+    LocalProjectSpec {
+        path: LOCAL_PROJECT_SPECS_OPERATIONS,
+        role: "operational_readiness",
+        constitution_ref: "interfaces/PROJECT_SPECS.md",
+    },
+    LocalProjectSpec {
+        path: LOCAL_PROJECT_SPECS_SECURITY,
+        role: "security_posture",
+        constitution_ref: "interfaces/PROJECT_SPECS.md",
+    },
 ];
 
 #[derive(Debug, Clone, Default)]
@@ -56,6 +74,9 @@ pub struct LocalProjectSpecsContext {
     pub architecture: Option<String>,
     pub interfaces: Option<String>,
     pub validation: Option<String>,
+    pub semantics: Option<String>,
+    pub operations: Option<String>,
+    pub security: Option<String>,
     pub canonical_paths: Vec<String>,
     pub constitution_refs: Vec<String>,
     pub update_guidance: String,
@@ -94,6 +115,12 @@ pub fn local_project_specs_context(project_root: &Path) -> LocalProjectSpecsCont
     ctx.interfaces = read_if_exists(project_root, LOCAL_PROJECT_SPECS_INTERFACES)
         .and_then(|s| first_meaningful_line(&s));
     ctx.validation = read_if_exists(project_root, LOCAL_PROJECT_SPECS_VALIDATION)
+        .and_then(|s| first_meaningful_line(&s));
+    ctx.semantics = read_if_exists(project_root, LOCAL_PROJECT_SPECS_SEMANTICS)
+        .and_then(|s| first_meaningful_line(&s));
+    ctx.operations = read_if_exists(project_root, LOCAL_PROJECT_SPECS_OPERATIONS)
+        .and_then(|s| first_meaningful_line(&s));
+    ctx.security = read_if_exists(project_root, LOCAL_PROJECT_SPECS_SECURITY)
         .and_then(|s| first_meaningful_line(&s));
     ctx.update_guidance = "Treat .decapod/generated/specs/*.md as living project contracts: when user intent, interfaces, architecture, or proof gates change, update these specs before implementation proceeds.".to_string();
     ctx

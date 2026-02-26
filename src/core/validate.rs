@@ -13,8 +13,9 @@ use crate::core::plan_governance;
 use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_DIR,
     LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
-    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_VALIDATION, hash_text,
-    read_specs_manifest, repo_signal_fingerprint,
+    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
+    LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS, LOCAL_PROJECT_SPECS_VALIDATION,
+    hash_text, read_specs_manifest, repo_signal_fingerprint,
 };
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
@@ -1266,6 +1267,19 @@ fn validate_project_specs_docs(
         let file = spec.path;
         if path.exists() {
             pass(&format!("Project specs file present: {}", file), ctx);
+        } else if matches!(
+            file,
+            LOCAL_PROJECT_SPECS_SEMANTICS
+                | LOCAL_PROJECT_SPECS_OPERATIONS
+                | LOCAL_PROJECT_SPECS_SECURITY
+        ) {
+            warn(
+                &format!(
+                    "Recommended project spec missing (scaffold-v2+): {}. Run `decapod init --force` to add the expanded spec surface.",
+                    file
+                ),
+                ctx,
+            );
         } else {
             fail(
                 &format!("Missing required project specs file: {}", file),
@@ -1349,6 +1363,8 @@ fn validate_project_specs_docs(
             "## Current Facts",
             "## Topology",
             "## Execution Path",
+            "## Concurrency and Runtime Model",
+            "## Deployment Topology",
             "## Data and Contracts",
             "## Delivery Plan",
             "## Risks and Mitigations",
@@ -1499,6 +1515,61 @@ fn validate_project_specs_docs(
         }
     }
 
+    let semantics_path = repo_root.join(LOCAL_PROJECT_SPECS_SEMANTICS);
+    if semantics_path.exists() {
+        let semantics =
+            fs::read_to_string(&semantics_path).map_err(error::DecapodError::IoError)?;
+        for section in ["# Semantics", "## State Machines", "## Invariants"] {
+            if !semantics.contains(section) {
+                fail(
+                    &format!("Semantics spec missing required section: {}", section),
+                    ctx,
+                );
+            }
+        }
+        pass("Semantics spec contains required sections", ctx);
+    }
+
+    let operations_path = repo_root.join(LOCAL_PROJECT_SPECS_OPERATIONS);
+    if operations_path.exists() {
+        let operations =
+            fs::read_to_string(&operations_path).map_err(error::DecapodError::IoError)?;
+        for section in [
+            "# Operations",
+            "## Service Level Objectives",
+            "## Monitoring",
+            "## Incident Response",
+        ] {
+            if !operations.contains(section) {
+                fail(
+                    &format!("Operations spec missing required section: {}", section),
+                    ctx,
+                );
+            }
+        }
+        pass("Operations spec contains required sections", ctx);
+    }
+
+    let security_path = repo_root.join(LOCAL_PROJECT_SPECS_SECURITY);
+    if security_path.exists() {
+        let security = fs::read_to_string(&security_path).map_err(error::DecapodError::IoError)?;
+        for section in [
+            "# Security",
+            "## Threat Model",
+            "## Authentication",
+            "## Authorization",
+            "## Data Classification",
+        ] {
+            if !security.contains(section) {
+                fail(
+                    &format!("Security spec missing required section: {}", section),
+                    ctx,
+                );
+            }
+        }
+        pass("Security spec contains required sections", ctx);
+    }
+
     Ok(())
 }
 
@@ -1636,6 +1707,58 @@ fn validate_spec_drift(
             &format!("INTERFACES.md missing sections: {:?}", missing_sections),
             ctx,
         );
+    }
+
+    for (path, name, sections) in [
+        (
+            LOCAL_PROJECT_SPECS_SEMANTICS,
+            "SEMANTICS.md",
+            vec!["# Semantics", "## State Machines", "## Invariants"],
+        ),
+        (
+            LOCAL_PROJECT_SPECS_OPERATIONS,
+            "OPERATIONS.md",
+            vec![
+                "# Operations",
+                "## Service Level Objectives",
+                "## Monitoring",
+                "## Incident Response",
+            ],
+        ),
+        (
+            LOCAL_PROJECT_SPECS_SECURITY,
+            "SECURITY.md",
+            vec![
+                "# Security",
+                "## Threat Model",
+                "## Authentication",
+                "## Authorization",
+                "## Data Classification",
+            ],
+        ),
+    ] {
+        let path = repo_root.join(path);
+        if !path.exists() {
+            warn(
+                &format!(
+                    "{} missing (hygiene check only). Run `decapod init --force` to scaffold it.",
+                    name
+                ),
+                ctx,
+            );
+            continue;
+        }
+        let body = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+        let missing = sections
+            .iter()
+            .filter(|section| !body.contains(**section))
+            .copied()
+            .collect::<Vec<_>>();
+        if missing.is_empty() {
+            pass(&format!("{} has structural sections", name), ctx);
+        } else {
+            warn(&format!("{} missing sections: {:?}", name, missing), ctx);
+        }
     }
 
     Ok(())
