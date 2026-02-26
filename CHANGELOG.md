@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- schema/interface: expand canonical project specs set to include `SEMANTICS.md`, `OPERATIONS.md`, and `SECURITY.md`
+- docs/scaffold: scaffold-v2 project specs with adaptive topology/sequence diagrams, richer interface contracts, validation decision flow, and security/operations directives
+
+### Changed
+
+- validate: add architecture runtime/deployment section enforcement and conditional structure checks for semantics/operations/security specs
+- docs/specs: upgrade Decapod's checked-in generated specs to industry-grade operational/security semantics with explicit proof surfaces
+
 ## [0.44.6](https://github.com/DecapodLabs/decapod/compare/v0.44.5...v0.44.6) - 2026-02-25
 
 ### Fixed
