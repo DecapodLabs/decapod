@@ -4040,6 +4040,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                             "UPDATE tasks SET depends_on = ?1, updated_at = ?2 WHERE id = ?3",
                             rusqlite::params![depends_on, ev.ts, id],
                         )?;
+                        sync_task_dependencies(conn, &id, depends_on, &ev.ts)?;
                     }
                     if let Some(blocks) = ev.payload.get("blocks").and_then(|v| v.as_str()) {
                         conn.execute(
