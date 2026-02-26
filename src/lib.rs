@@ -6,10 +6,10 @@
 //! Runtime operational contracts for agents are defined in repository entrypoint
 //! docs and constitution documents, not in Rust source comments.
 
+pub(crate) mod cli;
 pub mod constitution;
 pub mod core;
 pub mod plugins;
-pub(crate) mod cli;
 pub(crate) mod subsystems;
 
 use cli::*;
@@ -42,7 +42,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 // CLI struct definitions have been moved to src/cli.rs
 
 // (remaining CLI struct definitions removed — now in src/cli.rs)
-
 
 fn find_decapod_project_root(start_dir: &Path) -> Result<PathBuf, error::DecapodError> {
     let mut current_dir = PathBuf::from(start_dir);
@@ -4573,14 +4572,14 @@ struct RpcCtx<'a> {
 }
 
 mod rpc_handlers {
+    use super::RpcCtx;
     use super::*;
-    use crate::core::rpc::*;
-    use crate::core::workspace;
-    use crate::core::standards;
+    use crate::core::assurance::{AssuranceEngine, AssuranceEvaluateInput};
     use crate::core::interview;
     use crate::core::mentor;
-    use crate::core::assurance::{AssuranceEngine, AssuranceEvaluateInput};
-    use super::RpcCtx;
+    use crate::core::rpc::*;
+    use crate::core::standards;
+    use crate::core::workspace;
 
     pub(crate) fn handle_agent_init(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let workspace_status = workspace::get_workspace_status(ctx.project_root)?;
@@ -4591,22 +4590,31 @@ mod rpc_handlers {
             && let Ok(mut tasks) = todo::list_tasks(
                 &ctx.store.root,
                 Some("open".to_string()),
-                None, None, None, None,
+                None,
+                None,
+                None,
+                None,
             )
         {
             tasks.retain(|t| t.assigned_to == agent_id);
             if tasks.is_empty() {
-                allowed_ops.insert(0, AllowedOp {
-                    op: "todo.add".to_string(),
-                    reason: "MANDATORY: Create a task for your work".to_string(),
-                    required_params: vec!["title".to_string()],
-                });
+                allowed_ops.insert(
+                    0,
+                    AllowedOp {
+                        op: "todo.add".to_string(),
+                        reason: "MANDATORY: Create a task for your work".to_string(),
+                        required_params: vec!["title".to_string()],
+                    },
+                );
             } else if tasks.iter().any(|t| t.assigned_to.is_empty()) {
-                allowed_ops.insert(0, AllowedOp {
-                    op: "todo.claim".to_string(),
-                    reason: "MANDATORY: Claim your assigned task".to_string(),
-                    required_params: vec!["id".to_string()],
-                });
+                allowed_ops.insert(
+                    0,
+                    AllowedOp {
+                        op: "todo.claim".to_string(),
+                        reason: "MANDATORY: Claim your assigned task".to_string(),
+                        required_params: vec!["id".to_string()],
+                    },
+                );
             }
         }
 
@@ -4619,7 +4627,10 @@ mod rpc_handlers {
                 standards: Some({
                     let resolved = standards::resolve_standards(ctx.project_root)?;
                     let mut map = std::collections::HashMap::new();
-                    map.insert("project_name".to_string(), serde_json::json!(resolved.project_name));
+                    map.insert(
+                        "project_name".to_string(),
+                        serde_json::json!(resolved.project_name),
+                    );
                     map
                 }),
             })
@@ -4634,8 +4645,14 @@ mod rpc_handlers {
         };
 
         let mut response = success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-            None, vec![], context_capsule, allowed_ops, ctx.mandates.clone(),
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            None,
+            vec![],
+            context_capsule,
+            allowed_ops,
+            ctx.mandates.clone(),
         );
         response.result = Some(serde_json::json!({
             "environment_context": {
@@ -4652,14 +4669,22 @@ mod rpc_handlers {
         Ok(response)
     }
 
-    pub(crate) fn handle_workspace_status(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+    pub(crate) fn handle_workspace_status(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
         let status = workspace::get_workspace_status(ctx.project_root)?;
         let blocked_by = status.blockers.clone();
         let allowed_ops = workspace::get_allowed_ops(&status);
 
         let mut response = success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-            None, vec![], None, allowed_ops, ctx.mandates.clone(),
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            None,
+            vec![],
+            None,
+            allowed_ops,
+            ctx.mandates.clone(),
         );
         response.result = Some(serde_json::json!({
             "git_branch": status.git.current_branch,
@@ -4671,9 +4696,16 @@ mod rpc_handlers {
         Ok(response)
     }
 
-    pub(crate) fn handle_workspace_ensure(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+    pub(crate) fn handle_workspace_ensure(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
         let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
-        let branch = ctx.request.params.get("branch").and_then(|v| v.as_str()).map(|s| s.to_string());
+        let branch = ctx
+            .request
+            .params
+            .get("branch")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
 
         let config = branch.map(|b| workspace::WorkspaceConfig {
             branch: b,
@@ -4685,26 +4717,45 @@ mod rpc_handlers {
         let allowed_ops = workspace::get_allowed_ops(&status);
 
         Ok(success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-            None, vec![format!(".git/refs/heads/{}", status.git.current_branch)],
-            None, allowed_ops, ctx.mandates.clone(),
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            None,
+            vec![format!(".git/refs/heads/{}", status.git.current_branch)],
+            None,
+            allowed_ops,
+            ctx.mandates.clone(),
         ))
     }
 
-    pub(crate) fn handle_workspace_publish(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+    pub(crate) fn handle_workspace_publish(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
         let store_root = ctx.project_root.join(".decapod").join("data");
         plan_governance::ensure_execute_ready(plan_governance::ExecuteCheckInput {
             project_root: ctx.project_root,
             store_root: &store_root,
             todo_id: None,
         })?;
-        let title = ctx.request.params.get("title").and_then(|v| v.as_str()).map(|s| s.to_string());
-        let description = ctx.request.params.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
+        let title = ctx
+            .request
+            .params
+            .get("title")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+        let description = ctx
+            .request
+            .params
+            .get("description")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
 
         let result = workspace::publish_workspace(ctx.project_root, title, description)?;
 
         Ok(success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
             Some(serde_json::json!({
                 "branch": result.branch,
                 "commit_hash": result.commit_hash,
@@ -4775,13 +4826,26 @@ mod rpc_handlers {
         fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
         fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
         let touched_vec = touched_paths
-            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect::<Vec<_>>())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect::<Vec<_>>()
+            })
             .unwrap_or_default();
         let tags_vec = intent_tags
-            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect::<Vec<_>>())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect::<Vec<_>>()
+            })
             .unwrap_or_default();
         let scoped_fragments = docs::resolve_scoped_fragments(
-            ctx.project_root, query, op, &touched_vec, &tags_vec, limit,
+            ctx.project_root,
+            query,
+            op,
+            &touched_vec,
+            &tags_vec,
+            limit,
         );
         fragments.extend(scoped_fragments.clone());
         fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
@@ -4813,8 +4877,11 @@ mod rpc_handlers {
         mark_constitution_context_resolved(ctx.project_root)?;
 
         Ok(success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-            Some(result), vec![],
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(result),
+            vec![],
             Some(ContextCapsule {
                 fragments,
                 spec: local_specs.intent.clone(),
@@ -4822,30 +4889,36 @@ mod rpc_handlers {
                 security: None,
                 standards: Some({
                     let mut m = std::collections::HashMap::new();
-                    m.insert("local_project_specs".to_string(), serde_json::json!({
-                        "canonical_paths": local_specs.canonical_paths,
-                        "constitution_refs": local_specs.constitution_refs,
-                        "interfaces": local_specs.interfaces,
-                        "validation": local_specs.validation,
-                        "update_guidance": local_specs.update_guidance
-                    }));
+                    m.insert(
+                        "local_project_specs".to_string(),
+                        serde_json::json!({
+                            "canonical_paths": local_specs.canonical_paths,
+                            "constitution_refs": local_specs.constitution_refs,
+                            "interfaces": local_specs.interfaces,
+                            "validation": local_specs.validation,
+                            "update_guidance": local_specs.update_guidance
+                        }),
+                    );
                     m
                 }),
             }),
             vec![
                 AllowedOp {
                     op: "store.upsert".to_string(),
-                    reason: "Persist significant decisions for audit trail before proceeding".to_string(),
+                    reason: "Persist significant decisions for audit trail before proceeding"
+                        .to_string(),
                     required_params: vec!["kind".to_string(), "data".to_string()],
                 },
                 AllowedOp {
                     op: "validate.run".to_string(),
-                    reason: "Validate your changes against constitution before claiming done".to_string(),
+                    reason: "Validate your changes against constitution before claiming done"
+                        .to_string(),
                     required_params: vec![],
                 },
                 AllowedOp {
                     op: "store.query".to_string(),
-                    reason: "Retrieve prior decisions and knowledge relevant to current task".to_string(),
+                    reason: "Retrieve prior decisions and knowledge relevant to current task"
+                        .to_string(),
                     required_params: vec!["kind".to_string()],
                 },
             ],
@@ -4853,26 +4926,50 @@ mod rpc_handlers {
         ))
     }
 
-    pub(crate) fn handle_context_capsule_query(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+    pub(crate) fn handle_context_capsule_query(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
         let params = &ctx.request.params;
-        let topic = params.get("topic").and_then(|v| v.as_str()).ok_or_else(|| {
-            error::DecapodError::ValidationError("context.capsule.query requires 'topic'".to_string())
-        })?;
-        let scope = params.get("scope").and_then(|v| v.as_str()).ok_or_else(|| {
-            error::DecapodError::ValidationError("context.capsule.query requires 'scope'".to_string())
-        })?;
+        let topic = params
+            .get("topic")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "context.capsule.query requires 'topic'".to_string(),
+                )
+            })?;
+        let scope = params
+            .get("scope")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "context.capsule.query requires 'scope'".to_string(),
+                )
+            })?;
         let task_id = params.get("task_id").and_then(|v| v.as_str());
         let workunit_id = params.get("workunit_id").and_then(|v| v.as_str());
         let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(6) as usize;
         let risk_tier = params.get("risk_tier").and_then(|v| v.as_str());
-        let write = params.get("write").and_then(|v| v.as_bool()).unwrap_or(false);
+        let write = params
+            .get("write")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
 
         let resolved_policy = core::capsule_policy::resolve_capsule_policy(
-            ctx.project_root, scope, risk_tier, limit, write,
+            ctx.project_root,
+            scope,
+            risk_tier,
+            limit,
+            write,
         )?;
         let capsule = core::context_capsule::query_embedded_capsule_governed(
-            ctx.project_root, topic, scope, task_id, workunit_id,
-            resolved_policy.effective_limit, resolved_policy.binding,
+            ctx.project_root,
+            topic,
+            scope,
+            task_id,
+            workunit_id,
+            resolved_policy.effective_limit,
+            resolved_policy.binding,
         )?;
 
         let mut touched = Vec::new();
@@ -4880,31 +4977,45 @@ mod rpc_handlers {
             let path = core::context_capsule::write_context_capsule(ctx.project_root, &capsule)?;
             touched.push(path.to_string_lossy().to_string());
             if let Some(workunit_path) = maybe_bind_capsule_to_workunit_state_ref(
-                ctx.project_root, task_id.or(workunit_id), &path,
+                ctx.project_root,
+                task_id.or(workunit_id),
+                &path,
             )? {
                 touched.push(workunit_path.to_string_lossy().to_string());
             }
         }
 
         Ok(success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
             Some(serde_json::to_value(&capsule).unwrap()),
             touched,
             Some(ContextCapsule {
                 fragments: vec![],
                 spec: Some("Deterministic context capsule query completed".to_string()),
-                architecture: None, security: None, standards: None,
+                architecture: None,
+                security: None,
+                standards: None,
             }),
-            vec![], ctx.mandates.clone(),
+            vec![],
+            ctx.mandates.clone(),
         ))
     }
 
-    pub(crate) fn handle_context_bindings(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+    pub(crate) fn handle_context_bindings(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
         let bindings = docs::get_bindings(ctx.project_root);
         Ok(success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
             Some(serde_json::to_value(bindings).unwrap()),
-            vec![], None, vec![], ctx.mandates.clone(),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
         ))
     }
 
@@ -4912,7 +5023,9 @@ mod rpc_handlers {
         let entity = ctx.request.params.get("entity").and_then(|v| v.as_str());
         match entity {
             Some("todo") => Ok(success_response(
-                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
                 Some(serde_json::json!({
                     "schema_version": "v1",
                     "json_schema": {
@@ -4926,10 +5039,15 @@ mod rpc_handlers {
                         "required": ["title"]
                     }
                 })),
-                vec![], None, vec![], ctx.mandates.clone(),
+                vec![],
+                None,
+                vec![],
+                ctx.mandates.clone(),
             )),
             Some("knowledge") => Ok(success_response(
-                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
                 Some(serde_json::json!({
                     "schema_version": "v1",
                     "json_schema": {
@@ -4943,10 +5061,15 @@ mod rpc_handlers {
                         "required": ["id", "title", "text", "provenance"]
                     }
                 })),
-                vec![], None, vec![], ctx.mandates.clone(),
+                vec![],
+                None,
+                vec![],
+                ctx.mandates.clone(),
             )),
             Some("decision") => Ok(success_response(
-                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
                 Some(serde_json::json!({
                     "schema_version": "v1",
                     "json_schema": {
@@ -4960,13 +5083,19 @@ mod rpc_handlers {
                         "required": ["title", "rationale", "chosen"]
                     }
                 })),
-                vec![], None, vec![], ctx.mandates.clone(),
+                vec![],
+                None,
+                vec![],
+                ctx.mandates.clone(),
             )),
             _ => Ok(error_response(
-                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
                 "invalid_entity".to_string(),
                 format!("Invalid or missing entity: {:?}", entity),
-                None, ctx.mandates.clone(),
+                None,
+                ctx.mandates.clone(),
             )),
         }
     }
@@ -4979,68 +5108,154 @@ mod rpc_handlers {
 
         match entity {
             Some("todo") => {
-                let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                let description = payload.and_then(|p| p.get("description")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                let priority = payload.and_then(|p| p.get("priority")).and_then(|v| v.as_str()).unwrap_or("medium").to_string();
-                let tags = payload.and_then(|p| p.get("tags")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let title = payload
+                    .and_then(|p| p.get("title"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let description = payload
+                    .and_then(|p| p.get("description"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let priority = payload
+                    .and_then(|p| p.get("priority"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("medium")
+                    .to_string();
+                let tags = payload
+                    .and_then(|p| p.get("tags"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
 
                 let args = todo::TodoCommand::Add {
-                    title, description, priority, tags,
-                    owner: "".to_string(), due: None,
-                    r#ref: "".to_string(), dir: None,
-                    depends_on: "".to_string(), blocks: "".to_string(),
-                    parent: None, one_shot: 0,
+                    title,
+                    description,
+                    priority,
+                    tags,
+                    owner: "".to_string(),
+                    due: None,
+                    r#ref: "".to_string(),
+                    dir: None,
+                    depends_on: "".to_string(),
+                    blocks: "".to_string(),
+                    parent: None,
+                    one_shot: 0,
                 };
                 let res = todo::add_task(&ctx.store.root, &args)?;
                 Ok(success_response(
-                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
                     Some(serde_json::json!({ "id": res.get("id"), "stored": true })),
-                    vec![], None, vec![], ctx.mandates.clone(),
+                    vec![],
+                    None,
+                    vec![],
+                    ctx.mandates.clone(),
                 ))
             }
             Some("knowledge") => {
-                let id = payload.and_then(|p| p.get("id")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                let text = payload.and_then(|p| p.get("text")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                let provenance = payload.and_then(|p| p.get("provenance")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let id = payload
+                    .and_then(|p| p.get("id"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let title = payload
+                    .and_then(|p| p.get("title"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let text = payload
+                    .and_then(|p| p.get("text"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let provenance = payload
+                    .and_then(|p| p.get("provenance"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
 
                 db::initialize_knowledge_db(&ctx.store.root)?;
                 let result = knowledge::add_knowledge(
                     ctx.store,
                     knowledge::AddKnowledgeParams {
-                        id: &id, title: &title, content: &text, provenance: &provenance,
-                        claim_id: None, merge_key: None,
+                        id: &id,
+                        title: &title,
+                        content: &text,
+                        provenance: &provenance,
+                        claim_id: None,
+                        merge_key: None,
                         conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
-                        status: "active", ttl_policy: "persistent", expires_ts: None,
+                        status: "active",
+                        ttl_policy: "persistent",
+                        expires_ts: None,
                     },
                 )?;
                 Ok(success_response(
-                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-                    Some(serde_json::json!({ "id": result.id, "stored": true, "action": result.action })),
-                    vec![], None, vec![], ctx.mandates.clone(),
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
+                    Some(
+                        serde_json::json!({ "id": result.id, "stored": true, "action": result.action }),
+                    ),
+                    vec![],
+                    None,
+                    vec![],
+                    ctx.mandates.clone(),
                 ))
             }
             Some("decision") => {
-                let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                let rationale = payload.and_then(|p| p.get("rationale")).and_then(|v| v.as_str()).unwrap_or("").to_string();
-                let chosen = payload.and_then(|p| p.get("chosen")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let title = payload
+                    .and_then(|p| p.get("title"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let rationale = payload
+                    .and_then(|p| p.get("rationale"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let chosen = payload
+                    .and_then(|p| p.get("chosen"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
 
                 let content = format!("Decision: {}\nRationale: {}", chosen, rationale);
                 let node_id = federation::add_node(
-                    ctx.store, &title, "decision", "notable", "agent_inferred",
-                    &content, "rpc:store.upsert", "", "repo", None, "agent",
+                    ctx.store,
+                    &title,
+                    "decision",
+                    "notable",
+                    "agent_inferred",
+                    &content,
+                    "rpc:store.upsert",
+                    "",
+                    "repo",
+                    None,
+                    "agent",
                 )?;
                 Ok(success_response(
-                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
                     Some(serde_json::json!({ "id": node_id, "stored": true })),
-                    vec![], None, vec![], ctx.mandates.clone(),
+                    vec![],
+                    None,
+                    vec![],
+                    ctx.mandates.clone(),
                 ))
             }
             _ => Ok(error_response(
-                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
                 "invalid_entity".to_string(),
                 format!("Invalid or missing entity: {:?}", entity),
-                None, ctx.mandates.clone(),
+                None,
+                ctx.mandates.clone(),
             )),
         }
     }
@@ -5052,42 +5267,75 @@ mod rpc_handlers {
 
         match entity {
             Some("todo") => {
-                let status = query.and_then(|q| q.get("status")).and_then(|v| v.as_str()).map(|s| s.to_string());
+                let status = query
+                    .and_then(|q| q.get("status"))
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string());
                 let tasks = todo::list_tasks(&ctx.store.root, status, None, None, None, None)?;
                 Ok(success_response(
-                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
                     Some(serde_json::json!({ "items": tasks, "next_page": null })),
-                    vec![], None, vec![], ctx.mandates.clone(),
+                    vec![],
+                    None,
+                    vec![],
+                    ctx.mandates.clone(),
                 ))
             }
             Some("knowledge") => {
-                let text = query.and_then(|q| q.get("text")).and_then(|v| v.as_str()).unwrap_or("");
+                let text = query
+                    .and_then(|q| q.get("text"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
                 db::initialize_knowledge_db(&ctx.store.root)?;
                 let entries = knowledge::search_knowledge(
-                    ctx.store, text,
-                    knowledge::SearchOptions { as_of: None, window_days: None, rank: "relevance" },
+                    ctx.store,
+                    text,
+                    knowledge::SearchOptions {
+                        as_of: None,
+                        window_days: None,
+                        rank: "relevance",
+                    },
                 )?;
                 Ok(success_response(
-                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
                     Some(serde_json::json!({ "items": entries, "next_page": null })),
-                    vec![], None, vec![], ctx.mandates.clone(),
+                    vec![],
+                    None,
+                    vec![],
+                    ctx.mandates.clone(),
                 ))
             }
             Some("decision") => {
                 let nodes = plugins::federation_ext::list_nodes(
-                    &ctx.store.root, Some("decision".to_string()), None, None, None,
+                    &ctx.store.root,
+                    Some("decision".to_string()),
+                    None,
+                    None,
+                    None,
                 )?;
                 Ok(success_response(
-                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
                     Some(serde_json::json!({ "items": nodes, "next_page": null })),
-                    vec![], None, vec![], ctx.mandates.clone(),
+                    vec![],
+                    None,
+                    vec![],
+                    ctx.mandates.clone(),
                 ))
             }
             _ => Ok(error_response(
-                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
                 "invalid_entity".to_string(),
                 format!("Invalid or missing entity: {:?}", entity),
-                None, ctx.mandates.clone(),
+                None,
+                ctx.mandates.clone(),
             )),
         }
     }
@@ -5100,28 +5348,48 @@ mod rpc_handlers {
         let res = run_validation_bounded(&project_store, ctx.project_root, false);
         match res {
             Ok(_) => Ok(success_response(
-                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
                 Some(serde_json::json!({ "success": true })),
-                vec![], None, vec![], ctx.mandates.clone(),
+                vec![],
+                None,
+                vec![],
+                ctx.mandates.clone(),
             )),
             Err(e) => Ok(error_response(
-                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-                "validation_failed".to_string(), e.to_string(),
-                None, ctx.mandates.clone(),
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                "validation_failed".to_string(),
+                e.to_string(),
+                None,
+                ctx.mandates.clone(),
             )),
         }
     }
 
-    pub(crate) fn handle_scaffold_next_question(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
-        let project_name = ctx.request.params.get("project_name")
-            .and_then(|v| v.as_str()).unwrap_or("Untitled").to_string();
+    pub(crate) fn handle_scaffold_next_question(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let project_name = ctx
+            .request
+            .params
+            .get("project_name")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Untitled")
+            .to_string();
 
         let interview_state = interview::init_interview(project_name);
         let question = interview::next_question(&interview_state);
 
         let mut response = success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-            None, vec![], None,
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            None,
+            vec![],
+            None,
             vec![AllowedOp {
                 op: "scaffold.apply_answer".to_string(),
                 reason: "Provide answer to continue interview".to_string(),
@@ -5145,11 +5413,23 @@ mod rpc_handlers {
         Ok(response)
     }
 
-    pub(crate) fn handle_scaffold_apply_answer(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
-        let question_id = ctx.request.params.get("question_id")
+    pub(crate) fn handle_scaffold_apply_answer(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let question_id = ctx
+            .request
+            .params
+            .get("question_id")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| error::DecapodError::ValidationError("question_id required".to_string()))?;
-        let value = ctx.request.params.clone().get("value").cloned()
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError("question_id required".to_string())
+            })?;
+        let value = ctx
+            .request
+            .params
+            .clone()
+            .get("value")
+            .cloned()
             .ok_or_else(|| error::DecapodError::ValidationError("value required".to_string()))?;
 
         let mut interview_state = interview::init_interview("project".to_string());
@@ -5158,11 +5438,23 @@ mod rpc_handlers {
         let next_q = interview::next_question(&interview_state);
 
         let mut response = success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-            None, vec![], None,
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            None,
+            vec![],
+            None,
             vec![AllowedOp {
-                op: if next_q.is_some() { "scaffold.next_question".to_string() } else { "scaffold.generate_artifacts".to_string() },
-                reason: if next_q.is_some() { "Continue interview".to_string() } else { "Interview complete - generate artifacts".to_string() },
+                op: if next_q.is_some() {
+                    "scaffold.next_question".to_string()
+                } else {
+                    "scaffold.generate_artifacts".to_string()
+                },
+                reason: if next_q.is_some() {
+                    "Continue interview".to_string()
+                } else {
+                    "Interview complete - generate artifacts".to_string()
+                },
                 required_params: vec![],
             }],
             ctx.mandates.clone(),
@@ -5176,16 +5468,25 @@ mod rpc_handlers {
         Ok(response)
     }
 
-    pub(crate) fn handle_scaffold_generate_artifacts(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+    pub(crate) fn handle_scaffold_generate_artifacts(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
         let interview_state = interview::init_interview("project".to_string());
         let output_dir = ctx.project_root.to_path_buf();
 
         let artifacts = interview::generate_artifacts(&interview_state, &output_dir)?;
-        let touched_paths: Vec<String> = artifacts.iter().map(|a| a.path.to_string_lossy().to_string()).collect();
+        let touched_paths: Vec<String> = artifacts
+            .iter()
+            .map(|a| a.path.to_string_lossy().to_string())
+            .collect();
 
         Ok(success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-            None, touched_paths, None,
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            None,
+            touched_paths,
+            None,
             vec![AllowedOp {
                 op: "validate".to_string(),
                 reason: "Artifacts generated - validate before claiming done".to_string(),
@@ -5195,52 +5496,114 @@ mod rpc_handlers {
         ))
     }
 
-    pub(crate) fn handle_standards_resolve(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+    pub(crate) fn handle_standards_resolve(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
         let resolved = standards::resolve_standards(ctx.project_root)?;
 
         let mut standards_map = std::collections::HashMap::new();
-        standards_map.insert("project_name".to_string(), serde_json::json!(resolved.project_name));
+        standards_map.insert(
+            "project_name".to_string(),
+            serde_json::json!(resolved.project_name),
+        );
         for (k, v) in &resolved.standards {
             standards_map.insert(k.clone(), v.clone());
         }
 
         let context_capsule = ContextCapsule {
-            fragments: vec![], spec: None, architecture: None, security: None,
+            fragments: vec![],
+            spec: None,
+            architecture: None,
+            security: None,
             standards: Some(standards_map),
         };
 
         Ok(success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-            None, vec![], Some(context_capsule), vec![], ctx.mandates.clone(),
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            None,
+            vec![],
+            Some(context_capsule),
+            vec![],
+            ctx.mandates.clone(),
         ))
     }
 
-    pub(crate) fn handle_mentor_obligations(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+    pub(crate) fn handle_mentor_obligations(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
         use crate::core::mentor::{MentorEngine, ObligationsContext};
 
         let engine = MentorEngine::new(ctx.project_root);
         let obligations_ctx = ObligationsContext {
-            op: ctx.request.params.get("op").and_then(|v| v.as_str()).unwrap_or("unknown").to_string(),
-            params: ctx.request.params.get("params").cloned().unwrap_or(serde_json::json!({})),
-            touched_paths: ctx.request.params.get("touched_paths")
+            op: ctx
+                .request
+                .params
+                .get("op")
+                .and_then(|v| v.as_str())
+                .unwrap_or("unknown")
+                .to_string(),
+            params: ctx
+                .request
+                .params
+                .get("params")
+                .cloned()
+                .unwrap_or(serde_json::json!({})),
+            touched_paths: ctx
+                .request
+                .params
+                .get("touched_paths")
                 .and_then(|v| v.as_array())
-                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect()
+                })
                 .unwrap_or_default(),
-            diff_summary: ctx.request.params.get("diff_summary").and_then(|v| v.as_str()).map(|s| s.to_string()),
-            project_profile_id: ctx.request.params.get("project_profile_id").and_then(|v| v.as_str()).map(|s| s.to_string()),
-            session_id: ctx.request.params.get("session_id").and_then(|v| v.as_str()).map(|s| s.to_string()),
-            high_risk: ctx.request.params.get("high_risk").and_then(|v| v.as_bool()).unwrap_or(false),
+            diff_summary: ctx
+                .request
+                .params
+                .get("diff_summary")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string()),
+            project_profile_id: ctx
+                .request
+                .params
+                .get("project_profile_id")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string()),
+            session_id: ctx
+                .request
+                .params
+                .get("session_id")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string()),
+            high_risk: ctx
+                .request
+                .params
+                .get("high_risk")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false),
         };
 
         let obligations = engine.compute_obligations(&obligations_ctx)?;
 
         let context_capsule = ContextCapsule {
-            fragments: vec![], spec: None, architecture: None, security: None, standards: None,
+            fragments: vec![],
+            spec: None,
+            architecture: None,
+            security: None,
+            standards: None,
         };
 
         let mut response = success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-            None, vec![], Some(context_capsule),
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            None,
+            vec![],
+            Some(context_capsule),
             vec![AllowedOp {
                 op: "mentor.obligations".to_string(),
                 reason: "Obligations computed - review must list before proceeding".to_string(),
@@ -5258,31 +5621,79 @@ mod rpc_handlers {
         Ok(response)
     }
 
-    pub(crate) fn handle_assurance_evaluate(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+    pub(crate) fn handle_assurance_evaluate(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
         let input = AssuranceEvaluateInput {
-            op: ctx.request.params.get("op").and_then(|v| v.as_str()).unwrap_or("unknown").to_string(),
-            params: ctx.request.params.get("params").cloned().unwrap_or(serde_json::json!({})),
-            touched_paths: ctx.request.params.get("touched_paths")
+            op: ctx
+                .request
+                .params
+                .get("op")
+                .and_then(|v| v.as_str())
+                .unwrap_or("unknown")
+                .to_string(),
+            params: ctx
+                .request
+                .params
+                .get("params")
+                .cloned()
+                .unwrap_or(serde_json::json!({})),
+            touched_paths: ctx
+                .request
+                .params
+                .get("touched_paths")
                 .and_then(|v| v.as_array())
-                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                        .collect()
+                })
                 .unwrap_or_default(),
-            diff_summary: ctx.request.params.get("diff_summary").and_then(|v| v.as_str()).map(|s| s.to_string()),
-            session_id: ctx.request.params.get("session_id").and_then(|v| v.as_str()).map(|s| s.to_string()),
-            phase: ctx.request.params.get("phase").cloned().and_then(|v| serde_json::from_value(v).ok()),
-            time_budget_s: ctx.request.params.clone().get("time_budget_s").and_then(|v| v.as_u64()),
+            diff_summary: ctx
+                .request
+                .params
+                .get("diff_summary")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string()),
+            session_id: ctx
+                .request
+                .params
+                .get("session_id")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string()),
+            phase: ctx
+                .request
+                .params
+                .get("phase")
+                .cloned()
+                .and_then(|v| serde_json::from_value(v).ok()),
+            time_budget_s: ctx
+                .request
+                .params
+                .clone()
+                .get("time_budget_s")
+                .and_then(|v| v.as_u64()),
         };
 
         let engine = AssuranceEngine::new(ctx.project_root);
         let evaluated = engine.evaluate(&input)?;
         let mut response = success_response(
-            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
-            None, input.touched_paths.clone(), None,
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            None,
+            input.touched_paths.clone(),
+            None,
             if let Some(interlock) = &evaluated.interlock {
-                interlock.unblock_ops.iter().map(|op| AllowedOp {
-                    op: op.clone(),
-                    reason: format!("Unblock path for {}", interlock.code),
-                    required_params: vec![],
-                }).collect()
+                interlock
+                    .unblock_ops
+                    .iter()
+                    .map(|op| AllowedOp {
+                        op: op.clone(),
+                        reason: format!("Unblock path for {}", interlock.code),
+                        required_params: vec![],
+                    })
+                    .collect()
             } else {
                 vec![AllowedOp {
                     op: "assurance.evaluate".to_string(),
@@ -5410,14 +5821,20 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         "validate.run" => rpc_handlers::handle_validate_run(&rpc_ctx)?,
         "scaffold.next_question" => rpc_handlers::handle_scaffold_next_question(&rpc_ctx)?,
         "scaffold.apply_answer" => rpc_handlers::handle_scaffold_apply_answer(&rpc_ctx)?,
-        "scaffold.generate_artifacts" => rpc_handlers::handle_scaffold_generate_artifacts(&rpc_ctx)?,
+        "scaffold.generate_artifacts" => {
+            rpc_handlers::handle_scaffold_generate_artifacts(&rpc_ctx)?
+        }
         "standards.resolve" => rpc_handlers::handle_standards_resolve(&rpc_ctx)?,
         "mentor.obligations" => rpc_handlers::handle_mentor_obligations(&rpc_ctx)?,
         "assurance.evaluate" => rpc_handlers::handle_assurance_evaluate(&rpc_ctx)?,
         _ => error_response(
-            request.id.clone(), request.op.clone(), request.params.clone(),
-            "unknown_op".to_string(), format!("Unknown operation: {}", request.op),
-            None, mandates.clone(),
+            request.id.clone(),
+            request.op.clone(),
+            request.params.clone(),
+            "unknown_op".to_string(),
+            format!("Unknown operation: {}", request.op),
+            None,
+            mandates.clone(),
         ),
     };
 
