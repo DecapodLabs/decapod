@@ -31,6 +31,24 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{Duration, Instant};
 use ulid::Ulid;
 
+/// Spawn a validation gate in a rayon scope with timing and error capture.
+///
+/// Replaces ~10 lines of boilerplate per gate with a single invocation.
+macro_rules! gate {
+    ($scope:expr, $timings:expr, $ctx:expr, $name:literal, $body:expr) => {
+        $scope.spawn(move |_| {
+            let start = Instant::now();
+            if let Err(e) = $body {
+                fail(&format!("gate error: {e}"), $ctx);
+            }
+            $timings
+                .lock()
+                .unwrap()
+                .push(($name, start.elapsed()));
+        });
+    };
+}
+
 struct ValidationContext {
     pass_count: AtomicU32,
     fail_count: AtomicU32,
@@ -4119,477 +4137,54 @@ pub fn run_validation(
         let timings = &timings;
         let broker = broker_content.as_deref();
 
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_repo_map(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_repo_map", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_no_legacy_namespaces(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_no_legacy_namespaces", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_embedded_self_contained(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_embedded_self_contained", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_docs_templates_bucket(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_docs_templates_bucket", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_entrypoint_invariants(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_entrypoint_invariants", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_interface_contract_bootstrap(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_interface_contract_bootstrap", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_health_purity(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_health_purity", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_project_scoped_state(store, ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_project_scoped_state", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_generated_artifact_whitelist(store, ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_generated_artifact_whitelist", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_project_config_toml(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_project_config_toml", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_project_specs_docs(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_project_specs_docs", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_spec_drift(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_spec_drift", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_machine_contract(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_machine_contract", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_workunit_manifests_if_present(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_workunit_manifests_if_present", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_context_capsule_policy_contract(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_context_capsule_policy_contract", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_context_capsules_if_present(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_context_capsules_if_present", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_knowledge_promotions_if_present(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_knowledge_promotions_if_present", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_skill_cards_if_present(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_skill_cards_if_present", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_skill_resolutions_if_present(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_skill_resolutions_if_present", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_eval_gate_if_required(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_eval_gate_if_required", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_schema_determinism(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_schema_determinism", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_database_schema_versions(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_database_schema_versions", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_health_cache_integrity(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_health_cache_integrity", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_risk_map(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_risk_map", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_risk_map_violations(store, ctx, broker) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_risk_map_violations", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_policy_integrity(store, ctx, broker) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_policy_integrity", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_knowledge_integrity(store, ctx, broker) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_knowledge_integrity", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_lineage_hard_gate(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_lineage_hard_gate", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_repomap_determinism(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_repomap_determinism", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_watcher_audit(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_watcher_audit", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_watcher_purity(store, ctx, broker) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_watcher_purity", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_archive_integrity(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_archive_integrity", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_control_plane_contract(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_control_plane_contract", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_canon_mutation(store, ctx, broker) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_canon_mutation", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_heartbeat_invocation_gate(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_heartbeat_invocation_gate", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_markdown_primitives_roundtrip_gate(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings.lock().unwrap().push((
-                "validate_markdown_primitives_roundtrip_gate",
-                start.elapsed(),
-            ));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_federation_gates(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_federation_gates", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_git_workspace_context(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_git_workspace_context", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_git_protected_branch(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_git_protected_branch", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_tooling_gate(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_tooling_gate", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_state_commit_gate(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_state_commit_gate", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_obligations(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_obligations", start.elapsed()));
-        });
+        gate!(s, timings, ctx, "validate_repo_map", validate_repo_map(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_no_legacy_namespaces", validate_no_legacy_namespaces(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_embedded_self_contained", validate_embedded_self_contained(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_docs_templates_bucket", validate_docs_templates_bucket(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_entrypoint_invariants", validate_entrypoint_invariants(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_interface_contract_bootstrap", validate_interface_contract_bootstrap(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_health_purity", validate_health_purity(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_project_scoped_state", validate_project_scoped_state(store, ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_generated_artifact_whitelist", validate_generated_artifact_whitelist(store, ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_project_config_toml", validate_project_config_toml(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_project_specs_docs", validate_project_specs_docs(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_spec_drift", validate_spec_drift(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_machine_contract", validate_machine_contract(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_workunit_manifests_if_present", validate_workunit_manifests_if_present(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_context_capsule_policy_contract", validate_context_capsule_policy_contract(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_context_capsules_if_present", validate_context_capsules_if_present(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_knowledge_promotions_if_present", validate_knowledge_promotions_if_present(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_skill_cards_if_present", validate_skill_cards_if_present(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_skill_resolutions_if_present", validate_skill_resolutions_if_present(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_eval_gate_if_required", validate_eval_gate_if_required(store, ctx));
+        gate!(s, timings, ctx, "validate_schema_determinism", validate_schema_determinism(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_database_schema_versions", validate_database_schema_versions(store, ctx));
+        gate!(s, timings, ctx, "validate_health_cache_integrity", validate_health_cache_integrity(store, ctx));
+        gate!(s, timings, ctx, "validate_risk_map", validate_risk_map(store, ctx));
+        gate!(s, timings, ctx, "validate_risk_map_violations", validate_risk_map_violations(store, ctx, broker));
+        gate!(s, timings, ctx, "validate_policy_integrity", validate_policy_integrity(store, ctx, broker));
+        gate!(s, timings, ctx, "validate_knowledge_integrity", validate_knowledge_integrity(store, ctx, broker));
+        gate!(s, timings, ctx, "validate_lineage_hard_gate", validate_lineage_hard_gate(store, ctx));
+        gate!(s, timings, ctx, "validate_repomap_determinism", validate_repomap_determinism(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_watcher_audit", validate_watcher_audit(store, ctx));
+        gate!(s, timings, ctx, "validate_watcher_purity", validate_watcher_purity(store, ctx, broker));
+        gate!(s, timings, ctx, "validate_archive_integrity", validate_archive_integrity(store, ctx));
+        gate!(s, timings, ctx, "validate_control_plane_contract", validate_control_plane_contract(store, ctx));
+        gate!(s, timings, ctx, "validate_canon_mutation", validate_canon_mutation(store, ctx, broker));
+        gate!(s, timings, ctx, "validate_heartbeat_invocation_gate", validate_heartbeat_invocation_gate(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_markdown_primitives_roundtrip_gate", validate_markdown_primitives_roundtrip_gate(store, ctx));
+        gate!(s, timings, ctx, "validate_federation_gates", validate_federation_gates(store, ctx));
+        gate!(s, timings, ctx, "validate_git_workspace_context", validate_git_workspace_context(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_git_protected_branch", validate_git_protected_branch(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_tooling_gate", validate_tooling_gate(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_state_commit_gate", validate_state_commit_gate(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_obligations", validate_obligations(store, ctx));
 
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_gatekeeper_gate(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_gatekeeper_gate", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_coplayer_policy_tightening(ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_coplayer_policy_tightening", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_lcm_immutability(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_lcm_immutability", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_lcm_rebuild_gate(store, ctx) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_lcm_rebuild_gate", start.elapsed()));
-        });
-        s.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = validate_plan_governed_execution_gate(store, ctx, decapod_dir) {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings
-                .lock()
-                .unwrap()
-                .push(("validate_plan_governed_execution_gate", start.elapsed()));
-        });
+        gate!(s, timings, ctx, "validate_gatekeeper_gate", validate_gatekeeper_gate(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_coplayer_policy_tightening", validate_coplayer_policy_tightening(ctx, decapod_dir));
+        gate!(s, timings, ctx, "validate_lcm_immutability", validate_lcm_immutability(store, ctx));
+        gate!(s, timings, ctx, "validate_lcm_rebuild_gate", validate_lcm_rebuild_gate(store, ctx));
+        gate!(s, timings, ctx, "validate_plan_governed_execution_gate", validate_plan_governed_execution_gate(store, ctx, decapod_dir));
     });
 
     // Print per-gate timings in verbose mode

@@ -11,6 +11,7 @@
 
 use crate::core::broker::DbBroker;
 use crate::core::error;
+use crate::core::schemas;
 use crate::core::store::Store;
 use regex::Regex;
 use rusqlite::params;
@@ -19,110 +20,6 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-
-pub const APTITUDE_DB_NAME: &str = "aptitude.db";
-
-// ============================================================================
-// DATABASE SCHEMAS
-// ============================================================================
-
-pub const APTITUDE_DB_SCHEMA_PREFERENCES: &str = "
-    CREATE TABLE IF NOT EXISTS preferences (
-        id TEXT PRIMARY KEY,
-        category TEXT NOT NULL,
-        key TEXT NOT NULL,
-        value TEXT NOT NULL,
-        context TEXT,
-        source TEXT NOT NULL,
-        confidence INTEGER DEFAULT 100,
-        created_at TEXT NOT NULL,
-        updated_at TEXT,
-        last_accessed_at TEXT,
-        access_count INTEGER DEFAULT 0,
-        UNIQUE(category, key)
-    )
-";
-
-pub const APTITUDE_DB_SCHEMA_SKILLS: &str = "
-    CREATE TABLE IF NOT EXISTS skills (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL UNIQUE,
-        description TEXT,
-        workflow TEXT NOT NULL,
-        context TEXT,
-        usage_count INTEGER DEFAULT 0,
-        last_used_at TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT
-    )
-";
-
-pub const APTITUDE_DB_SCHEMA_PATTERNS: &str = "
-    CREATE TABLE IF NOT EXISTS patterns (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL UNIQUE,
-        category TEXT NOT NULL,
-        regex_pattern TEXT NOT NULL,
-        preference_category TEXT,
-        preference_key TEXT,
-        description TEXT,
-        created_at TEXT NOT NULL
-    )
-";
-
-pub const APTITUDE_DB_SCHEMA_OBSERVATIONS: &str = "
-    CREATE TABLE IF NOT EXISTS observations (
-        id TEXT PRIMARY KEY,
-        content TEXT NOT NULL,
-        category TEXT,
-        matched_pattern_id TEXT,
-        processed INTEGER DEFAULT 0,
-        created_at TEXT NOT NULL,
-        FOREIGN KEY(matched_pattern_id) REFERENCES patterns(id)
-    )
-";
-
-pub const APTITUDE_DB_SCHEMA_CONSOLIDATIONS: &str = "
-    CREATE TABLE IF NOT EXISTS consolidations (
-        id TEXT PRIMARY KEY,
-        source_type TEXT NOT NULL,
-        source_id TEXT NOT NULL,
-        target_type TEXT NOT NULL,
-        target_id TEXT NOT NULL,
-        reason TEXT,
-        created_at TEXT NOT NULL
-    )
-";
-
-pub const APTITUDE_DB_SCHEMA_AGENT_PROMPTS: &str = "
-    CREATE TABLE IF NOT EXISTS agent_prompts (
-        id TEXT PRIMARY KEY,
-        context TEXT NOT NULL,
-        prompt_text TEXT NOT NULL,
-        priority INTEGER DEFAULT 100,
-        active INTEGER DEFAULT 1,
-        usage_count INTEGER DEFAULT 0,
-        last_shown_at TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT
-    )
-";
-
-// Index creation statements
-pub const APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY: &str =
-    "CREATE INDEX IF NOT EXISTS idx_preferences_category ON preferences(category)";
-pub const APTITUDE_DB_SCHEMA_INDEX_PREF_KEY: &str =
-    "CREATE INDEX IF NOT EXISTS idx_preferences_key ON preferences(key)";
-pub const APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS: &str =
-    "CREATE INDEX IF NOT EXISTS idx_preferences_access ON preferences(last_accessed_at)";
-pub const APTITUDE_DB_SCHEMA_INDEX_SKILL_NAME: &str =
-    "CREATE INDEX IF NOT EXISTS idx_skills_name ON skills(name)";
-pub const APTITUDE_DB_SCHEMA_INDEX_PATTERN_CATEGORY: &str =
-    "CREATE INDEX IF NOT EXISTS idx_patterns_category ON patterns(category)";
-pub const APTITUDE_DB_SCHEMA_INDEX_OBS_PROCESSED: &str =
-    "CREATE INDEX IF NOT EXISTS idx_observations_processed ON observations(processed)";
-pub const APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT: &str =
-    "CREATE INDEX IF NOT EXISTS idx_agent_prompts_context ON agent_prompts(context)";
 
 // ============================================================================
 // DEFAULT DATA
@@ -373,12 +270,12 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
 
     broker.with_conn(&db_path, "decapod", None, "aptitude.init", |conn| {
         // Create tables (if not exists)
-        conn.execute(APTITUDE_DB_SCHEMA_PREFERENCES, [])?;
-        conn.execute(APTITUDE_DB_SCHEMA_SKILLS, [])?;
-        conn.execute(APTITUDE_DB_SCHEMA_PATTERNS, [])?;
-        conn.execute(APTITUDE_DB_SCHEMA_OBSERVATIONS, [])?;
-        conn.execute(APTITUDE_DB_SCHEMA_CONSOLIDATIONS, [])?;
-        conn.execute(APTITUDE_DB_SCHEMA_AGENT_PROMPTS, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_PREFERENCES, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_SKILLS, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_PATTERNS, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_OBSERVATIONS, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_CONSOLIDATIONS, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_AGENT_PROMPTS, [])?;
 
         // Schema migrations: add columns if they don't exist
         // These will fail silently if columns already exist
@@ -387,13 +284,13 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
         let _ = conn.execute("ALTER TABLE preferences ADD COLUMN access_count INTEGER DEFAULT 0", []);
 
         // Create indexes
-        conn.execute(APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY, [])?;
-        conn.execute(APTITUDE_DB_SCHEMA_INDEX_PREF_KEY, [])?;
-        conn.execute(APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS, [])?;
-        conn.execute(APTITUDE_DB_SCHEMA_INDEX_SKILL_NAME, [])?;
-        conn.execute(APTITUDE_DB_SCHEMA_INDEX_PATTERN_CATEGORY, [])?;
-        conn.execute(APTITUDE_DB_SCHEMA_INDEX_OBS_PROCESSED, [])?;
-        conn.execute(APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_KEY, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_SKILL_NAME, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PATTERN_CATEGORY, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_OBS_PROCESSED, [])?;
+        conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT, [])?;
 
         // Insert default patterns
         let now = now_iso();
