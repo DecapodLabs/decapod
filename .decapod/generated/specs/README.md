@@ -4,57 +4,41 @@ Canonical path: `.decapod/generated/specs/`.
 These files are the project-local contract for humans and agents.
 
 ## Snapshot
-
 - Project: decapod
-- Outcome: A daemonless control plane for AI coding agents.
+- Outcome: Daemonless control plane that drives agent convergence to user intent with proof-backed completion.
 - Detected languages: rust
-- Detected surfaces: cargo
-- Version: 0.44.3
+- Detected surfaces: cargo, cli, rpc, validation gates
 
 ## How to use this folder
-
-- `INTENT.md`: What success means, in-scope capabilities, and falsifiable non-goals.
-- `ARCHITECTURE.md`: The topology, data flow, and component responsibilities.
-- `INTERFACES.md`: CLI commands, JSON-RPC operations, and data schemas with concrete invocations.
-- `VALIDATION.md`: Proof surfaces, promotion gates, and typed error codes.
-
-## Quick Verification (Machine-Checkable)
-
-```bash
-# 1. Get capabilities
-decapod capabilities --format json
-
-# 2. Get schemas
-decapod data schema --format json --deterministic
-
-# 3. Run validation gate
-decapod validate --format json
-```
+- `INTENT.md`: product outcome, scope boundaries, and objective acceptance criteria.
+- `ARCHITECTURE.md`: topology, runtime model, deployment shape, and ADR/risk register.
+- `INTERFACES.md`: CLI/RPC/event/data contracts, timeout budgets, and failure semantics.
+- `VALIDATION.md`: promotion gate design, evidence model, and bounded execution.
+- `SEMANTICS.md`: state machines, invariants, replay semantics, and idempotency contracts.
+- `OPERATIONS.md`: SLOs, monitoring, incident response, and capacity planning.
+- `SECURITY.md`: trust boundaries, STRIDE threats, auth/authz model, and supply-chain controls.
 
 ## Canonical `.decapod/` Layout
+- `.decapod/data/`: canonical control-plane state (SQLite + ledgers).
+- `.decapod/generated/specs/`: living project specs for humans and agents.
+- `.decapod/generated/context/`: deterministic context capsules.
+- `.decapod/generated/policy/context_capsule_policy.json`: repo-native JIT context policy contract.
+- `.decapod/generated/artifacts/provenance/`: promotion manifests and convergence checklist.
+- `.decapod/generated/artifacts/inventory/`: deterministic release inventory.
+- `.decapod/generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
+- `.decapod/workspaces/`: isolated todo-scoped git worktrees.
 
-- `.decapod/data/`: Canonical control-plane state (SQLite + ledgers).
-- `.decapod/generated/specs/`: Living project specs for humans and agents.
-- `.decapod/generated/context/`: Deterministic context capsules.
-- `.decapod/generated/policy/context_capsule_policy.json`: Repo-native JIT context policy contract.
-- `.decapod/generated/artifacts/provenance/`: Promotion manifests and convergence checklist.
-- `.decapod/generated/artifacts/inventory/`: Deterministic release inventory.
-- `.decapod/generated/artifacts/diagnostics/`: Opt-in diagnostics artifacts.
-- `.decapod/workspaces/`: Isolated todo-scoped git worktrees.
+## Day-0 Onboarding Checklist
+- [ ] Confirm user-facing outcome and non-goals in `INTENT.md`.
+- [ ] Confirm architecture topology and runtime/deployment model in `ARCHITECTURE.md`.
+- [ ] Confirm all CLI/RPC interfaces and error taxonomy in `INTERFACES.md`.
+- [ ] Confirm proof surfaces and blocking gates in `VALIDATION.md`.
+- [ ] Confirm state transitions and invariants in `SEMANTICS.md`.
+- [ ] Confirm SLO/monitoring/incident ownership in `OPERATIONS.md`.
+- [ ] Confirm trust boundaries and threat mitigations in `SECURITY.md`.
+- [ ] Confirm docs + architecture diagram + changelog proof gates are defined.
+- [ ] Confirm tests pass locally and in CI.
+- [ ] Attach evidence artifacts before promotion.
 
-## Stability Guarantees
-
-| Surface | Stability |
-|---------|-----------|
-| Core CLI commands | Stable |
-| JSON-RPC operations | Stable |
-| Validation gate | Stable |
-| Schema format | Stable |
-| Error codes | Stable |
-
-## Non-Goals (Explicitly)
-
-- No daemon mode
-- No remote/cloud dependency for core function
-- No agent framework / prompt management
-- No cross-repo state sync
+## Agent Directive
+- Specs are executable governance, not placeholders. Before coding: resolve ambiguity in these docs. Before marking done: validate, update drifted sections, and attach evidence.

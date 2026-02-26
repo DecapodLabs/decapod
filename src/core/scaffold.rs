@@ -11,7 +11,8 @@ use crate::core::error;
 use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_INTENT,
     LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
-    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_README,
+    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
+    LOCAL_PROJECT_SPECS_README, LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS,
     LOCAL_PROJECT_SPECS_VALIDATION, ProjectSpecManifestEntry, ProjectSpecsManifest, hash_text,
     repo_signal_fingerprint,
 };
@@ -104,6 +105,286 @@ fn default_test_commands(seed: Option<&SpecsSeed>) -> Vec<String> {
     commands
 }
 
+fn has_language(seed: Option<&SpecsSeed>, needle: &str) -> bool {
+    let needle = needle.to_ascii_lowercase();
+    seed.map(|s| {
+        s.primary_languages
+            .iter()
+            .any(|l| l.to_ascii_lowercase().contains(&needle))
+    })
+    .unwrap_or(false)
+}
+
+fn primary_language_name(seed: Option<&SpecsSeed>) -> String {
+    seed.and_then(|s| s.primary_languages.first().cloned())
+        .unwrap_or_else(|| "not detected yet".to_string())
+}
+
+fn language_specific_test_criteria(seed: Option<&SpecsSeed>) -> Vec<String> {
+    if has_language(seed, "rust") {
+        return vec![
+            "`cargo test` passes for unit/integration coverage".to_string(),
+            "`cargo clippy -- -D warnings` passes with no denied lints".to_string(),
+            "`cargo fmt --check` passes on the repo".to_string(),
+        ];
+    }
+    if has_language(seed, "python") {
+        return vec![
+            "`pytest -q` passes for unit/integration scenarios".to_string(),
+            "`ruff check .` passes for lint quality".to_string(),
+            "`mypy .` passes for typed modules in production paths".to_string(),
+        ];
+    }
+    if has_language(seed, "go") {
+        return vec![
+            "`go test ./...` passes for all packages".to_string(),
+            "`go vet ./...` passes with no diagnostics".to_string(),
+            "`gofmt -l .` returns no files".to_string(),
+        ];
+    }
+    if has_language(seed, "typescript") || has_language(seed, "javascript") {
+        return vec![
+            "`npm test` (or `pnpm test`) passes for unit/integration suites".to_string(),
+            "`npm run lint` passes".to_string(),
+            "`npm run typecheck` passes for strict TS projects".to_string(),
+        ];
+    }
+    vec!["Repository test/lint/typecheck commands are defined and wired into CI.".to_string()]
+}
+
+fn language_specific_error_example(seed: Option<&SpecsSeed>) -> String {
+    if has_language(seed, "rust") {
+        return r#"```rust
+#[derive(Debug, thiserror::Error)]
+pub enum ApiError {
+    #[error("validation failed: {0}")]
+    Validation(String),
+    #[error("upstream timeout")]
+    UpstreamTimeout,
+    #[error("conflict: {0}")]
+    Conflict(String),
+}
+```"#
+            .to_string();
+    }
+    if has_language(seed, "python") {
+        return r#"```python
+class ApiError(Exception):
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        self.message = message
+        super().__init__(f"{code}: {message}")
+```"#
+            .to_string();
+    }
+    if has_language(seed, "go") {
+        return r#"```go
+var (
+    ErrValidation = errors.New("validation_failed")
+    ErrTimeout    = errors.New("upstream_timeout")
+    ErrConflict   = errors.New("conflict")
+)
+```"#
+            .to_string();
+    }
+    r#"```ts
+export enum ApiErrorCode {
+  Validation = "validation_failed",
+  UpstreamTimeout = "upstream_timeout",
+  Conflict = "conflict"
+}
+```"#
+        .to_string()
+}
+
+fn language_specific_supply_chain_tools(seed: Option<&SpecsSeed>) -> Vec<String> {
+    if has_language(seed, "rust") {
+        return vec!["cargo audit", "cargo deny", "cargo vet"]
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+    }
+    if has_language(seed, "python") {
+        return vec!["pip-audit", "safety", "bandit"]
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+    }
+    if has_language(seed, "go") {
+        return vec!["govulncheck", "gosec", "nancy"]
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+    }
+    vec!["npm audit", "osv-scanner", "snyk"]
+        .into_iter()
+        .map(str::to_string)
+        .collect()
+}
+
+fn language_specific_logging_hint(seed: Option<&SpecsSeed>) -> String {
+    if has_language(seed, "rust") {
+        return "Use `tracing` + `tracing-subscriber` with structured JSON output and request correlation ids.".to_string();
+    }
+    if has_language(seed, "python") {
+        return "Use `structlog` (or stdlib logging JSON formatter) with request_id, task_id, and outcome fields.".to_string();
+    }
+    if has_language(seed, "go") {
+        return "Use `zap` or `zerolog` with structured fields and propagated context ids."
+            .to_string();
+    }
+    "Use structured logging (pino/winston) with request_id, actor, latency_ms, and error_code fields.".to_string()
+}
+
+fn adaptive_topology_diagram(style: DiagramStyle, seed: Option<&SpecsSeed>) -> String {
+    let product_type = seed
+        .and_then(|s| s.product_type.as_deref())
+        .unwrap_or("service");
+    match style {
+        DiagramStyle::Ascii => {
+            if product_type.contains("cli") {
+                r#"```text
+User -> CLI Entrypoint -> Command Router -> Core Engine -> Local Store
+                                      \-> External API / Filesystem
+```"#
+                    .to_string()
+            } else if product_type.contains("frontend") {
+                r#"```text
+Browser -> UI Shell -> API Client -> Backend Gateway -> Datastores / Events
+```"#
+                    .to_string()
+            } else if product_type.contains("library") {
+                r#"```text
+Host Application -> Library API -> Domain Core -> Adapters (Store / Network)
+```"#
+                    .to_string()
+            } else {
+                r#"```text
+Client -> API Gateway -> Service Core -> Worker Queue -> Datastores
+```"#
+                    .to_string()
+            }
+        }
+        DiagramStyle::Mermaid => {
+            if product_type.contains("cli") {
+                r#"```mermaid
+flowchart LR
+  U[User] --> C[CLI Entrypoint]
+  C --> R[Command Router]
+  R --> E[Core Engine]
+  E --> S[(Local Store)]
+  E --> X[External APIs / Filesystem]
+```"#
+                    .to_string()
+            } else if product_type.contains("frontend") {
+                r#"```mermaid
+flowchart LR
+  B[Browser] --> UI[UI Shell]
+  UI --> A[API Client]
+  A --> G[Backend Gateway]
+  G --> DB[(Datastore)]
+  G --> Q[(Event Bus)]
+```"#
+                    .to_string()
+            } else if product_type.contains("library") {
+                r#"```mermaid
+flowchart LR
+  H[Host Application] --> L[Library API]
+  L --> D[Domain Core]
+  D --> AD[Adapter Layer]
+  AD --> DB[(Store)]
+  AD --> N[Network]
+```"#
+                    .to_string()
+            } else {
+                r#"```mermaid
+flowchart LR
+  C[Client] --> G[API Gateway]
+  G --> S[Service Core]
+  S --> W[Workers]
+  S --> DB[(Primary Datastore)]
+  W --> Q[(Queue)]
+```"#
+                    .to_string()
+            }
+        }
+    }
+}
+
+fn adaptive_happy_path_sequence(style: DiagramStyle, seed: Option<&SpecsSeed>) -> String {
+    let product_type = seed
+        .and_then(|s| s.product_type.as_deref())
+        .unwrap_or("service");
+    match style {
+        DiagramStyle::Ascii => {
+            if product_type.contains("cli") {
+                r#"```text
+User invokes command -> CLI parses args -> Core executes action -> state persists -> result printed
+```"#
+                    .to_string()
+            } else if product_type.contains("frontend") {
+                r#"```text
+User action -> UI validates input -> API request -> backend persists -> UI renders success
+```"#
+                    .to_string()
+            } else {
+                r#"```text
+Client request -> API validation -> domain execution -> persistence -> response with trace id
+```"#
+                    .to_string()
+            }
+        }
+        DiagramStyle::Mermaid => {
+            if product_type.contains("cli") {
+                r#"```mermaid
+sequenceDiagram
+  participant U as User
+  participant C as CLI
+  participant E as Core Engine
+  participant S as Store
+  U->>C: Run command
+  C->>E: Parse + validate
+  E->>S: Persist mutation
+  S-->>E: Ack
+  E-->>C: Result
+  C-->>U: Structured output
+```"#
+                    .to_string()
+            } else if product_type.contains("frontend") {
+                r#"```mermaid
+sequenceDiagram
+  participant U as User
+  participant UI as Frontend
+  participant API as Backend API
+  participant DB as Datastore
+  U->>UI: Submit action
+  UI->>API: Authenticated request
+  API->>DB: Write transaction
+  DB-->>API: Commit ok
+  API-->>UI: 200 + payload
+  UI-->>U: Updated view
+```"#
+                    .to_string()
+            } else {
+                r#"```mermaid
+sequenceDiagram
+  participant C as Client
+  participant G as API
+  participant D as Domain
+  participant DB as Datastore
+  C->>G: Request
+  G->>D: Validate + execute
+  D->>DB: Commit transaction
+  DB-->>D: Commit ok
+  D-->>G: Domain result
+  G-->>C: Response + trace_id
+```"#
+                    .to_string()
+            }
+        }
+    }
+}
+
 fn specs_readme_template(seed: Option<&SpecsSeed>) -> String {
     let product = seed
         .and_then(|s| s.product_name.as_deref())
@@ -134,9 +415,12 @@ These files are the project-local contract for humans and agents.
 
 ## How to use this folder
 - `INTENT.md`: what success means and what is explicitly out of scope.
-- `ARCHITECTURE.md`: the current implementation shape and planned evolution.
+- `ARCHITECTURE.md`: topology, runtime model, data boundaries, and ADR trail.
 - `INTERFACES.md`: API/CLI/events/storage contracts and failure behavior.
-- `VALIDATION.md`: required proof commands and promotion gates.
+- `VALIDATION.md`: proof commands, quality gates, and evidence artifacts.
+- `SEMANTICS.md`: state machines, invariants, replay rules, and idempotency.
+- `OPERATIONS.md`: SLOs, monitoring, incident response, and rollout strategy.
+- `SECURITY.md`: threat model, trust boundaries, auth/authz, and supply-chain posture.
 
 ## Canonical `.decapod/` Layout
 - `.decapod/data/`: canonical control-plane state (SQLite + ledgers).
@@ -149,10 +433,19 @@ These files are the project-local contract for humans and agents.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
 
 ## Day-0 Onboarding Checklist
-- [ ] Replace all placeholder bullets in each spec file.
+- [ ] Replace all placeholders in all 8 spec files.
 - [ ] Confirm primary user outcome and acceptance criteria in `INTENT.md`.
-- [ ] Document real interfaces and data boundaries in `INTERFACES.md`.
-- [ ] Run and record validation commands listed in `VALIDATION.md`.
+- [ ] Confirm topology and runtime model in `ARCHITECTURE.md`.
+- [ ] Document all inbound/outbound contracts in `INTERFACES.md`.
+- [ ] Define validation gates and CI proof surfaces in `VALIDATION.md`.
+- [ ] Define state machines and invariants in `SEMANTICS.md`.
+- [ ] Define SLOs, alerting, and incident process in `OPERATIONS.md`.
+- [ ] Define threat model and auth/authz decisions in `SECURITY.md`.
+- [ ] Ensure architecture diagram, docs, changelog, and tests are mapped to promotion gates.
+- [ ] Run all validation/test commands and attach evidence artifacts.
+
+## Agent Directive
+- Treat these files as executable governance surfaces. Before implementation: resolve ambiguity and update specs. After implementation: refresh drifted sections, rerun proof gates, and attach evidence.
 "#
     )
 }
@@ -178,12 +471,26 @@ fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
         seed.map(|s| s.detected_surfaces.as_slice()).unwrap_or(&[]),
         "not detected yet",
     );
+    let language_criteria = language_specific_test_criteria(seed)
+        .into_iter()
+        .map(|s| format!("- [ ] {}", s))
+        .collect::<Vec<_>>()
+        .join("\n");
 
     format!(
         r#"# Intent
 
 ## Product Outcome
 - {product_outcome}
+
+## Product View
+```mermaid
+flowchart LR
+  U[Primary User] --> P[{product_name}]
+  P --> O[User-visible Outcome]
+  P --> G[Proof Gates]
+  G --> E[Evidence Artifacts]
+```
 
 ## Inferred Baseline
 - Repository: {product_name}
@@ -192,26 +499,46 @@ fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
 - Detected surfaces: {surfaces}
 
 ## Scope
-- In scope for {product_name}:
-- Out of scope:
+| Area | In Scope | Proof Surface |
+|---|---|---|
+| Core workflow | Define a concrete user-visible workflow | Acceptance criteria + tests |
+| Data contracts | Document canonical inputs/outputs | `INTERFACES.md` and schema checks |
+| Delivery quality | Block promotion on broken proof surfaces | `VALIDATION.md` blocking gates |
+
+## Non-Goals (Falsifiable)
+| Non-goal | How to falsify |
+|---|---|
+| Feature creep beyond the primary outcome | Any PR adds capability not tied to outcome criteria |
+| Shipping without evidence | Missing validation artifacts for promoted changes |
+| Ambiguous ownership boundaries | Missing owner/system-of-record in interfaces |
 
 ## Constraints
-- Technical:
-- Operational:
-- Security/compliance:
+- Technical: runtime, dependency, and topology boundaries are explicit.
+- Operational: deployment, rollback, and incident ownership are defined.
+- Security/compliance: sensitive data handling and authz are mandatory.
 
 ## Acceptance Criteria (must be objectively testable)
 - [ ] {done_criteria}
 - [ ] Non-functional targets are met (latency, reliability, cost, etc.).
 - [ ] Validation gates pass and artifacts are attached.
+{language_criteria}
+
+## Tradeoffs Register
+| Decision | Benefit | Cost | Review Trigger |
+|---|---|---|---|
+| Simplicity vs extensibility | Faster iteration | Potential rework | Feature set expands |
+| Strict gates vs dev speed | Higher confidence | More upfront discipline | Lead time regressions |
 
 ## First Implementation Slice
 - [ ] Define the smallest user-visible workflow to ship first.
-- [ ] Define what data/contracts are required for that workflow.
+- [ ] Define required data/contracts for that workflow.
 - [ ] Define what is intentionally postponed until v2.
 
-## Open Questions
-- List unresolved decisions that block implementation confidence.
+## Open Questions (with decision deadlines)
+| Question | Owner | Deadline | Decision |
+|---|---|---|---|
+| Which interfaces are versioned at launch? | TBD | YYYY-MM-DD | |
+| Which non-functional target is hardest to hit? | TBD | YYYY-MM-DD | |
 "#
     )
 }
@@ -220,7 +547,7 @@ fn specs_architecture_template(style: DiagramStyle, seed: Option<&SpecsSeed>) ->
     let summary = seed
         .and_then(|s| s.architecture_direction.as_deref())
         .unwrap_or(
-            "Describe the architecture in 5-8 dense sentences focused on deployment reality, system boundaries, and operational risks.",
+            "Describe architecture in deployment-reality terms: runtime boundaries, operational ownership, and failure containment.",
         );
     let runtime_langs = seed
         .map(|s| s.primary_languages.join(", "))
@@ -233,76 +560,6 @@ fn specs_architecture_template(style: DiagramStyle, seed: Option<&SpecsSeed>) ->
     let product_type = seed
         .and_then(|s| s.product_type.as_deref())
         .unwrap_or("to be confirmed");
-    let deployment_hint = if surfaces.contains("frontend") && surfaces.contains("backend") {
-        "Frontend runs in user-facing edge/runtime environments; backend runs in service/container environments with explicit contract boundaries."
-    } else if surfaces.contains("frontend") {
-        "Primary runtime is client/edge-facing; deployment must include CDN/edge and API dependency policy."
-    } else if surfaces.contains("backend") {
-        "Primary runtime is service/container process space; deployment must include network, persistence, and rollout topology."
-    } else {
-        "Runtime topology must be explicitly defined before promotion."
-    };
-    let execution_hint = if runtime_langs.contains("rust") {
-        "Process model should document async runtime, worker model, synchronization strategy, and blocking boundaries."
-    } else {
-        "Process model should document concurrency strategy, scheduling model, and isolation boundaries."
-    };
-    let schema_hint = if surfaces.contains("backend") {
-        "Document authoritative schema objects, ownership boundaries, migration policy, and backward-compatibility rules."
-    } else {
-        "Document data models, state ownership, and compatibility policy for persisted/shared artifacts."
-    };
-
-    let diagram = match style {
-        DiagramStyle::Ascii => {
-            r#"```text
-Human Intent
-    |
-    v
-Agent Swarm(s)  <---->  Decapod Control Plane  <---->  Repo + Services
-                             |      |      |
-                             |      |      +-- Validation Gates
-                             |      +--------- Provenance + Artifacts
-                             +---------------- Work Unit / Context Governance
-```"#
-        }
-        DiagramStyle::Mermaid => {
-            r#"```mermaid
-flowchart LR
-  H[Human Intent] --> A[Agent Swarm(s)]
-  A <--> D[Decapod Control Plane]
-  D <--> R[Repo + Services]
-  D --> G[Validation Gates]
-  D --> P[Provenance + Artifacts]
-  D --> W[Work Unit and Context Governance]
-```"#
-        }
-    };
-    let flow_diagram = match style {
-        DiagramStyle::Ascii => {
-            r#"```text
-Input/Event --> Contract Parse --> Planning/Dispatch --> Execution --> Verification --> Promotion Gate
-      |              |                  |                  |               |                 |
-      +--------------+------------------+------------------+---------------+-----------------+
-                                Trace + Metrics + Artifacts (durable evidence)
-```"#
-        }
-        DiagramStyle::Mermaid => {
-            r#"```mermaid
-flowchart LR
-  I[Input or Event] --> C[Contract Parse]
-  C --> P[Planning or Dispatch]
-  P --> E[Execution]
-  E --> V[Verification]
-  V --> G[Promotion Gate]
-  I -.-> T[Trace + Metrics + Artifacts]
-  C -.-> T
-  P -.-> T
-  E -.-> T
-  V -.-> T
-```"#
-        }
-    };
 
     format!(
         r#"# Architecture
@@ -316,18 +573,61 @@ flowchart LR
 - Product type: {product_type}
 
 ## Topology
-{diagram}
+{topology}
+
+## Store Boundaries
+```mermaid
+flowchart LR
+  I[Inbound Requests] --> C[Core Runtime]
+  C --> W[(Write Store)]
+  C --> R[(Read Store)]
+  C --> E[External Dependency]
+  E --> DLQ[(DLQ / Retry Queue)]
+```
+
+## Happy Path Sequence
+{happy_path}
+
+## Error Path
+```mermaid
+sequenceDiagram
+  participant Client
+  participant API
+  participant Upstream
+  Client->>API: Request
+  API->>Upstream: Call with timeout budget
+  Upstream--xAPI: Timeout / failure
+  API-->>Client: Typed error + retry guidance + trace_id
+```
 
 ## Execution Path
-{flow_diagram}
-- Deployment assumptions: {deployment_hint}
-- Concurrency/runtime note: {execution_hint}
+- Ingress parse + validation:
+- Policy/interlock checks:
+- Core execution + persistence:
+- Verification and artifact emission:
+
+## Concurrency and Runtime Model
+- Execution model:
+- Isolation boundaries:
+- Backpressure strategy:
+- Shared state synchronization:
+
+## Deployment Topology
+- Runtime units:
+- Region/zone model:
+- Rollout strategy (blue/green/canary):
+- Rollback trigger and blast-radius scope:
 
 ## Data and Contracts
 - Inbound contracts (CLI/API/events):
 - Outbound dependencies (datastores/queues/external APIs):
 - Data ownership boundaries:
-- Schema responsibility note: {schema_hint}
+- Schema evolution + migration policy:
+
+## ADR Register
+| ADR | Title | Status | Rationale | Date |
+|---|---|---|---|---|
+| ADR-001 | Initial topology choice | Proposed | Define first stable architecture | YYYY-MM-DD |
 
 ## Delivery Plan (first 3 slices)
 - Slice 1 (ship first):
@@ -335,9 +635,13 @@ flowchart LR
 - Slice 3:
 
 ## Risks and Mitigations
-- Risk:
-  Mitigation:
-"#
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Contract drift across components | Medium | High | Spec + schema checks in CI |
+| Runtime saturation under peak load | Medium | High | Capacity model + load tests |
+"#,
+        topology = adaptive_topology_diagram(style, seed),
+        happy_path = adaptive_happy_path_sequence(style, seed),
     )
 }
 
@@ -349,8 +653,30 @@ fn specs_interfaces_template(seed: Option<&SpecsSeed>) -> String {
     let product_type = seed
         .and_then(|s| s.product_type.as_deref())
         .unwrap_or("not classified yet");
+    let error_example = language_specific_error_example(seed);
+
     format!(
         r#"# Interfaces
+
+## Contract Principles
+- Prefer explicit schemas over implicit behavior.
+- Every mutating interface defines idempotency semantics.
+- Every failure path maps to a typed, documented error code.
+
+## API / RPC Contracts
+| Interface | Method | Request Schema | Response Schema | Errors | Idempotency |
+|---|---|---|---|---|---|
+| `TODO` | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
+
+## Event Consumers
+| Consumer | Event | Ordering Requirement | Retry Policy | DLQ Policy |
+|---|---|---|---|---|
+| `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
+
+## Outbound Dependencies
+| Dependency | Purpose | SLA | Timeout | Circuit-Breaker |
+|---|---|---|---|---|
+| `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
 
 ## Inbound Contracts
 - API / RPC entrypoints:
@@ -358,24 +684,32 @@ fn specs_interfaces_template(seed: Option<&SpecsSeed>) -> String {
 - Event/webhook consumers:
 - Repository-detected surfaces: {surfaces}
 
-## Outbound Dependencies
-- Datastores:
-- External APIs/services:
-- Queues/brokers:
-
 ## Data Ownership
 - Source-of-truth tables/collections:
 - Cross-boundary read models:
 - Consistency expectations:
 
-## Failure Semantics
-- Retry/backoff policy:
-- Timeout/circuit behavior:
-- Degradation behavior:
+## Error Taxonomy Example ({product_type})
+{error_example}
 
-## Interface Notes
-- Product type hint: {product_type}
-- Enumerate explicit error codes for each mutating interface.
+## Failure Semantics
+| Failure Class | Retry/Backoff | Client Contract | Observability |
+|---|---|---|---|
+| Validation | No retry | 4xx typed error | warn log + metric |
+| Dependency timeout | Exponential backoff | 503 with retryable code | error log + alert |
+| Conflict | Conditional retry | 409 with conflict detail | info log + metric |
+
+## Timeout Budget
+| Hop | Budget (ms) | Notes |
+|---|---|---|
+| Client -> Edge/API | 500 | Includes auth + routing |
+| API -> Domain | 300 | Includes validation |
+| Domain -> Store/Dependency | 200 | Includes retry overhead |
+
+## Interface Versioning
+- Version strategy (`v1`, date-based, semver):
+- Backward-compatibility guarantees:
+- Deprecation window and removal policy:
 "#
     )
 }
@@ -394,6 +728,34 @@ fn specs_validation_template(seed: Option<&SpecsSeed>) -> String {
     format!(
         r#"# Validation
 
+## Validation Philosophy
+> Validation is a release gate, not documentation theater.
+
+## Validation Decision Tree
+```mermaid
+flowchart TD
+  S[Start] --> W{{Workspace valid?}}
+  W -->|No| F1[Fail: workspace gate]
+  W -->|Yes| T{{Tests pass?}}
+  T -->|No| F2[Fail: test gate]
+  T -->|Yes| D{{Docs + diagrams + changelog updated?}}
+  D -->|No| F3[Fail: docs gate]
+  D -->|Yes| V[Run decapod validate]
+  V --> P{{All blocking gates pass?}}
+  P -->|No| F4[Fail: promotion blocked]
+  P -->|Yes| E[Emit promotion evidence]
+```
+
+## Promotion Flow
+```mermaid
+flowchart LR
+  A[Plan] --> B[Implement]
+  B --> C[Test]
+  C --> D[Validate]
+  D --> E[Assemble Evidence]
+  E --> F[Promote]
+```
+
 ## Proof Surfaces
 - `decapod validate`
 - Required test commands:
@@ -401,19 +763,273 @@ fn specs_validation_template(seed: Option<&SpecsSeed>) -> String {
 - Required integration/e2e commands:
 
 ## Promotion Gates
-- Blocking gates:
-- Warning-only gates:
-- Kill switches:
+
+## Blocking Gates
+| Gate | Command | Evidence |
+|---|---|---|
+| Architecture + interface drift check | `decapod validate` | Gate output |
+| Tests pass | project test command | CI + local logs |
+| Docs + changelog current | repo docs checks | PR diff |
+| Security critical checks pass | security scanner suite | scanner reports |
+
+## Warning Gates
+| Gate | Trigger | Follow-up SLA |
+|---|---|---|
+| Coverage regression warning | Coverage drops below target | 48h |
+| Non-blocking perf drift | P95 regression below hard threshold | 72h |
 
 ## Evidence Artifacts
-- Manifest paths:
-- Required hashes/checksums:
-- Trace/log attachments:
+| Artifact | Path | Required For |
+|---|---|---|
+| Validation report | `.decapod/generated/artifacts/provenance/*` | Promotion |
+| Test logs | CI artifact store | Promotion |
+| Architecture diagram snapshot | `ARCHITECTURE.md` | Promotion |
+| Changelog entry | `CHANGELOG.md` | Promotion |
 
 ## Regression Guardrails
 - Baseline references:
 - Statistical thresholds (if non-deterministic):
 - Rollback criteria:
+
+## Bounded Execution
+| Operation | Timeout | Failure Mode |
+|---|---|---|
+| Validation | 30s | timeout or lock |
+| Unit test suite | project-defined | non-zero exit |
+| Integration suite | project-defined | non-zero exit |
+
+## Coverage Checklist
+- [ ] Unit tests cover critical branches.
+- [ ] Integration tests cover key user flows.
+- [ ] Failure-path tests cover retries/timeouts.
+- [ ] Docs/diagram/changelog updates included.
+"#
+    )
+}
+
+fn specs_semantics_template(seed: Option<&SpecsSeed>) -> String {
+    let lang = primary_language_name(seed);
+    format!(
+        r#"# Semantics
+
+## State Machines
+```mermaid
+stateDiagram-v2
+  [*] --> Draft
+  Draft --> InProgress
+  InProgress --> Verified
+  InProgress --> Blocked
+  Blocked --> InProgress
+  Verified --> [*]
+```
+
+| From | Event | To | Guard | Side Effect |
+|---|---|---|---|---|
+| Draft | start | InProgress | owner assigned | emit state change |
+| InProgress | validate_pass | Verified | all blocking gates pass | persist receipt hash |
+| InProgress | dependency_blocked | Blocked | external dependency unavailable | emit alert event |
+
+## Invariants
+| Invariant | Type | Validation |
+|---|---|---|
+| No promoted change without proof | System | validation gate |
+| Canonical source-of-truth per entity | Data | interface/spec review |
+| Mutation events are replayable | Data | deterministic replay |
+
+## Event Sourcing Schema
+| Field | Type | Description |
+|---|---|---|
+| event_id | string | globally unique event id |
+| aggregate_id | string | entity/workflow id |
+| event_type | string | semantic transition |
+| payload | object | transition data |
+| recorded_at | timestamp | append time |
+
+## Replay Semantics
+- Replay order:
+- Conflict resolution:
+- Snapshot cadence:
+- Determinism proof strategy:
+
+## Error Code Semantics
+- Namespace:
+- Stable compatibility window:
+- Mapping to retry/degrade behavior:
+
+## Domain Rules
+- Business rule 1:
+- Business rule 2:
+- Business rule 3:
+
+## Idempotency Contracts
+| Operation | Idempotency Key | Duplicate Behavior |
+|---|---|---|
+| create/update mutation | request_id | return original result |
+| async enqueue | event_id | ignore duplicate enqueue |
+
+## Language Note
+- Primary language inferred: {lang}
+"#
+    )
+}
+
+fn specs_operations_template(seed: Option<&SpecsSeed>) -> String {
+    let logging_hint = language_specific_logging_hint(seed);
+    format!(
+        r#"# Operations
+
+## Operational Readiness Checklist
+- [ ] On-call ownership defined.
+- [ ] SLOs and alert thresholds defined.
+- [ ] Dashboards for latency/errors/throughput are live.
+- [ ] Runbooks linked for all Sev1/Sev2 alerts.
+- [ ] Rollback plan validated.
+- [ ] Capacity guardrails documented.
+
+## Service Level Objectives
+| SLI | SLO Target | Measurement Window | Owner |
+|---|---|---|---|
+| Availability | 99.9% | 30d | TBD |
+| P95 latency | TBD | 7d | TBD |
+| Error rate | < 1% | 7d | TBD |
+
+## Monitoring
+| Signal | Metric | Threshold | Alert |
+|---|---|---|---|
+| Traffic | requests/sec | baseline drift | warn |
+| Latency | p95/p99 | threshold breach | page |
+| Reliability | error ratio | threshold breach | page |
+| Saturation | cpu/memory/queue depth | sustained high | page |
+
+## Health Checks
+- Liveness:
+- Readiness:
+- Dependency health:
+- Synthetic transaction:
+
+## Alerting and Runbooks
+| Alert | Severity | Runbook Link | Escalation |
+|---|---|---|---|
+| API error rate spike | Sev2 | TBD | App on-call |
+| Persistent dependency timeout | Sev1 | TBD | App + platform |
+| Validation gate outage | Sev2 | TBD | Maintainers |
+
+## Incident Response
+- Incident commander model:
+- Communication channels:
+- Postmortem SLA:
+- Corrective action tracking:
+
+## Structured Logging
+- {logging_hint}
+
+## Severity Definitions
+| Severity | Definition | Response Time |
+|---|---|---|
+| Sev1 | Production outage or data integrity risk | Immediate |
+| Sev2 | Major functionality impaired | 30 minutes |
+| Sev3 | Minor degradation | Next business day |
+
+## Deployment Strategy
+- Primary strategy:
+- Change validation process:
+- Rollback and forward-fix policy:
+
+## Environment Configuration
+| Variable | Purpose | Default | Secret |
+|---|---|---|---|
+| APP_ENV | runtime environment | dev | no |
+| LOG_LEVEL | observability verbosity | info | no |
+| API_TOKEN | external auth | none | yes |
+
+## Capacity Planning
+- Peak request assumption:
+- Storage growth model:
+- Queue/worker headroom:
+"#
+    )
+}
+
+fn specs_security_template(seed: Option<&SpecsSeed>) -> String {
+    let scanners = language_specific_supply_chain_tools(seed)
+        .into_iter()
+        .map(|tool| format!("`{}`", tool))
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!(
+        r#"# Security
+
+## Threat Model
+```mermaid
+flowchart LR
+  U[User/Client] --> A[Application Boundary]
+  A --> D[(Data Stores)]
+  A --> X[External Dependencies]
+  I[Identity Provider] --> A
+  A --> L[Audit Logs]
+```
+
+## STRIDE Table
+| Threat | Surface | Mitigation | Verification |
+|---|---|---|---|
+| Spoofing | Auth boundary | strong auth + token validation | auth tests |
+| Tampering | State mutation APIs | integrity checks + RBAC | integration tests |
+| Repudiation | Critical actions | immutable audit logs | log review |
+| Information disclosure | Data at rest/in transit | encryption + classification | security scans |
+| Denial of service | Hot paths | rate limit + backpressure | load tests |
+| Elevation of privilege | Admin interfaces | least privilege + policy checks | authz tests |
+
+## Authentication
+- Identity source:
+- Token/session lifetime:
+- Rotation and revocation:
+
+## Authorization
+- Role model:
+- Resource-level policy:
+- Privilege escalation controls:
+
+## Data Classification
+| Data Class | Examples | Storage Rules | Access Rules |
+|---|---|---|---|
+| Public | docs, non-sensitive metadata | standard | unrestricted |
+| Internal | operational telemetry | controlled | team access |
+| Sensitive | tokens, PII, secrets | encrypted | least privilege |
+
+## Sensitive Data Handling
+- Encryption at rest:
+- Encryption in transit:
+- Redaction in logs:
+- Retention + deletion policy:
+
+## Supply Chain Security
+- Recommended scanners: {scanners}
+- Dependency update cadence:
+- Signed artifact/provenance strategy:
+
+## Secrets Management
+| Secret | Source | Rotation | Consumer |
+|---|---|---|---|
+| API credentials | secret manager/env | periodic | runtime services |
+| Signing keys | HSM/KMS/local secure store | periodic | release pipeline |
+
+## Security Testing
+| Test Type | Cadence | Tooling |
+|---|---|---|
+| SAST | each PR | language linters/scanners |
+| Dependency scan | each PR + weekly | supply-chain tools |
+| DAST/pentest | scheduled | external/internal |
+
+## Compliance and Audit
+- Regulatory scope:
+- Audit evidence location:
+- Exception process:
+
+## Pre-Promotion Security Checklist
+- [ ] Threat model updated for changed surfaces.
+- [ ] Auth/authz tests pass.
+- [ ] Dependency vulnerability scan reviewed.
+- [ ] No unresolved critical/high security findings.
 "#
     )
 }
@@ -658,6 +1274,9 @@ pub fn scaffold_project_entrypoints(
                 }
                 LOCAL_PROJECT_SPECS_INTERFACES => specs_interfaces_template(seed),
                 LOCAL_PROJECT_SPECS_VALIDATION => specs_validation_template(seed),
+                LOCAL_PROJECT_SPECS_SEMANTICS => specs_semantics_template(seed),
+                LOCAL_PROJECT_SPECS_OPERATIONS => specs_operations_template(seed),
+                LOCAL_PROJECT_SPECS_SECURITY => specs_security_template(seed),
                 _ => continue,
             };
             specs_files.push((spec.path, content));
@@ -680,7 +1299,7 @@ pub fn scaffold_project_entrypoints(
         if !opts.dry_run {
             let manifest = ProjectSpecsManifest {
                 schema_version: LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA.to_string(),
-                template_version: "scaffold-v1".to_string(),
+                template_version: "scaffold-v2".to_string(),
                 generated_at: crate::core::time::now_epoch_z(),
                 repo_signal_fingerprint: repo_signal_fingerprint(&opts.target_dir)?,
                 files: manifest_entries,

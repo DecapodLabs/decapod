@@ -17,6 +17,9 @@ Decapod-managed projects MUST contain exactly this canonical local specs surface
 3. `.decapod/generated/specs/ARCHITECTURE.md`
 4. `.decapod/generated/specs/INTERFACES.md`
 5. `.decapod/generated/specs/VALIDATION.md`
+6. `.decapod/generated/specs/SEMANTICS.md`
+7. `.decapod/generated/specs/OPERATIONS.md`
+8. `.decapod/generated/specs/SECURITY.md`
 
 This set is hardcoded in the Decapod binary (`core::project_specs::LOCAL_PROJECT_SPECS`) and consumed by:
 - `decapod init` scaffolding
@@ -33,6 +36,9 @@ This set is hardcoded in the Decapod binary (`core::project_specs::LOCAL_PROJECT
 | `.decapod/generated/specs/ARCHITECTURE.md` | Technical implementation architecture | `interfaces/ARCHITECTURE_FOUNDATIONS.md` |
 | `.decapod/generated/specs/INTERFACES.md` | Inbound/outbound contracts and failure semantics | `interfaces/CONTROL_PLANE.md` |
 | `.decapod/generated/specs/VALIDATION.md` | Proof surfaces, promotion gates, and evidence model | `interfaces/TESTING.md` |
+| `.decapod/generated/specs/SEMANTICS.md` | State machines, invariants, replay semantics, and idempotency contracts | `interfaces/PROJECT_SPECS.md` |
+| `.decapod/generated/specs/OPERATIONS.md` | SLO/SLI targets, monitoring, incident operations, and deployment readiness | `interfaces/PROJECT_SPECS.md` |
+| `.decapod/generated/specs/SECURITY.md` | Threat model, trust boundaries, auth/authz, and supply-chain security posture | `interfaces/PROJECT_SPECS.md` |
 | `.decapod/generated/specs/README.md` | Local specs index and navigation | `core/INTERFACES.md` |
 
 ---
