@@ -1,149 +1,65 @@
 # Intent
 
 ## Product Outcome
+Decapod is a daemonless local-first control plane that enforces agent workflow discipline so outputs converge on explicit user intent with machine-verifiable proof.
 
-Decapod is a **daemonless, local-first control plane for AI coding agents**. Agents invoke it on-demand to turn implicit human intent into explicit context, enforce boundaries, and produce proof-backed completion evidence.
-
-### Product View
-
-```mermaid
-flowchart TB
-    subgraph Human["Human Intent"]
-        H[Natural Language Request]
-    end
-
-    subgraph Agent["AI Agent Loop"]
-        A[Agent Process]
-    end
-
-    subgraph Decapod["Decapod Control Plane"]
-        D[Runtime<br/>(on-demand process)]
-        S[Session Manager]
-        W[Workspace Isolation]
-        T[Todo Ledger]
-        V[Validate Gate]
-        K[Knowledge Store]
-        C[Context Capsule]
-    end
-
-    subgraph Boundary["Store Boundary"]
-        direction LR
-        US[User Store<br/>~/.decapod]
-        RS[Repo Store<br/><repo>/.decapod]
-    end
-
-    H --> A
-    A -->|"rpc --op agent.init"| D
-    A -->|"cli commands"| D
-    
-    D --> S
-    D --> W
-    D --> T
-    D --> V
-    D --> K
-    D --> C
-    
-    D -->|workspace.ensure| W
-    W -->|"isolated branch"| W
-    
-    D -->|todo events| T
-    T -->|receipt hash| A
-    
-    D -->|validate| V
-    V -->|proof receipt| A
-    
-    D <-->|store boundary| Boundary
-    
-    style D fill:#9f9,stroke:#333
-    style V fill:#f99,stroke:#333
-    style Boundary fill:#ff9,stroke:#333
-```
-
-## Scope
-
-### In Scope
-
-| Capability | Proof Surface |
-|------------|---------------|
-| Session management | `decapod session acquire` / `decapod session status` |
-| Workspace isolation | `decapod workspace ensure` creates branch in `.decapod/workspaces/` |
-| Task tracking | `decapod todo add/claim/done/list` with event-sourced ledger |
-| Validation gates | `decapod validate` returns pass/fail with typed errors |
-| Preflight check | `decapod preflight --op <op>` predicts failures before operation |
-| Impact analysis | `decapod impact --changed-files <files>` predicts validate outcomes |
-| Knowledge management | `decapod data knowledge add/search/promote` |
-| Context capsules | `decapod govern capsule query` returns deterministic scoped docs |
-| Policy enforcement | `decapod govern policy` risk classification |
-| Health monitoring | `decapod govern health summary` |
-
-### Out of Scope
-
-- **Agent framework**: Decapod does not generate prompts or manage agent loops
-- **Daemon mode**: No background process; strictly on-demand invocation
-- **Remote services**: All state is local-first; no cloud dependency for core function
-- **Multi-repo federation**: Federation is knowledge-graph scoped, not cross-repo state sync
-
-### Non-Goals Visualized
-
+## Product View
 ```mermaid
 flowchart LR
-    subgraph In["IN SCOPE ✓"]
-        D[Daemonless<br/>on-demand]
-        L[Local-first<br/>state]
-        B[Boundaries<br/>enforced]
-        P[Proof-backed<br/>completion]
-    end
-
-    subgraph Out["OUT OF SCOPE ✗"]
-        DA[Daemon<br/>mode]
-        R[Remote<br/>services]
-        AF[Agent<br/>framework]
-        MF[Multi-repo<br/>federation]
-    end
-
-    style In fill:#9f9,stroke:#333
-    style Out fill:#f99,stroke:#333
+  H[Human Intent] --> A[AI Agent]
+  A --> D[Decapod Runtime]
+  D --> W[Workspace Isolation]
+  D --> T[Task Ledger]
+  D --> V[Validation Gates]
+  V --> E[Evidence Artifacts]
+  E --> H
 ```
 
-## Constraints
+## Inferred Baseline
+- Repository: decapod
+- Product type: control-plane CLI + RPC runtime
+- Primary languages: rust
+- Detected surfaces: CLI commands, RPC operations, gatekeeper/validate, workspaces
 
-### Technical Constraints
-
-- Single-process invocation model (no daemon)
-- SQLite-backed local storage
-- Embedded constitution (no external fetching)
-- Bounded execution for all validation gates
-
-### Operational Constraints
-
-- Must not pollute user store from repo store
-- Must enforce workspace isolation (no main/master mutation)
-- All state changes must produce receipt hashes
+## Scope
+| Area | In Scope | Proof Surface |
+|---|---|---|
+| Intent convergence | Force explicit intent, scope, and done criteria | `decapod context.resolve`, specs drift checks |
+| Industry-grade output | Architecture/docs/changelog/tests gate promotion | `decapod validate`, CI checks |
+| Agent safety interlocks | Workspace/session/verification/store boundaries | typed interlock codes in validate/preflight |
 
 ## Non-Goals (Falsifiable)
+| Non-goal | How to falsify |
+|---|---|
+| Act as an agent framework | If Decapod starts generating prompts/agent loops |
+| Permit work on protected branches | If mutate operations succeed on main/master |
+| Promote without proof | If done/publish succeeds with failed validation |
 
-| Claim | Verification |
-|-------|--------------|
-| Decapod never runs in background | No daemon code paths; process exits after each invocation |
-| Same inputs produce same outputs | Deterministic schema: `decapod data schema --deterministic` |
-| No store contamination | User store (`~/.decapod`) and repo store (`<repo>/.decapod/`) are separate |
-| Workspace isolation enforced | Cannot work on main/master; `decapod workspace ensure` required |
+## Constraints
+- Technical: daemonless process model, deterministic schema and receipts.
+- Operational: task ownership, workspace isolation, and evidence-linked completion.
+- Security/compliance: strict store boundaries and explicit sensitive-data controls.
 
-## Acceptance Criteria
+## Acceptance Criteria (must be objectively testable)
+- [ ] User intent is resolved into scoped actionable context before implementation.
+- [ ] `cargo test`, `cargo clippy -- -D warnings`, and `cargo fmt --check` pass.
+- [ ] `decapod validate` passes locally and in CI.
+- [ ] Architecture diagram, docs, and changelog updates are present for behavioral changes.
+- [ ] Completion records link to proof artifacts and typed gate outcomes.
 
-1. **Installation**: `cargo install decapod && decapod init` succeeds in empty directory
-2. **Session**: `decapod session acquire` produces session receipt
-3. **Workspace**: `decapod workspace ensure` creates isolated branch in worktree
-4. **Task lifecycle**: `decapod todo add` → `claim` → `done` persists to SQLite ledger
-5. **Validation gate**: `decapod validate` exits 0 on clean repo, non-zero with typed errors otherwise
-6. **Proof receipt**: Validation output includes hashes, touched paths, gate results
-7. **Preflight check**: `decapod preflight --op validate` on protected branch returns `WORKSPACE_REQUIRED` + next action
-8. **Impact analysis**: `decapod impact --changed-files <files>` on protected branch predicts `will_fail_validate: true`
+## Tradeoffs Register
+| Decision | Benefit | Cost | Review Trigger |
+|---|---|---|---|
+| Strict governance interlocks | Higher output quality and auditability | Added workflow overhead | contributor friction spikes |
+| Local-first state | Reliability and privacy | reduced cloud-native centralization | federation requirements increase |
 
 ## First Implementation Slice
+- [ ] initialize session/workspace/task lifecycle with typed failure semantics.
+- [ ] wire validation gate as blocking precondition for completion.
+- [ ] attach provenance artifacts for promotion-ready outputs.
 
-1. `decapod init` - scaffold `.decapod/`, create entrypoints
-2. `decapod session acquire` - establish agent session with receipt
-3. `decapod workspace ensure` - create isolated worktree
-4. `decapod todo add/claim/done` - task lifecycle with event sourcing
-5. `decapod validate` - deterministic validation gate
+## Open Questions (with decision deadlines)
+| Question | Owner | Deadline | Decision |
+|---|---|---|---|
+| Which new gates should be blocking vs warning by default? | Core maintainers | 2026-03-15 | |
+| Which CI evidence artifacts are required for release PRs? | Release owner | 2026-03-22 | |
