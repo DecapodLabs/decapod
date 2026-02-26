@@ -556,6 +556,7 @@ fn test_intent_context_spec_contract_alignment() {
     let core_decapod = fs::read_to_string(repo_root.join("constitution/core/DECAPOD.md"))
         .expect("read constitution/core/DECAPOD.md");
     let lib_rs = fs::read_to_string(repo_root.join("src/lib.rs")).expect("read src/lib.rs");
+    let cli_rs = fs::read_to_string(repo_root.join("src/cli.rs")).expect("read src/cli.rs");
 
     let contract_phrase =
         "turn intent into context, then context into explicit specifications before inference";
@@ -569,7 +570,7 @@ fn test_intent_context_spec_contract_alignment() {
         "constitution/core/DECAPOD.md must state the intent->context->specifications flow"
     );
     assert!(
-        lib_rs.contains(contract_phrase),
-        "src/lib.rs CLI about text must state the intent->context->specifications flow"
+        lib_rs.contains(contract_phrase) || cli_rs.contains(contract_phrase),
+        "src/lib.rs or src/cli.rs CLI about text must state the intent->context->specifications flow"
     );
 }
