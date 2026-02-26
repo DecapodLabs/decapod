@@ -14,7 +14,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::Sender;
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 use ulid::Ulid;
@@ -22,29 +21,15 @@ use ulid::Ulid;
 /// Database broker providing serialized access to Decapod state.
 ///
 /// The DbBroker is the "Thin Waist" control plane for all state mutations.
-/// It provides:
-/// - Write queue API for serialized mutation pipeline (future: background thread)
-/// - Read/write access with proper locking
-///
-#[allow(dead_code)]
+/// It provides read/write access with proper locking and full audit trail.
 pub struct DbBroker {
     audit_log_path: PathBuf,
-    write_queue: Option<Sender<WriteRequest>>,
 }
 
 #[derive(Clone)]
 struct CacheEntry {
     value: JsonValue,
     expires_at: Instant,
-}
-
-/// Write request for the queue - simplified for Send safety
-#[allow(dead_code)]
-struct WriteRequest {
-    db_path: PathBuf,
-    sql: String,
-    params: Vec<Box<dyn rusqlite::ToSql + Send>>,
-    result_tx: std::sync::mpsc::Sender<Result<u64, error::DecapodError>>,
 }
 
 /// Audit event for a brokered database operation.
@@ -94,7 +79,6 @@ impl DbBroker {
     pub fn new(root: &Path) -> Self {
         Self {
             audit_log_path: root.join("broker.events.jsonl"),
-            write_queue: None, // Future: spawn background thread
         }
     }
 
