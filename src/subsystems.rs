@@ -2,8 +2,8 @@
 //!
 //! Adding a new subsystem: append one entry to `SUBSYSTEMS`.
 
-use crate::core::{db, error};
 use crate::core::todo;
+use crate::core::{db, error};
 use crate::plugins::{
     aptitude, archive, cron, decide, federation, feedback, health, lcm, policy, reflex,
 };
@@ -20,18 +20,54 @@ pub(crate) struct SubsystemInit {
 /// Order matters for daemonless first-start reliability — sequential execution
 /// avoids SQLite contention during bootstrap.
 pub(crate) const SUBSYSTEMS: &[SubsystemInit] = &[
-    SubsystemInit { name: "todo", initialize_db: todo::initialize_todo_db },
-    SubsystemInit { name: "health", initialize_db: health::initialize_health_db },
-    SubsystemInit { name: "policy", initialize_db: policy::initialize_policy_db },
-    SubsystemInit { name: "feedback", initialize_db: feedback::initialize_feedback_db },
-    SubsystemInit { name: "archive", initialize_db: archive::initialize_archive_db },
-    SubsystemInit { name: "knowledge", initialize_db: db::initialize_knowledge_db },
-    SubsystemInit { name: "aptitude", initialize_db: aptitude::initialize_aptitude_db },
-    SubsystemInit { name: "federation", initialize_db: federation::initialize_federation_db },
-    SubsystemInit { name: "decide", initialize_db: decide::initialize_decide_db },
-    SubsystemInit { name: "lcm", initialize_db: lcm::initialize_lcm_db },
-    SubsystemInit { name: "cron", initialize_db: cron::initialize_cron_db },
-    SubsystemInit { name: "reflex", initialize_db: reflex::initialize_reflex_db },
+    SubsystemInit {
+        name: "todo",
+        initialize_db: todo::initialize_todo_db,
+    },
+    SubsystemInit {
+        name: "health",
+        initialize_db: health::initialize_health_db,
+    },
+    SubsystemInit {
+        name: "policy",
+        initialize_db: policy::initialize_policy_db,
+    },
+    SubsystemInit {
+        name: "feedback",
+        initialize_db: feedback::initialize_feedback_db,
+    },
+    SubsystemInit {
+        name: "archive",
+        initialize_db: archive::initialize_archive_db,
+    },
+    SubsystemInit {
+        name: "knowledge",
+        initialize_db: db::initialize_knowledge_db,
+    },
+    SubsystemInit {
+        name: "aptitude",
+        initialize_db: aptitude::initialize_aptitude_db,
+    },
+    SubsystemInit {
+        name: "federation",
+        initialize_db: federation::initialize_federation_db,
+    },
+    SubsystemInit {
+        name: "decide",
+        initialize_db: decide::initialize_decide_db,
+    },
+    SubsystemInit {
+        name: "lcm",
+        initialize_db: lcm::initialize_lcm_db,
+    },
+    SubsystemInit {
+        name: "cron",
+        initialize_db: cron::initialize_cron_db,
+    },
+    SubsystemInit {
+        name: "reflex",
+        initialize_db: reflex::initialize_reflex_db,
+    },
 ];
 
 /// Initialize all subsystem databases sequentially.
