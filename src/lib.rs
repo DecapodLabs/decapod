@@ -9,6 +9,10 @@
 pub mod constitution;
 pub mod core;
 pub mod plugins;
+pub(crate) mod cli;
+pub(crate) mod subsystems;
+
+use cli::*;
 
 use core::{
     db, docs, docs_cli, error, flight_recorder, migration, obligation, plan_governance, proof,
@@ -21,7 +25,7 @@ use plugins::{
     health, knowledge, lcm, map_ops, policy, primitives, reflex, verify, watcher, workflow,
 };
 
-use clap::{CommandFactory, Parser, Subcommand};
+use clap::{CommandFactory, Parser};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -35,1068 +39,10 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-#[derive(Parser, Debug)]
-#[clap(
-    name = "decapod",
-    version = env!("CARGO_PKG_VERSION"),
-    about = "Decapod is the daemonless, local-first control plane that agents call on demand to turn intent into context, then context into explicit specifications before inference, enforce boundaries, and produce proof-backed completion across concurrent multi-agent work. 🦀",
-    disable_version_flag = true
-)]
-struct Cli {
-    #[clap(subcommand)]
-    command: Command,
-}
+// CLI struct definitions have been moved to src/cli.rs
 
-#[derive(clap::Args, Debug)]
-struct ValidateCli {
-    /// Store to validate: 'user' (blank-slate semantics) or 'repo' (dogfood backlog).
-    #[clap(long, default_value = "repo")]
-    store: String,
-    /// Output format: 'text' or 'json'.
-    #[clap(long, default_value = "text")]
-    format: String,
-    /// Print per-gate timing information.
-    #[clap(long, short = 'v')]
-    verbose: bool,
-}
+// (remaining CLI struct definitions removed — now in src/cli.rs)
 
-#[derive(clap::Args, Debug)]
-struct CapabilitiesCli {
-    /// Output format: 'json' or 'text'.
-    #[clap(long, default_value = "text")]
-    format: String,
-}
-
-#[derive(clap::Args, Debug)]
-struct WorkspaceCli {
-    #[clap(subcommand)]
-    command: WorkspaceCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum WorkspaceCommand {
-    /// Ensure an isolated workspace exists (create if needed)
-    Ensure {
-        /// Branch name (auto-generated if not provided)
-        #[clap(long)]
-        branch: Option<String>,
-        /// Use a container for the workspace
-        #[clap(long)]
-        container: bool,
-    },
-    /// Show current workspace status
-    Status,
-    /// Publish workspace changes as a patch/PR bundle
-    Publish {
-        /// Title for the change
-        #[clap(long)]
-        title: Option<String>,
-        /// Description for the change
-        #[clap(long)]
-        description: Option<String>,
-    },
-}
-
-#[derive(clap::Args, Debug)]
-struct RpcCli {
-    /// Operation to perform
-    #[clap(long)]
-    op: Option<String>,
-    /// JSON parameters
-    #[clap(long)]
-    params: Option<String>,
-    /// Read request from stdin instead of command line
-    #[clap(long)]
-    stdin: bool,
-}
-
-// ===== Grouped Command Structures =====
-
-#[derive(clap::Args, Debug)]
-struct InitGroupCli {
-    #[clap(subcommand)]
-    command: Option<InitCommand>,
-    /// Directory to initialize (defaults to current working directory).
-    #[clap(short, long)]
-    dir: Option<PathBuf>,
-    /// Overwrite existing files by archiving them under `<dir>/.decapod_archive/`.
-    #[clap(long)]
-    force: bool,
-    /// Show what would change without writing files.
-    #[clap(long)]
-    dry_run: bool,
-    /// Generate project specs docs scaffolding under `.decapod/generated/specs/` (enabled by default).
-    #[clap(long = "no-specs", action = clap::ArgAction::SetFalse, default_value_t = true)]
-    specs: bool,
-    /// Diagram style for generated `.decapod/generated/specs/ARCHITECTURE.md`.
-    #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
-    diagram_style: InitDiagramStyle,
-    /// Force creation of all 3 entrypoint files (GEMINI.md, AGENTS.md, CLAUDE.md).
-    #[clap(long)]
-    all: bool,
-    /// Create only CLAUDE.md entrypoint file.
-    #[clap(long)]
-    claude: bool,
-    /// Create only GEMINI.md entrypoint file.
-    #[clap(long)]
-    gemini: bool,
-    /// Create only AGENTS.md entrypoint file.
-    #[clap(long)]
-    agents: bool,
-    /// Seed product name for generated specs (non-interactive safe).
-    #[clap(long)]
-    product_name: Option<String>,
-    /// Seed product summary/outcome for generated specs (non-interactive safe).
-    #[clap(long)]
-    product_summary: Option<String>,
-    /// Seed architecture direction for generated specs (non-interactive safe).
-    #[clap(long)]
-    architecture_direction: Option<String>,
-    /// Seed product type for generated specs (e.g. service_or_library/application).
-    #[clap(long)]
-    product_type: Option<String>,
-    /// Seed done criteria for generated specs (non-interactive safe).
-    #[clap(long)]
-    done_criteria: Option<String>,
-    /// Seed primary languages (repeatable and/or comma-separated).
-    #[clap(long = "primary-language", value_delimiter = ',')]
-    primary_languages: Vec<String>,
-    /// Seed detected surfaces (repeatable and/or comma-separated).
-    #[clap(long = "surface", value_delimiter = ',')]
-    detected_surfaces: Vec<String>,
-}
-
-#[derive(Subcommand, Debug)]
-enum InitCommand {
-    /// Remove all Decapod files from repository
-    Clean {
-        /// Directory to clean (defaults to current working directory).
-        #[clap(short, long)]
-        dir: Option<PathBuf>,
-    },
-    /// Apply explicit init options (non-interactive).
-    #[clap(alias = "wtih")]
-    With(InitWithCli),
-}
-
-#[derive(clap::Args, Debug, Clone)]
-struct InitWithCli {
-    /// Directory to initialize (defaults to current working directory).
-    #[clap(short, long)]
-    dir: Option<PathBuf>,
-    /// Overwrite existing files by archiving them under `<dir>/.decapod_archive/`.
-    #[clap(long)]
-    force: bool,
-    /// Show what would change without writing files.
-    #[clap(long)]
-    dry_run: bool,
-    /// Force creation of all entrypoint files.
-    #[clap(long)]
-    all: bool,
-    /// Create only CLAUDE.md entrypoint file.
-    #[clap(long)]
-    claude: bool,
-    /// Create only GEMINI.md entrypoint file.
-    #[clap(long)]
-    gemini: bool,
-    /// Create only AGENTS.md entrypoint file.
-    #[clap(long)]
-    agents: bool,
-    /// Generate project specs docs scaffolding under `.decapod/generated/specs/` (enabled by default).
-    #[clap(long = "no-specs", action = clap::ArgAction::SetFalse, default_value_t = true)]
-    specs: bool,
-    /// Diagram style for generated `.decapod/generated/specs/ARCHITECTURE.md`.
-    #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
-    diagram_style: InitDiagramStyle,
-    /// Seed product name for generated specs (non-interactive safe).
-    #[clap(long)]
-    product_name: Option<String>,
-    /// Seed product summary/outcome for generated specs (non-interactive safe).
-    #[clap(long)]
-    product_summary: Option<String>,
-    /// Seed architecture direction for generated specs (non-interactive safe).
-    #[clap(long)]
-    architecture_direction: Option<String>,
-    /// Seed product type for generated specs (e.g. service_or_library/application).
-    #[clap(long)]
-    product_type: Option<String>,
-    /// Seed done criteria for generated specs (non-interactive safe).
-    #[clap(long)]
-    done_criteria: Option<String>,
-    /// Seed primary languages (repeatable and/or comma-separated).
-    #[clap(long = "primary-language", value_delimiter = ',')]
-    primary_languages: Vec<String>,
-    /// Seed detected surfaces (repeatable and/or comma-separated).
-    #[clap(long = "surface", value_delimiter = ',')]
-    detected_surfaces: Vec<String>,
-}
-
-#[derive(clap::ValueEnum, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-enum InitDiagramStyle {
-    Ascii,
-    Mermaid,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct DecapodProjectConfig {
-    schema_version: String,
-    init: InitConfigSection,
-    repo: RepoContext,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct InitConfigSection {
-    specs: bool,
-    diagram_style: InitDiagramStyle,
-    entrypoints: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-struct RepoContext {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    product_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    product_summary: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "architecture_direction", alias = "architecture_intent")]
-    architecture_direction: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    product_type: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    done_criteria: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    primary_languages: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    detected_surfaces: Vec<String>,
-}
-
-impl Default for DecapodProjectConfig {
-    fn default() -> Self {
-        Self {
-            schema_version: "1.0.0".to_string(),
-            init: InitConfigSection {
-                specs: true,
-                diagram_style: InitDiagramStyle::Ascii,
-                entrypoints: vec![
-                    "AGENTS.md".to_string(),
-                    "CLAUDE.md".to_string(),
-                    "GEMINI.md".to_string(),
-                    "CODEX.md".to_string(),
-                ],
-            },
-            repo: RepoContext::default(),
-        }
-    }
-}
-
-#[derive(clap::Args, Debug)]
-struct SessionCli {
-    #[clap(subcommand)]
-    command: SessionCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum SessionCommand {
-    /// Acquire a new session token (required before using other commands)
-    Acquire,
-    /// Show current session status
-    Status,
-    /// Release the current session token
-    Release,
-    /// Bootstrap a governed work session with stubs and handshake artifact
-    Init {
-        /// Intended scope for this work session
-        #[clap(long, default_value = "governed-work-session")]
-        scope: String,
-        /// Proof commands this session commits to run
-        #[clap(long = "proof")]
-        proofs: Vec<String>,
-        /// Overwrite existing stubs if they already exist
-        #[clap(long)]
-        force: bool,
-    },
-}
-
-#[derive(clap::Args, Debug)]
-struct SetupCli {
-    #[clap(subcommand)]
-    command: SetupCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum SetupCommand {
-    /// Install or uninstall repository git hooks
-    Hook {
-        /// Install conventional commit message validation hook
-        #[clap(long)]
-        commit_msg: bool,
-        /// Install Rust pre-commit hook (fmt + clippy)
-        #[clap(long)]
-        pre_commit: bool,
-        /// Remove installed hooks
-        #[clap(long)]
-        uninstall: bool,
-    },
-}
-
-#[derive(clap::Args, Debug)]
-struct GovernCli {
-    #[clap(subcommand)]
-    command: GovernCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum GovernCommand {
-    /// Risk classification and approvals
-    Policy(policy::PolicyCli),
-
-    /// Claims, proofs, and system health
-    Health(health::HealthCli),
-
-    /// Execute verification proofs
-    Proof(ProofCommandCli),
-
-    /// Run integrity watchlist checks
-    Watcher(WatcherCli),
-
-    /// Operator feedback and preferences
-    Feedback(FeedbackCli),
-
-    /// Workspace safety gates: path blocklist, diff size, secret scan, dangerous patterns
-    Gatekeeper(GatekeeperCli),
-
-    /// Plan-governed execution artifacts and gates
-    Plan(PlanCli),
-
-    /// Work unit manifest artifacts (intent/spec/state/proof chain)
-    Workunit(WorkunitCli),
-
-    /// Deterministic context capsule query over embedded constitution docs
-    Capsule(CapsuleCli),
-}
-
-#[derive(clap::Args, Debug)]
-struct PlanCli {
-    #[clap(subcommand)]
-    command: PlanCommand,
-}
-
-#[derive(clap::ValueEnum, Clone, Debug)]
-enum PlanStateArg {
-    Draft,
-    Annotating,
-    Approved,
-    Executing,
-    Done,
-}
-
-impl From<PlanStateArg> for plan_governance::PlanState {
-    fn from(value: PlanStateArg) -> Self {
-        match value {
-            PlanStateArg::Draft => Self::Draft,
-            PlanStateArg::Annotating => Self::Annotating,
-            PlanStateArg::Approved => Self::Approved,
-            PlanStateArg::Executing => Self::Executing,
-            PlanStateArg::Done => Self::Done,
-        }
-    }
-}
-
-#[derive(Subcommand, Debug)]
-enum PlanCommand {
-    /// Initialize governed PLAN artifact
-    Init {
-        #[clap(long)]
-        title: String,
-        #[clap(long)]
-        intent: String,
-        #[clap(long = "todo-id")]
-        todo_ids: Vec<String>,
-        #[clap(long = "proof-hook")]
-        proof_hooks: Vec<String>,
-        #[clap(long = "unknown")]
-        unknowns: Vec<String>,
-        #[clap(long = "question")]
-        human_questions: Vec<String>,
-        #[clap(long = "forbidden-path")]
-        forbidden_paths: Vec<String>,
-        #[clap(long)]
-        file_touch_budget: Option<usize>,
-    },
-    /// Patch governed PLAN artifact
-    Update {
-        #[clap(long)]
-        title: Option<String>,
-        #[clap(long)]
-        intent: Option<String>,
-        #[clap(long = "todo-id")]
-        todo_ids: Vec<String>,
-        #[clap(long = "proof-hook")]
-        proof_hooks: Vec<String>,
-        #[clap(long = "unknown")]
-        unknowns: Vec<String>,
-        #[clap(long = "question")]
-        human_questions: Vec<String>,
-        #[clap(long, default_value_t = false)]
-        clear_unknowns: bool,
-        #[clap(long, default_value_t = false)]
-        clear_questions: bool,
-        #[clap(long = "forbidden-path")]
-        forbidden_paths: Vec<String>,
-        #[clap(long)]
-        file_touch_budget: Option<usize>,
-    },
-    /// Set plan state
-    SetState {
-        #[clap(long, value_enum)]
-        state: PlanStateArg,
-    },
-    /// Shortcut for setting plan state to APPROVED
-    Approve,
-    /// Display current plan artifact
-    Status,
-    /// Execute readiness check with typed pushback markers
-    CheckExecute {
-        #[clap(long)]
-        todo_id: Option<String>,
-    },
-}
-
-#[derive(clap::Args, Debug)]
-struct WorkunitCli {
-    #[clap(subcommand)]
-    command: WorkunitCommand,
-}
-
-#[derive(clap::ValueEnum, Clone, Debug)]
-enum WorkunitStatusArg {
-    Draft,
-    Executing,
-    Claimed,
-    Verified,
-}
-
-impl From<WorkunitStatusArg> for core::workunit::WorkUnitStatus {
-    fn from(value: WorkunitStatusArg) -> Self {
-        match value {
-            WorkunitStatusArg::Draft => Self::Draft,
-            WorkunitStatusArg::Executing => Self::Executing,
-            WorkunitStatusArg::Claimed => Self::Claimed,
-            WorkunitStatusArg::Verified => Self::Verified,
-        }
-    }
-}
-
-#[derive(Subcommand, Debug)]
-enum WorkunitCommand {
-    /// Initialize a work unit manifest for a task
-    Init {
-        #[clap(long)]
-        task_id: String,
-        #[clap(long)]
-        intent_ref: String,
-    },
-    /// Get full work unit manifest JSON
-    Get {
-        #[clap(long)]
-        task_id: String,
-    },
-    /// Show compact work unit status
-    Status {
-        #[clap(long)]
-        task_id: String,
-    },
-    /// Attach a spec reference to a work unit
-    AttachSpec {
-        #[clap(long)]
-        task_id: String,
-        #[clap(long = "ref")]
-        reference: String,
-    },
-    /// Attach a state reference to a work unit
-    AttachState {
-        #[clap(long)]
-        task_id: String,
-        #[clap(long = "ref")]
-        reference: String,
-    },
-    /// Replace proof plan gates for a work unit
-    SetProofPlan {
-        #[clap(long)]
-        task_id: String,
-        #[clap(long = "gate")]
-        gates: Vec<String>,
-    },
-    /// Record proof result for a gate
-    RecordProof {
-        #[clap(long)]
-        task_id: String,
-        #[clap(long)]
-        gate: String,
-        #[clap(long)]
-        status: String,
-        #[clap(long)]
-        artifact: Option<String>,
-    },
-    /// Transition workunit status through governed state machine
-    Transition {
-        #[clap(long)]
-        task_id: String,
-        #[clap(long, value_enum)]
-        to: WorkunitStatusArg,
-    },
-}
-
-#[derive(clap::Args, Debug)]
-struct CapsuleCli {
-    #[clap(subcommand)]
-    command: CapsuleCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum CapsuleCommand {
-    /// Query a deterministic context capsule from embedded docs
-    Query {
-        #[clap(long)]
-        topic: String,
-        #[clap(long)]
-        scope: String,
-        #[clap(long)]
-        risk_tier: Option<String>,
-        #[clap(long)]
-        task_id: Option<String>,
-        #[clap(long)]
-        workunit_id: Option<String>,
-        #[clap(long, default_value_t = 6)]
-        limit: usize,
-        #[clap(long, default_value_t = false)]
-        write: bool,
-    },
-}
-
-#[derive(clap::Args, Debug)]
-struct DataCli {
-    #[clap(subcommand)]
-    command: DataCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum DataCommand {
-    /// Session archives (MOVE-not-TRIM)
-    Archive(ArchiveCli),
-
-    /// Repository knowledge base
-    Knowledge(KnowledgeCli),
-
-    /// Token budgets and context packing
-    Context(ContextCli),
-
-    /// Subsystem schemas and discovery
-    Schema(SchemaCli),
-
-    /// Repository structure and dependencies
-    Repo(RepoCli),
-
-    /// Audit log access (The Thin Waist)
-    Broker(BrokerCli),
-
-    /// Aptitude memory and preferences
-    #[clap(aliases = ["memory"])]
-    Aptitude(aptitude::AptitudeCli),
-
-    /// Governed agent memory — typed knowledge graph
-    Federation(federation::FederationCli),
-
-    /// Markdown-native primitive layer
-    Primitives(primitives::PrimitivesCli),
-}
-
-#[derive(clap::Args, Debug)]
-struct AutoCli {
-    #[clap(subcommand)]
-    command: AutoCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum AutoCommand {
-    /// Scheduled tasks (time-based)
-    Cron(cron::CronCli),
-
-    /// Event-driven automation
-    Reflex(reflex::ReflexCli),
-
-    /// Workflow automation and discovery
-    Workflow(workflow::WorkflowCli),
-
-    /// Ephemeral isolated container execution
-    Container(container::ContainerCli),
-}
-
-#[derive(clap::Args, Debug)]
-struct QaCli {
-    #[clap(subcommand)]
-    command: QaCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum QaCommand {
-    /// Verify previously completed work (proof replay + drift checks)
-    Verify(verify::VerifyCli),
-
-    /// CI validation checks
-    Check {
-        /// Check crate description matches expected
-        #[clap(long)]
-        crate_description: bool,
-        /// Smoke-check all discoverable command help surfaces
-        #[clap(long)]
-        commands: bool,
-        /// Run all checks
-        #[clap(long)]
-        all: bool,
-    },
-
-    /// Run gatling regression test across all CLI code paths
-    Gatling(plugins::gatling::GatlingCli),
-}
-
-#[derive(clap::Args, Debug)]
-struct HandshakeCli {
-    /// Intended scope of work for this agent/session
-    #[clap(long)]
-    scope: String,
-    /// Proof commands this agent commits to run
-    #[clap(long = "proof")]
-    proofs: Vec<String>,
-}
-
-#[derive(clap::Args, Debug)]
-struct ReleaseCli {
-    #[clap(subcommand)]
-    command: ReleaseCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum ReleaseCommand {
-    /// Validate release readiness (versioning, changelog, manifests, lockfile)
-    Check,
-    /// Emit deterministic repository inventory JSON for CI artifacts
-    Inventory,
-    /// Normalize and stamp deterministic policy lineage across provenance manifests
-    LineageSync,
-}
-
-// ===== Main Command Enum =====
-
-#[derive(clap::Args, Debug)]
-struct TraceCli {
-    #[clap(subcommand)]
-    command: TraceCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum TraceCommand {
-    /// Export local traces
-    Export {
-        /// Number of last traces to export
-        #[clap(long, default_value = "10")]
-        last: usize,
-    },
-}
-
-#[derive(Subcommand, Debug)]
-enum Command {
-    /// Activate local control plane state and run startup migrations
-    #[clap(name = "activate")]
-    Activate,
-
-    /// Bootstrap system and manage lifecycle
-    #[clap(name = "init", visible_alias = "i")]
-    Init(InitGroupCli),
-
-    /// Configure repository (hooks, settings)
-    #[clap(name = "setup")]
-    Setup(SetupCli),
-
-    /// Session token management (required for agent operation)
-    #[clap(name = "session", visible_alias = "s")]
-    Session(SessionCli),
-
-    /// Access methodology documentation
-    #[clap(name = "docs", visible_alias = "d")]
-    Docs(docs_cli::DocsCli),
-
-    /// Track tasks and work items
-    #[clap(name = "todo", visible_alias = "t")]
-    Todo(todo::TodoCli),
-
-    /// Governance-native obligation graph
-    #[clap(name = "obligation", visible_alias = "o")]
-    Obligation(obligation::ObligationCli),
-
-    /// Validate methodology compliance
-    #[clap(name = "validate", visible_alias = "v")]
-    Validate(ValidateCli),
-
-    /// Show version information
-    #[clap(name = "version")]
-    Version,
-
-    /// Governance: policy, health, proofs, audits
-    #[clap(name = "govern", visible_alias = "g")]
-    Govern(GovernCli),
-
-    /// Data: archives, knowledge, context, schemas
-    #[clap(name = "data")]
-    Data(DataCli),
-
-    /// Automation: scheduled and event-driven
-    #[clap(name = "auto", visible_alias = "a")]
-    Auto(AutoCli),
-
-    /// Quality assurance: verification and checks
-    #[clap(name = "qa", visible_alias = "q")]
-    Qa(QaCli),
-
-    /// Architecture decision prompting
-    #[clap(name = "decide")]
-    Decide(decide::DecideCli),
-
-    /// Agent workspace management
-    #[clap(name = "workspace", visible_alias = "w")]
-    Workspace(WorkspaceCli),
-
-    /// Structured JSON-RPC interface for agents
-    #[clap(name = "rpc")]
-    Rpc(RpcCli),
-
-    /// Deterministic agent handshake artifact (repo-native)
-    #[clap(name = "handshake")]
-    Handshake(HandshakeCli),
-
-    /// Release lifecycle checks and guards
-    #[clap(name = "release")]
-    Release(ReleaseCli),
-
-    /// Show Decapod capabilities (for agent discovery)
-    #[clap(name = "capabilities")]
-    Capabilities(CapabilitiesCli),
-
-    /// Preflight check: before any operation, predict what will fail
-    #[clap(name = "preflight")]
-    Preflight(PreflightCli),
-
-    /// Impact analysis: predict validation outcomes for changed files
-    #[clap(name = "impact")]
-    Impact(ImpactCli),
-
-    /// Local trace management
-    #[clap(name = "trace")]
-    Trace(TraceCli),
-
-    /// Variance-aware evaluation artifacts and promotion gates
-    #[clap(name = "eval")]
-    Eval(eval::EvalCli),
-
-    /// Governance Flight Recorder - render timeline from event logs
-    #[clap(name = "flight-recorder")]
-    FlightRecorder(flight_recorder::FlightRecorderCli),
-
-    /// STATE_COMMIT: prove and verify cryptographic state commitments
-    #[clap(name = "state-commit")]
-    StateCommit(StateCommitCli),
-
-    /// Preflight health checks for the workspace
-    #[clap(name = "doctor")]
-    Doctor(doctor::DoctorCli),
-
-    /// Lossless Context Management — immutable originals + deterministic summaries
-    #[clap(name = "lcm")]
-    Lcm(lcm::LcmCli),
-
-    /// Deterministic map operators — structured parallel processing
-    #[clap(name = "map")]
-    Map(map_ops::MapCli),
-
-    /// Run demonstrations of Decapod features
-    #[clap(name = "demo")]
-    Demo(DemoCli),
-}
-
-#[derive(clap::Args, Debug)]
-struct BrokerCli {
-    #[clap(subcommand)]
-    command: BrokerCommand,
-}
-
-#[derive(clap::Args, Debug)]
-struct StateCommitCli {
-    #[clap(subcommand)]
-    command: StateCommitCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum StateCommitCommand {
-    /// Compute STATE_COMMIT for the current workspace
-    Prove {
-        /// Base commit SHA (required)
-        #[clap(long)]
-        base: String,
-        /// Head commit SHA (defaults to current HEAD)
-        #[clap(long)]
-        head: Option<String>,
-        /// Output file for scope_record.cbor
-        #[clap(long, default_value = "scope_record.cbor")]
-        output: PathBuf,
-    },
-    /// Verify a STATE_COMMIT matches current workspace
-    Verify {
-        /// Path to scope_record.cbor
-        #[clap(long)]
-        scope_record: PathBuf,
-        /// Expected state_commit_root
-        #[clap(long)]
-        expected_root: Option<String>,
-    },
-    /// Explain the contents of a scope_record.cbor file
-    Explain {
-        /// Path to scope_record.cbor
-        #[clap(long)]
-        scope_record: PathBuf,
-    },
-}
-
-#[derive(Subcommand, Debug)]
-enum BrokerCommand {
-    /// Show the audit log of brokered mutations.
-    Audit,
-    /// Verify audit log integrity and detect crash-induced divergence.
-    Verify,
-}
-
-#[derive(clap::Args, Debug)]
-struct KnowledgeCli {
-    #[clap(subcommand)]
-    command: KnowledgeCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum KnowledgeCommand {
-    /// Add an entry to project knowledge
-    Add {
-        #[clap(long)]
-        id: String,
-        #[clap(long)]
-        title: String,
-        #[clap(long)]
-        text: String,
-        #[clap(long)]
-        provenance: String,
-        #[clap(long)]
-        claim_id: Option<String>,
-    },
-    /// Search project knowledge
-    Search {
-        #[clap(long)]
-        query: String,
-    },
-    /// Record explicit promotion of advisory/episodic knowledge into procedural class
-    Promote {
-        #[clap(long)]
-        source_entry_id: String,
-        #[clap(long = "evidence-ref")]
-        evidence_refs: Vec<String>,
-        #[clap(long)]
-        approved_by: String,
-        #[clap(long)]
-        reason: String,
-    },
-}
-
-#[derive(clap::Args, Debug)]
-struct RepoCli {
-    #[clap(subcommand)]
-    command: RepoCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum RepoCommand {
-    /// Generate a deterministic summary of the repo
-    Map,
-    /// Generate a Markdown dependency graph (Mermaid format)
-    Graph,
-}
-
-#[derive(clap::Args, Debug)]
-struct WatcherCli {
-    #[clap(subcommand)]
-    command: WatcherCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum WatcherCommand {
-    /// Run all checks in the watchlist
-    Run,
-}
-
-#[derive(clap::Args, Debug)]
-struct ArchiveCli {
-    #[clap(subcommand)]
-    command: ArchiveCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum ArchiveCommand {
-    /// List all session archives
-    List,
-    /// Verify archive integrity (hashes and presence)
-    Verify,
-}
-
-#[derive(clap::Args, Debug)]
-struct FeedbackCli {
-    #[clap(subcommand)]
-    command: FeedbackCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum FeedbackCommand {
-    /// Add operator feedback to the ledger
-    Add {
-        #[clap(long)]
-        source: String,
-        #[clap(long)]
-        text: String,
-        #[clap(long)]
-        links: Option<String>,
-    },
-    /// Propose preference updates based on feedback
-    Propose,
-}
-
-#[derive(clap::Args, Debug)]
-struct GatekeeperCli {
-    #[clap(subcommand)]
-    command: GatekeeperCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum GatekeeperCommand {
-    /// Check staged/changed files against safety gates
-    Check {
-        /// Paths to check (defaults to git staged files)
-        #[clap(long)]
-        paths: Option<Vec<String>>,
-        /// Maximum diff size in bytes (default 10MB)
-        #[clap(long)]
-        max_diff_bytes: Option<u64>,
-        /// Disable secret scanning
-        #[clap(long)]
-        no_secrets: bool,
-        /// Disable dangerous pattern scanning
-        #[clap(long)]
-        no_dangerous: bool,
-    },
-}
-
-#[derive(clap::Args, Debug)]
-pub struct ProofCommandCli {
-    #[clap(subcommand)]
-    pub command: ProofSubCommand,
-}
-
-#[derive(Subcommand, Debug)]
-pub enum ProofSubCommand {
-    /// Run all configured proofs
-    Run,
-    /// Run a specific proof by name
-    Test {
-        #[clap(long)]
-        name: String,
-    },
-    /// Show proof configuration and results
-    List,
-}
-
-#[derive(clap::Args, Debug)]
-struct ContextCli {
-    #[clap(subcommand)]
-    command: ContextCommand,
-}
-
-#[derive(Subcommand, Debug)]
-enum ContextCommand {
-    /// Audit current session token usage against profiles.
-    Audit {
-        #[clap(long)]
-        profile: String,
-        #[clap(long)]
-        files: Vec<PathBuf>,
-    },
-    /// Perform MOVE-not-TRIM archival of a session file.
-    Pack {
-        #[clap(long)]
-        path: PathBuf,
-        #[clap(long)]
-        summary: String,
-    },
-    /// Restore content from an archive (budget-gated)
-    Restore {
-        #[clap(long)]
-        id: String,
-        #[clap(long, default_value = "main")]
-        profile: String,
-        #[clap(long)]
-        current_files: Vec<PathBuf>,
-    },
-}
-
-#[derive(clap::Args, Debug)]
-struct SchemaCli {
-    /// Format: json | md
-    #[clap(long, default_value = "json")]
-    format: String,
-    /// Optional: filter by subsystem name
-    #[clap(long)]
-    subsystem: Option<String>,
-    /// Force deterministic output (removes volatile timestamps)
-    #[clap(long)]
-    deterministic: bool,
-}
-
-#[derive(clap::Args, Debug)]
-struct PreflightCli {
-    /// Operation to preflight (e.g., todo.add, validate, workspace.ensure)
-    #[clap(long)]
-    op: Option<String>,
-    /// Output format: json | text
-    #[clap(long, default_value = "json")]
-    format: String,
-    /// Session ID to preflight for
-    #[clap(long)]
-    session: Option<String>,
-}
-
-#[derive(clap::Args, Debug)]
-struct ImpactCli {
-    /// Comma-separated list of changed files
-    #[clap(long)]
-    changed_files: Option<String>,
-    /// Output format: json | text
-    #[clap(long, default_value = "json")]
-    format: String,
-    /// Predict mode: don't actually run gates, just predict
-    #[clap(long)]
-    predict: bool,
-}
-
-#[derive(clap::Args, Debug)]
-struct DemoCli {
-    /// Demo to run: interlock
-    #[clap(long, default_value = "interlock")]
-    demo: String,
-}
 
 fn find_decapod_project_root(start_dir: &Path) -> Result<PathBuf, error::DecapodError> {
     let mut current_dir = PathBuf::from(start_dir);
@@ -1975,22 +921,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
             let migration_result =
                 migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
-                    // Intentionally sequential for daemonless first-start reliability.
-                    // Parallel init can contend on SQLite and produce immediate
-                    // DatabaseBusy errors in bootstrap/validate flows.
-                    todo::initialize_todo_db(data_root)?;
-                    health::initialize_health_db(data_root)?;
-                    policy::initialize_policy_db(data_root)?;
-                    feedback::initialize_feedback_db(data_root)?;
-                    archive::initialize_archive_db(data_root)?;
-                    db::initialize_knowledge_db(data_root)?;
-                    aptitude::initialize_aptitude_db(data_root)?;
-                    federation::initialize_federation_db(data_root)?;
-                    decide::initialize_decide_db(data_root)?;
-                    lcm::initialize_lcm_db(data_root)?;
-                    cron::initialize_cron_db(data_root)?;
-                    reflex::initialize_reflex_db(data_root)?;
-                    Ok(())
+                    subsystems::initialize_all_dbs(data_root)
                 });
             match migration_result {
                 Ok(()) => {}
@@ -5631,14 +4562,763 @@ fn run_state_commit_command(
     }
 }
 
-/// Run RPC command
-fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::DecapodError> {
-    use crate::core::assurance::{AssuranceEngine, AssuranceEvaluateInput};
+// --- RPC Handler Context and Extracted Handlers ---
+
+/// Shared context threaded through all RPC handlers.
+struct RpcCtx<'a> {
+    project_root: &'a Path,
+    store: &'a Store,
+    request: &'a crate::core::rpc::RpcRequest,
+    mandates: Vec<crate::core::docs::Mandate>,
+}
+
+mod rpc_handlers {
+    use super::*;
+    use crate::core::rpc::*;
+    use crate::core::workspace;
+    use crate::core::standards;
     use crate::core::interview;
     use crate::core::mentor;
+    use crate::core::assurance::{AssuranceEngine, AssuranceEvaluateInput};
+    use super::RpcCtx;
+
+    pub(crate) fn handle_agent_init(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let workspace_status = workspace::get_workspace_status(ctx.project_root)?;
+        let mut allowed_ops = workspace::get_allowed_ops(&workspace_status);
+
+        let agent_id = current_agent_id();
+        if agent_id != "unknown"
+            && let Ok(mut tasks) = todo::list_tasks(
+                &ctx.store.root,
+                Some("open".to_string()),
+                None, None, None, None,
+            )
+        {
+            tasks.retain(|t| t.assigned_to == agent_id);
+            if tasks.is_empty() {
+                allowed_ops.insert(0, AllowedOp {
+                    op: "todo.add".to_string(),
+                    reason: "MANDATORY: Create a task for your work".to_string(),
+                    required_params: vec!["title".to_string()],
+                });
+            } else if tasks.iter().any(|t| t.assigned_to.is_empty()) {
+                allowed_ops.insert(0, AllowedOp {
+                    op: "todo.claim".to_string(),
+                    reason: "MANDATORY: Claim your assigned task".to_string(),
+                    required_params: vec!["id".to_string()],
+                });
+            }
+        }
+
+        let context_capsule = if workspace_status.can_work {
+            Some(ContextCapsule {
+                fragments: vec![],
+                spec: Some("Agent initialized successfully".to_string()),
+                architecture: None,
+                security: None,
+                standards: Some({
+                    let resolved = standards::resolve_standards(ctx.project_root)?;
+                    let mut map = std::collections::HashMap::new();
+                    map.insert("project_name".to_string(), serde_json::json!(resolved.project_name));
+                    map
+                }),
+            })
+        } else {
+            None
+        };
+
+        let _blocked_by = if !workspace_status.can_work {
+            workspace_status.blockers.clone()
+        } else {
+            vec![]
+        };
+
+        let mut response = success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            None, vec![], context_capsule, allowed_ops, ctx.mandates.clone(),
+        );
+        response.result = Some(serde_json::json!({
+            "environment_context": {
+                "repo_root": ctx.project_root.to_string_lossy(),
+                "workspace_path": ctx.project_root.to_string_lossy(),
+                "tool_summary": {
+                    "docker_available": workspace_status.container.docker_available,
+                    "in_container": workspace_status.container.in_container,
+                },
+                "done_means": "decapod validate passes"
+            }
+        }));
+        mark_constitution_initialized(ctx.project_root)?;
+        Ok(response)
+    }
+
+    pub(crate) fn handle_workspace_status(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let status = workspace::get_workspace_status(ctx.project_root)?;
+        let blocked_by = status.blockers.clone();
+        let allowed_ops = workspace::get_allowed_ops(&status);
+
+        let mut response = success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            None, vec![], None, allowed_ops, ctx.mandates.clone(),
+        );
+        response.result = Some(serde_json::json!({
+            "git_branch": status.git.current_branch,
+            "git_is_protected": status.git.is_protected,
+            "in_container": status.container.in_container,
+            "can_work": status.can_work,
+        }));
+        response.blocked_by = blocked_by;
+        Ok(response)
+    }
+
+    pub(crate) fn handle_workspace_ensure(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+        let branch = ctx.request.params.get("branch").and_then(|v| v.as_str()).map(|s| s.to_string());
+
+        let config = branch.map(|b| workspace::WorkspaceConfig {
+            branch: b,
+            use_container: false,
+            base_image: None,
+        });
+
+        let status = workspace::ensure_workspace(ctx.project_root, config, &agent_id)?;
+        let allowed_ops = workspace::get_allowed_ops(&status);
+
+        Ok(success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            None, vec![format!(".git/refs/heads/{}", status.git.current_branch)],
+            None, allowed_ops, ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_workspace_publish(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let store_root = ctx.project_root.join(".decapod").join("data");
+        plan_governance::ensure_execute_ready(plan_governance::ExecuteCheckInput {
+            project_root: ctx.project_root,
+            store_root: &store_root,
+            todo_id: None,
+        })?;
+        let title = ctx.request.params.get("title").and_then(|v| v.as_str()).map(|s| s.to_string());
+        let description = ctx.request.params.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
+
+        let result = workspace::publish_workspace(ctx.project_root, title, description)?;
+
+        Ok(success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            Some(serde_json::json!({
+                "branch": result.branch,
+                "commit_hash": result.commit_hash,
+                "remote_url": result.remote_url,
+                "pr_url": result.pr_url,
+            })),
+            vec![format!(".git/refs/heads/{}", result.branch)],
+            None,
+            vec![AllowedOp {
+                op: "validate".to_string(),
+                reason: "Publish complete - run validation".to_string(),
+                required_params: vec![],
+            }],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_context_resolve(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let params = &ctx.request.params;
+        let op = params.get("op").and_then(|v| v.as_str());
+        let touched_paths = params.get("touched_paths").and_then(|v| v.as_array());
+        let intent_tags = params.get("intent_tags").and_then(|v| v.as_array());
+        let query = params.get("query").and_then(|v| v.as_str());
+        let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(5) as usize;
+
+        let mut fragments = Vec::new();
+        let bindings = docs::get_bindings(ctx.project_root);
+
+        if let Some(o) = op
+            && let Some(doc_ref) = bindings.ops.get(o)
+        {
+            let parts: Vec<&str> = doc_ref.split('#').collect();
+            let path = parts[0];
+            let anchor = parts.get(1).copied();
+            if let Some(f) = docs::get_fragment(ctx.project_root, path, anchor) {
+                fragments.push(f);
+            }
+        }
+
+        if let Some(paths) = touched_paths {
+            for p in paths.iter().filter_map(|v| v.as_str()) {
+                for (prefix, doc_ref) in &bindings.paths {
+                    if p.contains(prefix) {
+                        let parts: Vec<&str> = doc_ref.split('#').collect();
+                        let path = parts[0];
+                        let anchor = parts.get(1).copied();
+                        if let Some(f) = docs::get_fragment(ctx.project_root, path, anchor) {
+                            fragments.push(f);
+                        }
+                    }
+                }
+            }
+        }
+
+        if let Some(tags) = intent_tags {
+            for t in tags.iter().filter_map(|v| v.as_str()) {
+                if let Some(doc_ref) = bindings.tags.get(t) {
+                    let parts: Vec<&str> = doc_ref.split('#').collect();
+                    let path = parts[0];
+                    let anchor = parts.get(1).copied();
+                    if let Some(f) = docs::get_fragment(ctx.project_root, path, anchor) {
+                        fragments.push(f);
+                    }
+                }
+            }
+        }
+
+        fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
+        fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
+        let touched_vec = touched_paths
+            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect::<Vec<_>>())
+            .unwrap_or_default();
+        let tags_vec = intent_tags
+            .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect::<Vec<_>>())
+            .unwrap_or_default();
+        let scoped_fragments = docs::resolve_scoped_fragments(
+            ctx.project_root, query, op, &touched_vec, &tags_vec, limit,
+        );
+        fragments.extend(scoped_fragments.clone());
+        fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
+        fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
+        fragments.truncate(limit.max(1));
+
+        let local_specs = core::project_specs::local_project_specs_context(ctx.project_root);
+        let canonical_paths = local_specs.canonical_paths.clone();
+        let constitution_refs = local_specs.constitution_refs.clone();
+        let local_intent = local_specs.intent.clone();
+        let local_architecture = local_specs.architecture.clone();
+        let local_interfaces = local_specs.interfaces.clone();
+        let local_validation = local_specs.validation.clone();
+        let local_update_guidance = local_specs.update_guidance.clone();
+
+        let result = serde_json::json!({
+            "fragments": fragments,
+            "scoped_fragments": scoped_fragments,
+            "local_project_specs": {
+                "canonical_paths": canonical_paths,
+                "constitution_refs": constitution_refs,
+                "intent": local_intent,
+                "architecture": local_architecture,
+                "interfaces": local_interfaces,
+                "validation": local_validation,
+                "update_guidance": local_update_guidance
+            }
+        });
+        mark_constitution_context_resolved(ctx.project_root)?;
+
+        Ok(success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            Some(result), vec![],
+            Some(ContextCapsule {
+                fragments,
+                spec: local_specs.intent.clone(),
+                architecture: local_specs.architecture.clone(),
+                security: None,
+                standards: Some({
+                    let mut m = std::collections::HashMap::new();
+                    m.insert("local_project_specs".to_string(), serde_json::json!({
+                        "canonical_paths": local_specs.canonical_paths,
+                        "constitution_refs": local_specs.constitution_refs,
+                        "interfaces": local_specs.interfaces,
+                        "validation": local_specs.validation,
+                        "update_guidance": local_specs.update_guidance
+                    }));
+                    m
+                }),
+            }),
+            vec![
+                AllowedOp {
+                    op: "store.upsert".to_string(),
+                    reason: "Persist significant decisions for audit trail before proceeding".to_string(),
+                    required_params: vec!["kind".to_string(), "data".to_string()],
+                },
+                AllowedOp {
+                    op: "validate.run".to_string(),
+                    reason: "Validate your changes against constitution before claiming done".to_string(),
+                    required_params: vec![],
+                },
+                AllowedOp {
+                    op: "store.query".to_string(),
+                    reason: "Retrieve prior decisions and knowledge relevant to current task".to_string(),
+                    required_params: vec!["kind".to_string()],
+                },
+            ],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_context_capsule_query(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let params = &ctx.request.params;
+        let topic = params.get("topic").and_then(|v| v.as_str()).ok_or_else(|| {
+            error::DecapodError::ValidationError("context.capsule.query requires 'topic'".to_string())
+        })?;
+        let scope = params.get("scope").and_then(|v| v.as_str()).ok_or_else(|| {
+            error::DecapodError::ValidationError("context.capsule.query requires 'scope'".to_string())
+        })?;
+        let task_id = params.get("task_id").and_then(|v| v.as_str());
+        let workunit_id = params.get("workunit_id").and_then(|v| v.as_str());
+        let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(6) as usize;
+        let risk_tier = params.get("risk_tier").and_then(|v| v.as_str());
+        let write = params.get("write").and_then(|v| v.as_bool()).unwrap_or(false);
+
+        let resolved_policy = core::capsule_policy::resolve_capsule_policy(
+            ctx.project_root, scope, risk_tier, limit, write,
+        )?;
+        let capsule = core::context_capsule::query_embedded_capsule_governed(
+            ctx.project_root, topic, scope, task_id, workunit_id,
+            resolved_policy.effective_limit, resolved_policy.binding,
+        )?;
+
+        let mut touched = Vec::new();
+        if write {
+            let path = core::context_capsule::write_context_capsule(ctx.project_root, &capsule)?;
+            touched.push(path.to_string_lossy().to_string());
+            if let Some(workunit_path) = maybe_bind_capsule_to_workunit_state_ref(
+                ctx.project_root, task_id.or(workunit_id), &path,
+            )? {
+                touched.push(workunit_path.to_string_lossy().to_string());
+            }
+        }
+
+        Ok(success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            Some(serde_json::to_value(&capsule).unwrap()),
+            touched,
+            Some(ContextCapsule {
+                fragments: vec![],
+                spec: Some("Deterministic context capsule query completed".to_string()),
+                architecture: None, security: None, standards: None,
+            }),
+            vec![], ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_context_bindings(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let bindings = docs::get_bindings(ctx.project_root);
+        Ok(success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            Some(serde_json::to_value(bindings).unwrap()),
+            vec![], None, vec![], ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_schema_get(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let entity = ctx.request.params.get("entity").and_then(|v| v.as_str());
+        match entity {
+            Some("todo") => Ok(success_response(
+                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                Some(serde_json::json!({
+                    "schema_version": "v1",
+                    "json_schema": {
+                        "type": "object",
+                        "properties": {
+                            "title": { "type": "string" },
+                            "description": { "type": "string" },
+                            "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+                            "tags": { "type": "string" }
+                        },
+                        "required": ["title"]
+                    }
+                })),
+                vec![], None, vec![], ctx.mandates.clone(),
+            )),
+            Some("knowledge") => Ok(success_response(
+                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                Some(serde_json::json!({
+                    "schema_version": "v1",
+                    "json_schema": {
+                        "type": "object",
+                        "properties": {
+                            "id": { "type": "string" },
+                            "title": { "type": "string" },
+                            "text": { "type": "string" },
+                            "provenance": { "type": "string" }
+                        },
+                        "required": ["id", "title", "text", "provenance"]
+                    }
+                })),
+                vec![], None, vec![], ctx.mandates.clone(),
+            )),
+            Some("decision") => Ok(success_response(
+                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                Some(serde_json::json!({
+                    "schema_version": "v1",
+                    "json_schema": {
+                        "type": "object",
+                        "properties": {
+                            "title": { "type": "string" },
+                            "rationale": { "type": "string" },
+                            "options": { "type": "array", "items": { "type": "string" } },
+                            "chosen": { "type": "string" }
+                        },
+                        "required": ["title", "rationale", "chosen"]
+                    }
+                })),
+                vec![], None, vec![], ctx.mandates.clone(),
+            )),
+            _ => Ok(error_response(
+                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                "invalid_entity".to_string(),
+                format!("Invalid or missing entity: {:?}", entity),
+                None, ctx.mandates.clone(),
+            )),
+        }
+    }
+
+    pub(crate) fn handle_store_upsert(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let params = &ctx.request.params;
+        let entity = params.get("entity").and_then(|v| v.as_str());
+        let payload = params.get("payload");
+        let _provenance = params.get("provenance");
+
+        match entity {
+            Some("todo") => {
+                let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let description = payload.and_then(|p| p.get("description")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let priority = payload.and_then(|p| p.get("priority")).and_then(|v| v.as_str()).unwrap_or("medium").to_string();
+                let tags = payload.and_then(|p| p.get("tags")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+
+                let args = todo::TodoCommand::Add {
+                    title, description, priority, tags,
+                    owner: "".to_string(), due: None,
+                    r#ref: "".to_string(), dir: None,
+                    depends_on: "".to_string(), blocks: "".to_string(),
+                    parent: None, one_shot: 0,
+                };
+                let res = todo::add_task(&ctx.store.root, &args)?;
+                Ok(success_response(
+                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                    Some(serde_json::json!({ "id": res.get("id"), "stored": true })),
+                    vec![], None, vec![], ctx.mandates.clone(),
+                ))
+            }
+            Some("knowledge") => {
+                let id = payload.and_then(|p| p.get("id")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let text = payload.and_then(|p| p.get("text")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let provenance = payload.and_then(|p| p.get("provenance")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+
+                db::initialize_knowledge_db(&ctx.store.root)?;
+                let result = knowledge::add_knowledge(
+                    ctx.store,
+                    knowledge::AddKnowledgeParams {
+                        id: &id, title: &title, content: &text, provenance: &provenance,
+                        claim_id: None, merge_key: None,
+                        conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
+                        status: "active", ttl_policy: "persistent", expires_ts: None,
+                    },
+                )?;
+                Ok(success_response(
+                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                    Some(serde_json::json!({ "id": result.id, "stored": true, "action": result.action })),
+                    vec![], None, vec![], ctx.mandates.clone(),
+                ))
+            }
+            Some("decision") => {
+                let title = payload.and_then(|p| p.get("title")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let rationale = payload.and_then(|p| p.get("rationale")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let chosen = payload.and_then(|p| p.get("chosen")).and_then(|v| v.as_str()).unwrap_or("").to_string();
+
+                let content = format!("Decision: {}\nRationale: {}", chosen, rationale);
+                let node_id = federation::add_node(
+                    ctx.store, &title, "decision", "notable", "agent_inferred",
+                    &content, "rpc:store.upsert", "", "repo", None, "agent",
+                )?;
+                Ok(success_response(
+                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                    Some(serde_json::json!({ "id": node_id, "stored": true })),
+                    vec![], None, vec![], ctx.mandates.clone(),
+                ))
+            }
+            _ => Ok(error_response(
+                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                "invalid_entity".to_string(),
+                format!("Invalid or missing entity: {:?}", entity),
+                None, ctx.mandates.clone(),
+            )),
+        }
+    }
+
+    pub(crate) fn handle_store_query(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let params = &ctx.request.params;
+        let entity = params.get("entity").and_then(|v| v.as_str());
+        let query = params.get("query");
+
+        match entity {
+            Some("todo") => {
+                let status = query.and_then(|q| q.get("status")).and_then(|v| v.as_str()).map(|s| s.to_string());
+                let tasks = todo::list_tasks(&ctx.store.root, status, None, None, None, None)?;
+                Ok(success_response(
+                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                    Some(serde_json::json!({ "items": tasks, "next_page": null })),
+                    vec![], None, vec![], ctx.mandates.clone(),
+                ))
+            }
+            Some("knowledge") => {
+                let text = query.and_then(|q| q.get("text")).and_then(|v| v.as_str()).unwrap_or("");
+                db::initialize_knowledge_db(&ctx.store.root)?;
+                let entries = knowledge::search_knowledge(
+                    ctx.store, text,
+                    knowledge::SearchOptions { as_of: None, window_days: None, rank: "relevance" },
+                )?;
+                Ok(success_response(
+                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                    Some(serde_json::json!({ "items": entries, "next_page": null })),
+                    vec![], None, vec![], ctx.mandates.clone(),
+                ))
+            }
+            Some("decision") => {
+                let nodes = plugins::federation_ext::list_nodes(
+                    &ctx.store.root, Some("decision".to_string()), None, None, None,
+                )?;
+                Ok(success_response(
+                    ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                    Some(serde_json::json!({ "items": nodes, "next_page": null })),
+                    vec![], None, vec![], ctx.mandates.clone(),
+                ))
+            }
+            _ => Ok(error_response(
+                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                "invalid_entity".to_string(),
+                format!("Invalid or missing entity: {:?}", entity),
+                None, ctx.mandates.clone(),
+            )),
+        }
+    }
+
+    pub(crate) fn handle_validate_run(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let project_store = Store {
+            kind: StoreKind::Repo,
+            root: ctx.project_root.join(".decapod").join("data"),
+        };
+        let res = run_validation_bounded(&project_store, ctx.project_root, false);
+        match res {
+            Ok(_) => Ok(success_response(
+                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                Some(serde_json::json!({ "success": true })),
+                vec![], None, vec![], ctx.mandates.clone(),
+            )),
+            Err(e) => Ok(error_response(
+                ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+                "validation_failed".to_string(), e.to_string(),
+                None, ctx.mandates.clone(),
+            )),
+        }
+    }
+
+    pub(crate) fn handle_scaffold_next_question(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let project_name = ctx.request.params.get("project_name")
+            .and_then(|v| v.as_str()).unwrap_or("Untitled").to_string();
+
+        let interview_state = interview::init_interview(project_name);
+        let question = interview::next_question(&interview_state);
+
+        let mut response = success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            None, vec![], None,
+            vec![AllowedOp {
+                op: "scaffold.apply_answer".to_string(),
+                reason: "Provide answer to continue interview".to_string(),
+                required_params: vec!["question_id".to_string(), "value".to_string()],
+            }],
+            ctx.mandates.clone(),
+        );
+
+        if let Some(q) = question {
+            response.result = Some(serde_json::json!({
+                "interview_id": interview_state.id,
+                "question": q,
+            }));
+        } else {
+            response.result = Some(serde_json::json!({
+                "interview_id": interview_state.id,
+                "complete": true,
+            }));
+        }
+
+        Ok(response)
+    }
+
+    pub(crate) fn handle_scaffold_apply_answer(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let question_id = ctx.request.params.get("question_id")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| error::DecapodError::ValidationError("question_id required".to_string()))?;
+        let value = ctx.request.params.clone().get("value").cloned()
+            .ok_or_else(|| error::DecapodError::ValidationError("value required".to_string()))?;
+
+        let mut interview_state = interview::init_interview("project".to_string());
+        interview::apply_answer(&mut interview_state, question_id, value)?;
+
+        let next_q = interview::next_question(&interview_state);
+
+        let mut response = success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            None, vec![], None,
+            vec![AllowedOp {
+                op: if next_q.is_some() { "scaffold.next_question".to_string() } else { "scaffold.generate_artifacts".to_string() },
+                reason: if next_q.is_some() { "Continue interview".to_string() } else { "Interview complete - generate artifacts".to_string() },
+                required_params: vec![],
+            }],
+            ctx.mandates.clone(),
+        );
+
+        response.result = Some(serde_json::json!({
+            "answers_count": interview_state.answers.len(),
+            "is_complete": interview_state.is_complete,
+        }));
+
+        Ok(response)
+    }
+
+    pub(crate) fn handle_scaffold_generate_artifacts(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let interview_state = interview::init_interview("project".to_string());
+        let output_dir = ctx.project_root.to_path_buf();
+
+        let artifacts = interview::generate_artifacts(&interview_state, &output_dir)?;
+        let touched_paths: Vec<String> = artifacts.iter().map(|a| a.path.to_string_lossy().to_string()).collect();
+
+        Ok(success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            None, touched_paths, None,
+            vec![AllowedOp {
+                op: "validate".to_string(),
+                reason: "Artifacts generated - validate before claiming done".to_string(),
+                required_params: vec![],
+            }],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_standards_resolve(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let resolved = standards::resolve_standards(ctx.project_root)?;
+
+        let mut standards_map = std::collections::HashMap::new();
+        standards_map.insert("project_name".to_string(), serde_json::json!(resolved.project_name));
+        for (k, v) in &resolved.standards {
+            standards_map.insert(k.clone(), v.clone());
+        }
+
+        let context_capsule = ContextCapsule {
+            fragments: vec![], spec: None, architecture: None, security: None,
+            standards: Some(standards_map),
+        };
+
+        Ok(success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            None, vec![], Some(context_capsule), vec![], ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_mentor_obligations(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        use crate::core::mentor::{MentorEngine, ObligationsContext};
+
+        let engine = MentorEngine::new(ctx.project_root);
+        let obligations_ctx = ObligationsContext {
+            op: ctx.request.params.get("op").and_then(|v| v.as_str()).unwrap_or("unknown").to_string(),
+            params: ctx.request.params.get("params").cloned().unwrap_or(serde_json::json!({})),
+            touched_paths: ctx.request.params.get("touched_paths")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+                .unwrap_or_default(),
+            diff_summary: ctx.request.params.get("diff_summary").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            project_profile_id: ctx.request.params.get("project_profile_id").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            session_id: ctx.request.params.get("session_id").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            high_risk: ctx.request.params.get("high_risk").and_then(|v| v.as_bool()).unwrap_or(false),
+        };
+
+        let obligations = engine.compute_obligations(&obligations_ctx)?;
+
+        let context_capsule = ContextCapsule {
+            fragments: vec![], spec: None, architecture: None, security: None, standards: None,
+        };
+
+        let mut response = success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            None, vec![], Some(context_capsule),
+            vec![AllowedOp {
+                op: "mentor.obligations".to_string(),
+                reason: "Obligations computed - review must list before proceeding".to_string(),
+                required_params: vec![],
+            }],
+            ctx.mandates.clone(),
+        );
+
+        response.result = Some(serde_json::json!({ "obligations": obligations }));
+
+        if !obligations.contradictions.is_empty() {
+            response.blocked_by = mentor::contradictions_to_blockers(&obligations.contradictions);
+        }
+
+        Ok(response)
+    }
+
+    pub(crate) fn handle_assurance_evaluate(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let input = AssuranceEvaluateInput {
+            op: ctx.request.params.get("op").and_then(|v| v.as_str()).unwrap_or("unknown").to_string(),
+            params: ctx.request.params.get("params").cloned().unwrap_or(serde_json::json!({})),
+            touched_paths: ctx.request.params.get("touched_paths")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+                .unwrap_or_default(),
+            diff_summary: ctx.request.params.get("diff_summary").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            session_id: ctx.request.params.get("session_id").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            phase: ctx.request.params.get("phase").cloned().and_then(|v| serde_json::from_value(v).ok()),
+            time_budget_s: ctx.request.params.clone().get("time_budget_s").and_then(|v| v.as_u64()),
+        };
+
+        let engine = AssuranceEngine::new(ctx.project_root);
+        let evaluated = engine.evaluate(&input)?;
+        let mut response = success_response(
+            ctx.request.id.clone(), ctx.request.op.clone(), ctx.request.params.clone(),
+            None, input.touched_paths.clone(), None,
+            if let Some(interlock) = &evaluated.interlock {
+                interlock.unblock_ops.iter().map(|op| AllowedOp {
+                    op: op.clone(),
+                    reason: format!("Unblock path for {}", interlock.code),
+                    required_params: vec![],
+                }).collect()
+            } else {
+                vec![AllowedOp {
+                    op: "assurance.evaluate".to_string(),
+                    reason: "Re-evaluate after meaningful context changes".to_string(),
+                    required_params: vec![],
+                }]
+            },
+            ctx.mandates.clone(),
+        );
+        response.interlock = evaluated.interlock.clone();
+        response.advisory = Some(evaluated.advisory.clone());
+        response.attestation = Some(evaluated.attestation.clone());
+        response.result = Some(serde_json::json!({
+            "assurance_evaluated": true,
+            "interlock_code": evaluated.interlock.as_ref().map(|i| i.code.clone()),
+        }));
+        if let Some(interlock) = evaluated.interlock {
+            response.blocked_by = vec![Blocker {
+                kind: match interlock.code.as_str() {
+                    "workspace_required" => BlockerKind::WorkspaceRequired,
+                    "verification_required" => BlockerKind::MissingProof,
+                    "store_boundary_violation" => BlockerKind::Unauthorized,
+                    "decision_required" => BlockerKind::MissingAnswer,
+                    _ => BlockerKind::ValidationFailed,
+                },
+                message: interlock.code,
+                resolve_hint: interlock.message,
+            }];
+        }
+        Ok(response)
+    }
+}
+
+/// Run RPC command
+fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::DecapodError> {
     use crate::core::rpc::*;
-    use crate::core::standards;
-    use crate::core::workspace;
 
     let request: RpcRequest = if cli.stdin {
         let mut buffer = String::new();
@@ -5709,1134 +5389,35 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         return Ok(());
     }
 
+    let rpc_ctx = RpcCtx {
+        project_root,
+        store: &project_store,
+        request: &request,
+        mandates: mandates.clone(),
+    };
+
     let response = match request.op.as_str() {
-        "agent.init" => {
-            // Session initialization with receipt
-            let workspace_status = workspace::get_workspace_status(project_root)?;
-            let mut allowed_ops = workspace::get_allowed_ops(&workspace_status);
-
-            // Add mandatory todo ops if no active tasks
-            let agent_id = current_agent_id();
-            if agent_id != "unknown"
-                && let Ok(mut tasks) = todo::list_tasks(
-                    &project_store.root,
-                    Some("open".to_string()),
-                    None,
-                    None,
-                    None,
-                    None,
-                )
-            {
-                tasks.retain(|t| t.assigned_to == agent_id);
-                if tasks.is_empty() {
-                    allowed_ops.insert(
-                        0,
-                        AllowedOp {
-                            op: "todo.add".to_string(),
-                            reason: "MANDATORY: Create a task for your work".to_string(),
-                            required_params: vec!["title".to_string()],
-                        },
-                    );
-                } else if tasks.iter().any(|t| t.assigned_to.is_empty()) {
-                    allowed_ops.insert(
-                        0,
-                        AllowedOp {
-                            op: "todo.claim".to_string(),
-                            reason: "MANDATORY: Claim your assigned task".to_string(),
-                            required_params: vec!["id".to_string()],
-                        },
-                    );
-                }
-            }
-
-            let context_capsule = if workspace_status.can_work {
-                Some(ContextCapsule {
-                    fragments: vec![],
-                    spec: Some("Agent initialized successfully".to_string()),
-                    architecture: None,
-                    security: None,
-                    standards: Some({
-                        let resolved = standards::resolve_standards(project_root)?;
-                        let mut map = std::collections::HashMap::new();
-                        map.insert(
-                            "project_name".to_string(),
-                            serde_json::json!(resolved.project_name),
-                        );
-                        map
-                    }),
-                })
-            } else {
-                None
-            };
-
-            let _blocked_by = if !workspace_status.can_work {
-                workspace_status.blockers.clone()
-            } else {
-                vec![]
-            };
-
-            let mut response = success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                None,
-                vec![],
-                context_capsule,
-                allowed_ops,
-                mandates.clone(),
-            );
-            response.result = Some(serde_json::json!({
-                "environment_context": {
-                    "repo_root": project_root.to_string_lossy(),
-                    "workspace_path": project_root.to_string_lossy(),
-                    "tool_summary": {
-                        "docker_available": workspace_status.container.docker_available,
-                        "in_container": workspace_status.container.in_container,
-                    },
-                    "done_means": "decapod validate passes"
-                }
-            }));
-            mark_constitution_initialized(project_root)?;
-            response
-        }
-        "workspace.status" => {
-            let status = workspace::get_workspace_status(project_root)?;
-            let blocked_by = status.blockers.clone();
-            let allowed_ops = workspace::get_allowed_ops(&status);
-
-            let mut response = success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                None,
-                vec![],
-                None,
-                allowed_ops,
-                mandates.clone(),
-            );
-            response.result = Some(serde_json::json!({
-                "git_branch": status.git.current_branch,
-                "git_is_protected": status.git.is_protected,
-                "in_container": status.container.in_container,
-                "can_work": status.can_work,
-            }));
-            response.blocked_by = blocked_by;
-            response
-        }
-        "workspace.ensure" => {
-            let agent_id =
-                std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
-            let branch = request
-                .params
-                .get("branch")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string());
-
-            let config = branch.map(|b| workspace::WorkspaceConfig {
-                branch: b,
-                use_container: false,
-                base_image: None,
-            });
-
-            let status = workspace::ensure_workspace(project_root, config, &agent_id)?;
-            let allowed_ops = workspace::get_allowed_ops(&status);
-
-            success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                None,
-                vec![format!(".git/refs/heads/{}", status.git.current_branch)],
-                None,
-                allowed_ops,
-                mandates.clone(),
-            )
-        }
-        "workspace.publish" => {
-            let store_root = project_root.join(".decapod").join("data");
-            plan_governance::ensure_execute_ready(plan_governance::ExecuteCheckInput {
-                project_root,
-                store_root: &store_root,
-                todo_id: None,
-            })?;
-            let title = request
-                .params
-                .get("title")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string());
-            let description = request
-                .params
-                .get("description")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string());
-
-            let result = workspace::publish_workspace(project_root, title, description)?;
-
-            success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                Some(serde_json::json!({
-                    "branch": result.branch,
-                    "commit_hash": result.commit_hash,
-                    "remote_url": result.remote_url,
-                    "pr_url": result.pr_url,
-                })),
-                vec![format!(".git/refs/heads/{}", result.branch)],
-                None,
-                vec![AllowedOp {
-                    op: "validate".to_string(),
-                    reason: "Publish complete - run validation".to_string(),
-                    required_params: vec![],
-                }],
-                mandates.clone(),
-            )
-        }
-        "context.resolve" | "context.scope" => {
-            let params = &request.params;
-            let op = params.get("op").and_then(|v| v.as_str());
-            let touched_paths = params.get("touched_paths").and_then(|v| v.as_array());
-            let intent_tags = params.get("intent_tags").and_then(|v| v.as_array());
-            let query = params.get("query").and_then(|v| v.as_str());
-            let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(5) as usize;
-
-            let mut fragments = Vec::new();
-            let bindings = docs::get_bindings(project_root);
-
-            // Deterministic relevance mapping
-            if let Some(o) = op
-                && let Some(doc_ref) = bindings.ops.get(o)
-            {
-                let parts: Vec<&str> = doc_ref.split('#').collect();
-                let path = parts[0];
-                let anchor = parts.get(1).copied();
-                if let Some(f) = docs::get_fragment(project_root, path, anchor) {
-                    fragments.push(f);
-                }
-            }
-
-            if let Some(paths) = touched_paths {
-                for p in paths.iter().filter_map(|v| v.as_str()) {
-                    for (prefix, doc_ref) in &bindings.paths {
-                        if p.contains(prefix) {
-                            let parts: Vec<&str> = doc_ref.split('#').collect();
-                            let path = parts[0];
-                            let anchor = parts.get(1).copied();
-                            if let Some(f) = docs::get_fragment(project_root, path, anchor) {
-                                fragments.push(f);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if let Some(tags) = intent_tags {
-                for t in tags.iter().filter_map(|v| v.as_str()) {
-                    if let Some(doc_ref) = bindings.tags.get(t) {
-                        let parts: Vec<&str> = doc_ref.split('#').collect();
-                        let path = parts[0];
-                        let anchor = parts.get(1).copied();
-                        if let Some(f) = docs::get_fragment(project_root, path, anchor) {
-                            fragments.push(f);
-                        }
-                    }
-                }
-            }
-
-            fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
-            fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
-            let touched_vec = touched_paths
-                .map(|arr| {
-                    arr.iter()
-                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                        .collect::<Vec<_>>()
-                })
-                .unwrap_or_default();
-            let tags_vec = intent_tags
-                .map(|arr| {
-                    arr.iter()
-                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                        .collect::<Vec<_>>()
-                })
-                .unwrap_or_default();
-            let scoped_fragments = docs::resolve_scoped_fragments(
-                project_root,
-                query,
-                op,
-                &touched_vec,
-                &tags_vec,
-                limit,
-            );
-            fragments.extend(scoped_fragments.clone());
-            fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
-            fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
-            fragments.truncate(limit.max(1));
-
-            let local_specs = core::project_specs::local_project_specs_context(project_root);
-            let canonical_paths = local_specs.canonical_paths.clone();
-            let constitution_refs = local_specs.constitution_refs.clone();
-            let local_intent = local_specs.intent.clone();
-            let local_architecture = local_specs.architecture.clone();
-            let local_interfaces = local_specs.interfaces.clone();
-            let local_validation = local_specs.validation.clone();
-            let local_update_guidance = local_specs.update_guidance.clone();
-
-            let result = serde_json::json!({
-                "fragments": fragments,
-                "scoped_fragments": scoped_fragments,
-                "local_project_specs": {
-                    "canonical_paths": canonical_paths,
-                    "constitution_refs": constitution_refs,
-                    "intent": local_intent,
-                    "architecture": local_architecture,
-                    "interfaces": local_interfaces,
-                    "validation": local_validation,
-                    "update_guidance": local_update_guidance
-                }
-            });
-            mark_constitution_context_resolved(project_root)?;
-
-            success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                Some(result),
-                vec![],
-                Some(ContextCapsule {
-                    fragments,
-                    spec: local_specs.intent.clone(),
-                    architecture: local_specs.architecture.clone(),
-                    security: None,
-                    standards: Some({
-                        let mut m = std::collections::HashMap::new();
-                        m.insert(
-                            "local_project_specs".to_string(),
-                            serde_json::json!({
-                                "canonical_paths": local_specs.canonical_paths,
-                                "constitution_refs": local_specs.constitution_refs,
-                                "interfaces": local_specs.interfaces,
-                                "validation": local_specs.validation,
-                                "update_guidance": local_specs.update_guidance
-                            }),
-                        );
-                        m
-                    }),
-                }),
-                vec![
-                    AllowedOp {
-                        op: "store.upsert".to_string(),
-                        reason: "Persist significant decisions for audit trail before proceeding"
-                            .to_string(),
-                        required_params: vec!["kind".to_string(), "data".to_string()],
-                    },
-                    AllowedOp {
-                        op: "validate.run".to_string(),
-                        reason: "Validate your changes against constitution before claiming done"
-                            .to_string(),
-                        required_params: vec![],
-                    },
-                    AllowedOp {
-                        op: "store.query".to_string(),
-                        reason: "Retrieve prior decisions and knowledge relevant to current task"
-                            .to_string(),
-                        required_params: vec!["kind".to_string()],
-                    },
-                ],
-                mandates.clone(),
-            )
-        }
-        "context.capsule.query" => {
-            let params = &request.params;
-            let topic = params
-                .get("topic")
-                .and_then(|v| v.as_str())
-                .ok_or_else(|| {
-                    error::DecapodError::ValidationError(
-                        "context.capsule.query requires 'topic'".to_string(),
-                    )
-                })?;
-            let scope = params
-                .get("scope")
-                .and_then(|v| v.as_str())
-                .ok_or_else(|| {
-                    error::DecapodError::ValidationError(
-                        "context.capsule.query requires 'scope'".to_string(),
-                    )
-                })?;
-            let task_id = params.get("task_id").and_then(|v| v.as_str());
-            let workunit_id = params.get("workunit_id").and_then(|v| v.as_str());
-            let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(6) as usize;
-            let risk_tier = params.get("risk_tier").and_then(|v| v.as_str());
-            let write = params
-                .get("write")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false);
-
-            let resolved_policy = core::capsule_policy::resolve_capsule_policy(
-                project_root,
-                scope,
-                risk_tier,
-                limit,
-                write,
-            )?;
-            let capsule = core::context_capsule::query_embedded_capsule_governed(
-                project_root,
-                topic,
-                scope,
-                task_id,
-                workunit_id,
-                resolved_policy.effective_limit,
-                resolved_policy.binding,
-            )?;
-
-            let mut touched = Vec::new();
-            if write {
-                let path = core::context_capsule::write_context_capsule(project_root, &capsule)?;
-                touched.push(path.to_string_lossy().to_string());
-                if let Some(workunit_path) = maybe_bind_capsule_to_workunit_state_ref(
-                    project_root,
-                    task_id.or(workunit_id),
-                    &path,
-                )? {
-                    touched.push(workunit_path.to_string_lossy().to_string());
-                }
-            }
-
-            success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                Some(serde_json::to_value(&capsule).unwrap()),
-                touched,
-                Some(ContextCapsule {
-                    fragments: vec![],
-                    spec: Some("Deterministic context capsule query completed".to_string()),
-                    architecture: None,
-                    security: None,
-                    standards: None,
-                }),
-                vec![],
-                mandates.clone(),
-            )
-        }
-        "context.bindings" => {
-            let bindings = docs::get_bindings(project_root);
-            success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                Some(serde_json::to_value(bindings).unwrap()),
-                vec![],
-                None,
-                vec![],
-                mandates.clone(),
-            )
-        }
-        "schema.get" => {
-            let params = &request.params;
-            let entity = params.get("entity").and_then(|v| v.as_str());
-            match entity {
-                Some("todo") => success_response(
-                    request.id.clone(),
-                    request.op.clone(),
-                    request.params.clone(),
-                    Some(serde_json::json!({
-                        "schema_version": "v1",
-                        "json_schema": {
-                            "type": "object",
-                            "properties": {
-                                "title": { "type": "string" },
-                                "description": { "type": "string" },
-                                "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
-                                "tags": { "type": "string" }
-                            },
-                            "required": ["title"]
-                        }
-                    })),
-                    vec![],
-                    None,
-                    vec![],
-                    mandates.clone(),
-                ),
-                Some("knowledge") => success_response(
-                    request.id.clone(),
-                    request.op.clone(),
-                    request.params.clone(),
-                    Some(serde_json::json!({
-                        "schema_version": "v1",
-                        "json_schema": {
-                            "type": "object",
-                            "properties": {
-                                "id": { "type": "string" },
-                                "title": { "type": "string" },
-                                "text": { "type": "string" },
-                                "provenance": { "type": "string" }
-                            },
-                            "required": ["id", "title", "text", "provenance"]
-                        }
-                    })),
-                    vec![],
-                    None,
-                    vec![],
-                    mandates.clone(),
-                ),
-                Some("decision") => success_response(
-                    request.id.clone(),
-                    request.op.clone(),
-                    request.params.clone(),
-                    Some(serde_json::json!({
-                        "schema_version": "v1",
-                        "json_schema": {
-                            "type": "object",
-                            "properties": {
-                                "title": { "type": "string" },
-                                "rationale": { "type": "string" },
-                                "options": { "type": "array", "items": { "type": "string" } },
-                                "chosen": { "type": "string" }
-                            },
-                            "required": ["title", "rationale", "chosen"]
-                        }
-                    })),
-                    vec![],
-                    None,
-                    vec![],
-                    mandates.clone(),
-                ),
-                _ => error_response(
-                    request.id.clone(),
-                    request.op.clone(),
-                    request.params.clone(),
-                    "invalid_entity".to_string(),
-                    format!("Invalid or missing entity: {:?}", entity),
-                    None,
-                    mandates.clone(),
-                ),
-            }
-        }
-        "store.upsert" => {
-            let params = &request.params;
-            let entity = params.get("entity").and_then(|v| v.as_str());
-            let payload = params.get("payload");
-            let _provenance = params.get("provenance");
-
-            match entity {
-                Some("todo") => {
-                    let title = payload
-                        .and_then(|p| p.get("title"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string();
-                    let description = payload
-                        .and_then(|p| p.get("description"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string();
-                    let priority = payload
-                        .and_then(|p| p.get("priority"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("medium")
-                        .to_string();
-                    let tags = payload
-                        .and_then(|p| p.get("tags"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string();
-
-                    let args = todo::TodoCommand::Add {
-                        title,
-                        description,
-                        priority,
-                        tags,
-                        owner: "".to_string(),
-                        due: None,
-                        r#ref: "".to_string(),
-                        dir: None,
-                        depends_on: "".to_string(),
-                        blocks: "".to_string(),
-                        parent: None,
-                        one_shot: 0,
-                    };
-                    let res = todo::add_task(&project_store.root, &args)?;
-                    success_response(
-                        request.id.clone(),
-                        request.op.clone(),
-                        request.params.clone(),
-                        Some(serde_json::json!({
-                            "id": res.get("id"),
-                            "stored": true
-                        })),
-                        vec![],
-                        None,
-                        vec![],
-                        mandates.clone(),
-                    )
-                }
-                Some("knowledge") => {
-                    let id = payload
-                        .and_then(|p| p.get("id"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string();
-                    let title = payload
-                        .and_then(|p| p.get("title"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string();
-                    let text = payload
-                        .and_then(|p| p.get("text"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string();
-                    let provenance = payload
-                        .and_then(|p| p.get("provenance"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string();
-
-                    db::initialize_knowledge_db(&project_store.root)?;
-                    let result = knowledge::add_knowledge(
-                        &project_store,
-                        knowledge::AddKnowledgeParams {
-                            id: &id,
-                            title: &title,
-                            content: &text,
-                            provenance: &provenance,
-                            claim_id: None,
-                            merge_key: None,
-                            conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
-                            status: "active",
-                            ttl_policy: "persistent",
-                            expires_ts: None,
-                        },
-                    )?;
-                    success_response(
-                        request.id.clone(),
-                        request.op.clone(),
-                        request.params.clone(),
-                        Some(serde_json::json!({
-                            "id": result.id,
-                            "stored": true,
-                            "action": result.action
-                        })),
-                        vec![],
-                        None,
-                        vec![],
-                        mandates.clone(),
-                    )
-                }
-                Some("decision") => {
-                    // Decisions land in federation for now as a common store
-                    let title = payload
-                        .and_then(|p| p.get("title"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string();
-                    let rationale = payload
-                        .and_then(|p| p.get("rationale"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string();
-                    let chosen = payload
-                        .and_then(|p| p.get("chosen"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("")
-                        .to_string();
-
-                    let content = format!("Decision: {}\nRationale: {}", chosen, rationale);
-                    let node_id = federation::add_node(
-                        &project_store,
-                        &title,
-                        "decision",
-                        "notable",
-                        "agent_inferred",
-                        &content,
-                        "rpc:store.upsert",
-                        "",
-                        "repo",
-                        None,
-                        "agent",
-                    )?;
-                    success_response(
-                        request.id.clone(),
-                        request.op.clone(),
-                        request.params.clone(),
-                        Some(serde_json::json!({
-                            "id": node_id,
-                            "stored": true
-                        })),
-                        vec![],
-                        None,
-                        vec![],
-                        mandates.clone(),
-                    )
-                }
-                _ => error_response(
-                    request.id.clone(),
-                    request.op.clone(),
-                    request.params.clone(),
-                    "invalid_entity".to_string(),
-                    format!("Invalid or missing entity: {:?}", entity),
-                    None,
-                    mandates.clone(),
-                ),
-            }
-        }
-        "store.query" => {
-            let params = &request.params;
-            let entity = params.get("entity").and_then(|v| v.as_str());
-            let query = params.get("query");
-
-            match entity {
-                Some("todo") => {
-                    let status = query
-                        .and_then(|q| q.get("status"))
-                        .and_then(|v| v.as_str())
-                        .map(|s| s.to_string());
-                    let tasks =
-                        todo::list_tasks(&project_store.root, status, None, None, None, None)?;
-                    success_response(
-                        request.id.clone(),
-                        request.op.clone(),
-                        request.params.clone(),
-                        Some(serde_json::json!({
-                            "items": tasks,
-                            "next_page": null
-                        })),
-                        vec![],
-                        None,
-                        vec![],
-                        mandates.clone(),
-                    )
-                }
-                Some("knowledge") => {
-                    let text = query
-                        .and_then(|q| q.get("text"))
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("");
-                    db::initialize_knowledge_db(&project_store.root)?;
-                    let entries = knowledge::search_knowledge(
-                        &project_store,
-                        text,
-                        knowledge::SearchOptions {
-                            as_of: None,
-                            window_days: None,
-                            rank: "relevance",
-                        },
-                    )?;
-                    success_response(
-                        request.id.clone(),
-                        request.op.clone(),
-                        request.params.clone(),
-                        Some(serde_json::json!({
-                            "items": entries,
-                            "next_page": null
-                        })),
-                        vec![],
-                        None,
-                        vec![],
-                        mandates.clone(),
-                    )
-                }
-                Some("decision") => {
-                    let nodes = plugins::federation_ext::list_nodes(
-                        &project_store.root,
-                        Some("decision".to_string()),
-                        None,
-                        None,
-                        None,
-                    )?;
-                    success_response(
-                        request.id.clone(),
-                        request.op.clone(),
-                        request.params.clone(),
-                        Some(serde_json::json!({
-                            "items": nodes,
-                            "next_page": null
-                        })),
-                        vec![],
-                        None,
-                        vec![],
-                        mandates.clone(),
-                    )
-                }
-                _ => error_response(
-                    request.id.clone(),
-                    request.op.clone(),
-                    request.params.clone(),
-                    "invalid_entity".to_string(),
-                    format!("Invalid or missing entity: {:?}", entity),
-                    None,
-                    mandates.clone(),
-                ),
-            }
-        }
-        "validate.run" => {
-            let project_store = Store {
-                kind: StoreKind::Repo,
-                root: project_root.join(".decapod").join("data"),
-            };
-
-            let res = run_validation_bounded(&project_store, project_root, false);
-
-            match res {
-                Ok(_) => success_response(
-                    request.id.clone(),
-                    request.op.clone(),
-                    request.params.clone(),
-                    Some(serde_json::json!({ "success": true })),
-                    vec![],
-                    None,
-                    vec![],
-                    mandates.clone(),
-                ),
-                Err(e) => error_response(
-                    request.id.clone(),
-                    request.op.clone(),
-                    request.params.clone(),
-                    "validation_failed".to_string(),
-                    e.to_string(),
-                    None,
-                    mandates.clone(),
-                ),
-            }
-        }
-        "scaffold.next_question" => {
-            let project_name = request
-                .params
-                .get("project_name")
-                .and_then(|v| v.as_str())
-                .unwrap_or("Untitled")
-                .to_string();
-
-            let interview = interview::init_interview(project_name);
-            let question = interview::next_question(&interview);
-
-            let mut response = success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                None,
-                vec![],
-                None,
-                vec![AllowedOp {
-                    op: "scaffold.apply_answer".to_string(),
-                    reason: "Provide answer to continue interview".to_string(),
-                    required_params: vec!["question_id".to_string(), "value".to_string()],
-                }],
-                mandates.clone(),
-            );
-
-            if let Some(q) = question {
-                response.result = Some(serde_json::json!({
-                    "interview_id": interview.id,
-                    "question": q,
-                }));
-            } else {
-                response.result = Some(serde_json::json!({
-                    "interview_id": interview.id,
-                    "complete": true,
-                }));
-            }
-
-            response
-        }
-        "scaffold.apply_answer" => {
-            let question_id = request
-                .params
-                .get("question_id")
-                .and_then(|v| v.as_str())
-                .ok_or_else(|| {
-                    error::DecapodError::ValidationError("question_id required".to_string())
-                })?;
-            let value = request
-                .params
-                .clone()
-                .get("value")
-                .cloned()
-                .ok_or_else(|| {
-                    error::DecapodError::ValidationError("value required".to_string())
-                })?;
-
-            let mut interview = interview::init_interview("project".to_string());
-            interview::apply_answer(&mut interview, question_id, value)?;
-
-            let next_q = interview::next_question(&interview);
-
-            let mut response = success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                None,
-                vec![],
-                None,
-                vec![AllowedOp {
-                    op: if next_q.is_some() {
-                        "scaffold.next_question".to_string()
-                    } else {
-                        "scaffold.generate_artifacts".to_string()
-                    },
-                    reason: if next_q.is_some() {
-                        "Continue interview".to_string()
-                    } else {
-                        "Interview complete - generate artifacts".to_string()
-                    },
-                    required_params: vec![],
-                }],
-                mandates.clone(),
-            );
-
-            response.result = Some(serde_json::json!({
-                "answers_count": interview.answers.len(),
-                "is_complete": interview.is_complete,
-            }));
-
-            response
-        }
-        "scaffold.generate_artifacts" => {
-            let interview = interview::init_interview("project".to_string());
-            let output_dir = project_root.to_path_buf();
-
-            let artifacts = interview::generate_artifacts(&interview, &output_dir)?;
-
-            let touched_paths: Vec<String> = artifacts
-                .iter()
-                .map(|a| a.path.to_string_lossy().to_string())
-                .collect();
-
-            success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                None,
-                touched_paths,
-                None,
-                vec![AllowedOp {
-                    op: "validate".to_string(),
-                    reason: "Artifacts generated - validate before claiming done".to_string(),
-                    required_params: vec![],
-                }],
-                mandates.clone(),
-            )
-        }
-        "standards.resolve" => {
-            let resolved = standards::resolve_standards(project_root)?;
-
-            let mut standards_map = std::collections::HashMap::new();
-            standards_map.insert(
-                "project_name".to_string(),
-                serde_json::json!(resolved.project_name),
-            );
-            for (k, v) in &resolved.standards {
-                standards_map.insert(k.clone(), v.clone());
-            }
-
-            let context_capsule = ContextCapsule {
-                fragments: vec![],
-                spec: None,
-                architecture: None,
-                security: None,
-                standards: Some(standards_map),
-            };
-
-            success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                None,
-                vec![],
-                Some(context_capsule),
-                vec![],
-                mandates.clone(),
-            )
-        }
-        "mentor.obligations" => {
-            use crate::core::mentor::{MentorEngine, ObligationsContext};
-
-            let engine = MentorEngine::new(project_root);
-            let ctx = ObligationsContext {
-                op: request
-                    .params
-                    .get("op")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("unknown")
-                    .to_string(),
-                params: request
-                    .params
-                    .get("params")
-                    .cloned()
-                    .unwrap_or(serde_json::json!({})),
-                touched_paths: request
-                    .params
-                    .get("touched_paths")
-                    .and_then(|v| v.as_array())
-                    .map(|arr| {
-                        arr.iter()
-                            .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                            .collect()
-                    })
-                    .unwrap_or_default(),
-                diff_summary: request
-                    .params
-                    .get("diff_summary")
-                    .and_then(|v| v.as_str())
-                    .map(|s| s.to_string()),
-                project_profile_id: request
-                    .params
-                    .get("project_profile_id")
-                    .and_then(|v| v.as_str())
-                    .map(|s| s.to_string()),
-                session_id: request
-                    .params
-                    .get("session_id")
-                    .and_then(|v| v.as_str())
-                    .map(|s| s.to_string()),
-                high_risk: request
-                    .params
-                    .get("high_risk")
-                    .and_then(|v| v.as_bool())
-                    .unwrap_or(false),
-            };
-
-            let obligations = engine.compute_obligations(&ctx)?;
-
-            let context_capsule = ContextCapsule {
-                fragments: vec![],
-                spec: None,
-                architecture: None,
-                security: None,
-                standards: None,
-            };
-
-            let mut response = success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                None,
-                vec![],
-                Some(context_capsule),
-                vec![AllowedOp {
-                    op: "mentor.obligations".to_string(),
-                    reason: "Obligations computed - review must list before proceeding".to_string(),
-                    required_params: vec![],
-                }],
-                mandates.clone(),
-            );
-
-            response.result = Some(serde_json::json!({
-                "obligations": obligations,
-            }));
-
-            // Add blockers for contradictions
-            if !obligations.contradictions.is_empty() {
-                response.blocked_by =
-                    mentor::contradictions_to_blockers(&obligations.contradictions);
-            }
-
-            response
-        }
-        "assurance.evaluate" => {
-            let input = AssuranceEvaluateInput {
-                op: request
-                    .params
-                    .get("op")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("unknown")
-                    .to_string(),
-                params: request
-                    .params
-                    .get("params")
-                    .cloned()
-                    .unwrap_or(serde_json::json!({})),
-                touched_paths: request
-                    .params
-                    .get("touched_paths")
-                    .and_then(|v| v.as_array())
-                    .map(|arr| {
-                        arr.iter()
-                            .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                            .collect()
-                    })
-                    .unwrap_or_default(),
-                diff_summary: request
-                    .params
-                    .get("diff_summary")
-                    .and_then(|v| v.as_str())
-                    .map(|s| s.to_string()),
-                session_id: request
-                    .params
-                    .get("session_id")
-                    .and_then(|v| v.as_str())
-                    .map(|s| s.to_string()),
-                phase: request
-                    .params
-                    .get("phase")
-                    .cloned()
-                    .and_then(|v| serde_json::from_value(v).ok()),
-                time_budget_s: request
-                    .params
-                    .clone()
-                    .get("time_budget_s")
-                    .and_then(|v| v.as_u64()),
-            };
-
-            let engine = AssuranceEngine::new(project_root);
-            let evaluated = engine.evaluate(&input)?;
-            let mut response = success_response(
-                request.id.clone(),
-                request.op.clone(),
-                request.params.clone(),
-                None,
-                input.touched_paths.clone(),
-                None,
-                if let Some(interlock) = &evaluated.interlock {
-                    interlock
-                        .unblock_ops
-                        .iter()
-                        .map(|op| AllowedOp {
-                            op: op.clone(),
-                            reason: format!("Unblock path for {}", interlock.code),
-                            required_params: vec![],
-                        })
-                        .collect()
-                } else {
-                    vec![AllowedOp {
-                        op: "assurance.evaluate".to_string(),
-                        reason: "Re-evaluate after meaningful context changes".to_string(),
-                        required_params: vec![],
-                    }]
-                },
-                mandates.clone(),
-            );
-            response.interlock = evaluated.interlock.clone();
-            response.advisory = Some(evaluated.advisory.clone());
-            response.attestation = Some(evaluated.attestation.clone());
-            response.result = Some(serde_json::json!({
-                "assurance_evaluated": true,
-                "interlock_code": evaluated.interlock.as_ref().map(|i| i.code.clone()),
-            }));
-            if let Some(interlock) = evaluated.interlock {
-                response.blocked_by = vec![Blocker {
-                    kind: match interlock.code.as_str() {
-                        "workspace_required" => BlockerKind::WorkspaceRequired,
-                        "verification_required" => BlockerKind::MissingProof,
-                        "store_boundary_violation" => BlockerKind::Unauthorized,
-                        "decision_required" => BlockerKind::MissingAnswer,
-                        _ => BlockerKind::ValidationFailed,
-                    },
-                    message: interlock.code,
-                    resolve_hint: interlock.message,
-                }];
-            }
-            response
-        }
+        "agent.init" => rpc_handlers::handle_agent_init(&rpc_ctx)?,
+        "workspace.status" => rpc_handlers::handle_workspace_status(&rpc_ctx)?,
+        "workspace.ensure" => rpc_handlers::handle_workspace_ensure(&rpc_ctx)?,
+        "workspace.publish" => rpc_handlers::handle_workspace_publish(&rpc_ctx)?,
+        "context.resolve" | "context.scope" => rpc_handlers::handle_context_resolve(&rpc_ctx)?,
+        "context.capsule.query" => rpc_handlers::handle_context_capsule_query(&rpc_ctx)?,
+        "context.bindings" => rpc_handlers::handle_context_bindings(&rpc_ctx)?,
+        "schema.get" => rpc_handlers::handle_schema_get(&rpc_ctx)?,
+        "store.upsert" => rpc_handlers::handle_store_upsert(&rpc_ctx)?,
+        "store.query" => rpc_handlers::handle_store_query(&rpc_ctx)?,
+        "validate.run" => rpc_handlers::handle_validate_run(&rpc_ctx)?,
+        "scaffold.next_question" => rpc_handlers::handle_scaffold_next_question(&rpc_ctx)?,
+        "scaffold.apply_answer" => rpc_handlers::handle_scaffold_apply_answer(&rpc_ctx)?,
+        "scaffold.generate_artifacts" => rpc_handlers::handle_scaffold_generate_artifacts(&rpc_ctx)?,
+        "standards.resolve" => rpc_handlers::handle_standards_resolve(&rpc_ctx)?,
+        "mentor.obligations" => rpc_handlers::handle_mentor_obligations(&rpc_ctx)?,
+        "assurance.evaluate" => rpc_handlers::handle_assurance_evaluate(&rpc_ctx)?,
         _ => error_response(
-            request.id.clone(),
-            request.op.clone(),
-            request.params.clone(),
-            "unknown_op".to_string(),
-            format!("Unknown operation: {}", request.op),
-            None,
-            mandates.clone(),
+            request.id.clone(), request.op.clone(), request.params.clone(),
+            "unknown_op".to_string(), format!("Unknown operation: {}", request.op),
+            None, mandates.clone(),
         ),
     };
 
