@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.0](https://github.com/DecapodLabs/decapod/compare/v0.44.6...v0.45.0) - 2026-02-26
+
+### Other
+
+- apply cargo fmt
+- architecture overhaul — decompose lib.rs, extract CLI/RPC/gates, consolidate schemas
+
 ## [0.44.6](https://github.com/DecapodLabs/decapod/compare/v0.44.5...v0.44.6) - 2026-02-25
 
 ### Fixed
