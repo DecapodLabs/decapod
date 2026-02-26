@@ -41,10 +41,7 @@ macro_rules! gate {
             if let Err(e) = $body {
                 fail(&format!("gate error: {e}"), $ctx);
             }
-            $timings
-                .lock()
-                .unwrap()
-                .push(($name, start.elapsed()));
+            $timings.lock().unwrap().push(($name, start.elapsed()));
         });
     };
 }
@@ -4137,54 +4134,336 @@ pub fn run_validation(
         let timings = &timings;
         let broker = broker_content.as_deref();
 
-        gate!(s, timings, ctx, "validate_repo_map", validate_repo_map(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_no_legacy_namespaces", validate_no_legacy_namespaces(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_embedded_self_contained", validate_embedded_self_contained(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_docs_templates_bucket", validate_docs_templates_bucket(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_entrypoint_invariants", validate_entrypoint_invariants(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_interface_contract_bootstrap", validate_interface_contract_bootstrap(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_health_purity", validate_health_purity(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_project_scoped_state", validate_project_scoped_state(store, ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_generated_artifact_whitelist", validate_generated_artifact_whitelist(store, ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_project_config_toml", validate_project_config_toml(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_project_specs_docs", validate_project_specs_docs(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_spec_drift", validate_spec_drift(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_machine_contract", validate_machine_contract(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_workunit_manifests_if_present", validate_workunit_manifests_if_present(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_context_capsule_policy_contract", validate_context_capsule_policy_contract(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_context_capsules_if_present", validate_context_capsules_if_present(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_knowledge_promotions_if_present", validate_knowledge_promotions_if_present(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_skill_cards_if_present", validate_skill_cards_if_present(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_skill_resolutions_if_present", validate_skill_resolutions_if_present(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_eval_gate_if_required", validate_eval_gate_if_required(store, ctx));
-        gate!(s, timings, ctx, "validate_schema_determinism", validate_schema_determinism(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_database_schema_versions", validate_database_schema_versions(store, ctx));
-        gate!(s, timings, ctx, "validate_health_cache_integrity", validate_health_cache_integrity(store, ctx));
-        gate!(s, timings, ctx, "validate_risk_map", validate_risk_map(store, ctx));
-        gate!(s, timings, ctx, "validate_risk_map_violations", validate_risk_map_violations(store, ctx, broker));
-        gate!(s, timings, ctx, "validate_policy_integrity", validate_policy_integrity(store, ctx, broker));
-        gate!(s, timings, ctx, "validate_knowledge_integrity", validate_knowledge_integrity(store, ctx, broker));
-        gate!(s, timings, ctx, "validate_lineage_hard_gate", validate_lineage_hard_gate(store, ctx));
-        gate!(s, timings, ctx, "validate_repomap_determinism", validate_repomap_determinism(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_watcher_audit", validate_watcher_audit(store, ctx));
-        gate!(s, timings, ctx, "validate_watcher_purity", validate_watcher_purity(store, ctx, broker));
-        gate!(s, timings, ctx, "validate_archive_integrity", validate_archive_integrity(store, ctx));
-        gate!(s, timings, ctx, "validate_control_plane_contract", validate_control_plane_contract(store, ctx));
-        gate!(s, timings, ctx, "validate_canon_mutation", validate_canon_mutation(store, ctx, broker));
-        gate!(s, timings, ctx, "validate_heartbeat_invocation_gate", validate_heartbeat_invocation_gate(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_markdown_primitives_roundtrip_gate", validate_markdown_primitives_roundtrip_gate(store, ctx));
-        gate!(s, timings, ctx, "validate_federation_gates", validate_federation_gates(store, ctx));
-        gate!(s, timings, ctx, "validate_git_workspace_context", validate_git_workspace_context(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_git_protected_branch", validate_git_protected_branch(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_tooling_gate", validate_tooling_gate(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_state_commit_gate", validate_state_commit_gate(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_obligations", validate_obligations(store, ctx));
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_repo_map",
+            validate_repo_map(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_no_legacy_namespaces",
+            validate_no_legacy_namespaces(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_embedded_self_contained",
+            validate_embedded_self_contained(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_docs_templates_bucket",
+            validate_docs_templates_bucket(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_entrypoint_invariants",
+            validate_entrypoint_invariants(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_interface_contract_bootstrap",
+            validate_interface_contract_bootstrap(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_health_purity",
+            validate_health_purity(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_project_scoped_state",
+            validate_project_scoped_state(store, ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_generated_artifact_whitelist",
+            validate_generated_artifact_whitelist(store, ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_project_config_toml",
+            validate_project_config_toml(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_project_specs_docs",
+            validate_project_specs_docs(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_spec_drift",
+            validate_spec_drift(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_machine_contract",
+            validate_machine_contract(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_workunit_manifests_if_present",
+            validate_workunit_manifests_if_present(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_context_capsule_policy_contract",
+            validate_context_capsule_policy_contract(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_context_capsules_if_present",
+            validate_context_capsules_if_present(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_knowledge_promotions_if_present",
+            validate_knowledge_promotions_if_present(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_skill_cards_if_present",
+            validate_skill_cards_if_present(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_skill_resolutions_if_present",
+            validate_skill_resolutions_if_present(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_eval_gate_if_required",
+            validate_eval_gate_if_required(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_schema_determinism",
+            validate_schema_determinism(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_database_schema_versions",
+            validate_database_schema_versions(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_health_cache_integrity",
+            validate_health_cache_integrity(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_risk_map",
+            validate_risk_map(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_risk_map_violations",
+            validate_risk_map_violations(store, ctx, broker)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_policy_integrity",
+            validate_policy_integrity(store, ctx, broker)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_knowledge_integrity",
+            validate_knowledge_integrity(store, ctx, broker)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_lineage_hard_gate",
+            validate_lineage_hard_gate(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_repomap_determinism",
+            validate_repomap_determinism(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_watcher_audit",
+            validate_watcher_audit(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_watcher_purity",
+            validate_watcher_purity(store, ctx, broker)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_archive_integrity",
+            validate_archive_integrity(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_control_plane_contract",
+            validate_control_plane_contract(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_canon_mutation",
+            validate_canon_mutation(store, ctx, broker)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_heartbeat_invocation_gate",
+            validate_heartbeat_invocation_gate(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_markdown_primitives_roundtrip_gate",
+            validate_markdown_primitives_roundtrip_gate(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_federation_gates",
+            validate_federation_gates(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_git_workspace_context",
+            validate_git_workspace_context(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_git_protected_branch",
+            validate_git_protected_branch(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_tooling_gate",
+            validate_tooling_gate(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_state_commit_gate",
+            validate_state_commit_gate(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_obligations",
+            validate_obligations(store, ctx)
+        );
 
-        gate!(s, timings, ctx, "validate_gatekeeper_gate", validate_gatekeeper_gate(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_coplayer_policy_tightening", validate_coplayer_policy_tightening(ctx, decapod_dir));
-        gate!(s, timings, ctx, "validate_lcm_immutability", validate_lcm_immutability(store, ctx));
-        gate!(s, timings, ctx, "validate_lcm_rebuild_gate", validate_lcm_rebuild_gate(store, ctx));
-        gate!(s, timings, ctx, "validate_plan_governed_execution_gate", validate_plan_governed_execution_gate(store, ctx, decapod_dir));
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_gatekeeper_gate",
+            validate_gatekeeper_gate(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_coplayer_policy_tightening",
+            validate_coplayer_policy_tightening(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_lcm_immutability",
+            validate_lcm_immutability(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_lcm_rebuild_gate",
+            validate_lcm_rebuild_gate(store, ctx)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_plan_governed_execution_gate",
+            validate_plan_governed_execution_gate(store, ctx, decapod_dir)
+        );
     });
 
     // Print per-gate timings in verbose mode
