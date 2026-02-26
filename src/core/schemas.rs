@@ -249,7 +249,10 @@ pub const DECIDE_DB_SCHEMA_DECISIONS: &str = "
     )
 ";
 
-// Decoupled name mapping for compatibility
+// Federation uses the same schema as Memory but stores data in a separate
+// database file (`federation.db` vs `memory.db`). This allows subsystems
+// like `primitives` to maintain an independent knowledge graph instance
+// while sharing the identical table structure.
 pub const KNOWLEDGE_DB_NAME: &str = "knowledge.db";
 pub const FEDERATION_DB_NAME: &str = "federation.db";
 pub const FEDERATION_EVENTS_NAME: &str = "federation.events.jsonl";
@@ -520,6 +523,105 @@ pub const POLICY_DB_NAME: &str = "policy.db";
 pub const FEEDBACK_DB_NAME: &str = "feedback.db";
 pub const ARCHIVE_DB_NAME: &str = "archive.db";
 pub const APTITUDE_DB_NAME: &str = "aptitude.db";
+
+// --- Aptitude Schemas ---
+
+pub const APTITUDE_DB_SCHEMA_PREFERENCES: &str = "
+    CREATE TABLE IF NOT EXISTS preferences (
+        id TEXT PRIMARY KEY,
+        category TEXT NOT NULL,
+        key TEXT NOT NULL,
+        value TEXT NOT NULL,
+        context TEXT,
+        source TEXT NOT NULL,
+        confidence INTEGER DEFAULT 100,
+        created_at TEXT NOT NULL,
+        updated_at TEXT,
+        last_accessed_at TEXT,
+        access_count INTEGER DEFAULT 0,
+        UNIQUE(category, key)
+    )
+";
+
+pub const APTITUDE_DB_SCHEMA_SKILLS: &str = "
+    CREATE TABLE IF NOT EXISTS skills (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        description TEXT,
+        workflow TEXT NOT NULL,
+        context TEXT,
+        usage_count INTEGER DEFAULT 0,
+        last_used_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT
+    )
+";
+
+pub const APTITUDE_DB_SCHEMA_PATTERNS: &str = "
+    CREATE TABLE IF NOT EXISTS patterns (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        category TEXT NOT NULL,
+        regex_pattern TEXT NOT NULL,
+        preference_category TEXT,
+        preference_key TEXT,
+        description TEXT,
+        created_at TEXT NOT NULL
+    )
+";
+
+pub const APTITUDE_DB_SCHEMA_OBSERVATIONS: &str = "
+    CREATE TABLE IF NOT EXISTS observations (
+        id TEXT PRIMARY KEY,
+        content TEXT NOT NULL,
+        category TEXT,
+        matched_pattern_id TEXT,
+        processed INTEGER DEFAULT 0,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(matched_pattern_id) REFERENCES patterns(id)
+    )
+";
+
+pub const APTITUDE_DB_SCHEMA_CONSOLIDATIONS: &str = "
+    CREATE TABLE IF NOT EXISTS consolidations (
+        id TEXT PRIMARY KEY,
+        source_type TEXT NOT NULL,
+        source_id TEXT NOT NULL,
+        target_type TEXT NOT NULL,
+        target_id TEXT NOT NULL,
+        reason TEXT,
+        created_at TEXT NOT NULL
+    )
+";
+
+pub const APTITUDE_DB_SCHEMA_AGENT_PROMPTS: &str = "
+    CREATE TABLE IF NOT EXISTS agent_prompts (
+        id TEXT PRIMARY KEY,
+        context TEXT NOT NULL,
+        prompt_text TEXT NOT NULL,
+        priority INTEGER DEFAULT 100,
+        active INTEGER DEFAULT 1,
+        usage_count INTEGER DEFAULT 0,
+        last_shown_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT
+    )
+";
+
+pub const APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY: &str =
+    "CREATE INDEX IF NOT EXISTS idx_preferences_category ON preferences(category)";
+pub const APTITUDE_DB_SCHEMA_INDEX_PREF_KEY: &str =
+    "CREATE INDEX IF NOT EXISTS idx_preferences_key ON preferences(key)";
+pub const APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS: &str =
+    "CREATE INDEX IF NOT EXISTS idx_preferences_access ON preferences(last_accessed_at)";
+pub const APTITUDE_DB_SCHEMA_INDEX_SKILL_NAME: &str =
+    "CREATE INDEX IF NOT EXISTS idx_skills_name ON skills(name)";
+pub const APTITUDE_DB_SCHEMA_INDEX_PATTERN_CATEGORY: &str =
+    "CREATE INDEX IF NOT EXISTS idx_patterns_category ON patterns(category)";
+pub const APTITUDE_DB_SCHEMA_INDEX_OBS_PROCESSED: &str =
+    "CREATE INDEX IF NOT EXISTS idx_observations_processed ON observations(processed)";
+pub const APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT: &str =
+    "CREATE INDEX IF NOT EXISTS idx_agent_prompts_context ON agent_prompts(context)";
 
 // --- 5. LCM Bin (Lossless Context Management) ---
 pub const LCM_DB_NAME: &str = "lcm.db";
