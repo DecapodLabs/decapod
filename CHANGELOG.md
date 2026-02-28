@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.1](https://github.com/DecapodLabs/decapod/compare/v0.46.0...v0.46.1) - 2026-02-28
+
+### Added
+
+- add internalized context artifacts + activation-first README rewrite
+
+### Fixed
+
+- add changelog entry for schema/interface change, fix .decapod/ path in constitution doc
+- apply rustfmt, fix contract alignment test, update artifact manifest hash
+
 ### Added
 
 - schema/interface: add `interfaces/INTERNALIZATION_SCHEMA.md` — internalized context artifact schema and lifecycle contract
