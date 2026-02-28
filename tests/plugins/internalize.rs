@@ -225,9 +225,7 @@ fn test_source_hash_changes_when_document_changes() {
 
 #[test]
 fn test_ttl_blocks_attach_after_expiry() {
-    use decapod::plugins::internalize::{
-        attach_internalization, create_internalization,
-    };
+    use decapod::plugins::internalize::{attach_internalization, create_internalization};
 
     let temp_dir = TempDir::new().unwrap();
     let store_root = temp_dir.path().to_path_buf();
@@ -256,7 +254,11 @@ fn test_ttl_blocks_attach_after_expiry() {
     let raw = fs::read_to_string(&manifest_path).unwrap();
     let mut manifest: serde_json::Value = serde_json::from_str(&raw).unwrap();
     manifest["expires_at"] = serde_json::Value::String("2020-01-01T00:00:00Z".to_string());
-    fs::write(&manifest_path, serde_json::to_string_pretty(&manifest).unwrap()).unwrap();
+    fs::write(
+        &manifest_path,
+        serde_json::to_string_pretty(&manifest).unwrap(),
+    )
+    .unwrap();
 
     // Attempt attach — should fail with Expired
     let err = attach_internalization(&store_root, &result.artifact_id, "test-session");
@@ -300,8 +302,7 @@ fn test_full_lifecycle_create_inspect_attach() {
     assert!(!create_result.source_hash.is_empty());
 
     // INSPECT
-    let inspect_result =
-        inspect_internalization(&store_root, &create_result.artifact_id).unwrap();
+    let inspect_result = inspect_internalization(&store_root, &create_result.artifact_id).unwrap();
 
     assert_eq!(inspect_result.status, "valid");
     assert!(inspect_result.integrity.adapter_hash_valid);
@@ -395,15 +396,16 @@ fn test_cli_create_and_inspect() {
 
     // Parse the JSON output to get artifact ID
     let stdout_lines: Vec<&str> = output.lines().collect();
-    let json_start = stdout_lines.iter().position(|l| l.trim_start().starts_with('{'));
+    let json_start = stdout_lines
+        .iter()
+        .position(|l| l.trim_start().starts_with('{'));
     assert!(json_start.is_some(), "Output should contain JSON");
 
     // Find matching closing brace
     let json_str = &output[output.find('{').unwrap()..];
-    let result: serde_json::Value = serde_json::from_str(
-        &json_str[..json_str.rfind('}').unwrap() + 1],
-    )
-    .expect("Should parse create result JSON");
+    let result: serde_json::Value =
+        serde_json::from_str(&json_str[..json_str.rfind('}').unwrap() + 1])
+            .expect("Should parse create result JSON");
 
     let artifact_id = result["artifact_id"].as_str().unwrap();
     assert!(!artifact_id.is_empty());
@@ -427,10 +429,9 @@ fn test_cli_create_and_inspect() {
     );
 
     let inspect_json_str = &output[output.find('{').unwrap()..];
-    let inspect_result: serde_json::Value = serde_json::from_str(
-        &inspect_json_str[..inspect_json_str.rfind('}').unwrap() + 1],
-    )
-    .expect("Should parse inspect result JSON");
+    let inspect_result: serde_json::Value =
+        serde_json::from_str(&inspect_json_str[..inspect_json_str.rfind('}').unwrap() + 1])
+            .expect("Should parse inspect result JSON");
 
     assert_eq!(inspect_result["status"].as_str().unwrap(), "valid");
     assert_eq!(inspect_result["artifact_id"].as_str().unwrap(), artifact_id);
