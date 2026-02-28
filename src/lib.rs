@@ -1004,11 +1004,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     run_capabilities_command(cap_cli)?;
                 }
                 Command::Internalize(internalize_cli) => {
-                    internalize::run_internalize_cli(
-                        &project_store,
-                        &store_root,
-                        internalize_cli,
-                    )?;
+                    internalize::run_internalize_cli(&project_store, &store_root, internalize_cli)?;
                 }
                 Command::Preflight(preflight_cli) => {
                     run_preflight_command(preflight_cli, &project_root)?;

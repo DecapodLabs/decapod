@@ -10,8 +10,8 @@
 </p>
 
 <p align="center">
-  Decapod is a repo-native substrate that agents call during a run to turn human intent into explicit, checkable work artifacts
-  (intent → context → spec → proof) before the next inference step. No background service. No new workflow. Local-first state you can inspect.
+  Called on demand inside agent loops to turn intent into context, then context into explicit specifications before inference.
+  No background service. No new workflow. Local-first state you can inspect.
 </p>
 
 <p align="center">

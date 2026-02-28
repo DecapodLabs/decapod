@@ -4,8 +4,8 @@
 
 use crate::core::{docs_cli, flight_recorder, obligation, plan_governance, todo, workunit};
 use crate::plugins::{
-    aptitude, container, cron, decide, doctor, eval, federation, health, internalize, lcm,
-    map_ops, policy, primitives, reflex, verify, workflow,
+    aptitude, container, cron, decide, doctor, eval, federation, health, internalize, lcm, map_ops,
+    policy, primitives, reflex, verify, workflow,
 };
 
 use clap::{Parser, Subcommand};

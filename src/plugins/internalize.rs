@@ -322,9 +322,18 @@ pub enum InternalizeError {
     ProfileNotFound(String),
     ProfileExecution(String),
     ArtifactNotFound(String),
-    SourceIntegrityFailed { expected: String, actual: String },
-    AdapterIntegrityFailed { expected: String, actual: String },
-    Expired { artifact_id: String, expired_at: String },
+    SourceIntegrityFailed {
+        expected: String,
+        actual: String,
+    },
+    AdapterIntegrityFailed {
+        expected: String,
+        actual: String,
+    },
+    Expired {
+        artifact_id: String,
+        expired_at: String,
+    },
     ValidationError(String),
 }
 
@@ -625,8 +634,7 @@ pub fn create_internalization(
     };
 
     // Write manifest
-    let manifest_json =
-        serde_json::to_string_pretty(&manifest).map_err(InternalizeError::Json)?;
+    let manifest_json = serde_json::to_string_pretty(&manifest).map_err(InternalizeError::Json)?;
     fs::write(art_dir.join("manifest.json"), &manifest_json).map_err(InternalizeError::Io)?;
 
     let result = InternalizationCreateResult {
@@ -800,7 +808,10 @@ pub fn run_internalize_cli(
             if format == "json" {
                 println!("{}", serde_json::to_string_pretty(&result).unwrap());
             } else {
-                println!("Attached {} to session {}", result.artifact_id, result.session_id);
+                println!(
+                    "Attached {} to session {}",
+                    result.artifact_id, result.session_id
+                );
                 println!("  Risk: {}", result.risk_classification);
             }
         }
