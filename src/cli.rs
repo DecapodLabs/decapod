@@ -4,8 +4,8 @@
 
 use crate::core::{docs_cli, flight_recorder, obligation, plan_governance, todo, workunit};
 use crate::plugins::{
-    aptitude, container, cron, decide, doctor, eval, federation, health, lcm, map_ops, policy,
-    primitives, reflex, verify, workflow,
+    aptitude, container, cron, decide, doctor, eval, federation, health, internalize, lcm,
+    map_ops, policy, primitives, reflex, verify, workflow,
 };
 
 use clap::{Parser, Subcommand};
@@ -759,6 +759,10 @@ pub(crate) enum Command {
     /// Show Decapod capabilities (for agent discovery)
     #[clap(name = "capabilities")]
     Capabilities(CapabilitiesCli),
+
+    /// Internalized context artifacts: create, attach, and inspect context adapters
+    #[clap(name = "internalize")]
+    Internalize(internalize::InternalizeCli),
 
     /// Preflight check: before any operation, predict what will fail
     #[clap(name = "preflight")]

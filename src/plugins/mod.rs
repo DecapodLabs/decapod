@@ -12,6 +12,7 @@ pub mod feedback;
 pub mod gatling;
 pub mod health;
 pub mod heartbeat;
+pub mod internalize;
 pub mod knowledge;
 pub mod lcm;
 pub mod map_ops;

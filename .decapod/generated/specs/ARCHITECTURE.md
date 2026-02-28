@@ -58,6 +58,32 @@ sequenceDiagram
   Runtime-->>Agent: VALIDATE_TIMEOUT_OR_LOCK
 ```
 
+## Internalized Context Artifacts
+```mermaid
+sequenceDiagram
+  participant Agent
+  participant Runtime as Decapod
+  participant Profile as Internalizer Profile
+  participant Store
+
+  Agent->>Runtime: internalize create --source doc.md --model base-v1 --profile noop
+  Runtime->>Runtime: hash source document (SHA-256)
+  Runtime->>Profile: execute(document, base_model, params)
+  Profile-->>Runtime: adapter.bin + metadata
+  Runtime->>Runtime: hash adapter payload (SHA-256)
+  Runtime->>Store: write manifest.json + adapter.bin to artifacts/internalizations/<id>/
+  Runtime-->>Agent: InternalizationCreateResult (artifact_id, hashes)
+
+  Agent->>Runtime: internalize attach --id <id> --session <session>
+  Runtime->>Store: verify adapter integrity + TTL
+  Runtime->>Store: log provenance to sessions/<session>/
+  Runtime-->>Agent: InternalizationAttachResult (capabilities_contract, risk)
+
+  Agent->>Runtime: internalize inspect --id <id>
+  Runtime->>Store: read manifest + verify hashes
+  Runtime-->>Agent: InternalizationInspectResult (status, integrity)
+```
+
 ## Execution Path
 `intent -> context.resolve -> workspace.ensure -> task lifecycle -> implementation -> validate -> evidence -> completion`
 

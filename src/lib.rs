@@ -22,7 +22,8 @@ use core::{
 };
 use plugins::{
     aptitude, archive, container, context, cron, decide, doctor, eval, federation, feedback,
-    health, knowledge, lcm, map_ops, policy, primitives, reflex, verify, watcher, workflow,
+    health, internalize, knowledge, lcm, map_ops, policy, primitives, reflex, verify, watcher,
+    workflow,
 };
 
 use clap::{CommandFactory, Parser};
@@ -1001,6 +1002,13 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
                 Command::Capabilities(cap_cli) => {
                     run_capabilities_command(cap_cli)?;
+                }
+                Command::Internalize(internalize_cli) => {
+                    internalize::run_internalize_cli(
+                        &project_store,
+                        &store_root,
+                        internalize_cli,
+                    )?;
                 }
                 Command::Preflight(preflight_cli) => {
                     run_preflight_command(preflight_cli, &project_root)?;
