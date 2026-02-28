@@ -241,12 +241,13 @@ impl InternalizerProfile {
     }
 
     /// Resolve a profile by name. Returns the noop stub for "noop",
-    /// otherwise looks for a profile JSON in `.decapod/profiles/internalizers/`.
+    /// otherwise looks for a profile JSON in `.decapod/generated/profiles/internalizers/`.
     pub fn resolve(name: &str, store_root: &Path) -> Result<Self, InternalizeError> {
         if name == "noop" {
             return Ok(Self::noop());
         }
         let profile_path = store_root
+            .join("generated")
             .join("profiles")
             .join("internalizers")
             .join(format!("{}.json", name));

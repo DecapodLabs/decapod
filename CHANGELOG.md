@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- schema/interface: add `interfaces/INTERNALIZATION_SCHEMA.md` — internalized context artifact schema and lifecycle contract
+- feat: add `decapod internalize` subsystem (create, attach, inspect) for governed context internalization artifacts
+
 ## [0.46.0](https://github.com/DecapodLabs/decapod/compare/v0.45.0...v0.46.0) - 2026-02-26
 
 ### Other

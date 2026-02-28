@@ -148,7 +148,7 @@ An internalization is **not training**. It is a governed artifact produced by a 
 
 ## 7. Internalizer Profiles
 
-Profiles are pluggable external tools stored in `.decapod/profiles/internalizers/<name>.json`.
+Profiles are pluggable external tools stored in `.decapod/generated/profiles/internalizers/<name>.json`.
 
 Profile schema:
 ```json
