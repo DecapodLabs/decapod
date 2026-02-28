@@ -44,6 +44,7 @@ This is the single source of truth for Decapod subsystem status.
 | federation | `decapod data federation` | implemented | REAL | `plugins/FEDERATION.md` | `decapod data schema --subsystem federation` |
 | primitives | `decapod data primitives` | implemented | REAL | `plugins/TODO.md` | `decapod data primitives validate` |
 | decide | `decapod decide` | implemented | REAL | `plugins/DECIDE.md` | `decapod data schema --subsystem decide` |
+| internalize | `decapod internalize` | implemented | REAL | `interfaces/INTERNALIZATION_SCHEMA.md` | `decapod internalize inspect --id <id>` |
 | db_broker | `decapod data broker` | planned | SPEC | `plugins/DB_BROKER.md` | not yet enforced |
 | heartbeat | `decapod heartbeat` | removed | DEPRECATED | `plugins/HEARTBEAT.md` | replacement: `decapod govern health summary` |
 | trust | `decapod trust` | removed | DEPRECATED | `plugins/TRUST.md` | replacement: `decapod govern health autonomy` |

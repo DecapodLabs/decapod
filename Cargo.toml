@@ -72,6 +72,10 @@ name = "plugins_aptitude_tests"
 path = "tests/plugins/aptitude.rs"
 
 [[test]]
+name = "plugins_internalize_tests"
+path = "tests/plugins/internalize.rs"
+
+[[test]]
 name = "plugins_federation_tests"
 path = "tests/plugins/federation.rs"
 
