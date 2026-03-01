@@ -27,6 +27,7 @@ This registry defines the canonical binding interface surfaces.
 | `interfaces/DEMANDS_SCHEMA.md` | User-demand schema + precedence rules | Yes |
 | `interfaces/RISK_POLICY_GATE.md` | Deterministic PR risk-policy gate semantics | Yes |
 | `interfaces/INTERNALIZATION_SCHEMA.md` | Internalized context artifact schema + lifecycle contract | Yes |
+| `interfaces/jsonschema/internalization/*.json` | Stable JSON Schemas for internalization manifests and CLI results | Yes |
 | `interfaces/AGENT_CONTEXT_PACK.md` | Agent context-pack layout and mutation contract | Yes |
 | `interfaces/PROJECT_SPECS.md` | Canonical local `specs/*.md` contract and constitution mapping | Yes |
 
@@ -43,6 +44,12 @@ This registry defines the canonical binding interface surfaces.
 - Agent memory/context pack semantics: `interfaces/AGENT_CONTEXT_PACK.md`
 - Canonical local project specs contract: `interfaces/PROJECT_SPECS.md`
 - Internalized context artifact lifecycle: `interfaces/INTERNALIZATION_SCHEMA.md`
+- Internalization JSON schemas:
+- `interfaces/jsonschema/internalization/InternalizationManifest.schema.json`
+- `interfaces/jsonschema/internalization/InternalizationCreateResult.schema.json`
+- `interfaces/jsonschema/internalization/InternalizationAttachResult.schema.json`
+- `interfaces/jsonschema/internalization/InternalizationDetachResult.schema.json`
+- `interfaces/jsonschema/internalization/InternalizationInspectResult.schema.json`
 
 ---
 

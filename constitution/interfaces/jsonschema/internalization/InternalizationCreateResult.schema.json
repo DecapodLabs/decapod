@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://decapod.dev/schemas/internalization/create-result-1.2.0.json",
+  "title": "InternalizationCreateResult",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "success",
+    "artifact_id",
+    "artifact_path",
+    "cache_hit",
+    "manifest",
+    "source_hash",
+    "adapter_hash"
+  ]
+}

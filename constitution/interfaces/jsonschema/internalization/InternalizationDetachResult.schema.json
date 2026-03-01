@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://decapod.dev/schemas/internalization/detach-result-1.2.0.json",
+  "title": "InternalizationDetachResult",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "success",
+    "artifact_id",
+    "session_id",
+    "detached_at",
+    "lease_id",
+    "detached"
+  ]
+}

@@ -69,6 +69,34 @@ Binding system rules live in `specs/SYSTEM.md` and `specs/INTENT.md`.
 
 ---
 
+## 6. Internalized Context Artifact Sequence
+
+```text
+Agent
+  |
+  | decapod internalize create --source doc.md --model base-model --profile noop
+  v
+Decapod CLI
+  |
+  | hashes source + resolves profile + writes manifest/adapter
+  v
+.decapod/generated/artifacts/internalizations/<artifact_id>
+  |
+  | decapod internalize attach --id <artifact_id> --session <session_id> --tool <tool> --lease-seconds 1800
+  v
+Session-scoped mount lease
+  |
+  | inference payload references artifact_id only while lease is active
+  v
+Inference caller
+  |
+  | decapod internalize detach --id <artifact_id> --session <session_id>
+  v
+Lease revoked
+```
+
+---
+
 ## Links
 
 ### Core Router
