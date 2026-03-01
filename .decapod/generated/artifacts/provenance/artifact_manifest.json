@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "README.md",
-      "sha256": "50c89e477e08d9f4d96f06b5a4961c7119856e6481f4102b299fc63fd1f057a6"
+      "sha256": "39b227aa2bd98fc770023b8ddb84cbc3d5e9425ab07a2b20449d771161b9dd00"
     }
   ],
   "kind": "artifact_manifest",
