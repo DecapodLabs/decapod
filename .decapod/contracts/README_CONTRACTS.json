@@ -1,0 +1,245 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-02-28",
+  "source": "README.md claims extracted and mapped to enforcement",
+  "claims": [
+    {
+      "claim_id": "readme.daemonless",
+      "source_line": "README.md:122",
+      "source_text": "**Daemonless.** No background process. The binary starts, does its job, exits.",
+      "normalized_claim": "Decapod MUST be invoked on-demand with no background daemon process",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "tests/daemonless_lifecycle.rs",
+        "claim.foundation.daemonless_repo_native_canonicality"
+      ],
+      "constitution_ref": "claim.foundation.daemonless_repo_native_canonicality",
+      "rationale": "Enforced by daemonless_lifecycle test which verifies no lingering processes"
+    },
+    {
+      "claim_id": "readme.two_command_install",
+      "source_line": "README.md:123",
+      "source_text": "**Two-command install.** Install and init. Done.",
+      "normalized_claim": "Decapod MUST be installable with 'cargo install decapod && decapod init'",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "src/cli.rs",
+        "README.md:54-57"
+      ],
+      "constitution_ref": null,
+      "rationale": "CLI provides 'init' command; install is via cargo which is external"
+    },
+    {
+      "claim_id": "readme.agent_agnostic",
+      "source_line": "README.md:124",
+      "source_text": "**Agent-agnostic.** Works with Claude, Codex, Gemini, Cursor, and anything else that can shell out.",
+      "normalized_claim": "Decapod MUST work with any agent that can execute CLI commands",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "src/cli.rs",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md"
+      ],
+      "constitution_ref": null,
+      "rationale": "Entry points exist for multiple agents; CLI is agent-agnostic"
+    },
+    {
+      "claim_id": "readme.parallel_safe",
+      "source_line": "README.md:125",
+      "source_text": "**Parallel-safe.** Multiple agents, one repo, no collisions.",
+      "normalized_claim": "Decapod MUST support concurrent agent operations without state corruption",
+      "enforcement_status": "partially_enforced",
+      "enforcement_links": [
+        "src/core/workspace.rs",
+        "src/core/broker.rs",
+        "tests/chaos_replay.rs",
+        "claim.concurrency.no_git_solve"
+      ],
+      "constitution_ref": "claim.concurrency.no_git_solve",
+      "rationale": "Workspace isolation via git worktrees; broker provides serialization; chaos tests verify"
+    },
+    {
+      "claim_id": "readme.proof_gated_completion",
+      "source_line": "README.md:126",
+      "source_text": "**Proof-gated completion.** `VERIFIED` requires passing proof-plan results, not narrative.",
+      "normalized_claim": "Decapod MUST require executable proof for completion, not narrative claims",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "src/core/workunit.rs",
+        "tests/workunit_publish_gate.rs",
+        "claim.proof.executable_check"
+      ],
+      "constitution_ref": "claim.proof.executable_check",
+      "rationale": "Workunit requires proof gates to reach VERIFIED status"
+    },
+    {
+      "claim_id": "readme.fully_auditable",
+      "source_line": "README.md:127",
+      "source_text": "**Fully auditable.** Every decision, trace, and proof artifact lives in `.decapod/` as plain files.",
+      "normalized_claim": "All Decapod state MUST be stored as plain files in .decapod/ directory",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "src/core/store.rs",
+        "src/core/db.rs",
+        "src/core/flight_recorder.rs",
+        "claim.store.blank_slate"
+      ],
+      "constitution_ref": "claim.store.blank_slate",
+      "rationale": "All state is file-based in .decapod/; SQLite DBs are local files"
+    },
+    {
+      "claim_id": "readme.context_internalization",
+      "source_line": "README.md:128",
+      "source_text": "**Context internalization.** Turn long documents into mountable, verifiable context adapters so agents stop re-ingesting the same 50-page spec every session.",
+      "normalized_claim": "Decapod MUST provide context internalization to avoid repeated document parsing",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "src/plugins/internalize.rs",
+        "constitution/interfaces/INTERNALIZATION_SCHEMA.md"
+      ],
+      "constitution_ref": "claim.lcm.append_only_ledger",
+      "rationale": "Internalize plugin creates mountable context adapters with deterministic hashes"
+    },
+    {
+      "claim_id": "readme.local_durable_state",
+      "source_line": "README.md:97",
+      "source_text": "State is local and durable in `.decapod/`. Context, decisions, and traces persist across sessions and stay retrievable over time. Nothing hides. Nothing phones home.",
+      "normalized_claim": "Decapod state MUST be local and repo-native with no hidden remote state",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "src/core/store.rs",
+        "constitution/core/DECAPOD.md:25"
+      ],
+      "constitution_ref": "claim.foundation.daemonless_repo_native_canonicality",
+      "rationale": "State is file-based in repo; no remote sync by default"
+    },
+    {
+      "claim_id": "readme.no_daemon",
+      "source_line": "README.md:14",
+      "source_text": "No daemon. No workflow tax. Just artifacts you can read, hash, and trust.",
+      "normalized_claim": "Decapod MUST NOT run as a background daemon",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "tests/daemonless_lifecycle.rs"
+      ],
+      "constitution_ref": "claim.foundation.daemonless_repo_native_canonicality",
+      "rationale": "Verified by daemonless_lifecycle test"
+    },
+    {
+      "claim_id": "readme.repo_native",
+      "source_line": "README.md:75",
+      "source_text": "Everything material is a file you can `cat`. No databases to query, no dashboards to check. The state *is* the directory.",
+      "normalized_claim": "Decapod MUST store all state as human-readable files in the repo",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "src/core/store.rs",
+        "src/core/db.rs"
+      ],
+      "constitution_ref": "claim.foundation.daemonless_repo_native_canonicality",
+      "rationale": "SQLite DBs are files that can be inspected; no external services required"
+    },
+    {
+      "claim_id": "readme.workspace_isolation",
+      "source_line": "README.md:40",
+      "source_text": "Decapod coordinates shared state across parallel runs. No silent overwrites. No drift. Each agent gets an isolated workspace with a provenance trail.",
+      "normalized_claim": "Decapod MUST provide workspace isolation to prevent concurrent agent conflicts",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "src/core/workspace.rs",
+        "tests/workspace_interlock.rs",
+        "claim.git.no_direct_main_push"
+      ],
+      "constitution_ref": "claim.git.no_direct_main_push",
+      "rationale": "Workspace uses git worktrees; validates against protected branches"
+    },
+    {
+      "claim_id": "readme.three_questions",
+      "source_line": "README.md:30",
+      "source_text": "Before an agent mutates your repo, Decapod forces it to answer three questions: *What did the human actually ask for?* *What boundaries apply?* *How will we prove it's done?*",
+      "normalized_claim": "Decapod MUST enforce intent clarification, boundary definition, and proof planning before mutation",
+      "enforcement_status": "partially_enforced",
+      "enforcement_links": [
+        "src/core/todo.rs",
+        "src/core/workunit.rs",
+        "src/plugins/doctor.rs"
+      ],
+      "constitution_ref": "claim.todo.claim_before_work",
+      "rationale": "TODO claims enforce ownership; workunit enforces proof plans; doctor provides preflight"
+    },
+    {
+      "claim_id": "readme.interlock_advisory_attestation",
+      "source_line": "README.md:101-108",
+      "source_text": "Every Decapod operation returns one of three things: Advisory (tightens intent), Interlock (hard policy boundary), Attestation (structured proof)",
+      "normalized_claim": "Decapod operations MUST return typed responses: Advisory, Interlock, or Attestation",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "src/core/rpc.rs",
+        "src/core/output.rs",
+        "tests/spec_conformance.rs"
+      ],
+      "constitution_ref": null,
+      "rationale": "RPC responses include receipt, context_capsule, allowed_next_ops, blocked_by"
+    },
+    {
+      "claim_id": "readme.constitution_embedded",
+      "source_line": "README.md:32",
+      "source_text": "It ships with an embedded constitution: governance docs agents receive as just-in-time context",
+      "normalized_claim": "Decapod MUST embed constitution docs for just-in-time context delivery",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "src/core/docs.rs",
+        "src/core/docs_cli.rs",
+        "constitution/"
+      ],
+      "constitution_ref": null,
+      "rationale": "Docs CLI provides embedded constitution access"
+    },
+    {
+      "claim_id": "readme.validate_gate",
+      "source_line": "README.md:46",
+      "source_text": "`VERIFIED` means every gate in the proof plan actually passed — not \"the agent said it looks good.\"",
+      "normalized_claim": "Decapod validate MUST be the authoritative completion gate",
+      "enforcement_status": "enforced",
+      "enforcement_links": [
+        "src/core/validate.rs",
+        "tests/spec_conformance.rs",
+        "claim.validate.bounded_termination"
+      ],
+      "constitution_ref": "claim.validate.bounded_termination",
+      "rationale": "Validate runs gates and terminates boundedly; tests verify"
+    }
+  ],
+  "non_guarantees": [
+    {
+      "original_text": "README.md:39",
+      "text": "The agent stops hallucinating requirements.",
+      "reason": "This is an aspirational outcome, not a guarantee. Decapod provides tools but cannot guarantee agent behavior.",
+      "recommended_action": "Downgraded to aspirational"
+    },
+    {
+      "original_text": "README.md:95",
+      "text": "It shapes what goes into inference without doing inference itself.",
+      "reason": "This describes intent but is not a testable guarantee.",
+      "recommended_action": "Retained as description, not guarantee"
+    }
+  ],
+  "constitution_claims_not_in_readme": [
+    {
+      "claim_id": "claim.store.decapod_cli_only",
+      "description": "Agents must not read/write .decapod/* files directly; access must go through decapod CLI surfaces",
+      "source": "constitution/interfaces/STORE_MODEL.md"
+    },
+    {
+      "claim_id": "claim.session.agent_password_required",
+      "description": "Session access requires agent identity plus ephemeral per-session password",
+      "source": "constitution/specs/SECURITY.md"
+    },
+    {
+      "claim_id": "claim.federation.store_scoped",
+      "description": "Federation data exists only under the selected store root",
+      "source": "constitution/plugins/FEDERATION.md"
+    }
+  ]
+}
