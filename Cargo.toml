@@ -1,6 +1,6 @@
 [package]
 name = "decapod"
-version = "0.46.2"
+version = "0.46.3"
 edition = "2024"
 rust-version = "1.90"
 build = "build/constitution_index.rs"
