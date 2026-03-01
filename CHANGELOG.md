@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.2](https://github.com/DecapodLabs/decapod/compare/v0.46.1...v0.46.2) - 2026-03-01
+
+### Other
+
+- uplift README with voice, edge, and plain-English agent-first framing
+
 ## [0.46.1](https://github.com/DecapodLabs/decapod/compare/v0.46.0...v0.46.1) - 2026-02-28
 
 ### Added
