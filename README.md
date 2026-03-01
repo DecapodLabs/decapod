@@ -88,11 +88,15 @@ Override any constitution default with plain English in `.decapod/OVERRIDE.md`. 
 
 ## Why this exists
 
-AI coding agents are extraordinarily good at generating code. They are extraordinarily bad at knowing when to stop, what not to touch, and whether the thing they built is the thing you asked for.
+Coding agents suck. But it's not their fault.
 
-The failure mode isn't "bad code." It's unaccountable code: no intent recorded, no boundaries enforced, no proof that completion criteria were met. You get a PR that compiles. You have no idea if it's right.
+You can't solve the world inside the agent. Like any serious technology, agents need infrastructure — a way to interface with the host machine (files, repos, terminals, policies) in a way that's intelligent, bounded, and provable.
 
-Decapod closes that gap. Agents call it mid-run to lock intent, enforce boundaries, and prove completion. It shapes what goes into inference without doing inference itself.
+The Unix philosophy ("do one thing well") breaks down the moment the "one thing" becomes: reason over ambiguous intent, plan work, write code, validate it, manage state, coordinate tools, and ship safely. We expect agents to generate great code. They mostly can. But the gaps aren't something you patch by making the agent fatter. The gaps exist because the agent isn't the right place for control-plane responsibilities.
+
+Right now, agent makers keep stuffing more into the agent: task management, memory, rules, planning, codegen, toolchains, browsers — until it's mediocre at everything. Agents shouldn't be responsible for control-plane work. They shouldn't be your TODO database. They shouldn't be the place you encode a team's behavioral expectations. They shouldn't be the system of record for "what got done" or "what's allowed." That belongs in infrastructure.
+
+Decapod is a repo-native governance kernel that agents call into — like a device driver for agent work. It makes intent explicit, boundaries explicit, and completion provable. The agent stays the brain. Decapod becomes the control plane that turns agent output into something shippable.
 
 State is local and durable in `.decapod/`. Context, decisions, and traces persist across sessions and stay retrievable over time. Nothing hides. Nothing phones home.
 
