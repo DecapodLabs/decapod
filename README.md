@@ -6,12 +6,12 @@
 
 <p align="center">
   <strong>Decapod</strong><br />
-  A daemonless control plane for AI coding agents.
+  The governance kernel for AI coding agents.
 </p>
 
 <p align="center">
-  Called on demand inside agent loops to turn intent into context, then context into explicit specifications before inference.
-  No background service. No new workflow. Local-first state you can inspect.
+  Called on demand inside agent loops to turn intent into context, then context into explicit specifications before inference.<br />
+  No daemon. No workflow tax. Just artifacts you can read, hash, and trust.
 </p>
 
 <p align="center">
@@ -23,45 +23,42 @@
 
 ---
 
-## What Decapod does (plain language)
+## The idea
 
-Decapod does **not** replace your agent. You keep using Claude Code, Codex, Gemini CLI, Cursor, etc.
+Your agent writes code. Nobody checks its homework.
 
-Decapod adds one missing layer: when an agent needs to make a control-plane decision (what the user *meant*, what's in/out of scope, what "done" means, what must be proven), it calls Decapod as a local CLI/RPC. Decapod writes the resulting intent/spec/proof artifacts into `.decapod/`, so the run becomes auditable and repeatable instead of "trust me bro."
+Decapod is the layer that makes agents show their work. Before an agent mutates your repo, Decapod forces it to answer three questions: *What did the human actually ask for?* *What boundaries apply?* *How will we prove it's done?* The answers become artifacts — not comments, not logs, artifacts with hashes and validation gates — stored in `.decapod/` where anyone on the team can see exactly what happened and why.
 
-Decapod ships with an embedded [constitution](constitution/core/DECAPOD.md): a set of governance docs that agents receive as just-in-time context. The constitution defines boundaries, interfaces, and methodology so agents don't have to guess the rules — they query them on demand.
+It ships with an embedded [constitution](constitution/core/DECAPOD.md): governance docs agents receive as just-in-time context so they query the rules on demand instead of guessing them.
 
-Decapod is **daemonless**: it starts when called and exits immediately after the call.
+Decapod doesn't replace your agent. It doesn't run in the background. It starts when called, writes its receipts, and exits. Two commands to adopt. Zero config to maintain.
 
-### Scenarios where Decapod helps immediately
+### When it clicks
 
-1. **"This request is underspecified."**
-   The agent stops guessing. Decapod forces intent to become explicit (constraints, boundaries, acceptance criteria), then the agent continues with tighter context.
+**"The spec was vibes."** Your agent asks Decapod what the user actually meant. Decapod forces intent to crystallize — constraints, boundaries, acceptance criteria — before a single line is generated. The agent stops hallucinating requirements.
 
-2. **"Multiple agents are editing the same repo."**
-   Decapod coordinates shared state and prevents collisions so parallel runs don't silently overwrite or drift.
+**"Three agents, one repo, total chaos."** Decapod coordinates shared state across parallel runs. No silent overwrites. No drift. Each agent gets an isolated workspace with a provenance trail.
 
-3. **"It compiled, but is it actually done?"**
-   Decapod enforces completion gates: tests, validations, and proof artifacts must pass before a run can claim VERIFIED.
+**"It passes CI but is it *done*?"** Decapod gates completion on proof artifacts, not narrative claims. `VERIFIED` means every gate in the proof plan actually passed — not "the agent said it looks good."
 
-Related research: [Evaluating AGENTS.md](https://arxiv.org/pdf/2602.11988) (ETH SRI, 2026) on context-file quality and agent cost/performance.
+Related: [Evaluating AGENTS.md](https://arxiv.org/pdf/2602.11988) (ETH SRI, 2026) on context-file quality and agent cost/performance.
 
 <p align="center">
-  ☕ Like Decapod? <a href="https://ko-fi.com/decapodlabs"><strong>Buy us a coffee on Ko-fi</strong></a> 💙
+  <a href="https://ko-fi.com/decapodlabs"><strong>Buy us a coffee</strong></a> ☕
 </p>
 
-## Getting started
+---
+
+## Get running
 
 ```bash
 cargo install decapod
 decapod init
 ```
 
-### What changes after init?
+That's it. Keep using Claude Code, Codex, Gemini CLI, Cursor — whatever you already use. Decapod gets called by your agent automatically when control-plane decisions are needed. Your workflow doesn't change; the agent just gets smarter about when to stop and think.
 
-Decapod creates a `.decapod/` directory (local-first state) and a small set of agent entrypoint files so agents know the contract. Your existing code and workflow are untouched.
-
-### What files get created?
+### What lands in your repo
 
 ```text
 .decapod/
@@ -71,68 +68,68 @@ Decapod creates a `.decapod/` directory (local-first state) and a small set of a
     specs/                    # intent, architecture, validation specs
     artifacts/                # proof artifacts, internalizations, provenance
     sessions/                 # per-session provenance logs
-AGENTS.md                     # agent-facing contract overview
+AGENTS.md                     # universal agent contract
 CLAUDE.md / CODEX.md / GEMINI.md  # tool-specific entrypoints
 ```
 
-### How to tell it's working
+Everything material is a file you can `cat`. No databases to query, no dashboards to check. The state *is* the directory.
 
-1. Run your agent normally and ask for a real change (not just "explain X").
-2. Check `.decapod/generated/` for new artifacts (specs, proofs, session logs).
-3. Run `decapod validate` and see typed pass/fail gates instead of narrative claims.
-4. Ask the agent "what did Decapod change about your plan?" — it should reference explicit intent/spec/proof steps.
+### How to know it's working
 
-Agent integration: see `AGENTS.md` and tool-specific entrypoints (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`) for the operational contract.
+1. Ask your agent to make a real change. Watch `.decapod/generated/` populate with new specs and proof artifacts.
+2. Ask your agent to validate the work. It will report typed pass/fail gates, not "looks good to me."
+3. Ask the agent *"what did Decapod change about your plan?"* — it should cite spec and proof steps, not vibes.
 
-Learn more about the embedded [constitution](constitution/core/DECAPOD.md). Override defaults with plain English in `.decapod/OVERRIDE.md`.
+Agent integration: `AGENTS.md` and tool-specific entrypoints (`CLAUDE.md`, `CODEX.md`, `GEMINI.md`) define the full operational contract your agent follows.
+
+Override any constitution default with plain English in `.decapod/OVERRIDE.md`. Learn more about the embedded [constitution](constitution/core/DECAPOD.md).
 
 ---
 
-## Why Decapod
+## Why this exists
 
-AI coding agents are strong at generating code. Most failures happen before and after generation: unclear intent, fuzzy boundaries, and weak completion checks.
+AI coding agents are extraordinarily good at generating code. They are extraordinarily bad at knowing when to stop, what not to touch, and whether the thing they built is the thing you asked for.
 
-Decapod is the missing layer in that loop. Agents call it mid-run to lock intent, enforce boundaries, and prove completion with explicit gates. It shapes inference without doing inference.
+The failure mode isn't "bad code." It's unaccountable code: no intent recorded, no boundaries enforced, no proof that completion criteria were met. You get a PR that compiles. You have no idea if it's right.
 
-State is local and durable in `.decapod/`: shared context, decisions, and traces persist across sessions and remain retrievable over time.
+Decapod closes that gap. Agents call it mid-run to lock intent, enforce boundaries, and prove completion. It shapes what goes into inference without doing inference itself.
 
-## Assurance model
+State is local and durable in `.decapod/`. Context, decisions, and traces persist across sessions and stay retrievable over time. Nothing hides. Nothing phones home.
 
-Decapod centers execution around three outcomes:
+## How it works
 
-- `Advisory`: clear next actions that tighten intent and reduce wasted loops.
-- `Interlock`: hard policy boundaries that block unsafe or out-of-contract flow.
-- `Attestation`: durable, structured proof that completion criteria actually passed.
+Every Decapod operation returns one of three things:
 
-## Operating model
+| Signal | What it does | Think of it as |
+|--------|-------------|----------------|
+| **Advisory** | Tightens intent, reduces wasted loops | Guardrails |
+| **Interlock** | Hard policy boundary — blocks unsafe flow | Circuit breaker |
+| **Attestation** | Structured proof that criteria actually passed | Receipt |
 
 ```text
 Human Intent
     |
     v
-AI Agent(s)  <---->  Decapod Runtime  <---->  Repository + Policy
-                         |    |    |
-                         |    |    +-- Interlock (enforced boundaries)
-                         |    +------- Advisory (guided execution)
-                         +------------ Attestation (verifiable outcomes)
+AI Agent(s)  <---->  Decapod  <---->  Repository + Policy
+                       |  |  |
+                       |  |  +-- Interlock (enforced boundaries)
+                       |  +----- Advisory (guided execution)
+                       +-------- Attestation (verifiable outcomes)
 ```
 
-## Features
+## What you get
 
-Core properties:
+- **Daemonless.** No background process. The binary starts, does its job, exits.
+- **Two-command install.** Install and init. Done.
+- **Agent-agnostic.** Works with Claude, Codex, Gemini, Cursor, and anything else that can shell out.
+- **Parallel-safe.** Multiple agents, one repo, no collisions.
+- **Proof-gated completion.** `VERIFIED` requires passing proof-plan results, not narrative.
+- **Fully auditable.** Every decision, trace, and proof artifact lives in `.decapod/` as plain files.
+- **Context internalization.** Turn long documents into mountable, verifiable context adapters so agents stop re-ingesting the same 50-page spec every session.
 
-- Daemonless execution: no background agent manager, no hidden runtime.
-- Two-command adoption: `cargo install decapod` and `decapod init`.
-- Agent-agnostic contract: one CLI/RPC surface across Claude, Codex, Gemini, Cursor, and others.
-- Parallel-safe collaboration: multiple agents can operate in one repo without state collisions.
-- VERIFIED is enforced: completion requires passing proof-plan results, not narrative claims.
-- Local-first auditability: `.decapod/` keeps durable traces, decisions, and proof artifacts.
-- Internalized context artifacts: turn long documents into mountable, verifiable context adapters so agents stop paying the long-context tax repeatedly (`decapod internalize create`).
+The deep surface area — interfaces, capsules, eval kernel, knowledge promotions, obligation graphs — lives in the embedded constitution. Ask your agent to explore it.
 
-Deep surface area (interfaces, capsules, eval kernel, promotions, etc.):
-
-- `decapod docs show core/INTERFACES.md`
-- `.decapod/OVERRIDE.md` template after init
+---
 
 ## Contributing
 
@@ -141,19 +138,18 @@ git clone https://github.com/DecapodLabs/decapod
 cd decapod
 cargo build
 cargo test
-decapod validate
 ```
 
-## Documentation
+## Docs
 
-- Development guide: [CONTRIBUTING.md](CONTRIBUTING.md)
-- Security policy: [SECURITY.md](SECURITY.md)
-- Release history: [CHANGELOG.md](CHANGELOG.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md) — development guide
+- [SECURITY.md](SECURITY.md) — security policy
+- [CHANGELOG.md](CHANGELOG.md) — release history
 
 ## Support
 
-- [File an issue](https://github.com/DecapodLabs/decapod/issues)
-- [Support on Ko-fi](https://ko-fi.com/decapodlabs)
+- [Issues](https://github.com/DecapodLabs/decapod/issues)
+- [Ko-fi](https://ko-fi.com/decapodlabs)
 
 ## License
 
