@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://decapod.dev/schemas/internalization/inspect-result-1.2.0.json",
+  "title": "InternalizationInspectResult",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "manifest",
+    "integrity",
+    "status"
+  ]
+}

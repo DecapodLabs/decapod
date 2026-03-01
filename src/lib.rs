@@ -2377,21 +2377,28 @@ fn resolve_release_capsule(project_root: &Path) -> Result<(String, String), erro
     let fallback_path = core::context_capsule::context_capsule_path(project_root, &fallback);
     let capsule = if fallback_path.exists() {
         let raw = fs::read_to_string(&fallback_path).map_err(error::DecapodError::IoError)?;
-        let parsed: core::context_capsule::DeterministicContextCapsule = serde_json::from_str(&raw)
-            .map_err(|e| {
+        // If the on-disk capsule is empty (e.g. after a shallow checkout or
+        // force-push that left a zero-length tracked file), fall through to
+        // the freshly-generated capsule instead of failing with a parse error.
+        if raw.trim().is_empty() {
+            fallback
+        } else {
+            let parsed: core::context_capsule::DeterministicContextCapsule =
+                serde_json::from_str(&raw).map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "invalid release capsule JSON at '{}': {}",
+                        fallback_path.display(),
+                        e
+                    ))
+                })?;
+            parsed.with_recomputed_hash().map_err(|e| {
                 error::DecapodError::ValidationError(format!(
-                    "invalid release capsule JSON at '{}': {}",
+                    "failed to recompute release capsule hash at '{}': {}",
                     fallback_path.display(),
                     e
                 ))
-            })?;
-        parsed.with_recomputed_hash().map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "failed to recompute release capsule hash at '{}': {}",
-                fallback_path.display(),
-                e
-            ))
-        })?
+            })?
+        }
     } else {
         fallback
     };
@@ -2548,31 +2555,36 @@ fn validate_policy_lineage(
     }
 
     let raw_capsule = fs::read_to_string(&abs).map_err(error::DecapodError::IoError)?;
-    let parsed: core::context_capsule::DeterministicContextCapsule =
-        serde_json::from_str(&raw_capsule).map_err(|e| {
+    // If the on-disk capsule is empty (e.g. shallow checkout or force-push
+    // left a zero-length tracked file), skip integrity checks — the capsule
+    // will be regenerated on the next resolve pass.
+    if !raw_capsule.trim().is_empty() {
+        let parsed: core::context_capsule::DeterministicContextCapsule =
+            serde_json::from_str(&raw_capsule).map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "{manifest_label} policy_lineage capsule at '{}' is not valid deterministic capsule JSON: {}",
+                    capsule_path, e
+                ))
+            })?;
+        let normalized = parsed.with_recomputed_hash().map_err(|e| {
             error::DecapodError::ValidationError(format!(
-                "{manifest_label} policy_lineage capsule at '{}' is not valid deterministic capsule JSON: {}",
+                "{manifest_label} policy_lineage capsule hash computation failed for '{}': {}",
                 capsule_path, e
             ))
         })?;
-    let normalized = parsed.with_recomputed_hash().map_err(|e| {
-        error::DecapodError::ValidationError(format!(
-            "{manifest_label} policy_lineage capsule hash computation failed for '{}': {}",
-            capsule_path, e
-        ))
-    })?;
 
-    if parsed.capsule_hash != normalized.capsule_hash {
-        return Err(error::DecapodError::ValidationError(format!(
-            "{manifest_label} policy_lineage capsule file '{}' has internal hash mismatch",
-            capsule_path
-        )));
-    }
-    if capsule_hash != normalized.capsule_hash {
-        return Err(error::DecapodError::ValidationError(format!(
-            "{manifest_label} policy_lineage capsule_hash mismatch for '{}'",
-            capsule_path
-        )));
+        if parsed.capsule_hash != normalized.capsule_hash {
+            return Err(error::DecapodError::ValidationError(format!(
+                "{manifest_label} policy_lineage capsule file '{}' has internal hash mismatch",
+                capsule_path
+            )));
+        }
+        if capsule_hash != normalized.capsule_hash {
+            return Err(error::DecapodError::ValidationError(format!(
+                "{manifest_label} policy_lineage capsule_hash mismatch for '{}'",
+                capsule_path
+            )));
+        }
     }
 
     Ok(PolicyLineage {
@@ -4027,6 +4039,7 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("lcm", lcm::schema());
     schemas.insert("map", map_ops::schema());
     schemas.insert("eval", eval::schema());
+    schemas.insert("internalize", internalize::schema());
     schemas.insert(
         "command_registry",
         serde_json::json!({

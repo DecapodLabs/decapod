@@ -125,7 +125,7 @@ AI Agent(s)  <---->  Decapod  <---->  Repository + Policy
 - **Parallel-safe.** Multiple agents, one repo, no collisions.
 - **Proof-gated completion.** `VERIFIED` requires passing proof-plan results, not narrative.
 - **Fully auditable.** Every decision, trace, and proof artifact lives in `.decapod/` as plain files.
-- **Context internalization.** Turn long documents into mountable, verifiable context adapters so agents stop re-ingesting the same 50-page spec every session.
+- **Context internalization.** Turn long documents into mountable, verifiable context adapters with explicit source hashes, determinism labels, session-scoped attach leases, and explicit detach so agents stop re-ingesting the same 50-page spec every session.
 
 The deep surface area — interfaces, capsules, eval kernel, knowledge promotions, obligation graphs — lives in the embedded constitution. Ask your agent to explore it.
 
