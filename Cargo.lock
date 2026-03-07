@@ -326,7 +326,6 @@ dependencies = [
 name = "decapod"
 version = "0.47.6"
 dependencies = [
- "anyhow",
  "clap",
  "colored",
  "criterion",
