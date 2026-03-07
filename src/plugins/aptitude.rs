@@ -13,7 +13,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
-use regex::Regex;
+use fancy_regex::Regex;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -1010,6 +1010,7 @@ pub fn match_patterns(
         if let Ok(regex) = Regex::new(&pattern.regex_pattern) {
             let captures: Vec<String> = regex
                 .captures_iter(content)
+                .filter_map(|cap| cap.ok())
                 .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string()))
                 .collect();
             if !captures.is_empty() {

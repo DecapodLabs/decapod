@@ -320,6 +320,7 @@ dependencies = [
  "clap",
  "criterion",
  "decapod",
+ "fancy-regex",
  "regex",
  "rusqlite",
  "rust-embed",

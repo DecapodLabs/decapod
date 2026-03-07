@@ -115,13 +115,13 @@ pub fn add_knowledge(
     store: &Store,
     args: AddKnowledgeParams<'_>,
 ) -> Result<AddKnowledgeResult, error::DecapodError> {
-    use regex::Regex;
+    use fancy_regex::Regex;
     let prov_re = Regex::new(
         r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:[A-Z0-9_]+)$",
     )
     .unwrap();
 
-    if !prov_re.is_match(args.provenance) {
+    if !prov_re.is_match(args.provenance).unwrap_or(false) {
         return Err(error::DecapodError::ValidationError(format!(
             "Invalid provenance format: '{}'. Must match scheme (file:|url:|cmd:|commit:|event:)",
             args.provenance

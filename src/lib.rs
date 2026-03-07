@@ -1205,8 +1205,8 @@ fn branch_contains_todo_ticket_id(branch: &str) -> bool {
     if branch.contains("r_") {
         return true;
     }
-    if let Ok(hash_re) = regex::Regex::new(r"todo-[a-z0-9]{6}(\b|-|$)")
-        && hash_re.is_match(&branch)
+    if let Ok(hash_re) = fancy_regex::Regex::new(r"todo-[a-z0-9]{6}(\b|-|$)")
+        && hash_re.is_match(&branch).unwrap_or(false)
     {
         return true;
     }
