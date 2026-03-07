@@ -4827,7 +4827,7 @@ pub fn run_validation(
 }
 
 pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
 
     let intent_content = crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
     let intent_version =
