@@ -12,15 +12,6 @@ use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 use ulid::Ulid;
 
-const PROTECTED_BRANCH_PATTERNS: &[&str] = &[
-    "main",
-    "master",
-    "production",
-    "stable",
-    "release/*",
-    "hotfix/*",
-];
-
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
 pub enum ImageProfile {
     DebianSlim,
@@ -227,39 +218,29 @@ fn run_container(
     local_only: bool,
 ) -> Result<RunSummary, error::DecapodError> {
     let repo = resolve_repo_path(repo_override)?;
-    if container_runtime_disabled(&repo)? {
-        return Err(error::DecapodError::ValidationError(
-            "Container subsystem is disabled by .decapod/OVERRIDE.md. \
-Remove the disable marker after installing Docker/Podman and configuring a dedicated local SSH key. \
-Warning: running without isolated containers means concurrent agents can step on each other."
-                .to_string(),
-        ));
-    }
-
     let docker = match find_container_runtime() {
         Ok(runtime) => runtime,
         Err(_) => {
-            let wrote_override = disable_container_runtime_override(
+            disable_container_runtime_override(
                 &repo,
                 "No docker/podman runtime found",
                 "Install Docker or Podman first, then re-run the task.",
             )?;
-            let mut message = "No container runtime found (docker/podman).\n\
+            let message = "No container runtime found (docker/podman).\n\
 Please install Docker or Podman.\n\
-Warning: without isolated containers, concurrent agents can step on each other."
-                .to_string();
-            if wrote_override {
-                message.push_str(
-                    "\nI also wrote .decapod/OVERRIDE.md with container runtime disabled so agent runs stay safe by default.",
-                );
-            } else {
-                message.push_str(
-                    "\nProtected host checkout detected, so no OVERRIDE.md was written. Create a worktree first if you want workspace-local auto-disable behavior.",
-                );
-            }
-            return Err(error::DecapodError::ValidationError(message));
+I also wrote .decapod/OVERRIDE.md with container runtime disabled so agent runs stay safe by default.\n\
+Warning: without isolated containers, concurrent agents can step on each other.";
+            return Err(error::DecapodError::ValidationError(message.to_string()));
         }
     };
+    clear_container_runtime_override(&repo)?;
+    if container_runtime_disabled(&repo)? {
+        return Err(error::DecapodError::ValidationError(
+            "Container subsystem is disabled by .decapod/OVERRIDE.md even though a runtime is available. \
+Clear the disable marker or let Decapod self-heal the override file before retrying."
+                .to_string(),
+        ));
+    }
 
     ensure_container_runtime_access(&docker)?;
 
@@ -434,57 +415,64 @@ fn container_runtime_disabled(repo_root: &Path) -> Result<bool, error::DecapodEr
     Ok(content.contains(CONTAINER_DISABLE_MARKER))
 }
 
-fn branch_is_protected(branch: &str) -> bool {
-    let branch_lower = branch.to_ascii_lowercase();
-    PROTECTED_BRANCH_PATTERNS.iter().any(|pattern| {
-        if let Some(prefix) = pattern.strip_suffix("/*") {
-            branch_lower.starts_with(prefix)
-        } else {
-            branch_lower == *pattern
+fn clear_container_runtime_override(repo_root: &Path) -> Result<bool, error::DecapodError> {
+    let path = override_file_path(repo_root);
+    if !path.exists() {
+        return Ok(false);
+    }
+    let content = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+    if !content.contains(CONTAINER_DISABLE_MARKER) {
+        return Ok(false);
+    }
+
+    let lines: Vec<&str> = content.lines().collect();
+    let marker_index = lines
+        .iter()
+        .position(|line| line.trim() == CONTAINER_DISABLE_MARKER)
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "container override marker exists but could not be located".to_string(),
+            )
+        })?;
+
+    let mut start = marker_index;
+    while start > 0 {
+        let candidate = lines[start - 1].trim();
+        if candidate == "### plugins/CONTAINER.md" {
+            start -= 1;
+            break;
         }
-    })
-}
-
-fn host_checkout_is_protected_non_worktree(repo_root: &Path) -> bool {
-    let branch_output = Command::new("git")
-        .args([
-            "-C",
-            repo_root.to_str().unwrap_or("."),
-            "branch",
-            "--show-current",
-        ])
-        .output();
-    let Ok(branch_output) = branch_output else {
-        return false;
-    };
-    if !branch_output.status.success() {
-        return false;
-    }
-    let branch = String::from_utf8_lossy(&branch_output.stdout)
-        .trim()
-        .to_string();
-    if branch.is_empty() || !branch_is_protected(&branch) {
-        return false;
+        if candidate.is_empty() {
+            start -= 1;
+            continue;
+        }
+        break;
     }
 
-    let git_dir_output = Command::new("git")
-        .args([
-            "-C",
-            repo_root.to_str().unwrap_or("."),
-            "rev-parse",
-            "--git-dir",
-        ])
-        .output();
-    let Ok(git_dir_output) = git_dir_output else {
-        return false;
-    };
-    if !git_dir_output.status.success() {
-        return false;
+    let mut end = marker_index + 1;
+    while end < lines.len() {
+        let candidate = lines[end].trim();
+        if candidate.starts_with("reason:")
+            || candidate.starts_with("remediation:")
+            || candidate.starts_with("warning:")
+            || candidate == "## Runtime Guard Override (auto-generated)"
+            || candidate.is_empty()
+        {
+            end += 1;
+            continue;
+        }
+        break;
     }
-    let git_dir = String::from_utf8_lossy(&git_dir_output.stdout)
-        .trim()
-        .to_string();
-    !git_dir.contains("/worktrees/")
+
+    let mut rebuilt: Vec<&str> = Vec::with_capacity(lines.len().saturating_sub(end - start));
+    rebuilt.extend_from_slice(&lines[..start]);
+    rebuilt.extend_from_slice(&lines[end..]);
+    let mut cleaned = rebuilt.join("\n");
+    if !cleaned.is_empty() {
+        cleaned.push('\n');
+    }
+    fs::write(path, cleaned).map_err(error::DecapodError::IoError)?;
+    Ok(true)
 }
 
 fn disable_container_runtime_override(
@@ -492,9 +480,6 @@ fn disable_container_runtime_override(
     reason: &str,
     remediation: &str,
 ) -> Result<bool, error::DecapodError> {
-    if host_checkout_is_protected_non_worktree(repo_root) {
-        return Ok(false);
-    }
     let path = override_file_path(repo_root);
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
@@ -1428,26 +1413,25 @@ mod tests {
     }
 
     #[test]
-    fn disable_override_skips_protected_non_worktree_checkout() {
+    fn clear_override_strips_container_runtime_disabled_marker() {
         let root = std::env::temp_dir().join(format!(
-            "decapod-container-protected-{}",
+            "decapod-container-clear-{}",
             Ulid::new().to_string().to_lowercase()
         ));
         fs::create_dir_all(&root).expect("mkdir");
-
-        let git_init = Command::new("git")
-            .current_dir(&root)
-            .args(["init", "-b", "master"])
-            .output()
-            .expect("git init");
-        assert!(git_init.status.success(), "git init failed");
-
         let wrote = disable_container_runtime_override(&root, "test-reason", "test-remediation")
             .expect("disable override");
-        assert!(!wrote, "protected non-worktree checkout should stay clean");
+        assert!(wrote, "override should be written");
+        let cleared = clear_container_runtime_override(&root).expect("clear override");
+        assert!(cleared, "disable marker should be removed");
         assert!(
-            !root.join(".decapod").join("OVERRIDE.md").exists(),
-            "override should not be written on protected checkout"
+            !container_runtime_disabled(&root).expect("disabled check"),
+            "container disable marker should be cleared"
+        );
+        let content = fs::read_to_string(root.join(".decapod").join("OVERRIDE.md")).expect("read");
+        assert!(
+            !content.contains(CONTAINER_DISABLE_MARKER),
+            "override should no longer contain the disable marker"
         );
 
         let _ = fs::remove_dir_all(root);
