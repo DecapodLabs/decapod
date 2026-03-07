@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.0](https://github.com/DecapodLabs/decapod/compare/v0.46.4...v0.47.0) - 2026-03-07
+
+### Fixed
+
+- update Four Invariants Gate patterns to match normative AGENTS.md rewrite
+- sync template_agents() with AGENTS.md normative content
+- resolve CI test failures from merged branches
+- silence dead_code and unused-variable clippy lints in contract/conformance tests
+- update artifact manifest hash and add changelog entry for capsule fix
+
+### Other
+
+- Merge remote-tracking branch 'origin/docs/contracts-and-conformance' into agent/unknown/todo-01kk3r-1772874431
+- Merge fix/release-capsule-empty-file into combined branch
+- capture why-this-exists philosophy in README
+- Add governed internalization artifacts
+
 ### Fixed
 
 - tolerate empty capsule files in release check and manifest schema/interface validation
