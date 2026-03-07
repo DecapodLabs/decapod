@@ -98,8 +98,9 @@ Every RPC response includes:
 ## Standards Resolution
 
 Decapod resolves standards from:
-1. Industry defaults (built-in)
-2. `.decapod/OVERRIDE.md` (project-specific)
+1. Industry Engineering Excellence (built-in Oracle: see `ENGINEERING_EXCELLENCE.md`)
+2. Industry defaults (built-in)
+3. `.decapod/OVERRIDE.md` (project-specific)
 
 Query with: `decapod rpc --op standards.resolve`
 

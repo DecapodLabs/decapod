@@ -27,6 +27,14 @@
 
 ## Decision Frameworks
 
+### Does this meet the Oracle's Standard?
+
+```
+Does this change align with the CTO/SVP/Architect/Principal standards in ENGINEERING_EXCELLENCE.md?
+  YES → Proceed with implementation.
+  NO  → Stop. Refactor the approach to meet the industry-defining standards of the Oracle.
+```
+
 ### Should I Create a New File?
 
 ```
