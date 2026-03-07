@@ -92,7 +92,6 @@ pub struct RunSummary {
 pub(crate) const CONTAINER_DISABLE_MARKER: &str = "DECAPOD_CONTAINER_RUNTIME_DISABLED=true";
 
 pub(crate) enum ContainerRuntimeOverrideHeal {
-    Added,
     Cleared,
     Unchanged,
 }
@@ -226,14 +225,8 @@ fn run_container(
     let docker = match find_container_runtime() {
         Ok(runtime) => runtime,
         Err(_) => {
-            disable_container_runtime_override(
-                &repo,
-                "No docker/podman runtime found",
-                "Install Docker or Podman first, then re-run the task.",
-            )?;
             let message = "No container runtime found (docker/podman).\n\
 Please install Docker or Podman.\n\
-I also wrote .decapod/OVERRIDE.md with container runtime disabled so agent runs stay safe by default.\n\
 Warning: without isolated containers, concurrent agents can step on each other.";
             return Err(error::DecapodError::ValidationError(message.to_string()));
         }
@@ -482,8 +475,6 @@ fn clear_container_runtime_override(repo_root: &Path) -> Result<bool, error::Dec
 
 pub(crate) fn heal_container_runtime_override(
     repo_root: &Path,
-    reason: &str,
-    remediation: &str,
 ) -> Result<ContainerRuntimeOverrideHeal, error::DecapodError> {
     match find_container_runtime() {
         Ok(runtime) if ensure_container_runtime_access(&runtime).is_ok() => {
@@ -493,16 +484,11 @@ pub(crate) fn heal_container_runtime_override(
                 Ok(ContainerRuntimeOverrideHeal::Unchanged)
             }
         }
-        _ => {
-            if disable_container_runtime_override(repo_root, reason, remediation)? {
-                Ok(ContainerRuntimeOverrideHeal::Added)
-            } else {
-                Ok(ContainerRuntimeOverrideHeal::Unchanged)
-            }
-        }
+        _ => Ok(ContainerRuntimeOverrideHeal::Unchanged),
     }
 }
 
+#[cfg(test)]
 fn disable_container_runtime_override(
     repo_root: &Path,
     reason: &str,
@@ -957,11 +943,50 @@ fn sync_workspace_branch_to_host_repo(
     if output.status.success() {
         return Ok(());
     }
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    if stderr.contains("refusing to fetch into branch")
+        && matches!(current_branch(repo), Ok(current) if current == branch)
+    {
+        let pull_output = Command::new("git")
+            .arg("-C")
+            .arg(repo)
+            .arg("pull")
+            .arg("--ff-only")
+            .arg(workspace_str)
+            .arg(branch)
+            .output()
+            .map_err(error::DecapodError::IoError)?;
+        if pull_output.status.success() {
+            return Ok(());
+        }
+        return Err(error::DecapodError::ValidationError(format!(
+            "failed fast-forwarding checked-out branch '{}' from workspace '{}': {}",
+            branch,
+            workspace.display(),
+            String::from_utf8_lossy(&pull_output.stderr).trim()
+        )));
+    }
     Err(error::DecapodError::ValidationError(format!(
         "failed syncing workspace branch '{}' back to host repo: {}",
         branch,
-        String::from_utf8_lossy(&output.stderr).trim()
+        stderr
     )))
+}
+
+fn current_branch(repo: &Path) -> Result<String, error::DecapodError> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(repo)
+        .args(["branch", "--show-current"])
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "failed determining current branch: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
 fn create_gh_pr(
