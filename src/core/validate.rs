@@ -21,6 +21,7 @@ use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::plugins::aptitude::{SkillCard, SkillResolution};
+use crate::plugins::internalize::{self, DeterminismClass, InternalizationManifest, ReplayClass};
 use crate::{db, primitives, todo};
 use regex::Regex;
 use serde_json;
@@ -2234,6 +2235,207 @@ fn validate_skill_resolutions_if_present(
     Ok(())
 }
 
+fn validate_internalization_artifacts_if_present(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Internalization Artifact Gate");
+
+    let artifacts_dir = repo_root
+        .join(".decapod")
+        .join("generated")
+        .join("artifacts")
+        .join("internalizations");
+    if !artifacts_dir.exists() {
+        skip(
+            "No internalization artifacts found; skipping internalization gate",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let mut files = 0usize;
+    for entry in fs::read_dir(&artifacts_dir).map_err(error::DecapodError::IoError)? {
+        let entry = entry.map_err(error::DecapodError::IoError)?;
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let manifest_path = path.join("manifest.json");
+        if !manifest_path.exists() {
+            fail(
+                &format!(
+                    "Internalization artifact is missing manifest.json ({})",
+                    path.display()
+                ),
+                ctx,
+            );
+            continue;
+        }
+
+        files += 1;
+        let raw = fs::read_to_string(&manifest_path).map_err(error::DecapodError::IoError)?;
+        let manifest: InternalizationManifest = serde_json::from_str(&raw).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "invalid internalization manifest {}: {}",
+                manifest_path.display(),
+                e
+            ))
+        })?;
+
+        if manifest.schema_version != internalize::SCHEMA_VERSION {
+            fail(
+                &format!(
+                    "Internalization manifest schema mismatch in {} (actual={}, expected={})",
+                    manifest_path.display(),
+                    manifest.schema_version,
+                    internalize::SCHEMA_VERSION
+                ),
+                ctx,
+            );
+        }
+        if manifest.base_model_id.trim().is_empty() {
+            fail(
+                &format!(
+                    "Internalization manifest missing base_model_id ({})",
+                    manifest_path.display()
+                ),
+                ctx,
+            );
+        }
+        if manifest.capabilities_contract.permitted_tools.is_empty() {
+            fail(
+                &format!(
+                    "Internalization manifest must declare permitted_tools ({})",
+                    manifest_path.display()
+                ),
+                ctx,
+            );
+        }
+        if manifest.replay_recipe.mode == ReplayClass::Replayable
+            && manifest.determinism_class != DeterminismClass::Deterministic
+        {
+            fail(
+                &format!(
+                    "Internalization manifest claims replayable despite non-deterministic profile ({})",
+                    manifest_path.display()
+                ),
+                ctx,
+            );
+        }
+        if manifest.determinism_class == DeterminismClass::BestEffort
+            && (manifest.binary_hash.trim().is_empty()
+                || manifest.runtime_fingerprint.trim().is_empty())
+        {
+            fail(
+                &format!(
+                    "Best-effort internalization manifest must include binary_hash and runtime_fingerprint ({})",
+                    manifest_path.display()
+                ),
+                ctx,
+            );
+        }
+
+        let inspect =
+            internalize::inspect_internalization(&repo_root.join(".decapod"), &manifest.id)
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "internalization inspect failed for {}: {}",
+                        manifest_path.display(),
+                        e
+                    ))
+                })?;
+        if !inspect.integrity.adapter_hash_valid {
+            fail(
+                &format!(
+                    "Internalization adapter hash mismatch ({})",
+                    manifest_path.display()
+                ),
+                ctx,
+            );
+        }
+        if inspect.integrity.source_verification == "mismatch" {
+            fail(
+                &format!(
+                    "Internalization source hash mismatch ({})",
+                    manifest_path.display()
+                ),
+                ctx,
+            );
+        }
+        if !inspect.integrity.replayable_claim_valid {
+            fail(
+                &format!(
+                    "Internalization replay metadata is inconsistent ({})",
+                    manifest_path.display()
+                ),
+                ctx,
+            );
+        }
+    }
+
+    let sessions_dir = repo_root
+        .join(".decapod")
+        .join("generated")
+        .join("sessions");
+    if sessions_dir.exists() {
+        for session_entry in fs::read_dir(&sessions_dir).map_err(error::DecapodError::IoError)? {
+            let session_entry = session_entry.map_err(error::DecapodError::IoError)?;
+            let mounts_dir = session_entry.path().join("internalize_mounts");
+            if !mounts_dir.exists() {
+                continue;
+            }
+            for mount_entry in fs::read_dir(&mounts_dir).map_err(error::DecapodError::IoError)? {
+                let mount_entry = mount_entry.map_err(error::DecapodError::IoError)?;
+                let mount_path = mount_entry.path();
+                if mount_path.extension().and_then(|s| s.to_str()) != Some("json") {
+                    continue;
+                }
+                let raw = fs::read_to_string(&mount_path).map_err(error::DecapodError::IoError)?;
+                let mount: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "invalid internalization mount lease {}: {}",
+                        mount_path.display(),
+                        e
+                    ))
+                })?;
+                let lease_expires_at = mount
+                    .get("lease_expires_at")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
+                if lease_expires_at.is_empty() {
+                    fail(
+                        &format!(
+                            "Internalization mount missing lease_expires_at ({})",
+                            mount_path.display()
+                        ),
+                        ctx,
+                    );
+                    continue;
+                }
+                if lease_expires_at < internalize::now_iso8601().as_str() {
+                    fail(
+                        &format!(
+                            "Internalization mount lease expired but still present ({})",
+                            mount_path.display()
+                        ),
+                        ctx,
+                    );
+                }
+            }
+        }
+    }
+
+    pass(
+        &format!(
+            "Internalization artifact contract checked for {} artifact(s)",
+            files
+        ),
+        ctx,
+    );
+    Ok(())
+}
+
 fn validate_schema_determinism(
     ctx: &ValidationContext,
     _decapod_dir: &Path,
@@ -4389,6 +4591,13 @@ pub fn run_validation(
             ctx,
             "validate_skill_resolutions_if_present",
             validate_skill_resolutions_if_present(ctx, decapod_dir)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_internalization_artifacts_if_present",
+            validate_internalization_artifacts_if_present(ctx, decapod_dir)
         );
         gate!(
             s,
