@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.6](https://github.com/DecapodLabs/decapod/compare/v0.47.3...v0.47.4) - 2026-03-07
+
+### Fixed
+
+- fixes\
 ## [0.47.5](https://github.com/DecapodLabs/decapod/compare/v0.47.4...v0.47.5) - 2026-03-07
 
 ### Other
@@ -15,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump Rust to 1.91.1 and optimize cargo install speed
 
 ## [0.47.4](https://github.com/DecapodLabs/decapod/compare/v0.47.3...v0.47.4) - 2026-03-07
-
+https://github.com/DecapodLabs/decapod/pull/480/conflict?name=Cargo.toml&ancestor_oid=1ef44710ac168673b8c4a38c4d6cb57566eaa2a2&base_oid=50932162f6a5d01e18a18c2c27671a54d5e6082a&head_oid=d18e26a8a021e05eb988ad43221cb1c97d8fb9f2
 ### Added
 
 - embed ENGINEERING_EXCELLENCE.md and register in OVERRIDE template
