@@ -3430,9 +3430,10 @@ fn validate_git_workspace_context(
     ];
 
     let in_container = signals_container.iter().any(|(signal, _)| *signal);
-    let container_runtime_disabled = fs::read_to_string(repo_root.join(".decapod").join("OVERRIDE.md"))
-        .map(|content| content.contains(crate::plugins::container::CONTAINER_DISABLE_MARKER))
-        .unwrap_or(false);
+    let container_runtime_disabled =
+        fs::read_to_string(repo_root.join(".decapod").join("OVERRIDE.md"))
+            .map(|content| content.contains(crate::plugins::container::CONTAINER_DISABLE_MARKER))
+            .unwrap_or(false);
 
     if in_container {
         let reasons: Vec<&str> = signals_container
