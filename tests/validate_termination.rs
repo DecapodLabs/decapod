@@ -217,6 +217,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         &dir,
         &["validate", "--format", "json"],
         &[
+            ("DECAPOD_CONTAINER", "1"),
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
             ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
@@ -224,7 +225,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     );
     assert!(
         validate.status.success(),
-        "validate --format json should succeed after self-heal; stderr:\n{}",
+        "validate --format json should succeed in a container-marked workspace; stderr:\n{}",
         String::from_utf8_lossy(&validate.stderr)
     );
 
@@ -235,6 +236,12 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     assert!(payload["report"]["fail_count"].as_u64().unwrap_or(1) == 0);
     assert!(payload["report"]["gate_timings"].is_array());
     assert!(payload["self_heal"].is_array());
+    assert!(
+        !payload["self_heal"].as_array().unwrap().iter().any(
+            |action| action["action"] == "heal_container_runtime_override"
+        ),
+        "validate should not write container-runtime override markers automatically"
+    );
 }
 
 #[test]

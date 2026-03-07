@@ -3054,16 +3054,7 @@ fn heal_override_checksum(
 fn heal_container_runtime_override(
     project_root: &Path,
 ) -> Result<Option<ValidationHealAction>, error::DecapodError> {
-    match container::heal_container_runtime_override(
-        project_root,
-        "No docker/podman runtime found during validation self-heal.",
-        "Install Docker or Podman, then remove this override if you want strict container gating restored.",
-    )? {
-        container::ContainerRuntimeOverrideHeal::Added => Ok(Some(ValidationHealAction {
-            action: "heal_container_runtime_override".to_string(),
-            outcome: "updated".to_string(),
-            detail: "Disabled strict container-runtime enforcement because no local container runtime is available.".to_string(),
-        })),
+    match container::heal_container_runtime_override(project_root)? {
         container::ContainerRuntimeOverrideHeal::Cleared => Ok(Some(ValidationHealAction {
             action: "heal_container_runtime_override".to_string(),
             outcome: "cleared".to_string(),

@@ -3427,11 +3427,6 @@ fn validate_git_workspace_context(
     ];
 
     let in_container = signals_container.iter().any(|(signal, _)| *signal);
-    let container_runtime_disabled =
-        fs::read_to_string(repo_root.join(".decapod").join("OVERRIDE.md"))
-            .map(|content| content.contains(crate::plugins::container::CONTAINER_DISABLE_MARKER))
-            .unwrap_or(false);
-
     if in_container {
         let reasons: Vec<&str> = signals_container
             .iter()
@@ -3443,15 +3438,6 @@ fn validate_git_workspace_context(
                 "Running in container workspace (signals: {})",
                 reasons.join(", ")
             ),
-            ctx,
-        );
-    } else if container_runtime_disabled {
-        warn(
-            "Container workspace requirement auto-waived because OVERRIDE.md disables container runtime after environment preflight failure.",
-            ctx,
-        );
-        pass(
-            "Container workspace gate satisfied via explicit runtime-disable override",
             ctx,
         );
     } else {
