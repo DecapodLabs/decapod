@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.3](https://github.com/DecapodLabs/decapod/compare/v0.47.2...v0.47.3) - 2026-03-07
+
+### Other
+
+- Strip stale container override during validate
+- Self-heal stale container override markers
+- Avoid override writes on protected host checkouts
+
 ## [0.47.2](https://github.com/DecapodLabs/decapod/compare/v0.47.1...v0.47.2) - 2026-03-07
 
 ### Other
