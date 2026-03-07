@@ -13,6 +13,8 @@
 
 ## Core Overrides (Routers and Indices)
 
+### core/ENGINEERING_EXCELLENCE.md
+
 ### core/DECAPOD.md
 
 ### core/INTERFACES.md
