@@ -1,0 +1,9 @@
+name: 'Install LLD linker'
+description: 'Install the LLD linker on Linux runners (no-op on macOS/Windows)'
+runs:
+  using: composite
+  steps:
+    - name: Install LLD
+      if: runner.os == 'Linux'
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y lld
