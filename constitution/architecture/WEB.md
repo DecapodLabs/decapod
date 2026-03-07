@@ -8,7 +8,29 @@
 
 ---
 
-## 1. Web Architecture Principles
+## 1. The Oracle's Verdict: The Web as a Contract
+
+*The Web is a hostile, distributed environment. Your API is a legal contract, and the network is always trying to break it.*
+
+### 1.1 The CTO's Strategic View
+- **APIs are Products:** Treat every internal and external API as a product. It needs documentation, versioning, and an SLA. A breaking change in an API without a deprecation period is a breach of contract with the business.
+- **The Protocol is the Architecture:** Do not fight HTTP. Use its semantics (methods, headers, caching) rather than building ad-hoc protocols on top of POST requests. Re-inventing the wheel at the network layer is a waste of capital.
+
+### 1.2 The SVP's Operational View
+- **Resilience is Not Optional:** The network will fail. Every external call must have a timeout, a retry policy with backoff and jitter, and a circuit breaker. "It worked on my machine" is an invalid excuse for a cascading production failure.
+- **Rate Limiting by Default:** Any endpoint exposed to the internet without a rate limit is a denial-of-service attack waiting to happen. Protect your resources aggressively.
+
+### 1.3 The Architect's Structural View
+- **Statelessness as Scalability:** The server must never remember the client. Session state belongs in a distributed cache or the database, never in local memory. If your architecture requires "sticky sessions" at the load balancer, it is fundamentally flawed.
+- **Idempotency is King:** In a distributed system, retries are inevitable. Every mutating operation (POST/PUT/DELETE) must be idempotent or have an idempotency key. Without this, you will double-charge customers.
+
+### 1.4 The Principal's Execution View
+- **GraphQL vs REST Reality Check:** GraphQL is brilliant for highly relational data and mobile clients, but it makes caching, rate limiting, and performance tuning exponentially harder. Do not use GraphQL just because it is modern; use REST for simple CRUD.
+- **Error Consistency:** A 500 Internal Server Error is a bug, not an expected state. APIs must return consistent, predictable, and machine-parseable error structures (e.g., RFC 7807 Problem Details).
+
+---
+
+## 2. Web Architecture Principles
 
 ### 1.1 Statelessness
 **HTTP is stateless.** Server treats each request independently.
