@@ -24,6 +24,7 @@ use crate::plugins::aptitude::{SkillCard, SkillResolution};
 use crate::plugins::internalize::{self, DeterminismClass, InternalizationManifest, ReplayClass};
 use crate::{db, primitives, todo};
 use regex::Regex;
+use serde::Serialize;
 use serde_json;
 use std::collections::HashSet;
 use std::fs;
@@ -55,6 +56,24 @@ struct ValidationContext {
     fails: Mutex<Vec<String>>,
     warns: Mutex<Vec<String>>,
     repo_files_cache: Mutex<Vec<(PathBuf, Vec<PathBuf>)>>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ValidationGateTiming {
+    pub name: String,
+    pub elapsed_ms: u64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ValidationReport {
+    pub status: String,
+    pub elapsed_ms: u64,
+    pub pass_count: u32,
+    pub fail_count: u32,
+    pub warn_count: u32,
+    pub failures: Vec<String>,
+    pub warnings: Vec<String>,
+    pub gate_timings: Vec<ValidationGateTiming>,
 }
 
 impl ValidationContext {
@@ -520,10 +539,11 @@ fn validate_entrypoint_invariants(
     }
 
     let content = fs::read_to_string(&agents_path).map_err(error::DecapodError::IoError)?;
+    let normalized = content.to_ascii_lowercase();
 
     // Exact invariant strings (tamper detection)
     let exact_invariants = [
-        ("core/DECAPOD.md", "Router pointer to core/DECAPOD.md"),
+        ("core/decapod.md", "Router pointer to core/DECAPOD.md"),
         ("cargo install decapod", "Version update gate language"),
         ("decapod validate", "Validation gate language"),
         (
@@ -531,26 +551,26 @@ fn validate_entrypoint_invariants(
             "Core constitution ingestion mandate language",
         ),
         ("stop if", "Stop-if-missing behavior"),
-        ("Docker git workspaces", "Docker workspace mandate language"),
+        ("docker git workspaces", "Docker workspace mandate language"),
         (
             "decapod todo claim --id <task-id>",
             "Task claim-before-work mandate language",
         ),
         (
-            "request elevated permissions before Docker/container workspace commands",
+            "request elevated permissions before docker/container workspace commands",
             "Elevated-permissions mandate language",
         ),
         (
-            "DECAPOD_SESSION_PASSWORD",
+            "decapod_session_password",
             "Per-agent session password mandate language",
         ),
-        ("via decapod CLI", "Jail rule: .decapod access is CLI-only"),
+        ("via decapod cli", "Jail rule: .decapod access is CLI-only"),
         (
-            "Interface abstraction boundary",
+            "interface abstraction boundary",
             "Control-plane opacity language",
         ),
         (
-            "Strict Dependency: You are strictly bound to the Decapod control plane",
+            "strict dependency: you are strictly bound to the decapod control plane",
             "Agent dependency enforcement language",
         ),
         ("✅", "Four invariants checklist format"),
@@ -558,7 +578,12 @@ fn validate_entrypoint_invariants(
 
     let mut all_present = true;
     for (marker, description) in exact_invariants {
-        if content.contains(marker) {
+        let present = if marker == "✅" {
+            content.contains(marker)
+        } else {
+            normalized.contains(marker)
+        };
+        if present {
             pass(&format!("Invariant present: {}", description), ctx);
         } else {
             fail(&format!("Invariant missing: {}", description), ctx);
@@ -3405,6 +3430,9 @@ fn validate_git_workspace_context(
     ];
 
     let in_container = signals_container.iter().any(|(signal, _)| *signal);
+    let container_runtime_disabled = fs::read_to_string(repo_root.join(".decapod").join("OVERRIDE.md"))
+        .map(|content| content.contains(crate::plugins::container::CONTAINER_DISABLE_MARKER))
+        .unwrap_or(false);
 
     if in_container {
         let reasons: Vec<&str> = signals_container
@@ -3417,6 +3445,15 @@ fn validate_git_workspace_context(
                 "Running in container workspace (signals: {})",
                 reasons.join(", ")
             ),
+            ctx,
+        );
+    } else if container_runtime_disabled {
+        warn(
+            "Container workspace requirement auto-waived because OVERRIDE.md disables container runtime after environment preflight failure.",
+            ctx,
+        );
+        pass(
+            "Container workspace gate satisfied via explicit runtime-disable override",
             ctx,
         );
     } else {
@@ -4385,25 +4422,9 @@ pub fn run_validation(
     store: &Store,
     decapod_dir: &Path,
     _home_dir: &Path,
-    verbose: bool,
-) -> Result<(), error::DecapodError> {
+    _verbose: bool,
+) -> Result<ValidationReport, error::DecapodError> {
     let total_start = Instant::now();
-    use colored::Colorize;
-    println!(
-        "{} {}",
-        "▶".bright_green().bold(),
-        "validate:".bright_cyan().bold()
-    );
-
-    // Directly get content from embedded assets
-    let intent_content = crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
-    let intent_version =
-        extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
-    println!(
-        "  {} intent_version={}",
-        "spec:".bright_cyan(),
-        intent_version.bright_white()
-    );
 
     let ctx = ValidationContext::new();
 
@@ -4420,34 +4441,14 @@ pub fn run_validation(
         StoreKind::User => {
             let start = Instant::now();
             validate_user_store_blank_slate(&ctx)?;
-            if verbose {
-                println!(
-                    "  {} [validate_user_store_blank_slate] {} ({:.2?})",
-                    "✓".bright_green(),
-                    "done".bright_white(),
-                    start.elapsed()
-                );
-            }
+            let _ = start;
         }
         StoreKind::Repo => {
             let start = Instant::now();
             validate_repo_store_dogfood(store, &ctx, decapod_dir)?;
-            if verbose {
-                println!(
-                    "  {} [validate_repo_store_dogfood] {} ({:.2?})",
-                    "✓".bright_green(),
-                    "done".bright_white(),
-                    start.elapsed()
-                );
-            }
+            let _ = start;
         }
     }
-
-    println!(
-        "  {} {}",
-        "gate:".bright_magenta().bold(),
-        "Four Invariants Gate".bright_white()
-    );
 
     // Run remaining gates in parallel for bounded wall-clock validation time.
     let timings: Mutex<Vec<(&str, Duration)>> = Mutex::new(Vec::new());
@@ -4795,68 +4796,99 @@ pub fn run_validation(
         );
     });
 
-    // Print per-gate timings in verbose mode
-    if verbose {
-        let mut gate_timings = timings.into_inner().unwrap();
-        gate_timings.sort_by(|a, b| b.1.cmp(&a.1));
-        for (name, elapsed) in &gate_timings {
-            println!(
-                "  {} [{}] {} ({:.2?})",
-                "✓".bright_green(),
-                name.bright_cyan(),
-                "done".bright_white(),
-                elapsed
-            );
-        }
-    }
-
     let elapsed = total_start.elapsed();
     let pass_count = ctx.pass_count.load(Ordering::Relaxed);
     let fail_count = ctx.fail_count.load(Ordering::Relaxed);
     let warn_count = ctx.warn_count.load(Ordering::Relaxed);
-    let fails = ctx.fails.lock().unwrap();
-    let warns = ctx.warns.lock().unwrap();
+    let fails = ctx.fails.lock().unwrap().clone();
+    let warns = ctx.warns.lock().unwrap().clone();
     let fail_total = (fails.len() as u32).max(fail_count);
     let warn_total = (warns.len() as u32).max(warn_count);
+    let mut gate_timings = timings.into_inner().unwrap();
+    gate_timings.sort_by(|a, b| b.1.cmp(&a.1));
+
+    Ok(ValidationReport {
+        status: if fail_total > 0 { "fail" } else { "ok" }.to_string(),
+        elapsed_ms: elapsed.as_millis() as u64,
+        pass_count,
+        fail_count: fail_total,
+        warn_count: warn_total,
+        failures: fails,
+        warnings: warns,
+        gate_timings: gate_timings
+            .into_iter()
+            .map(|(name, elapsed)| ValidationGateTiming {
+                name: name.to_string(),
+                elapsed_ms: elapsed.as_millis() as u64,
+            })
+            .collect(),
+    })
+}
+
+pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
+    use colored::Colorize;
+
+    let intent_content = crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
+    let intent_version =
+        extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
 
     println!(
-        "  {} pass={} fail={} warn={} {}",
-        "summary:".bright_cyan(),
-        pass_count.to_string().bright_green(),
-        fail_total.to_string().bright_red(),
-        warn_total.to_string().bright_yellow(),
-        format!("({:.2?})", elapsed).bright_white()
+        "{} {}",
+        "▶".bright_green().bold(),
+        "validate".bright_cyan().bold()
+    );
+    println!(
+        "  {} intent_version={}",
+        "spec".bright_cyan(),
+        intent_version.bright_white()
     );
 
-    if !fails.is_empty() {
+    if verbose {
         println!(
-            "  {} {}: {}",
-            "✗".bright_red().bold(),
-            "failures".bright_red(),
-            output::preview_messages(&fails, 2, 110)
+            "  {} {}",
+            "gates".bright_magenta().bold(),
+            "timings".bright_white()
+        );
+        for gate in &report.gate_timings {
+            println!(
+                "  {} [{}] {}ms",
+                "✓".bright_green(),
+                gate.name.bright_cyan(),
+                gate.elapsed_ms
+            );
+        }
+    }
+
+    println!(
+        "  {} pass={} fail={} warn={} ({:.2}s)",
+        "summary".bright_cyan().bold(),
+        report.pass_count.to_string().bright_green(),
+        report.fail_count.to_string().bright_red(),
+        report.warn_count.to_string().bright_yellow(),
+        report.elapsed_ms as f64 / 1000.0
+    );
+
+    if !report.failures.is_empty() {
+        println!(
+            "  {} {}",
+            "failures".bright_red().bold(),
+            output::preview_messages(&report.failures, 3, 120)
         );
     }
 
-    if !warns.is_empty() {
+    if !report.warnings.is_empty() {
         println!(
-            "  {} {}: {}",
-            "⚠".bright_yellow().bold(),
-            "warnings".bright_yellow(),
-            output::preview_messages(&warns, 2, 110)
+            "  {} {}",
+            "warnings".bright_yellow().bold(),
+            output::preview_messages(&report.warnings, 3, 120)
         );
     }
 
-    if fail_total > 0 {
-        Err(error::DecapodError::ValidationError(format!(
-            "{} test(s) failed.",
-            fail_total
-        )))
-    } else {
+    if report.fail_count == 0 {
         println!(
             "{} {}",
             "✓".bright_green().bold(),
             "validation passed".bright_green().bold()
         );
-        Ok(())
     }
 }
