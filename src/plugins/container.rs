@@ -12,6 +12,15 @@ use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 use ulid::Ulid;
 
+const PROTECTED_BRANCH_PATTERNS: &[&str] = &[
+    "main",
+    "master",
+    "production",
+    "stable",
+    "release/*",
+    "hotfix/*",
+];
+
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
 pub enum ImageProfile {
     DebianSlim,
@@ -230,18 +239,25 @@ Warning: running without isolated containers means concurrent agents can step on
     let docker = match find_container_runtime() {
         Ok(runtime) => runtime,
         Err(_) => {
-            disable_container_runtime_override(
+            let wrote_override = disable_container_runtime_override(
                 &repo,
                 "No docker/podman runtime found",
                 "Install Docker or Podman first, then re-run the task.",
             )?;
-            return Err(error::DecapodError::ValidationError(
-                "No container runtime found (docker/podman).\n\
+            let mut message = "No container runtime found (docker/podman).\n\
 Please install Docker or Podman.\n\
-I also wrote .decapod/OVERRIDE.md with container runtime disabled so agent runs stay safe by default.\n\
 Warning: without isolated containers, concurrent agents can step on each other."
-                    .to_string(),
-            ));
+                .to_string();
+            if wrote_override {
+                message.push_str(
+                    "\nI also wrote .decapod/OVERRIDE.md with container runtime disabled so agent runs stay safe by default.",
+                );
+            } else {
+                message.push_str(
+                    "\nProtected host checkout detected, so no OVERRIDE.md was written. Create a worktree first if you want workspace-local auto-disable behavior.",
+                );
+            }
+            return Err(error::DecapodError::ValidationError(message));
         }
     };
 
@@ -418,11 +434,67 @@ fn container_runtime_disabled(repo_root: &Path) -> Result<bool, error::DecapodEr
     Ok(content.contains(CONTAINER_DISABLE_MARKER))
 }
 
+fn branch_is_protected(branch: &str) -> bool {
+    let branch_lower = branch.to_ascii_lowercase();
+    PROTECTED_BRANCH_PATTERNS.iter().any(|pattern| {
+        if let Some(prefix) = pattern.strip_suffix("/*") {
+            branch_lower.starts_with(prefix)
+        } else {
+            branch_lower == *pattern
+        }
+    })
+}
+
+fn host_checkout_is_protected_non_worktree(repo_root: &Path) -> bool {
+    let branch_output = Command::new("git")
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "branch",
+            "--show-current",
+        ])
+        .output();
+    let Ok(branch_output) = branch_output else {
+        return false;
+    };
+    if !branch_output.status.success() {
+        return false;
+    }
+    let branch = String::from_utf8_lossy(&branch_output.stdout)
+        .trim()
+        .to_string();
+    if branch.is_empty() || !branch_is_protected(&branch) {
+        return false;
+    }
+
+    let git_dir_output = Command::new("git")
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "rev-parse",
+            "--git-dir",
+        ])
+        .output();
+    let Ok(git_dir_output) = git_dir_output else {
+        return false;
+    };
+    if !git_dir_output.status.success() {
+        return false;
+    }
+    let git_dir = String::from_utf8_lossy(&git_dir_output.stdout)
+        .trim()
+        .to_string();
+    !git_dir.contains("/worktrees/")
+}
+
 fn disable_container_runtime_override(
     repo_root: &Path,
     reason: &str,
     remediation: &str,
-) -> Result<(), error::DecapodError> {
+) -> Result<bool, error::DecapodError> {
+    if host_checkout_is_protected_non_worktree(repo_root) {
+        return Ok(false);
+    }
     let path = override_file_path(repo_root);
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
@@ -433,7 +505,7 @@ fn disable_container_runtime_override(
         String::new()
     };
     if content.contains(CONTAINER_DISABLE_MARKER) {
-        return Ok(());
+        return Ok(false);
     }
     if !content.ends_with('\n') && !content.is_empty() {
         content.push('\n');
@@ -449,7 +521,7 @@ fn disable_container_runtime_override(
     content.push_str(&format!("remediation: {}\n", remediation));
     content.push_str("warning: disabling isolated containers increases risk of concurrent agents stepping on each other.\n");
     fs::write(path, content).map_err(error::DecapodError::IoError)?;
-    Ok(())
+    Ok(true)
 }
 
 fn repo_root_from_store(store: &Store) -> Result<PathBuf, error::DecapodError> {
@@ -1352,6 +1424,32 @@ mod tests {
         assert!(content.contains(CONTAINER_DISABLE_MARKER));
         assert!(content.contains("warning: disabling isolated containers"));
         assert!(container_runtime_disabled(&root).expect("disabled check"));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn disable_override_skips_protected_non_worktree_checkout() {
+        let root = std::env::temp_dir().join(format!(
+            "decapod-container-protected-{}",
+            Ulid::new().to_string().to_lowercase()
+        ));
+        fs::create_dir_all(&root).expect("mkdir");
+
+        let git_init = Command::new("git")
+            .current_dir(&root)
+            .args(["init", "-b", "master"])
+            .output()
+            .expect("git init");
+        assert!(git_init.status.success(), "git init failed");
+
+        let wrote = disable_container_runtime_override(&root, "test-reason", "test-remediation")
+            .expect("disable override");
+        assert!(!wrote, "protected non-worktree checkout should stay clean");
+        assert!(
+            !root.join(".decapod").join("OVERRIDE.md").exists(),
+            "override should not be written on protected checkout"
+        );
+
         let _ = fs::remove_dir_all(root);
     }
 }
