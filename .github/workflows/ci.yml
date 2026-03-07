@@ -23,7 +23,7 @@ env:
   RUSTFLAGS: "-C link-arg=-fuse-ld=lld -D warnings" # LLD linker for 2-3x faster linking
 
 jobs:
-  # COMMIT LINT: Fast check, runs in parallel with build
+  # COMMIT LINT: Fast check, no build dependency
   commit-lint:
     name: Commit Lint
     runs-on: ubuntu-latest
@@ -32,15 +32,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Check commit messages
         run: |
-          # Get commits in this PR
           git log --format=%B origin/${{ github.base_ref }}..HEAD | while read -r msg; do
-            # Skip empty lines
             [ -z "$msg" ] && continue
-
-            # Block WIP commits
             if echo "$msg" | grep -qiE "^(wip|fixup|squash)"; then
               echo "❌ ERROR: WIP commit found: $msg"
               exit 1
@@ -72,7 +67,7 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-  # FMT: Pure source check — runs in parallel with build, needs only rustfmt
+  # FMT: Pure source check, no compile needed
   fmt:
     name: Lint (fmt)
     runs-on: ubuntu-latest
@@ -80,81 +75,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-
       - name: Format check
         run: cargo fmt --all -- --check
 
-  # BUILD: Compile everything once, upload test binaries as artifact.
-  # All downstream test jobs download the artifact instead of rebuilding Rust.
-  build:
-    name: Build (compile all test binaries)
-    runs-on: ubuntu-latest
-    outputs:
-      artifact-name: test-bins-${{ github.sha }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install LLD
-        uses: ./.github/actions/install-lld
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
-
-      - name: Cache Rust build artifacts
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "ci-build"
-          cache-targets: true
-          save-if: "true"
-          cache-all-crates: true
-
-      - name: Check Cargo.lock is up to date
-        run: cargo generate-lockfile && git diff --quiet Cargo.lock || echo "⚠️ Cargo.lock outdated - run cargo update locally"
-
-      - name: Compile all test binaries (no-run)
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/test-bins
-
-          # Compile everything and capture the path to each test executable
-          cargo test --no-run --all-features --message-format json 2>/dev/null \
-            | tee /tmp/cargo_out.json \
-            | jq -r 'select(.executable != null and (.target.kind | contains(["test"]))) | [.target.name, .executable] | @tsv' \
-            | while IFS=$'\t' read -r name exe; do
-                cp "$exe" "/tmp/test-bins/$name"
-                echo "Packaged test binary: $name"
-              done
-
-          # Also package the main decapod binary (tests use CARGO_BIN_EXE_decapod)
-          main_bin=$(jq -r 'select(.executable != null and (.target.kind | contains(["bin"])) and .target.name == "decapod") | .executable' /tmp/cargo_out.json | head -1)
-          if [ -n "$main_bin" ]; then
-            cp "$main_bin" /tmp/test-bins/_decapod_bin
-            echo "Packaged main binary: _decapod_bin"
-          fi
-
-          echo "All packaged binaries:"
-          ls -lh /tmp/test-bins/
-
-      - name: Upload test binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-bins-${{ github.sha }}
-          path: /tmp/test-bins/
-          retention-days: 1
-          compression-level: 9
-
-  # CLIPPY: Runs in parallel with build — does its own compile/analysis,
-  # benefits from master's shared cache if available but does not block on build.
+  # CLIPPY: Compiles its own analysis pass, runs in parallel with setup
   clippy:
     name: Lint (clippy)
     runs-on: ubuntu-latest
@@ -162,275 +90,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-
       - name: Install LLD
         uses: ./.github/actions/install-lld
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
-
-      - name: Restore build cache
+      - name: Restore cache
         uses: Swatinem/rust-cache@v2
         with:
           shared-key: "ci-build"
           save-if: "false"
-
       - name: Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
-  # CORE TESTS: Unit and bin tests via pre-built binary
-  test-core:
-    name: Tests (Core)
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Download test binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: test-bins-${{ github.sha }}
-          path: /tmp/test-bins
-
-      - name: Restore main binary for CARGO_BIN_EXE
-        run: |
-          mkdir -p target/debug
-          if [ -f /tmp/test-bins/_decapod_bin ]; then
-            cp /tmp/test-bins/_decapod_bin target/debug/decapod
-            chmod +x target/debug/decapod
-          fi
-
-      - name: Run unit tests
-        run: |
-          set -euo pipefail
-          # The lib unit test binary is named after the crate ("decapod")
-          bin=$(ls /tmp/test-bins/decapod 2>/dev/null || ls /tmp/test-bins/decapod-* 2>/dev/null | head -1 || true)
-          if [ -z "$bin" ]; then
-            echo "No pre-built unit test binary found"
-            exit 1
-          fi
-          chmod +x "$bin"
-          echo "Running core tests from: $bin"
-          "$bin" --test-threads=4
-
-  # INTEGRATION TESTS: 20 parallel shards using pre-built binaries.
-  # No Rust toolchain needed per shard — download artifact and run directly.
-  test-integration:
-    name: Tests (Integration ${{ matrix.shard }}/20)
-    runs-on: ubuntu-latest
-    needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Download test binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: test-bins-${{ github.sha }}
-          path: /tmp/test-bins
-
-      - name: Restore main binary for CARGO_BIN_EXE
-        run: |
-          mkdir -p target/debug
-          if [ -f /tmp/test-bins/_decapod_bin ]; then
-            cp /tmp/test-bins/_decapod_bin target/debug/decapod
-            chmod +x target/debug/decapod
-          fi
-
-      - name: Run integration tests (shard ${{ matrix.shard }}/20)
-        run: |
-          set -euo pipefail
-          shard=${{ matrix.shard }}
-          total=20
-
-          # Isolated suites run in dedicated jobs; exclude them from shards
-          ISOLATED="agent_rpc_suite chaos_replay daemonless_lifecycle _decapod_bin"
-
-          # All available test binaries sorted for stable shard assignment
-          mapfile -t all_tests < <(
-            ls /tmp/test-bins/ | sort | grep -vxFf <(echo "$ISOLATED" | tr ' ' '\n')
-          )
-
-          ran=0
-          for i in "${!all_tests[@]}"; do
-            if [ $(( i % total )) -ne "$shard" ]; then
-              continue
-            fi
-            t="${all_tests[$i]}"
-            bin="/tmp/test-bins/$t"
-            chmod +x "$bin"
-            echo "Shard $shard running: $t"
-            "$bin" --test-threads=4
-            ran=$(( ran + 1 ))
-          done
-
-          if [ "$ran" -eq 0 ]; then
-            echo "Shard $shard: no tests assigned (OK for small test suites)"
-          fi
-
-  # RPC SUITE: isolated to avoid contention with other integration tests
-  test-rpc-suite:
-    name: Tests (RPC Suite)
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Download test binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: test-bins-${{ github.sha }}
-          path: /tmp/test-bins
-
-      - name: Restore main binary for CARGO_BIN_EXE
-        run: |
-          mkdir -p target/debug
-          if [ -f /tmp/test-bins/_decapod_bin ]; then
-            cp /tmp/test-bins/_decapod_bin target/debug/decapod
-            chmod +x target/debug/decapod
-          fi
-
-      - name: Run RPC suite
-        run: |
-          chmod +x /tmp/test-bins/agent_rpc_suite
-          /tmp/test-bins/agent_rpc_suite --test-threads=1
-
-  # CHAOS: Multi-agent contention + deterministic replay gate
-  chaos-replay:
-    name: Chaos Replay Gate
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Download test binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: test-bins-${{ github.sha }}
-          path: /tmp/test-bins
-
-      - name: Restore main binary for CARGO_BIN_EXE
-        run: |
-          mkdir -p target/debug
-          if [ -f /tmp/test-bins/_decapod_bin ]; then
-            cp /tmp/test-bins/_decapod_bin target/debug/decapod
-            chmod +x target/debug/decapod
-          fi
-
-      - name: Run chaos replay determinism test
-        run: |
-          chmod +x /tmp/test-bins/chaos_replay
-          /tmp/test-bins/chaos_replay --test-threads=1
-
-  # DAEMONLESS: ensure commands do not leave background processes
-  daemonless-lifecycle:
-    name: Daemonless Lifecycle Gate
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Download test binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: test-bins-${{ github.sha }}
-          path: /tmp/test-bins
-
-      - name: Restore main binary for CARGO_BIN_EXE
-        run: |
-          mkdir -p target/debug
-          if [ -f /tmp/test-bins/_decapod_bin ]; then
-            cp /tmp/test-bins/_decapod_bin target/debug/decapod
-            chmod +x target/debug/decapod
-          fi
-
-      - name: Run daemonless lifecycle test
-        run: |
-          chmod +x /tmp/test-bins/daemonless_lifecycle
-          /tmp/test-bins/daemonless_lifecycle --test-threads=1
-
-  # CONTRACTS: README/Constitution drift detection
-  contracts:
-    name: Contract Conformance
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Download test binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: test-bins-${{ github.sha }}
-          path: /tmp/test-bins
-
-      - name: Restore main binary for CARGO_BIN_EXE
-        run: |
-          mkdir -p target/debug
-          if [ -f /tmp/test-bins/_decapod_bin ]; then
-            cp /tmp/test-bins/_decapod_bin target/debug/decapod
-            chmod +x target/debug/decapod
-          fi
-
-      - name: Run contract conformance tests
-        run: |
-          chmod +x /tmp/test-bins/contract_conformance /tmp/test-bins/constitution_claims
-          /tmp/test-bins/contract_conformance --test-threads=1
-          /tmp/test-bins/constitution_claims --test-threads=1
-
-      - name: Run CLI contract enforcement tests
-        run: |
-          chmod +x /tmp/test-bins/cli_contract_enforcement
-          /tmp/test-bins/cli_contract_enforcement --test-threads=1
-
-  # MIGRATION TESTS: Only when SQL migration scripts change
-  migration-script-tests:
-    name: Migration Script Tests
-    runs-on: ubuntu-latest
-    needs: [build, detect-migration-script-changes]
-    if: github.event_name == 'pull_request' && needs.detect-migration-script-changes.outputs.changed == 'true'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Download test binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: test-bins-${{ github.sha }}
-          path: /tmp/test-bins
-
-      - name: Restore main binary for CARGO_BIN_EXE
-        run: |
-          mkdir -p target/debug
-          if [ -f /tmp/test-bins/_decapod_bin ]; then
-            cp /tmp/test-bins/_decapod_bin target/debug/decapod
-            chmod +x target/debug/decapod
-          fi
-
-      - name: Run migration tests
-        run: |
-          chmod +x /tmp/test-bins/core_tests
-          /tmp/test-bins/core_tests migration_ --ignored --test-threads=1
-
-  # HEALTH: Decapod validation and health checks (needs release binary via cargo install).
-  # Runs in parallel with build — uses cargo install, not the test binary artifact.
+  # HEALTH: cargo install (release build), no dependency on setup
   health:
     name: Health Checks
     runs-on: ubuntu-latest
@@ -438,43 +112,34 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-
       - name: Install LLD
         uses: ./.github/actions/install-lld
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Restore build cache
+      - name: Restore cache
         uses: Swatinem/rust-cache@v2
         with:
           shared-key: "ci-build"
           save-if: "false"
-
       - name: Build and install decapod
         run: cargo install --path . --locked
-
       - name: Initialize Decapod
         run: decapod init --force
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
-
       - name: Acquire Decapod session
         run: decapod session acquire
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
-
       - name: Run validation harness
         run: decapod validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
           DECAPOD_VALIDATE_TIMEOUT_SECS: "120"
-
       - name: Run watcher
         run: decapod govern watcher run
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
-
       - name: Check health summary
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
@@ -485,89 +150,7 @@ jobs:
             echo "::warning::Watcher is stale"
           fi
 
-  # PRE-MERGE DRIFT GATE: Catches test-file drift before it reaches master.
-  # When a test file changes, run ONLY that test against the pre-built binary.
-  # Prevents whack-a-mole where contract/invariant tests drift from source.
-  pre-merge-drift-gate:
-    name: Pre-merge Drift Gate
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Detect changed test files
-        id: changed
-        run: |
-          set -euo pipefail
-          base_ref="${{ github.base_ref }}"
-          git fetch --no-tags --prune origin "$base_ref"
-
-          changed_tests=""
-          while IFS= read -r path; do
-            # Top-level tests/*.rs — binary name is the file stem
-            if [[ "$path" =~ ^tests/([^/]+)\.rs$ ]]; then
-              changed_tests="$changed_tests ${BASH_REMATCH[1]}"
-            fi
-            # tests/core/core.rs -> core_tests (custom [[test]] target)
-            if [[ "$path" == "tests/core/core.rs" ]]; then
-              changed_tests="$changed_tests core_tests"
-            fi
-            # tests/plugins/<name>.rs -> plugins_<name>_tests (custom [[test]] targets)
-            if [[ "$path" =~ ^tests/plugins/([^/]+)\.rs$ ]]; then
-              changed_tests="$changed_tests plugins_${BASH_REMATCH[1]}_tests"
-            fi
-          done < <(git diff --name-only "origin/$base_ref"...HEAD | grep '\.rs$')
-
-          # Deduplicate and trim
-          changed_tests=$(echo "$changed_tests" | tr ' ' '\n' | sort -u | grep -v '^$' | tr '\n' ' ')
-          echo "Changed test targets: '$changed_tests'"
-          echo "tests=$changed_tests" >> "$GITHUB_OUTPUT"
-
-      - name: Download test binaries
-        if: steps.changed.outputs.tests != ''
-        uses: actions/download-artifact@v4
-        with:
-          name: test-bins-${{ github.sha }}
-          path: /tmp/test-bins
-
-      - name: Restore main binary for CARGO_BIN_EXE
-        if: steps.changed.outputs.tests != ''
-        run: |
-          mkdir -p target/debug
-          if [ -f /tmp/test-bins/_decapod_bin ]; then
-            cp /tmp/test-bins/_decapod_bin target/debug/decapod
-            chmod +x target/debug/decapod
-          fi
-
-      - name: Run changed tests (drift check)
-        if: steps.changed.outputs.tests != ''
-        run: |
-          set -euo pipefail
-          failed=0
-          for test_name in ${{ steps.changed.outputs.tests }}; do
-            bin="/tmp/test-bins/$test_name"
-            if [ ! -f "$bin" ]; then
-              echo "⚠️  No pre-built binary for '$test_name' — skipping drift check"
-              continue
-            fi
-            chmod +x "$bin"
-            echo "Drift gate running: $test_name"
-            if ! "$bin" --test-threads=4; then
-              echo "❌ DRIFT: '$test_name' failed — changed test does not pass against current source"
-              failed=1
-            fi
-          done
-          [ "$failed" -eq 0 ] || exit 1
-
-      - name: No test files changed
-        if: steps.changed.outputs.tests == ''
-        run: echo "✅ No test files changed — drift gate skipped"
-
-  # STATE_COMMIT: Golden vectors cross-platform verification.
-  # Runs in parallel with build — compiles its own golden_vectors binary, not the main artifact.
+  # STATE_COMMIT: Builds its own golden_vectors binary, no dependency on setup
   state-commit-golden-vectors:
     name: Golden Vectors (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -581,28 +164,22 @@ jobs:
         with:
           fetch-depth: 1
           submodules: recursive
-
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-
       - name: Verify golden vectors exist
         run: |
           echo "=== Verifying golden vectors exist ==="
           test -f tests/golden/state_commit/v1/scope_record.cbor || exit 1
           test -f tests/golden/state_commit/v1/scope_record_hash.txt || exit 1
           test -f tests/golden/state_commit/v1/state_commit_root.txt || exit 1
-
           echo "=== Expected values ==="
           echo "scope_record_hash: 41d7e3729b6f4512887fb3cb6f10140942b600041e0d88308b0177e06ebb4b93"
           echo "state_commit_root: 28591ac86e52ffac76d5fc3aceeceda5d8592708a8d7fcb75371567fdc481492"
-
           echo "=== Actual committed values ==="
           cat tests/golden/state_commit/v1/scope_record_hash.txt
           cat tests/golden/state_commit/v1/state_commit_root.txt
-
       - name: Build golden vectors generator
         run: cd tests/golden_vectors && unset RUSTFLAGS && cargo build --release
-
       - name: Initialize fixture repo
         run: |
           cd tests/fixtures/state_commit_repo
@@ -613,22 +190,17 @@ jobs:
           git commit -m "base commit"
           git add .
           git commit -m "fixture commit"
-
       - name: Run golden vectors generator
         working-directory: tests/golden_vectors
         run: |
           ./target/release/golden_vectors > /tmp/generated.txt 2>&1
-
           GEN_HASH=$(grep "scope_record_hash:" /tmp/generated.txt | awk '{print $2}')
           GEN_ROOT=$(grep "state_commit_root:" /tmp/generated.txt | awk '{print $2}')
-
           echo "Generated hash: $GEN_HASH"
           echo "Generated root: $GEN_ROOT"
-
           test -n "$GEN_HASH" || exit 1
           test -n "$GEN_ROOT" || exit 1
           echo "✅ Golden vectors generator runs successfully"
-
       - name: Verify no network dependencies
         run: |
           if grep -qE "(reqwest|hyper|ureq|http)" tests/golden_vectors/Cargo.toml; then
@@ -636,6 +208,301 @@ jobs:
             exit 1
           fi
           echo "✅ No network dependencies"
+
+  # SETUP: Compile the library once, save to Swatinem cache.
+  # Test shards restore this cache and only compile their own small test harness (~15-30s).
+  # No binary artifact upload — cache is ~100-200MB of compiled objects, not linked binaries.
+  setup:
+    name: Setup & Warm Cache
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install LLD
+        uses: ./.github/actions/install-lld
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Save Rust cache (always, so PRs benefit on next run)
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-build"
+          cache-targets: true
+          save-if: "true"
+          cache-all-crates: true
+      - name: Check Cargo.lock is up to date
+        run: cargo generate-lockfile && git diff --quiet Cargo.lock || echo "⚠️ Cargo.lock outdated - run cargo update locally"
+      - name: Compile library and binary (warm cache, no test harnesses)
+        # cargo build --all-features compiles the lib+bin but not test harnesses,
+        # keeping the cache small. Each test shard compiles only its own harness file.
+        run: cargo build --all-features
+
+  # TEST: Unit tests
+  test-core:
+    name: Tests (Core)
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install LLD
+        uses: ./.github/actions/install-lld
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-build"
+          save-if: "false"
+      - name: Run unit tests
+        run: cargo test --all-features --lib --bins -- --test-threads=4
+
+  # INTEGRATION TESTS: 20 parallel shards.
+  # Each shard restores the pre-warmed cache and compiles only its assigned test harnesses.
+  test-integration:
+    name: Tests (Integration ${{ matrix.shard }}/20)
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install LLD
+        uses: ./.github/actions/install-lld
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-build"
+          save-if: "false"
+      - name: Run integration tests (shard ${{ matrix.shard }}/20)
+        run: |
+          set -euo pipefail
+          shard=${{ matrix.shard }}
+          total=20
+
+          # All test targets: auto-discovered top-level tests + custom [[test]] targets
+          # Build the full list from Cargo.toml to include plugins_*, core_tests, etc.
+          mapfile -t all_tests < <(
+            {
+              # Auto-discovered: tests/*.rs
+              ls tests/*.rs | xargs -n1 basename | sed 's/\.rs$//'
+              # Custom [[test]] targets from Cargo.toml
+              grep -A1 '^\[\[test\]\]' Cargo.toml | grep '^name' | awk -F'"' '{print $2}'
+            } | sort -u
+          )
+
+          # Isolated suites have dedicated jobs
+          ISOLATED="agent_rpc_suite chaos_replay daemonless_lifecycle"
+
+          ran=0
+          for i in "${!all_tests[@]}"; do
+            t="${all_tests[$i]}"
+            # Skip isolated suites
+            if echo "$ISOLATED" | grep -qw "$t"; then
+              continue
+            fi
+            if [ $(( i % total )) -ne "$shard" ]; then
+              continue
+            fi
+            echo "Shard $shard running: $t"
+            cargo test --all-features --test "$t" -- --test-threads=4
+            ran=$(( ran + 1 ))
+          done
+
+          if [ "$ran" -eq 0 ]; then
+            echo "Shard $shard: no tests assigned"
+          fi
+
+  # RPC SUITE: isolated to avoid contention
+  test-rpc-suite:
+    name: Tests (RPC Suite)
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install LLD
+        uses: ./.github/actions/install-lld
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-build"
+          save-if: "false"
+      - name: Run RPC suite
+        run: cargo test --all-features --test agent_rpc_suite -- --test-threads=1
+
+  # CHAOS: Multi-agent contention + deterministic replay gate
+  chaos-replay:
+    name: Chaos Replay Gate
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install LLD
+        uses: ./.github/actions/install-lld
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-build"
+          save-if: "false"
+      - name: Run chaos replay determinism test
+        run: cargo test --test chaos_replay -- --test-threads=1
+
+  # DAEMONLESS: ensure commands do not leave background processes
+  daemonless-lifecycle:
+    name: Daemonless Lifecycle Gate
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install LLD
+        uses: ./.github/actions/install-lld
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-build"
+          save-if: "false"
+      - name: Run daemonless lifecycle test
+        run: cargo test --all-features --test daemonless_lifecycle -- --test-threads=1
+
+  # CONTRACTS: README/Constitution drift detection
+  contracts:
+    name: Contract Conformance
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install LLD
+        uses: ./.github/actions/install-lld
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-build"
+          save-if: "false"
+      - name: Run contract conformance tests
+        run: |
+          cargo test --all-features --test contract_conformance -- --test-threads=1
+          cargo test --all-features --test constitution_claims -- --test-threads=1
+      - name: Run CLI contract enforcement tests
+        run: cargo test --all-features --test cli_contract_enforcement -- --test-threads=1
+
+  # MIGRATION TESTS: Only when SQL migration scripts change
+  migration-script-tests:
+    name: Migration Script Tests
+    runs-on: ubuntu-latest
+    needs: [setup, detect-migration-script-changes]
+    if: github.event_name == 'pull_request' && needs.detect-migration-script-changes.outputs.changed == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install LLD
+        uses: ./.github/actions/install-lld
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Restore cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-build"
+          save-if: "false"
+      - name: Run migration tests
+        run: cargo test --all-features --test core_tests migration_ -- --ignored --test-threads=1
+
+  # PRE-MERGE DRIFT GATE: When test files change, run only those tests before merge.
+  # Catches whack-a-mole drift where contract/invariant tests are updated without source passing.
+  pre-merge-drift-gate:
+    name: Pre-merge Drift Gate
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect changed test files
+        id: changed
+        run: |
+          set -euo pipefail
+          base_ref="${{ github.base_ref }}"
+          git fetch --no-tags --prune origin "$base_ref"
+
+          changed_tests=""
+          while IFS= read -r path; do
+            # tests/*.rs — target name is the file stem
+            if [[ "$path" =~ ^tests/([^/]+)\.rs$ ]]; then
+              changed_tests="$changed_tests ${BASH_REMATCH[1]}"
+            fi
+            # tests/core/core.rs -> core_tests
+            if [[ "$path" == "tests/core/core.rs" ]]; then
+              changed_tests="$changed_tests core_tests"
+            fi
+            # tests/plugins/<name>.rs -> plugins_<name>_tests
+            if [[ "$path" =~ ^tests/plugins/([^/]+)\.rs$ ]]; then
+              changed_tests="$changed_tests plugins_${BASH_REMATCH[1]}_tests"
+            fi
+          done < <(git diff --name-only "origin/$base_ref"...HEAD | grep '\.rs$')
+
+          changed_tests=$(echo "$changed_tests" | tr ' ' '\n' | sort -u | grep -v '^$' | tr '\n' ' ')
+          echo "Changed test targets: '$changed_tests'"
+          echo "tests=$changed_tests" >> "$GITHUB_OUTPUT"
+
+      - name: Install LLD
+        if: steps.changed.outputs.tests != ''
+        uses: ./.github/actions/install-lld
+
+      - name: Install Rust toolchain
+        if: steps.changed.outputs.tests != ''
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Restore cache
+        if: steps.changed.outputs.tests != ''
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "ci-build"
+          save-if: "false"
+
+      - name: Run changed tests (drift check)
+        if: steps.changed.outputs.tests != ''
+        run: |
+          set -euo pipefail
+          failed=0
+          for test_name in ${{ steps.changed.outputs.tests }}; do
+            echo "Drift gate running: $test_name"
+            if ! cargo test --all-features --test "$test_name" -- --test-threads=4; then
+              echo "❌ DRIFT: '$test_name' failed — changed test does not pass against current source"
+              failed=1
+            fi
+          done
+          [ "$failed" -eq 0 ] || exit 1
+
+      - name: No test files changed
+        if: steps.changed.outputs.tests == ''
+        run: echo "✅ No test files changed — drift gate skipped"
 
   # RELEASE BUILD: Only on master, after all checks pass
   release-build:
@@ -647,22 +514,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-
       - name: Install LLD
         uses: ./.github/actions/install-lld
-
       - uses: dtolnay/rust-toolchain@stable
-
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
         with:
           shared-key: "release"
           cache-targets: true
           save-if: true
-
       - name: Build release
         run: cargo build --release --locked
-
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
