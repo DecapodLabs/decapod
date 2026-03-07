@@ -46,6 +46,7 @@ Dedicated files created for previously spliced contract content:
 
 ### Core Router
 - `core/DECAPOD.md` - **Router and navigation charter (START HERE)**
+- `core/ENGINEERING_EXCELLENCE.md` - **Oracle for Engineering Standards (CTO->Principal)**
 
 ### Authority (Constitution Layer)
 - `specs/INTENT.md` - **Methodology contract (READ FIRST)**

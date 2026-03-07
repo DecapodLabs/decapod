@@ -8,7 +8,30 @@
 
 ---
 
-## 1. Caching Principles
+## 1. The Oracle's Verdict: Caching as a Performance Lever
+
+*Caching is the art of trading memory for time, and complexity for speed. If you don't need it, don't use it.*
+
+### 1.1 The CTO's Strategic View
+- **The Performance Budget:** Caching is a tool to meet your performance budget. If the system is fast enough without a cache, adding one is just adding a potential source of bugs.
+- **Cost of Stale Data:** The business must decide what the cost of stale data is. If showing a price that's 5 minutes old loses $1M, you cannot cache it. Caching is a business decision.
+
+### 1.2 The SVP's Operational View
+- **Cache as a Dependency:** A cache is a stateful dependency. If the cache goes down, does the system stay up? If the DB can't handle the "cold cache" load, your cache is actually a part of your database, and your architecture is fragile.
+- **Global vs. Local:** CDNs (Global) are for static assets and public APIs. Redis (Local/Regional) is for session and application state. Don't confuse the two.
+
+### 1.3 The Architect's Structural View
+- **Invalidation is the First Class Citizen:** Don't design a cache; design an invalidation strategy. If you can't prove how an entry gets removed, you shouldn't add it.
+- **The "Cache-Aside" Default:** For most application state, use the Cache-Aside pattern. It's the most resilient and easiest to reason about.
+
+### 1.4 The Principal's Execution View
+- **TTL is not a Strategy:** A TTL is a fallback, not an invalidation strategy. Use event-driven invalidation for critical data.
+- **The "Thundering Herd" is Real:** If a hot key expires, your DB will die. Use mutexes or probabilistic early expiration to prevent the herd.
+- **Serialization Costs:** Often, the time to serialize/deserialize an object from a cache is longer than the DB query itself. Measure the *total* time, not just the network round-trip.
+
+---
+
+## 2. Caching Principles
 
 ### 1.1 Cache Purpose
 Cache is a **performance optimization**, not a:
