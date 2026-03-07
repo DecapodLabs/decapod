@@ -2945,11 +2945,14 @@ fn should_scaffold_validation_surfaces(project_root: &Path) -> bool {
     required.iter().any(|rel| !project_root.join(rel).exists())
 }
 
-fn heal_agents_contract(project_root: &Path) -> Result<Option<ValidationHealAction>, error::DecapodError> {
+fn heal_agents_contract(
+    project_root: &Path,
+) -> Result<Option<ValidationHealAction>, error::DecapodError> {
     let path = project_root.join("AGENTS.md");
     if !path.exists() {
-        let content = core::assets::get_template("AGENTS.md")
-            .ok_or_else(|| error::DecapodError::ValidationError("Missing AGENTS.md template".to_string()))?;
+        let content = core::assets::get_template("AGENTS.md").ok_or_else(|| {
+            error::DecapodError::ValidationError("Missing AGENTS.md template".to_string())
+        })?;
         atomic_write_file(&path, &content)?;
         return Ok(Some(ValidationHealAction {
             action: "heal_agents_contract".to_string(),
@@ -2984,11 +2987,16 @@ fn heal_agents_contract(project_root: &Path) -> Result<Option<ValidationHealActi
     Ok(Some(ValidationHealAction {
         action: "heal_agents_contract".to_string(),
         outcome: "updated".to_string(),
-        detail: format!("Added {} missing validator anchor(s) to AGENTS.md.", anchors.len()),
+        detail: format!(
+            "Added {} missing validator anchor(s) to AGENTS.md.",
+            anchors.len()
+        ),
     }))
 }
 
-fn heal_validation_scaffold(project_root: &Path) -> Result<Option<ValidationHealAction>, error::DecapodError> {
+fn heal_validation_scaffold(
+    project_root: &Path,
+) -> Result<Option<ValidationHealAction>, error::DecapodError> {
     if !should_scaffold_validation_surfaces(project_root) {
         return Ok(None);
     }
@@ -3024,7 +3032,9 @@ fn heal_validation_scaffold(project_root: &Path) -> Result<Option<ValidationHeal
     }))
 }
 
-fn heal_override_checksum(project_root: &Path) -> Result<Option<ValidationHealAction>, error::DecapodError> {
+fn heal_override_checksum(
+    project_root: &Path,
+) -> Result<Option<ValidationHealAction>, error::DecapodError> {
     match docs_cli::sync_override_checksum(project_root, false)? {
         docs_cli::OverrideChecksumStatus::MissingOverride
         | docs_cli::OverrideChecksumStatus::Unchanged => Ok(None),
@@ -3068,7 +3078,9 @@ fn heal_container_runtime_override(
     content.push_str("remediation: Install Docker or Podman, then remove this override if you want strict container gating restored.\n");
     content.push_str("warning: disabling isolated containers increases risk of concurrent agents stepping on each other.\n");
     let parent = override_path.parent().ok_or_else(|| {
-        error::DecapodError::ValidationError("OVERRIDE.md path missing parent directory".to_string())
+        error::DecapodError::ValidationError(
+            "OVERRIDE.md path missing parent directory".to_string(),
+        )
     })?;
     fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
     atomic_write_file(&override_path, &content)?;
@@ -3087,12 +3099,10 @@ fn attempt_validation_failure_heal(
 ) -> Result<Vec<ValidationHealAction>, error::DecapodError> {
     let mut actions = Vec::new();
 
-    if report
-        .failures
-        .iter()
-        .any(|msg| msg.contains("Repo store missing todo.db")
-            || msg.contains("Repo todo.db does NOT match rebuild from todo.events.jsonl"))
-    {
+    if report.failures.iter().any(|msg| {
+        msg.contains("Repo store missing todo.db")
+            || msg.contains("Repo todo.db does NOT match rebuild from todo.events.jsonl")
+    }) {
         let rebuild = todo::rebuild_from_events(&store.root)?;
         actions.push(ValidationHealAction {
             action: "todo.rebuild".to_string(),
@@ -3139,7 +3149,11 @@ fn render_validation_text(
 
     validate::render_validation_report(report, verbose);
     if !actions.is_empty() {
-        println!("  {} {}", "repair".bright_blue().bold(), format!("{} action(s)", actions.len()).bright_white());
+        println!(
+            "  {} {}",
+            "repair".bright_blue().bold(),
+            format!("{} action(s)", actions.len()).bright_white()
+        );
         for action in actions {
             println!(
                 "  {} {} {}",
@@ -3241,7 +3255,9 @@ fn run_validate_command(
                 "self_heal": heal_actions,
                 "report": report,
             }))
-            .map_err(|e| error::DecapodError::ValidationError(format!("validate JSON encode failed: {e}")))?,
+            .map_err(|e| error::DecapodError::ValidationError(format!(
+                "validate JSON encode failed: {e}"
+            )))?,
         );
     } else {
         render_validation_text(&report, &heal_actions, validate_cli.verbose);
