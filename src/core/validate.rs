@@ -23,7 +23,7 @@ use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::plugins::aptitude::{SkillCard, SkillResolution};
 use crate::plugins::internalize::{self, DeterminismClass, InternalizationManifest, ReplayClass};
 use crate::{db, primitives, todo};
-use regex::Regex;
+use fancy_regex::Regex;
 use serde::Serialize;
 use serde_json;
 use std::collections::HashSet;
@@ -1034,7 +1034,7 @@ fn validate_health_purity(
             }
 
             let content = fs::read_to_string(&path).unwrap_or_default();
-            if forbidden.is_match(&content) {
+            if forbidden.is_match(&content).unwrap_or(false) {
                 offenders.push(path);
             }
         }

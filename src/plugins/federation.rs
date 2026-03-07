@@ -341,12 +341,12 @@ fn validate_edge_type(t: &str) -> Result<(), error::DecapodError> {
 }
 
 fn validate_provenance(source: &str) -> Result<(), error::DecapodError> {
-    let prov_re = regex::Regex::new(
+    let prov_re = fancy_regex::Regex::new(
         r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:.+)$",
     )
     .unwrap();
 
-    if !prov_re.is_match(source) {
+    if !prov_re.is_match(source).unwrap_or(false) {
         return Err(error::DecapodError::ValidationError(format!(
             "Invalid provenance source: '{}'. Must match scheme (file:|url:|cmd:|commit:|event:)",
             source

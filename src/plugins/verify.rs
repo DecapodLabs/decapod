@@ -6,7 +6,7 @@ use crate::core::store::Store;
 use crate::core::todo;
 use crate::plugins::federation;
 use clap::{Parser, Subcommand};
-use regex::Regex;
+use fancy_regex::Regex;
 use rusqlite::OptionalExtension;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};

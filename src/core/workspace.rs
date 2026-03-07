@@ -11,7 +11,7 @@ use crate::core::rpc::{AllowedOp, Blocker, BlockerKind};
 use crate::core::todo;
 use crate::core::workunit::{self, WorkUnitStatus};
 use crate::plugins::eval;
-use regex::Regex;
+use fancy_regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -954,6 +954,7 @@ fn extract_task_ids_from_branch(branch: &str) -> Vec<String> {
     let re = Regex::new(r"(?i)(?:r_|test_|docs_|fix_|feat_)[a-z0-9]+").expect("static regex");
     let mut out: Vec<String> = re
         .find_iter(branch)
+        .filter_map(|m| m.ok())
         .map(|m| m.as_str().to_string())
         .collect();
     out.sort();

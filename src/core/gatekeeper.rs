@@ -7,7 +7,7 @@
 //! - Dangerous pattern detection
 
 use crate::core::error;
-use regex::Regex;
+use fancy_regex::Regex;
 use std::path::{Path, PathBuf};
 
 /// Gatekeeper configuration
@@ -151,7 +151,7 @@ fn scan_for_secrets(
 
         for (line_num, line) in content.lines().enumerate() {
             for pattern in &patterns {
-                if pattern.is_match(line) {
+                if pattern.is_match(line).unwrap_or(false) {
                     violations.push(Violation {
                         kind: ViolationKind::SecretDetected,
                         path: path.clone(),
@@ -195,7 +195,7 @@ fn scan_for_dangerous_patterns(
 
         for (line_num, line) in content.lines().enumerate() {
             for pattern in &patterns {
-                if pattern.is_match(line) {
+                if pattern.is_match(line).unwrap_or(false) {
                     violations.push(Violation {
                         kind: ViolationKind::DangerousPattern,
                         path: path.clone(),
@@ -294,15 +294,15 @@ mod tests {
 
         // AWS key
         let line = "AWS_KEY=AKIAIOSFODNN7EXAMPLE";
-        assert!(patterns.iter().any(|p| p.is_match(line)));
+        assert!(patterns.iter().any(|p| p.is_match(line).unwrap_or(false)));
 
         // GitHub token
         let line = "token=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-        assert!(patterns.iter().any(|p| p.is_match(line)));
+        assert!(patterns.iter().any(|p| p.is_match(line).unwrap_or(false)));
 
         // Private key
         let line = "-----BEGIN PRIVATE KEY-----";
-        assert!(patterns.iter().any(|p| p.is_match(line)));
+        assert!(patterns.iter().any(|p| p.is_match(line).unwrap_or(false)));
     }
 
     #[test]
@@ -311,11 +311,11 @@ mod tests {
 
         // eval with variable
         let line = "eval $CMD";
-        assert!(patterns.iter().any(|p| p.is_match(line)));
+        assert!(patterns.iter().any(|p| p.is_match(line).unwrap_or(false)));
 
         // shell=True
         let line = "subprocess.run(cmd, shell=True)";
-        assert!(patterns.iter().any(|p| p.is_match(line)));
+        assert!(patterns.iter().any(|p| p.is_match(line).unwrap_or(false)));
     }
 
     #[test]
