@@ -36,6 +36,7 @@ macro_rules! embedded_docs {
 
 embedded_docs! {
     // Core: Routers and indices
+    "core/ENGINEERING_EXCELLENCE.md" => EMBEDDED_CORE_ENGINEERING_EXCELLENCE,
     "core/DECAPOD.md" => EMBEDDED_CORE_DECAPOD,
     "core/INTERFACES.md" => EMBEDDED_CORE_INTERFACES,
     "core/METHODOLOGY.md" => EMBEDDED_CORE_METHODOLOGY,
@@ -471,6 +472,8 @@ fn template_override() -> String {
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 
 ## Core Overrides (Routers and Indices)
+
+### core/ENGINEERING_EXCELLENCE.md
 
 ### core/DECAPOD.md
 
