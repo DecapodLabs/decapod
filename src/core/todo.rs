@@ -18,7 +18,6 @@ use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
-use ulid::Ulid;
 
 const AGENT_EVICT_TIMEOUT_SECS: u64 = 30 * 60;
 const CLAIM_STATUS_CACHE_SCOPE: &str = "todo.claim.status";
@@ -707,7 +706,7 @@ fn seed_default_risk_zones(conn: &Connection) -> Result<(), error::DecapodError>
             "INSERT OR IGNORE INTO risk_zones(id, zone_name, description, required_trust_level, requires_approval, created_at)
              VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
             rusqlite::params![
-                Ulid::new().to_string(),
+                crate::core::ulid::new_ulid(),
                 zone_name,
                 description,
                 required_trust_level,
@@ -797,7 +796,7 @@ fn seed_default_categories(conn: &Connection) -> Result<(), error::DecapodError>
         conn.execute(
             "INSERT OR IGNORE INTO categories(id, name, description, keywords, created_at)
              VALUES(?1, ?2, ?3, ?4, ?5)",
-            rusqlite::params![Ulid::new().to_string(), name, desc, keywords, ts],
+            rusqlite::params![crate::core::ulid::new_ulid(), name, desc, keywords, ts],
         )?;
     }
     Ok(())
@@ -849,7 +848,7 @@ fn migrate_existing_category_ownerships(conn: &Connection) -> Result<(), error::
             "INSERT OR IGNORE INTO agent_category_claims(id, agent_id, category, claimed_at, updated_at)
              VALUES(?1, ?2, ?3, ?4, ?5)",
             rusqlite::params![
-                Ulid::new().to_string(),
+                crate::core::ulid::new_ulid(),
                 agent_id,
                 category,
                 claimed_at.clone(),
@@ -1074,7 +1073,7 @@ fn register_agent_categories(
                    agent_id = excluded.agent_id,
                    claimed_at = excluded.claimed_at,
                    updated_at = excluded.updated_at",
-                rusqlite::params![Ulid::new().to_string(), agent_id, category, ts, ts],
+                rusqlite::params![crate::core::ulid::new_ulid(), agent_id, category, ts, ts],
             )
             .map_err(error::DecapodError::RusqliteError)?;
         }
@@ -1196,7 +1195,7 @@ fn record_heartbeat(root: &Path, agent_id: &str) -> Result<serde_json::Value, er
 
         let ev = TodoEvent {
             ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             event_type: "agent.heartbeat".to_string(),
             status: "success".to_string(),
             task_id: None,
@@ -1280,7 +1279,7 @@ pub fn cleanup_stale_agent_assignments(
 
                     let ev = TodoEvent {
                         ts: ts.clone(),
-                        event_id: Ulid::new().to_string(),
+                        event_id: crate::core::ulid::new_ulid(),
                         event_type: "task.release".to_string(),
                         status: "success".to_string(),
                         task_id: Some(task_id.clone()),
@@ -1316,7 +1315,7 @@ pub fn cleanup_stale_agent_assignments(
 
             let ev = TodoEvent {
                 ts: ts.clone(),
-                event_id: Ulid::new().to_string(),
+                event_id: crate::core::ulid::new_ulid(),
                 event_type: "agent.session.cleanup".to_string(),
                 status: "success".to_string(),
                 task_id: None,
@@ -1447,7 +1446,7 @@ fn record_task_lesson(
     agent_id: &str,
     context_summary: &serde_json::Value,
 ) {
-    let lesson_id = format!("K_{}", Ulid::new());
+    let lesson_id = format!("K_{}", crate::core::ulid::new_ulid());
     let provenance = format!("event:{}", task.id);
     let lesson_title = format!("Lesson: {}", task.title);
     let lesson_content = format!(
@@ -1866,7 +1865,7 @@ fn infer_task_type(scope: &str, category: &str, title: &str, tags: &str) -> Stri
 }
 
 fn make_task_id(task_type: &str) -> String {
-    let body: String = Ulid::new()
+    let body: String = crate::core::ulid::new_ulid()
         .to_string()
         .to_ascii_lowercase()
         .chars()
@@ -1939,7 +1938,7 @@ pub fn record_task_event(
         ensure_schema(conn)?;
         let ev = TodoEvent {
             ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             event_type: event_type.to_string(),
             status: "success".to_string(),
             task_id: task_id.map(|s| s.to_string()),
@@ -2034,7 +2033,7 @@ fn claim_category_if_unowned(
     conn.execute(
         "INSERT OR IGNORE INTO agent_category_claims(id, agent_id, category, claimed_at, updated_at)
          VALUES(?1, ?2, ?3, ?4, ?5)",
-        rusqlite::params![Ulid::new().to_string(), agent_id, category, ts, ts],
+        rusqlite::params![crate::core::ulid::new_ulid(), agent_id, category, ts, ts],
     )
     .map_err(error::DecapodError::RusqliteError)?;
     Ok(())
@@ -2120,7 +2119,7 @@ fn sync_task_dependencies(
         conn.execute(
             "INSERT OR IGNORE INTO task_dependencies(id, task_id, depends_on_task_id, created_at)
              VALUES(?1, ?2, ?3, ?4)",
-            rusqlite::params![Ulid::new().to_string(), task_id, dep_id, ts],
+            rusqlite::params![crate::core::ulid::new_ulid(), task_id, dep_id, ts],
         )
         .map_err(error::DecapodError::RusqliteError)?;
     }
@@ -2171,7 +2170,7 @@ fn upsert_task_owner(
         .map_err(error::DecapodError::RusqliteError)?;
         Ok(id)
     } else {
-        let claim_id = Ulid::new().to_string();
+        let claim_id = crate::core::ulid::new_ulid();
         conn.execute(
             "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
              VALUES(?1, ?2, ?3, ?4, ?5)",
@@ -2198,7 +2197,7 @@ fn write_ownership_claim_event(
 ) -> Result<(), error::DecapodError> {
     let ev = TodoEvent {
         ts: claim.ts.to_string(),
-        event_id: Ulid::new().to_string(),
+        event_id: crate::core::ulid::new_ulid(),
         event_type: "ownership.claim".to_string(),
         status: "success".to_string(),
         task_id: Some(claim.task_id.to_string()),
@@ -2278,7 +2277,7 @@ fn set_task_owners(
         .map_err(error::DecapodError::RusqliteError)?;
         let ev = TodoEvent {
             ts: ts.to_string(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             event_type: "ownership.release".to_string(),
             status: "success".to_string(),
             task_id: Some(task_id.to_string()),
@@ -2343,7 +2342,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         .to_string();
     let scope = scope_from_dir(&dir_abs);
     let ts = now_iso();
-    let intent_ref = format!("intent:todo.add:{}", Ulid::new());
+    let intent_ref = format!("intent:todo.add:{}", crate::core::ulid::new_ulid());
     let owner_list = parse_owners_input(owner);
     let primary_owner = owner_list.first().cloned().unwrap_or_default();
 
@@ -2438,7 +2437,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
 
         let ev = TodoEvent {
             ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             event_type: "task.add".to_string(),
             status: "success".to_string(),
             task_id: Some(task_id.clone()),
@@ -2513,7 +2512,7 @@ pub fn update_status(
     payload: JsonValue,
 ) -> Result<serde_json::Value, error::DecapodError> {
     let ts = now_iso();
-    let intent_ref = format!("intent:{}:{}", event_type, Ulid::new());
+    let intent_ref = format!("intent:{}:{}", event_type, crate::core::ulid::new_ulid());
     let root = &store.root;
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -2553,7 +2552,7 @@ pub fn update_status(
 
         let ev = TodoEvent {
             ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             event_type: event_type.to_string(),
             status: "success".to_string(),
             task_id: Some(id.to_string()),
@@ -2653,7 +2652,7 @@ fn comment_task(
         // Event-only; does not mutate task row.
         let ev = TodoEvent {
             ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             event_type: "task.comment".to_string(),
             status: "success".to_string(),
             task_id: Some(id.to_string()),
@@ -2767,7 +2766,7 @@ fn edit_task(
 
         let ev = TodoEvent {
             ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             event_type: "task.edit".to_string(),
             status: "success".to_string(),
             task_id: Some(id.to_string()),
@@ -3088,7 +3087,7 @@ fn claim_task(
         // Create claim event
         let ev = TodoEvent {
             ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             event_type: "task.claim".to_string(),
             status: "success".to_string(),
             task_id: Some(id.to_string()),
@@ -3187,7 +3186,7 @@ fn handoff_task(
                    agent_id = excluded.agent_id,
                    claimed_at = excluded.claimed_at,
                    updated_at = excluded.updated_at",
-                rusqlite::params![Ulid::new().to_string(), to, category, ts, ts],
+                rusqlite::params![crate::core::ulid::new_ulid(), to, category, ts, ts],
             )
             .map_err(error::DecapodError::RusqliteError)?;
         }
@@ -3204,7 +3203,7 @@ fn handoff_task(
             assigned_to
         };
 
-        let event_id = Ulid::new().to_string();
+        let event_id = crate::core::ulid::new_ulid();
         let ev = TodoEvent {
             ts: ts.clone(),
             event_id: event_id.clone(),
@@ -3245,7 +3244,7 @@ fn handoff_task(
         .and_then(|v| v.as_str())
         .is_some_and(|s| s == "ok")
     {
-        let knowledge_id = format!("H_{}", Ulid::new());
+        let knowledge_id = format!("H_{}", crate::core::ulid::new_ulid());
         let title = format!("Task handoff {}", id);
         let content = format!("Handoff from {:?} to {}. Summary: {}", from, to, summary);
         let provenance = format!("event:{}", event_id);
@@ -3387,7 +3386,7 @@ fn remove_task_owner(
         // Log ownership release event
         let ev = TodoEvent {
             ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             event_type: "ownership.release".to_string(),
             status: "success".to_string(),
             task_id: Some(task_id.to_string()),
@@ -3459,7 +3458,7 @@ fn register_agent_expertise(
         // Log expertise event
         let ev = TodoEvent {
             ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             event_type: "agent.expertise".to_string(),
             status: "success".to_string(),
             task_id: None,
@@ -3612,7 +3611,7 @@ fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
         // Create release event
         let ev = TodoEvent {
             ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             event_type: "task.release".to_string(),
             status: "success".to_string(),
             task_id: Some(id.to_string()),
@@ -4130,7 +4129,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         )?;
                     } else {
                         let insert_id = if claim_id.is_empty() {
-                            Ulid::new().to_string()
+                            crate::core::ulid::new_ulid()
                         } else {
                             claim_id.to_string()
                         };

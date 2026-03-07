@@ -10,7 +10,6 @@ use sha2::{Digest, Sha256};
 use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
-use ulid::Ulid;
 
 // --- Constants ---
 
@@ -579,8 +578,8 @@ pub fn add_node(
     let db_path = federation_db_path(&store.root);
     let events_path = federation_events_path(&store.root);
     let now = now_ts();
-    let node_id = format!("F_{}", Ulid::new());
-    let event_id = Ulid::new().to_string();
+    let node_id = format!("F_{}", crate::core::ulid::new_ulid());
+    let event_id = crate::core::ulid::new_ulid();
 
     let payload_json = serde_json::json!({
         "title": title,
@@ -607,7 +606,7 @@ pub fn add_node(
 
         // Insert sources
         for src in &sources {
-            let src_id = format!("FS_{}", Ulid::new());
+            let src_id = format!("FS_{}", crate::core::ulid::new_ulid());
             conn.execute(
                 "INSERT INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)",
                 params![src_id, node_id, src, now],
@@ -741,7 +740,7 @@ pub fn edit_node(
         conn.execute(&sql, params_refs.as_slice())?;
 
         // Record event in DB
-        let event_id = Ulid::new().to_string();
+        let event_id = crate::core::ulid::new_ulid();
         let payload_json = serde_json::json!({
             "title": title,
             "body": body,
@@ -822,7 +821,7 @@ pub fn supersede_node(
         )?;
 
         // Create supersedes edge
-        let edge_id = format!("FE_{}", Ulid::new());
+        let edge_id = format!("FE_{}", crate::core::ulid::new_ulid());
         conn.execute(
             "INSERT INTO edges(id, source_id, target_id, edge_type, created_at, actor)
              VALUES(?1, ?2, ?3, 'supersedes', ?4, 'decapod')",
@@ -830,7 +829,7 @@ pub fn supersede_node(
         )?;
 
         // Record event
-        let event_id = Ulid::new().to_string();
+        let event_id = crate::core::ulid::new_ulid();
         let payload_json = serde_json::json!({
             "old_id": old_id,
             "new_id": new_id,
@@ -897,7 +896,7 @@ pub fn transition_node_status(
             params![new_status, now, id],
         )?;
 
-        let event_id = Ulid::new().to_string();
+        let event_id = crate::core::ulid::new_ulid();
         let payload_json = serde_json::json!({
             "new_status": new_status,
             "reason": reason,
@@ -946,7 +945,7 @@ pub fn add_edge(
     let db_path = federation_db_path(&store.root);
     let events_path = federation_events_path(&store.root);
     let now = now_ts();
-    let edge_id = format!("FE_{}", Ulid::new());
+    let edge_id = format!("FE_{}", crate::core::ulid::new_ulid());
 
     broker.with_conn(&db_path, "decapod", None, "federation.link", |conn| {
         if !node_exists(conn, source_id)? {
@@ -968,7 +967,7 @@ pub fn add_edge(
             params![edge_id, source_id, target_id, edge_type, now],
         )?;
 
-        let event_id = Ulid::new().to_string();
+        let event_id = crate::core::ulid::new_ulid();
         let payload_json = serde_json::json!({
             "edge_id": edge_id,
             "source_id": source_id,
@@ -1023,7 +1022,7 @@ fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> 
             )));
         }
 
-        let event_id = Ulid::new().to_string();
+        let event_id = crate::core::ulid::new_ulid();
         let payload_json = serde_json::json!({ "edge_id": edge_id });
         conn.execute(
             "INSERT INTO federation_events(event_id, ts, event_type, node_id, payload, actor)
@@ -1067,7 +1066,7 @@ pub fn add_source_to_node(
     let db_path = federation_db_path(&store.root);
     let events_path = federation_events_path(&store.root);
     let now = now_ts();
-    let src_id = format!("FS_{}", Ulid::new());
+    let src_id = format!("FS_{}", crate::core::ulid::new_ulid());
 
     broker.with_conn(
         &db_path,
@@ -1093,7 +1092,7 @@ pub fn add_source_to_node(
                 params![now, node_id],
             )?;
 
-            let event_id = Ulid::new().to_string();
+            let event_id = crate::core::ulid::new_ulid();
             let payload_json = serde_json::json!({
                 "source_id": src_id,
                 "source": source,
@@ -1593,7 +1592,7 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
             if let Some(sources) = p.get("sources").and_then(|v| v.as_array()) {
                 for src in sources {
                     if let Some(s) = src.as_str() {
-                        let src_id = format!("FS_{}", Ulid::new());
+                        let src_id = format!("FS_{}", crate::core::ulid::new_ulid());
                         conn.execute(
                             "INSERT INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)",
                             params![src_id, node_id, s, event.ts],
@@ -1641,7 +1640,7 @@ fn replay_event(conn: &Connection, event: &FederationEvent) -> Result<(), error:
             )
             ?;
 
-            let fallback_edge_id = format!("FE_{}", Ulid::new());
+            let fallback_edge_id = format!("FE_{}", crate::core::ulid::new_ulid());
             let edge_id = p
                 .get("edge_id")
                 .and_then(|v| v.as_str())
@@ -1921,7 +1920,7 @@ pub fn validate_federation(
             // Rebuild to a unique temp location to avoid collisions across parallel validates.
             let tmp_db = std::env::temp_dir().join(format!(
                 "decapod_federation_validate_{}.db",
-                ulid::Ulid::new()
+                crate::core::ulid::new_ulid()
             ));
             if tmp_db.exists() {
                 let _ = fs::remove_file(&tmp_db);

@@ -37,7 +37,7 @@ pub fn add_feedback(
 ) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = feedback_db_path(&store.root);
-    let id = ulid::Ulid::new().to_string();
+    let id = crate::core::ulid::new_ulid();
     let now = format!("{:?}", std::time::SystemTime::now());
 
     broker.with_conn(&db_path, "decapod", None, "feedback.add", |conn| {

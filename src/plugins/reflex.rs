@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
 use std::path::{Path, PathBuf};
-use ulid::Ulid;
 
 fn reflex_db_path(root: &Path) -> PathBuf {
     root.join(schemas::AUTOMATION_DB_NAME)
@@ -62,7 +61,7 @@ fn scope_from_dir(p: &str) -> String {
 }
 
 fn ulid_like() -> String {
-    Ulid::new().to_string()
+    crate::core::ulid::new_ulid()
 }
 
 #[derive(Serialize, Deserialize, Debug)]

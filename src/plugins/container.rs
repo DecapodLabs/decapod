@@ -10,7 +10,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
-use ulid::Ulid;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
 pub enum ImageProfile {
@@ -862,7 +861,7 @@ fn prepare_workspace_clone(
     let workspaces_root = repo.join(".decapod").join("workspaces");
     fs::create_dir_all(&workspaces_root).map_err(error::DecapodError::IoError)?;
 
-    let suffix = Ulid::new().to_string().to_lowercase();
+    let suffix = crate::core::ulid::new_ulid().to_lowercase();
     let dir_name = format!("{}-{}", sanitize_branch_component(branch), &suffix[..8]);
     let workspace_path = workspaces_root.join(dir_name);
     let workspace_path_str = workspace_path
@@ -1044,7 +1043,7 @@ fn build_docker_spec(
     let container_name = format!(
         "decapod-agent-{}-{}",
         sanitize_name(agent),
-        &Ulid::new().to_string().to_lowercase()[..8]
+        &crate::core::ulid::new_ulid().to_lowercase()[..8]
     );
     let mut args = vec![
         "run".to_string(),
@@ -1245,7 +1244,7 @@ fn sanitize_branch_component(s: &str) -> String {
 fn default_branch_name(agent: &str, task_id: Option<&str>) -> String {
     let suffix = task_id
         .map(sanitize_branch_component)
-        .unwrap_or_else(|| Ulid::new().to_string().to_lowercase());
+        .unwrap_or_else(|| crate::core::ulid::new_ulid().to_lowercase());
     format!("agent/{}/{}", sanitize_branch_component(agent), suffix)
 }
 
@@ -1428,7 +1427,7 @@ mod tests {
     fn disable_override_marks_container_runtime_disabled() {
         let root = std::env::temp_dir().join(format!(
             "decapod-container-override-{}",
-            Ulid::new().to_string().to_lowercase()
+            crate::core::ulid::new_ulid().to_lowercase()
         ));
         fs::create_dir_all(&root).expect("mkdir");
         disable_container_runtime_override(&root, "test-reason", "test-remediation")
@@ -1445,7 +1444,7 @@ mod tests {
     fn clear_override_strips_container_runtime_disabled_marker() {
         let root = std::env::temp_dir().join(format!(
             "decapod-container-clear-{}",
-            Ulid::new().to_string().to_lowercase()
+            crate::core::ulid::new_ulid().to_lowercase()
         ));
         fs::create_dir_all(&root).expect("mkdir");
         let wrote = disable_container_runtime_override(&root, "test-reason", "test-remediation")

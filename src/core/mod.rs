@@ -36,6 +36,7 @@ pub mod state_commit;
 pub mod store;
 pub mod time;
 pub mod todo;
+pub mod ulid;
 pub mod trace;
 pub mod validate;
 pub mod workspace;

@@ -8,7 +8,6 @@ use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::path::{Path, PathBuf};
-use ulid::Ulid;
 
 pub fn health_db_path(root: &Path) -> PathBuf {
     root.join(schemas::GOVERNANCE_DB_NAME)
@@ -260,7 +259,7 @@ pub fn record_proof(
     broker.with_conn(&db_path, "decapod", None, "health.proof_record", |conn| {
         conn.execute(
             "INSERT INTO proof_events(event_id, claim_id, ts, surface, result, sla_seconds) VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
-            params![Ulid::new().to_string(), claim_id, now, surface, result, sla],
+            params![crate::core::ulid::new_ulid(), claim_id, now, surface, result, sla],
         )?;
         Ok(())
     })

@@ -1765,7 +1765,7 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
 fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error::DecapodError> {
     let issued = now_epoch_secs();
     let expires = issued.saturating_add(session_ttl_secs());
-    let token = ulid::Ulid::to_string(&ulid::Ulid::new());
+    let token = crate::core::ulid::new_ulid();
     let password = generate_ephemeral_password()?;
     let rec = AgentSessionRecord {
         agent_id: agent_id.to_string(),
@@ -1808,7 +1808,7 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
 
             let issued = now_epoch_secs();
             let expires = issued.saturating_add(session_ttl_secs());
-            let token = ulid::Ulid::to_string(&ulid::Ulid::new());
+            let token = crate::core::ulid::new_ulid();
             let password = generate_ephemeral_password()?;
             let rec = AgentSessionRecord {
                 agent_id: agent_id.clone(),
@@ -1926,7 +1926,7 @@ fn build_handshake_artifact(
         );
     }
 
-    let request_id = ulid::Ulid::new().to_string();
+    let request_id = crate::core::ulid::new_ulid();
     let mut unsigned = serde_json::json!({
         "schema_version": "1.0.0",
         "request_id": request_id,
@@ -3194,7 +3194,7 @@ fn run_validate_command(
         "user" => {
             // User store uses a temp directory for blank-slate validation
             let tmp_root =
-                std::env::temp_dir().join(format!("decapod_validate_user_{}", ulid::Ulid::new()));
+                std::env::temp_dir().join(format!("decapod_validate_user_{}", crate::core::ulid::new_ulid()));
             std::fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
             Store {
                 kind: StoreKind::User,
@@ -3323,7 +3323,7 @@ fn write_validate_diagnostic_artifact(
     timeout_secs: u64,
 ) -> Result<PathBuf, error::DecapodError> {
     let mut run_id_hasher = Sha256::new();
-    run_id_hasher.update(ulid::Ulid::new().to_string().as_bytes());
+    run_id_hasher.update(crate::core::ulid::new_ulid().as_bytes());
     let run_id = hash_bytes_hex(&run_id_hasher.finalize())[..32].to_string();
     let diagnostics_dir = project_root.join(".decapod/generated/artifacts/diagnostics/validate");
     fs::create_dir_all(&diagnostics_dir).map_err(error::DecapodError::IoError)?;

@@ -436,7 +436,7 @@ pub fn log_retrieval_feedback(
         )));
     }
 
-    let event_id = ulid::Ulid::new().to_string();
+    let event_id = crate::core::ulid::new_ulid();
     let event = serde_json::json!({
         "event_id": event_id,
         "ts": now_iso(),
@@ -511,7 +511,7 @@ pub fn decay_knowledge(
     })?;
 
     // Log decay event
-    let event_id = ulid::Ulid::new().to_string();
+    let event_id = crate::core::ulid::new_ulid();
     let event = serde_json::json!({
         "event_id": event_id,
         "ts": now_iso(),
@@ -585,7 +585,7 @@ pub fn record_promotion_event(
     }
 
     let event = KnowledgePromotionEvent {
-        event_id: ulid::Ulid::new().to_string(),
+        event_id: crate::core::ulid::new_ulid(),
         ts: now_iso(),
         source_entry_id: input.source_entry_id.trim().to_string(),
         target_class: "procedural".to_string(),

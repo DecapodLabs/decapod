@@ -9,14 +9,13 @@ use crate::core::pool;
 use crate::core::time;
 use crate::plugins::policy;
 use rusqlite::Connection;
-use rustc_hash::FxHashMap;
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
-use ulid::Ulid;
 
 /// Database broker providing serialized access to Decapod state.
 ///
@@ -129,7 +128,7 @@ impl DbBroker {
         let effective_intent = if let Some(i) = intent_ref {
             Some(i.to_string())
         } else if !is_read {
-            Some(format!("intent:auto:{}:{}", op_name, Ulid::new()))
+            Some(format!("intent:auto:{}:{}", op_name, crate::core::ulid::new_ulid()))
         } else {
             None
         };
@@ -301,7 +300,7 @@ impl DbBroker {
 
         let f = std::fs::File::open(&self.audit_log_path).map_err(error::DecapodError::IoError)?;
         let reader = std::io::BufReader::new(f);
-        let mut pending_map = FxHashMap::default();
+        let mut pending_map = HashMap::new();
         let mut total_events = 0usize;
 
         for line in reader.lines() {
@@ -394,9 +393,9 @@ fn get_audit_lock() -> &'static Mutex<()> {
     AUDIT_LOCK.get_or_init(|| Mutex::new(()))
 }
 
-fn broker_read_cache() -> &'static Mutex<FxHashMap<String, CacheEntry>> {
-    static READ_CACHE: OnceLock<Mutex<FxHashMap<String, CacheEntry>>> = OnceLock::new();
-    READ_CACHE.get_or_init(|| Mutex::new(FxHashMap::default()))
+fn broker_read_cache() -> &'static Mutex<HashMap<String, CacheEntry>> {
+    static READ_CACHE: OnceLock<Mutex<HashMap<String, CacheEntry>>> = OnceLock::new();
+    READ_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
 pub fn schema() -> serde_json::Value {
