@@ -3,169 +3,143 @@
 **Authority:** interface (machine-readable contract)
 **Layer:** Interfaces
 **Binding:** Yes
-**Scope:** schema, invariants, and lifecycle for internalized context artifacts
-**Non-goals:** internalizer implementation details, model training
+**Scope:** schema, invariants, CLI lifecycle, and proof gates for internalized context artifacts
+**Non-goals:** model training, hidden memory, background services
 
 ---
 
 ## 1. Purpose
 
-Internalized context artifacts let agents convert long documents into mountable, verifiable context adapters. This eliminates redundant long-context ingestion across sessions while maintaining full auditability.
+Internalized context artifacts let agents reuse long-document context without re-sending the full document on every call.
 
-An internalization is **not training**. It is a governed artifact produced by a pluggable external tool (an "internalizer profile") and managed by Decapod's artifact lifecycle.
+An internalization is **not training** and **not hidden state**. It is a governed repo-local artifact produced on demand by a pluggable profile tool, bound to exact source bytes, and attachable only through an explicit lease-bearing mount step.
 
 ---
 
-## 2. Artifact Layout
+## 2. Capability Decision + Scope
+
+### Added
+
+One capability family: `internalize.*`
+
+- `internalize.create` creates or reuses a content-addressed internalization artifact.
+- `internalize.attach` creates a session-scoped mount lease with explicit expiry.
+- `internalize.detach` revokes the mount explicitly before lease expiry.
+- `internalize.inspect` proves exact bindings, integrity status, and determinism labeling.
+
+### Not Added
+
+- No background daemon or auto-mounting.
+- No silent GPU dependency.
+- No implicit session reuse across tools.
+- No claim that best-effort profiles are replayable.
+- No general-purpose ambient memory layer.
+
+---
+
+## 3. Artifact Layout
 
 ```text
 .decapod/generated/artifacts/internalizations/<artifact_id>/
-  manifest.json       # InternalizationManifest (see schema below)
-  adapter.bin          # adapter payload (or pointer)
+  manifest.json
+  adapter.bin
+```
+
+Session-scoped active mount leases are stored at:
+
+```text
+.decapod/generated/sessions/<session_id>/internalize_mounts/
+  mount_<artifact_id>.json
 ```
 
 ---
 
-## 3. InternalizationManifest Schema (v1.0.0)
+## 4. Manifest Contract
 
-```json
-{
-  "schema_version": "1.0.0",
-  "id": "<ULID>",
-  "source_hash": "<SHA-256 of source document>",
-  "source_path": "<original path or URI>",
-  "extraction_method": "<profile name>",
-  "chunking_params": {},
-  "base_model_id": "<model identifier>",
-  "internalizer_profile": "<profile name>",
-  "internalizer_version": "<semver>",
-  "adapter_format": "<format string>",
-  "created_at": "<ISO 8601>",
-  "ttl_seconds": 0,
-  "expires_at": "<ISO 8601 | null>",
-  "provenance": [
-    {
-      "op": "internalize.create",
-      "timestamp": "<ISO 8601>",
-      "actor": "<actor id>",
-      "inputs_hash": "<SHA-256>"
-    }
-  ],
-  "replay_recipe": {
-    "command": "decapod",
-    "args": ["internalize", "create", "--source", "..."],
-    "env": {}
-  },
-  "adapter_hash": "<SHA-256 of adapter payload>",
-  "adapter_path": "adapter.bin",
-  "capabilities_contract": {
-    "allowed_scopes": ["qa", "summarization"],
-    "permitted_tools": ["*"],
-    "allow_code_gen": false
-  },
-  "risk_tier": {
-    "creation": "compute-risky",
-    "attach": "behavior-changing",
-    "inspect": "read-only"
-  }
-}
-```
+Schema version: `1.2.0`
+
+Required fields include:
+
+- `source_hash`
+- `base_model_id`
+- `internalizer_profile`
+- `internalizer_version`
+- `adapter_hash`
+- `determinism_class`
+- `binary_hash`
+- `runtime_fingerprint`
+- `replay_recipe`
+- `capabilities_contract`
+
+Determinism rules:
+
+- `determinism_class` is `deterministic` or `best_effort`
+- only deterministic profiles may claim `replay_recipe.mode=replayable`
+- best-effort profiles must be `non_replayable`
+- best-effort manifests must carry `binary_hash` and `runtime_fingerprint`
+
+Capabilities rules:
+
+- default scope is `qa`
+- `allow_code_gen=false` by default
+- attach must enforce `permitted_tools`
 
 ---
 
-## 4. Result Schemas
+## 5. CLI Surface
 
-### InternalizationCreateResult
+### `decapod internalize create`
 
-```json
-{
-  "schema_version": "1.0.0",
-  "success": true,
-  "artifact_id": "<ULID>",
-  "artifact_path": "<absolute path>",
-  "manifest": { "...InternalizationManifest..." },
-  "source_hash": "<SHA-256>",
-  "adapter_hash": "<SHA-256>"
-}
-```
+Creates or reuses a content-addressed artifact from:
+- `--source`
+- `--model`
+- `--profile`
+- `--ttl`
+- `--scope`
 
-### InternalizationAttachResult
+### `decapod internalize attach`
 
-```json
-{
-  "schema_version": "1.0.0",
-  "success": true,
-  "artifact_id": "<ULID>",
-  "session_id": "<session identifier>",
-  "attached_at": "<ISO 8601>",
-  "expires_at": "<ISO 8601 | null>",
-  "capabilities_contract": { "...CapabilitiesContract..." },
-  "risk_classification": "behavior-changing",
-  "provenance_entry": { "...ProvenanceEntry..." }
-}
-```
+Creates a session-scoped mount lease from:
+- `--id`
+- `--session`
+- `--tool`
+- `--lease-seconds`
 
-### InternalizationInspectResult
+### `decapod internalize detach`
 
-```json
-{
-  "schema_version": "1.0.0",
-  "artifact_id": "<ULID>",
-  "manifest": { "...InternalizationManifest..." },
-  "integrity": {
-    "source_hash_valid": true,
-    "adapter_hash_valid": true,
-    "manifest_consistent": true,
-    "expired": false
-  },
-  "status": "valid"
-}
-```
+Revokes the session-scoped mount lease:
+- `--id`
+- `--session`
+
+### `decapod internalize inspect`
+
+Proves artifact status:
+- `valid`
+- `best-effort`
+- `expired`
+- `integrity-failed`
 
 ---
 
-## 5. Invariants
+## 6. Provable Acceptance Criteria
 
-1. **Source binding:** `source_hash` must be the SHA-256 of the document at creation time. No silent changes.
-2. **Base model binding:** `base_model_id` must be recorded; adapters are model-specific.
-3. **Reproducibility:** `internalizer_profile` + `internalizer_version` + `replay_recipe` must be sufficient to reproduce the artifact.
-4. **Explicit attach:** Agents cannot reference an internalization without a logged `internalize.attach` operation.
-5. **TTL enforcement:** If `expires_at` is set and in the past, `attach` MUST fail.
-6. **Adapter integrity:** `adapter_hash` must match the SHA-256 of the payload file at attach time.
-7. **Provenance logging:** Every `attach` operation appends a provenance entry to the session directory.
+An internalization is provable only if:
 
----
-
-## 6. Risk Classification
-
-| Operation | Risk Level | Rationale |
-|-----------|-----------|-----------|
-| `create` | compute-risky | Invokes external tool; no repo mutation beyond artifact dir |
-| `attach` | behavior-changing | Affects inference behavior; logged as dependency |
-| `inspect` | read-only | No side effects |
+1. `source_hash` binds to exact source bytes.
+2. `base_model_id` is recorded.
+3. `adapter_hash` matches the adapter payload.
+4. replayability claims match determinism policy.
+5. use requires a successful attach lease.
+6. expired artifacts cannot be attached.
+7. expired mount leases fail validation if left active.
+8. the attach tool is allowed by `permitted_tools`.
 
 ---
 
-## 7. Internalizer Profiles
+## 7. Stable JSON Schemas
 
-Profiles are pluggable external tools stored in `.decapod/generated/profiles/internalizers/<name>.json`.
-
-Profile schema:
-```json
-{
-  "name": "<profile name>",
-  "version": "<semver>",
-  "executable": "<path or builtin:noop>",
-  "default_params": {},
-  "adapter_format": "<format string>"
-}
-```
-
-The built-in `noop` profile produces an empty adapter for pipeline testing without GPU dependencies.
-
----
-
-## Links
-
-- `core/PLUGINS.md` - Subsystem registry
-- `core/INTERFACES.md` - Interface contracts registry
+- `constitution/interfaces/jsonschema/internalization/InternalizationManifest.schema.json`
+- `constitution/interfaces/jsonschema/internalization/InternalizationCreateResult.schema.json`
+- `constitution/interfaces/jsonschema/internalization/InternalizationAttachResult.schema.json`
+- `constitution/interfaces/jsonschema/internalization/InternalizationDetachResult.schema.json`
+- `constitution/interfaces/jsonschema/internalization/InternalizationInspectResult.schema.json`

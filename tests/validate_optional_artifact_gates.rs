@@ -498,3 +498,110 @@ fn validate_fails_on_invalid_context_capsule_policy_contract_if_present() {
         stderr
     );
 }
+
+#[test]
+fn validate_fails_on_internalization_source_hash_drift_if_present() {
+    let (_tmp, dir, password) = setup_repo();
+    let doc_path = dir.join("doc.txt");
+    fs::write(&doc_path, "version 1").expect("write source doc");
+
+    let create = run_decapod(
+        &dir,
+        &[
+            "internalize",
+            "create",
+            "--source",
+            "doc.txt",
+            "--model",
+            "test-model",
+            "--profile",
+            "noop",
+            "--format",
+            "json",
+        ],
+        &[("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")],
+    );
+    assert!(
+        create.status.success(),
+        "create failed: {}",
+        combined_output(&create)
+    );
+
+    fs::write(&doc_path, "version 2").expect("mutate source doc");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(!validate.status.success());
+    let stderr = combined_output(&validate);
+    assert!(stderr.contains("Internalization source hash mismatch"));
+}
+
+#[test]
+fn validate_fails_on_best_effort_internalization_claiming_replayable() {
+    let (_tmp, dir, password) = setup_repo();
+    let doc_path = dir.join("doc.txt");
+    fs::write(&doc_path, "version 1").expect("write source doc");
+
+    let create = run_decapod(
+        &dir,
+        &[
+            "internalize",
+            "create",
+            "--source",
+            "doc.txt",
+            "--model",
+            "test-model",
+            "--profile",
+            "noop",
+            "--format",
+            "json",
+        ],
+        &[("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")],
+    );
+    assert!(
+        create.status.success(),
+        "create failed: {}",
+        combined_output(&create)
+    );
+    let created: serde_json::Value = serde_json::from_slice(&create.stdout).expect("create json");
+    let artifact_id = created["artifact_id"].as_str().expect("artifact id");
+    let manifest_path = dir
+        .join(".decapod")
+        .join("generated")
+        .join("artifacts")
+        .join("internalizations")
+        .join(artifact_id)
+        .join("manifest.json");
+    let raw = fs::read_to_string(&manifest_path).expect("read manifest");
+    let mut manifest: serde_json::Value = serde_json::from_str(&raw).expect("parse manifest");
+    manifest["determinism_class"] = serde_json::Value::String("best_effort".to_string());
+    manifest["replay_recipe"]["mode"] = serde_json::Value::String("replayable".to_string());
+    fs::write(
+        &manifest_path,
+        serde_json::to_vec_pretty(&manifest).expect("serialize manifest"),
+    )
+    .expect("write manifest");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(!validate.status.success());
+    let stderr = combined_output(&validate);
+    assert!(
+        stderr.contains("claims replayable despite non-deterministic profile")
+            || stderr.contains("replay metadata is inconsistent")
+    );
+}
