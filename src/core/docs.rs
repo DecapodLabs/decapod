@@ -31,6 +31,16 @@ pub struct Bindings {
     pub mandates: std::collections::HashMap<String, Vec<String>>, // op -> [mandate_ids]
 }
 
+fn truncate_chars(input: &str, max_chars: usize) -> String {
+    let mut chars = input.chars();
+    let truncated: String = chars.by_ref().take(max_chars).collect();
+    if chars.next().is_some() {
+        format!("{truncated}...")
+    } else {
+        truncated
+    }
+}
+
 /// Resolve a scoped constitution context package for a concrete problem/query.
 ///
 /// This function is intentionally deterministic:
@@ -276,7 +286,7 @@ pub fn get_fragment(repo_root: &Path, path: &str, anchor: Option<&str>) -> Optio
         .collect::<Vec<_>>()
         .join("\n");
     let excerpt = if excerpt.len() > 500 {
-        format!("{}...", &excerpt[..497])
+        truncate_chars(&excerpt, 497)
     } else {
         excerpt
     };
@@ -412,7 +422,7 @@ fn get_best_fragment_for_terms(path: &str, content: &str, terms: &[String]) -> O
     let hash = format!("{:x}", hasher.finalize());
     let excerpt = section.lines().take(12).collect::<Vec<_>>().join("\n");
     let excerpt = if excerpt.len() > 700 {
-        format!("{}...", &excerpt[..697])
+        truncate_chars(&excerpt, 697)
     } else {
         excerpt
     };
@@ -424,4 +434,15 @@ fn get_best_fragment_for_terms(path: &str, content: &str, terms: &[String]) -> O
         excerpt,
         hash,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::truncate_chars;
+
+    #[test]
+    fn truncate_chars_respects_char_boundaries() {
+        let input = "alpha — beta";
+        assert_eq!(truncate_chars(input, 7), "alpha —...");
+    }
 }

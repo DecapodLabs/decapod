@@ -7,7 +7,6 @@ use clap::{Parser, Subcommand};
 use rusqlite::{OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use ulid::Ulid;
 
 #[derive(Parser, Debug)]
 #[clap(name = "policy", about = "Manage policy and risk mapping")]
@@ -636,7 +635,7 @@ pub fn approve_action(
 ) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = policy_db_path(&store.root);
-    let approval_id = Ulid::new().to_string();
+    let approval_id = crate::core::ulid::new_ulid();
     let fingerprint = derive_fingerprint(command, target_path, scope);
     let now = now_iso();
 

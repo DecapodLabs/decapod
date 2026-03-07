@@ -15,6 +15,7 @@ use crate::core::docs::{DocFragment, Mandate};
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
 use std::collections::HashMap;
+use std::process::Command;
 
 /// Standard RPC request envelope
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -33,7 +34,7 @@ pub struct RpcRequest {
 }
 
 pub fn default_request_id() -> String {
-    ulid::Ulid::new().to_string()
+    crate::core::ulid::new_ulid()
 }
 
 /// Standard RPC response envelope
@@ -293,6 +294,12 @@ pub struct Attestation {
 
 /// Generate capabilities report
 pub fn generate_capabilities() -> CapabilitiesReport {
+    let docker_available = Command::new("docker")
+        .arg("version")
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false);
+
     CapabilitiesReport {
         version: env!("CARGO_PKG_VERSION").to_string(),
         capabilities: vec![
@@ -469,7 +476,7 @@ pub fn generate_capabilities() -> CapabilitiesReport {
         ],
         workspace: WorkspaceCapabilities {
             enforcement_available: true,
-            docker_available: std::env::var("DECAPOD_CONTAINER_RUNTIME_DISABLED").is_err(),
+            docker_available,
             protected_patterns: vec![
                 "main".to_string(),
                 "master".to_string(),

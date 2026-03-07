@@ -9,7 +9,6 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use ulid::Ulid;
 
 const BROKER_INTERNAL_ENV: &str = "DECAPOD_GROUP_BROKER_INTERNAL";
 const BROKER_DISABLE_ENV: &str = "DECAPOD_GROUP_BROKER_DISABLE";
@@ -98,7 +97,7 @@ fn run_unix_broker(broker_root: &Path, argv: &[String]) -> Result<(), error::Dec
     let request = BrokerRequest {
         protocol_version: client_protocol_version(),
         request_id: std::env::var(BROKER_REQUEST_ID_ENV)
-            .unwrap_or_else(|_| Ulid::new().to_string()),
+            .unwrap_or_else(|_| crate::core::ulid::new_ulid()),
         argv: argv.to_vec(),
         payload_hash: hash_payload(argv),
     };
@@ -367,7 +366,11 @@ fn execute_request(
     let response = BrokerResponse {
         protocol_version: server_protocol_version(),
         status: status.to_string(),
-        commit_marker: Some(format!("{}:{}", time::now_epoch_z(), Ulid::new())),
+        commit_marker: Some(format!(
+            "{}:{}",
+            time::now_epoch_z(),
+            crate::core::ulid::new_ulid()
+        )),
         result_envelope: result_envelope.clone(),
         retry_after_ms_hint: if status == "COMMITTED" {
             None

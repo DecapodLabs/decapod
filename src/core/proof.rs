@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 use std::time::Instant;
-use ulid::Ulid;
 
 /// A proof definition from proofs.toml
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -137,7 +136,7 @@ pub fn run_proofs(
     actor: &str,
 ) -> Result<ProofRunSummary, DecapodError> {
     let config = load_proof_config(decapod_dir)?;
-    let run_id = Ulid::new().to_string();
+    let run_id = crate::core::ulid::new_ulid();
     let ts = format!(
         "{}Z",
         std::time::SystemTime::now()
@@ -160,7 +159,7 @@ pub fn run_proofs(
         // Log event to proof.events.jsonl
         let event = ProofEvent {
             ts: ts.clone(),
-            event_id: Ulid::new().to_string(),
+            event_id: crate::core::ulid::new_ulid(),
             run_id: run_id.clone(),
             proof_name: proof_def.name.clone(),
             command: format!("{} {}", proof_def.command, proof_def.args.join(" ")),

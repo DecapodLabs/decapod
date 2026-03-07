@@ -16,7 +16,6 @@ use clap::{Parser, Subcommand, ValueEnum};
 use rusqlite::{OptionalExtension, params};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use ulid::Ulid;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, ValueEnum)]
 #[serde(rename_all = "lowercase")]
@@ -194,7 +193,7 @@ pub fn add_obligation(
 ) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = obligation_db_path(&store.root);
-    let id = Ulid::new().to_string();
+    let id = crate::core::ulid::new_ulid();
     let now = crate::core::time::now_epoch_z();
 
     let depends_on_ids: Vec<String> = depends_on
@@ -229,7 +228,7 @@ pub fn add_obligation(
         )?;
 
         for dep_id in depends_on_ids {
-            let edge_id = Ulid::new().to_string();
+            let edge_id = crate::core::ulid::new_ulid();
             conn.execute(
                 "INSERT INTO obligation_edges (edge_id, from_id, to_id, kind, created_at)
                  VALUES (?1, ?2, ?3, ?4, ?5)",

@@ -16,7 +16,6 @@ use sha2::{Digest, Sha256};
 use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
-use ulid::Ulid;
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -166,7 +165,7 @@ pub fn ingest(
     }
 
     let content_hash = sha256_hex(content.as_bytes());
-    let event_id = Ulid::new().to_string();
+    let event_id = crate::core::ulid::new_ulid();
     let ts = now_iso();
     let byte_size = content.len() as i64;
 

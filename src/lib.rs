@@ -375,7 +375,7 @@ fn prompt_line(prompt: &str) -> Result<String, error::DecapodError> {
 }
 
 fn print_init_block(title: &str, subtitle: &str) {
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
     println!();
     println!("{}", format!("◢ {}", title).bright_cyan().bold());
     println!("{}", format!("  {}", subtitle).bright_black());
@@ -386,7 +386,7 @@ fn prompt_text_field(
     helper: &str,
     default_value: &str,
 ) -> Result<String, error::DecapodError> {
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
     println!();
     println!("{}", format!("  {}", label).bright_white().bold());
     println!("{}", format!("    {}", helper).bright_black());
@@ -411,7 +411,7 @@ fn prompt_line_default(prompt: &str, default_value: &str) -> Result<String, erro
 }
 
 fn prompt_yes_no(prompt: &str, default_yes: bool) -> Result<bool, error::DecapodError> {
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
     let suffix = if default_yes { "[Y/n]" } else { "[y/N]" };
     println!();
     println!("{}", format!("  {}", prompt).bright_white().bold());
@@ -586,7 +586,7 @@ fn run_init_apply(
 
     let setup_decapod_root = target_dir.join(".decapod");
     if setup_decapod_root.exists() && !init_with.force {
-        use colored::Colorize;
+        use crate::core::ansi::AnsiExt;
         println!(
             "{} {}",
             "init:".bright_yellow(),
@@ -683,7 +683,7 @@ fn run_init_apply(
         .unwrap_or(current_dir)
         .display()
         .to_string();
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
     print_init_block(
         "Decapod Init Summary",
         "Scaffold completed with the following changes.",
@@ -1205,8 +1205,8 @@ fn branch_contains_todo_ticket_id(branch: &str) -> bool {
     if branch.contains("r_") {
         return true;
     }
-    if let Ok(hash_re) = regex::Regex::new(r"todo-[a-z0-9]{6}(\b|-|$)")
-        && hash_re.is_match(&branch)
+    if let Ok(hash_re) = fancy_regex::Regex::new(r"todo-[a-z0-9]{6}(\b|-|$)")
+        && hash_re.is_match(&branch).unwrap_or(false)
     {
         return true;
     }
@@ -1765,7 +1765,7 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
 fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error::DecapodError> {
     let issued = now_epoch_secs();
     let expires = issued.saturating_add(session_ttl_secs());
-    let token = ulid::Ulid::to_string(&ulid::Ulid::new());
+    let token = crate::core::ulid::new_ulid();
     let password = generate_ephemeral_password()?;
     let rec = AgentSessionRecord {
         agent_id: agent_id.to_string(),
@@ -1808,7 +1808,7 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
 
             let issued = now_epoch_secs();
             let expires = issued.saturating_add(session_ttl_secs());
-            let token = ulid::Ulid::to_string(&ulid::Ulid::new());
+            let token = crate::core::ulid::new_ulid();
             let password = generate_ephemeral_password()?;
             let rec = AgentSessionRecord {
                 agent_id: agent_id.clone(),
@@ -1926,7 +1926,7 @@ fn build_handshake_artifact(
         );
     }
 
-    let request_id = ulid::Ulid::new().to_string();
+    let request_id = crate::core::ulid::new_ulid();
     let mut unsigned = serde_json::json!({
         "schema_version": "1.0.0",
         "request_id": request_id,
@@ -3054,16 +3054,7 @@ fn heal_override_checksum(
 fn heal_container_runtime_override(
     project_root: &Path,
 ) -> Result<Option<ValidationHealAction>, error::DecapodError> {
-    match container::heal_container_runtime_override(
-        project_root,
-        "No docker/podman runtime found during validation self-heal.",
-        "Install Docker or Podman, then remove this override if you want strict container gating restored.",
-    )? {
-        container::ContainerRuntimeOverrideHeal::Added => Ok(Some(ValidationHealAction {
-            action: "heal_container_runtime_override".to_string(),
-            outcome: "updated".to_string(),
-            detail: "Disabled strict container-runtime enforcement because no local container runtime is available.".to_string(),
-        })),
+    match container::heal_container_runtime_override(project_root)? {
         container::ContainerRuntimeOverrideHeal::Cleared => Ok(Some(ValidationHealAction {
             action: "heal_container_runtime_override".to_string(),
             outcome: "cleared".to_string(),
@@ -3126,7 +3117,7 @@ fn render_validation_text(
     actions: &[ValidationHealAction],
     verbose: bool,
 ) {
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
 
     validate::render_validation_report(report, verbose);
     if !actions.is_empty() {
@@ -3193,8 +3184,10 @@ fn run_validate_command(
     let store = match validate_cli.store.as_str() {
         "user" => {
             // User store uses a temp directory for blank-slate validation
-            let tmp_root =
-                std::env::temp_dir().join(format!("decapod_validate_user_{}", ulid::Ulid::new()));
+            let tmp_root = std::env::temp_dir().join(format!(
+                "decapod_validate_user_{}",
+                crate::core::ulid::new_ulid()
+            ));
             std::fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
             Store {
                 kind: StoreKind::User,
@@ -3323,7 +3316,7 @@ fn write_validate_diagnostic_artifact(
     timeout_secs: u64,
 ) -> Result<PathBuf, error::DecapodError> {
     let mut run_id_hasher = Sha256::new();
-    run_id_hasher.update(ulid::Ulid::new().to_string().as_bytes());
+    run_id_hasher.update(crate::core::ulid::new_ulid().as_bytes());
     let run_id = hash_bytes_hex(&run_id_hasher.finalize())[..32].to_string();
     let diagnostics_dir = project_root.join(".decapod/generated/artifacts/diagnostics/validate");
     fs::create_dir_all(&diagnostics_dir).map_err(error::DecapodError::IoError)?;
@@ -4635,23 +4628,34 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
     command_paths.sort();
     command_paths.dedup();
 
-    use rayon::prelude::*;
-    command_paths.par_iter().try_for_each(|path| {
-        let mut args = path.clone();
-        args.push("--help".to_string());
-        let output = std::process::Command::new(&exe)
-            .args(&args)
-            .output()
-            .map_err(error::DecapodError::IoError)?;
-        if !output.status.success() {
-            return Err(error::DecapodError::ValidationError(format!(
-                "help smoke failed for `decapod {}`: {}",
-                path.join(" "),
-                String::from_utf8_lossy(&output.stderr).trim()
-            )));
-        }
-        Ok(())
-    })?;
+    let mut handles = Vec::new();
+    for path in &command_paths {
+        handles.push(std::thread::spawn({
+            let path = path.clone();
+            let exe = exe.clone();
+            move || {
+                let mut args = path.clone();
+                args.push("--help".to_string());
+                let output = std::process::Command::new(&exe)
+                    .args(&args)
+                    .output()
+                    .map_err(error::DecapodError::IoError)?;
+                if !output.status.success() {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "help smoke failed for `decapod {}`: {}",
+                        path.join(" "),
+                        String::from_utf8_lossy(&output.stderr).trim()
+                    )));
+                }
+                Ok(())
+            }
+        }));
+    }
+    for handle in handles {
+        handle
+            .join()
+            .map_err(|_| error::DecapodError::ValidationError("thread panicked".into()))??;
+    }
     Ok(())
 }
 

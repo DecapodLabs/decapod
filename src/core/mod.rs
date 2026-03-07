@@ -3,6 +3,7 @@
 //! This is the foundation of Decapod's runtime. All core subsystems
 //! and shared primitives live here.
 
+pub mod ansi;
 pub mod assets;
 pub mod assurance;
 pub mod broker;
@@ -36,6 +37,7 @@ pub mod store;
 pub mod time;
 pub mod todo;
 pub mod trace;
+pub mod ulid;
 pub mod validate;
 pub mod workspace;
 pub mod workunit;

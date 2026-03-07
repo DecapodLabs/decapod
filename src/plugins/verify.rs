@@ -6,7 +6,7 @@ use crate::core::store::Store;
 use crate::core::todo;
 use crate::plugins::federation;
 use clap::{Parser, Subcommand};
-use regex::Regex;
+use fancy_regex::Regex;
 use rusqlite::OptionalExtension;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -875,7 +875,7 @@ pub fn run_verify_cli(
         return Ok(());
     }
 
-    let run_id = ulid::Ulid::new().to_string();
+    let run_id = crate::core::ulid::new_ulid();
     let mut results = Vec::new();
 
     for target in &targets {

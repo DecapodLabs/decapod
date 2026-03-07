@@ -7,7 +7,6 @@ use clap::{Parser, Subcommand};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use ulid::Ulid;
 
 // --- Decision Tree Data Model (compiled into binary) ---
 
@@ -1060,7 +1059,7 @@ pub fn start_session(
     let broker = DbBroker::new(&store.root);
     let db_path = decide_db_path(&store.root);
     let now = now_ts();
-    let session_id = format!("DS_{}", Ulid::new());
+    let session_id = format!("DS_{}", crate::core::ulid::new_ulid());
 
     // Create federation cross-link
     let fed_node_id = create_session_federation_node(store, &session_id, tree_id, title, actor)?;
@@ -1145,7 +1144,7 @@ pub fn record_decision(
     let option = find_option(question, value)?;
 
     let now = now_ts();
-    let decision_id = format!("DD_{}", Ulid::new());
+    let decision_id = format!("DD_{}", crate::core::ulid::new_ulid());
 
     // Create federation cross-link
     let fed_node_id = if let Some(ref session_fed_id) = session_fed_node_id {

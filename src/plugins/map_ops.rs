@@ -16,7 +16,6 @@ use sha2::{Digest, Sha256};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use ulid::Ulid;
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -138,7 +137,7 @@ pub fn map_llm(
     let results_json = serde_json::to_string(&results).unwrap();
     let result_hash = sha256_hex(results_json.as_bytes());
 
-    let event_id = Ulid::new().to_string();
+    let event_id = crate::core::ulid::new_ulid();
     let ts = now_iso();
 
     let event = serde_json::json!({
@@ -205,7 +204,7 @@ pub fn map_agentic(
     let results_json = serde_json::to_string(&results).unwrap();
     let result_hash = sha256_hex(results_json.as_bytes());
 
-    let event_id = Ulid::new().to_string();
+    let event_id = crate::core::ulid::new_ulid();
     let ts = now_iso();
 
     let event = serde_json::json!({
