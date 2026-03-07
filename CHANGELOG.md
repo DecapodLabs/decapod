@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.1](https://github.com/DecapodLabs/decapod/compare/v0.47.0...v0.47.1) - 2026-03-07
+
+### Other
+
+- Format validation changes
+- Unblock workspace tests on auto-generated override
+- Self-heal validate and add structured reports
+
 ## [0.47.0](https://github.com/DecapodLabs/decapod/compare/v0.46.4...v0.47.0) - 2026-03-07
 
 ### Fixed
