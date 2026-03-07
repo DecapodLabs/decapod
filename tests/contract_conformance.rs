@@ -2,6 +2,7 @@ use std::fs;
 use std::path::Path;
 
 #[derive(serde::Deserialize, Debug)]
+#[allow(dead_code)]
 struct ContractClaim {
     claim_id: String,
     source_line: String,
@@ -19,6 +20,7 @@ struct ContractMap {
 }
 
 #[derive(serde::Deserialize, Debug)]
+#[allow(dead_code)]
 struct NonGuarantee {
     original_text: String,
     reason: String,
