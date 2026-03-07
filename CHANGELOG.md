@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.8](https://github.com/DecapodLabs/decapod/compare/v0.47.7...v0.47.8) - 2026-03-07
+
+### Fixed
+
+- make integration shard routing one-based
+- use explicit integration shard labels in ci
+- export sqlite runtime libs in nix shell
+
+### Other
+
+- use one-based integration shard matrix
+- use one-based integration shard labels
+- add optional nix dev shell and ci path
+
 ## [0.47.7](https://github.com/DecapodLabs/decapod/compare/v0.47.6...v0.47.7) - 2026-03-07
 
 ### Fixed
