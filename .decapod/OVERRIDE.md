@@ -134,3 +134,10 @@
 ### plugins/DECIDE.md
 
 ### plugins/AUTOUPDATE.md
+
+### plugins/CONTAINER.md
+## Runtime Guard Override (auto-generated)
+DECAPOD_CONTAINER_RUNTIME_DISABLED=true
+reason: No docker/podman runtime found during validation self-heal.
+remediation: Install Docker or Podman, then remove this override if you want strict container gating restored.
+warning: disabling isolated containers increases risk of concurrent agents stepping on each other.

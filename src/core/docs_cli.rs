@@ -75,6 +75,45 @@ pub struct DocsRunResult {
     pub ingested_core_constitution: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum OverrideChecksumStatus {
+    MissingOverride,
+    Cached,
+    Updated,
+    Unchanged,
+}
+
+pub fn sync_override_checksum(
+    repo_root: &Path,
+    force: bool,
+) -> Result<OverrideChecksumStatus, error::DecapodError> {
+    let override_path = repo_root.join(".decapod").join("OVERRIDE.md");
+
+    if !override_path.exists() {
+        return Ok(OverrideChecksumStatus::MissingOverride);
+    }
+
+    let current_checksum = calculate_sha256(&override_path)?;
+    if force {
+        cache_checksum(repo_root, &current_checksum)?;
+        return Ok(OverrideChecksumStatus::Cached);
+    }
+
+    match get_cached_checksum(repo_root) {
+        Some(cached_checksum) if cached_checksum == current_checksum => {
+            Ok(OverrideChecksumStatus::Unchanged)
+        }
+        Some(_) => {
+            cache_checksum(repo_root, &current_checksum)?;
+            Ok(OverrideChecksumStatus::Updated)
+        }
+        None => {
+            cache_checksum(repo_root, &current_checksum)?;
+            Ok(OverrideChecksumStatus::Cached)
+        }
+    }
+}
+
 pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> {
     match cli.command {
         DocsCommand::List => {
@@ -216,42 +255,19 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
             let repo_root = find_repo_root(&current_dir)?;
             let override_path = repo_root.join(".decapod").join("OVERRIDE.md");
-
-            if !override_path.exists() {
-                println!("ℹ No OVERRIDE.md found at {}", override_path.display());
-                println!("  Run `decapod init` to create one.");
-                return Ok(DocsRunResult::default());
-            }
-
-            // Calculate current checksum
-            let current_checksum = calculate_sha256(&override_path)?;
-
-            if force {
-                println!("🔄 Force re-caching OVERRIDE.md checksum...");
-                cache_checksum(&repo_root, &current_checksum)?;
-                println!("✓ Checksum cached: {}", current_checksum);
-                return Ok(DocsRunResult::default());
-            }
-
-            // Check if changed
-            let cached = get_cached_checksum(&repo_root);
-            match cached {
-                Some(cached_checksum) if cached_checksum == current_checksum => {
+            match sync_override_checksum(&repo_root, force)? {
+                OverrideChecksumStatus::MissingOverride => {
+                    println!("ℹ No OVERRIDE.md found at {}", override_path.display());
+                    println!("  Run `decapod init` to create one.");
+                }
+                OverrideChecksumStatus::Cached => {
+                    println!("✓ OVERRIDE.md checksum cached");
+                }
+                OverrideChecksumStatus::Updated => {
+                    println!("📝 OVERRIDE.md checksum refreshed");
+                }
+                OverrideChecksumStatus::Unchanged => {
                     println!("✓ OVERRIDE.md unchanged");
-                    println!("  Cached checksum: {}", cached_checksum);
-                }
-                Some(cached_checksum) => {
-                    println!("📝 OVERRIDE.md has changed");
-                    println!("  Old checksum: {}", cached_checksum);
-                    println!("  New checksum: {}", current_checksum);
-                    cache_checksum(&repo_root, &current_checksum)?;
-                    println!("✓ Checksum updated");
-                }
-                None => {
-                    println!("📝 First time caching OVERRIDE.md checksum");
-                    println!("  Checksum: {}", current_checksum);
-                    cache_checksum(&repo_root, &current_checksum)?;
-                    println!("✓ Checksum cached");
                 }
             }
 
