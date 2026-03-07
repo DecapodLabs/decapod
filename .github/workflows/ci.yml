@@ -153,11 +153,11 @@ jobs:
           retention-days: 1
           compression-level: 9
 
-  # CLIPPY: Uses the populated build cache — analysis only, no full recompile
+  # CLIPPY: Runs in parallel with build — does its own compile/analysis,
+  # benefits from master's shared cache if available but does not block on build.
   clippy:
     name: Lint (clippy)
     runs-on: ubuntu-latest
-    needs: build
     steps:
       - uses: actions/checkout@v4
         with:
