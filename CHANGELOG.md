@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.5](https://github.com/DecapodLabs/decapod/compare/v0.47.4...v0.47.5) - 2026-03-07
+
+### Other
+
+- Merge pull request #478 from DecapodLabs/agent/unknown/todo-01kk3w-plus-6-1772886360
+- Bump Rust to 1.91.1 and optimize cargo install speed
+
+## [0.47.4](https://github.com/DecapodLabs/decapod/compare/v0.47.3...v0.47.4) - 2026-03-07
+
+### Added
+
+- embed ENGINEERING_EXCELLENCE.md and register in OVERRIDE template
+
+### Other
+
+- refactor constitution files to eliminate role-labeled Oracle sections
+- expand the Oracle's Verdict deep into cloud, web, frontend, and methodology
+
 ## [0.47.3](https://github.com/DecapodLabs/decapod/compare/v0.47.2...v0.47.3) - 2026-03-07
 
 ### Other
