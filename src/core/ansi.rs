@@ -6,7 +6,11 @@ pub struct Stylized<'a> {
 
 impl<'a> Stylized<'a> {
     pub fn new(s: &'a str, code: &'a str) -> Self {
-        Self { s, code, bold: false }
+        Self {
+            s,
+            code,
+            bold: false,
+        }
     }
     pub fn bold(mut self) -> Self {
         self.bold = true;
@@ -28,16 +32,36 @@ pub trait AnsiExt {
 }
 
 impl AnsiExt for str {
-    fn bright_cyan(&self) -> Stylized<'_> { Stylized::new(self, "\x1b[96m") }
-    fn bright_white(&self) -> Stylized<'_> { Stylized::new(self, "\x1b[97m") }
-    fn bright_black(&self) -> Stylized<'_> { Stylized::new(self, "\x1b[90m") }
-    fn bright_yellow(&self) -> Stylized<'_> { Stylized::new(self, "\x1b[93m") }
-    fn bright_green(&self) -> Stylized<'_> { Stylized::new(self, "\x1b[92m") }
-    fn bright_red(&self) -> Stylized<'_> { Stylized::new(self, "\x1b[91m") }
-    fn bright_blue(&self) -> Stylized<'_> { Stylized::new(self, "\x1b[94m") }
-    fn bright_magenta(&self) -> Stylized<'_> { Stylized::new(self, "\x1b[95m") }
-    fn cyan(&self) -> Stylized<'_> { Stylized::new(self, "\x1b[36m") }
-    fn green(&self) -> Stylized<'_> { Stylized::new(self, "\x1b[32m") }
+    fn bright_cyan(&self) -> Stylized<'_> {
+        Stylized::new(self, "\x1b[96m")
+    }
+    fn bright_white(&self) -> Stylized<'_> {
+        Stylized::new(self, "\x1b[97m")
+    }
+    fn bright_black(&self) -> Stylized<'_> {
+        Stylized::new(self, "\x1b[90m")
+    }
+    fn bright_yellow(&self) -> Stylized<'_> {
+        Stylized::new(self, "\x1b[93m")
+    }
+    fn bright_green(&self) -> Stylized<'_> {
+        Stylized::new(self, "\x1b[92m")
+    }
+    fn bright_red(&self) -> Stylized<'_> {
+        Stylized::new(self, "\x1b[91m")
+    }
+    fn bright_blue(&self) -> Stylized<'_> {
+        Stylized::new(self, "\x1b[94m")
+    }
+    fn bright_magenta(&self) -> Stylized<'_> {
+        Stylized::new(self, "\x1b[95m")
+    }
+    fn cyan(&self) -> Stylized<'_> {
+        Stylized::new(self, "\x1b[36m")
+    }
+    fn green(&self) -> Stylized<'_> {
+        Stylized::new(self, "\x1b[32m")
+    }
 }
 
 impl<'a> std::fmt::Display for Stylized<'a> {

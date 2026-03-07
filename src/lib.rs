@@ -3184,8 +3184,10 @@ fn run_validate_command(
     let store = match validate_cli.store.as_str() {
         "user" => {
             // User store uses a temp directory for blank-slate validation
-            let tmp_root =
-                std::env::temp_dir().join(format!("decapod_validate_user_{}", crate::core::ulid::new_ulid()));
+            let tmp_root = std::env::temp_dir().join(format!(
+                "decapod_validate_user_{}",
+                crate::core::ulid::new_ulid()
+            ));
             std::fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
             Store {
                 kind: StoreKind::User,
@@ -4650,7 +4652,9 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
         }));
     }
     for handle in handles {
-        handle.join().map_err(|_| error::DecapodError::ValidationError("thread panicked".into()))??;
+        handle
+            .join()
+            .map_err(|_| error::DecapodError::ValidationError("thread panicked".into()))??;
     }
     Ok(())
 }

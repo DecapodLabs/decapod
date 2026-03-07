@@ -9,9 +9,9 @@ use crate::core::pool;
 use crate::core::time;
 use crate::plugins::policy;
 use rusqlite::Connection;
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
+use std::collections::HashMap;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
@@ -128,7 +128,11 @@ impl DbBroker {
         let effective_intent = if let Some(i) = intent_ref {
             Some(i.to_string())
         } else if !is_read {
-            Some(format!("intent:auto:{}:{}", op_name, crate::core::ulid::new_ulid()))
+            Some(format!(
+                "intent:auto:{}:{}",
+                op_name,
+                crate::core::ulid::new_ulid()
+            ))
         } else {
             None
         };
