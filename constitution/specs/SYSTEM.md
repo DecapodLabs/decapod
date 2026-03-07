@@ -16,6 +16,24 @@ Machine note:
 
 ---
 
+## 1. The Oracle's Verdict: Systems of Intent
+
+*The greatest technical debt is not bad code; it is unrecorded intent.*
+
+### 1.1 The CTO's Strategic View
+- **Intent as Intellectual Property:** The "Why" is our most valuable asset. Code is just a snapshot in time. If we lose the "Why," we lose the ability to evolve.
+- **The Speed of Trust:** Systems that enforce intent through automated validation (like Decapod) allow for radical decentralization. When the system enforces the rules, the CTO doesn't have to.
+
+### 1.2 The Architect's Structural View
+- **Invariant-Driven Design:** Don't design features; design invariants. An invariant is something that must *always* be true. Features are just the temporary ways we satisfy those invariants.
+- **The "Truth" is in the Repo:** If it's not in the repo, it doesn't exist. Avoid hidden, daemonized state. The repo must be the single source of truth for the entire engineering lifecycle.
+
+### 1.3 The Principal's Execution View
+- **Proof is the Only Currency:** Narrative claims of "it works" are worthless. In a professional engineering environment, we only deal in executable proof.
+- **Mode Discipline is Professionalism:** Switching between "Authoring Intent" and "Implementing Code" requires a different mindset. Professional engineers (and agents) are explicit about which mode they are in.
+
+---
+
 ## 1. Core Philosophy: Intent is the API
 
 The fundamental principle of the Decapod system is that **Intent is the primary interface**. We do not start by writing code; we start by declaring what must be true.
