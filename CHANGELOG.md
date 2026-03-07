@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.2](https://github.com/DecapodLabs/decapod/compare/v0.47.1...v0.47.2) - 2026-03-07
+
+### Other
+
+- remove pre-merge drift gate (redundant, fragile)
+- fix drift gate grep exit code under set -euo pipefail
+- revert binary artifact approach, use Swatinem cache + 20 shards
+- run health and golden-vectors in parallel with build
+- run clippy in parallel with build (no longer needs artifact)
+- build once, share artifact across 20 test shards + pre-merge drift gate
+
 ## [0.47.1](https://github.com/DecapodLabs/decapod/compare/v0.47.0...v0.47.1) - 2026-03-07
 
 ### Other
