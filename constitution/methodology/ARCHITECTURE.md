@@ -10,7 +10,29 @@ This guide explains how to make architecture decisions in Decapod-managed repos.
 
 ---
 
-## 1. Architecture Mission
+## 1. The Oracle's Verdict: Architecture as Risk Management
+
+*Architecture is about the important stuff. Whatever that is. The decisions that are hard to change.*
+
+### 1.1 The CTO's Strategic View
+- **The "Boring" Mandate:** Innovation tokens should be spent on the product's core value proposition, not the underlying architecture. Use boring, proven technologies (Postgres, boring monoliths, simple queues) until you hit a physical limit.
+- **Conway's Law is a Feature:** Do not fight Conway's Law. Design your system architecture to match your desired organizational structure. If you want independent, fast-moving teams, you must build independent, decoupled services.
+
+### 1.2 The SVP's Operational View
+- **Operability First:** If an architecture is beautiful on a whiteboard but cannot be debugged at 3 AM by a sleep-deprived engineer, it is a failed architecture. Observability and operability must be designed in from Day 1.
+- **The End of "Big Bang" Rewrites:** If an architectural change cannot be done incrementally while the system is running, the change is too risky. Strangle monoliths, dual-write to new databases, but never "stop the world."
+
+### 1.3 The Architect's Structural View
+- **Boundaries Over Patterns:** Microservices vs Monolith is the wrong debate. The only thing that matters is clear domain boundaries. A well-modularized monolith is infinitely better than a distributed ball of mud.
+- **Design for Deletion:** A good architecture allows you to easily delete code and deprecate services. If removing a feature requires touching 12 different services, your boundaries are wrong.
+
+### 1.4 The Principal's Execution View
+- **Documentation is the Architecture:** An architecture that is not documented does not exist. Use ADRs (Architecture Decision Records) to capture the *context* and *why* of a decision. The code only tells you *what* was built.
+- **The "YAGNI" Principle:** You Aren't Gonna Need It. Do not build abstractions, generic interfaces, or scaling mechanisms for problems you do not have today. Premature abstraction is the root of all legacy code.
+
+---
+
+## 2. Architecture Mission
 
 Architecture exists to improve delivery outcomes:
 - velocity
