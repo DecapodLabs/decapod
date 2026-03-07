@@ -289,7 +289,6 @@ jobs:
           set -euo pipefail
           shard=${{ matrix.shard }}
           total=20
-          shard_index=$(( shard - 1 ))
 
           # All test targets: auto-discovered top-level tests + custom [[test]] targets
           # Build the full list from Cargo.toml to include plugins_*, core_tests, etc.
@@ -312,7 +311,7 @@ jobs:
             if echo "$ISOLATED" | grep -qw "$t"; then
               continue
             fi
-            if [ $(( i % total )) -ne "$shard_index" ]; then
+            if [ $(( (i % total) + 1 )) -ne "$shard" ]; then
               continue
             fi
             echo "Shard $shard running: $t"
