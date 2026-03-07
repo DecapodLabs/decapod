@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.10](https://github.com/DecapodLabs/decapod/compare/v0.47.9...v0.47.10) - 2026-03-07
+
+### Other
+
+- move flake input to 25.11
+
 ## [0.47.9](https://github.com/DecapodLabs/decapod/compare/v0.47.8...v0.47.9) - 2026-03-07
 
 ### Other
