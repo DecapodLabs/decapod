@@ -264,7 +264,7 @@ jobs:
   # INTEGRATION TESTS: 20 parallel shards.
   # Each shard restores the pre-warmed cache and compiles only its assigned test harnesses.
   test-integration:
-    name: Tests (Integration ${{ matrix.shard }}/20)
+    name: Tests (Integration ${{ matrix.shard + 1 }}/20)
     runs-on: ubuntu-latest
     needs: setup
     strategy:
@@ -284,11 +284,12 @@ jobs:
         with:
           shared-key: "ci-build"
           save-if: "false"
-      - name: Run integration tests (shard ${{ matrix.shard }}/20)
+      - name: Run integration tests (shard ${{ matrix.shard + 1 }}/20)
         run: |
           set -euo pipefail
           shard=${{ matrix.shard }}
           total=20
+          display=$(( shard + 1 ))
 
           # All test targets: auto-discovered top-level tests + custom [[test]] targets
           # Build the full list from Cargo.toml to include plugins_*, core_tests, etc.
@@ -314,13 +315,13 @@ jobs:
             if [ $(( i % total )) -ne "$shard" ]; then
               continue
             fi
-            echo "Shard $shard running: $t"
+            echo "Shard $display running: $t"
             cargo test --all-features --test "$t" -- --test-threads=4
             ran=$(( ran + 1 ))
           done
 
           if [ "$ran" -eq 0 ]; then
-            echo "Shard $shard: no tests assigned"
+            echo "Shard $display: no tests assigned"
           fi
 
   # RPC SUITE: isolated to avoid contention
