@@ -37,15 +37,13 @@ use std::time::{Duration, Instant};
 ///
 /// Replaces ~10 lines of boilerplate per gate with a single invocation.
 macro_rules! gate {
-    ($scope:expr, $timings:expr, $ctx:expr, $name:literal, $body:expr) => {
-        $scope.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = $body {
-                fail(&format!("gate error: {e}"), $ctx);
-            }
-            $timings.lock().unwrap().push(($name, start.elapsed()));
-        });
-    };
+    ($_scope:expr, $timings:expr, $ctx:expr, $name:literal, $body:expr) => {{
+        let start = Instant::now();
+        if let Err(e) = $body {
+            fail(&format!("gate error: {e}"), $ctx);
+        }
+        $timings.lock().unwrap().push(($name, start.elapsed()));
+    }};
 }
 
 struct ValidationContext {
@@ -4452,7 +4450,8 @@ pub fn run_validation(
 
     // Run remaining gates in parallel for bounded wall-clock validation time.
     let timings: Mutex<Vec<(&str, Duration)>> = Mutex::new(Vec::new());
-    rayon::scope(|s| {
+    {
+        let s = ();
         let ctx = &ctx;
         let timings = &timings;
         let broker = broker_content.as_deref();
@@ -4794,7 +4793,7 @@ pub fn run_validation(
             "validate_plan_governed_execution_gate",
             validate_plan_governed_execution_gate(store, ctx, decapod_dir)
         );
-    });
+    }
 
     let elapsed = total_start.elapsed();
     let pass_count = ctx.pass_count.load(Ordering::Relaxed);
