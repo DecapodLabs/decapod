@@ -366,7 +366,11 @@ fn execute_request(
     let response = BrokerResponse {
         protocol_version: server_protocol_version(),
         status: status.to_string(),
-        commit_marker: Some(format!("{}:{}", time::now_epoch_z(), crate::core::ulid::new_ulid())),
+        commit_marker: Some(format!(
+            "{}:{}",
+            time::now_epoch_z(),
+            crate::core::ulid::new_ulid()
+        )),
         result_envelope: result_envelope.clone(),
         retry_after_ms_hint: if status == "COMMITTED" {
             None

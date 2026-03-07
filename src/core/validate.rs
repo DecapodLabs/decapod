@@ -348,7 +348,10 @@ fn fetch_tasks_fingerprint(db_path: &Path) -> Result<String, error::DecapodError
 
 fn validate_user_store_blank_slate(ctx: &ValidationContext) -> Result<(), error::DecapodError> {
     info("Store: user (blank-slate semantics)");
-    let tmp_root = std::env::temp_dir().join(format!("decapod_validate_user_{}", crate::core::ulid::new_ulid()));
+    let tmp_root = std::env::temp_dir().join(format!(
+        "decapod_validate_user_{}",
+        crate::core::ulid::new_ulid()
+    ));
     fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
 
     todo::initialize_todo_db(&tmp_root)?;
@@ -417,7 +420,10 @@ fn validate_repo_store_dogfood(
         );
     }
 
-    let tmp_root = std::env::temp_dir().join(format!("decapod_validate_repo_{}", crate::core::ulid::new_ulid()));
+    let tmp_root = std::env::temp_dir().join(format!(
+        "decapod_validate_repo_{}",
+        crate::core::ulid::new_ulid()
+    ));
     fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
     let tmp_db = tmp_root.join("todo.db");
     let _events = todo::rebuild_db_from_events(&events, &tmp_db)?;

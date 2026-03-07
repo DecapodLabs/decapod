@@ -237,9 +237,11 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     assert!(payload["report"]["gate_timings"].is_array());
     assert!(payload["self_heal"].is_array());
     assert!(
-        !payload["self_heal"].as_array().unwrap().iter().any(
-            |action| action["action"] == "heal_container_runtime_override"
-        ),
+        !payload["self_heal"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|action| action["action"] == "heal_container_runtime_override"),
         "validate should not write container-runtime override markers automatically"
     );
 }

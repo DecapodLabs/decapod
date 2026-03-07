@@ -968,8 +968,7 @@ fn sync_workspace_branch_to_host_repo(
     }
     Err(error::DecapodError::ValidationError(format!(
         "failed syncing workspace branch '{}' back to host repo: {}",
-        branch,
-        stderr
+        branch, stderr
     )))
 }
 
