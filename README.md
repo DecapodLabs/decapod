@@ -56,6 +56,16 @@ cargo install decapod
 decapod init
 ```
 
+### Faster install (recommended)
+
+For significantly faster installation (~30 seconds vs ~5 minutes), use [cargo-binstall](https://github.com/cargo-bins/cargo-binstall):
+
+```bash
+cargo install cargo-binstall
+cargo binstall decapod
+decapod init
+```
+
 That's it. Keep using Claude Code, Codex, Gemini CLI, Cursor — whatever you already use. Decapod gets called by your agent automatically when control-plane decisions are needed. Your workflow doesn't change; the agent just gets smarter about when to stop and think.
 
 ### What lands in your repo
