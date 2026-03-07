@@ -4842,6 +4842,11 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
         "spec".bright_cyan(),
         intent_version.bright_white()
     );
+    println!(
+        "  {} {}",
+        "gate".bright_magenta().bold(),
+        "Four Invariants Gate".bright_white()
+    );
 
     if verbose {
         println!(
