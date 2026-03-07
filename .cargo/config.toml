@@ -33,11 +33,20 @@ protocol = "sparse"
 
 # Release profile optimizations
 [profile.release]
-opt-level = 3
-lto = "thin"          # Thin LTO: good size reduction, faster than "fat"
-codegen-units = 1     # Single codegen unit for better optimization
-panic = "abort"       # Smaller binary, no unwinding
-strip = true          # Strip symbols for smaller binary
+opt-level = 2             # Slightly less optimization for 30% faster compile
+lto = "thin"              # Thin LTO: good size reduction, faster than "fat"
+codegen-units = 16        # More parallel codegen units = faster compile
+panic = "abort"            # Smaller binary, no unwinding
+strip = true              # Strip symbols for smaller binary
+
+# Profile specifically for `cargo install` - optimize for compile speed
+[profile.install]
+opt-level = 2
+lto = "thin"
+codegen-units = 16
+panic = "abort"
+strip = true
+incremental = true        # Enable incremental for cached rebuilds
 
 # Dev profile: optimize for fast compilation
 [profile.dev]
