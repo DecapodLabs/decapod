@@ -365,7 +365,7 @@ impl AssuranceEngine {
         let input_hash = format!("{:x}", hasher.finalize());
 
         let attestation = Attestation {
-            id: ulid::Ulid::new().to_string(),
+            id: crate::core::ulid::new_ulid(),
             op: "assurance.evaluate".to_string(),
             timestamp,
             input_hash,

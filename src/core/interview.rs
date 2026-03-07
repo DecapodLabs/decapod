@@ -662,7 +662,7 @@ fn get_answer(state: &InterviewState, question_id: &str) -> Option<String> {
 /// Initialize a new interview
 pub fn init_interview(project_name: String) -> InterviewState {
     InterviewState {
-        id: ulid::Ulid::new().to_string(),
+        id: crate::core::ulid::new_ulid(),
         project_name,
         current_section: "overview".to_string(),
         answers: HashMap::new(),

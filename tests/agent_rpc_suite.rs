@@ -1,3 +1,4 @@
+use decapod::core::ulid::new_ulid;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -10,7 +11,7 @@ static CLAIMED_TODO_ID: OnceLock<String> = OnceLock::new();
 
 fn test_repo_root() -> &'static PathBuf {
     TEST_REPO_ROOT.get_or_init(|| {
-        let dir = std::env::temp_dir().join(format!("decapod_rpc_suite_{}", ulid::Ulid::new()));
+        let dir = std::env::temp_dir().join(format!("decapod_rpc_suite_{}", new_ulid()));
         std::fs::create_dir_all(&dir).expect("create rpc suite repo dir");
 
         let git_init = Command::new("git")
@@ -309,7 +310,7 @@ fn test_rpc_schema_get() {
 
 #[test]
 fn test_rpc_store_upsert_knowledge() {
-    let id = format!("K_TEST_{}", ulid::Ulid::new());
+    let id = format!("K_TEST_{}", new_ulid());
     let request = serde_json::json!({
         "op": "store.upsert",
         "params": {
@@ -343,7 +344,7 @@ fn test_rpc_context_bindings() {
 
 #[test]
 fn test_rpc_trace_and_redaction() {
-    let secret_id = format!("SECRET_{}", ulid::Ulid::new());
+    let secret_id = format!("SECRET_{}", new_ulid());
     let request = serde_json::json!({
         "op": "schema.get",
         "params": {

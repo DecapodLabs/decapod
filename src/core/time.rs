@@ -1,7 +1,6 @@
 //! Shared timestamp/event helpers for deterministic envelopes.
 
 use serde_json::Value as JsonValue;
-use ulid::Ulid;
 
 /// Returns unix-epoch seconds with `Z` suffix (e.g. `1771220592Z`).
 pub fn now_epoch_z() -> String {
@@ -14,7 +13,7 @@ pub fn now_epoch_z() -> String {
 }
 
 pub fn new_event_id() -> String {
-    Ulid::new().to_string()
+    crate::core::ulid::new_ulid()
 }
 
 /// Standard command response envelope shape used across CLI surfaces.
@@ -56,7 +55,7 @@ mod tests {
     #[test]
     fn test_new_event_id_is_valid_ulid() {
         let id = new_event_id();
-        assert!(ulid::Ulid::from_string(&id).is_ok());
+        assert!(crate::core::ulid::is_valid(&id));
     }
 
     #[test]

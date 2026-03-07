@@ -13,7 +13,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::schemas;
 use crate::core::store::Store;
-use regex::Regex;
+use fancy_regex::Regex;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -299,7 +299,7 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
                 "INSERT OR IGNORE INTO patterns(id, name, category, regex_pattern, preference_category, preference_key, description, created_at)
                  VALUES(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
                 params![
-                    ulid::Ulid::new().to_string(),
+                    crate::core::ulid::new_ulid(),
                     name,
                     category,
                     pattern,
@@ -316,7 +316,7 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
             conn.execute(
                 "INSERT OR IGNORE INTO agent_prompts(id, context, prompt_text, priority, active, usage_count, created_at)
                  VALUES(?1, ?2, ?3, ?4, 1, 0, ?5)",
-                params![ulid::Ulid::new().to_string(), context, prompt, priority, now],
+                params![crate::core::ulid::new_ulid(), context, prompt, priority, now],
             )?;
         }
 
@@ -334,7 +334,7 @@ pub fn add_preference(
 ) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
-    let id = ulid::Ulid::new().to_string();
+    let id = crate::core::ulid::new_ulid();
     let now = now_iso();
     let confidence = input.confidence.unwrap_or(100);
 
@@ -541,7 +541,7 @@ pub fn get_preferences_by_category(
 pub fn add_skill(store: &Store, input: SkillInput) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
-    let id = ulid::Ulid::new().to_string();
+    let id = crate::core::ulid::new_ulid();
     let now = now_iso();
 
     broker.with_conn(&db_path, "decapod", None, "aptitude.skill.add", |conn| {
@@ -930,7 +930,7 @@ pub fn resolve_skills(
 pub fn add_pattern(store: &Store, input: PatternInput) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
-    let id = ulid::Ulid::new().to_string();
+    let id = crate::core::ulid::new_ulid();
     let now = now_iso();
 
     // Validate regex pattern
@@ -1010,6 +1010,7 @@ pub fn match_patterns(
         if let Ok(regex) = Regex::new(&pattern.regex_pattern) {
             let captures: Vec<String> = regex
                 .captures_iter(content)
+                .filter_map(|cap| cap.ok())
                 .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string()))
                 .collect();
             if !captures.is_empty() {
@@ -1032,7 +1033,7 @@ pub fn record_observation(
 ) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
-    let id = ulid::Ulid::new().to_string();
+    let id = crate::core::ulid::new_ulid();
     let now = now_iso();
 
     // Try to match against patterns
@@ -1121,7 +1122,7 @@ pub fn record_consolidation(
 ) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
-    let id = ulid::Ulid::new().to_string();
+    let id = crate::core::ulid::new_ulid();
     let now = now_iso();
 
     broker.with_conn(&db_path, "decapod", None, "aptitude.consolidate.record", |conn| {
@@ -1187,7 +1188,7 @@ pub fn execute_consolidation(
                     "INSERT INTO consolidations(id, source_type, source_id, target_type, target_id, reason, created_at)
                      VALUES(?1, 'preference', ?2, 'preference', ?3, ?4, ?5)",
                     params![
-                        ulid::Ulid::new().to_string(),
+                        crate::core::ulid::new_ulid(),
                         pref.id,
                         target_id,
                         format!("Consolidated: {}", group.similarity_reason),
@@ -1214,7 +1215,7 @@ pub fn add_agent_prompt(
 ) -> Result<String, error::DecapodError> {
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
-    let id = ulid::Ulid::new().to_string();
+    let id = crate::core::ulid::new_ulid();
     let now = now_iso();
     let priority = priority.unwrap_or(100);
 

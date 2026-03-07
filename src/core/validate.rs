@@ -23,7 +23,7 @@ use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::plugins::aptitude::{SkillCard, SkillResolution};
 use crate::plugins::internalize::{self, DeterminismClass, InternalizationManifest, ReplayClass};
 use crate::{db, primitives, todo};
-use regex::Regex;
+use fancy_regex::Regex;
 use serde::Serialize;
 use serde_json;
 use std::collections::HashSet;
@@ -32,21 +32,18 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{Duration, Instant};
-use ulid::Ulid;
 
 /// Spawn a validation gate in a rayon scope with timing and error capture.
 ///
 /// Replaces ~10 lines of boilerplate per gate with a single invocation.
 macro_rules! gate {
-    ($scope:expr, $timings:expr, $ctx:expr, $name:literal, $body:expr) => {
-        $scope.spawn(move |_| {
-            let start = Instant::now();
-            if let Err(e) = $body {
-                fail(&format!("gate error: {e}"), $ctx);
-            }
-            $timings.lock().unwrap().push(($name, start.elapsed()));
-        });
-    };
+    ($_scope:expr, $timings:expr, $ctx:expr, $name:literal, $body:expr) => {{
+        let start = Instant::now();
+        if let Err(e) = $body {
+            fail(&format!("gate error: {e}"), $ctx);
+        }
+        $timings.lock().unwrap().push(($name, start.elapsed()));
+    }};
 }
 
 struct ValidationContext {
@@ -351,7 +348,10 @@ fn fetch_tasks_fingerprint(db_path: &Path) -> Result<String, error::DecapodError
 
 fn validate_user_store_blank_slate(ctx: &ValidationContext) -> Result<(), error::DecapodError> {
     info("Store: user (blank-slate semantics)");
-    let tmp_root = std::env::temp_dir().join(format!("decapod_validate_user_{}", Ulid::new()));
+    let tmp_root = std::env::temp_dir().join(format!(
+        "decapod_validate_user_{}",
+        crate::core::ulid::new_ulid()
+    ));
     fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
 
     todo::initialize_todo_db(&tmp_root)?;
@@ -420,7 +420,10 @@ fn validate_repo_store_dogfood(
         );
     }
 
-    let tmp_root = std::env::temp_dir().join(format!("decapod_validate_repo_{}", Ulid::new()));
+    let tmp_root = std::env::temp_dir().join(format!(
+        "decapod_validate_repo_{}",
+        crate::core::ulid::new_ulid()
+    ));
     fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
     let tmp_db = tmp_root.join("todo.db");
     let _events = todo::rebuild_db_from_events(&events, &tmp_db)?;
@@ -1034,7 +1037,7 @@ fn validate_health_purity(
             }
 
             let content = fs::read_to_string(&path).unwrap_or_default();
-            if forbidden.is_match(&content) {
+            if forbidden.is_match(&content).unwrap_or(false) {
                 offenders.push(path);
             }
         }
@@ -3430,11 +3433,6 @@ fn validate_git_workspace_context(
     ];
 
     let in_container = signals_container.iter().any(|(signal, _)| *signal);
-    let container_runtime_disabled =
-        fs::read_to_string(repo_root.join(".decapod").join("OVERRIDE.md"))
-            .map(|content| content.contains(crate::plugins::container::CONTAINER_DISABLE_MARKER))
-            .unwrap_or(false);
-
     if in_container {
         let reasons: Vec<&str> = signals_container
             .iter()
@@ -3446,15 +3444,6 @@ fn validate_git_workspace_context(
                 "Running in container workspace (signals: {})",
                 reasons.join(", ")
             ),
-            ctx,
-        );
-    } else if container_runtime_disabled {
-        warn(
-            "Container workspace requirement auto-waived because OVERRIDE.md disables container runtime after environment preflight failure.",
-            ctx,
-        );
-        pass(
-            "Container workspace gate satisfied via explicit runtime-disable override",
             ctx,
         );
     } else {
@@ -4453,7 +4442,8 @@ pub fn run_validation(
 
     // Run remaining gates in parallel for bounded wall-clock validation time.
     let timings: Mutex<Vec<(&str, Duration)>> = Mutex::new(Vec::new());
-    rayon::scope(|s| {
+    {
+        let _s = ();
         let ctx = &ctx;
         let timings = &timings;
         let broker = broker_content.as_deref();
@@ -4795,7 +4785,7 @@ pub fn run_validation(
             "validate_plan_governed_execution_gate",
             validate_plan_governed_execution_gate(store, ctx, decapod_dir)
         );
-    });
+    }
 
     let elapsed = total_start.elapsed();
     let pass_count = ctx.pass_count.load(Ordering::Relaxed);
@@ -4827,7 +4817,7 @@ pub fn run_validation(
 }
 
 pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
 
     let intent_content = crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
     let intent_version =

@@ -115,13 +115,13 @@ pub fn add_knowledge(
     store: &Store,
     args: AddKnowledgeParams<'_>,
 ) -> Result<AddKnowledgeResult, error::DecapodError> {
-    use regex::Regex;
+    use fancy_regex::Regex;
     let prov_re = Regex::new(
         r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:[A-Z0-9_]+)$",
     )
     .unwrap();
 
-    if !prov_re.is_match(args.provenance) {
+    if !prov_re.is_match(args.provenance).unwrap_or(false) {
         return Err(error::DecapodError::ValidationError(format!(
             "Invalid provenance format: '{}'. Must match scheme (file:|url:|cmd:|commit:|event:)",
             args.provenance
@@ -436,7 +436,7 @@ pub fn log_retrieval_feedback(
         )));
     }
 
-    let event_id = ulid::Ulid::new().to_string();
+    let event_id = crate::core::ulid::new_ulid();
     let event = serde_json::json!({
         "event_id": event_id,
         "ts": now_iso(),
@@ -511,7 +511,7 @@ pub fn decay_knowledge(
     })?;
 
     // Log decay event
-    let event_id = ulid::Ulid::new().to_string();
+    let event_id = crate::core::ulid::new_ulid();
     let event = serde_json::json!({
         "event_id": event_id,
         "ts": now_iso(),
@@ -585,7 +585,7 @@ pub fn record_promotion_event(
     }
 
     let event = KnowledgePromotionEvent {
-        event_id: ulid::Ulid::new().to_string(),
+        event_id: crate::core::ulid::new_ulid(),
         ts: now_iso(),
         source_entry_id: input.source_entry_id.trim().to_string(),
         target_class: "procedural".to_string(),

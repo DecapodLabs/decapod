@@ -4,7 +4,7 @@
 //! of manifests, entry points, build hints, and documentation topology.
 //! The map helps agents quickly understand project structure without reading every file.
 
-use regex::Regex;
+use fancy_regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
 use std::fs;
@@ -123,10 +123,10 @@ pub fn generate_doc_graph(root: &Path) -> DocGraph {
         let content = fs::read_to_string(&full_path).unwrap_or_default();
         let mut refs = HashSet::new();
 
-        for cap in link_re.captures_iter(&content) {
+        for cap in link_re.captures_iter(&content).filter_map(|c| c.ok()) {
             refs.insert(cap[1].to_string());
         }
-        for cap in path_re.captures_iter(&content) {
+        for cap in path_re.captures_iter(&content).filter_map(|c| c.ok()) {
             refs.insert(cap["path"].to_string());
         }
 

@@ -1,5 +1,5 @@
 use crate::core::error::DecapodError;
-use regex::Regex;
+use fancy_regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::fs::OpenOptions;
