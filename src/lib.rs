@@ -3054,42 +3054,23 @@ fn heal_override_checksum(
 fn heal_container_runtime_override(
     project_root: &Path,
 ) -> Result<Option<ValidationHealAction>, error::DecapodError> {
-    let override_path = project_root.join(".decapod").join("OVERRIDE.md");
-    let existing = if override_path.exists() {
-        fs::read_to_string(&override_path).map_err(error::DecapodError::IoError)?
-    } else {
-        String::new()
-    };
-    if existing.contains(container::CONTAINER_DISABLE_MARKER) {
-        return Ok(None);
+    match container::heal_container_runtime_override(
+        project_root,
+        "No docker/podman runtime found during validation self-heal.",
+        "Install Docker or Podman, then remove this override if you want strict container gating restored.",
+    )? {
+        container::ContainerRuntimeOverrideHeal::Added => Ok(Some(ValidationHealAction {
+            action: "heal_container_runtime_override".to_string(),
+            outcome: "updated".to_string(),
+            detail: "Disabled strict container-runtime enforcement because no local container runtime is available.".to_string(),
+        })),
+        container::ContainerRuntimeOverrideHeal::Cleared => Ok(Some(ValidationHealAction {
+            action: "heal_container_runtime_override".to_string(),
+            outcome: "cleared".to_string(),
+            detail: "Removed stale container-runtime override because Docker/Podman support is available.".to_string(),
+        })),
+        container::ContainerRuntimeOverrideHeal::Unchanged => Ok(None),
     }
-
-    let mut content = existing;
-    if !content.ends_with('\n') && !content.is_empty() {
-        content.push('\n');
-    }
-    content.push_str(
-        "\n### plugins/CONTAINER.md\n\
-## Runtime Guard Override (auto-generated)\n",
-    );
-    content.push_str(container::CONTAINER_DISABLE_MARKER);
-    content.push('\n');
-    content.push_str("reason: No docker/podman runtime found during validation self-heal.\n");
-    content.push_str("remediation: Install Docker or Podman, then remove this override if you want strict container gating restored.\n");
-    content.push_str("warning: disabling isolated containers increases risk of concurrent agents stepping on each other.\n");
-    let parent = override_path.parent().ok_or_else(|| {
-        error::DecapodError::ValidationError(
-            "OVERRIDE.md path missing parent directory".to_string(),
-        )
-    })?;
-    fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
-    atomic_write_file(&override_path, &content)?;
-
-    Ok(Some(ValidationHealAction {
-        action: "heal_container_runtime_override".to_string(),
-        outcome: "updated".to_string(),
-        detail: "Disabled strict container-runtime enforcement because no local container runtime is available.".to_string(),
-    }))
 }
 
 fn attempt_validation_failure_heal(
@@ -3231,6 +3212,9 @@ fn run_validate_command(
         heal_actions.push(action);
     }
     if let Some(action) = heal_agents_contract(project_root)? {
+        heal_actions.push(action);
+    }
+    if let Some(action) = heal_container_runtime_override(project_root)? {
         heal_actions.push(action);
     }
 
