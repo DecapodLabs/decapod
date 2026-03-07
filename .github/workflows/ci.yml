@@ -465,7 +465,7 @@ jobs:
             if [[ "$path" =~ ^tests/plugins/([^/]+)\.rs$ ]]; then
               changed_tests="$changed_tests plugins_${BASH_REMATCH[1]}_tests"
             fi
-          done < <(git diff --name-only "origin/$base_ref"...HEAD | grep '\.rs$')
+          done < <(git diff --name-only "origin/$base_ref"...HEAD | grep '\.rs$' || true)
 
           changed_tests=$(echo "$changed_tests" | tr ' ' '\n' | sort -u | grep -v '^$' | tr '\n' ' ')
           echo "Changed test targets: '$changed_tests'"
