@@ -92,6 +92,12 @@ pub struct RunSummary {
 
 pub(crate) const CONTAINER_DISABLE_MARKER: &str = "DECAPOD_CONTAINER_RUNTIME_DISABLED=true";
 
+pub(crate) enum ContainerRuntimeOverrideHeal {
+    Added,
+    Cleared,
+    Unchanged,
+}
+
 pub fn run_container_cli(store: &Store, cli: ContainerCli) -> Result<(), error::DecapodError> {
     let summary = match cli.command {
         ContainerCommand::Run {
@@ -218,15 +224,6 @@ fn run_container(
     local_only: bool,
 ) -> Result<RunSummary, error::DecapodError> {
     let repo = resolve_repo_path(repo_override)?;
-    if container_runtime_disabled(&repo)? {
-        return Err(error::DecapodError::ValidationError(
-            "Container subsystem is disabled by .decapod/OVERRIDE.md. \
-Remove the disable marker after installing Docker/Podman and configuring a dedicated local SSH key. \
-Warning: running without isolated containers means concurrent agents can step on each other."
-                .to_string(),
-        ));
-    }
-
     let docker = match find_container_runtime() {
         Ok(runtime) => runtime,
         Err(_) => {
@@ -235,15 +232,21 @@ Warning: running without isolated containers means concurrent agents can step on
                 "No docker/podman runtime found",
                 "Install Docker or Podman first, then re-run the task.",
             )?;
-            return Err(error::DecapodError::ValidationError(
-                "No container runtime found (docker/podman).\n\
+            let message = "No container runtime found (docker/podman).\n\
 Please install Docker or Podman.\n\
 I also wrote .decapod/OVERRIDE.md with container runtime disabled so agent runs stay safe by default.\n\
-Warning: without isolated containers, concurrent agents can step on each other."
-                    .to_string(),
-            ));
+Warning: without isolated containers, concurrent agents can step on each other.";
+            return Err(error::DecapodError::ValidationError(message.to_string()));
         }
     };
+    clear_container_runtime_override(&repo)?;
+    if container_runtime_disabled(&repo)? {
+        return Err(error::DecapodError::ValidationError(
+            "Container subsystem is disabled by .decapod/OVERRIDE.md even though a runtime is available. \
+Clear the disable marker or let Decapod self-heal the override file before retrying."
+                .to_string(),
+        ));
+    }
 
     ensure_container_runtime_access(&docker)?;
 
@@ -418,11 +421,94 @@ fn container_runtime_disabled(repo_root: &Path) -> Result<bool, error::DecapodEr
     Ok(content.contains(CONTAINER_DISABLE_MARKER))
 }
 
+fn clear_container_runtime_override(repo_root: &Path) -> Result<bool, error::DecapodError> {
+    let path = override_file_path(repo_root);
+    if !path.exists() {
+        return Ok(false);
+    }
+    let content = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+    if !content.contains(CONTAINER_DISABLE_MARKER) {
+        return Ok(false);
+    }
+
+    let lines: Vec<&str> = content.lines().collect();
+    let marker_index = lines
+        .iter()
+        .position(|line| line.trim() == CONTAINER_DISABLE_MARKER)
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "container override marker exists but could not be located".to_string(),
+            )
+        })?;
+
+    let mut start = marker_index;
+    while start > 0 {
+        let candidate = lines[start - 1].trim();
+        if candidate == "### plugins/CONTAINER.md" {
+            start -= 1;
+            break;
+        }
+        if candidate.is_empty() {
+            start -= 1;
+            continue;
+        }
+        break;
+    }
+
+    let mut end = marker_index + 1;
+    while end < lines.len() {
+        let candidate = lines[end].trim();
+        if candidate.starts_with("reason:")
+            || candidate.starts_with("remediation:")
+            || candidate.starts_with("warning:")
+            || candidate == "## Runtime Guard Override (auto-generated)"
+            || candidate.is_empty()
+        {
+            end += 1;
+            continue;
+        }
+        break;
+    }
+
+    let mut rebuilt: Vec<&str> = Vec::with_capacity(lines.len().saturating_sub(end - start));
+    rebuilt.extend_from_slice(&lines[..start]);
+    rebuilt.extend_from_slice(&lines[end..]);
+    let mut cleaned = rebuilt.join("\n");
+    if !cleaned.is_empty() {
+        cleaned.push('\n');
+    }
+    fs::write(path, cleaned).map_err(error::DecapodError::IoError)?;
+    Ok(true)
+}
+
+pub(crate) fn heal_container_runtime_override(
+    repo_root: &Path,
+    reason: &str,
+    remediation: &str,
+) -> Result<ContainerRuntimeOverrideHeal, error::DecapodError> {
+    match find_container_runtime() {
+        Ok(runtime) if ensure_container_runtime_access(&runtime).is_ok() => {
+            if clear_container_runtime_override(repo_root)? {
+                Ok(ContainerRuntimeOverrideHeal::Cleared)
+            } else {
+                Ok(ContainerRuntimeOverrideHeal::Unchanged)
+            }
+        }
+        _ => {
+            if disable_container_runtime_override(repo_root, reason, remediation)? {
+                Ok(ContainerRuntimeOverrideHeal::Added)
+            } else {
+                Ok(ContainerRuntimeOverrideHeal::Unchanged)
+            }
+        }
+    }
+}
+
 fn disable_container_runtime_override(
     repo_root: &Path,
     reason: &str,
     remediation: &str,
-) -> Result<(), error::DecapodError> {
+) -> Result<bool, error::DecapodError> {
     let path = override_file_path(repo_root);
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
@@ -433,7 +519,7 @@ fn disable_container_runtime_override(
         String::new()
     };
     if content.contains(CONTAINER_DISABLE_MARKER) {
-        return Ok(());
+        return Ok(false);
     }
     if !content.ends_with('\n') && !content.is_empty() {
         content.push('\n');
@@ -449,7 +535,7 @@ fn disable_container_runtime_override(
     content.push_str(&format!("remediation: {}\n", remediation));
     content.push_str("warning: disabling isolated containers increases risk of concurrent agents stepping on each other.\n");
     fs::write(path, content).map_err(error::DecapodError::IoError)?;
-    Ok(())
+    Ok(true)
 }
 
 fn repo_root_from_store(store: &Store) -> Result<PathBuf, error::DecapodError> {
@@ -1352,6 +1438,31 @@ mod tests {
         assert!(content.contains(CONTAINER_DISABLE_MARKER));
         assert!(content.contains("warning: disabling isolated containers"));
         assert!(container_runtime_disabled(&root).expect("disabled check"));
+        let _ = fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn clear_override_strips_container_runtime_disabled_marker() {
+        let root = std::env::temp_dir().join(format!(
+            "decapod-container-clear-{}",
+            Ulid::new().to_string().to_lowercase()
+        ));
+        fs::create_dir_all(&root).expect("mkdir");
+        let wrote = disable_container_runtime_override(&root, "test-reason", "test-remediation")
+            .expect("disable override");
+        assert!(wrote, "override should be written");
+        let cleared = clear_container_runtime_override(&root).expect("clear override");
+        assert!(cleared, "disable marker should be removed");
+        assert!(
+            !container_runtime_disabled(&root).expect("disabled check"),
+            "container disable marker should be cleared"
+        );
+        let content = fs::read_to_string(root.join(".decapod").join("OVERRIDE.md")).expect("read");
+        assert!(
+            !content.contains(CONTAINER_DISABLE_MARKER),
+            "override should no longer contain the disable marker"
+        );
+
         let _ = fs::remove_dir_all(root);
     }
 }

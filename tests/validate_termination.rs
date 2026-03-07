@@ -238,6 +238,72 @@ fn validate_json_reports_self_heal_and_structured_summary() {
 }
 
 #[test]
+fn validate_clears_stale_container_override_when_runtime_is_available() {
+    let (_tmp, dir, password) = setup_repo();
+    let override_path = dir.join(".decapod").join("OVERRIDE.md");
+    fs::write(
+        &override_path,
+        concat!(
+            "### plugins/CONTAINER.md\n",
+            "## Runtime Guard Override (auto-generated)\n",
+            "DECAPOD_CONTAINER_RUNTIME_DISABLED=true\n",
+            "reason: stale test marker\n",
+            "remediation: remove when runtime is healthy\n",
+            "warning: disabling isolated containers increases risk of concurrent agents stepping on each other.\n",
+        ),
+    )
+    .expect("write override");
+
+    let fake_bin = dir.join("fake-bin");
+    fs::create_dir_all(&fake_bin).expect("mkdir fake-bin");
+    let fake_docker = fake_bin.join("docker");
+    fs::write(
+        &fake_docker,
+        "#!/bin/sh\nif [ \"$1\" = \"info\" ]; then exit 0; fi\nexit 0\n",
+    )
+    .expect("write fake docker");
+    let chmod = Command::new("chmod")
+        .args(["+x", fake_docker.to_str().expect("fake docker path")])
+        .status()
+        .expect("chmod fake docker");
+    assert!(chmod.success(), "chmod should succeed");
+
+    let path = std::env::var("PATH").unwrap_or_default();
+    let runtime_path = format!("{}:{}", fake_bin.display(), path);
+    let validate = run_decapod(
+        &dir,
+        &["validate", "--format", "json"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+            ("PATH", &runtime_path),
+        ],
+    );
+    assert!(
+        validate.status.success(),
+        "validate should clear stale runtime override; stderr:\n{}",
+        String::from_utf8_lossy(&validate.stderr)
+    );
+
+    let payload: Value =
+        serde_json::from_slice(&validate.stdout).expect("validate json payload should parse");
+    let heals = payload["self_heal"].as_array().expect("self_heal array");
+    assert!(
+        heals.iter().any(|action| {
+            action["action"] == "heal_container_runtime_override" && action["outcome"] == "cleared"
+        }),
+        "expected stale container override to be cleared; payload: {payload}"
+    );
+
+    let override_content = fs::read_to_string(&override_path).expect("read override");
+    assert!(
+        !override_content.contains("DECAPOD_CONTAINER_RUNTIME_DISABLED=true"),
+        "container disable marker should be removed"
+    );
+}
+
+#[test]
 fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
     let (_tmp, dir, password) = setup_repo();
     let db_path = dir.join(".decapod").join("data").join("todo.db");
