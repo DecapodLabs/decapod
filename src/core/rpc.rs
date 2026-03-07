@@ -392,6 +392,24 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 stability: "stable".to_string(),
                 cost: "low".to_string(),
             },
+            Capability {
+                name: "todo.manage".to_string(),
+                description: "Add, claim, list, and complete todo tasks".to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "session.acquire".to_string(),
+                description: "Acquire or renew an agent session token".to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "docs.show".to_string(),
+                description: "Show embedded constitution and reference documentation".to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
         ],
         subsystems: vec![
             SubsystemInfo {

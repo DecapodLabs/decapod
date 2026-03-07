@@ -1781,6 +1781,8 @@ fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error
     // and the password was just generated in this process.
     unsafe { std::env::set_var("DECAPOD_SESSION_PASSWORD", &password) }
 
+    eprintln!("session: auto-acquired for agent '{}'.", agent_id);
+
     Ok(())
 }
 
@@ -4004,11 +4006,16 @@ fn schema_to_markdown(schema: &serde_json::Value) -> String {
 }
 
 pub(crate) fn deterministic_schema_envelope() -> serde_json::Value {
+    let root = cli_command_registry();
+    let command_registry = root
+        .get("subcommands")
+        .cloned()
+        .unwrap_or(serde_json::Value::Array(vec![]));
     serde_json::json!({
         "schema_version": "1.0.0",
         "subsystems": schema_catalog(),
         "deprecations": deprecation_metadata(),
-        "command_registry": cli_command_registry()
+        "command_registry": command_registry
     })
 }
 
