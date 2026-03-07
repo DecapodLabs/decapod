@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.7](https://github.com/DecapodLabs/decapod/compare/v0.47.6...v0.47.7) - 2026-03-07
+
+### Fixed
+
+- use internal ulid helper in rpc tests
+- stop auto-disabling container validation
+- add lifetime annotations and suppress unused var warning
+- resolve three build failures
+
+### Other
+
+- apply rustfmt formatting updates
+- inline ulid/thiserror/rustc-hash, remove 7 direct deps
+- replace regex with shared fancy-regex dep
+- remove colored and rayon dependencies
+- remove unused 'anyhow' from direct dependencies
+
 ## [0.47.6](https://github.com/DecapodLabs/decapod/compare/v0.47.3...v0.47.4) - 2026-03-07
 
 ### Fixed
