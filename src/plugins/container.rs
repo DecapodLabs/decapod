@@ -92,6 +92,12 @@ pub struct RunSummary {
 
 pub(crate) const CONTAINER_DISABLE_MARKER: &str = "DECAPOD_CONTAINER_RUNTIME_DISABLED=true";
 
+pub(crate) enum ContainerRuntimeOverrideHeal {
+    Added,
+    Cleared,
+    Unchanged,
+}
+
 pub fn run_container_cli(store: &Store, cli: ContainerCli) -> Result<(), error::DecapodError> {
     let summary = match cli.command {
         ContainerCommand::Run {
@@ -473,6 +479,29 @@ fn clear_container_runtime_override(repo_root: &Path) -> Result<bool, error::Dec
     }
     fs::write(path, cleaned).map_err(error::DecapodError::IoError)?;
     Ok(true)
+}
+
+pub(crate) fn heal_container_runtime_override(
+    repo_root: &Path,
+    reason: &str,
+    remediation: &str,
+) -> Result<ContainerRuntimeOverrideHeal, error::DecapodError> {
+    match find_container_runtime() {
+        Ok(runtime) if ensure_container_runtime_access(&runtime).is_ok() => {
+            if clear_container_runtime_override(repo_root)? {
+                Ok(ContainerRuntimeOverrideHeal::Cleared)
+            } else {
+                Ok(ContainerRuntimeOverrideHeal::Unchanged)
+            }
+        }
+        _ => {
+            if disable_container_runtime_override(repo_root, reason, remediation)? {
+                Ok(ContainerRuntimeOverrideHeal::Added)
+            } else {
+                Ok(ContainerRuntimeOverrideHeal::Unchanged)
+            }
+        }
+    }
 }
 
 fn disable_container_runtime_override(
