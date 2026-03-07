@@ -21,6 +21,9 @@
           inherit system;
           overlays = [ (import rust-overlay) ];
         };
+        runtimeLibs = with pkgs; [
+          sqlite
+        ];
         toolchain = pkgs.rust-bin.stable.latest.default.override {
           extensions = [
             "clippy"
@@ -37,6 +40,7 @@
             nixfmt-rfc-style
             openssh
             pkg-config
+            sqlite
             toolchain
           ];
 
@@ -45,6 +49,7 @@
             export CARGO_INCREMENTAL=0
             export CARGO_NET_RETRY=10
             export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+            export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath runtimeLibs}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
             if [ "$(uname -s)" = "Linux" ]; then
               export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=clang
               export RUSTFLAGS="-C link-arg=-fuse-ld=lld''${RUSTFLAGS:+ $RUSTFLAGS}"
