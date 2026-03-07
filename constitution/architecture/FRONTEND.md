@@ -38,6 +38,18 @@
 - Color contrast (WCAG AA minimum)
 - Focus management
 
+### 1.5 Production Mindset
+The frontend is not a layer — it is the product. Every decision that degrades the user experience degrades the product itself:
+
+- **Time-to-interactive is a revenue metric:** A bloated JavaScript bundle has a direct, measurable impact on conversion and retention. Every new dependency must justify its payload weight. If a library costs 200KB to format a date, replace it with 5 lines.
+- **Framework stability over novelty:** Rewriting the frontend every time a new framework trends is a net loss. Choose a mature, well-supported ecosystem and hold it. Innovation belongs in the user experience and product capability, not the build toolchain.
+- **Accessibility is a correctness requirement, not a backlog item:** If a core flow cannot be completed with a keyboard and screen reader, the feature is defective. This is both an ethical and legal obligation, and it must be verified before any flow is marked complete.
+- **Standardized components over bespoke CSS:** A consistent, accessible component library is a force multiplier. Custom widget implementations for standard patterns (buttons, modals, selects) accumulate accessibility debt and design drift. Use and maintain a shared system.
+- **State locality reduces complexity:** The largest source of frontend complexity is state that lives farther from its use site than necessary. Reach for global state only when multiple disconnected components strictly require synchronization. Local and URL state should be the defaults.
+- **Choose the rendering model for the use case:** SSR and SSG are the correct defaults for content-heavy pages and SEO-critical surfaces. Pay the cost of a full SPA only when the interface genuinely requires app-level interactivity that cannot be achieved otherwise.
+- **Server-state libraries are the standard:** Manual `useEffect` for data fetching is error-prone and widely superseded. Libraries like React Query and SWR handle caching, deduplication, background refresh, and error states correctly. Use them.
+- **Monitor bundle size as a first-class metric:** Tree-shaking must be verified, not assumed. Bundle analysis should run in CI. Size regressions are caught at PR review, not discovered when performance degrades in production.
+
 ---
 
 ## 2. Rendering Strategies

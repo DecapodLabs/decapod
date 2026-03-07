@@ -41,6 +41,18 @@ Everything is a resource with:
 - Connection migration: Survive network changes
 - Reduced latency: 0-RTT for repeat connections
 
+### 1.4 Production Mindset
+The web is a distributed, adversarial environment. APIs are long-lived contracts with operational, economic, and trust implications:
+
+- **APIs are products with SLAs:** Every internal and external API has consumers who depend on its behavior. A breaking change without a deprecation period is a contract violation. Treat versioning, documentation, and backward compatibility as first-class engineering obligations.
+- **Use HTTP semantics, not workarounds:** The protocol has well-defined methods, headers, and caching semantics. Re-inventing these as POST bodies or custom headers wastes the protocol's value and breaks standard tooling. Build with HTTP, not on top of it.
+- **The network is hostile and unreliable:** Every external HTTP call must have a timeout, a retry policy with exponential backoff and jitter, and a circuit breaker. "It worked in staging" is not a resilience argument. Design for failure at the transport layer.
+- **Rate limiting is not optional:** Any endpoint reachable from the internet without a rate limit is a denial-of-service vulnerability. Protect resources with per-user, per-IP, and per-endpoint limits. Return 429 with `Retry-After`.
+- **Stateless servers are the only scalable servers:** Session state held in application memory breaks horizontal scaling and requires sticky session routing, which is a load-balancer anti-pattern. State belongs in the database or a distributed cache, never in local memory.
+- **Idempotency is required for mutation endpoints:** In a distributed system, retries are not exceptional — they are expected. POST/PUT/DELETE operations must be idempotent or require an idempotency key. Non-idempotent mutations that can be retried will eventually be retried, with real consequences.
+- **GraphQL vs REST is a capabilities match, not a style choice:** GraphQL provides value for highly relational data, flexible client queries, and mobile bandwidth constraints. It makes caching, rate limiting, and performance tracing significantly harder. REST remains the right default for simple CRUD and cacheable resources.
+- **Error responses are part of the API contract:** A 500 is a bug, not an expected state. API errors must use consistent, machine-parseable structures (RFC 7807 or equivalent). Clients must be able to handle errors programmatically, not just display a generic message.
+
 ---
 
 ## 2. API Design Patterns

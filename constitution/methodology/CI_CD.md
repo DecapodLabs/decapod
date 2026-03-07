@@ -17,6 +17,17 @@ CI/CD should make high-quality delivery the default path:
 - release risk is visible before merge
 - deployment outcomes are observable and reversible
 
+The pipeline is not infrastructure — it is engineering discipline made executable. The following principles define what that means in practice:
+
+- **Deployment frequency is a competitive metric:** The ability to ship to production ten times a day is not a technical indulgence — it is the mechanism by which an organization tests hypotheses faster than competitors who deploy monthly. Infrequent deployment is infrequent feedback.
+- **Releases must be boring non-events:** A release that requires a war room, a release manager, or an after-hours window is a release that will cause an incident. If shipping is painful, teams will ship less. If teams ship less, every deployment becomes higher-stakes. The pipeline's job is to make this cycle impossible.
+- **CI is a practice, not a tool:** Continuous Integration means merging to the main branch at least once per day. Long-lived feature branches are the opposite of integration — they are divergence accumulation. The discipline of small, frequent merges is the practice; the tool enforces it.
+- **Fail closed, recover fast:** When deployment metrics degrade, the pipeline must halt the rollout and revert automatically. Mean Time to Recovery is more operationally important than Mean Time Between Failures. Optimize for fast recovery, not for preventing every failure.
+- **Build once, deploy everywhere:** The same artifact that passes staging must be the artifact deployed to production. Environment-specific builds destroy the value of staging. Immutable, hash-verified artifacts are the only trustworthy promotion mechanism.
+- **Deployment and release are independent operations:** Deploying code to a server is a technical operation. Releasing a feature to users is a product operation. Feature flags decouple them, enabling dark launches, gradual rollouts, and instant kill switches without a full redeployment.
+- **The pipeline is code:** CI/CD configuration must live in the repository, versioned alongside application code, subject to the same review process. Pipelines that exist only in a CI provider's UI are unversioned infrastructure.
+- **A broken main branch stops all feature work:** When the main branch build fails, it is the highest-priority incident for the entire engineering team. Not because it is urgent in isolation, but because it blocks all downstream work. Fix it before anything else.
+
 ---
 
 ## 2. CI Baseline (Per PR)
@@ -73,4 +84,3 @@ Binding release and verification interfaces live in:
 - `interfaces/TESTING.md`
 - `plugins/VERIFY.md`
 - `specs/GIT.md`
-

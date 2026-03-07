@@ -44,6 +44,17 @@
 - Spot instances for fault-tolerant workloads
 - Right-sizing resources
 
+### 1.5 Production Mindset
+Cloud infrastructure decisions have direct business consequences. Apply the same rigor to infrastructure as to application code:
+
+- **Unit economics are the architecture test:** If the cost to serve one customer exceeds the revenue they generate, the architecture is broken regardless of how elegantly it scales. Every architectural decision has a cost per unit; make it visible.
+- **Portability is leverage, not ideology:** Full vendor lock-in is a negotiating failure. Using managed services accelerates delivery — that's the right trade — but core domain logic must remain portable enough to migrate within a reasonable window if vendor economics turn predatory.
+- **Click-ops in production is a defect:** Infrastructure that was configured through a web console cannot be reviewed, versioned, tested, or recovered reliably. Every production state change must be expressed in code and promoted through the same review process as application changes.
+- **Cost is an engineering signal, not a finance problem:** If an engineer cannot explain the cost impact of a PR, it cannot ship. Cloud spend is a direct output of architectural decisions; teams own that number.
+- **Stateless compute is the default contract:** Any compute that accumulates local state breaks auto-scaling and complicates recovery. If an instance cannot be terminated safely at any moment, the system is brittle by design.
+- **FaaS has a shape constraint:** Serverless functions are excellent for event-driven, bursty workloads. They are poor fits for consistent, high-throughput, latency-sensitive APIs where cold starts are visible and predictable resource allocation matters.
+- **Least privilege is non-negotiable:** IAM roles must be scoped per service, per action, per resource. Wildcard permissions in production are a critical security defect. A compromised service must not be a pivot to adjacent systems.
+
 ---
 
 ## 2. Compute Options
