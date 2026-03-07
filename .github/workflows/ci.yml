@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 # Cancel in-progress runs for massive time savings
 concurrency:
@@ -21,6 +22,7 @@ env:
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse       # 3x faster registry fetching
   RUST_BACKTRACE: 1
   RUSTFLAGS: "-C link-arg=-fuse-ld=lld -D warnings" # LLD linker for 2-3x faster linking
+  NIX_CONFIG: "experimental-features = nix-command flakes"
 
 jobs:
   # COMMIT LINT: Fast check, no build dependency
@@ -75,12 +77,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Enable Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Format check
-        run: cargo fmt --all -- --check
+        run: nix develop .#ci -c cargo fmt --all -- --check
 
   # CLIPPY: Compiles its own analysis pass, runs in parallel with setup
   clippy:
@@ -90,19 +92,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Install LLD
-        uses: ./.github/actions/install-lld
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Enable Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
         with:
           shared-key: "ci-build"
           save-if: "false"
       - name: Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: nix develop .#ci -c cargo clippy --all-targets --all-features -- -D warnings
 
   # HEALTH: cargo install (release build), no dependency on setup
   health:
@@ -332,17 +332,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Install LLD
-        uses: ./.github/actions/install-lld
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+      - name: Enable Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@main
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
         with:
           shared-key: "ci-build"
           save-if: "false"
       - name: Run RPC suite
-        run: cargo test --all-features --test agent_rpc_suite -- --test-threads=1
+        run: nix develop .#ci -c cargo test --all-features --test agent_rpc_suite -- --test-threads=1
 
   # CHAOS: Multi-agent contention + deterministic replay gate
   chaos-replay:
