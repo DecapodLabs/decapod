@@ -16,25 +16,33 @@ Machine note:
 
 ---
 
-## 1. The Oracle's Verdict: Systems of Intent
+## 1. Engineering Philosophy: Intent-Driven Systems
 
 *The greatest technical debt is not bad code; it is unrecorded intent.*
 
-### 1.1 The CTO's Strategic View
-- **Intent as Intellectual Property:** The "Why" is our most valuable asset. Code is just a snapshot in time. If we lose the "Why," we lose the ability to evolve.
-- **The Speed of Trust:** Systems that enforce intent through automated validation (like Decapod) allow for radical decentralization. When the system enforces the rules, the CTO doesn't have to.
+The design of intent-driven systems requires holding multiple engineering perspectives simultaneously. The following principles span strategic, structural, and execution concerns:
 
-### 1.2 The Architect's Structural View
-- **Invariant-Driven Design:** Don't design features; design invariants. An invariant is something that must *always* be true. Features are just the temporary ways we satisfy those invariants.
-- **The "Truth" is in the Repo:** If it's not in the repo, it doesn't exist. Avoid hidden, daemonized state. The repo must be the single source of truth for the entire engineering lifecycle.
+### 1.1 Intent as the Primary Asset
+The "why" behind a decision is more valuable than any specific implementation. Code is a snapshot in time. The intent — what must be true and why — is the durable artifact. Systems that lose their intent lose the ability to evolve coherently. Capture it explicitly, version it, and treat its preservation as a non-negotiable engineering obligation.
 
-### 1.3 The Principal's Execution View
-- **Proof is the Only Currency:** Narrative claims of "it works" are worthless. In a professional engineering environment, we only deal in executable proof.
-- **Mode Discipline is Professionalism:** Switching between "Authoring Intent" and "Implementing Code" requires a different mindset. Professional engineers (and agents) are explicit about which mode they are in.
+### 1.2 Automated Invariants Enable Decentralization
+When the system enforces its own rules — through validation gates, proof surfaces, and machine-verifiable contracts — individual judgment calls are replaced by objective checks. This is what makes it possible to decentralize decision-making without losing coherence. Trust is a byproduct of verifiable enforcement, not of oversight.
+
+### 1.3 Invariant-Driven Design
+Do not design features; design invariants. An invariant is something that must always be true regardless of which code path executed or which agent made the change. Features are transient implementations of invariants. When the invariant is clear, the correct implementation is usually obvious. When the invariant is unclear, no implementation is correct.
+
+### 1.4 The Repository is the System of Record
+If it is not in the repository, it does not exist. Avoid hidden, daemonized state. Environment-local configurations that are not committed are divergence waiting to happen. The repository must be the single source of truth for the entire engineering lifecycle — intent, spec, code, proof, and promotion history.
+
+### 1.5 Proof is the Only Valid Currency
+Narrative claims of correctness are worthless in a system that can verify. "It works" has no meaning without an executable check that would fail if it stopped working. In Decapod-governed repositories, proof is expressed as passing gates — `decapod validate`, test suites, type checks, and linting. Claims without proof are unverified hypotheses.
+
+### 1.6 Mode Discipline
+Switching between "authoring intent" and "implementing code" requires a different mental posture. Conflating them produces code that changes the spec to match the implementation, which is drift. Professionals — and agents — are explicit about which mode they are operating in at any given time.
 
 ---
 
-## 1. Core Philosophy: Intent is the API
+## 2. Core Philosophy: Intent is the API
 
 The fundamental principle of the Decapod system is that **Intent is the primary interface**. We do not start by writing code; we start by declaring what must be true.
 
@@ -45,7 +53,7 @@ The fundamental principle of the Decapod system is that **Intent is the primary 
 
 **The Golden Rule:** No change is legitimate until it is consistent with intent, either by preserving the existing intent or by updating the intent first.
 
-### 1.1 Decapod Foundation Demands (Binding)
+### 2.1 Decapod Foundation Demands (Binding)
 
 For Decapod-managed repositories, the following are mandatory:
 
@@ -57,7 +65,7 @@ For Decapod-managed repositories, the following are mandatory:
 
 ---
 
-## 2. The Intent-First Loop (Unidirectional Flow)
+## 3. The Intent-First Loop (Unidirectional Flow)
 
 All work in an intent-driven project follows a strict, unidirectional flow:
 
@@ -67,7 +75,7 @@ Reverse flow (e.g., changing specs to match code) is forbidden, except during a 
 
 ---
 
-## 3. Authority Hierarchy
+## 4. Authority Hierarchy
 
 When guidance from different documents conflicts, the most specific, highest-authority document in the current working directory prevails.
 
@@ -83,11 +91,11 @@ When guidance from different documents conflicts, the most specific, highest-aut
 
 ---
 
-## 4. Agent Behavior & Mode Discipline
+## 5. Agent Behavior & Mode Discipline
 
 All AI agents operating within this system must adhere to the following behavioral rules.
 
-### 4.1. Default Agent Behavior
+### 5.1. Default Agent Behavior
 
 -   **Before Acting:**
     1.  If present, start at `core/DECAPOD.md` (repo router/index).
@@ -104,7 +112,7 @@ All AI agents operating within this system must adhere to the following behavior
     -   Provide a concrete proof plan with exact commands and pass criteria.
     -   State "unverified" if proof cannot be run, and describe what is needed to confirm.
 
-### 4.2. Mode Discipline
+### 5.2. Mode Discipline
 
 Agents must explicitly declare their operating mode before proposing changes:
 
@@ -116,11 +124,11 @@ Agents must explicitly declare their operating mode before proposing changes:
 
 ---
 
-## 5. Structural & Proof Discipline
+## 6. Structural & Proof Discipline
 
 To prevent drift and ensure quality, all projects must adhere to strict structural and proof-related rules.
 
-### 5.1. Structural Enforcement
+### 6.1. Structural Enforcement
 
 -   **Promise IDs:** Intent promises MUST use stable, unique IDs (e.g., `P1`, `P2`). These IDs must be used for tracing in `ARCHITECTURE.md`, `proof.md`, and compliance tables. Never renumber existing promises.
 -   **Version Headers:**
@@ -129,7 +137,7 @@ To prevent drift and ensure quality, all projects must adhere to strict structur
 -   **Authority Constraints:** `philosophy.md` and `context.md` MUST be marked "non-binding" and must not claim authority.
 -   **Constraint Scoping:** Complexity constraints (e.g., line limits) MUST be explicitly scoped to "implementation files" or similar, not applied vaguely.
 
-### 5.2. Proof Discipline (Non-Negotiable)
+### 6.2. Proof Discipline (Non-Negotiable)
 
 **An agent or user must NEVER claim a change is "compliant", "verified", or "ready to promote" UNTIL ALL of the following are true:**
 
@@ -142,7 +150,7 @@ To prevent drift and ensure quality, all projects must adhere to strict structur
 
 **Violation of these rules is considered drift.** The process must stop, the proof surface must be updated, and verification must be re-run.
 
-### 5.3. Tooling Validation Gate (First-Class Citizen)
+### 6.3. Tooling Validation Gate (First-Class Citizen)
 
 Tooling that validates the repo's own source code and the tooling the project relies on MUST be treated as first-class citizens in proof checking.
 
@@ -160,11 +168,11 @@ Tooling that validates the repo's own source code and the tooling the project re
 
 ---
 
-## 6. Project & Capability Definitions
+## 7. Project & Capability Definitions
 
 This system defines clear classifications for projects and a composable system for defining a project's technical capabilities.
 
-### 6.1. Project Classes
+### 7.1. Project Classes
 
 Every repository must be classified as one of the following:
 
@@ -172,7 +180,7 @@ Every repository must be classified as one of the following:
 2.  **Spec-Driven:** Specifications exist, but are not treated as a binding contract.
 3.  **Prototype/Spike:** For exploration. Assumptions and exit criteria must be recorded.
 
-### 6.2. The Capability System
+### 7.2. The Capability System
 
 To standardize architectural choices, projects can declare **Capabilities**—named, versioned, composable modules for features like language toolchains, runtimes, or data storage.
 
@@ -182,17 +190,17 @@ To standardize architectural choices, projects can declare **Capabilities**—na
 
 ---
 
-## 7. Workshop Overlay (Methodology as a Curriculum)
+## 8. Workshop Overlay (Methodology as a Curriculum)
 
 This system is designed to be teachable. The "Workshop Overlay" turns the intent-driven methodology into a curriculum that agents can run.
 
-### 7.1. Workshop Roles
+### 8.1. Workshop Roles
 
 -   **Instructor Mode:** Reveal structure, ask "why," but do not provide full solutions.
 -   **Participant Mode:** Optimize for learning-by-doing, with hints and proof-first iteration.
 -   **Evaluator Mode:** Run proofs, verify traceability, and grade based on objective rubrics.
 
-### 7.2. Workshop Invariants
+### 8.2. Workshop Invariants
 
 -   The unidirectional flow (`intent` → `spec` → `code` → `proof`) is always preserved.
 -   Traceability is required for all artifacts.
@@ -200,7 +208,7 @@ This system is designed to be teachable. The "Workshop Overlay" turns the intent
 
 ---
 
-## 8. Core Subsystems
+## 9. Core Subsystems
 
 Subsystems exist as interface surfaces (`decapod <subsystem> ...`), but subsystem truth is not defined here.
 
@@ -209,7 +217,7 @@ Canonical subsystem registry (single source of truth):
 
 ---
 
-## 9. Extensions (Planned)
+## 10. Extensions (Planned)
 
 Decapod will support extensions, but this repository currently ships a single Rust CLI binary with built-in subsystems.
 
@@ -221,7 +229,7 @@ Until this is implemented, do not document script-based plugin systems or extern
 
 ---
 
-## 10. See Also
+## 11. See Also
 
 -   `methodology/SOUL.md`: Defines the agent's core identity and prime directives.
 -   `methodology/MEMORY.md`: Outlines principles and mechanisms for agent's memory.

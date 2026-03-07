@@ -8,30 +8,7 @@
 
 ---
 
-## 1. The Oracle's Verdict: Concurrency as a High-Stakes Game
-
-*Concurrency is the source of the most subtle, non-deterministic, and expensive bugs in software. If you can solve a problem sequentially, do it.*
-
-### 1.1 The CTO's Strategic View
-- **Simplicity over Scale:** Don't reach for microservices or complex actor models until you've exhausted the limits of a single-threaded or simple multi-threaded monolith. Complexity is a tax on every future developer.
-- **The "Cost of Coordination":** Coordination is the bottleneck of scaling. Amdahl's Law is a business law. If 10% of your task is sequential, you can't speed it up more than 10x, no matter how many cores you add.
-
-### 1.2 The SVP's Operational View
-- **Blast Radius:** A concurrency bug in one component can bring down the entire system (e.g., a deadlock that starves the thread pool). Isolate concurrent workloads.
-- **Backpressure as a First-Class Citizen:** If a system cannot say "no" when it's overloaded, it's not production-ready. Every concurrent queue must be bounded.
-
-### 1.3 The Architect's Structural View
-- **Immutability is the Cure:** The easiest way to solve concurrency issues is to eliminate shared mutable state. Use persistent data structures and message passing.
-- **State Machines for Coordination:** Complex concurrent workflows must be modeled as explicit state machines. "Ad-hoc" coordination with boolean flags is a recipe for disaster.
-
-### 1.4 The Principal's Execution View
-- **The "Lock-Free" Trap:** Unless you are building a low-level primitive (like a queue or a memory allocator), stay away from lock-free programming. It is incredibly difficult to get right and even harder to test.
-- **Async is not "Free":** Async runtimes have overhead. For CPU-bound tasks, use a dedicated thread pool. For I/O-bound tasks, use async, but watch your stack sizes and allocation patterns.
-- **Deterministic Simulation:** For critical concurrent logic, use deterministic simulation testing (like Loom or FoundationDB's simulator) to find edge cases that traditional testing will miss.
-
----
-
-## 2. Concurrency Models
+## 1. Concurrency Models
 
 ### 1.1 Shared Memory vs Message Passing
 
@@ -47,6 +24,18 @@
 **Threads:** Use for CPU-bound work, blocking I/O, or when simplicity matters more than scale.
 
 **Async:** Use for I/O-bound work with many concurrent connections. Understand the cost: async runtimes add complexity, stack traces become harder to read, and cancellation semantics require care.
+
+### 1.3 Production Mindset
+Concurrency is one of the highest-leverage and highest-risk categories of engineering decisions:
+
+- **Sequential first:** Do not reach for concurrent architectures until the sequential baseline is exhausted. The simplest correct program is single-threaded. Concurrency is justified by measured need, not anticipated scale.
+- **Coordination is the bottleneck:** Amdahl's Law is a hard limit. If 10% of a workload is sequential, no amount of parallelism yields more than 10× improvement. Design to minimize the sequential fraction, and be explicit about where it lives.
+- **Blast radius isolation:** A concurrency bug — deadlock, live-lock, data race — can bring down an entire process or starve a thread pool. Isolate concurrent subsystems behind clear boundaries so failures cannot cascade.
+- **Backpressure is a correctness property:** A system that cannot say "no" when overloaded is not production-ready. Every concurrent queue must be bounded. Unbounded queues are memory leaks with a delayed fuse.
+- **Immutability eliminates the problem class:** Shared mutable state is the root cause of most concurrency bugs. Prefer immutable data, message passing, and copy-on-write semantics. When mutable state is unavoidable, make lock discipline explicit and reviewed.
+- **Explicit state machines over ad-hoc coordination:** Complex concurrent workflows modeled with boolean flags and informal protocols will contain bugs that cannot be reproduced or proven correct. Model them as explicit state machines with defined transitions.
+- **Lock-free is not "free":** Lock-free data structures are expert territory. Unless implementing a low-level primitive where profiling justifies it, lock-free code introduces correctness hazards that testing rarely catches. Use well-tested library implementations.
+- **Async is not free either:** Async runtimes have scheduling overhead. For CPU-bound work, async adds overhead without benefit; use dedicated thread pools. Watch stack sizes, allocation rates, and wake-up patterns under load.
 
 ---
 
@@ -139,7 +128,20 @@ Rules:
 
 ---
 
-## 5. Anti-Patterns
+## 5. Coordination Patterns
+
+### 5.1 Fan-Out / Fan-In
+Distribute work across workers, collect results. Use bounded concurrency to prevent resource exhaustion.
+
+### 5.2 Pipeline
+Chain processing stages with channels between them. Each stage runs independently. Backpressure propagates naturally through bounded channels.
+
+### 5.3 Circuit Breaker
+When an external service fails repeatedly, stop calling it temporarily. Prevents cascade failures and gives the service time to recover.
+
+---
+
+## 6. Anti-Patterns
 
 | Anti-Pattern | Why It's Dangerous | Alternative |
 |---|---|---|
@@ -149,19 +151,6 @@ Rules:
 | **No timeouts on I/O** | Hung tasks, resource exhaustion | Timeout every external call |
 | **Shared mutable state** | Race conditions | Message passing or lock discipline |
 | **Thread-per-request** | Resource exhaustion at scale | Thread pools with bounded concurrency |
-
----
-
-## 6. Coordination Patterns
-
-### 6.1 Fan-Out / Fan-In
-Distribute work across workers, collect results. Use bounded concurrency to prevent resource exhaustion.
-
-### 6.2 Pipeline
-Chain processing stages with channels between them. Each stage runs independently. Backpressure propagates naturally through bounded channels.
-
-### 6.3 Circuit Breaker
-When an external service fails repeatedly, stop calling it temporarily. Prevents cascade failures and gives the service time to recover.
 
 ---
 
