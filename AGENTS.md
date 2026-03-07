@@ -40,13 +40,24 @@ decapod eval plan --task-set-id <id> --task-ref <task-id> --model-id <model> --p
 
 ## Golden Rules (Non-Negotiable)
 
-1. Always refine intent with the user before inference-heavy work.
-2. Never work on main/master. Use `.decapod/workspaces/*`.
-3. `.decapod files are accessed only via decapod CLI`.
-4. Never claim done without `decapod validate` passing.
-5. Never invent capabilities that are not exposed by the binary.
-6. Stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
-7. Respect the Interface abstraction boundary.
+1. **MUST** refine intent with the user before inference-heavy work.
+2. **MUST NOT** work on main/master. **MUST** use `.decapod/workspaces/*`.
+3. **MUST** access `.decapod/*` files only via decapod CLI surfaces.
+4. **MUST NOT** claim done without `decapod validate` passing.
+5. **MUST NOT** invent capabilities that are not exposed by the binary.
+6. **MUST** stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
+7. **MUST** respect the Interface abstraction boundary.
+
+## Invariants (Normative)
+
+These invariants are directly enforced by tests. Violations will cause CI failure.
+
+- **INV-DAEMONLESS**: Decapod MUST NOT leave background processes running. (enforced by `tests/daemonless_lifecycle.rs`)
+- **INV-BOUNDED-VALIDATE**: `decapod validate` MUST terminate within bounded time. (enforced by `tests/validate_termination.rs`)
+- **INV-STORE-BOUNDARY**: Agents MUST NOT directly mutate `.decapod/*`; all access MUST use CLI. (enforced by validation gates)
+- **INV-SESSION-AUTH**: Mutations require active session with valid credentials. (enforced by session commands)
+- **INV-PROOF-GATED**: Workunit status `VERIFIED` MUST have passed proof-plan gates. (enforced by `tests/workunit_publish_gate.rs`)
+- **INV-WORKSPACE-ISOLATION**: Protected branches (main/master) MUST NOT be directly mutated. (enforced by workspace validation)
 
 ## Safety Invariants
 
