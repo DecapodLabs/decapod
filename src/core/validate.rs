@@ -4451,7 +4451,7 @@ pub fn run_validation(
     // Run remaining gates in parallel for bounded wall-clock validation time.
     let timings: Mutex<Vec<(&str, Duration)>> = Mutex::new(Vec::new());
     {
-        let s = ();
+        let _s = ();
         let ctx = &ctx;
         let timings = &timings;
         let broker = broker_content.as_deref();
