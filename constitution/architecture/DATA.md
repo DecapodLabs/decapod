@@ -8,7 +8,30 @@
 
 ---
 
-## 1. Data Architecture Principles
+## 1. The Oracle's Verdict: Data as the Enterprise Spine
+
+*Code is transient; data is forever. A bad schema will haunt a company for a decade.*
+
+### 1.1 The CTO's Strategic View
+- **Data as Asset:** The most valuable output of engineering is clean, structured, and accessible data. Decisions must be data-driven; therefore, data must be high-fidelity.
+- **Vendor Independence:** Avoid vendor lock-in where data is trapped in proprietary formats. Use open standards (Postgres, Parquet, Avro). If a cloud provider shuts down, you must be able to migrate your data in 24 hours.
+
+### 1.2 The SVP's Operational View
+- **Governance vs. Velocity:** Don't let centralized data teams become a bottleneck. Move to a "Data Mesh" approach where teams own and expose their own data as a product.
+- **Privacy as a Right:** Compliance (GDPR, HIPAA) is the floor, not the ceiling. Build data deletion and anonymity into the architecture from the start. "I forgot to delete the data" is an $80M mistake.
+
+### 1.3 The Architect's Structural View
+- **Schema First:** No "schemaless" production data. Even if the DB doesn't enforce it, the code must. Use protobuf or JSON schema for everything. Unstructured data is just "data you haven't understood yet."
+- **Consistency vs. Scalability:** Understand the CAP theorem. For Decapod-managed state, prefer Consistency (CP) for core repo metadata and Availability (AP) for high-frequency logs/traces. Never choose "neither."
+
+### 1.4 The Principal's Execution View
+- **The "Migration" Mindset:** Every piece of data code must be written with the next migration in mind. If you can't run two versions of the schema simultaneously, you haven't finished the design.
+- **Integrity is Absolute:** Foreign keys are not optional. If the DB doesn't support them, the application layer must. Broken references are data rot, and data rot kills systems.
+- **N+1 is a Seniority Test:** If an agent or engineer introduces an N+1 query, it's a failure of architectural understanding. Use batching and projection.
+
+---
+
+## 2. Data Architecture Principles
 
 ### 1.1 Data Longevity
 **Data outlives code by orders of magnitude.** Design for data that will survive:

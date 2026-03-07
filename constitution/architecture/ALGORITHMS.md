@@ -8,7 +8,26 @@
 
 ---
 
-## 1. Algorithm Selection Principles
+## 1. The Oracle's Verdict: Algorithms in Production
+
+*The difference between a student and a Principal Engineer is knowing that O(1) can be slower than O(n) if it destroys the CPU cache.*
+
+### 1.1 The CTO's Strategic View
+- **Algorithms as IP:** Most business value lies in domain logic, not custom sorting. Use standard libraries. Only build custom algorithms when they provide a 10x competitive advantage (e.g., a custom search engine or high-frequency trading engine).
+- **Maintenance Cost:** A complex algorithm is a liability. If only one person can maintain it, it's a single point of failure. Favor "boring" but correct implementations.
+
+### 1.2 The Architect's Structural View
+- **Scale-Out vs. Scale-Up:** Prefer algorithms that are easy to parallelize or distribute. A slightly less efficient O(n log n) algorithm that can run on 100 machines beats a complex O(n) algorithm that must be single-threaded.
+- **Data Locality:** In modern systems, the "memory wall" is the bottleneck. Algorithms must be cache-aware. Sequential access is almost always faster than random access, even if the Big-O suggests otherwise.
+
+### 1.3 The Principal's Execution View
+- **The "Small n" Reality:** Most production datasets for a single operation are small (n < 1000). At this scale, O(n²) or even O(2ⁿ) might be faster than O(log n) if it has lower constant factors or better cache locality.
+- **Determinism is Quality:** In Decapod-governed systems, algorithms must be deterministic. Avoid non-deterministic choices (like random pivots without a fixed seed) to ensure reproducible state.
+- **Fail-Fast & Resource Bounds:** Algorithms must have time and space budgets. An algorithm that might run forever or consume all memory is a bug. Implement timeouts and memory limits at the algorithmic level.
+
+---
+
+## 2. Algorithm Selection Principles
 
 ### 1.1 Measure First, Optimize Second
 **Premature optimization is the root of all evil.**

@@ -8,7 +8,31 @@
 
 ---
 
-## 1. Security Principles
+## 1. The Oracle's Verdict: Security as an Invariant
+
+*Security is not a feature you add; it is a property you preserve. If you have to "fix security" before a release, you have already failed.*
+
+### 1.1 The CISO's Strategic View
+- **Assume Breach:** Design every system as if the perimeter has already been compromised. Lateral movement must be impossible.
+- **The Cost of Trust:** Trust is a technical debt. Every trusted component is a potential pivot point for an attacker. Minimize trust boundaries.
+- **Compliance is the Floor:** Meeting SOC2 or HIPAA requirements does not make you secure; it makes you legal. Real security requires thinking like an attacker.
+
+### 1.2 The SVP's Operational View
+- **Security Velocity:** Security must be automated. If a security check requires a human in the loop for every PR, developers will bypass it. Use static analysis (SAST), dynamic analysis (DAST), and automated dependency scanning.
+- **No "Security Exceptions":** An exception to a security policy is a vulnerability by another name. If a policy is too strict to follow, fix the policy, don't grant an exception.
+
+### 1.3 The Architect's Structural View
+- **Identity is the New Perimeter:** In a cloud-native world, IP addresses mean nothing. Use strong, cryptographic identity (mTLS, SPIFFE/SPIRE) for every service-to-service interaction.
+- **Immutable Infrastructure:** Servers should be treated as cattle, not pets. If a server is compromised, don't "clean" it; kill it and redeploy from a known good image.
+
+### 1.4 The Principal's Execution View
+- **Secure by Default:** Every API, every library, and every configuration must be secure by default. If a developer has to "remember" to turn on security, they will eventually forget.
+- **The "Need to Know" for Agents:** When agents operate on the codebase, they must only have access to the specific files and tools required for their task. Over-privileged agents are a massive security risk.
+- **Validation is the Gate:** In Decapod, `validate` is the final arbiter. If a change violates a security spec, it cannot be promoted. No exceptions.
+
+---
+
+## 2. Security Principles
 
 ### 1.1 Defense in Depth
 **No single point of failure.**

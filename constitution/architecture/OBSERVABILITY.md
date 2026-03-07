@@ -8,7 +8,30 @@
 
 ---
 
-## 1. Observability Principles
+## 1. The Oracle's Verdict: Observability as the Feedback Loop
+
+*If you can't see it, it doesn't exist. If you can't measure it, you can't improve it.*
+
+### 1.1 The VP of Engineering's Pulse
+- **Operational Excellence:** Observability is the heartbeat of the organization. It's how we know if our strategy is working.
+- **SLIs/SLOs as a Contract:** Service Level Indicators (SLIs) and Objectives (SLOs) are the common language between engineering and the business. If we are within our error budget, we ship features. If not, we fix reliability. No exceptions.
+
+### 1.2 The SVP's Operational View
+- **Mean Time to Detection (MTTD):** The goal of observability is to reduce MTTD to near zero. We should know about a failure before the customer does.
+- **Unified Telemetry:** Metrics, logs, and traces (MELT) must be correlated. A single trace ID must link a user's request to a specific log line and a spike in a metric. Siloed observability is useless.
+
+### 1.3 The Architect's Structural View
+- **Semantic Logging:** Logs are not just for humans; they are data. Use structured, semantic logging that captures the *intent* of an operation, not just the mechanical steps.
+- **Distributed Tracing is Mandatory:** In a microservices or highly concurrent system, a single request can touch dozens of components. Without tracing, debugging is a guessing game.
+
+### 1.4 The Principal's Execution View
+- **Instrumentation is Code:** Observability code is as important as business logic. It must be tested, reviewed, and maintained. A "silent" failure because of missing instrumentation is a critical bug.
+- **Avoid "Log Spam":** High-volume, low-signal logs are "log pollution." They increase costs and hide real issues. Log at the appropriate level and sample aggressively at the trace level.
+- **The "Audit" is a State:** In Decapod, observability is how we prove completion. The event log is the authoritative record. If it's not in the audit trail, it didn't happen.
+
+---
+
+## 2. Observability Principles
 
 ### 1.1 The Three Pillars
 
