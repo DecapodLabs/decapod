@@ -2,14 +2,7 @@ use std::fs;
 use std::path::Path;
 
 #[derive(serde::Deserialize, Debug)]
-struct ConstitutionClaim {
-    #[serde(rename = "Claim ID")]
-    claim_id: String,
-    #[serde(rename = "Enforcement")]
-    enforcement: String,
-}
-
-#[derive(serde::Deserialize, Debug)]
+#[allow(dead_code)]
 struct ConstitutionTable {
     #[serde(rename = "Claim ID")]
     claim_id: String,
@@ -31,18 +24,12 @@ fn load_constitution_claims() -> Vec<ConstitutionTable> {
 
     let mut claims = Vec::new();
     let mut in_table = false;
-    let mut headers: Vec<String> = Vec::new();
 
     for line in content.lines() {
         let trimmed = line.trim();
 
         if trimmed.starts_with('|') && trimmed.contains("Claim ID") {
             in_table = true;
-            headers = trimmed
-                .split('|')
-                .filter(|s| !s.trim().is_empty())
-                .map(|s| s.trim().to_string())
-                .collect();
             continue;
         }
 
