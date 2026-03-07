@@ -530,7 +530,7 @@ fn validate_entrypoint_invariants(
             "decapod docs ingest",
             "Core constitution ingestion mandate language",
         ),
-        ("Stop if", "Stop-if-missing behavior"),
+        ("stop if", "Stop-if-missing behavior"),
         ("Docker git workspaces", "Docker workspace mandate language"),
         (
             "decapod todo claim --id <task-id>",
@@ -544,10 +544,7 @@ fn validate_entrypoint_invariants(
             "DECAPOD_SESSION_PASSWORD",
             "Per-agent session password mandate language",
         ),
-        (
-            ".decapod files are accessed only via decapod CLI",
-            "Jail rule: .decapod access is CLI-only",
-        ),
+        ("via decapod CLI", "Jail rule: .decapod access is CLI-only"),
         (
             "Interface abstraction boundary",
             "Control-plane opacity language",
