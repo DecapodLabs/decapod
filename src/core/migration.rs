@@ -13,7 +13,6 @@ use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
-use ulid::Ulid;
 
 /// Current Decapod version from Cargo.toml
 pub const DECAPOD_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -226,7 +225,7 @@ fn create_data_backup(data_root: &Path) -> Result<Option<std::path::PathBuf>, er
     let backup_dir = data_root.join(format!(
         ".migration_backup_{}_{}",
         DECAPOD_VERSION.replace('.', "_"),
-        Ulid::new()
+        crate::core::ulid::new_ulid()
     ));
     fs::create_dir_all(&backup_dir).map_err(error::DecapodError::IoError)?;
 
@@ -631,7 +630,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
             for r in rows {
                 let (id, title, content, prov, ts) = r?;
                 mem_conn.execute("INSERT OR IGNORE INTO nodes(id, node_type, title, body, created_at, updated_at, dir_path, scope) VALUES(?1, 'observation', ?2, ?3, ?4, ?4, '', 'repo')", rusqlite::params![id, title, content, ts])?;
-                mem_conn.execute("INSERT OR IGNORE INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)", rusqlite::params![Ulid::new().to_string(), id, prov, ts])?;
+                mem_conn.execute("INSERT OR IGNORE INTO sources(id, node_id, source, created_at) VALUES(?1, ?2, ?3, ?4)", rusqlite::params![crate::core::ulid::new_ulid(), id, prov, ts])?;
             }
         }
     }

@@ -875,7 +875,7 @@ pub fn run_verify_cli(
         return Ok(());
     }
 
-    let run_id = ulid::Ulid::new().to_string();
+    let run_id = crate::core::ulid::new_ulid();
     let mut results = Vec::new();
 
     for target in &targets {

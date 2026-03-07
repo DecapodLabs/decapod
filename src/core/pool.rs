@@ -28,7 +28,7 @@
 use crate::core::db;
 use crate::core::error::DecapodError;
 use rusqlite::Connection;
-use rustc_hash::FxHashMap;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 use std::thread;
@@ -58,13 +58,13 @@ struct PoolEntry {
 /// - Read operations create fresh connections without mutex serialization (WAL concurrent reads).
 /// - Both paths use increased `busy_timeout` for cross-process contention.
 pub struct SqlitePool {
-    entries: Mutex<FxHashMap<PathBuf, &'static PoolEntry>>,
+    entries: Mutex<HashMap<PathBuf, &'static PoolEntry>>,
 }
 
 impl SqlitePool {
     fn new() -> Self {
         Self {
-            entries: Mutex::new(FxHashMap::default()),
+            entries: Mutex::new(HashMap::new()),
         }
     }
 

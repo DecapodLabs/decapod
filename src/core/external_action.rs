@@ -6,7 +6,6 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
-use ulid::Ulid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ExternalCapability {
@@ -204,7 +203,7 @@ pub fn execute(
 
     let event = ExternalActionEvent {
         ts: now_iso(),
-        event_id: Ulid::new().to_string(),
+        event_id: crate::core::ulid::new_ulid(),
         capability: capability.as_str().to_string(),
         scope: scope.to_string(),
         command: command.to_string(),

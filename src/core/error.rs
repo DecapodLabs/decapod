@@ -3,56 +3,79 @@
 //! This module defines the canonical error type used throughout Decapod.
 //! All subsystems return `Result<T, DecapodError>` for error handling.
 
-use rusqlite;
 use std::env;
+use std::fmt;
 use std::io;
-use thiserror::Error;
 
 /// Canonical error type for all Decapod operations.
-///
-/// Uses `thiserror` for automatic `Display` and `Error` trait implementations.
-/// Many variants auto-convert from standard library errors via `#[from]`.
-#[derive(Error, Debug)]
+#[derive(Debug)]
 pub enum DecapodError {
     /// SQLite database error (auto-converts from `rusqlite::Error`)
-    #[error("SQLite error: {0}")]
-    RusqliteError(#[from] rusqlite::Error),
-
+    RusqliteError(rusqlite::Error),
     /// I/O error (auto-converts from `std::io::Error`)
-    #[error("I/O error: {0}")]
-    IoError(#[from] io::Error),
-
+    IoError(io::Error),
     /// Database initialization failure
-    #[error("Failed to initialize database: {0}")]
     DatabaseInitializationError(String),
-
     /// Path resolution or validation error
-    #[error("Path error: {0}")]
     PathError(String),
-
     /// Environment variable error (auto-converts from `std::env::VarError`)
-    #[error("Environment variable error: {0}")]
-    EnvVarError(#[from] env::VarError),
-
+    EnvVarError(env::VarError),
     /// Validation harness failure (proof gate, schema check, etc.)
-    #[error("Validation error: {0}")]
     ValidationError(String),
-
     /// Resource not found (missing file, task, claim, etc.)
-    #[error("Not found: {0}")]
     NotFound(String),
-
     /// Feature not yet implemented
-    #[error("Not implemented: {0}")]
     NotImplemented(String),
-
     /// Context pack/archive error
-    #[error("Context pack error: {0}")]
     ContextPackError(String),
-
     /// Session token error (not found, invalid, expired, etc.)
-    #[error("Session error: {0}")]
     SessionError(String),
+}
+
+impl fmt::Display for DecapodError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::RusqliteError(e) => write!(f, "SQLite error: {e}"),
+            Self::IoError(e) => write!(f, "I/O error: {e}"),
+            Self::DatabaseInitializationError(s) => write!(f, "Failed to initialize database: {s}"),
+            Self::PathError(s) => write!(f, "Path error: {s}"),
+            Self::EnvVarError(e) => write!(f, "Environment variable error: {e}"),
+            Self::ValidationError(s) => write!(f, "Validation error: {s}"),
+            Self::NotFound(s) => write!(f, "Not found: {s}"),
+            Self::NotImplemented(s) => write!(f, "Not implemented: {s}"),
+            Self::ContextPackError(s) => write!(f, "Context pack error: {s}"),
+            Self::SessionError(s) => write!(f, "Session error: {s}"),
+        }
+    }
+}
+
+impl std::error::Error for DecapodError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::RusqliteError(e) => Some(e),
+            Self::IoError(e) => Some(e),
+            Self::EnvVarError(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
+impl From<rusqlite::Error> for DecapodError {
+    fn from(e: rusqlite::Error) -> Self {
+        Self::RusqliteError(e)
+    }
+}
+
+impl From<io::Error> for DecapodError {
+    fn from(e: io::Error) -> Self {
+        Self::IoError(e)
+    }
+}
+
+impl From<env::VarError> for DecapodError {
+    fn from(e: env::VarError) -> Self {
+        Self::EnvVarError(e)
+    }
 }
 
 #[cfg(test)]

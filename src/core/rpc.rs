@@ -33,7 +33,7 @@ pub struct RpcRequest {
 }
 
 pub fn default_request_id() -> String {
-    ulid::Ulid::new().to_string()
+    crate::core::ulid::new_ulid()
 }
 
 /// Standard RPC response envelope
