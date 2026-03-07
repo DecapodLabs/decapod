@@ -210,6 +210,34 @@ fn validate_timeout_does_not_strand_db_for_followup_commands() {
 }
 
 #[test]
+fn validate_json_reports_self_heal_and_structured_summary() {
+    let (_tmp, dir, password) = setup_repo();
+
+    let validate = run_decapod(
+        &dir,
+        &["validate", "--format", "json"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        validate.status.success(),
+        "validate --format json should succeed after self-heal; stderr:\n{}",
+        String::from_utf8_lossy(&validate.stderr)
+    );
+
+    let payload: Value =
+        serde_json::from_slice(&validate.stdout).expect("validate json payload should parse");
+    assert_eq!(payload["status"], "ok");
+    assert_eq!(payload["report"]["status"], "ok");
+    assert!(payload["report"]["fail_count"].as_u64().unwrap_or(1) == 0);
+    assert!(payload["report"]["gate_timings"].is_array());
+    assert!(payload["self_heal"].is_array());
+}
+
+#[test]
 fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
     let (_tmp, dir, password) = setup_repo();
     let db_path = dir.join(".decapod").join("data").join("todo.db");

@@ -684,11 +684,26 @@ fn has_local_modifications(repo_root: &Path) -> Result<bool, DecapodError> {
             repo_root.to_str().unwrap_or("."),
             "status",
             "--porcelain",
+            "-z",
         ])
         .output()
         .map_err(DecapodError::IoError)?;
 
-    Ok(!String::from_utf8_lossy(&output.stdout).trim().is_empty())
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut saw_non_ignorable = false;
+    for entry in stdout.split('\0').filter(|entry| !entry.is_empty()) {
+        if entry.len() < 4 {
+            continue;
+        }
+        let path = &entry[3..];
+        if path == ".decapod/OVERRIDE.md" {
+            continue;
+        }
+        saw_non_ignorable = true;
+        break;
+    }
+
+    Ok(saw_non_ignorable)
 }
 
 fn sanitize_agent_id(agent_id: &str) -> String {

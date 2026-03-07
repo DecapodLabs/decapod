@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "title": "Self-heal validation and structured reporting",
+  "intent": "Make decapod validation converge toward green via safe self-heal actions, structured reporting, and environment-aware gating in the claimed workspace.",
+  "state": "APPROVED",
+  "todo_ids": [
+    "bugs_01kk3wktkzarkbqb"
+  ],
+  "proof_hooks": [
+    "decapod validate",
+    "cargo test --test validate_termination validate_json_reports_self_heal_and_structured_summary -- --nocapture"
+  ],
+  "unknowns": [],
+  "human_questions": [],
+  "constraints": {
+    "forbidden_paths": [],
+    "file_touch_budget": null
+  },
+  "updated_at": "1772879509Z"
+}
