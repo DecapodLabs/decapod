@@ -429,11 +429,11 @@ jobs:
           chmod +x /tmp/test-bins/core_tests
           /tmp/test-bins/core_tests migration_ --ignored --test-threads=1
 
-  # HEALTH: Decapod validation and health checks (needs release binary via cargo install)
+  # HEALTH: Decapod validation and health checks (needs release binary via cargo install).
+  # Runs in parallel with build — uses cargo install, not the test binary artifact.
   health:
     name: Health Checks
     runs-on: ubuntu-latest
-    needs: build
     steps:
       - uses: actions/checkout@v4
         with:
@@ -566,11 +566,11 @@ jobs:
         if: steps.changed.outputs.tests == ''
         run: echo "✅ No test files changed — drift gate skipped"
 
-  # STATE_COMMIT: Golden vectors cross-platform verification
+  # STATE_COMMIT: Golden vectors cross-platform verification.
+  # Runs in parallel with build — compiles its own golden_vectors binary, not the main artifact.
   state-commit-golden-vectors:
     name: Golden Vectors (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: build
     env:
       DECAPOD_STATE_COMMIT_CI_JOB: state-commit-golden-vectors
     strategy:
