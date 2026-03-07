@@ -375,7 +375,7 @@ fn prompt_line(prompt: &str) -> Result<String, error::DecapodError> {
 }
 
 fn print_init_block(title: &str, subtitle: &str) {
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
     println!();
     println!("{}", format!("◢ {}", title).bright_cyan().bold());
     println!("{}", format!("  {}", subtitle).bright_black());
@@ -386,7 +386,7 @@ fn prompt_text_field(
     helper: &str,
     default_value: &str,
 ) -> Result<String, error::DecapodError> {
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
     println!();
     println!("{}", format!("  {}", label).bright_white().bold());
     println!("{}", format!("    {}", helper).bright_black());
@@ -411,7 +411,7 @@ fn prompt_line_default(prompt: &str, default_value: &str) -> Result<String, erro
 }
 
 fn prompt_yes_no(prompt: &str, default_yes: bool) -> Result<bool, error::DecapodError> {
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
     let suffix = if default_yes { "[Y/n]" } else { "[y/N]" };
     println!();
     println!("{}", format!("  {}", prompt).bright_white().bold());
@@ -586,7 +586,7 @@ fn run_init_apply(
 
     let setup_decapod_root = target_dir.join(".decapod");
     if setup_decapod_root.exists() && !init_with.force {
-        use colored::Colorize;
+        use crate::core::ansi::AnsiExt;
         println!(
             "{} {}",
             "init:".bright_yellow(),
@@ -683,7 +683,7 @@ fn run_init_apply(
         .unwrap_or(current_dir)
         .display()
         .to_string();
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
     print_init_block(
         "Decapod Init Summary",
         "Scaffold completed with the following changes.",
@@ -3126,7 +3126,7 @@ fn render_validation_text(
     actions: &[ValidationHealAction],
     verbose: bool,
 ) {
-    use colored::Colorize;
+    use crate::core::ansi::AnsiExt;
 
     validate::render_validation_report(report, verbose);
     if !actions.is_empty() {
@@ -4635,23 +4635,32 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
     command_paths.sort();
     command_paths.dedup();
 
-    use rayon::prelude::*;
-    command_paths.par_iter().try_for_each(|path| {
-        let mut args = path.clone();
-        args.push("--help".to_string());
-        let output = std::process::Command::new(&exe)
-            .args(&args)
-            .output()
-            .map_err(error::DecapodError::IoError)?;
-        if !output.status.success() {
-            return Err(error::DecapodError::ValidationError(format!(
-                "help smoke failed for `decapod {}`: {}",
-                path.join(" "),
-                String::from_utf8_lossy(&output.stderr).trim()
-            )));
-        }
-        Ok(())
-    })?;
+    let mut handles = Vec::new();
+    for path in &command_paths {
+        handles.push(std::thread::spawn({
+            let path = path.clone();
+            let exe = exe.clone();
+            move || {
+                let mut args = path.clone();
+                args.push("--help".to_string());
+                let output = std::process::Command::new(&exe)
+                    .args(&args)
+                    .output()
+                    .map_err(error::DecapodError::IoError)?;
+                if !output.status.success() {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "help smoke failed for `decapod {}`: {}",
+                        path.join(" "),
+                        String::from_utf8_lossy(&output.stderr).trim()
+                    )));
+                }
+                Ok(())
+            }
+        }));
+    }
+    for handle in handles {
+        handle.join().map_err(|_| error::DecapodError::ValidationError("thread panicked".into()))??;
+    }
     Ok(())
 }
 
