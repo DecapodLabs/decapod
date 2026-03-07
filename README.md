@@ -112,13 +112,11 @@ State is local and durable in `.decapod/`. Context, decisions, and traces persis
 
 ## How it works
 
-Every Decapod operation returns one of three things:
+Every Decapod operation returns some combination of three signals.
 
-| Signal | What it does | Think of it as |
-|--------|-------------|----------------|
-| **Advisory** | Tightens intent, reduces wasted loops | Guardrails |
-| **Interlock** | Hard policy boundary — blocks unsafe flow | Circuit breaker |
-| **Attestation** | Structured proof that criteria actually passed | Receipt |
+- **Advisory** narrows the problem. It helps the agent stop wasting cycles on vague intent, missing context, or weak plans.
+- **Interlock** blocks unsafe flow. It is the hard stop that says, "you are about to break policy, violate a boundary, or skip proof."
+- **Attestation** is the receipt. It records what actually happened and whether the required criteria were met.
 
 ```text
 Human Intent
@@ -149,15 +147,19 @@ The deep surface area — interfaces, capsules, eval kernel, knowledge promotion
 
 These are the things Decapod **actually enforces** — break any of these and `decapod validate` will fail:
 
-| Guarantee | Description | Enforcement |
-|-----------|-------------|-------------|
-| **Daemonless** | No background process. Invoked on-demand, exits when done. | `tests/daemonless_lifecycle.rs` |
-| **Repo-native** | All state lives in `.decapod/` as plain files. Nothing phones home. | File-based storage in `src/core/store.rs` |
-| **Proof-gated completion** | `VERIFIED` requires passing proof-plan gates, not narrative claims. | WorkUnit status machine + `tests/workunit_publish_gate.rs` |
-| **Workspace isolation** | Agents cannot mutate protected branches directly. Must use isolated worktrees. | Git worktree enforcement + `tests/workspace_interlock.rs` |
-| **Bounded validation** | `decapod validate` terminates in bounded time, never hangs. | `tests/validate_termination.rs` + timeout enforcement |
-| **Store boundary** | Agents must use CLI, not direct file access to `.decapod/*`. | Validation gates + broker |
-| **Session required** | Mutations require active session with credentials. | Session auth on mutation commands |
+Decapod stays daemonless. There is no background service to keep alive. It runs on demand and exits when the call is done. That behavior is enforced by [tests/daemonless_lifecycle.rs](tests/daemonless_lifecycle.rs).
+
+Decapod stays repo-native. State lives in `.decapod/` as plain files and local data, rather than an external control-plane service. The storage model is implemented in [src/core/store.rs](src/core/store.rs).
+
+Completion is proof-gated. `VERIFIED` is not a vibe-based status; it only exists when the proof plan passes. That path is enforced by the WorkUnit status machinery and [tests/workunit_publish_gate.rs](tests/workunit_publish_gate.rs).
+
+Workspace isolation is mandatory. Agents cannot mutate protected branches directly and are expected to work in isolated worktrees. That is enforced by the workspace interlock and [tests/workspace_interlock.rs](tests/workspace_interlock.rs).
+
+Validation is bounded. `decapod validate` must terminate in finite time instead of hanging indefinitely. That guarantee is enforced by [tests/validate_termination.rs](tests/validate_termination.rs) and the timeout logic around validation gates.
+
+The store boundary is real. Agents are expected to use Decapod command surfaces instead of mutating `.decapod/*` directly. That is enforced by validation gates and the broker layer.
+
+Mutations require a session. State-changing operations need active credentials, and session checks are part of the mutation path.
 
 These are **aspirational** (we're working on them):
 
