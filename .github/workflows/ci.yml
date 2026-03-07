@@ -264,53 +264,13 @@ jobs:
   # INTEGRATION TESTS: 20 parallel shards.
   # Each shard restores the pre-warmed cache and compiles only its assigned test harnesses.
   test-integration:
-    name: Tests (Integration ${{ matrix.display }}/20)
+    name: Tests (Integration ${{ matrix.shard }}/20)
     runs-on: ubuntu-latest
     needs: setup
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - shard: 0
-            display: 1
-          - shard: 1
-            display: 2
-          - shard: 2
-            display: 3
-          - shard: 3
-            display: 4
-          - shard: 4
-            display: 5
-          - shard: 5
-            display: 6
-          - shard: 6
-            display: 7
-          - shard: 7
-            display: 8
-          - shard: 8
-            display: 9
-          - shard: 9
-            display: 10
-          - shard: 10
-            display: 11
-          - shard: 11
-            display: 12
-          - shard: 12
-            display: 13
-          - shard: 13
-            display: 14
-          - shard: 14
-            display: 15
-          - shard: 15
-            display: 16
-          - shard: 16
-            display: 17
-          - shard: 17
-            display: 18
-          - shard: 18
-            display: 19
-          - shard: 19
-            display: 20
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -324,12 +284,12 @@ jobs:
         with:
           shared-key: "ci-build"
           save-if: "false"
-      - name: Run integration tests (shard ${{ matrix.display }}/20)
+      - name: Run integration tests (shard ${{ matrix.shard }}/20)
         run: |
           set -euo pipefail
           shard=${{ matrix.shard }}
           total=20
-          display=${{ matrix.display }}
+          shard_index=$(( shard - 1 ))
 
           # All test targets: auto-discovered top-level tests + custom [[test]] targets
           # Build the full list from Cargo.toml to include plugins_*, core_tests, etc.
@@ -352,16 +312,16 @@ jobs:
             if echo "$ISOLATED" | grep -qw "$t"; then
               continue
             fi
-            if [ $(( i % total )) -ne "$shard" ]; then
+            if [ $(( i % total )) -ne "$shard_index" ]; then
               continue
             fi
-            echo "Shard $display running: $t"
+            echo "Shard $shard running: $t"
             cargo test --all-features --test "$t" -- --test-threads=4
             ran=$(( ran + 1 ))
           done
 
           if [ "$ran" -eq 0 ]; then
-            echo "Shard $display: no tests assigned"
+            echo "Shard $shard: no tests assigned"
           fi
 
   # RPC SUITE: isolated to avoid contention
