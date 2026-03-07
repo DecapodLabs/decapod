@@ -8,29 +8,7 @@
 
 ---
 
-## 1. The Oracle's Verdict: The Frontend as the Product
-
-*To the user, the frontend is not a layer; it is the entire product. If it feels slow, broken, or confusing, the backend's elegance is irrelevant.*
-
-### 1.1 The CTO's Strategic View
-- **Time-to-Interactive is Revenue:** Performance is not a technical metric; it is a business metric. A bloated JavaScript payload directly impacts conversion rates. Every dependency added to the frontend must justify its weight in dollars.
-- **The "Rewrite" Fallacy:** Do not rewrite the frontend every time a new framework becomes popular. Choose a boring, stable ecosystem (like React) and stick with it. Innovation should happen in the user experience, not the build tooling.
-
-### 1.2 The SVP's Operational View
-- **Accessibility as a Baseline:** Accessibility (a11y) is a legal and ethical requirement, not a backlog item. If a core flow cannot be completed via keyboard and screen reader, the feature is fundamentally defective and must not ship.
-- **Component Libraries over Custom CSS:** Stop reinventing the button. Teams must use a standardized, accessible component library. Consistency across the product suite is more important than bespoke pixel-pushing.
-
-### 1.3 The Architect's Structural View
-- **State Locality:** The biggest source of frontend complexity is global state. State should live as close to where it is used as possible. Only use global state (Redux/Zustand) when multiple disconnected components strictly require synchronization.
-- **Server-Driven UI vs Client-Heavy SPAs:** Default to Server-Side Rendering (SSR) or Static Site Generation (SSG) for content. Only pay the cost of a Single Page Application (SPA) if the interface requires app-like interactivity (e.g., a complex dashboard or editor).
-
-### 1.4 The Principal's Execution View
-- **Data Fetching is a Solved Problem:** Do not write custom `useEffect` hooks for data fetching. Use established libraries (React Query, SWR, Apollo) that handle caching, deduplication, and stale-while-revalidate out of the box.
-- **Bundle Phobia:** Principal engineers are terrified of large bundles. Monitor bundle size on every PR. Tree-shaking is mandatory. If you import a 2MB library to format a date, you are doing it wrong.
-
----
-
-## 2. Frontend Architecture Principles
+## 1. Frontend Architecture Principles
 
 ### 1.1 Performance is User Experience
 **Core Web Vitals are engineering requirements:**
@@ -59,6 +37,18 @@
 - Screen reader support
 - Color contrast (WCAG AA minimum)
 - Focus management
+
+### 1.5 Production Mindset
+The frontend is not a layer — it is the product. Every decision that degrades the user experience degrades the product itself:
+
+- **Time-to-interactive is a revenue metric:** A bloated JavaScript bundle has a direct, measurable impact on conversion and retention. Every new dependency must justify its payload weight. If a library costs 200KB to format a date, replace it with 5 lines.
+- **Framework stability over novelty:** Rewriting the frontend every time a new framework trends is a net loss. Choose a mature, well-supported ecosystem and hold it. Innovation belongs in the user experience and product capability, not the build toolchain.
+- **Accessibility is a correctness requirement, not a backlog item:** If a core flow cannot be completed with a keyboard and screen reader, the feature is defective. This is both an ethical and legal obligation, and it must be verified before any flow is marked complete.
+- **Standardized components over bespoke CSS:** A consistent, accessible component library is a force multiplier. Custom widget implementations for standard patterns (buttons, modals, selects) accumulate accessibility debt and design drift. Use and maintain a shared system.
+- **State locality reduces complexity:** The largest source of frontend complexity is state that lives farther from its use site than necessary. Reach for global state only when multiple disconnected components strictly require synchronization. Local and URL state should be the defaults.
+- **Choose the rendering model for the use case:** SSR and SSG are the correct defaults for content-heavy pages and SEO-critical surfaces. Pay the cost of a full SPA only when the interface genuinely requires app-level interactivity that cannot be achieved otherwise.
+- **Server-state libraries are the standard:** Manual `useEffect` for data fetching is error-prone and widely superseded. Libraries like React Query and SWR handle caching, deduplication, background refresh, and error states correctly. Use them.
+- **Monitor bundle size as a first-class metric:** Tree-shaking must be verified, not assumed. Bundle analysis should run in CI. Size regressions are caught at PR review, not discovered when performance degrades in production.
 
 ---
 

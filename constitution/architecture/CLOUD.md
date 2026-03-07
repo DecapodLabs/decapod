@@ -8,29 +8,7 @@
 
 ---
 
-## 1. The Oracle's Verdict: Cloud as Utility, Not Magic
-
-*The cloud is just someone else's computer, but it charges by the millisecond. If you do not engineer for cost and failure, the cloud will bankrupt you before it scales you.*
-
-### 1.1 The CTO's Strategic View
-- **Unit Economics over Vanity Metrics:** Cloud architecture must map directly to business unit economics. If serving one customer costs more than the revenue they generate, the architecture is fundamentally broken, regardless of how elegantly it scales.
-- **Portability as Leverage:** Total vendor lock-in is a failure of negotiation. While using managed services (PaaS/Serverless) accelerates velocity, the core domain logic must remain portable enough to migrate if a vendor's pricing becomes predatory.
-
-### 1.2 The SVP's Operational View
-- **Infrastructure as Data:** Infrastructure as Code (IaC) is not enough; infrastructure must be versioned, tested, and promoted identically to application code. "Click-ops" (using the AWS/GCP console to change state) in production is a fireable offense.
-- **Cost is an Engineering Metric:** Cloud cost is not a finance problem; it is an engineering problem. Every PR must have a predictable cost impact. If a developer cannot explain the cost of their architecture, it cannot be merged.
-
-### 1.3 The Architect's Structural View
-- **Embrace the Chaos (Design for Failure):** The network is not reliable, latency is not zero, and instances will die. Architecture must handle the loss of any single node, zone, or service gracefully. If an outage in a non-critical downstream service brings down the primary flow, the architecture has failed.
-- **Stateless by Default:** Compute must be ephemeral and stateless. State belongs only in managed databases or object storage. If an auto-scaling group cannot kill an instance safely at any moment, the system is brittle.
-
-### 1.4 The Principal's Execution View
-- **The Limits of Serverless:** FaaS (Lambda/Cloud Functions) is phenomenal for event-driven glue, but terrible for consistent, high-throughput, low-latency APIs. Choose the compute model based on the workload's shape, not the hype cycle.
-- **Least Privilege is Absolute:** IAM roles must be tightly scoped per service. A compromised container must not have access to the S3 buckets of another service. Wildcard (`*`) permissions in production IAM policies are a critical security violation.
-
----
-
-## 2. Cloud Architecture Principles
+## 1. Cloud Architecture Principles
 
 ### 1.1 Design for Failure
 **Everything fails, all the time.**
@@ -65,6 +43,17 @@
 - Reserved capacity for steady-state
 - Spot instances for fault-tolerant workloads
 - Right-sizing resources
+
+### 1.5 Production Mindset
+Cloud infrastructure decisions have direct business consequences. Apply the same rigor to infrastructure as to application code:
+
+- **Unit economics are the architecture test:** If the cost to serve one customer exceeds the revenue they generate, the architecture is broken regardless of how elegantly it scales. Every architectural decision has a cost per unit; make it visible.
+- **Portability is leverage, not ideology:** Full vendor lock-in is a negotiating failure. Using managed services accelerates delivery — that's the right trade — but core domain logic must remain portable enough to migrate within a reasonable window if vendor economics turn predatory.
+- **Click-ops in production is a defect:** Infrastructure that was configured through a web console cannot be reviewed, versioned, tested, or recovered reliably. Every production state change must be expressed in code and promoted through the same review process as application changes.
+- **Cost is an engineering signal, not a finance problem:** If an engineer cannot explain the cost impact of a PR, it cannot ship. Cloud spend is a direct output of architectural decisions; teams own that number.
+- **Stateless compute is the default contract:** Any compute that accumulates local state breaks auto-scaling and complicates recovery. If an instance cannot be terminated safely at any moment, the system is brittle by design.
+- **FaaS has a shape constraint:** Serverless functions are excellent for event-driven, bursty workloads. They are poor fits for consistent, high-throughput, latency-sensitive APIs where cold starts are visible and predictable resource allocation matters.
+- **Least privilege is non-negotiable:** IAM roles must be scoped per service, per action, per resource. Wildcard permissions in production are a critical security defect. A compromised service must not be a pivot to adjacent systems.
 
 ---
 

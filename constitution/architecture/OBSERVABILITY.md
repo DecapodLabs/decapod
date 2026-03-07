@@ -8,30 +8,7 @@
 
 ---
 
-## 1. The Oracle's Verdict: Observability as the Feedback Loop
-
-*If you can't see it, it doesn't exist. If you can't measure it, you can't improve it.*
-
-### 1.1 The VP of Engineering's Pulse
-- **Operational Excellence:** Observability is the heartbeat of the organization. It's how we know if our strategy is working.
-- **SLIs/SLOs as a Contract:** Service Level Indicators (SLIs) and Objectives (SLOs) are the common language between engineering and the business. If we are within our error budget, we ship features. If not, we fix reliability. No exceptions.
-
-### 1.2 The SVP's Operational View
-- **Mean Time to Detection (MTTD):** The goal of observability is to reduce MTTD to near zero. We should know about a failure before the customer does.
-- **Unified Telemetry:** Metrics, logs, and traces (MELT) must be correlated. A single trace ID must link a user's request to a specific log line and a spike in a metric. Siloed observability is useless.
-
-### 1.3 The Architect's Structural View
-- **Semantic Logging:** Logs are not just for humans; they are data. Use structured, semantic logging that captures the *intent* of an operation, not just the mechanical steps.
-- **Distributed Tracing is Mandatory:** In a microservices or highly concurrent system, a single request can touch dozens of components. Without tracing, debugging is a guessing game.
-
-### 1.4 The Principal's Execution View
-- **Instrumentation is Code:** Observability code is as important as business logic. It must be tested, reviewed, and maintained. A "silent" failure because of missing instrumentation is a critical bug.
-- **Avoid "Log Spam":** High-volume, low-signal logs are "log pollution." They increase costs and hide real issues. Log at the appropriate level and sample aggressively at the trace level.
-- **The "Audit" is a State:** In Decapod, observability is how we prove completion. The event log is the authoritative record. If it's not in the audit trail, it didn't happen.
-
----
-
-## 2. Observability Principles
+## 1. Observability Principles
 
 ### 1.1 The Three Pillars
 
@@ -47,6 +24,18 @@
 - **Alert on symptoms, not causes.** Users experience symptoms (latency, errors); investigate causes after alerting.
 - **Sampling is acceptable for high-volume data.** 100% capture at low volume, statistical sampling at high volume.
 - **Cost of observability < cost of not observing.** If you can't see it, you can't fix it.
+
+### 1.3 Production Mindset
+Observability is not a feature bolted on after the system is built — it is the primary mechanism by which a system proves it is operating correctly:
+
+- **SLIs and SLOs are the engineering-business contract:** Service Level Indicators define what "working" means in measurable terms. SLOs define the acceptable threshold. When within error budget, ship features. When outside it, fix reliability. This is not optional and does not require negotiation.
+- **Mean Time to Detection must approach zero:** The goal of observability is to know about a failure before the customer does. If the customer reports the issue first, the observability layer has already failed its primary function.
+- **Telemetry must be correlated:** Metrics, logs, and traces in isolation are incomplete. A single trace ID must link a user-visible request to a specific log line and a spike in a latency histogram. Siloed observability is expensive noise.
+- **Semantic logging, not mechanical logging:** Logs are data, not strings. A log entry should capture the intent and outcome of an operation, not just a sequential chronicle of function calls. Log what happened and why it matters, with machine-parseable fields.
+- **Distributed tracing is mandatory in concurrent systems:** When a request touches multiple async components or services, debugging without a trace is guesswork. Instrument trace propagation at service boundaries from the start — it cannot be added cheaply after the fact.
+- **Instrumentation is production code:** Observability code must be tested, reviewed, and maintained at the same standard as business logic. A silent failure caused by missing or broken instrumentation is a critical defect.
+- **High-volume logs are noise:** Logging every function call or intermediate state is log pollution. It increases cost, slows queries, and buries real signals. Log at the appropriate level; sample traces aggressively at high volume.
+- **The audit trail is the system of record:** In Decapod, observability is the mechanism by which completion is proved. An operation that is not in the audit log did not happen as far as the system is concerned.
 
 ---
 

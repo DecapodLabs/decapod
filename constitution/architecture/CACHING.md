@@ -8,30 +8,7 @@
 
 ---
 
-## 1. The Oracle's Verdict: Caching as a Performance Lever
-
-*Caching is the art of trading memory for time, and complexity for speed. If you don't need it, don't use it.*
-
-### 1.1 The CTO's Strategic View
-- **The Performance Budget:** Caching is a tool to meet your performance budget. If the system is fast enough without a cache, adding one is just adding a potential source of bugs.
-- **Cost of Stale Data:** The business must decide what the cost of stale data is. If showing a price that's 5 minutes old loses $1M, you cannot cache it. Caching is a business decision.
-
-### 1.2 The SVP's Operational View
-- **Cache as a Dependency:** A cache is a stateful dependency. If the cache goes down, does the system stay up? If the DB can't handle the "cold cache" load, your cache is actually a part of your database, and your architecture is fragile.
-- **Global vs. Local:** CDNs (Global) are for static assets and public APIs. Redis (Local/Regional) is for session and application state. Don't confuse the two.
-
-### 1.3 The Architect's Structural View
-- **Invalidation is the First Class Citizen:** Don't design a cache; design an invalidation strategy. If you can't prove how an entry gets removed, you shouldn't add it.
-- **The "Cache-Aside" Default:** For most application state, use the Cache-Aside pattern. It's the most resilient and easiest to reason about.
-
-### 1.4 The Principal's Execution View
-- **TTL is not a Strategy:** A TTL is a fallback, not an invalidation strategy. Use event-driven invalidation for critical data.
-- **The "Thundering Herd" is Real:** If a hot key expires, your DB will die. Use mutexes or probabilistic early expiration to prevent the herd.
-- **Serialization Costs:** Often, the time to serialize/deserialize an object from a cache is longer than the DB query itself. Measure the *total* time, not just the network round-trip.
-
----
-
-## 2. Caching Principles
+## 1. Caching Principles
 
 ### 1.1 Cache Purpose
 Cache is a **performance optimization**, not a:
@@ -57,6 +34,16 @@ Cache is a **performance optimization**, not a:
 | Throughput | High | Variable |
 | Consistency | Stale | Fresh |
 | Complexity | High | Low |
+
+### 1.4 Production Mindset
+Before adding a cache, establish a performance budget and verify the cache is necessary:
+
+- **Cache only when the system demands it:** If the system meets latency targets without a cache, adding one only introduces a failure mode. Measure first.
+- **Stale data has a business cost:** The acceptable staleness window is a product decision, not an engineering default. A price shown 5 minutes late may be catastrophically wrong; a user's display name shown 5 minutes stale is harmless. Make this explicit.
+- **A cache is a stateful dependency:** If the cache goes offline and the origin cannot absorb the resulting load, the cache has become load-bearing infrastructure — that is a fragile architecture. Design so the system degrades gracefully when the cache is cold or absent.
+- **CDN vs application cache are different tools:** CDNs serve public, edge-delivered assets; distributed caches (Redis) handle session and application state. Using the wrong layer for the wrong data adds complexity and consistency bugs.
+- **TTL is a fallback, not a strategy:** Time-based expiry is a safety net for when event-driven invalidation fails. For data with defined write paths, use explicit or event-driven invalidation and treat TTL as the last resort.
+- **Measure total round-trip cost:** Serialization and deserialization often exceed the network round-trip for a direct DB read. Benchmark the full cache path before assuming it is faster.
 
 ---
 
