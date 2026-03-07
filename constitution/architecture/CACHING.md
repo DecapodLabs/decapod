@@ -35,6 +35,16 @@ Cache is a **performance optimization**, not a:
 | Consistency | Stale | Fresh |
 | Complexity | High | Low |
 
+### 1.4 Production Mindset
+Before adding a cache, establish a performance budget and verify the cache is necessary:
+
+- **Cache only when the system demands it:** If the system meets latency targets without a cache, adding one only introduces a failure mode. Measure first.
+- **Stale data has a business cost:** The acceptable staleness window is a product decision, not an engineering default. A price shown 5 minutes late may be catastrophically wrong; a user's display name shown 5 minutes stale is harmless. Make this explicit.
+- **A cache is a stateful dependency:** If the cache goes offline and the origin cannot absorb the resulting load, the cache has become load-bearing infrastructure — that is a fragile architecture. Design so the system degrades gracefully when the cache is cold or absent.
+- **CDN vs application cache are different tools:** CDNs serve public, edge-delivered assets; distributed caches (Redis) handle session and application state. Using the wrong layer for the wrong data adds complexity and consistency bugs.
+- **TTL is a fallback, not a strategy:** Time-based expiry is a safety net for when event-driven invalidation fails. For data with defined write paths, use explicit or event-driven invalidation and treat TTL as the last resort.
+- **Measure total round-trip cost:** Serialization and deserialization often exceed the network round-trip for a direct DB read. Benchmark the full cache path before assuming it is faster.
+
 ---
 
 ## 2. Cache Levels

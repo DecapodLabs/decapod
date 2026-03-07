@@ -45,6 +45,20 @@
 - Security requirements are functional requirements
 - Security reviews for architectural changes
 
+### 1.5 Production Mindset
+Security is a property of the system, not a feature layer. Systems that require security to be "added" before release have already failed at architecture:
+
+- **Assume the perimeter is already breached:** Design every component assuming a network-adjacent attacker exists. Lateral movement must be architecturally impossible, not just blocked by policy. Microsegmentation, mTLS, and zero-trust identity make this enforceable.
+- **Trust is technical debt:** Every trusted component or interface is a potential pivot point. Minimize trust boundaries explicitly. Document what is trusted, why, and what the consequences of that trust being violated are.
+- **Compliance is the floor, not the ceiling:** Meeting SOC2 or HIPAA means you satisfy a minimum legal standard. Real security requires adversarial thinking. Red-team your own architecture before an attacker does.
+- **Security must be automated to scale:** Manual security reviews on every PR are a bottleneck that developers will eventually route around. SAST, DAST, dependency scanning, and secret detection must run in CI on every change, without exceptions.
+- **Policy exceptions are vulnerabilities:** An exception to a security policy is a vulnerability with documentation. If a policy is consistently too strict to follow, fix the policy through a formal process — do not grant individual exceptions.
+- **Identity is the perimeter in cloud-native systems:** IP-based trust is meaningless in elastic, multi-tenant infrastructure. Use strong cryptographic identity (mTLS, SPIFFE/SPIRE) for every service-to-service interaction.
+- **Immutable infrastructure limits blast radius:** A compromised instance must not be patched in place. Kill it and redeploy from a known-good image. This is only possible if compute is stateless and infrastructure is defined in code.
+- **Secure defaults are the only reliable defaults:** Any configuration, API, or library that requires explicit action to enable security will eventually ship insecure. Defaults must be secure. Opt-in for relaxed behavior, never opt-in for security.
+- **Agents must operate with minimum necessary context:** When agents process external data or operate on the codebase, they must have access only to the files, tools, and credentials their specific task requires. Over-privileged agents are a significant attack surface. Scope everything.
+- **Validation is the final gate:** In Decapod, `decapod validate` is the last line of automated defense. A change that violates a security specification cannot be promoted. This gate is non-negotiable.
+
 ---
 
 ## 2. Threat Modeling

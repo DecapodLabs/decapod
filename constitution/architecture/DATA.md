@@ -31,6 +31,18 @@ Every data entity has a single owner:
 - Owner handles migrations
 - Other services access through defined interfaces
 
+### 1.4 Production Mindset
+Data decisions compound over years. Schema choices made at week one outlive three engineering teams:
+
+- **Data is the primary asset:** The most durable output of any engineering effort is clean, structured, accessible data. Code is a snapshot; data persists. Decisions must be data-driven, which requires data to be high-fidelity.
+- **Avoid proprietary data lock-in:** Core data should live in open, portable formats (Postgres, Parquet, Avro). Vendor-specific binary formats create migration debt that compounds as volume grows.
+- **Schema before storage:** There is no such thing as "schemaless in production" — only schema that is unknown to the database and therefore unenforceable. Express schema explicitly using protobuf, JSON Schema, or equivalent. Unstructured data is just data whose structure you haven't modeled yet.
+- **Privacy and deletion are architecture requirements:** Compliance (GDPR, CCPA, HIPAA) is the legal floor. Deletion and anonymization must be designed into the data model from the start, not retrofitted. Data that cannot be deleted on demand is an incident waiting to happen.
+- **Consistency model is a design choice, not a default:** Understand where your system sits in the CAP theorem and make it explicit. Core transactional state requires consistency (CP). High-frequency event logs can tolerate availability-priority (AP). Never drift into an unexamined middle.
+- **Design for the next migration:** Every data structure should be written with its own evolution in mind. If the schema cannot support two live versions simultaneously, the design is incomplete.
+- **Referential integrity is absolute:** If the database supports foreign keys, use them. If it does not, enforce integrity in the application layer. Orphaned references are data rot, and data rot compounds silently until a system fails in an unrecoverable way.
+- **N+1 is an architectural smell:** A loop that issues one query per item is not a performance optimization opportunity — it is a design defect. Use joins, batching, or projection. Catch it in review, not production.
+
 ---
 
 ## 2. Storage Selection Framework

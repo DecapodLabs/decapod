@@ -30,6 +30,16 @@
 - **Parallelism:** Amdahl's Law limits
 - **Constants:** 2× slower is still O(n)
 
+### 1.4 Production Mindset
+The gap between academic algorithm knowledge and production engineering is real:
+
+- **Standard libraries first:** Most business value lives in domain logic, not sorting internals. Use language-native, battle-tested implementations. Custom algorithms are warranted only when the standard approach imposes a measurable, load-bearing bottleneck.
+- **Maintenance cost is a first-class constraint:** A clever algorithm maintained by one person is a single point of failure. Favor correct and readable over theoretically optimal.
+- **Data locality beats asymptotic complexity for small n:** Most production operation sets are small (n < 1000). O(n²) with cache-friendly sequential access frequently outperforms O(n log n) with pointer chasing. The memory wall is the real bottleneck in modern hardware.
+- **Prefer scale-out over scale-up:** An O(n log n) algorithm that parallelizes cleanly across 100 machines is often more practical than an O(n) algorithm that must remain single-threaded.
+- **Determinism is a correctness property:** In a system governed by reproducible validation, algorithms must produce identical output for identical input. Avoid non-deterministic choices (e.g., unseed random pivots) anywhere output is compared or stored.
+- **Resource budgets are not optional:** Every algorithm must have time and memory bounds enforced at the call site. An algorithm that may run forever or allocate without limit is a bug, not a performance risk.
+
 ---
 
 ## 2. Complexity Analysis

@@ -25,6 +25,18 @@
 - **Sampling is acceptable for high-volume data.** 100% capture at low volume, statistical sampling at high volume.
 - **Cost of observability < cost of not observing.** If you can't see it, you can't fix it.
 
+### 1.3 Production Mindset
+Observability is not a feature bolted on after the system is built — it is the primary mechanism by which a system proves it is operating correctly:
+
+- **SLIs and SLOs are the engineering-business contract:** Service Level Indicators define what "working" means in measurable terms. SLOs define the acceptable threshold. When within error budget, ship features. When outside it, fix reliability. This is not optional and does not require negotiation.
+- **Mean Time to Detection must approach zero:** The goal of observability is to know about a failure before the customer does. If the customer reports the issue first, the observability layer has already failed its primary function.
+- **Telemetry must be correlated:** Metrics, logs, and traces in isolation are incomplete. A single trace ID must link a user-visible request to a specific log line and a spike in a latency histogram. Siloed observability is expensive noise.
+- **Semantic logging, not mechanical logging:** Logs are data, not strings. A log entry should capture the intent and outcome of an operation, not just a sequential chronicle of function calls. Log what happened and why it matters, with machine-parseable fields.
+- **Distributed tracing is mandatory in concurrent systems:** When a request touches multiple async components or services, debugging without a trace is guesswork. Instrument trace propagation at service boundaries from the start — it cannot be added cheaply after the fact.
+- **Instrumentation is production code:** Observability code must be tested, reviewed, and maintained at the same standard as business logic. A silent failure caused by missing or broken instrumentation is a critical defect.
+- **High-volume logs are noise:** Logging every function call or intermediate state is log pollution. It increases cost, slows queries, and buries real signals. Log at the appropriate level; sample traces aggressively at high volume.
+- **The audit trail is the system of record:** In Decapod, observability is the mechanism by which completion is proved. An operation that is not in the audit log did not happen as far as the system is concerned.
+
 ---
 
 ## 2. Structured Logging
