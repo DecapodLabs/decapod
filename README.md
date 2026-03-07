@@ -27,11 +27,11 @@
 
 Your agent writes code. Nobody checks its homework.
 
-Decapod is the layer that makes agents show their work. Before an agent mutates your repo, Decapod forces it to answer three questions: *What did the human actually ask for?* *What boundaries apply?* *How will we prove it's done?* The answers become artifacts — not comments, not logs, artifacts with hashes and validation gates — stored in `.decapod/` where anyone on the team can see exactly what happened and why.
+Decapod is the invisible layer between your agents and your code—humans never see it. It forces agents to answer three questions before touching a single line: *What did the human actually ask for?* *What boundaries apply?* *How will we prove it's done?* The answers become cryptographically verifiable artifacts, so the code that lands in your repo is provably what was intended.
 
 It ships with an embedded [constitution](constitution/core/DECAPOD.md): governance docs agents receive as just-in-time context so they query the rules on demand instead of guessing them.
 
-Decapod doesn't replace your agent. It doesn't run in the background. It starts when called, writes its receipts, and exits. Two commands to adopt. Zero config to maintain.
+Decapod doesn't replace your agent. It doesn't replace your workflow. Humans never interact with it—agents call it on demand, it enforces the rules, and exits. Two commands to adopt. Zero config to maintain.
 
 ### When it clicks
 
@@ -72,7 +72,7 @@ AGENTS.md                     # universal agent contract
 CLAUDE.md / CODEX.md / GEMINI.md  # tool-specific entrypoints
 ```
 
-Everything material is a file you can `cat`. No databases to query, no dashboards to check. The state *is* the directory.
+Every artifact lives as plain text in the repository. No external databases, no dashboards—the filesystem is the system of record.
 
 ### How to know it's working
 
@@ -88,11 +88,15 @@ Override any constitution default with plain English in `.decapod/OVERRIDE.md`. 
 
 ## Why this exists
 
-AI coding agents are extraordinarily good at generating code. They are extraordinarily bad at knowing when to stop, what not to touch, and whether the thing they built is the thing you asked for.
+Coding agents suck. But it's not their fault.
 
-The failure mode isn't "bad code." It's unaccountable code: no intent recorded, no boundaries enforced, no proof that completion criteria were met. You get a PR that compiles. You have no idea if it's right.
+You can't solve the world inside the agent. Like any serious technology, agents need infrastructure — a way to interface with the host machine (files, repos, terminals, policies) in a way that's intelligent, bounded, and provable.
 
-Decapod closes that gap. Agents call it mid-run to lock intent, enforce boundaries, and prove completion. It shapes what goes into inference without doing inference itself.
+The Unix philosophy ("do one thing well") breaks down the moment the "one thing" becomes: reason over ambiguous intent, plan work, write code, validate it, manage state, coordinate tools, and ship safely. We expect agents to generate great code. They mostly can. But the gaps aren't something you patch by making the agent fatter. The gaps exist because the agent isn't the right place for control-plane responsibilities.
+
+Right now, agent makers keep stuffing more into the agent: task management, memory, rules, planning, codegen, toolchains, browsers — until it's mediocre at everything. Agents shouldn't be responsible for control-plane work. They shouldn't be your TODO database. They shouldn't be the place you encode a team's behavioral expectations. They shouldn't be the system of record for "what got done" or "what's allowed." That belongs in infrastructure.
+
+Decapod is a repo-native governance kernel that agents call into — like a device driver for agent work. It makes intent explicit, boundaries explicit, and completion provable. The agent stays the brain. Decapod becomes the control plane that turns agent output into something shippable.
 
 State is local and durable in `.decapod/`. Context, decisions, and traces persist across sessions and stay retrievable over time. Nothing hides. Nothing phones home.
 
@@ -125,9 +129,32 @@ AI Agent(s)  <---->  Decapod  <---->  Repository + Policy
 - **Parallel-safe.** Multiple agents, one repo, no collisions.
 - **Proof-gated completion.** `VERIFIED` requires passing proof-plan results, not narrative.
 - **Fully auditable.** Every decision, trace, and proof artifact lives in `.decapod/` as plain files.
-- **Context internalization.** Turn long documents into mountable, verifiable context adapters so agents stop re-ingesting the same 50-page spec every session.
+- **Context internalization.** Turn long documents into mountable, verifiable context adapters with explicit source hashes, determinism labels, session-scoped attach leases, and explicit detach so agents stop re-ingesting the same 50-page spec every session.
 
 The deep surface area — interfaces, capsules, eval kernel, knowledge promotions, obligation graphs — lives in the embedded constitution. Ask your agent to explore it.
+
+---
+
+## What Decapod Guarantees
+
+These are the things Decapod **actually enforces** — break any of these and `decapod validate` will fail:
+
+| Guarantee | Description | Enforcement |
+|-----------|-------------|-------------|
+| **Daemonless** | No background process. Invoked on-demand, exits when done. | `tests/daemonless_lifecycle.rs` |
+| **Repo-native** | All state lives in `.decapod/` as plain files. Nothing phones home. | File-based storage in `src/core/store.rs` |
+| **Proof-gated completion** | `VERIFIED` requires passing proof-plan gates, not narrative claims. | WorkUnit status machine + `tests/workunit_publish_gate.rs` |
+| **Workspace isolation** | Agents cannot mutate protected branches directly. Must use isolated worktrees. | Git worktree enforcement + `tests/workspace_interlock.rs` |
+| **Bounded validation** | `decapod validate` terminates in bounded time, never hangs. | `tests/validate_termination.rs` + timeout enforcement |
+| **Store boundary** | Agents must use CLI, not direct file access to `.decapod/*`. | Validation gates + broker |
+| **Session required** | Mutations require active session with credentials. | Session auth on mutation commands |
+
+These are **aspirational** (we're working on them):
+
+- Parallel-safe multi-agent coordination (partially enforced via workspace isolation)
+- Context capsule deterministic output (partially enforced)
+
+See `.decapod/contracts/README_CONTRACTS.json` for the full contract map and enforcement links.
 
 ---
 

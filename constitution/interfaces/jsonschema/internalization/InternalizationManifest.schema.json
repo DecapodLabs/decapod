@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://decapod.dev/schemas/internalization/manifest-1.2.0.json",
+  "title": "InternalizationManifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "source_hash",
+    "source_path",
+    "base_model_id",
+    "internalizer_profile",
+    "internalizer_version",
+    "adapter_format",
+    "created_at",
+    "ttl_seconds",
+    "provenance",
+    "replay_recipe",
+    "adapter_hash",
+    "adapter_path",
+    "capabilities_contract",
+    "risk_tier",
+    "determinism_class",
+    "binary_hash",
+    "runtime_fingerprint"
+  ]
+}
