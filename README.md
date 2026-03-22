@@ -19,6 +19,9 @@
   <a href="https://crates.io/crates/decapod"><img alt="crates.io" src="https://img.shields.io/crates/v/decapod.svg"></a>
   <a href="https://github.com/DecapodLabs/decapod/blob/master/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <a href="https://ko-fi.com/decapodlabs"><img alt="Ko-fi" src="https://img.shields.io/badge/Support-Ko--fi-ff5f5f?logo=ko-fi&logoColor=white"></a>
+  <a href="https://gitcgr.com/DecapodLabs/decapod">
+    <img src="https://gitcgr.com/badge/DecapodLabs/decapod.svg" alt="gitcgr" />
+  </a>
 </p>
 
 ---
