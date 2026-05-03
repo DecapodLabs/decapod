@@ -78,6 +78,9 @@ When agents interface with Decapod-managed repositories, these standards are the
 - `methodology/ARCHITECTURE.md` - Architecture practice
 - `methodology/TESTING.md` - Testing practice
 - `methodology/CI_CD.md` - CI/CD practice
+- `methodology/METRICS.md` - Metrics and performance measurement
+- `methodology/INCIDENT_RESPONSE.md` - Incident handling procedures
+- `methodology/RELEASE_MANAGEMENT.md` - Release and deployment standards
 
 ### Architecture Patterns
 - `architecture/ALGORITHMS.md` - Algorithm selection
@@ -85,3 +88,5 @@ When agents interface with Decapod-managed repositories, these standards are the
 - `architecture/SECURITY.md` - Security architecture
 - `architecture/OBSERVABILITY.md` - Observability architecture
 - `architecture/CONCURRENCY.md` - Concurrency architecture
+- `architecture/API_DESIGN.md` - API design standards
+- `architecture/COST_OPTIMIZATION.md` - Cloud and token cost management

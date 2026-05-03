@@ -69,6 +69,12 @@
 
 ### methodology/MEMORY.md
 
+### methodology/METRICS.md
+
+### methodology/INCIDENT_RESPONSE.md
+
+### methodology/RELEASE_MANAGEMENT.md
+
 ---
 
 ## Architecture Overrides (Domain Patterns)
@@ -92,6 +98,10 @@
 ### architecture/OBSERVABILITY.md
 
 ### architecture/CONCURRENCY.md
+
+### architecture/API_DESIGN.md
+
+### architecture/COST_OPTIMIZATION.md
 
 ---
 
