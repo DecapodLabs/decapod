@@ -315,7 +315,7 @@ dependencies = [
 
 [[package]]
 name = "decapod"
-version = "0.48.7"
+version = "0.48.8"
 dependencies = [
  "clap",
  "criterion",
