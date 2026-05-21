@@ -246,7 +246,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
-- Merge pull request #512 from DecapodLabs/agent/docs/readme-portability
+- Merge pull request #512 from DecapodLabs/agent/docs/readme.json-portability
 - surface project context in agent entrypoints
 - Add config.toml explanation in README
 - Remove RPC instructions, keep init simple
@@ -474,7 +474,7 @@ https://github.com/DecapodLabs/decapod/pull/480/conflict?name=Cargo.toml&ancesto
 
 ### Other
 
-- Merge remote-tracking branch 'origin/docs/contracts-and-conformance' into agent/unknown/todo-01kk3r-1772874431
+- Merge remote-tracking branch 'origin/docs/contracts.json-and-conformance' into agent/unknown/todo-01kk3r-1772874431
 - Merge fix/release-capsule-empty-file into combined branch
 - capture why-this-exists philosophy in README
 - Add governed internalization artifacts
@@ -533,7 +533,7 @@ https://github.com/DecapodLabs/decapod/pull/480/conflict?name=Cargo.toml&ancesto
 
 ### Added
 
-- schema/interface: add `interfaces/INTERNALIZATION_SCHEMA.md` — internalized context artifact schema and lifecycle contract
+- schema/interface: add `interfaces/INTERNALIZATION_SCHEMA.json` — internalized context artifact schema and lifecycle contract
 - feat: add `decapod internalize` subsystem (create, attach, inspect) for governed context internalization artifacts
 
 ## [0.46.0](https://github.com/DecapodLabs/decapod/compare/v0.45.0...v0.46.0) - 2026-02-26
@@ -546,12 +546,12 @@ https://github.com/DecapodLabs/decapod/pull/480/conflict?name=Cargo.toml&ancesto
 ### Added
 
 - schema/interface: expand canonical project specs set to include `SEMANTICS.md`, `OPERATIONS.md`, and `SECURITY.md`
-- docs/scaffold: scaffold-v2 project specs with adaptive topology/sequence diagrams, richer interface contracts, validation decision flow, and security/operations directives
+- docs/scaffold.json: scaffold-v2 project specs with adaptive topology/sequence diagrams, richer interface contracts, validation decision flow, and security/operations directives
 
 ### Changed
 
 - validate: add architecture runtime/deployment section enforcement and conditional structure checks for semantics/operations/security specs
-- docs/specs: upgrade Decapod's checked-in generated specs to industry-grade operational/security semantics with explicit proof surfaces
+- docs/specs.json: upgrade Decapod's checked-in generated specs to industry-grade operational/security semantics with explicit proof surfaces
 
 ## [0.44.6](https://github.com/DecapodLabs/decapod/compare/v0.44.5...v0.44.6) - 2026-02-25
 
@@ -713,11 +713,11 @@ https://github.com/DecapodLabs/decapod/pull/480/conflict?name=Cargo.toml&ancesto
 - cli: add `decapod activate` as explicit first-run activation surface to trigger migrations/bootstrap
 - migration: add version-gated migration registry (`min_version` + `target_version`) with applied ledger at `.decapod/generated/migrations/applied.json`
 - init: seed `.decapod/generated/version_counter.json` and track binary-version transitions for safe migration orchestration
-- ci: add PR-only migration script test gate that runs migration tests only when `src/core/sql/*.sql` changes
+- ci: add PR-only migration script test gate that runs migration tests only when `src/core/sql.json/*.sql` changes
 - migration: add sequence/scope metadata, duplicate/order guards, and generated migration catalog for long-horizon schema evolution
 - validate: add database schema version gate to verify versioned DBs match this decapod binary expectations
 - schema/interface: update TODO schema contract with typed ID and hash invariants
-- docs/scaffold: refresh `.decapod/README.md` template with Decapod harness positioning and canonical control-plane layout
+- docs/scaffold.json: refresh `.decapod/README.md` template with Decapod harness positioning and canonical control-plane layout
 
 ## [0.41.2](https://github.com/DecapodLabs/decapod/compare/v0.41.1...v0.41.2) - 2026-02-24
 
@@ -795,7 +795,7 @@ https://github.com/DecapodLabs/decapod/pull/480/conflict?name=Cargo.toml&ancesto
 
 - init: add `decapod init with` (alias `wtih`) and `.decapod/config.toml` schema-backed repo context
 - init: infer repo purpose/architecture signals from prominent files (`README.md`, manifests, repo surfaces)
-- init: scaffold canonical local project specs set (`specs/README.md`, `intent.md`, `architecture.md`, `interfaces.md`, `validation.md`)
+- init: scaffold canonical local project specs set (`specs/README.json`, `intent.md`, `architecture.md`, `interfaces.md`, `validation.md`)
 - init: support diagram style selection (`ascii` or `mermaid`) for architecture topology generation
 - init: seed local specs content from inferred/config context and enforce intent-purpose vs architecture-direction separation
 - validate: add project config + canonical local specs gates, including placeholder rejection for intent/architecture content
@@ -803,7 +803,7 @@ https://github.com/DecapodLabs/decapod/pull/480/conflict?name=Cargo.toml&ancesto
 
 ### Other
 
-- schema/interface: add `interfaces/PROJECT_SPECS.md` and register claim `claim.project_specs.canonical_set_enforced`
+- schema/interface: add `interfaces/PROJECT_SPECS.json` and register claim `claim.project_specs.canonical_set_enforced`
 - schema/interface: bind hardcoded local specs registry in binary to constitution dependencies and control-plane sequencing docs
 
 ## [0.39.0](https://github.com/DecapodLabs/decapod/compare/v0.38.13...v0.39.0) - 2026-02-23
@@ -816,7 +816,7 @@ https://github.com/DecapodLabs/decapod/pull/480/conflict?name=Cargo.toml&ancesto
 
 ### Other
 
-- schema/interface: rename aptitude subsystem across CLI/docs/contracts as canonical memory surface
+- schema/interface: rename aptitude subsystem across CLI/docs/contracts.json as canonical memory surface
 
 ## [0.38.13](https://github.com/DecapodLabs/decapod/compare/v0.38.12...v0.38.13) - 2026-02-23
 
@@ -1028,7 +1028,7 @@ https://github.com/DecapodLabs/decapod/pull/480/conflict?name=Cargo.toml&ancesto
 ### Other
 
 - Rename LEVIE_GOVERNANCE_AUDIT.md to GOVERNANCE_AUDIT.md
-- Update and rename docs/LEVIE_GOVERNANCE_AUDIT.md to constitution/docs/GOVERNANCE_AUDIT.md
+- Update and rename docs/LEVIE_GOVERNANCE_AUDIT.json to constitution/docs/GOVERNANCE_AUDIT.json
 
 ## [0.37.1](https://github.com/DecapodLabs/decapod/compare/v0.37.0...v0.37.1) - 2026-02-22
 
@@ -1137,7 +1137,7 @@ https://github.com/DecapodLabs/decapod/pull/480/conflict?name=Cargo.toml&ancesto
 
 ### Other
 
-- Rename PLAYBOOK.md to docs/PLAYBOOK.md
+- Rename PLAYBOOK.md to docs/PLAYBOOK.json
 
 ## [0.35.5](https://github.com/DecapodLabs/decapod/compare/v0.35.4...v0.35.5) - 2026-02-21
 
@@ -2045,7 +2045,7 @@ https://github.com/DecapodLabs/decapod/pull/480/conflict?name=Cargo.toml&ancesto
 
 ### Fixed
 
-- update validation to check for methodology/ARCHITECTURE.md instead of specs/ARCHITECTURE.md
+- update validation to check for methodology/ARCHITECTURE.json instead of specs/ARCHITECTURE.json
 
 ## [0.4.0](https://github.com/DecapodLabs/decapod/compare/v0.3.3...v0.4.0) - 2026-02-14
 

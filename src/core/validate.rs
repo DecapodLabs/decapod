@@ -489,8 +489,8 @@ fn validate_repo_map(
         ctx,
     );
 
-    let required_specs = ["specs/INTENT", "specs/SYSTEM"];
-    let required_methodology = ["methodology/ARCHITECTURE"];
+    let required_specs = ["specs/INTENT.json", "specs/SYSTEM.json"];
+    let required_methodology = ["methodology/ARCHITECTURE.json"];
     for r in required_specs {
         if crate::core::assets::get_doc(r).is_some() {
             pass(&format!("Constitution doc {} present (embedded)", r), ctx);
@@ -577,7 +577,7 @@ fn validate_entrypoint_invariants(
 
     // Exact invariant strings (tamper detection)
     let exact_invariants = [
-        ("core/decapod", "Router pointer to core/DECAPOD"),
+        ("core/decapod.json", "Router pointer to core/DECAPOD.json"),
         ("cargo install decapod", "Version update gate language"),
         ("decapod validate", "Validation gate language"),
         (
@@ -680,12 +680,11 @@ fn validate_entrypoint_invariants(
             all_present = false;
         }
 
-        // Must reference canonical router
-        if agent_content.contains("core/DECAPOD") {
-            pass(&format!("{} references canonical router", agent_file), ctx);
+        if agent_content.contains("core/DECAPOD.json") {
+            pass(&format!("{} references core/DECAPOD.json", agent_file), ctx);
         } else {
             fail(
-                &format!("{} missing canonical router reference", agent_file),
+                &format!("{} missing canonical router reference (.json)", agent_file),
                 ctx,
             );
             all_present = false;
@@ -3528,25 +3527,25 @@ fn validate_heartbeat_invocation_gate(
 
     let doc_markers = [
         (
-            crate::core::assets::get_doc("core/DECAPOD")
+            crate::core::assets::get_doc("core/DECAPOD.json")
                 .unwrap_or_default()
                 .contains("invocation heartbeat"),
             "Router documents invocation heartbeat contract",
         ),
         (
-            crate::core::assets::get_doc("interfaces/CONTROL_PLANE")
+            crate::core::assets::get_doc("interfaces/CONTROL_PLANE.json")
                 .unwrap_or_default()
                 .contains("invocation heartbeat"),
             "Control-plane interface documents invocation heartbeat",
         ),
         (
-            crate::core::assets::get_doc("plugins/TODO")
+            crate::core::assets::get_doc("plugins/TODO.json")
                 .unwrap_or_default()
                 .contains("auto-clocks liveness"),
             "TODO plugin documents automatic liveness clock-in",
         ),
         (
-            crate::core::assets::get_doc("plugins/REFLEX")
+            crate::core::assets::get_doc("plugins/REFLEX.json")
                 .unwrap_or_default()
                 .contains("todo.heartbeat.autoclaim"),
             "REFLEX plugin documents heartbeat autoclaim action",
@@ -5176,7 +5175,7 @@ pub fn run_validation(
 pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
     use crate::core::ansi::AnsiExt;
 
-    let intent_content = crate::core::assets::get_doc("specs/INTENT").unwrap_or_default();
+    let intent_content = crate::core::assets::get_doc("specs/INTENT.json").unwrap_or_default();
     let intent_version =
         extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
 

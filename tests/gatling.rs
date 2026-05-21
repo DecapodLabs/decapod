@@ -270,11 +270,11 @@ fn t020_setup_hooks() {
 fn t030_docs() {
     let (_tmp, dir) = setup_workspace();
     // T030
-    ok(&dir, &["docs", "show", "core/DECAPOD.md"]);
+    ok(&dir, &["docs", "show", "core/DECAPOD.json"]);
     // T031
-    ok(&dir, &["docs", "show", "specs/INTENT.md"]);
+    ok(&dir, &["docs", "show", "specs/INTENT.json"]);
     // T032
-    ok(&dir, &["docs", "show", "plugins/TODO.md"]);
+    ok(&dir, &["docs", "show", "plugins/TODO.json"]);
     // T033
     ok(&dir, &["docs", "ingest"]);
     // T034
@@ -282,7 +282,7 @@ fn t030_docs() {
     // T035
     ok(&dir, &["docs", "--help"]);
     // T036: alias
-    ok(&dir, &["d", "show", "core/DECAPOD.md"]);
+    ok(&dir, &["d", "show", "core/DECAPOD.json"]);
     // T037: nonexistent doc → error
     fail(&dir, &["docs", "show", "nonexistent.md"]);
 }
@@ -629,7 +629,7 @@ fn t110_feedback() {
             "--text",
             "Feedback with link",
             "--links",
-            "specs/INTENT.md",
+            "specs/INTENT.json",
         ],
     );
     // T112

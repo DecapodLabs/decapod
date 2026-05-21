@@ -2,14 +2,14 @@
 //!
 //! This module provides deterministic guidance that pushes agents back to:
 //! - Prior decisions (ADRs)
-//! - Specs/architecture/security docs
+//! - Specs/architecture/security.json docs
 //! - Knowledge graph nodes
 //! - Active todos/commitments
 //!
 //! # Design Principles
 //!
 //! - Deterministic: Same repo state + input = same obligations
-//! - Immutable sources: Never modifies existing docs/KG
+//! - Immutable sources: Never modifies existing docs/KG.json
 //! - Compact views: Max 5 items per obligations list
 //! - Optional LLM: Only for ranking/phrasing, never adding obligations
 
@@ -293,7 +293,7 @@ impl MentorEngine {
         Ok(candidates)
     }
 
-    /// Get ADR candidates from docs/decisions/
+    /// Get ADR candidates from docs/decisions.json/
     fn get_adr_candidates(&self) -> Result<Vec<CandidateSource>, DecapodError> {
         let mut candidates = vec![];
         let decisions_dir = self.repo_root.join("docs").join("decisions");
@@ -965,7 +965,7 @@ impl MentorEngine {
                     title,
                     why_short: "Prior architectural decision may affect this work".to_string(),
                     evidence: Evidence {
-                        source: "docs/decisions".to_string(),
+                        source: "docs/decisions.json".to_string(),
                         id: path
                             .file_name()
                             .unwrap_or_default()

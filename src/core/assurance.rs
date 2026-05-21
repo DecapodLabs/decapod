@@ -117,7 +117,7 @@ impl AssuranceEngine {
             required: vec![
                 "decapod validate".to_string(),
                 "cargo test --locked".to_string(),
-                "Compare observed outputs against docs/spec.md expectations".to_string(),
+                "Compare observed outputs against docs/spec.json expectations".to_string(),
             ],
             checklist: vec![
                 "Run each required proof command in order".to_string(),

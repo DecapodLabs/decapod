@@ -19,9 +19,9 @@
   "intent": "Each merge MUST preserve user intent traceability and proof-gated completion.",
   "kind": "intent_convergence_checklist",
   "policy_lineage": {
-    "capsule_hash": "ae7a6d11033a9f6882f0abc2834e4712ead0e5e842e346a18bde564279ff6ad0",
+    "capsule_hash": "4dfb9cae4e1da9d21f109037982d1e2244accf747da5c029605ab1ae50f2f237",
     "capsule_path": ".decapod/generated/context/R_releasecheck.json",
-    "policy_hash": "598e60a8e9b9586f03cbe0e7717e586d956df0d23017a59d8c0f1c9120b7b29a",
+    "policy_hash": "955d435a2b886f94a89243ada91a0f8443642eaafb1155ebb8fdd636005a78f6",
     "policy_revision": "policy.release@v1",
     "risk_tier": "medium"
   },

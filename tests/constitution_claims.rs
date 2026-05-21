@@ -19,7 +19,7 @@ struct ConstitutionTable {
 
 fn load_constitution_claims() -> Vec<ConstitutionTable> {
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["docs", "show", "interfaces/CLAIMS"])
+        .args(["docs", "show", "interfaces/CLAIMS.json"])
         .output()
         .expect("run decapod docs show");
     assert!(output.status.success(), "decapod docs show failed");

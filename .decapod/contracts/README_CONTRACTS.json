@@ -52,8 +52,8 @@
       "normalized_claim": "Decapod MUST support concurrent agent operations without state corruption",
       "enforcement_status": "partially_enforced",
       "enforcement_links": [
-        "src/core/workspace.rs",
-        "src/core/broker.rs",
+        "src/core/workspace.json.rs",
+        "src/core/broker.json.rs",
         "tests/chaos_replay.rs",
         "claim.concurrency.no_git_solve"
       ],
@@ -67,7 +67,7 @@
       "normalized_claim": "Decapod MUST require executable proof for completion, not narrative claims",
       "enforcement_status": "enforced",
       "enforcement_links": [
-        "src/core/workunit.rs",
+        "src/core/workunit.json.rs",
         "tests/workunit_publish_gate.rs",
         "claim.proof.executable_check"
       ],
@@ -81,9 +81,9 @@
       "normalized_claim": "All Decapod state MUST be stored as plain files in .decapod/ directory",
       "enforcement_status": "enforced",
       "enforcement_links": [
-        "src/core/store.rs",
-        "src/core/db.rs",
-        "src/core/flight_recorder.rs",
+        "src/core/store.json.rs",
+        "src/core/db.json.rs",
+        "src/core/flight_recorder.json.rs",
         "claim.store.blank_slate"
       ],
       "constitution_ref": "claim.store.blank_slate",
@@ -96,8 +96,8 @@
       "normalized_claim": "Decapod MUST provide context internalization to avoid repeated document parsing",
       "enforcement_status": "enforced",
       "enforcement_links": [
-        "src/plugins/internalize.rs",
-        "constitution/interfaces/INTERNALIZATION_SCHEMA.md"
+        "src/plugins/internalize.json.rs",
+        "constitution/interfaces/INTERNALIZATION_SCHEMA.json"
       ],
       "constitution_ref": "claim.lcm.append_only_ledger",
       "rationale": "Internalize plugin creates mountable context adapters with deterministic hashes"
@@ -109,8 +109,8 @@
       "normalized_claim": "Decapod state MUST be local and repo-native with no hidden remote state",
       "enforcement_status": "enforced",
       "enforcement_links": [
-        "src/core/store.rs",
-        "constitution/core/DECAPOD.md:25"
+        "src/core/store.json.rs",
+        "constitution/core/DECAPOD.json:25"
       ],
       "constitution_ref": "claim.foundation.daemonless_repo_native_canonicality",
       "rationale": "State is file-based in repo; no remote sync by default"
@@ -134,8 +134,8 @@
       "normalized_claim": "Decapod MUST store all state as human-readable files in the repo",
       "enforcement_status": "enforced",
       "enforcement_links": [
-        "src/core/store.rs",
-        "src/core/db.rs"
+        "src/core/store.json.rs",
+        "src/core/db.json.rs"
       ],
       "constitution_ref": "claim.foundation.daemonless_repo_native_canonicality",
       "rationale": "SQLite DBs are files that can be inspected; no external services required"
@@ -147,7 +147,7 @@
       "normalized_claim": "Decapod MUST provide workspace isolation to prevent concurrent agent conflicts",
       "enforcement_status": "enforced",
       "enforcement_links": [
-        "src/core/workspace.rs",
+        "src/core/workspace.json.rs",
         "tests/workspace_interlock.rs",
         "claim.git.no_direct_main_push"
       ],
@@ -161,9 +161,9 @@
       "normalized_claim": "Decapod MUST enforce intent clarification, boundary definition, and proof planning before mutation",
       "enforcement_status": "partially_enforced",
       "enforcement_links": [
-        "src/core/todo.rs",
-        "src/core/workunit.rs",
-        "src/plugins/doctor.rs"
+        "src/core/todo.json.rs",
+        "src/core/workunit.json.rs",
+        "src/plugins/doctor.json.rs"
       ],
       "constitution_ref": "claim.todo.claim_before_work",
       "rationale": "TODO claims enforce ownership; workunit enforces proof plans; doctor provides preflight"
@@ -175,8 +175,8 @@
       "normalized_claim": "Decapod operations MUST return typed responses: Advisory, Interlock, or Attestation",
       "enforcement_status": "enforced",
       "enforcement_links": [
-        "src/core/rpc.rs",
-        "src/core/output.rs",
+        "src/core/rpc.json.rs",
+        "src/core/output.json.rs",
         "tests/spec_conformance.rs"
       ],
       "constitution_ref": null,
@@ -189,8 +189,8 @@
       "normalized_claim": "Decapod MUST embed constitution docs for just-in-time context delivery",
       "enforcement_status": "enforced",
       "enforcement_links": [
-        "src/core/docs.rs",
-        "src/core/docs_cli.rs",
+        "src/core/docs.json.rs",
+        "src/core/docs_cli.json.rs",
         "constitution/"
       ],
       "constitution_ref": null,
@@ -203,7 +203,7 @@
       "normalized_claim": "Decapod validate MUST be the authoritative completion gate",
       "enforcement_status": "enforced",
       "enforcement_links": [
-        "src/core/validate.rs",
+        "src/core/validate.json.rs",
         "tests/spec_conformance.rs",
         "claim.validate.bounded_termination"
       ],
@@ -229,17 +229,17 @@
     {
       "claim_id": "claim.store.decapod_cli_only",
       "description": "Agents must not read/write .decapod/* files directly; access must go through decapod CLI surfaces",
-      "source": "constitution/interfaces/STORE_MODEL.md"
+      "source": "constitution/interfaces/STORE_MODEL.json"
     },
     {
       "claim_id": "claim.session.agent_password_required",
       "description": "Session access requires agent identity plus ephemeral per-session password",
-      "source": "constitution/specs/SECURITY.md"
+      "source": "constitution/specs/SECURITY.json"
     },
     {
       "claim_id": "claim.federation.store_scoped",
       "description": "Federation data exists only under the selected store root",
-      "source": "constitution/plugins/FEDERATION.md"
+      "source": "constitution/plugins/FEDERATION.json"
     }
   ]
 }

@@ -3,7 +3,7 @@
 Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to turn intent into context, then context into explicit specifications before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
 
 GitHub: https://github.com/DecapodLabs/decapod
-Canonical Contract: [core/DECAPOD](core/DECAPOD)
+Canonical Contract: [core/DECAPOD.json](core/DECAPOD.json)
 
 ## What This Directory Is
 

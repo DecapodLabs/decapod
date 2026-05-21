@@ -174,7 +174,7 @@ fn test_todo_command_structure() {
 fn test_constitution_docs_accessible() {
     let (_tmp, dir) = setup_repo();
 
-    let docs = run_decapod(dir, &["docs", "show", "core/DECAPOD"]);
+    let docs = run_decapod(dir, &["docs", "show", "core/DECAPOD.json"]);
     assert!(
         docs.status.success(),
         "docs show should succeed: {}",
@@ -272,12 +272,12 @@ fn test_constitution_docs_are_accessible() {
     );
 
     let required_docs = [
-        "core/DECAPOD",
-        "interfaces/CLAIMS",
-        "specs/INTENT",
-        "methodology/ARCHITECTURE",
-        "architecture/SECURITY",
-        "plugins/TODO",
+        "core/DECAPOD.json",
+        "interfaces/CLAIMS.json",
+        "specs/INTENT.json",
+        "methodology/ARCHITECTURE.json",
+        "architecture/SECURITY.json",
+        "plugins/TODO.json",
     ];
 
     for required in &required_docs {
@@ -315,12 +315,12 @@ fn test_constitution_docs_ingest_shows_links() {
 
     // Verify each embedded doc appears in ingest output
     let required_docs = [
-        "core/DECAPOD",
-        "interfaces/CLAIMS",
-        "specs/INTENT",
-        "methodology/ARCHITECTURE",
-        "architecture/SECURITY",
-        "plugins/TODO",
+        "core/DECAPOD.json",
+        "interfaces/CLAIMS.json",
+        "specs/INTENT.json",
+        "methodology/ARCHITECTURE.json",
+        "architecture/SECURITY.json",
+        "plugins/TODO.json",
     ];
 
     for doc_path in &required_docs {

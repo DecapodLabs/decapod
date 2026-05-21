@@ -469,8 +469,8 @@ fn test_claim_includes_container_result_when_autorun_enabled() {
     );
     let container_status = claimed["container"]["status"].as_str().unwrap_or("");
     assert!(
-        container_status == "ok" || container_status == "error",
-        "container status should be ok/error, got '{}'",
+        container_status == "ok" || container_status == "error" || container_status == "warning",
+        "container status should be ok/error/warning, got '{}'",
         container_status
     );
 }

@@ -1,4 +1,4 @@
-//! Interview engine for spec/architecture/security/ops generation
+//! Interview engine for spec/architecture/security.json/ops generation
 //!
 //! The interview engine helps agents gather requirements from humans
 //! through a structured question-and-answer process. It produces
@@ -103,7 +103,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "What is the name of this project?".to_string(),
             why_it_matters:
                 "The project name appears in all documentation and identifies the work.".to_string(),
-            lands_in: "docs/spec.md (title), docs/architecture.md".to_string(),
+            lands_in: "docs/spec.json (title), docs/architecture.json".to_string(),
             answer_type: AnswerType::Text,
             default_value: None,
             options: None,
@@ -116,7 +116,7 @@ fn get_all_questions() -> Vec<Question> {
             why_it_matters:
                 "A clear one-liner helps everyone quickly understand the project's purpose."
                     .to_string(),
-            lands_in: "docs/spec.md (summary), README.md".to_string(),
+            lands_in: "docs/spec.json (summary), README.md".to_string(),
             answer_type: AnswerType::Text,
             default_value: None,
             options: None,
@@ -129,7 +129,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "What problem does this project solve?".to_string(),
             why_it_matters: "Understanding the problem ensures the solution is fit for purpose."
                 .to_string(),
-            lands_in: "docs/spec.md (problem statement)".to_string(),
+            lands_in: "docs/spec.json (problem statement)".to_string(),
             answer_type: AnswerType::Text,
             default_value: None,
             options: None,
@@ -141,7 +141,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "How will we know this project is successful?".to_string(),
             why_it_matters: "Success criteria define when the work is done and working."
                 .to_string(),
-            lands_in: "docs/spec.md (success criteria)".to_string(),
+            lands_in: "docs/spec.json (success criteria)".to_string(),
             answer_type: AnswerType::Text,
             default_value: None,
             options: None,
@@ -154,7 +154,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "What programming language will you use?".to_string(),
             why_it_matters: "Language choice affects tooling, dependencies, and deployment."
                 .to_string(),
-            lands_in: "docs/architecture.md (runtime), docs/ops.md".to_string(),
+            lands_in: "docs/architecture.json (runtime), docs/ops.json".to_string(),
             answer_type: AnswerType::Choice,
             default_value: Some("Rust".to_string()),
             options: Some(vec![
@@ -172,7 +172,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "How will this be deployed?".to_string(),
             why_it_matters: "Deployment approach affects build configuration and operations."
                 .to_string(),
-            lands_in: "docs/ops.md (deployment), docs/architecture.md".to_string(),
+            lands_in: "docs/ops.json (deployment), docs/architecture.json".to_string(),
             answer_type: AnswerType::Choice,
             default_value: Some("Docker container".to_string()),
             options: Some(vec![
@@ -191,7 +191,7 @@ fn get_all_questions() -> Vec<Question> {
             section: "architecture".to_string(),
             text: "What are the main components/modules?".to_string(),
             why_it_matters: "Component breakdown guides implementation structure.".to_string(),
-            lands_in: "docs/architecture.md (components)".to_string(),
+            lands_in: "docs/architecture.json (components)".to_string(),
             answer_type: AnswerType::Text,
             default_value: None,
             options: None,
@@ -203,7 +203,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "How will data be stored?".to_string(),
             why_it_matters: "Storage choices affect reliability, performance, and operations."
                 .to_string(),
-            lands_in: "docs/architecture.md (data), docs/ops.md".to_string(),
+            lands_in: "docs/architecture.json (data), docs/ops.json".to_string(),
             answer_type: AnswerType::Choice,
             default_value: Some("SQLite (local)".to_string()),
             options: Some(vec![
@@ -223,7 +223,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "Will this handle secrets or credentials?".to_string(),
             why_it_matters: "Secret handling requires special care for security compliance."
                 .to_string(),
-            lands_in: "docs/security.md (secrets)".to_string(),
+            lands_in: "docs/security.json (secrets)".to_string(),
             answer_type: AnswerType::Boolean,
             default_value: Some("false".to_string()),
             options: None,
@@ -234,7 +234,7 @@ fn get_all_questions() -> Vec<Question> {
             section: "security".to_string(),
             text: "Will this process user data or PII?".to_string(),
             why_it_matters: "User data requires privacy considerations and compliance.".to_string(),
-            lands_in: "docs/security.md (privacy)".to_string(),
+            lands_in: "docs/security.json (privacy)".to_string(),
             answer_type: AnswerType::Boolean,
             default_value: Some("false".to_string()),
             options: None,
@@ -246,7 +246,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "Will this accept network connections?".to_string(),
             why_it_matters: "Network exposure increases attack surface and requires hardening."
                 .to_string(),
-            lands_in: "docs/security.md (network)".to_string(),
+            lands_in: "docs/security.json (network)".to_string(),
             answer_type: AnswerType::Boolean,
             default_value: Some("false".to_string()),
             options: None,
@@ -258,7 +258,7 @@ fn get_all_questions() -> Vec<Question> {
             section: "operations".to_string(),
             text: "What log level is appropriate for production?".to_string(),
             why_it_matters: "Log levels affect observability and storage costs.".to_string(),
-            lands_in: "docs/ops.md (monitoring)".to_string(),
+            lands_in: "docs/ops.json (monitoring)".to_string(),
             answer_type: AnswerType::Choice,
             default_value: Some("info".to_string()),
             options: Some(vec![
@@ -274,7 +274,7 @@ fn get_all_questions() -> Vec<Question> {
             section: "operations".to_string(),
             text: "What health checks are needed?".to_string(),
             why_it_matters: "Health checks enable automated recovery and monitoring.".to_string(),
-            lands_in: "docs/ops.md (health)".to_string(),
+            lands_in: "docs/ops.json (health)".to_string(),
             answer_type: AnswerType::Text,
             default_value: Some("Basic liveness check".to_string()),
             options: None,
@@ -409,7 +409,7 @@ This specification defines the functional and non-functional requirements for {p
 
     Ok(Artifact {
         artifact_type: "spec".to_string(),
-        path: output_dir.join("docs/spec.md"),
+        path: output_dir.join("docs/spec.json"),
         content,
     })
 }
@@ -460,7 +460,7 @@ fn generate_architecture(
 
     Ok(Artifact {
         artifact_type: "architecture".to_string(),
-        path: output_dir.join("docs/architecture.md"),
+        path: output_dir.join("docs/architecture.json"),
         content,
     })
 }
@@ -542,7 +542,7 @@ fn generate_security(state: &InterviewState, output_dir: &Path) -> Result<Artifa
 
     Ok(Artifact {
         artifact_type: "security".to_string(),
-        path: output_dir.join("docs/security.md"),
+        path: output_dir.join("docs/security.json"),
         content,
     })
 }
@@ -587,7 +587,7 @@ fn generate_ops(state: &InterviewState, output_dir: &Path) -> Result<Artifact, D
 
     Ok(Artifact {
         artifact_type: "ops".to_string(),
-        path: output_dir.join("docs/ops.md"),
+        path: output_dir.join("docs/ops.json"),
         content,
     })
 }
@@ -634,7 +634,7 @@ Initial technology selection for {project_name}.
     );
 
     let adr_path = output_dir.join(format!(
-        "docs/decisions/ADR-0001-{}-core-tech.md",
+        "docs/decisions.json/ADR-0001-{}-core-tech.md",
         project_name.to_lowercase().replace(" ", "-")
     ));
 

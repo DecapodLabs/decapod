@@ -10,7 +10,7 @@ fn repo_root() -> PathBuf {
 fn read_kcr_trend(root: &Path) -> String {
     let candidates = [
         ".decapod/generated/artifacts/provenance/kcr_trend.jsonl",
-        "docs/metrics/KCR_TREND.jsonl",
+        "docs/metrics.json/KCR_TREND.jsonl",
     ];
     for rel in candidates {
         let path = root.join(rel);
@@ -45,7 +45,7 @@ struct KcrTrendRow {
 fn enforced_claims_must_have_gate_mapping_and_kcr_trend_must_match() {
     let root = repo_root();
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["docs", "show", "interfaces/CLAIMS"])
+        .args(["docs", "show", "interfaces/CLAIMS.json"])
         .output()
         .expect("run decapod docs show");
     assert!(output.status.success(), "decapod docs show failed");
@@ -86,14 +86,14 @@ fn enforced_claims_must_have_gate_mapping_and_kcr_trend_must_match() {
                 && !proof_lc.contains("planned ");
             assert!(
                 has_mapping,
-                "ENFORCED claim lacks gate/test mapping in interfaces/CLAIMS: {}",
+                "ENFORCED claim lacks gate/test mapping in interfaces/CLAIMS.json: {}",
                 line
             );
             enforced_with_gate += 1;
         }
     }
 
-    assert!(enforced_total > 0, "No enforced claims found in interfaces/CLAIMS");
+    assert!(enforced_total > 0, "No enforced claims found in interfaces/CLAIMS.json");
     let kcr = enforced_with_gate as f64 / enforced_total as f64;
 
     let trend = read_kcr_trend(&root);

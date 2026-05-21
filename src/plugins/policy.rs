@@ -83,7 +83,7 @@ pub fn run_policy_cli(store: &Store, cli: PolicyCli) -> Result<(), error::Decapo
                                 rules: vec!["NO_AGENT_WRITE".to_string()],
                             },
                             RiskZone {
-                                path: "docs/specs/".to_string(),
+                                path: "docs/specs.json/".to_string(),
                                 level: RiskLevel::HIGH,
                                 rules: vec!["OPERATOR_REVIEW_REQUIRED".to_string()],
                             },
@@ -401,7 +401,7 @@ pub fn is_hitl_disabled_by_override(store: &Store, scope: &str, level: RiskLevel
     let Some(repo_root) = find_repo_root_from_store(store) else {
         return false;
     };
-    let Some(policy_override) = assets::get_override_doc(&repo_root, "plugins/POLICY") else {
+    let Some(policy_override) = assets::get_override_doc(&repo_root, "plugins/POLICY.json") else {
         return false;
     };
 

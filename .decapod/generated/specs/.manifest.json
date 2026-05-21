@@ -5,42 +5,42 @@
   "repo_signal_fingerprint": "eaa1425f561a83656955323e5e33e4f0c8d202fc0318d544934fddac1f516184",
   "files": [
     {
-      "path": ".decapod/generated/specs/README.md",
+      "path": ".decapod/generated/specs/README.json",
       "template_hash": "2cc76457e0d7dbaab7660c9ff093ce9a1af31cb6b76953bb23a3c9c2d58f185f",
       "content_hash": "2cc76457e0d7dbaab7660c9ff093ce9a1af31cb6b76953bb23a3c9c2d58f185f"
     },
     {
-      "path": ".decapod/generated/specs/INTENT.md",
+      "path": ".decapod/generated/specs/INTENT.json",
       "template_hash": "82778f947391e1cdbe42af31a665e4b015ccbf543ad702c5a60c5359a3d9464d",
       "content_hash": "82778f947391e1cdbe42af31a665e4b015ccbf543ad702c5a60c5359a3d9464d"
     },
     {
-      "path": ".decapod/generated/specs/ARCHITECTURE.md",
+      "path": ".decapod/generated/specs/ARCHITECTURE.json",
       "template_hash": "18ae05466b332e7ed50a671066ec024fe729a288358295973a5949be4f10c756",
       "content_hash": "18ae05466b332e7ed50a671066ec024fe729a288358295973a5949be4f10c756"
     },
     {
-      "path": ".decapod/generated/specs/INTERFACES.md",
+      "path": ".decapod/generated/specs/INTERFACES.json",
       "template_hash": "60163ea031c507eb45e47eb3bed84d3c877c38661b10d994143d21be75afcf90",
       "content_hash": "60163ea031c507eb45e47eb3bed84d3c877c38661b10d994143d21be75afcf90"
     },
     {
-      "path": ".decapod/generated/specs/VALIDATION.md",
+      "path": ".decapod/generated/specs/VALIDATION.json",
       "template_hash": "f8747b56d04249759b684add7629ccbb6690946e16955a5f124003520a9376e1",
       "content_hash": "f8747b56d04249759b684add7629ccbb6690946e16955a5f124003520a9376e1"
     },
     {
-      "path": ".decapod/generated/specs/SEMANTICS.md",
+      "path": ".decapod/generated/specs/SEMANTICS.json",
       "template_hash": "84f23ea8a25b640aa74080b813511c12af58e1d6932d0ea3ea52f4587b705798",
       "content_hash": "84f23ea8a25b640aa74080b813511c12af58e1d6932d0ea3ea52f4587b705798"
     },
     {
-      "path": ".decapod/generated/specs/OPERATIONS.md",
+      "path": ".decapod/generated/specs/OPERATIONS.json",
       "template_hash": "f0331dee8199a9493e5d3e7e75103e19b7ed58b4c29c0ffdf902fc6917cc4c2a",
       "content_hash": "f0331dee8199a9493e5d3e7e75103e19b7ed58b4c29c0ffdf902fc6917cc4c2a"
     },
     {
-      "path": ".decapod/generated/specs/SECURITY.md",
+      "path": ".decapod/generated/specs/SECURITY.json",
       "template_hash": "333b5936dbf72f3866940085c834e019560a143c99970b9951cb3490f4ec9104",
       "content_hash": "333b5936dbf72f3866940085c834e019560a143c99970b9951cb3490f4ec9104"
     }

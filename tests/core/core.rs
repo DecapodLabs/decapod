@@ -21,7 +21,7 @@ use tempfile::tempdir;
 #[test]
 fn assets_docs_and_templates_resolve() {
     let docs = assets::list_docs();
-    assert!(docs.contains(&"core/DECAPOD".to_string()));
+    assert!(docs.contains(&"core/DECAPOD.json".to_string()));
 
     for doc in docs {
         let content = assets::get_doc(&doc).expect("listed doc should be readable");
@@ -41,8 +41,8 @@ fn assets_docs_and_templates_resolve() {
         assert!(!content.trim().is_empty());
     }
 
-    assert!(assets::get_doc("core/DOES_NOT_EXIST.md").is_none());
-    assert!(assets::get_template("plugins/DOES_NOT_EXIST.md").is_none());
+    assert!(assets::get_doc("core/DOES_NOT_EXIST.json").is_none());
+    assert!(assets::get_template("plugins/DOES_NOT_EXIST.json").is_none());
 }
 
 #[test]
@@ -789,14 +789,14 @@ fn scaffold_store_and_docs_cli_behaviors() {
 
     docs_cli::run_docs_cli(DocsCli {
         command: DocsCommand::Show {
-            path: "core/DECAPOD".to_string(),
+            path: "core/DECAPOD.json".to_string(),
             source: docs_cli::DocumentSource::Merged,
         },
     })
     .expect("docs show existing");
     let missing = docs_cli::run_docs_cli(DocsCli {
         command: DocsCommand::Show {
-            path: "core/NOPE".to_string(),
+            path: "core/NOPE.json".to_string(),
             source: docs_cli::DocumentSource::Merged,
         },
     });
@@ -899,23 +899,23 @@ fn override_md_extraction_and_merging() {
 
 ## Core Overrides
 
-### core/DECAPOD
+### core/DECAPOD.json
 
 ## Custom Navigation
 
-This is a test override for core/DECAPOD
+This is a test override for core/DECAPOD.json
 
-### core/CONTROL_PLANE
+### core/CONTROL_PLANE.json
 
 ## Custom Control Plane
 
-This is a test override for core/CONTROL_PLANE
+This is a test override for core/CONTROL_PLANE.json
 
 ---
 
 ## Plugin Overrides
 
-### plugins/TODO
+### plugins/TODO.json
 
 ## Custom TODO Priorities
 
@@ -927,11 +927,11 @@ This is a test override for core/CONTROL_PLANE
     fs::write(root.join(".decapod/OVERRIDE.md"), override_content).expect("write OVERRIDE.md");
 
     // Test override extraction for specific components
-    let decapod_override = assets::get_override_doc(root, "core/DECAPOD");
+    let decapod_override = assets::get_override_doc(root, "core/DECAPOD.json");
     assert!(decapod_override.is_some());
     assert!(decapod_override.unwrap().contains("Custom Navigation"));
 
-    let control_plane_override = assets::get_override_doc(root, "core/CONTROL_PLANE");
+    let control_plane_override = assets::get_override_doc(root, "core/CONTROL_PLANE.json");
     assert!(control_plane_override.is_some());
     assert!(
         control_plane_override
@@ -939,16 +939,16 @@ This is a test override for core/CONTROL_PLANE
             .contains("Custom Control Plane")
     );
 
-    let todo_override = assets::get_override_doc(root, "plugins/TODO");
+    let todo_override = assets::get_override_doc(root, "plugins/TODO.json");
     assert!(todo_override.is_some());
     assert!(todo_override.unwrap().contains("Custom TODO Priorities"));
 
     // Test that non-existent override returns None
-    let missing_override = assets::get_override_doc(root, "plugins/NONEXISTENT");
+    let missing_override = assets::get_override_doc(root, "plugins/NONEXISTENT.json");
     assert!(missing_override.is_none());
 
     // Test merged document (embedded + override)
-    let merged_todo = assets::get_merged_doc(root, "plugins/TODO");
+    let merged_todo = assets::get_merged_doc(root, "plugins/TODO.json");
     assert!(merged_todo.is_some());
     let merged_content = merged_todo.unwrap();
     // Should contain both embedded content and override
@@ -959,9 +959,9 @@ This is a test override for core/CONTROL_PLANE
     assert_eq!(
         override_sections,
         vec![
-            "core/DECAPOD",
-            "core/CONTROL_PLANE",
-            "plugins/TODO"
+            "core/DECAPOD.json",
+            "core/CONTROL_PLANE.json",
+            "plugins/TODO.json"
         ]
     );
 }
@@ -977,14 +977,14 @@ fn docs_list_outputs_project_override_sections() {
         r#"# OVERRIDE.md
 
 ```markdown
-### core/EXAMPLE
+### core/EXAMPLE.json
 ```
 
 <!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
 
 ## Core Overrides
 
-### core/DECAPOD
+### core/DECAPOD.json
 
 Project override.
 "#,
@@ -1001,8 +1001,8 @@ Project override.
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).expect("utf8 stdout");
     assert!(stdout.contains("Project Override Sections:"));
-    assert!(stdout.contains("- core/DECAPOD"));
-    assert!(!stdout.contains("core/EXAMPLE"));
+    assert!(stdout.contains("- core/DECAPOD.json"));
+    assert!(!stdout.contains("core/EXAMPLE.json"));
 }
 
 #[test]
@@ -1074,28 +1074,28 @@ fn override_md_empty_sections_return_none() {
 
 ## Core Overrides
 
-### core/DECAPOD.md
+### core/DECAPOD.json
 
-### core/CONTROL_PLANE.md
+### core/CONTROL_PLANE.json
 
 Some content here
 
-### core/PLUGINS.md
+### core/PLUGINS.json
 "#;
 
     fs::write(root.join(".decapod/OVERRIDE.md"), override_content).expect("write OVERRIDE.md");
 
     // Empty section should return None
-    let empty_override = assets::get_override_doc(root, "core/DECAPOD.md");
+    let empty_override = assets::get_override_doc(root, "core/DECAPOD.json");
     assert!(empty_override.is_none());
 
     // Non-empty section should return Some
-    let non_empty_override = assets::get_override_doc(root, "core/CONTROL_PLANE.md");
+    let non_empty_override = assets::get_override_doc(root, "core/CONTROL_PLANE.json");
     assert!(non_empty_override.is_some());
     assert!(non_empty_override.unwrap().contains("Some content here"));
 
     // Empty section at end should return None
-    let end_empty_override = assets::get_override_doc(root, "core/PLUGINS.md");
+    let end_empty_override = assets::get_override_doc(root, "core/PLUGINS.json");
     assert!(end_empty_override.is_none());
 }
 
@@ -1114,7 +1114,7 @@ fn override_md_ignores_template_examples() {
 Example:
 
 ```markdown
-### plugins/TODO.md
+### plugins/TODO.json
 
 This is just an example in the instructions
 ```
@@ -1123,7 +1123,7 @@ This is just an example in the instructions
 
 ## Plugin Overrides
 
-### plugins/TODO.md
+### plugins/TODO.json
 
 This is the ACTUAL override content
 "#;
@@ -1131,7 +1131,7 @@ This is the ACTUAL override content
     fs::write(root.join(".decapod/OVERRIDE.md"), override_content).expect("write OVERRIDE.md");
 
     // Should extract the actual override, not the example
-    let override_doc = assets::get_override_doc(root, "plugins/TODO.md");
+    let override_doc = assets::get_override_doc(root, "plugins/TODO.json");
     assert!(override_doc.is_some());
     let content = override_doc.unwrap();
     assert!(content.contains("ACTUAL override content"));

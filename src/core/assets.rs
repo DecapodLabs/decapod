@@ -12,15 +12,29 @@ include!(concat!(env!("OUT_DIR"), "/constitution_compressed.rs"));
 pub fn get_embedded_doc(id: &str) -> Option<String> {
     let key = id.strip_prefix("embedded/").unwrap_or(id);
 
-    // 1. Try exact match (e.g., "core/DECAPOD")
+    // 1. Try exact match (e.g., "core/DECAPOD.json")
     if let Some(content) = get_decompressed(key) {
         return Some(content);
     }
 
-    // 2. Try normalizing dots to slashes (e.g., "core.DECAPOD" -> "core/DECAPOD")
+    // 2. Try appending .json (e.g., "core/DECAPOD" -> "core/DECAPOD.json")
+    if !key.ends_with(".json") {
+        let with_json = format!("{}.json", key);
+        if let Some(content) = get_decompressed(&with_json) {
+            return Some(content);
+        }
+    }
+
+    // 3. Try normalizing dots to slashes and appending .json
     let normalized = key.replace('.', "/");
     if let Some(content) = get_decompressed(&normalized) {
         return Some(content);
+    }
+    if !normalized.ends_with(".json") {
+        let normalized_json = format!("{}.json", normalized);
+        if let Some(content) = get_decompressed(&normalized_json) {
+            return Some(content);
+        }
     }
 
     None
@@ -173,9 +187,9 @@ decapod data schema --deterministic
 - Read and update `.decapod/config.toml` as project context; use Decapod CLI for other `.decapod/` state.
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides when present.
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
-- Read canonical router: `decapod docs show core/DECAPOD`.
+- Read canonical router: `decapod docs show core/DECAPOD.json`.
 - Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
-- Operator reference: `decapod docs show docs/PLAYBOOK`.
+- Operator reference: `decapod docs show docs/PLAYBOOK.json`.
 - Capability authority: `decapod capabilities --format json`.
 - Scoped context feature: `decapod docs search --query "<problem>" --op <op>` or `decapod rpc --op context.scope`.
 
@@ -250,7 +264,7 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 - **INV-ROOT-ISOLATION**: Agents MUST NOT check out branches or mutate files in the main repository checkout. All work must happen in isolated `.decapod/workspaces/*` worktrees to avoid disrupting the human user's environment. (enforced by workspace validation)
 
 ## Safety Invariants
-- ✅ Router pointer: `core/DECAPOD` | ✅ Validation gate: `decapod validate`
+- ✅ Router pointer: `core/DECAPOD.json` | ✅ Validation gate: `decapod validate`
 - ✅ Constitution ingestion gate: `decapod docs ingest`
 - ✅ Workspace status gate: `decapod workspace status`
 - ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`
@@ -260,7 +274,7 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 
 ## Universal Agent Operating Contract
 
-Decapod governs AI coding agents to ensure convergence on human intent and proof-backed completion.
+Decapod is the governance kernel that governs AI coding agents to ensure convergence on human intent and proof-backed completion.
 
 - **Doctrine:** Establish intent, shape context, bound mutation, and define proof BEFORE implementation.
 - **Rules:** Avoid opportunistic rewrites; preserve behavior; stop at subsystem boundaries; run strong verification.
@@ -274,7 +288,7 @@ Call Decapod before editing. Let Decapod validate after editing.
 - Read `.decapod/config.toml` (human-editable) for project context and architecture direction.
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides.
 - DO NOT mutate `.decapod/` state directly; use Decapod CLI for specs, data, workspaces, and sessions. Access to `.decapod/` is strictly via decapod CLI.
-- Use `decapod docs show core/DECAPOD` for binding contracts.
+- Use `decapod docs show core/DECAPOD.json` for binding contracts.
 - Use `decapod capabilities --format json` to discover available operations.
 - Stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
 - Respect the Interface abstraction boundary.
@@ -297,7 +311,7 @@ fn template_readme() -> String {
 Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to turn intent into context, then context into explicit specifications before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
 
 GitHub: https://github.com/DecapodLabs/decapod
-Canonical Contract: [core/DECAPOD](core/DECAPOD)
+Canonical Contract: [core/DECAPOD.json](core/DECAPOD.json)
 
 ## What This Directory Is
 
@@ -391,7 +405,7 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 ## Canonical Layout
 
 - `README.md`: operator onboarding and control-plane map.
-- `OVERRIDE.md`: project-local override layer for embedded constitution.
+- `OVERRIDE.md`: project-local override layer for embedded constitution directives.
 - `data/`: canonical control-plane state (SQLite + ledgers).
 - `skills/`: imported skill cards (auto-generated, tracked for reproducibility).
 - `generated/specs/`: living project specs scaffolded by `decapod init`.
@@ -400,6 +414,14 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 - `generated/artifacts/inventory/`: deterministic release inventory artifacts.
 - `generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `workspaces/`: isolated todo-scoped git worktrees for implementation.
+
+## How It Works
+
+Decapod uses a **JSON-based constitution** to govern agent behavior. Instead of the agent reading full Markdown documents, it uses the Decapod CLI to query specific directives.
+
+1. **Indexing**: Decapod indexes the constitution graph when called.
+2. **Selective Context**: Agents query exact sections (directives) needed for the current task, minimizing context overhead.
+3. **Local Overrides**: You can override any constitution directive in [.decapod/OVERRIDE.md](OVERRIDE.md) using the specific directive ID.
 
 ## Why Teams Use This
 
@@ -424,11 +446,15 @@ fn template_override() -> String {
 **Canonical:** OVERRIDE.md
 **Authority:** override
 **Layer:** Project
-**Binding:** Yes (overrides embedded constitution)
+**Binding:** Yes (overrides embedded constitution directives)
 
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- ⚠️  CHANGES ARE NOT PERMITTED ABOVE THIS LINE                           -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+Use this file to override specific constitution directives. Decapod indexes these sections
+using the H3 headers below (e.g., `### core/DECAPOD`). Overrides in this file take precedence
+over the embedded JSON constitution.
 "#.to_string();
 
     // Group nodes by category for the template

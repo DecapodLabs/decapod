@@ -1842,7 +1842,7 @@ pub fn validate_federation(
                 "federation.provenance".to_string(),
                 false,
                 format!(
-                    "Critical nodes missing provenance: {}. Fix: decapod data federation sources add --id <node> --source <scheme:ref>. See plugins/FEDERATION.md §4.2",
+                    "Critical nodes missing provenance: {}. Fix: decapod data federation sources add --id <node> --source <scheme:ref>. See plugins/FEDERATION.json §4.2",
                     violations.join(", ")
                 ),
             ));
@@ -1875,7 +1875,7 @@ pub fn validate_federation(
                 "federation.write_safety".to_string(),
                 false,
                 format!(
-                    "Critical nodes with edit events (append-only policy violation): {}. Critical types must use 'supersede', not 'edit'. See plugins/FEDERATION.md §6",
+                    "Critical nodes with edit events (append-only policy violation): {}. Critical types must use 'supersede', not 'edit'. See plugins/FEDERATION.json §6",
                     violations.join(", ")
                 ),
             ));
@@ -1904,7 +1904,7 @@ pub fn validate_federation(
             results.push((
                 "federation.lifecycle_dag".to_string(),
                 false,
-                "Cycle detected in supersedes edges. Run: decapod data federation graph --id <node> --depth 5 to trace. See plugins/FEDERATION.md §7".to_string(),
+                "Cycle detected in supersedes edges. Run: decapod data federation graph --id <node> --depth 5 to trace. See plugins/FEDERATION.json §7".to_string(),
             ));
         }
     }

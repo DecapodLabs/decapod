@@ -5950,6 +5950,9 @@ mod rpc_handlers {
     use crate::core::workspace;
 
     pub(crate) fn handle_agent_init(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let _params: AgentInitParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
         let workspace_status = workspace::get_workspace_status(ctx.project_root)?;
         let mut allowed_ops = workspace::get_allowed_ops(&workspace_status);
 
@@ -6012,27 +6015,29 @@ mod rpc_handlers {
             vec![]
         };
 
-        let mut response = success_response(
+        let result = AgentInitResult {
+            environment_context: EnvironmentContext {
+                repo_root: ctx.project_root.to_string_lossy().to_string(),
+                workspace_path: ctx.project_root.to_string_lossy().to_string(),
+                tool_summary: ToolSummary {
+                    docker_available: workspace_status.container.docker_available,
+                    in_container: workspace_status.container.in_container,
+                },
+                done_means: "decapod validate passes".to_string(),
+            },
+        };
+
+        let response = success_response(
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            None,
+            Some(serde_json::to_value(result).unwrap()),
             vec![],
             context_capsule,
             allowed_ops,
             ctx.mandates.clone(),
         );
-        response.result = Some(serde_json::json!({
-            "environment_context": {
-                "repo_root": ctx.project_root.to_string_lossy(),
-                "workspace_path": ctx.project_root.to_string_lossy(),
-                "tool_summary": {
-                    "docker_available": workspace_status.container.docker_available,
-                    "in_container": workspace_status.container.in_container,
-                },
-                "done_means": "decapod validate passes"
-            }
-        }));
+
         mark_constitution_initialized(ctx.project_root)?;
         Ok(response)
     }
@@ -6040,26 +6045,30 @@ mod rpc_handlers {
     pub(crate) fn handle_workspace_status(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
+        let _params: WorkspaceStatusParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
         let status = workspace::get_workspace_status(ctx.project_root)?;
         let blocked_by = status.blockers.clone();
         let allowed_ops = workspace::get_allowed_ops(&status);
+
+        let result = WorkspaceStatusResult {
+            git_branch: status.git.current_branch,
+            git_is_protected: status.git.is_protected,
+            in_container: status.container.in_container,
+            can_work: status.can_work,
+        };
 
         let mut response = success_response(
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            None,
+            Some(serde_json::to_value(result).unwrap()),
             vec![],
             None,
             allowed_ops,
             ctx.mandates.clone(),
         );
-        response.result = Some(serde_json::json!({
-            "git_branch": status.git.current_branch,
-            "git_is_protected": status.git.is_protected,
-            "in_container": status.container.in_container,
-            "can_work": status.can_work,
-        }));
         response.blocked_by = blocked_by;
         Ok(response)
     }
@@ -6067,15 +6076,11 @@ mod rpc_handlers {
     pub(crate) fn handle_workspace_ensure(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
-        let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
-        let branch = ctx
-            .request
-            .params
-            .get("branch")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
+        let params: WorkspaceEnsureParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
 
-        let config = branch.map(|b| workspace::WorkspaceConfig {
+        let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+        let config = params.branch.map(|b| workspace::WorkspaceConfig {
             branch: b,
             use_container: false,
             base_image: None,
@@ -6084,11 +6089,22 @@ mod rpc_handlers {
         let status = workspace::ensure_workspace(ctx.project_root, config, &agent_id)?;
         let allowed_ops = workspace::get_allowed_ops(&status);
 
+        let result = WorkspaceEnsureResult {
+            branch: status.git.current_branch.clone(),
+            worktree_path: status
+                .git
+                .worktree_path
+                .clone()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string(),
+        };
+
         Ok(success_response(
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            None,
+            Some(serde_json::to_value(result).unwrap()),
             vec![format!(".git/refs/heads/{}", status.git.current_branch)],
             None,
             allowed_ops,
@@ -6099,37 +6115,30 @@ mod rpc_handlers {
     pub(crate) fn handle_workspace_publish(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
+        let params: WorkspacePublishParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
         let store_root = ctx.project_root.join(".decapod").join("data");
         plan_governance::ensure_execute_ready(plan_governance::ExecuteCheckInput {
             project_root: ctx.project_root,
             store_root: &store_root,
             todo_id: None,
         })?;
-        let title = ctx
-            .request
-            .params
-            .get("title")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-        let description = ctx
-            .request
-            .params
-            .get("description")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
 
-        let result = workspace::publish_workspace(ctx.project_root, title, description)?;
+        let result = workspace::publish_workspace(ctx.project_root, params.title, params.description)?;
+
+        let rpc_result = WorkspacePublishResult {
+            branch: result.branch.clone(),
+            commit_hash: result.commit_hash,
+            remote_url: result.remote_url,
+            pr_url: result.pr_url,
+        };
 
         Ok(success_response(
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            Some(serde_json::json!({
-                "branch": result.branch,
-                "commit_hash": result.commit_hash,
-                "remote_url": result.remote_url,
-                "pr_url": result.pr_url,
-            })),
+            Some(serde_json::to_value(rpc_result).unwrap()),
             vec![format!(".git/refs/heads/{}", result.branch)],
             None,
             vec![AllowedOp {
@@ -6142,17 +6151,15 @@ mod rpc_handlers {
     }
 
     pub(crate) fn handle_context_resolve(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
-        let params = &ctx.request.params;
-        let op = params.get("op").and_then(|v| v.as_str());
-        let touched_paths = params.get("touched_paths").and_then(|v| v.as_array());
-        let intent_tags = params.get("intent_tags").and_then(|v| v.as_array());
-        let query = params.get("query").and_then(|v| v.as_str());
-        let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(5) as usize;
+        let params: ContextResolveParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
+        let limit = params.limit.unwrap_or(5);
 
         let mut fragments = Vec::new();
         let bindings = docs::get_bindings(ctx.project_root);
 
-        if let Some(o) = op
+        if let Some(o) = &params.op
             && let Some(doc_ref) = bindings.ops.get(o)
         {
             let parts: Vec<&str> = doc_ref.split('#').collect();
@@ -6163,8 +6170,8 @@ mod rpc_handlers {
             }
         }
 
-        if let Some(paths) = touched_paths {
-            for p in paths.iter().filter_map(|v| v.as_str()) {
+        if let Some(paths) = &params.touched_paths {
+            for p in paths {
                 for (prefix, doc_ref) in &bindings.paths {
                     if p.contains(prefix) {
                         let parts: Vec<&str> = doc_ref.split('#').collect();
@@ -6178,8 +6185,8 @@ mod rpc_handlers {
             }
         }
 
-        if let Some(tags) = intent_tags {
-            for t in tags.iter().filter_map(|v| v.as_str()) {
+        if let Some(tags) = &params.intent_tags {
+            for t in tags {
                 if let Some(doc_ref) = bindings.tags.get(t) {
                     let parts: Vec<&str> = doc_ref.split('#').collect();
                     let path = parts[0];
@@ -6193,24 +6200,14 @@ mod rpc_handlers {
 
         fragments.sort_by(|a, b| a.r#ref.cmp(&b.r#ref));
         fragments.dedup_by(|a, b| a.r#ref == b.r#ref);
-        let touched_vec = touched_paths
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or_default();
-        let tags_vec = intent_tags
-            .map(|arr| {
-                arr.iter()
-                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or_default();
+
+        let touched_vec = params.touched_paths.clone().unwrap_or_default();
+        let tags_vec = params.intent_tags.clone().unwrap_or_default();
+
         let scoped_fragments = docs::resolve_scoped_fragments(
             ctx.project_root,
-            query,
-            op,
+            params.query.as_deref(),
+            params.op.as_deref(),
             &touched_vec,
             &tags_vec,
             limit,
@@ -6221,34 +6218,27 @@ mod rpc_handlers {
         fragments.truncate(limit.max(1));
 
         let local_specs = core::project_specs::local_project_specs_context(ctx.project_root);
-        let canonical_paths = local_specs.canonical_paths.clone();
-        let constitution_refs = local_specs.constitution_refs.clone();
-        let local_intent = local_specs.intent.clone();
-        let local_architecture = local_specs.architecture.clone();
-        let local_interfaces = local_specs.interfaces.clone();
-        let local_validation = local_specs.validation.clone();
-        let local_update_guidance = local_specs.update_guidance.clone();
 
-        let result = serde_json::json!({
-            "fragments": fragments,
-            "scoped_fragments": scoped_fragments,
-            "local_project_specs": {
-                "canonical_paths": canonical_paths,
-                "constitution_refs": constitution_refs,
-                "intent": local_intent,
-                "architecture": local_architecture,
-                "interfaces": local_interfaces,
-                "validation": local_validation,
-                "update_guidance": local_update_guidance
-            }
-        });
+        let result = ContextResolveResult {
+            fragments: fragments.clone(),
+            scoped_fragments,
+            local_project_specs: LocalProjectSpecs {
+                canonical_paths: local_specs.canonical_paths.clone(),
+                constitution_refs: local_specs.constitution_refs.clone(),
+                intent: local_specs.intent.clone(),
+                architecture: local_specs.architecture.clone(),
+                interfaces: local_specs.interfaces.clone(),
+                validation: local_specs.validation.clone(),
+                update_guidance: Some(local_specs.update_guidance.clone()),
+            },
+        };
         mark_constitution_context_resolved(ctx.project_root)?;
 
         Ok(success_response(
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            Some(result),
+            Some(serde_json::to_value(result).unwrap()),
             vec![],
             Some(ContextCapsule {
                 fragments,
@@ -6297,45 +6287,25 @@ mod rpc_handlers {
     pub(crate) fn handle_context_capsule_query(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
-        let params = &ctx.request.params;
-        let topic = params
-            .get("topic")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| {
-                error::DecapodError::ValidationError(
-                    "context.capsule.query requires 'topic'".to_string(),
-                )
-            })?;
-        let scope = params
-            .get("scope")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| {
-                error::DecapodError::ValidationError(
-                    "context.capsule.query requires 'scope'".to_string(),
-                )
-            })?;
-        let task_id = params.get("task_id").and_then(|v| v.as_str());
-        let workunit_id = params.get("workunit_id").and_then(|v| v.as_str());
-        let limit = params.get("limit").and_then(|v| v.as_u64()).unwrap_or(6) as usize;
-        let risk_tier = params.get("risk_tier").and_then(|v| v.as_str());
-        let write = params
-            .get("write")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
+        let params: ContextCapsuleQueryParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
+        let limit = params.limit.unwrap_or(6);
+        let write = params.write.unwrap_or(false);
 
         let resolved_policy = core::capsule_policy::resolve_capsule_policy(
             ctx.project_root,
-            scope,
-            risk_tier,
+            &params.scope,
+            params.risk_tier.as_deref(),
             limit,
             write,
         )?;
         let capsule = core::context_capsule::query_embedded_capsule_governed(
             ctx.project_root,
-            topic,
-            scope,
-            task_id,
-            workunit_id,
+            &params.topic,
+            &params.scope,
+            params.task_id.as_deref(),
+            params.workunit_id.as_deref(),
             resolved_policy.effective_limit,
             resolved_policy.binding,
         )?;
@@ -6346,7 +6316,7 @@ mod rpc_handlers {
             touched.push(path.to_string_lossy().to_string());
             if let Some(workunit_path) = maybe_bind_capsule_to_workunit_state_ref(
                 ctx.project_root,
-                task_id.or(workunit_id),
+                params.task_id.as_deref().or(params.workunit_id.as_deref()),
                 &path,
             )? {
                 touched.push(workunit_path.to_string_lossy().to_string());
@@ -6374,6 +6344,9 @@ mod rpc_handlers {
     pub(crate) fn handle_context_bindings(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
+        let _params: ContextBindingsParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
         let bindings = docs::get_bindings(ctx.project_root);
         Ok(success_response(
             ctx.request.id.clone(),
@@ -6388,15 +6361,17 @@ mod rpc_handlers {
     }
 
     pub(crate) fn handle_schema_get(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
-        let entity = ctx.request.params.get("entity").and_then(|v| v.as_str());
-        match entity {
+        let params: SchemaGetParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
+        match params.entity.as_deref() {
             Some("todo") => Ok(success_response(
                 ctx.request.id.clone(),
                 ctx.request.op.clone(),
                 ctx.request.params.clone(),
-                Some(serde_json::json!({
-                    "schema_version": "v1",
-                    "json_schema": {
+                Some(serde_json::to_value(SchemaGetResult {
+                    schema_version: "v1".to_string(),
+                    json_schema: serde_json::json!({
                         "type": "object",
                         "properties": {
                             "title": { "type": "string" },
@@ -6405,8 +6380,8 @@ mod rpc_handlers {
                             "tags": { "type": "string" }
                         },
                         "required": ["title"]
-                    }
-                })),
+                    }),
+                }).unwrap()),
                 vec![],
                 None,
                 vec![],
@@ -6416,9 +6391,9 @@ mod rpc_handlers {
                 ctx.request.id.clone(),
                 ctx.request.op.clone(),
                 ctx.request.params.clone(),
-                Some(serde_json::json!({
-                    "schema_version": "v1",
-                    "json_schema": {
+                Some(serde_json::to_value(SchemaGetResult {
+                    schema_version: "v1".to_string(),
+                    json_schema: serde_json::json!({
                         "type": "object",
                         "properties": {
                             "id": { "type": "string" },
@@ -6427,8 +6402,8 @@ mod rpc_handlers {
                             "provenance": { "type": "string" }
                         },
                         "required": ["id", "title", "text", "provenance"]
-                    }
-                })),
+                    }),
+                }).unwrap()),
                 vec![],
                 None,
                 vec![],
@@ -6438,9 +6413,9 @@ mod rpc_handlers {
                 ctx.request.id.clone(),
                 ctx.request.op.clone(),
                 ctx.request.params.clone(),
-                Some(serde_json::json!({
-                    "schema_version": "v1",
-                    "json_schema": {
+                Some(serde_json::to_value(SchemaGetResult {
+                    schema_version: "v1".to_string(),
+                    json_schema: serde_json::json!({
                         "type": "object",
                         "properties": {
                             "title": { "type": "string" },
@@ -6449,8 +6424,8 @@ mod rpc_handlers {
                             "chosen": { "type": "string" }
                         },
                         "required": ["title", "rationale", "chosen"]
-                    }
-                })),
+                    }),
+                }).unwrap()),
                 vec![],
                 None,
                 vec![],
@@ -6461,7 +6436,7 @@ mod rpc_handlers {
                 ctx.request.op.clone(),
                 ctx.request.params.clone(),
                 "invalid_entity".to_string(),
-                format!("Invalid or missing entity: {:?}", entity),
+                format!("Invalid or missing entity: {:?}", params.entity),
                 None,
                 ctx.mandates.clone(),
             )),
@@ -6469,12 +6444,12 @@ mod rpc_handlers {
     }
 
     pub(crate) fn handle_store_upsert(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
-        let params = &ctx.request.params;
-        let entity = params.get("entity").and_then(|v| v.as_str());
-        let payload = params.get("payload");
-        let _provenance = params.get("provenance");
+        let params: StoreUpsertParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
 
-        match entity {
+        let payload = params.payload.as_ref();
+
+        match params.entity.as_deref() {
             Some("todo") => {
                 let title = payload
                     .and_then(|p| p.get("title"))
@@ -6513,11 +6488,21 @@ mod rpc_handlers {
                     one_shot: 0,
                 };
                 let res = todo::add_task(&ctx.store.root, &args)?;
+                let result = StoreUpsertResult {
+                    id: res
+                        .get("id")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or_default()
+                        .to_string(),
+                    status: None,
+                    stored: Some(true),
+                    action: None,
+                };
                 Ok(success_response(
                     ctx.request.id.clone(),
                     ctx.request.op.clone(),
                     ctx.request.params.clone(),
-                    Some(serde_json::json!({ "id": res.get("id"), "stored": true })),
+                    Some(serde_json::to_value(result).unwrap()),
                     vec![],
                     None,
                     vec![],
@@ -6547,7 +6532,7 @@ mod rpc_handlers {
                     .to_string();
 
                 db::initialize_knowledge_db(&ctx.store.root)?;
-                let result = knowledge::add_knowledge(
+                let res = knowledge::add_knowledge(
                     ctx.store,
                     knowledge::AddKnowledgeParams {
                         id: &id,
@@ -6562,13 +6547,17 @@ mod rpc_handlers {
                         expires_ts: None,
                     },
                 )?;
+                let result = StoreUpsertResult {
+                    id: res.id,
+                    status: None,
+                    stored: Some(true),
+                    action: Some(res.action),
+                };
                 Ok(success_response(
                     ctx.request.id.clone(),
                     ctx.request.op.clone(),
                     ctx.request.params.clone(),
-                    Some(
-                        serde_json::json!({ "id": result.id, "stored": true, "action": result.action }),
-                    ),
+                    Some(serde_json::to_value(result).unwrap()),
                     vec![],
                     None,
                     vec![],
@@ -6593,7 +6582,7 @@ mod rpc_handlers {
                     .to_string();
 
                 let content = format!("Decision: {}\nRationale: {}", chosen, rationale);
-                let node_id = federation::add_node(
+                let node = federation::add_node(
                     ctx.store,
                     &title,
                     "decision",
@@ -6606,11 +6595,17 @@ mod rpc_handlers {
                     None,
                     "agent",
                 )?;
+                let result = StoreUpsertResult {
+                    id: node.id,
+                    status: None,
+                    stored: Some(true),
+                    action: None,
+                };
                 Ok(success_response(
                     ctx.request.id.clone(),
                     ctx.request.op.clone(),
                     ctx.request.params.clone(),
-                    Some(serde_json::json!({ "id": node_id, "stored": true })),
+                    Some(serde_json::to_value(result).unwrap()),
                     vec![],
                     None,
                     vec![],
@@ -6622,7 +6617,7 @@ mod rpc_handlers {
                 ctx.request.op.clone(),
                 ctx.request.params.clone(),
                 "invalid_entity".to_string(),
-                format!("Invalid or missing entity: {:?}", entity),
+                format!("Invalid or missing entity: {:?}", params.entity),
                 None,
                 ctx.mandates.clone(),
             )),
@@ -6630,22 +6625,26 @@ mod rpc_handlers {
     }
 
     pub(crate) fn handle_store_query(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
-        let params = &ctx.request.params;
-        let entity = params.get("entity").and_then(|v| v.as_str());
-        let query = params.get("query");
+        let params: StoreQueryParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
 
-        match entity {
+        match params.entity.as_deref() {
             Some("todo") => {
-                let status = query
+                let status = params.query
+                    .as_ref()
                     .and_then(|q| q.get("status"))
                     .and_then(|v| v.as_str())
                     .map(|s| s.to_string());
                 let tasks = todo::list_tasks(&ctx.store.root, status, None, None, None, None)?;
+                let result = StoreQueryResult {
+                    items: tasks.into_iter().map(|t| serde_json::to_value(t).unwrap()).collect(),
+                    next_page: None,
+                };
                 Ok(success_response(
                     ctx.request.id.clone(),
                     ctx.request.op.clone(),
                     ctx.request.params.clone(),
-                    Some(serde_json::json!({ "items": tasks, "next_page": null })),
+                    Some(serde_json::to_value(result).unwrap()),
                     vec![],
                     None,
                     vec![],
@@ -6653,7 +6652,8 @@ mod rpc_handlers {
                 ))
             }
             Some("knowledge") => {
-                let text = query
+                let text = params.query
+                    .as_ref()
                     .and_then(|q| q.get("text"))
                     .and_then(|v| v.as_str())
                     .unwrap_or("");
@@ -6667,11 +6667,15 @@ mod rpc_handlers {
                         rank: "relevance",
                     },
                 )?;
+                let result = StoreQueryResult {
+                    items: entries.into_iter().map(|e| serde_json::to_value(e).unwrap()).collect(),
+                    next_page: None,
+                };
                 Ok(success_response(
                     ctx.request.id.clone(),
                     ctx.request.op.clone(),
                     ctx.request.params.clone(),
-                    Some(serde_json::json!({ "items": entries, "next_page": null })),
+                    Some(serde_json::to_value(result).unwrap()),
                     vec![],
                     None,
                     vec![],
@@ -6686,11 +6690,15 @@ mod rpc_handlers {
                     None,
                     None,
                 )?;
+                let result = StoreQueryResult {
+                    items: nodes.into_iter().map(|n| serde_json::to_value(n).unwrap()).collect(),
+                    next_page: None,
+                };
                 Ok(success_response(
                     ctx.request.id.clone(),
                     ctx.request.op.clone(),
                     ctx.request.params.clone(),
-                    Some(serde_json::json!({ "items": nodes, "next_page": null })),
+                    Some(serde_json::to_value(result).unwrap()),
                     vec![],
                     None,
                     vec![],
@@ -6702,7 +6710,7 @@ mod rpc_handlers {
                 ctx.request.op.clone(),
                 ctx.request.params.clone(),
                 "invalid_entity".to_string(),
-                format!("Invalid or missing entity: {:?}", entity),
+                format!("Invalid or missing entity: {:?}", params.entity),
                 None,
                 ctx.mandates.clone(),
             )),
@@ -6710,22 +6718,31 @@ mod rpc_handlers {
     }
 
     pub(crate) fn handle_validate_run(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let _params: ValidateRunParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
         let project_store = Store {
             kind: StoreKind::Repo,
             root: ctx.project_root.join(".decapod").join("data"),
         };
         let res = run_validation_bounded(&project_store, ctx.project_root, false);
         match res {
-            Ok(report) if report.fail_count == 0 => Ok(success_response(
-                ctx.request.id.clone(),
-                ctx.request.op.clone(),
-                ctx.request.params.clone(),
-                Some(serde_json::json!({ "success": true })),
-                vec![],
-                None,
-                vec![],
-                ctx.mandates.clone(),
-            )),
+            Ok(report) if report.fail_count == 0 => {
+                let result = ValidateRunResult {
+                    success: true,
+                    report: "All validation gates passed".to_string(),
+                };
+                Ok(success_response(
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
+                    Some(serde_json::to_value(result).unwrap()),
+                    vec![],
+                    None,
+                    vec![],
+                    ctx.mandates.clone(),
+                ))
+            }
             Ok(report) => Ok(error_response(
                 ctx.request.id.clone(),
                 ctx.request.op.clone(),
@@ -6750,13 +6767,10 @@ mod rpc_handlers {
     pub(crate) fn handle_scaffold_next_question(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
-        let project_name = ctx
-            .request
-            .params
-            .get("project_name")
-            .and_then(|v| v.as_str())
-            .unwrap_or("Untitled")
-            .to_string();
+        let params: ScaffoldNextQuestionParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
+        let project_name = params.project_name.unwrap_or_else(|| "Untitled".to_string());
 
         let interview_state = interview::init_interview(project_name);
         let question = interview::next_question(&interview_state);
@@ -6776,17 +6790,13 @@ mod rpc_handlers {
             ctx.mandates.clone(),
         );
 
-        if let Some(q) = question {
-            response.result = Some(serde_json::json!({
-                "interview_id": interview_state.id,
-                "question": q,
-            }));
-        } else {
-            response.result = Some(serde_json::json!({
-                "interview_id": interview_state.id,
-                "complete": true,
-            }));
-        }
+        let is_complete = question.is_none();
+        let result = ScaffoldNextQuestionResult {
+            interview_id: interview_state.id,
+            question,
+            complete: if is_complete { Some(true) } else { None },
+        };
+        response.result = Some(serde_json::to_value(result).unwrap());
 
         Ok(response)
     }
@@ -6794,24 +6804,11 @@ mod rpc_handlers {
     pub(crate) fn handle_scaffold_apply_answer(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
-        let question_id = ctx
-            .request
-            .params
-            .get("question_id")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| {
-                error::DecapodError::ValidationError("question_id required".to_string())
-            })?;
-        let value = ctx
-            .request
-            .params
-            .clone()
-            .get("value")
-            .cloned()
-            .ok_or_else(|| error::DecapodError::ValidationError("value required".to_string()))?;
+        let params: ScaffoldApplyAnswerParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
 
         let mut interview_state = interview::init_interview("project".to_string());
-        interview::apply_answer(&mut interview_state, question_id, value)?;
+        interview::apply_answer(&mut interview_state, &params.question_id, params.value)?;
 
         let next_q = interview::next_question(&interview_state);
 
@@ -6838,10 +6835,11 @@ mod rpc_handlers {
             ctx.mandates.clone(),
         );
 
-        response.result = Some(serde_json::json!({
-            "answers_count": interview_state.answers.len(),
-            "is_complete": interview_state.is_complete,
-        }));
+        let result = ScaffoldApplyAnswerResult {
+            answers_count: interview_state.answers.len(),
+            is_complete: interview_state.is_complete,
+        };
+        response.result = Some(serde_json::to_value(result).unwrap());
 
         Ok(response)
     }
@@ -6849,6 +6847,9 @@ mod rpc_handlers {
     pub(crate) fn handle_scaffold_generate_artifacts(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
+        let _params: ScaffoldGenerateArtifactsParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
         let interview_state = interview::init_interview("project".to_string());
         let output_dir = ctx.project_root.to_path_buf();
 
@@ -6877,6 +6878,9 @@ mod rpc_handlers {
     pub(crate) fn handle_standards_resolve(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
+        let _params: StandardsResolveParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
         let resolved = standards::resolve_standards(ctx.project_root)?;
 
         let mut standards_map = std::collections::HashMap::new();
@@ -6913,56 +6917,18 @@ mod rpc_handlers {
     ) -> Result<RpcResponse, error::DecapodError> {
         use crate::core::mentor::{MentorEngine, ObligationsContext};
 
+        let params: MentorObligationsParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
         let engine = MentorEngine::new(ctx.project_root);
         let obligations_ctx = ObligationsContext {
-            op: ctx
-                .request
-                .params
-                .get("op")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown")
-                .to_string(),
-            params: ctx
-                .request
-                .params
-                .get("params")
-                .cloned()
-                .unwrap_or(serde_json::json!({})),
-            touched_paths: ctx
-                .request
-                .params
-                .get("touched_paths")
-                .and_then(|v| v.as_array())
-                .map(|arr| {
-                    arr.iter()
-                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                        .collect()
-                })
-                .unwrap_or_default(),
-            diff_summary: ctx
-                .request
-                .params
-                .get("diff_summary")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string()),
-            project_profile_id: ctx
-                .request
-                .params
-                .get("project_profile_id")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string()),
-            session_id: ctx
-                .request
-                .params
-                .get("session_id")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string()),
-            high_risk: ctx
-                .request
-                .params
-                .get("high_risk")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false),
+            op: params.op.unwrap_or_else(|| "unknown".to_string()),
+            params: params.params.unwrap_or_else(|| serde_json::json!({})),
+            touched_paths: params.touched_paths.unwrap_or_default(),
+            diff_summary: params.diff_summary,
+            project_profile_id: params.project_profile_id,
+            session_id: params.session_id,
+            high_risk: params.high_risk.unwrap_or(false),
         };
 
         let obligations = engine.compute_obligations(&obligations_ctx)?;
@@ -6979,7 +6945,7 @@ mod rpc_handlers {
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            None,
+            Some(serde_json::to_value(MentorObligationsResult { obligations: obligations.clone() }).unwrap()),
             vec![],
             Some(context_capsule),
             vec![AllowedOp {
@@ -6989,8 +6955,6 @@ mod rpc_handlers {
             }],
             ctx.mandates.clone(),
         );
-
-        response.result = Some(serde_json::json!({ "obligations": obligations }));
 
         if !obligations.contradictions.is_empty() {
             response.blocked_by = mentor::contradictions_to_blockers(&obligations.contradictions);
@@ -7002,55 +6966,17 @@ mod rpc_handlers {
     pub(crate) fn handle_assurance_evaluate(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
+        let params: AssuranceEvaluateParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
         let input = AssuranceEvaluateInput {
-            op: ctx
-                .request
-                .params
-                .get("op")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown")
-                .to_string(),
-            params: ctx
-                .request
-                .params
-                .get("params")
-                .cloned()
-                .unwrap_or(serde_json::json!({})),
-            touched_paths: ctx
-                .request
-                .params
-                .get("touched_paths")
-                .and_then(|v| v.as_array())
-                .map(|arr| {
-                    arr.iter()
-                        .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                        .collect()
-                })
-                .unwrap_or_default(),
-            diff_summary: ctx
-                .request
-                .params
-                .get("diff_summary")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string()),
-            session_id: ctx
-                .request
-                .params
-                .get("session_id")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string()),
-            phase: ctx
-                .request
-                .params
-                .get("phase")
-                .cloned()
-                .and_then(|v| serde_json::from_value(v).ok()),
-            time_budget_s: ctx
-                .request
-                .params
-                .clone()
-                .get("time_budget_s")
-                .and_then(|v| v.as_u64()),
+            op: params.op.unwrap_or_else(|| "unknown".to_string()),
+            params: params.params.unwrap_or_else(|| serde_json::json!({})),
+            touched_paths: params.touched_paths.unwrap_or_default(),
+            diff_summary: params.diff_summary,
+            session_id: params.session_id,
+            phase: params.phase,
+            time_budget_s: params.time_budget_s,
         };
 
         let engine = AssuranceEngine::new(ctx.project_root);
@@ -7059,7 +6985,10 @@ mod rpc_handlers {
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            None,
+            Some(serde_json::to_value(AssuranceEvaluateResult {
+                assurance_evaluated: true,
+                interlock_code: evaluated.interlock.as_ref().map(|i| i.code.clone()),
+            }).unwrap()),
             input.touched_paths.clone(),
             None,
             if let Some(interlock) = &evaluated.interlock {
@@ -7084,10 +7013,7 @@ mod rpc_handlers {
         response.interlock = evaluated.interlock.clone();
         response.advisory = Some(evaluated.advisory.clone());
         response.attestation = Some(evaluated.attestation.clone());
-        response.result = Some(serde_json::json!({
-            "assurance_evaluated": true,
-            "interlock_code": evaluated.interlock.as_ref().map(|i| i.code.clone()),
-        }));
+
         if let Some(interlock) = evaluated.interlock {
             response.blocked_by = vec![Blocker {
                 kind: match interlock.code.as_str() {
@@ -7101,8 +7027,10 @@ mod rpc_handlers {
                 resolve_hint: interlock.message,
             }];
         }
+
         Ok(response)
     }
+
 }
 
 /// Run RPC command

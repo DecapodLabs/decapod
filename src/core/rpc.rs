@@ -62,6 +62,234 @@ pub struct RpcRequest {
     pub session: Option<String>,
 }
 
+// --- Typed RPC Parameters and Results ---
+
+// Agent Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AgentInitParams {}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AgentInitResult {
+    pub environment_context: EnvironmentContext,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct EnvironmentContext {
+    pub repo_root: String,
+    pub workspace_path: String,
+    pub tool_summary: ToolSummary,
+    pub done_means: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ToolSummary {
+    pub docker_available: bool,
+    pub in_container: bool,
+}
+
+// Workspace Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct WorkspaceStatusParams {}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct WorkspaceStatusResult {
+    pub git_branch: String,
+    pub git_is_protected: bool,
+    pub in_container: bool,
+    pub can_work: bool,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct WorkspaceEnsureParams {
+    pub branch: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct WorkspaceEnsureResult {
+    pub branch: String,
+    pub worktree_path: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct WorkspacePublishParams {
+    pub title: Option<String>,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct WorkspacePublishResult {
+    pub branch: String,
+    pub commit_hash: String,
+    pub remote_url: String,
+    pub pr_url: Option<String>,
+}
+
+// Context Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ContextResolveParams {
+    pub op: Option<String>,
+    pub touched_paths: Option<Vec<String>>,
+    pub intent_tags: Option<Vec<String>>,
+    pub query: Option<String>,
+    pub limit: Option<usize>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ContextResolveResult {
+    pub fragments: Vec<DocFragment>,
+    pub scoped_fragments: Vec<DocFragment>,
+    pub local_project_specs: LocalProjectSpecs,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct LocalProjectSpecs {
+    pub canonical_paths: Vec<String>,
+    pub constitution_refs: Vec<String>,
+    pub intent: Option<String>,
+    pub architecture: Option<String>,
+    pub interfaces: Option<String>,
+    pub validation: Option<String>,
+    pub update_guidance: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ContextCapsuleQueryParams {
+    pub topic: String,
+    pub scope: String,
+    pub task_id: Option<String>,
+    pub workunit_id: Option<String>,
+    pub limit: Option<usize>,
+    pub risk_tier: Option<String>,
+    pub write: Option<bool>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ContextBindingsParams {}
+
+// Schema Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SchemaGetParams {
+    pub entity: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SchemaGetResult {
+    pub schema_version: String,
+    pub json_schema: serde_json::Value,
+}
+
+// Store Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StoreUpsertParams {
+    pub entity: Option<String>,
+    pub payload: Option<serde_json::Value>,
+    pub provenance: Option<String>,
+}
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StoreUpsertResult {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stored: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action: Option<String>,
+}
+
+// Store Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StoreQueryParams {
+    pub entity: Option<String>,
+    pub query: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StoreQueryResult {
+    pub items: Vec<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next_page: Option<serde_json::Value>,
+}
+
+
+// Validate Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ValidateRunParams {
+    pub gate: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ValidateRunResult {
+    pub success: bool,
+    pub report: String,
+}
+
+// Scaffold Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ScaffoldNextQuestionParams {
+    pub project_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ScaffoldNextQuestionResult {
+    pub interview_id: String,
+    pub question: Option<crate::core::interview::Question>,
+    pub complete: Option<bool>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ScaffoldApplyAnswerParams {
+    pub question_id: String,
+    pub value: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ScaffoldApplyAnswerResult {
+    pub answers_count: usize,
+    pub is_complete: bool,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ScaffoldGenerateArtifactsParams {}
+
+// Standards Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StandardsResolveParams {}
+
+// Mentor Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct MentorObligationsParams {
+    pub op: Option<String>,
+    pub params: Option<serde_json::Value>,
+    pub touched_paths: Option<Vec<String>>,
+    pub diff_summary: Option<String>,
+    pub project_profile_id: Option<String>,
+    pub session_id: Option<String>,
+    pub high_risk: Option<bool>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct MentorObligationsResult {
+    pub obligations: crate::core::mentor::Obligations,
+}
+
+// Assurance Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AssuranceEvaluateParams {
+    pub op: Option<String>,
+    pub params: Option<serde_json::Value>,
+    pub touched_paths: Option<Vec<String>>,
+    pub diff_summary: Option<String>,
+    pub session_id: Option<String>,
+    pub phase: Option<crate::core::assurance::AssurancePhase>,
+    pub time_budget_s: Option<u64>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AssuranceEvaluateResult {
+    pub assurance_evaluated: bool,
+    pub interlock_code: Option<String>,
+}
+
 pub fn default_request_id() -> String {
     crate::core::ulid::new_ulid()
 }

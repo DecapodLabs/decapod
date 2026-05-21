@@ -369,15 +369,15 @@ fn test_entrypoints_contain_canonical_router() {
     let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
     assert!(success, "decapod init should succeed");
 
-    // Check that all entrypoints reference core/DECAPOD
+    // Check that all entrypoints reference core/DECAPOD.json
     let files = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"];
 
     for file in files {
         let content = fs::read_to_string(temp_path.join(file))
             .unwrap_or_else(|_| panic!("Failed to read {}", file));
         assert!(
-            content.contains("core/DECAPOD"),
-            "{} should reference canonical router (core/DECAPOD)",
+            content.contains("core/DECAPOD.json"),
+            "{} should reference canonical router (core/DECAPOD.json)",
             file
         );
     }
@@ -396,7 +396,7 @@ fn test_entrypoints_contain_four_invariants() {
     let agents_content =
         fs::read_to_string(temp_path.join("AGENTS.md")).expect("Failed to read AGENTS.md");
 
-    let invariant_markers = ["core/DECAPOD", "decapod validate", "stop if", "✅"];
+    let invariant_markers = ["core/DECAPOD.json", "decapod validate", "stop if", "✅"];
 
     for marker in invariant_markers {
         assert!(
@@ -420,7 +420,7 @@ fn test_validate_fails_on_missing_invariant() {
     // Tamper with AGENTS.md - remove canonical router reference
     let agents_path = temp_path.join("AGENTS.md");
     let content = fs::read_to_string(&agents_path).expect("Failed to read AGENTS.md");
-    let tampered = content.replace("core/DECAPOD", "MISSING/ROUTER");
+    let tampered = content.replace("core/DECAPOD.json", "MISSING/ROUTER");
     fs::write(&agents_path, tampered).expect("Failed to write tampered AGENTS.md");
 
     // Run decapod validate (should fail)
@@ -433,7 +433,7 @@ fn test_validate_fails_on_missing_invariant() {
 
     // Check that it detected the missing invariant
     assert!(
-        output.contains("Invariant missing: Router pointer to core/DECAPOD"),
+        output.contains("Invariant missing: Router pointer to core/DECAPOD.json"),
         "Validation should detect missing router invariant"
     );
 }
@@ -562,7 +562,7 @@ fn test_entrypoints_use_embedded_docs_paths_only() {
             file
         );
         assert!(
-            content.contains("decapod docs show docs/PLAYBOOK"),
+            content.contains("decapod docs show docs/PLAYBOOK.json"),
             "{} must reference embedded docs path for operator playbook",
             file
         );
@@ -591,8 +591,8 @@ fn test_top_level_docs_avoid_direct_constitution_file_links() {
     let security = fs::read_to_string(repo_root.join("SECURITY.md")).expect("read SECURITY.md");
 
     assert!(
-        readme.contains("(core/DECAPOD)"),
-        "README.md should link to core/DECAPOD"
+        readme.contains("(core/DECAPOD.json)"),
+        "README.md should link to core/DECAPOD.json"
     );
 
     assert!(
@@ -600,7 +600,7 @@ fn test_top_level_docs_avoid_direct_constitution_file_links() {
         "SECURITY.md should not instruct direct constitution file access"
     );
     assert!(
-        security.contains("decapod docs show specs/SECURITY"),
+        security.contains("decapod docs show specs/SECURITY.json"),
         "SECURITY.md should route constitutional access through decapod docs show"
     );
 }
@@ -610,7 +610,7 @@ fn test_intent_context_spec_contract_alignment() {
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let readme = fs::read_to_string(repo_root.join("README.md")).expect("read README.md");
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["docs", "show", "core/DECAPOD"])
+        .args(["docs", "show", "core/DECAPOD.json"])
         .output()
         .expect("run decapod docs show");
     assert!(output.status.success(), "decapod docs show failed");
@@ -627,7 +627,7 @@ fn test_intent_context_spec_contract_alignment() {
     );
     assert!(
         core_decapod.contains(contract_phrase),
-        "core/DECAPOD must state the intent->context->specifications flow"
+        "core/DECAPOD.json must state the intent->context->specifications flow"
     );
     assert!(
         lib_rs.contains(contract_phrase) || cli_rs.contains(contract_phrase),

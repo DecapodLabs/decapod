@@ -79,23 +79,23 @@ fn todo_help_schema_and_docs_stay_in_sync() {
         );
     }
 
-    let docs = run_decapod(&["docs", "show", "plugins/TODO"]);
+    let docs = run_decapod(&["docs", "show", "plugins/TODO.json"]);
 
     for command in &expected {
         assert!(
             docs.contains(&format!("decapod todo {}", command)),
-            "plugins/TODO missing CLI surface entry for command: {}",
+            "plugins/TODO.json missing CLI surface entry for command: {}",
             command
         );
     }
 
     assert!(
         docs.contains("decapod data schema --subsystem todo"),
-        "plugins/TODO missing JSON schema retrieval command"
+        "plugins/TODO.json missing JSON schema retrieval command"
     );
     assert!(
         !docs.contains("decapod todo schema"),
-        "plugins/TODO references removed command: decapod todo schema"
+        "plugins/TODO.json references removed command: decapod todo schema"
     );
 }
 
@@ -148,7 +148,7 @@ fn container_help_schema_and_docs_stay_in_sync() {
         );
     }
 
-    let docs = run_decapod(&["docs", "show", "plugins/CONTAINER"]);
+    let docs = run_decapod(&["docs", "show", "plugins/CONTAINER.json"]);
     for snippet in [
         "decapod auto container run",
         "--task-id",
@@ -159,7 +159,7 @@ fn container_help_schema_and_docs_stay_in_sync() {
     ] {
         assert!(
             docs.contains(snippet),
-            "plugins/CONTAINER missing content: {}",
+            "plugins/CONTAINER.json missing content: {}",
             snippet
         );
     }

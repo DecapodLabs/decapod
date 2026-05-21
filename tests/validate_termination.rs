@@ -253,7 +253,7 @@ fn validate_clears_stale_container_override_when_runtime_is_available() {
     fs::write(
         &override_path,
         concat!(
-            "### plugins/CONTAINER.md\n",
+            "### plugins/CONTAINER.json\n",
             "## Runtime Guard Override (auto-generated)\n",
             "DECAPOD_CONTAINER_RUNTIME_DISABLED=true\n",
             "reason: stale test marker\n",

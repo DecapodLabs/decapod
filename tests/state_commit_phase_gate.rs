@@ -31,7 +31,7 @@ mod tests {
     fn test_phase_gate_negative_unrelated() {
         let non_trigger_files = vec![
             "README.md",
-            "docs/foo.md",
+            "docs/foo.json",
             "src/lib.rs",
             "tests/other_test.rs",
         ];
