@@ -3,6 +3,7 @@
 //! This module implements the comprehensive validation suite that enforces
 //! Decapod's contracts, invariants, and methodology gates.
 
+use crate::core::assets;
 use crate::core::broker::DbBroker;
 use crate::core::capsule_policy::{self, POLICY_SCHEMA_VERSION};
 use crate::core::context_capsule::DeterministicContextCapsule;
@@ -248,26 +249,19 @@ fn validate_embedded_self_contained(
 ) -> Result<(), error::DecapodError> {
     info("Embedded Self-Contained Gate");
 
-    let constitution_dir = repo_root.join("constitution");
-    if !constitution_dir.exists() {
-        // This is a decapod repo, not a project with embedded docs
-        skip("No constitution/ directory found (decapod repo)", ctx);
+    // Only validate the embedded constitution source in the decapod repo itself.
+    if !repo_root.join("constitution.json").exists() {
+        skip("No constitution.json found (project repo)", ctx);
         return Ok(());
     }
 
-    let mut files = Vec::new();
-    collect_repo_files(&constitution_dir, &mut files, ctx)?;
+    let ids = assets::list_docs();
+    let mut offenders: Vec<String> = Vec::new();
 
-    let mut offenders: Vec<PathBuf> = Vec::new();
-
-    for path in files {
-        if path.extension().and_then(|e| e.to_str()) != Some("md") {
-            continue;
-        }
-
-        let content = match fs::read_to_string(&path) {
-            Ok(c) => c,
-            Err(_) => continue,
+    for id in ids {
+        let content = match assets::get_embedded_doc(&id) {
+            Some(c) => c,
+            None => continue,
         };
 
         // Check for .decapod/ references that aren't documenting override behavior
@@ -305,7 +299,7 @@ fn validate_embedded_self_contained(
 
             let total_decapod_refs = content.matches(".decapod/").count();
             if total_decapod_refs > legitimate_ref_count {
-                offenders.push(path);
+                offenders.push(id);
             }
         }
     }
@@ -318,8 +312,8 @@ fn validate_embedded_self_contained(
     } else {
         let mut msg =
             String::from("Embedded constitution files contain invalid .decapod/ references:");
-        for p in offenders.iter().take(8) {
-            msg.push_str(&format!(" {}", p.display()));
+        for id in offenders.iter().take(8) {
+            msg.push_str(&format!(" {}", id));
         }
         if offenders.len() > 8 {
             msg.push_str(&format!(" ... ({} total)", offenders.len()));
@@ -495,8 +489,8 @@ fn validate_repo_map(
         ctx,
     );
 
-    let required_specs = ["specs/INTENT.md", "specs/SYSTEM.md"];
-    let required_methodology = ["methodology/ARCHITECTURE.md"];
+    let required_specs = ["specs/INTENT", "specs/SYSTEM"];
+    let required_methodology = ["methodology/ARCHITECTURE"];
     for r in required_specs {
         if crate::core::assets::get_doc(r).is_some() {
             pass(&format!("Constitution doc {} present (embedded)", r), ctx);
@@ -583,7 +577,7 @@ fn validate_entrypoint_invariants(
 
     // Exact invariant strings (tamper detection)
     let exact_invariants = [
-        ("core/decapod.md", "Router pointer to core/DECAPOD.md"),
+        ("core/decapod", "Router pointer to core/DECAPOD"),
         ("cargo install decapod", "Version update gate language"),
         ("decapod validate", "Validation gate language"),
         (
@@ -687,7 +681,7 @@ fn validate_entrypoint_invariants(
         }
 
         // Must reference canonical router
-        if agent_content.contains("core/DECAPOD.md") {
+        if agent_content.contains("core/DECAPOD") {
             pass(&format!("{} references canonical router", agent_file), ctx);
         } else {
             fail(
@@ -957,32 +951,30 @@ fn validate_interface_contract_bootstrap(
 ) -> Result<(), error::DecapodError> {
     info("Interface Contract Bootstrap Gate");
 
-    // This gate applies to the decapod repository where constitution/* is present.
-    // Project repos initialized by `decapod init` should not fail on missing embedded docs.
-    let constitution_dir = repo_root.join("constitution");
-    if !constitution_dir.exists() {
+    // This gate applies to the decapod repository where constitution.json is present.
+    // Project repos initialized by `decapod init` should not fail on missing embedded source.
+    if !repo_root.join("constitution.json").exists() {
         skip(
-            "No constitution/ directory found (project repo); skipping interface bootstrap checks",
+            "No constitution.json found (project repo); skipping interface bootstrap checks",
             ctx,
         );
         return Ok(());
     }
 
-    let risk_policy_doc = repo_root.join("constitution/interfaces/RISK_POLICY_GATE.md");
-    let context_pack_doc = repo_root.join("constitution/interfaces/AGENT_CONTEXT_PACK.md");
-    for (path, label) in [
-        (&risk_policy_doc, "RISK_POLICY_GATE interface"),
-        (&context_pack_doc, "AGENT_CONTEXT_PACK interface"),
+    let risk_policy_id = "interfaces/RISK_POLICY_GATE";
+    let context_pack_id = "interfaces/AGENT_CONTEXT_PACK";
+    for (id, label) in [
+        (risk_policy_id, "RISK_POLICY_GATE interface"),
+        (context_pack_id, "AGENT_CONTEXT_PACK interface"),
     ] {
-        if path.is_file() {
-            pass(&format!("{} present at {}", label, path.display()), ctx);
+        if assets::get_embedded_doc(id).is_some() {
+            pass(&format!("{} present in embedded assets: {}", label, id), ctx);
         } else {
-            fail(&format!("{} missing at {}", label, path.display()), ctx);
+            fail(&format!("{} missing from embedded assets: {}", label, id), ctx);
         }
     }
 
-    if risk_policy_doc.is_file() {
-        let content = fs::read_to_string(&risk_policy_doc).map_err(error::DecapodError::IoError)?;
+    if let Some(content) = assets::get_embedded_doc(risk_policy_id) {
         for marker in [
             "**Authority:**",
             "**Layer:** Interfaces",
@@ -1001,14 +993,15 @@ fn validate_interface_contract_bootstrap(
                     ctx,
                 );
             } else {
-                fail(&format!("RISK_POLICY_GATE missing marker: {}", marker), ctx);
+                fail(
+                    &format!("RISK_POLICY_GATE missing marker: {}", marker),
+                    ctx,
+                );
             }
         }
     }
 
-    if context_pack_doc.is_file() {
-        let content =
-            fs::read_to_string(&context_pack_doc).map_err(error::DecapodError::IoError)?;
+    if let Some(content) = assets::get_embedded_doc(context_pack_id) {
         for marker in [
             "**Authority:**",
             "**Layer:** Interfaces",
@@ -2836,7 +2829,7 @@ fn validate_recursive_pass(pass: &RecursiveImprovementPass) -> Result<(), String
         return Err("constitutional authority is required".to_string());
     }
     let authority = pass.constitutional_authority.trim();
-    if !authority.starts_with("claim.") && !authority.contains(".md") {
+    if !authority.starts_with("claim.") && !authority.contains('/') && !authority.contains(".md") {
         return Err(
             "constitutional authority must cite a claim id or constitution document".to_string(),
         );
@@ -3535,25 +3528,25 @@ fn validate_heartbeat_invocation_gate(
 
     let doc_markers = [
         (
-            crate::core::assets::get_doc("core/DECAPOD.md")
+            crate::core::assets::get_doc("core/DECAPOD")
                 .unwrap_or_default()
                 .contains("invocation heartbeat"),
             "Router documents invocation heartbeat contract",
         ),
         (
-            crate::core::assets::get_doc("interfaces/CONTROL_PLANE.md")
+            crate::core::assets::get_doc("interfaces/CONTROL_PLANE")
                 .unwrap_or_default()
                 .contains("invocation heartbeat"),
             "Control-plane interface documents invocation heartbeat",
         ),
         (
-            crate::core::assets::get_doc("plugins/TODO.md")
+            crate::core::assets::get_doc("plugins/TODO")
                 .unwrap_or_default()
                 .contains("auto-clocks liveness"),
             "TODO plugin documents automatic liveness clock-in",
         ),
         (
-            crate::core::assets::get_doc("plugins/REFLEX.md")
+            crate::core::assets::get_doc("plugins/REFLEX")
                 .unwrap_or_default()
                 .contains("todo.heartbeat.autoclaim"),
             "REFLEX plugin documents heartbeat autoclaim action",
@@ -5183,7 +5176,7 @@ pub fn run_validation(
 pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
     use crate::core::ansi::AnsiExt;
 
-    let intent_content = crate::core::assets::get_doc("specs/INTENT.md").unwrap_or_default();
+    let intent_content = crate::core::assets::get_doc("specs/INTENT").unwrap_or_default();
     let intent_version =
         extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
 

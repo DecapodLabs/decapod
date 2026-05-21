@@ -500,7 +500,7 @@ fn clear_container_runtime_override(repo_root: &Path) -> Result<bool, error::Dec
     let mut start = marker_index;
     while start > 0 {
         let candidate = lines[start - 1].trim();
-        if candidate == "### plugins/CONTAINER.md" {
+        if candidate == "### plugins/CONTAINER" {
             start -= 1;
             break;
         }
@@ -574,7 +574,7 @@ fn disable_container_runtime_override(
         content.push('\n');
     }
     content.push_str(
-        "\n### plugins/CONTAINER.md\n\
+        "\n### plugins/CONTAINER\n\
 ## Runtime Guard Override (auto-generated)\n\
 ",
     );

@@ -1,4 +1,4 @@
-//! Core runtime surfaces that map to `constitution/core/*`.
+//! Core runtime surfaces that map to `core/*` constitution nodes.
 
 pub use crate::core::assets;
 pub use crate::core::broker;

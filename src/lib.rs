@@ -341,7 +341,7 @@ fn apply_substrate_adoption(ctx: &mut RepoContext, target_dir: &Path) {
     // Existing INTENT.md or README.md are lower priority than config.toml.
 
     // Check OVERRIDE.md (explicit user-defined override)
-    if let Some(override_intent) = core::assets::get_override_doc(target_dir, "specs/INTENT.md")
+    if let Some(override_intent) = core::assets::get_override_doc(target_dir, "specs/INTENT")
         && let Some(summary) = core::project_specs::first_markdown_content_line(&override_intent)
     {
         ctx.product_summary = Some(summary);
@@ -370,7 +370,7 @@ fn apply_substrate_adoption(ctx: &mut RepoContext, target_dir: &Path) {
     }
 
     // Architecture adoption (OVERRIDE.md wins, then config.toml, then ARCHITECTURE.md)
-    if let Some(override_arch) = core::assets::get_override_doc(target_dir, "specs/ARCHITECTURE.md")
+    if let Some(override_arch) = core::assets::get_override_doc(target_dir, "specs/ARCHITECTURE")
         && let Some(direction) = core::project_specs::first_markdown_content_line(&override_arch)
     {
         ctx.architecture_direction = Some(direction);
@@ -2938,8 +2938,8 @@ fn required_handshake_docs() -> Vec<&'static str> {
     vec![
         "CLAUDE.md",
         "AGENTS.md",
-        "constitution/core/DECAPOD.md",
-        "constitution/interfaces/CONTROL_PLANE.md",
+        "core/DECAPOD",
+        "interfaces/CONTROL_PLANE",
     ]
 }
 
@@ -2951,18 +2951,31 @@ fn build_handshake_artifact(
     let mut doc_hashes = serde_json::Map::new();
     let required_docs = required_handshake_docs();
     for rel in &required_docs {
-        let abs = project_root.join(rel);
-        if !abs.exists() {
-            return Err(error::DecapodError::ValidationError(format!(
-                "Handshake requires `{}` to exist.",
-                rel
-            )));
-        }
-        let bytes = fs::read(&abs).map_err(error::DecapodError::IoError)?;
-        doc_hashes.insert(
-            (*rel).to_string(),
-            serde_json::json!(hash_bytes_hex(&bytes)),
-        );
+        let hash = if rel.ends_with(".md") && !rel.contains('/') {
+            // Root files like AGENTS.md
+            let abs = project_root.join(rel);
+            if !abs.exists() {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Handshake requires `{}` to exist.",
+                    rel
+                )));
+            }
+            let bytes = fs::read(&abs).map_err(error::DecapodError::IoError)?;
+            hash_bytes_hex(&bytes)
+        } else {
+            // Constitution docs from embedded assets
+            match crate::core::assets::get_embedded_doc(rel) {
+                Some(c) => hash_bytes_hex(c.as_bytes()),
+                None => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Handshake requires constitution doc `{}` (embedded) to be accessible.",
+                        rel
+                    )));
+                }
+            }
+        };
+
+        doc_hashes.insert((*rel).to_string(), serde_json::json!(hash));
     }
 
     let request_id = crate::core::ulid::new_ulid();
@@ -3056,9 +3069,9 @@ fn run_session_init(
 - Constraints: keep daemonless, repo-native, proof-gated
 
 ## Required Constitution Links
-- constitution/core/DECAPOD.md
-- constitution/interfaces/CONTROL_PLANE.md
-- constitution/specs/SECURITY.md
+- core/DECAPOD
+- interfaces/CONTROL_PLANE
+- specs/SECURITY
 
 ## Proof Plan
 - decapod validate
@@ -3147,10 +3160,6 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     let mut lineage_records: Vec<(String, PolicyLineage)> = Vec::new();
     let mut changelog_raw: Option<String> = None;
     let changelog = project_root.join("CHANGELOG.md");
-    let migrations = project_root
-        .join("constitution")
-        .join("docs")
-        .join("MIGRATIONS.md");
     let cargo_lock = project_root.join("Cargo.lock");
     let cargo_toml = project_root.join("Cargo.toml");
     let rpc_golden_req = project_root.join("tests/golden/rpc/v1/agent_init.request.json");
@@ -3171,8 +3180,8 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
             failures.push("CHANGELOG.md missing `## [Unreleased]` section".to_string());
         }
     }
-    if !migrations.exists() {
-        failures.push("constitution/docs/MIGRATIONS.md missing".to_string());
+    if crate::core::assets::get_embedded_doc("docs/MIGRATIONS").is_none() {
+        failures.push("docs/MIGRATIONS missing from embedded assets".to_string());
     }
     if !cargo_lock.exists() {
         failures.push("Cargo.lock missing (locked builds required)".to_string());
@@ -3834,8 +3843,18 @@ fn validate_intent_convergence_manifest(
 
 fn build_release_inventory(project_root: &Path) -> Result<serde_json::Value, error::DecapodError> {
     let mut paths = Vec::new();
-    for root in ["src", "tests", "constitution"] {
-        collect_files_recursive(&project_root.join(root), &mut paths)?;
+    let mut roots = vec!["src", "tests"];
+    if project_root.join("constitution").exists() {
+        roots.push("constitution");
+    }
+    for root in roots {
+        let p = project_root.join(root);
+        if p.is_dir() {
+            collect_files_recursive(&p, &mut paths)?;
+        }
+    }
+    if project_root.join("constitution.json").exists() {
+        paths.push(PathBuf::from("constitution.json"));
     }
     paths.sort();
 
@@ -3856,7 +3875,7 @@ fn build_release_inventory(project_root: &Path) -> Result<serde_json::Value, err
             *totals_by_root.entry("src_loc").or_insert(0) += loc;
         } else if rel_s.starts_with("tests/") {
             *totals_by_root.entry("tests_loc").or_insert(0) += loc;
-        } else if rel_s.starts_with("constitution/") {
+        } else if rel_s.starts_with("constitution/") || rel_s == "constitution.json" {
             *totals_by_root.entry("constitution_loc").or_insert(0) += loc;
         }
         if rel_s.ends_with(".rs") {
@@ -3882,7 +3901,7 @@ fn build_release_inventory(project_root: &Path) -> Result<serde_json::Value, err
     Ok(serde_json::json!({
         "schema_version": "1.0.0",
         "kind": "repo_inventory",
-        "scope": ["src", "tests", "constitution"],
+        "scope": ["src", "tests", "constitution.json"],
         "totals": {
             "src_loc": src_loc,
             "tests_loc": tests_loc,
@@ -3940,7 +3959,7 @@ fn git_changed_paths(project_root: &Path) -> Vec<String> {
 
 fn has_schema_or_interface_changes(paths: &[String]) -> bool {
     paths.iter().any(|path| {
-        path.starts_with("constitution/interfaces/")
+        path == "constitution.json"
             || path == "src/core/schemas.rs"
             || path == "src/core/rpc.rs"
             || path.starts_with("tests/golden/rpc/")
@@ -4611,7 +4630,7 @@ fn enforce_constitutional_awareness_for_rpc(
 
     if rec.core_constitution_ingested_at_epoch_secs.is_none() {
         return Err(error::DecapodError::ValidationError(
-            "Constitutional awareness incomplete: core constitution ingestion missing. Run `decapod docs ingest` to ingest `constitution/core/*.md` before mutating operations."
+            "Constitutional awareness incomplete: core constitution ingestion missing. Run `decapod docs ingest` before mutating operations."
                 .to_string(),
         ));
     }
@@ -7359,24 +7378,24 @@ fn run_preflight_command(
 
     match op.as_str() {
         "todo.add" | "todo.claim" | "todo.done" => {
-            required_capsules.push("plugins/TODO.md");
-            required_capsules.push("interfaces/STORE_MODEL.md");
+            required_capsules.push("plugins/TODO");
+            required_capsules.push("interfaces/STORE_MODEL");
         }
         "validate" => {
-            required_capsules.push("plugins/VERIFY.md");
-            required_capsules.push("interfaces/TESTING.md");
+            required_capsules.push("plugins/VERIFY");
+            required_capsules.push("interfaces/TESTING");
             if workspace_status.git.is_protected {}
         }
         "workspace.ensure" | "workspace.status" => {
-            required_capsules.push("core/DECAPOD.md");
-            required_capsules.push("core/PLUGINS.md");
+            required_capsules.push("core/DECAPOD");
+            required_capsules.push("core/PLUGINS");
         }
         "rpc" | "agent.init" => {
-            required_capsules.push("core/INTERFACES.md");
-            required_capsules.push("specs/INTENT.md");
+            required_capsules.push("core/INTERFACES");
+            required_capsules.push("specs/INTENT");
         }
         _ => {
-            required_capsules.push("core/DECAPOD.md");
+            required_capsules.push("core/DECAPOD");
         }
     }
 

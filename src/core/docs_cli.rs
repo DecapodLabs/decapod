@@ -207,7 +207,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             for doc_path in docs {
                 // Convert embedded path to relative path for override merging
                 let relative_path = doc_path.strip_prefix("embedded/").unwrap_or(&doc_path);
-                if relative_path.starts_with("core/") && relative_path.ends_with(".md") {
+                if relative_path.starts_with("core/") {
                     ingested_core_constitution = true;
                 }
 

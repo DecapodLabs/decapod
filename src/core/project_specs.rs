@@ -29,42 +29,42 @@ pub const LOCAL_PROJECT_SPECS: &[LocalProjectSpec] = &[
     LocalProjectSpec {
         path: LOCAL_PROJECT_SPECS_README,
         role: "specs_index",
-        constitution_ref: "interfaces/PROJECT_SPECS.md#Canonical Local Project Specs Set",
+        constitution_ref: "interfaces/PROJECT_SPECS#Canonical Local Project Specs Set",
     },
     LocalProjectSpec {
         path: LOCAL_PROJECT_SPECS_INTENT,
         role: "intent_purpose",
-        constitution_ref: "specs/INTENT.md",
+        constitution_ref: "specs/INTENT",
     },
     LocalProjectSpec {
         path: LOCAL_PROJECT_SPECS_ARCHITECTURE,
         role: "implementation_architecture",
-        constitution_ref: "interfaces/ARCHITECTURE_FOUNDATIONS.md",
+        constitution_ref: "interfaces/ARCHITECTURE_FOUNDATIONS",
     },
     LocalProjectSpec {
         path: LOCAL_PROJECT_SPECS_INTERFACES,
         role: "service_contracts",
-        constitution_ref: "interfaces/CONTROL_PLANE.md",
+        constitution_ref: "interfaces/CONTROL_PLANE",
     },
     LocalProjectSpec {
         path: LOCAL_PROJECT_SPECS_VALIDATION,
         role: "proof_and_gate_plan",
-        constitution_ref: "interfaces/TESTING.md",
+        constitution_ref: "interfaces/TESTING",
     },
     LocalProjectSpec {
         path: LOCAL_PROJECT_SPECS_SEMANTICS,
         role: "state_machines_and_invariants",
-        constitution_ref: "interfaces/PROJECT_SPECS.md",
+        constitution_ref: "interfaces/PROJECT_SPECS",
     },
     LocalProjectSpec {
         path: LOCAL_PROJECT_SPECS_OPERATIONS,
         role: "operational_readiness",
-        constitution_ref: "interfaces/PROJECT_SPECS.md",
+        constitution_ref: "interfaces/PROJECT_SPECS",
     },
     LocalProjectSpec {
         path: LOCAL_PROJECT_SPECS_SECURITY,
         role: "security_posture",
-        constitution_ref: "interfaces/PROJECT_SPECS.md",
+        constitution_ref: "interfaces/PROJECT_SPECS",
     },
 ];
 

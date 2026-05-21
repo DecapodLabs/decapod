@@ -1,8 +1,7 @@
 //! Project scaffolding for Decapod initialization.
 //!
 //! This module handles the creation of Decapod project structure, including:
-//! - Root entrypoints (AGENTS.md, CLAUDE.md, GEMINI.md, CODEX.md)
-//! - Constitution directory (.decapod/constitution/)
+//! - Repository root entrypoints (AGENTS.md, CLAUDE.md, etc.)
 //! - Embedded methodology documents
 
 use crate::core::assets;

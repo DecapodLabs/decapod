@@ -12,25 +12,25 @@ fn context_capsule_canonical_serialization_is_deterministic() {
         workunit_id: Some("test_03".to_string()),
         sources: vec![
             ContextCapsuleSource {
-                path: "interfaces/CONTROL_PLANE.md".to_string(),
+                path: "interfaces/CONTROL_PLANE".to_string(),
                 section: "1. The Contract".to_string(),
             },
             ContextCapsuleSource {
-                path: "interfaces/CLAIMS.md".to_string(),
+                path: "interfaces/CLAIMS".to_string(),
                 section: "2. Claims".to_string(),
             },
             ContextCapsuleSource {
-                path: "interfaces/CLAIMS.md".to_string(),
+                path: "interfaces/CLAIMS".to_string(),
                 section: "2. Claims".to_string(),
             },
         ],
         snippets: vec![
             ContextCapsuleSnippet {
-                source_path: "interfaces/CLAIMS.md".to_string(),
+                source_path: "interfaces/CLAIMS".to_string(),
                 text: "claim.context.capsule.deterministic".to_string(),
             },
             ContextCapsuleSnippet {
-                source_path: "interfaces/CONTROL_PLANE.md".to_string(),
+                source_path: "interfaces/CONTROL_PLANE".to_string(),
                 text: "Control-plane operations MUST remain daemonless".to_string(),
             },
         ],
@@ -56,11 +56,11 @@ fn context_capsule_with_recomputed_hash_is_stable() {
         task_id: None,
         workunit_id: None,
         sources: vec![ContextCapsuleSource {
-            path: "interfaces/KNOWLEDGE_STORE.md".to_string(),
+            path: "interfaces/KNOWLEDGE_STORE".to_string(),
             section: "Promotion Firewall".to_string(),
         }],
         snippets: vec![ContextCapsuleSnippet {
-            source_path: "interfaces/KNOWLEDGE_STORE.md".to_string(),
+            source_path: "interfaces/KNOWLEDGE_STORE".to_string(),
             text: "episodic -> procedural requires explicit promotion event".to_string(),
         }],
         policy: Default::default(),

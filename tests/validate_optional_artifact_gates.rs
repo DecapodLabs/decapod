@@ -69,11 +69,11 @@ fn valid_recursive_pass() -> serde_json::Value {
         "id": "rip_01_valid",
         "observed_deficiency": "Generated acceptance evidence is documented but lacks a first-class proof adapter.",
         "parent_task_ref": "todo:cicd_01parent",
-        "parent_spec_ref": "constitution/docs/ARCHITECTURE_OVERVIEW.md#Acceptance Proof Inputs",
+        "parent_spec_ref": "docs/ARCHITECTURE_OVERVIEW.md#Acceptance Proof Inputs",
         "constitutional_authority": "claim.proof.acceptance_evidence_input",
-        "allowed_changes": ["constitution/plugins/VERIFY.md", "constitution/docs/ARCHITECTURE_OVERVIEW.md"],
-        "forbidden_changes": ["constitution/core", "src/core/validate.rs"],
-        "touched_paths": ["constitution/plugins/VERIFY.md"],
+        "allowed_changes": ["plugins/VERIFY.md", "docs/ARCHITECTURE_OVERVIEW.md"],
+        "forbidden_changes": ["core/", "src/core/validate.rs"],
+        "touched_paths": ["plugins/VERIFY.md"],
         "proof_required": ["decapod validate", "cargo test --test validate_optional_artifact_gates"],
         "stop_condition": "Stop after one validation-backed patch or on the first failed proof gate.",
         "risk_level": "medium",
@@ -287,7 +287,7 @@ fn validate_rejects_recursive_pass_that_weakens_governance() {
 fn validate_rejects_recursive_pass_touching_forbidden_paths() {
     let (_tmp, dir, password) = setup_repo();
     let mut pass = valid_recursive_pass();
-    pass["touched_paths"] = serde_json::json!(["constitution/core/DECAPOD.md"]);
+    pass["touched_paths"] = serde_json::json!(["core/DECAPOD.md"]);
     write_recursive_pass(&dir, pass);
 
     let validate = validate_with_session(&dir, &password);

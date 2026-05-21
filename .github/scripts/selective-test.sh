@@ -139,7 +139,7 @@ else
         fi
         
         # Config changes: run core conformance tests
-        if [[ "$changed_file" =~ ^(Cargo\.toml|AGENTS\.md|CLAUDE\.md|CODEX\.md|GEMINI\.md|constitution/) ]]; then
+        if [[ "$changed_file" =~ ^(Cargo\.toml|AGENTS\.md|CLAUDE\.md|CODEX\.md|GEMINI\.md|constitution\.json) ]]; then
             TESTS_TO_RUN[entrypoint_correctness]=1
             TESTS_TO_RUN[cli_contract_enforcement]=1
         fi

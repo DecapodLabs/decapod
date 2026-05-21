@@ -1,5 +1,4 @@
-use std::fs;
-use std::path::Path;
+use std::process::Command;
 
 #[derive(serde::Deserialize, Debug)]
 #[allow(dead_code)]
@@ -19,8 +18,12 @@ struct ConstitutionTable {
 }
 
 fn load_constitution_claims() -> Vec<ConstitutionTable> {
-    let path = Path::new("constitution/interfaces/CLAIMS.md");
-    let content = fs::read_to_string(path).expect("Failed to read CLAIMS.md");
+    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["docs", "show", "interfaces/CLAIMS"])
+        .output()
+        .expect("run decapod docs show");
+    assert!(output.status.success(), "decapod docs show failed");
+    let content = String::from_utf8_lossy(&output.stdout);
 
     let mut claims = Vec::new();
     let mut in_table = false;

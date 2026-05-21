@@ -1,86 +1,40 @@
-use flate2::{read::GzDecoder, write::GzEncoder, Compression};
+use flate2::{write::GzEncoder, Compression};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::env;
 use std::fs::{self, File};
-use std::io::{BufReader, BufWriter, Read, Write};
+use std::io::Write;
 use std::path::Path;
 
-const CONSTITUTION_DIRS: [&str; 7] = [
-    "core", "specs", "plugins", "interfaces", "methodology", "architecture", "docs",
-];
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct ConstitutionGraph {
+    nodes: HashMap<String, ConstitutionNode>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct ConstitutionNode {
+    title: String,
+    category: String,
+    dependencies: Vec<String>,
+    content: String,
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("cargo:rerun-if-env-changed=DECAPOD_CONSTITUTION_DIR");
-    println!("cargo:rerun-if-changed=constitution");
+    println!("cargo:rerun-if-changed=constitution.json");
     println!("cargo:rerun-if-changed=build/compress_constitution.rs");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
     let out_dir = env::var("OUT_DIR")?;
-    let constitution_path = Path::new(&manifest_dir).join("constitution");
-    let compressed_dir = Path::new(&out_dir).join("constitution_compressed");
+    let json_path = Path::new(&manifest_dir).join("constitution.json");
 
-    // Create output directory
-    fs::create_dir_all(&compressed_dir)?;
-
-    let mut doc_count = 0;
-    let mut total_original = 0u64;
-    let mut total_compressed = 0u64;
-
-    for dir_name in &CONSTITUTION_DIRS {
-        let dir_path = constitution_path.join(dir_name);
-
-        if !dir_path.exists() {
-            eprintln!("Warning: Directory {} does not exist", dir_path.display());
-            continue;
-        }
-
-        for entry in fs::read_dir(&dir_path)? {
-            let entry = entry?;
-            let path = entry.path();
-
-            if path.extension().and_then(|s| s.to_str()) == Some("md") {
-                // Read original file
-                let original = fs::read(&path)?;
-                let original_len = original.len() as u64;
-                total_original += original_len;
-
-                // Compress
-                let compressed = gzip_compress(&original);
-                let compressed_len = compressed.len() as u64;
-                total_compressed += compressed_len;
-
-                // Write compressed file with .gz extension
-                let relative_path = path.strip_prefix(&constitution_path).unwrap();
-                let out_path = compressed_dir.join(relative_path.with_extension("md.gz"));
-                if let Some(parent) = out_path.parent() {
-                    fs::create_dir_all(parent)?;
-                }
-                fs::write(&out_path, &compressed)?;
-
-                // Track for rebuild
-                println!("cargo:rerun-if-changed={}", path.display());
-                doc_count += 1;
-            }
-        }
+    if !json_path.exists() {
+        panic!("constitution.json not found at {}", json_path.display());
     }
 
-    // Generate Rust source with compressed bytes
-    generate_rust_module(&compressed_dir, &out_dir)?;
+    let json_content = fs::read_to_string(&json_path)?;
+    let graph: ConstitutionGraph = serde_json::from_str(&json_content)?;
 
-    let ratio = if total_original > 0 {
-        total_original as f64 / total_compressed as f64
-    } else {
-        0.0
-    };
-
-    eprintln!(
-        "Constitution compressed: {} docs, {}{} original -> {}{} compressed ({:.1}x ratio)",
-        doc_count,
-        format_bytes(total_original),
-        if total_original > 1024 * 1024 { "" } else { "B" },
-        format_bytes(total_compressed),
-        if total_compressed > 1024 { "" } else { "B" },
-        ratio
-    );
+    generate_rust_module(&graph, Path::new(&out_dir))?;
 
     Ok(())
 }
@@ -91,17 +45,7 @@ fn gzip_compress(data: &[u8]) -> Vec<u8> {
     encoder.finish().unwrap()
 }
 
-fn format_bytes(bytes: u64) -> String {
-    if bytes >= 1024 * 1024 {
-        format!("{:.1}MB", bytes as f64 / (1024.0 * 1024.0))
-    } else if bytes >= 1024 {
-        format!("{:.1}KB", bytes as f64 / 1024.0)
-    } else {
-        format!("{}B", bytes)
-    }
-}
-
-fn generate_rust_module(compressed_dir: &Path, out_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn generate_rust_module(graph: &ConstitutionGraph, out_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let out_path = out_dir.join("constitution_compressed.rs");
     let mut file = File::create(&out_path)?;
 
@@ -110,6 +54,7 @@ fn generate_rust_module(compressed_dir: &Path, out_dir: &Path) -> Result<(), Box
     writeln!(file)?;
     writeln!(file, "use flate2::read::GzDecoder;")?;
     writeln!(file, "use std::io::Read;")?;
+    writeln!(file, "use std::collections::HashMap;")?;
     writeln!(file)?;
     writeln!(file, "/// Decompress gzipped constitution document")?;
     writeln!(file, "pub fn decompress(bytes: &[u8]) -> Result<String, std::io::Error> {{")?;
@@ -120,28 +65,28 @@ fn generate_rust_module(compressed_dir: &Path, out_dir: &Path) -> Result<(), Box
     writeln!(file, "}}")?;
     writeln!(file)?;
 
-    // Generate include_bytes for each compressed file
-    let mut paths: Vec<_> = Vec::new();
-    collect_paths(compressed_dir, compressed_dir, &mut paths)?;
+    // Sort IDs for deterministic output
+    let mut ids: Vec<_> = graph.nodes.keys().collect();
+    ids.sort();
 
-    for (relative_path, absolute_path) in &paths {
-        let struct_name = path_to_struct_name(relative_path);
-        let compressed = fs::read(absolute_path)?;
+    // Generate include_bytes for each compressed node content
+    for id in &ids {
+        let node = &graph.nodes[*id];
+        let struct_name = id_to_const_name(id);
+        let compressed = gzip_compress(node.content.as_bytes());
 
-        writeln!(file)?;
-        writeln!(file, "/// Compressed constitution: {}", relative_path)?;
+        writeln!(file, "/// Compressed content for: {}", id)?;
         writeln!(file, "pub const {}_GZ: &[u8] = &{:?};", struct_name, compressed)?;
     }
 
     writeln!(file)?;
-    writeln!(file, "/// Get decompressed constitution document by path")?;
-    writeln!(file, "pub fn get_decompressed(path: &str) -> Option<String> {{")?;
-    writeln!(file, "    match path {{")?;
+    writeln!(file, "/// Get decompressed constitution document by ID")?;
+    writeln!(file, "pub fn get_decompressed(id: &str) -> Option<String> {{")?;
+    writeln!(file, "    match id {{")?;
 
-    for (relative_path, _) in &paths {
-        let struct_name = path_to_struct_name(relative_path);
-        let key = relative_path.replace('\\', "/"); // Normalize path separators
-        writeln!(file, "        \"{}\" => {{", key)?;
+    for id in &ids {
+        let struct_name = id_to_const_name(id);
+        writeln!(file, "        \"{}\" => {{", id)?;
         writeln!(file, "            let mut decoder = GzDecoder::new({}_GZ);", struct_name)?;
         writeln!(file, "            let mut s = String::new();")?;
         writeln!(file, "            decoder.read_to_string(&mut s).ok()?;")?;
@@ -155,38 +100,36 @@ fn generate_rust_module(compressed_dir: &Path, out_dir: &Path) -> Result<(), Box
 
     // Generate list function
     writeln!(file)?;
-    writeln!(file, "/// List all available constitution paths")?;
-    writeln!(file, "pub fn list_paths() -> Vec<&'static str> {{")?;
+    writeln!(file, "/// List all available constitution IDs")?;
+    writeln!(file, "pub fn list_ids() -> Vec<&'static str> {{")?;
     writeln!(file, "    vec![")?;
-    for (relative_path, _) in &paths {
-        let key = relative_path.replace('\\', "/");
-        writeln!(file, "        \"{}\",", key)?;
+    for id in &ids {
+        writeln!(file, "        \"{}\",", id)?;
     }
     writeln!(file, "    ]")?;
+    writeln!(file, "}}")?;
+
+    // Generate graph metadata function
+    writeln!(file)?;
+    writeln!(file, "/// Get node metadata (category, title, dependencies)")?;
+    writeln!(file, "pub fn get_metadata(id: &str) -> Option<(&'static str, &'static str, Vec<&'static str>)> {{")?;
+    writeln!(file, "    match id {{")?;
+    for id in &ids {
+        let node = &graph.nodes[*id];
+        let deps: Vec<String> = node.dependencies.iter().map(|s| format!("\"{}\"", s)).collect();
+        writeln!(file, "        \"{}\" => Some((\"{}\", \"{}\", vec![{}])),", 
+            id, node.category, node.title, deps.join(", "))?;
+    }
+    writeln!(file, "        _ => None,")?;
+    writeln!(file, "    }}")?;
     writeln!(file, "}}")?;
 
     Ok(())
 }
 
-fn collect_paths(dir: &Path, base: &Path, paths: &mut Vec<(String, std::path::PathBuf)>) -> std::io::Result<()> {
-    for entry in fs::read_dir(dir)? {
-        let entry = entry?;
-        let path = entry.path();
-
-        if path.is_dir() {
-            collect_paths(&path, base, paths)?;
-        } else if path.extension().and_then(|s| s.to_str()) == Some("gz") {
-            let relative = path.strip_prefix(base).unwrap();
-            let relative_str = relative.to_string_lossy().replace('\\', "/");
-            paths.push((relative_str, path));
-        }
-    }
-    Ok(())
-}
-
-fn path_to_struct_name(path: &str) -> String {
-    path.replace('/', "_")
-        .replace('.', "_")
+fn id_to_const_name(id: &str) -> String {
+    id.replace('.', "_")
+        .replace('/', "_")
         .replace('-', "_")
         .chars()
         .filter(|c| c.is_alphanumeric() || *c == '_')

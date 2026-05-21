@@ -91,8 +91,14 @@ fn verification_guide_pins_jit_capsule_flow() {
             ".decapod/generated/specs/VALIDATION.md",
         ],
     );
-    let capsule_contract =
-        read_first_existing(&root, &["constitution/interfaces/AGENT_CONTEXT_PACK.md"]);
+    
+    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["docs", "show", "interfaces/AGENT_CONTEXT_PACK"])
+        .output()
+        .expect("run decapod docs show");
+    assert!(output.status.success(), "decapod docs show failed");
+    let capsule_contract = String::from_utf8_lossy(&output.stdout);
+
     assert!(
         guide.contains("decapod govern capsule query"),
         "verification guide must include governed capsule query flow"

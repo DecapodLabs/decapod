@@ -105,18 +105,26 @@ fn test_internalization_manifest_schema_roundtrip() {
 
 #[test]
 fn test_schema_files_exist_and_parse() {
-    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let schema_dir = repo_root.join("constitution/interfaces/jsonschema/internalization");
     let files = [
-        "InternalizationManifest.schema.json",
-        "InternalizationCreateResult.schema.json",
-        "InternalizationAttachResult.schema.json",
-        "InternalizationDetachResult.schema.json",
-        "InternalizationInspectResult.schema.json",
+        "interfaces/jsonschema/internalization/InternalizationManifest.schema",
+        "interfaces/jsonschema/internalization/InternalizationCreateResult.schema",
+        "interfaces/jsonschema/internalization/InternalizationAttachResult.schema",
+        "interfaces/jsonschema/internalization/InternalizationDetachResult.schema",
+        "interfaces/jsonschema/internalization/InternalizationInspectResult.schema",
     ];
 
     for file in files {
-        let raw = fs::read_to_string(schema_dir.join(file)).expect("read schema fixture");
+        let output = std::process::Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(["docs", "show", file])
+            .output()
+            .expect("run decapod docs show");
+        assert!(
+            output.status.success(),
+            "decapod docs show failed for {}: {}",
+            file,
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let raw = String::from_utf8_lossy(&output.stdout);
         let parsed: serde_json::Value = serde_json::from_str(&raw).expect("parse schema fixture");
         assert!(
             parsed.get("$id").is_some(),

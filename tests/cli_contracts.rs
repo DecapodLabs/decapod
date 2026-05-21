@@ -79,25 +79,23 @@ fn todo_help_schema_and_docs_stay_in_sync() {
         );
     }
 
-    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let docs = fs::read_to_string(repo_root.join("constitution/plugins/TODO.md"))
-        .expect("read TODO plugin docs");
+    let docs = run_decapod(&["docs", "show", "plugins/TODO"]);
 
     for command in &expected {
         assert!(
             docs.contains(&format!("decapod todo {}", command)),
-            "plugins/TODO.md missing CLI surface entry for command: {}",
+            "plugins/TODO missing CLI surface entry for command: {}",
             command
         );
     }
 
     assert!(
         docs.contains("decapod data schema --subsystem todo"),
-        "plugins/TODO.md missing JSON schema retrieval command"
+        "plugins/TODO missing JSON schema retrieval command"
     );
     assert!(
         !docs.contains("decapod todo schema"),
-        "plugins/TODO.md references removed command: decapod todo schema"
+        "plugins/TODO references removed command: decapod todo schema"
     );
 }
 
@@ -150,9 +148,7 @@ fn container_help_schema_and_docs_stay_in_sync() {
         );
     }
 
-    let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let docs = fs::read_to_string(repo_root.join("constitution/plugins/CONTAINER.md"))
-        .expect("read CONTAINER plugin docs");
+    let docs = run_decapod(&["docs", "show", "plugins/CONTAINER"]);
     for snippet in [
         "decapod auto container run",
         "--task-id",
@@ -163,7 +159,7 @@ fn container_help_schema_and_docs_stay_in_sync() {
     ] {
         assert!(
             docs.contains(snippet),
-            "plugins/CONTAINER.md missing content: {}",
+            "plugins/CONTAINER missing content: {}",
             snippet
         );
     }

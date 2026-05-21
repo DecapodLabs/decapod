@@ -154,22 +154,22 @@ pub fn get_bindings(_repo_root: &Path) -> Bindings {
     let mut ops = std::collections::HashMap::new();
     ops.insert(
         "workspace.ensure".to_string(),
-        "core/DECAPOD.md#workspaces".to_string(),
+        "core/DECAPOD#workspaces".to_string(),
     );
     ops.insert(
         "workspace.status".to_string(),
-        "core/DECAPOD.md#workspaces".to_string(),
+        "core/DECAPOD#workspaces".to_string(),
     );
     ops.insert(
         "validate".to_string(),
-        "core/DECAPOD.md#validation".to_string(),
+        "core/DECAPOD#validation".to_string(),
     );
 
     let mut paths = std::collections::HashMap::new();
-    paths.insert("rpc".to_string(), "interfaces/CONTROL_PLANE.md".to_string());
+    paths.insert("rpc".to_string(), "interfaces/CONTROL_PLANE".to_string());
 
     let mut tags = std::collections::HashMap::new();
-    tags.insert("security".to_string(), "specs/SECURITY.md".to_string());
+    tags.insert("security".to_string(), "specs/SECURITY".to_string());
 
     let mut mandates = std::collections::HashMap::new();
     mandates.insert(
@@ -214,7 +214,7 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
             severity: "non-negotiable".to_string(),
             fragment: get_fragment(
                 repo_root,
-                "core/DECAPOD.md",
+                "core/DECAPOD",
                 Some("Workspace Rules (Non-Negotiable)"),
             )?,
             check_tag: "gate.worktree.no_master".to_string(),
@@ -224,7 +224,7 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
             severity: "non-negotiable".to_string(),
             fragment: get_fragment(
                 repo_root,
-                "core/DECAPOD.md",
+                "core/DECAPOD",
                 Some("For Agents: Quick Start"),
             )?,
             check_tag: "gate.session.active".to_string(),
@@ -232,7 +232,7 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
         "mandatory-todo" => Some(Mandate {
             id: id.to_string(),
             severity: "required".to_string(),
-            fragment: get_fragment(repo_root, "core/DECAPOD.md", Some("Subsystems"))?, // We'll link to todo section
+            fragment: get_fragment(repo_root, "core/DECAPOD", Some("Subsystems"))?, // We'll link to todo section
             check_tag: "gate.todo.active_task".to_string(),
         }),
         "validate-before-done" => Some(Mandate {
@@ -240,7 +240,7 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
             severity: "required".to_string(),
             fragment: get_fragment(
                 repo_root,
-                "core/DECAPOD.md",
+                "core/DECAPOD",
                 Some("Validation (must pass before claiming done)"),
             )?,
             check_tag: "gate.validation.pass".to_string(),
@@ -250,7 +250,7 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
             severity: "required".to_string(),
             fragment: get_fragment(
                 repo_root,
-                "core/DECAPOD.md",
+                "core/DECAPOD",
                 Some("Workspace Rules (Non-Negotiable)"),
             )?,
             check_tag: "gate.worktree.isolated".to_string(),

@@ -174,7 +174,7 @@ fn test_todo_command_structure() {
 fn test_constitution_docs_accessible() {
     let (_tmp, dir) = setup_repo();
 
-    let docs = run_decapod(dir, &["docs", "show", "core/DECAPOD.md"]);
+    let docs = run_decapod(dir, &["docs", "show", "core/DECAPOD"]);
     assert!(
         docs.status.success(),
         "docs show should succeed: {}",
@@ -256,9 +256,9 @@ fn test_constitution_docs_are_accessible() {
     let all_doc_paths: Vec<String> = docs_list
         .lines()
         .filter_map(|l| {
-            let parts: Vec<&str> = l.splitn(2, '-').collect();
+            let parts: Vec<&str> = l.split('-').collect();
             let path = parts.last().copied().unwrap_or(l).trim();
-            if path.ends_with(".md") && !path.is_empty() {
+            if !path.is_empty() {
                 Some(path.to_string())
             } else {
                 None
@@ -272,12 +272,12 @@ fn test_constitution_docs_are_accessible() {
     );
 
     let required_docs = [
-        "core/DECAPOD.md",
-        "interfaces/CLAIMS.md",
-        "specs/INTENT.md",
-        "methodology/ARCHITECTURE.md",
-        "architecture/SECURITY.md",
-        "plugins/TODO.md",
+        "core/DECAPOD",
+        "interfaces/CLAIMS",
+        "specs/INTENT",
+        "methodology/ARCHITECTURE",
+        "architecture/SECURITY",
+        "plugins/TODO",
     ];
 
     for required in &required_docs {
@@ -315,12 +315,12 @@ fn test_constitution_docs_ingest_shows_links() {
 
     // Verify each embedded doc appears in ingest output
     let required_docs = [
-        "core/DECAPOD.md",
-        "interfaces/CLAIMS.md",
-        "specs/INTENT.md",
-        "methodology/ARCHITECTURE.md",
-        "architecture/SECURITY.md",
-        "plugins/TODO.md",
+        "core/DECAPOD",
+        "interfaces/CLAIMS",
+        "specs/INTENT",
+        "methodology/ARCHITECTURE",
+        "architecture/SECURITY",
+        "plugins/TODO",
     ];
 
     for doc_path in &required_docs {

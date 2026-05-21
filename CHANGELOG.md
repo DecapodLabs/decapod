@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Internal
+- *(constitution)* templatize constitution into Rust source via JSON graph
+- *(constitution)* normalize document IDs to remove extensions (.md, .json)
+- *(build)* embed and compress constitution assets for hermetic distribution
+- *(interfaces)* schema-backed constitution access via `assets::get_embedded_doc`
+
 ## [0.48.6](https://github.com/DecapodLabs/decapod/compare/v0.48.5...v0.48.6) - 2026-05-19
 
 ### Other

@@ -1,155 +1,34 @@
 //! Embedded constitution and template assets.
 //!
 //! This module provides compile-time embedded access to Decapod's methodology documents.
-//! All constitution files (core, specs, plugins) are baked into the binary for
-//! hermetic deployment - no external files required.
+//! All constitution files are baked into the binary via `constitution.json`.
 
 use std::path::Path;
 
-/// Macro to embed constitution documents at compile time as text.
-///
-/// Generates:
-/// - Public constants for each embedded document
-/// - `get_embedded_doc(path)` function for lookup
-/// - `list_docs()` function for discovery
-macro_rules! embedded_docs {
-    ($($path:expr => $const_name:ident),* $(,)?) => {
-        $(
-            pub const $const_name: &str =
-                include_str!(concat!("../../constitution/", $path));
-        )*
+// Include the auto-generated compressed constitution
+include!(concat!(env!("OUT_DIR"), "/constitution_compressed.rs"));
 
-        pub fn get_embedded_doc(path: &str) -> Option<String> {
-            // Support both bare paths and legacy "embedded/" prefix
-            let key = path.strip_prefix("embedded/").unwrap_or(path);
-            match key {
-                $( $path => Some($const_name.to_string()), )*
-                _ => None,
-            }
-        }
+/// Get an embedded document by its ID (e.g., "core/DECAPOD")
+pub fn get_embedded_doc(id: &str) -> Option<String> {
+    let key = id.strip_prefix("embedded/").unwrap_or(id);
 
-        pub fn list_docs() -> Vec<String> {
-            vec![ $( $path.to_string(), )* ]
-        }
-    };
+    // 1. Try exact match (e.g., "core/DECAPOD")
+    if let Some(content) = get_decompressed(key) {
+        return Some(content);
+    }
+
+    // 2. Try normalizing dots to slashes (e.g., "core.DECAPOD" -> "core/DECAPOD")
+    let normalized = key.replace('.', "/");
+    if let Some(content) = get_decompressed(&normalized) {
+        return Some(content);
+    }
+
+    None
 }
 
-embedded_docs! {
-    // Core: Routers and indices
-    "core/ENGINEERING_EXCELLENCE.md" => EMBEDDED_CORE_ENGINEERING_EXCELLENCE,
-    "core/DECAPOD.md" => EMBEDDED_CORE_DECAPOD,
-    "core/INTERFACES.md" => EMBEDDED_CORE_INTERFACES,
-    "core/METHODOLOGY.md" => EMBEDDED_CORE_METHODOLOGY,
-    "core/PLUGINS.md" => EMBEDDED_CORE_PLUGINS,
-    "core/GAPS.md" => EMBEDDED_CORE_GAPS,
-    "core/DEMANDS.md" => EMBEDDED_CORE_DEMANDS,
-    "core/DEPRECATION.md" => EMBEDDED_CORE_DEPRECATION,
-
-    // Specs: System contracts
-    "specs/INTENT.md" => EMBEDDED_SPECS_INTENT,
-    "specs/SYSTEM.md" => EMBEDDED_SPECS_SYSTEM,
-    "specs/AMENDMENTS.md" => EMBEDDED_SPECS_AMENDMENTS,
-    "specs/SECURITY.md" => EMBEDDED_SPECS_SECURITY,
-    "specs/GIT.md" => EMBEDDED_SPECS_GIT,
-    "specs/evaluations/VARIANCE_EVALS.md" => EMBEDDED_SPECS_VARIANCE_EVALS,
-    "specs/evaluations/JUDGE_CONTRACT.md" => EMBEDDED_SPECS_JUDGE_CONTRACT,
-    "specs/engineering/FRONTEND_BACKEND_E2E.md" => EMBEDDED_SPECS_FRONTEND_BACKEND_E2E,
-    "specs/skills/SKILL_GOVERNANCE.md" => EMBEDDED_SPECS_SKILL_GOVERNANCE,
-
-    // Interfaces: Binding contracts
-    "interfaces/CLAIMS.md" => EMBEDDED_INTERFACES_CLAIMS,
-    "interfaces/CONTROL_PLANE.md" => EMBEDDED_INTERFACES_CONTROL_PLANE,
-    "interfaces/DOC_RULES.md" => EMBEDDED_INTERFACES_DOC_RULES,
-    "interfaces/GLOSSARY.md" => EMBEDDED_INTERFACES_GLOSSARY,
-    "interfaces/STORE_MODEL.md" => EMBEDDED_INTERFACES_STORE_MODEL,
-    "interfaces/TESTING.md" => EMBEDDED_INTERFACES_TESTING,
-    "interfaces/KNOWLEDGE_SCHEMA.md" => EMBEDDED_INTERFACES_KNOWLEDGE_SCHEMA,
-    "interfaces/KNOWLEDGE_STORE.md" => EMBEDDED_INTERFACES_KNOWLEDGE_STORE,
-    "interfaces/MEMORY_SCHEMA.md" => EMBEDDED_INTERFACES_MEMORY_SCHEMA,
-    "interfaces/DEMANDS_SCHEMA.md" => EMBEDDED_INTERFACES_DEMANDS_SCHEMA,
-    "interfaces/TODO_SCHEMA.md" => EMBEDDED_INTERFACES_TODO_SCHEMA,
-    "interfaces/PLAN_GOVERNED_EXECUTION.md" => EMBEDDED_INTERFACES_PLAN_GOVERNED_EXECUTION,
-    "interfaces/AGENT_CONTEXT_PACK.md" => EMBEDDED_INTERFACES_AGENT_CONTEXT_PACK,
-
-    // Methodology: Practice guides
-    "methodology/ARCHITECTURE.md" => EMBEDDED_METHODOLOGY_ARCHITECTURE,
-    "methodology/SOUL.md" => EMBEDDED_METHODOLOGY_SOUL,
-    "methodology/KNOWLEDGE.md" => EMBEDDED_METHODOLOGY_KNOWLEDGE,
-    "methodology/MEMORY.md" => EMBEDDED_METHODOLOGY_MEMORY,
-    "methodology/TESTING.md" => EMBEDDED_METHODOLOGY_TESTING,
-    "methodology/CI_CD.md" => EMBEDDED_METHODOLOGY_CI_CD,
-
-    // Architecture: Domain patterns
-    "architecture/ALGORITHMS.md" => EMBEDDED_ARCHITECTURE_ALGORITHMS,
-    "architecture/API_DESIGN.md" => EMBEDDED_ARCHITECTURE_API_DESIGN,
-    "architecture/AUTH.md" => EMBEDDED_ARCHITECTURE_AUTH,
-    "architecture/CACHING.md" => EMBEDDED_ARCHITECTURE_CACHING,
-    "architecture/CI_CD_PIPELINES.md" => EMBEDDED_ARCHITECTURE_CI_CD_PIPELINES,
-    "architecture/CLOUD.md" => EMBEDDED_ARCHITECTURE_CLOUD,
-    "architecture/CODING_STANDARDS.md" => EMBEDDED_ARCHITECTURE_CODING_STANDARDS,
-    "architecture/COMPLIANCE.md" => EMBEDDED_ARCHITECTURE_COMPLIANCE,
-    "architecture/CONCURRENCY.md" => EMBEDDED_ARCHITECTURE_CONCURRENCY,
-    "architecture/CONTAINERS.md" => EMBEDDED_ARCHITECTURE_CONTAINERS,
-    "architecture/COST_OPTIMIZATION.md" => EMBEDDED_ARCHITECTURE_COST_OPTIMIZATION,
-    "architecture/DATA.md" => EMBEDDED_ARCHITECTURE_DATA,
-    "architecture/DATABASE.md" => EMBEDDED_ARCHITECTURE_DATABASE,
-    "architecture/DISTRIBUTED_SYSTEMS.md" => EMBEDDED_ARCHITECTURE_DISTRIBUTED_SYSTEMS,
-    "architecture/DR.md" => EMBEDDED_ARCHITECTURE_DR,
-    "architecture/ENCRYPTION.md" => EMBEDDED_ARCHITECTURE_ENCRYPTION,
-    "architecture/EVENT_DRIVEN.md" => EMBEDDED_ARCHITECTURE_EVENT_DRIVEN,
-    "architecture/FRONTEND.md" => EMBEDDED_ARCHITECTURE_FRONTEND,
-    "architecture/GRAPHQL.md" => EMBEDDED_ARCHITECTURE_GRAPHQL,
-    "architecture/GRPC.md" => EMBEDDED_ARCHITECTURE_GRPC,
-    "architecture/INFRASTRUCTURE.md" => EMBEDDED_ARCHITECTURE_INFRASTRUCTURE,
-    "architecture/KNOWLEDGE_BASE.md" => EMBEDDED_ARCHITECTURE_KNOWLEDGE_BASE,
-    "architecture/KUBERNETES.md" => EMBEDDED_ARCHITECTURE_KUBERNETES,
-    "architecture/MEMORY.md" => EMBEDDED_ARCHITECTURE_MEMORY,
-    "architecture/MESSAGING.md" => EMBEDDED_ARCHITECTURE_MESSAGING,
-    "architecture/METRICS.md" => EMBEDDED_ARCHITECTURE_METRICS,
-    "architecture/MICROSERVICES.md" => EMBEDDED_ARCHITECTURE_MICROSERVICES,
-    "architecture/NETWORKING.md" => EMBEDDED_ARCHITECTURE_NETWORKING,
-    "architecture/OBSERVABILITY.md" => EMBEDDED_ARCHITECTURE_OBSERVABILITY,
-    "architecture/PERFORMANCE.md" => EMBEDDED_ARCHITECTURE_PERFORMANCE,
-    "architecture/SCALING.md" => EMBEDDED_ARCHITECTURE_SCALING,
-    "architecture/SECRETS.md" => EMBEDDED_ARCHITECTURE_SECRETS,
-    "architecture/SECURITY.md" => EMBEDDED_ARCHITECTURE_SECURITY,
-    "architecture/TESTING_STRATEGY.md" => EMBEDDED_ARCHITECTURE_TESTING_STRATEGY,
-    "architecture/UI.md" => EMBEDDED_ARCHITECTURE_UI,
-    "architecture/WEB.md" => EMBEDDED_ARCHITECTURE_WEB,
-
-    // Embedded docs used by entrypoints/operators
-    "docs/ARCHITECTURE_OVERVIEW.md" => EMBEDDED_DOCS_ARCHITECTURE_OVERVIEW,
-    "docs/CONTROL_PLANE_API.md" => EMBEDDED_DOCS_CONTROL_PLANE_API,
-    "docs/MAINTAINERS.md" => EMBEDDED_DOCS_MAINTAINERS,
-    "docs/MIGRATIONS.md" => EMBEDDED_DOCS_MIGRATIONS,
-    "docs/NEGLECTED_ASPECTS_LEDGER.md" => EMBEDDED_DOCS_NEGLECTED_ASPECTS_LEDGER,
-    "docs/PLAYBOOK.md" => EMBEDDED_DOCS_PLAYBOOK,
-    "docs/README.md" => EMBEDDED_DOCS_README,
-    "docs/RELEASE_PROCESS.md" => EMBEDDED_DOCS_RELEASE_PROCESS,
-    "docs/SECURITY_THREAT_MODEL.md" => EMBEDDED_DOCS_SECURITY_THREAT_MODEL,
-    "docs/EVAL_TRANSLATION_MAP.md" => EMBEDDED_DOCS_EVAL_TRANSLATION_MAP,
-    "docs/SKILL_TRANSLATION_MAP.md" => EMBEDDED_DOCS_SKILL_TRANSLATION_MAP,
-
-    "plugins/ARCHIVE.md" => EMBEDDED_PLUGINS_ARCHIVE,
-    "plugins/AUTOUPDATE.md" => EMBEDDED_PLUGINS_AUTOUPDATE,
-    "plugins/CONTEXT.md" => EMBEDDED_PLUGINS_CONTEXT,
-    "plugins/CRON.md" => EMBEDDED_PLUGINS_CRON,
-    "plugins/DB_BROKER.md" => EMBEDDED_PLUGINS_DB_BROKER,
-    "plugins/DECIDE.md" => EMBEDDED_PLUGINS_DECIDE,
-    "plugins/EMERGENCY_PROTOCOL.md" => EMBEDDED_PLUGINS_EMERGENCY_PROTOCOL,
-    "plugins/FEDERATION.md" => EMBEDDED_PLUGINS_FEDERATION,
-    "plugins/FEEDBACK.md" => EMBEDDED_PLUGINS_FEEDBACK,
-    "plugins/HEALTH.md" => EMBEDDED_PLUGINS_HEALTH,
-    "plugins/HEARTBEAT.md" => EMBEDDED_PLUGINS_HEARTBEAT,
-    "plugins/KNOWLEDGE.md" => EMBEDDED_PLUGINS_KNOWLEDGE,
-    "plugins/MANIFEST.md" => EMBEDDED_PLUGINS_MANIFEST,
-    "plugins/POLICY.md" => EMBEDDED_PLUGINS_POLICY,
-    "plugins/REFLEX.md" => EMBEDDED_PLUGINS_REFLEX,
-    "plugins/APTITUDE.md" => EMBEDDED_PLUGINS_APTITUDE,
-    "plugins/TODO.md" => EMBEDDED_PLUGINS_TODO,
-    "plugins/TRUST.md" => EMBEDDED_PLUGINS_TRUST,
-    "plugins/VERIFY.md" => EMBEDDED_PLUGINS_VERIFY,
-    "plugins/WATCHER.md" => EMBEDDED_PLUGINS_WATCHER,
+/// List all available constitution document IDs
+pub fn list_docs() -> Vec<String> {
+    list_ids().into_iter().map(|s| s.to_string()).collect()
 }
 
 /// Legacy function - now just forwards to get_embedded_doc
@@ -158,7 +37,7 @@ pub fn get_doc(path: &str) -> Option<String> {
 }
 
 /// Get only the override document from .decapod/OVERRIDE.md for a specific component
-pub fn get_override_doc(repo_root: &Path, relative_path: &str) -> Option<String> {
+pub fn get_override_doc(repo_root: &Path, id: &str) -> Option<String> {
     let override_path = repo_root.join(".decapod").join("OVERRIDE.md");
 
     if !override_path.exists() {
@@ -166,7 +45,7 @@ pub fn get_override_doc(repo_root: &Path, relative_path: &str) -> Option<String>
     }
 
     let override_content = std::fs::read_to_string(&override_path).ok()?;
-    extract_component_override(&override_content, relative_path)
+    extract_component_override(&override_content, id)
 }
 
 /// List component override section headings from .decapod/OVERRIDE.md.
@@ -196,13 +75,13 @@ fn extract_override_section_names(override_content: &str) -> Vec<String> {
 }
 
 /// Extract a specific component's override content from OVERRIDE.md
-fn extract_component_override(override_content: &str, component_path: &str) -> Option<String> {
+fn extract_component_override(override_content: &str, id: &str) -> Option<String> {
     // Only look after the "CHANGES ARE NOT PERMITTED ABOVE THIS LINE" marker
     let override_start = override_content.find("CHANGES ARE NOT PERMITTED ABOVE THIS LINE")?;
     let searchable_content = &override_content[override_start..];
 
-    // Look for the section heading: ### core/DECAPOD.md (or other path)
-    let section_marker = format!("### {}", component_path);
+    // Look for the section heading: ### core.DECAPOD
+    let section_marker = format!("### {}", id);
 
     let start = searchable_content.find(&section_marker)?;
 
@@ -231,12 +110,12 @@ fn extract_component_override(override_content: &str, component_path: &str) -> O
 }
 
 /// Get merged document (embedded base + optional project override from OVERRIDE.md)
-pub fn get_merged_doc(repo_root: &Path, relative_path: &str) -> Option<String> {
+pub fn get_merged_doc(repo_root: &Path, id: &str) -> Option<String> {
     // Get embedded base
-    let embedded_content = get_embedded_doc(relative_path)?;
+    let embedded_content = get_embedded_doc(id)?;
 
     // Check for component-specific override in .decapod/OVERRIDE.md
-    if let Some(override_content) = get_override_doc(repo_root, relative_path) {
+    if let Some(override_content) = get_override_doc(repo_root, id) {
         return Some(merge_override_content(&embedded_content, &override_content));
     }
 
@@ -294,9 +173,9 @@ decapod data schema --deterministic
 - Read and update `.decapod/config.toml` as project context; use Decapod CLI for other `.decapod/` state.
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides when present.
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
-- Read canonical router: `decapod docs show core/DECAPOD.md`.
+- Read canonical router: `decapod docs show core/DECAPOD`.
 - Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
-- Operator reference: `decapod docs show docs/PLAYBOOK.md`.
+- Operator reference: `decapod docs show docs/PLAYBOOK`.
 - Capability authority: `decapod capabilities --format json`.
 - Scoped context feature: `decapod docs search --query "<problem>" --op <op>` or `decapod rpc --op context.scope`.
 
@@ -371,7 +250,7 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 - **INV-ROOT-ISOLATION**: Agents MUST NOT check out branches or mutate files in the main repository checkout. All work must happen in isolated `.decapod/workspaces/*` worktrees to avoid disrupting the human user's environment. (enforced by workspace validation)
 
 ## Safety Invariants
-- ✅ Router pointer: `core/DECAPOD.md` | ✅ Validation gate: `decapod validate`
+- ✅ Router pointer: `core/DECAPOD` | ✅ Validation gate: `decapod validate`
 - ✅ Constitution ingestion gate: `decapod docs ingest`
 - ✅ Workspace status gate: `decapod workspace status`
 - ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`
@@ -395,7 +274,7 @@ Call Decapod before editing. Let Decapod validate after editing.
 - Read `.decapod/config.toml` (human-editable) for project context and architecture direction.
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides.
 - DO NOT mutate `.decapod/` state directly; use Decapod CLI for specs, data, workspaces, and sessions. Access to `.decapod/` is strictly via decapod CLI.
-- Use `decapod docs show core/DECAPOD.md` for binding contracts.
+- Use `decapod docs show core/DECAPOD` for binding contracts.
 - Use `decapod capabilities --format json` to discover available operations.
 - Stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
 - Respect the Interface abstraction boundary.
@@ -418,7 +297,7 @@ fn template_readme() -> String {
 Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to turn intent into context, then context into explicit specifications before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
 
 GitHub: https://github.com/DecapodLabs/decapod
-Canonical Contract: [constitution/core/DECAPOD.md](constitution/core/DECAPOD.md)
+Canonical Contract: [core/DECAPOD](core/DECAPOD)
 
 ## What This Directory Is
 
@@ -488,10 +367,10 @@ allowed-tools: Bash
 4. Report findings
 ```
 
-Place SKILL.md files in `constitution/metadata/skills/` and import them:
+Place SKILL.md files in `metadata/skills/` and import them:
 
 ```bash
-decapod data aptitude skill import --path constitution/metadata/skills/my-security-review/SKILL.md
+decapod data aptitude skill import --path metadata.skills.my-security-review.SKILL.md
 ```
 
 ### Aptitude Memory
@@ -538,7 +417,7 @@ Keep overrides minimal, explicit, and committed.
 }
 
 fn template_override() -> String {
-    r#"# OVERRIDE.md - Project-Specific Decapod Overrides
+    let mut s = r#"# OVERRIDE.md - Project-Specific Decapod Overrides
 
 > **IMPORTANT:** For detailed usage instructions and examples, see [README.md](README.md).
 
@@ -550,134 +429,32 @@ fn template_override() -> String {
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 <!-- ⚠️  CHANGES ARE NOT PERMITTED ABOVE THIS LINE                           -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
+"#.to_string();
 
-## Core Overrides (Routers and Indices)
+    // Group nodes by category for the template
+    let mut categories: HashMap<&str, Vec<&str>> = HashMap::new();
+    let mut ids = list_ids();
+    ids.sort();
 
-### core/ENGINEERING_EXCELLENCE.md
+    for id in ids {
+        if let Some((cat, _title, _deps)) = get_metadata(id) {
+            categories.entry(cat).or_default().push(id);
+        }
+    }
 
-### core/DECAPOD.md
+    let cat_order = ["core", "specs", "interfaces", "methodology", "architecture", "plugins", "docs"];
+    
+    for cat in cat_order {
+        if let Some(nodes) = categories.get(cat) {
+            s.push_str(&format!("\n## {} Overrides\n", cat.to_uppercase()));
+            for id in nodes {
+                s.push_str(&format!("\n### {}\n", id));
+            }
+            s.push_str("\n---\n");
+        }
+    }
 
-### core/INTERFACES.md
-
-### core/METHODOLOGY.md
-
-### core/PLUGINS.md
-
-### core/GAPS.md
-
-### core/DEMANDS.md
-
-### core/DEPRECATION.md
-
----
-
-## Specs Overrides (System Contracts)
-
-### specs/INTENT.md
-
-### specs/SYSTEM.md
-
-### specs/AMENDMENTS.md
-
-### specs/SECURITY.md
-
-### specs/GIT.md
-
----
-
-## Interfaces Overrides (Binding Contracts)
-
-### interfaces/CLAIMS.md
-
-### interfaces/CONTROL_PLANE.md
-
-### interfaces/DOC_RULES.md
-
-### interfaces/GLOSSARY.md
-
-### interfaces/STORE_MODEL.md
-
----
-
-## Methodology Overrides (Practice Guides)
-
-### methodology/ARCHITECTURE.md
-
-### methodology/SOUL.md
-
-### methodology/KNOWLEDGE.md
-
-### methodology/MEMORY.md
-
----
-
-## Architecture Overrides (Domain Patterns)
-
-### architecture/DATA.md
-
-### architecture/CACHING.md
-
-### architecture/MEMORY.md
-
-### architecture/WEB.md
-
-### architecture/CLOUD.md
-
-### architecture/FRONTEND.md
-
-### architecture/ALGORITHMS.md
-
-### architecture/SECURITY.md
-
-### architecture/OBSERVABILITY.md
-
-### architecture/CONCURRENCY.md
-
----
-
-## Plugins Overrides (Operational Subsystems)
-
-### plugins/TODO.md
-
-### plugins/MANIFEST.md
-
-### plugins/EMERGENCY_PROTOCOL.md
-
-### plugins/DB_BROKER.md
-
-### plugins/CRON.md
-
-### plugins/REFLEX.md
-
-### plugins/HEALTH.md
-
-### plugins/POLICY.md
-
-### plugins/WATCHER.md
-
-### plugins/KNOWLEDGE.md
-
-### plugins/ARCHIVE.md
-
-### plugins/FEDERATION.md
-
-### plugins/FEEDBACK.md
-
-### plugins/TRUST.md
-
-### plugins/CONTEXT.md
-
-### plugins/HEARTBEAT.md
-
-### plugins/APTITUDE.md
-
-### plugins/VERIFY.md
-
-### plugins/DECIDE.md
-
-### plugins/AUTOUPDATE.md
-"#
-    .to_string()
+    s
 }
 
 pub fn get_template(name: &str) -> Option<String> {

@@ -39,10 +39,6 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
     write(&root.join(".decapod/README.md"), "decapod fixture\n");
     write(&root.join(".decapod/data/.gitkeep"), "");
     write(
-        &root.join("constitution/docs/MIGRATIONS.md"),
-        "# Migrations\n\n- forward-only\n",
-    );
-    write(
         &root.join("Cargo.toml"),
         "[package]\nname = \"fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
     );
@@ -71,11 +67,11 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
         task_id: Some("R_FIXTURE".to_string()),
         workunit_id: None,
         sources: vec![ContextCapsuleSource {
-            path: "interfaces/CONTROL_PLANE.md".to_string(),
+            path: "interfaces/CONTROL_PLANE".to_string(),
             section: "Control Plane".to_string(),
         }],
         snippets: vec![ContextCapsuleSnippet {
-            source_path: "interfaces/CONTROL_PLANE.md".to_string(),
+            source_path: "interfaces/CONTROL_PLANE".to_string(),
             text: "fixture snippet".to_string(),
         }],
         policy: CapsulePolicyBinding::default(),

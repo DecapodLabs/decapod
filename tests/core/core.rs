@@ -21,7 +21,7 @@ use tempfile::tempdir;
 #[test]
 fn assets_docs_and_templates_resolve() {
     let docs = assets::list_docs();
-    assert!(docs.contains(&"core/DECAPOD.md".to_string()));
+    assert!(docs.contains(&"core/DECAPOD".to_string()));
 
     for doc in docs {
         let content = assets::get_doc(&doc).expect("listed doc should be readable");
@@ -789,14 +789,14 @@ fn scaffold_store_and_docs_cli_behaviors() {
 
     docs_cli::run_docs_cli(DocsCli {
         command: DocsCommand::Show {
-            path: "core/DECAPOD.md".to_string(),
+            path: "core/DECAPOD".to_string(),
             source: docs_cli::DocumentSource::Merged,
         },
     })
     .expect("docs show existing");
     let missing = docs_cli::run_docs_cli(DocsCli {
         command: DocsCommand::Show {
-            path: "core/NOPE.md".to_string(),
+            path: "core/NOPE".to_string(),
             source: docs_cli::DocumentSource::Merged,
         },
     });
@@ -848,25 +848,25 @@ fn schemas_errors_and_validate_entrypoint_are_exercised() {
     assert!(matches!(from_sqlite, DecapodError::RusqliteError(_)));
 
     let repo = tempdir().expect("tempdir");
-    fs::create_dir_all(repo.path().join(".decapod/constitution/specs")).expect("mkdir specs");
+    fs::create_dir_all(repo.path().join(".decapod/generated/specs")).expect("mkdir specs");
     fs::write(repo.path().join("AGENTS.md"), "entrypoint\n").expect("write agents");
     fs::write(repo.path().join("CLAUDE.md"), "entrypoint\n").expect("write claude");
     fs::write(repo.path().join("GEMINI.md"), "entrypoint\n").expect("write gemini");
     fs::create_dir_all(repo.path().join(".decapod")).expect("mkdir .decapod");
     fs::write(repo.path().join(".decapod/README.md"), "decapod readme\n").expect("write readme");
     fs::write(
-        repo.path().join(".decapod/constitution/specs/INTENT.md"),
+        repo.path().join(".decapod/generated/specs/INTENT.md"),
         "**Version:** 0.0.1\n",
     )
     .expect("write intent");
     fs::write(
         repo.path()
-            .join(".decapod/constitution/specs/ARCHITECTURE.md"),
+            .join(".decapod/generated/specs/ARCHITECTURE.md"),
         "architecture\n",
     )
     .expect("write architecture");
     fs::write(
-        repo.path().join(".decapod/constitution/specs/SYSTEM.md"),
+        repo.path().join(".decapod/generated/specs/SYSTEM.md"),
         "system\n",
     )
     .expect("write system");
@@ -899,23 +899,23 @@ fn override_md_extraction_and_merging() {
 
 ## Core Overrides
 
-### core/DECAPOD.md
+### core/DECAPOD
 
 ## Custom Navigation
 
-This is a test override for DECAPOD.md
+This is a test override for core/DECAPOD
 
-### core/CONTROL_PLANE.md
+### core/CONTROL_PLANE
 
 ## Custom Control Plane
 
-This is a test override for CONTROL_PLANE.md
+This is a test override for core/CONTROL_PLANE
 
 ---
 
 ## Plugin Overrides
 
-### plugins/TODO.md
+### plugins/TODO
 
 ## Custom TODO Priorities
 
@@ -927,11 +927,11 @@ This is a test override for CONTROL_PLANE.md
     fs::write(root.join(".decapod/OVERRIDE.md"), override_content).expect("write OVERRIDE.md");
 
     // Test override extraction for specific components
-    let decapod_override = assets::get_override_doc(root, "core/DECAPOD.md");
+    let decapod_override = assets::get_override_doc(root, "core/DECAPOD");
     assert!(decapod_override.is_some());
     assert!(decapod_override.unwrap().contains("Custom Navigation"));
 
-    let control_plane_override = assets::get_override_doc(root, "core/CONTROL_PLANE.md");
+    let control_plane_override = assets::get_override_doc(root, "core/CONTROL_PLANE");
     assert!(control_plane_override.is_some());
     assert!(
         control_plane_override
@@ -939,16 +939,16 @@ This is a test override for CONTROL_PLANE.md
             .contains("Custom Control Plane")
     );
 
-    let todo_override = assets::get_override_doc(root, "plugins/TODO.md");
+    let todo_override = assets::get_override_doc(root, "plugins/TODO");
     assert!(todo_override.is_some());
     assert!(todo_override.unwrap().contains("Custom TODO Priorities"));
 
     // Test that non-existent override returns None
-    let missing_override = assets::get_override_doc(root, "plugins/NONEXISTENT.md");
+    let missing_override = assets::get_override_doc(root, "plugins/NONEXISTENT");
     assert!(missing_override.is_none());
 
     // Test merged document (embedded + override)
-    let merged_todo = assets::get_merged_doc(root, "plugins/TODO.md");
+    let merged_todo = assets::get_merged_doc(root, "plugins/TODO");
     assert!(merged_todo.is_some());
     let merged_content = merged_todo.unwrap();
     // Should contain both embedded content and override
@@ -959,9 +959,9 @@ This is a test override for CONTROL_PLANE.md
     assert_eq!(
         override_sections,
         vec![
-            "core/DECAPOD.md",
-            "core/CONTROL_PLANE.md",
-            "plugins/TODO.md"
+            "core/DECAPOD",
+            "core/CONTROL_PLANE",
+            "plugins/TODO"
         ]
     );
 }
@@ -977,14 +977,14 @@ fn docs_list_outputs_project_override_sections() {
         r#"# OVERRIDE.md
 
 ```markdown
-### core/EXAMPLE.md
+### core/EXAMPLE
 ```
 
 <!-- CHANGES ARE NOT PERMITTED ABOVE THIS LINE -->
 
 ## Core Overrides
 
-### core/DECAPOD.md
+### core/DECAPOD
 
 Project override.
 "#,
@@ -1001,8 +1001,8 @@ Project override.
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).expect("utf8 stdout");
     assert!(stdout.contains("Project Override Sections:"));
-    assert!(stdout.contains("- core/DECAPOD.md"));
-    assert!(!stdout.contains("core/EXAMPLE.md"));
+    assert!(stdout.contains("- core/DECAPOD"));
+    assert!(!stdout.contains("core/EXAMPLE"));
 }
 
 #[test]

@@ -401,7 +401,7 @@ pub fn is_hitl_disabled_by_override(store: &Store, scope: &str, level: RiskLevel
     let Some(repo_root) = find_repo_root_from_store(store) else {
         return false;
     };
-    let Some(policy_override) = assets::get_override_doc(&repo_root, "plugins/POLICY.md") else {
+    let Some(policy_override) = assets::get_override_doc(&repo_root, "plugins/POLICY") else {
         return false;
     };
 
