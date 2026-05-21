@@ -20,7 +20,7 @@
   <a href="https://github.com/DecapodLabs/decapod/blob/master/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 </p>
 
-Canonical Contract: [core/DECAPOD.json](core/DECAPOD.json)
+Canonical Contract: `assets/constitution.json` section `core/DECAPOD`
 
 ---
 
@@ -59,7 +59,6 @@ flowchart TD
     AgentPost -->|"verified result"| UserOut
 
     AgentPre -.->|"ping for context"| UserIn
-    AgentPost -.->|"ping for context"| UserOut
 
     AgentPre -. "optional governance path" .-> DecapodPre
     DecapodPre -. "intent · context · gates" .-> AgentPre

@@ -250,8 +250,8 @@ fn validate_embedded_self_contained(
     info("Embedded Self-Contained Gate");
 
     // Only validate the embedded constitution source in the decapod repo itself.
-    if !repo_root.join("constitution.json").exists() {
-        skip("No constitution.json found (project repo)", ctx);
+    if !repo_root.join("assets/constitution.json").exists() {
+        skip("No assets/constitution.json found (project repo)", ctx);
         return Ok(());
     }
 
@@ -489,8 +489,8 @@ fn validate_repo_map(
         ctx,
     );
 
-    let required_specs = ["specs/INTENT.json", "specs/SYSTEM.json"];
-    let required_methodology = ["methodology/ARCHITECTURE.json"];
+    let required_specs = ["specs/INTENT", "specs/SYSTEM"];
+    let required_methodology = ["methodology/ARCHITECTURE"];
     for r in required_specs {
         if crate::core::assets::get_doc(r).is_some() {
             pass(&format!("Constitution doc {} present (embedded)", r), ctx);
@@ -577,12 +577,12 @@ fn validate_entrypoint_invariants(
 
     // Exact invariant strings (tamper detection)
     let exact_invariants = [
-        ("core/decapod.json", "Router pointer to core/DECAPOD.json"),
+        ("core/decapod", "Router pointer to core/DECAPOD"),
         ("cargo install decapod", "Version update gate language"),
         ("decapod validate", "Validation gate language"),
         (
-            "decapod docs ingest",
-            "Core constitution ingestion mandate language",
+            r#"decapod rpc --op constitution.get --params '{"section":"core/decapod"}'"#,
+            "Core constitution RPC mandate language",
         ),
         ("stop if", "Stop-if-missing behavior"),
         ("docker git workspaces", "Docker workspace mandate language"),
@@ -680,8 +680,8 @@ fn validate_entrypoint_invariants(
             all_present = false;
         }
 
-        if agent_content.contains("core/DECAPOD.json") {
-            pass(&format!("{} references core/DECAPOD.json", agent_file), ctx);
+        if agent_content.contains("core/DECAPOD") {
+            pass(&format!("{} references core/DECAPOD", agent_file), ctx);
         } else {
             fail(
                 &format!("{} missing canonical router reference (.json)", agent_file),
@@ -690,29 +690,27 @@ fn validate_entrypoint_invariants(
             all_present = false;
         }
 
-        // Must use embedded doc paths via CLI, never direct constitution/* file paths.
-        if agent_content.contains("decapod docs show constitution/")
+        // Must use RPC constitution access, never the docs CLI or direct constitution/* file paths.
+        if agent_content.contains("decapod docs")
+            || agent_content.contains("docs show")
             || agent_content.contains("(constitution/")
         {
             fail(
                 &format!(
-                    "{} references direct constitution filesystem paths; use embedded doc paths (e.g. core/*, specs/*, docs/*)",
+                    "{} references docs CLI or direct constitution paths; use constitution.get RPC",
                     agent_file
                 ),
                 ctx,
             );
             all_present = false;
-        } else if agent_content.contains("decapod docs show docs/") {
+        } else if agent_content.contains("constitution.get") {
             pass(
-                &format!("{} references embedded docs path convention", agent_file),
+                &format!("{} references constitution.get RPC", agent_file),
                 ctx,
             );
         } else {
             fail(
-                &format!(
-                    "{} missing embedded docs path reference (`decapod docs show docs/...`)",
-                    agent_file
-                ),
+                &format!("{} missing constitution.get RPC reference", agent_file),
                 ctx,
             );
             all_present = false;
@@ -862,7 +860,9 @@ fn validate_entrypoint_invariants(
         }
 
         // Must include core constitution ingestion mandate
-        if agent_content.contains("decapod docs ingest") {
+        if agent_content.to_ascii_lowercase().contains(
+            r#"decapod rpc --op constitution.get --params '{"section":"core/decapod"}'"#,
+        ) {
             pass(
                 &format!(
                     "{} includes core constitution ingestion mandate",
@@ -950,11 +950,11 @@ fn validate_interface_contract_bootstrap(
 ) -> Result<(), error::DecapodError> {
     info("Interface Contract Bootstrap Gate");
 
-    // This gate applies to the decapod repository where constitution.json is present.
+    // This gate applies to the decapod repository where assets/constitution.json is present.
     // Project repos initialized by `decapod init` should not fail on missing embedded source.
-    if !repo_root.join("constitution.json").exists() {
+    if !repo_root.join("assets/constitution.json").exists() {
         skip(
-            "No constitution.json found (project repo); skipping interface bootstrap checks",
+            "No assets/constitution.json found (project repo); skipping interface bootstrap checks",
             ctx,
         );
         return Ok(());
@@ -973,18 +973,18 @@ fn validate_interface_contract_bootstrap(
         }
     }
 
-    if let Some(content) = assets::get_embedded_doc(risk_policy_id) {
+    if let Some(content) = assets::get_merged_doc(repo_root, risk_policy_id) {
         for marker in [
-            "**Authority:**",
-            "**Layer:** Interfaces",
-            "**Binding:** Yes",
-            "**Scope:**",
-            "**Non-goals:**",
+            "Authority:",
+            "Layer: Interfaces",
+            "Binding: Yes",
+            "Scope:",
+            "Non-goals:",
             "## 3. Current-Head SHA Discipline",
             "## 6. Browser Evidence Manifest (UI/Critical Flows)",
             "## 8. Truth Labels and Upgrade Path",
             "## 10. Contract Example (JSON)",
-            "## Links",
+            "## Core Router",
         ] {
             if content.contains(marker) {
                 pass(
@@ -1000,18 +1000,18 @@ fn validate_interface_contract_bootstrap(
         }
     }
 
-    if let Some(content) = assets::get_embedded_doc(context_pack_id) {
+    if let Some(content) = assets::get_merged_doc(repo_root, context_pack_id) {
         for marker in [
-            "**Authority:**",
-            "**Layer:** Interfaces",
-            "**Binding:** Yes",
-            "**Scope:**",
-            "**Non-goals:**",
+            "Authority:",
+            "Layer: Interfaces",
+            "Binding: Yes",
+            "Scope:",
+            "Non-goals:",
             "## 2. Deterministic Load Order",
             "## 3. Mutation Authority",
             "## 4. Memory Distillation Contract",
             "## 8. Truth Labels and Upgrade Path",
-            "## Links",
+            "## Core Router",
         ] {
             if content.contains(marker) {
                 pass(
@@ -1178,6 +1178,7 @@ fn validate_generated_artifact_whitelist(
     let allowed_tracked = [
         ".decapod/generated/Dockerfile",
         ".decapod/data/knowledge.promotions.jsonl",
+        ".decapod/generated/specs/.manifest",
         ".decapod/generated/specs/.manifest.json",
         ".decapod/generated/policy/context_capsule_policy.json",
         ".decapod/generated/artifacts/provenance/kcr_trend.jsonl",
@@ -3527,25 +3528,25 @@ fn validate_heartbeat_invocation_gate(
 
     let doc_markers = [
         (
-            crate::core::assets::get_doc("core/DECAPOD.json")
+            crate::core::assets::get_doc("core/DECAPOD")
                 .unwrap_or_default()
                 .contains("invocation heartbeat"),
             "Router documents invocation heartbeat contract",
         ),
         (
-            crate::core::assets::get_doc("interfaces/CONTROL_PLANE.json")
+            crate::core::assets::get_doc("interfaces/CONTROL_PLANE")
                 .unwrap_or_default()
                 .contains("invocation heartbeat"),
             "Control-plane interface documents invocation heartbeat",
         ),
         (
-            crate::core::assets::get_doc("plugins/TODO.json")
+            crate::core::assets::get_doc("plugins/TODO")
                 .unwrap_or_default()
                 .contains("auto-clocks liveness"),
             "TODO plugin documents automatic liveness clock-in",
         ),
         (
-            crate::core::assets::get_doc("plugins/REFLEX.json")
+            crate::core::assets::get_doc("plugins/REFLEX")
                 .unwrap_or_default()
                 .contains("todo.heartbeat.autoclaim"),
             "REFLEX plugin documents heartbeat autoclaim action",
@@ -5175,7 +5176,7 @@ pub fn run_validation(
 pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
     use crate::core::ansi::AnsiExt;
 
-    let intent_content = crate::core::assets::get_doc("specs/INTENT.json").unwrap_or_default();
+    let intent_content = crate::core::assets::get_doc("specs/INTENT").unwrap_or_default();
     let intent_version =
         extract_md_version(&intent_content).unwrap_or_else(|| "unknown".to_string());
 

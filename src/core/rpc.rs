@@ -166,6 +166,21 @@ pub struct ContextCapsuleQueryParams {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ContextBindingsParams {}
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConstitutionGetParams {
+    pub section: String,
+    pub subsection: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConstitutionGetResult {
+    pub section: String,
+    pub title: String,
+    pub category: String,
+    pub dependencies: Vec<String>,
+    pub content: serde_json::Value,
+}
+
 // Schema Subsystem
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SchemaGetParams {
@@ -665,8 +680,9 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 cost: "low".to_string(),
             },
             Capability {
-                name: "docs.show".to_string(),
-                description: "Show embedded constitution and reference documentation".to_string(),
+                name: "constitution.get".to_string(),
+                description: "Return structured sections from the embedded constitution asset"
+                    .to_string(),
                 stability: "stable".to_string(),
                 cost: "low".to_string(),
             },

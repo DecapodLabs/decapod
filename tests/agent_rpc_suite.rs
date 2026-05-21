@@ -120,7 +120,13 @@ fn bootstrap_session() -> &'static str {
         );
 
         let ingest_out = run_decapod(
-            &["docs", "ingest"],
+            &[
+                "rpc",
+                "--op",
+                "constitution.get",
+                "--params",
+                r#"{"section":"core/DECAPOD"}"#,
+            ],
             &[
                 ("DECAPOD_AGENT_ID", agent_id),
                 ("DECAPOD_CLAIM_AUTORUN", "0"),
@@ -129,7 +135,7 @@ fn bootstrap_session() -> &'static str {
         );
         assert!(
             ingest_out.status.success(),
-            "docs ingest failed: {}",
+            "constitution.get failed: {}",
             String::from_utf8_lossy(&ingest_out.stderr)
         );
 

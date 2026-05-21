@@ -287,7 +287,7 @@ fn validate_rejects_recursive_pass_that_weakens_governance() {
 fn validate_rejects_recursive_pass_touching_forbidden_paths() {
     let (_tmp, dir, password) = setup_repo();
     let mut pass = valid_recursive_pass();
-    pass["touched_paths"] = serde_json::json!(["core/DECAPOD.md"]);
+    pass["touched_paths"] = serde_json::json!(["core/DECAPOD"]);
     write_recursive_pass(&dir, pass);
 
     let validate = validate_with_session(&dir, &password);

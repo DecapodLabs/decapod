@@ -24,7 +24,9 @@ fn claude_workflow_example_contains_required_ops() {
         ],
     );
     assert!(workflow.contains("decapod validate"));
-    assert!(workflow.contains("decapod docs ingest"));
+    assert!(workflow.contains(
+        r#"decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'"#
+    ));
     assert!(
         workflow.contains("decapod session acquire") || workflow.contains("decapod session init")
     );
@@ -93,10 +95,16 @@ fn verification_guide_pins_jit_capsule_flow() {
     );
     
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["docs", "show", "interfaces/AGENT_CONTEXT_PACK"])
+        .args([
+            "rpc",
+            "--op",
+            "constitution.get",
+            "--params",
+            r#"{"section":"interfaces/AGENT_CONTEXT_PACK"}"#,
+        ])
         .output()
-        .expect("run decapod docs show");
-    assert!(output.status.success(), "decapod docs show failed");
+        .expect("run decapod constitution.get");
+    assert!(output.status.success(), "constitution.get failed");
     let capsule_contract = String::from_utf8_lossy(&output.stdout);
 
     assert!(

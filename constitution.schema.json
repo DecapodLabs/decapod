@@ -2,21 +2,37 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Decapod Constitution Graph",
   "type": "object",
-  "required": ["nodes"],
+  "required": [
+    "nodes"
+  ],
   "properties": {
     "nodes": {
       "type": "object",
       "additionalProperties": {
         "type": "object",
-        "required": ["title", "category", "dependencies", "content"],
+        "required": [
+          "title",
+          "category",
+          "dependencies",
+          "content"
+        ],
         "properties": {
-          "title": { "type": "string" },
-          "category": { "type": "string" },
+          "title": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
           "dependencies": {
             "type": "array",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           },
-          "content": { "type": "string" }
+          "content": {
+            "type": "object",
+            "additionalProperties": true
+          }
         }
       }
     }

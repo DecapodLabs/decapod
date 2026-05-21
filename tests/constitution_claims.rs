@@ -19,11 +19,21 @@ struct ConstitutionTable {
 
 fn load_constitution_claims() -> Vec<ConstitutionTable> {
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["docs", "show", "interfaces/CLAIMS.json"])
+        .args([
+            "rpc",
+            "--op",
+            "constitution.get",
+            "--params",
+            r#"{"section":"interfaces/CLAIMS","subsection":"2. Claims (Binding Registry)"}"#,
+        ])
         .output()
-        .expect("run decapod docs show");
-    assert!(output.status.success(), "decapod docs show failed");
-    let content = String::from_utf8_lossy(&output.stdout);
+        .expect("run decapod constitution.get");
+    assert!(output.status.success(), "constitution.get failed");
+    let response: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("parse constitution.get response");
+    let content = response["result"]["content"]["value"]
+        .as_str()
+        .expect("constitution.get claims table");
 
     let mut claims = Vec::new();
     let mut in_table = false;

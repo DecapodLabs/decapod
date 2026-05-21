@@ -41,11 +41,11 @@ fn write_capsule(root: &std::path::Path, task_id: &str) {
         task_id: Some(task_id.to_string()),
         workunit_id: None,
         sources: vec![ContextCapsuleSource {
-            path: "interfaces/PLAN_GOVERNED_EXECUTION.json".to_string(),
+            path: "interfaces/PLAN_GOVERNED_EXECUTION".to_string(),
             section: "Contract".to_string(),
         }],
         snippets: vec![ContextCapsuleSnippet {
-            source_path: "interfaces/PLAN_GOVERNED_EXECUTION.json".to_string(),
+            source_path: "interfaces/PLAN_GOVERNED_EXECUTION".to_string(),
             text: "promotion path is proof-gated".to_string(),
         }],
         policy: CapsulePolicyBinding {

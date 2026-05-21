@@ -3,7 +3,7 @@
 Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to turn intent into context, then context into explicit specifications before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
 
 GitHub: https://github.com/DecapodLabs/decapod
-Canonical Contract: [core/DECAPOD.json](core/DECAPOD.json)
+Canonical Contract: `assets/constitution.json` section `core/DECAPOD`
 
 ## What This Directory Is
 
@@ -16,7 +16,7 @@ It keeps Decapod-owned state, generated artifacts, and isolated workspaces separ
 
 1. `decapod init`
 2. `decapod validate`
-3. `decapod docs ingest`
+3. `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
 4. `decapod session acquire`
 5. `decapod rpc --op agent.init`
 6. `decapod workspace status`

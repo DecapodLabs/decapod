@@ -1,7 +1,7 @@
 //! Embedded constitution and template assets.
 //!
 //! This module provides compile-time embedded access to Decapod's methodology documents.
-//! All constitution files are baked into the binary via `constitution.json`.
+//! All constitution files are baked into the binary via `assets/constitution.json`.
 
 use std::path::Path;
 
@@ -12,32 +12,34 @@ include!(concat!(env!("OUT_DIR"), "/constitution_compressed.rs"));
 pub fn get_embedded_doc(id: &str) -> Option<String> {
     let key = id.strip_prefix("embedded/").unwrap_or(id);
 
-    // 1. Try exact match (e.g., "core/DECAPOD.json")
-    if let Some(content) = get_decompressed(key) {
-        return Some(content);
-    }
-
-    // 2. Try appending .json (e.g., "core/DECAPOD" -> "core/DECAPOD.json")
-    if !key.ends_with(".json") {
-        let with_json = format!("{}.json", key);
-        if let Some(content) = get_decompressed(&with_json) {
-            return Some(content);
-        }
-    }
-
-    // 3. Try normalizing dots to slashes and appending .json
-    let normalized = key.replace('.', "/");
-    if let Some(content) = get_decompressed(&normalized) {
-        return Some(content);
-    }
-    if !normalized.ends_with(".json") {
-        let normalized_json = format!("{}.json", normalized);
-        if let Some(content) = get_decompressed(&normalized_json) {
+    for candidate in doc_id_candidates(key) {
+        if let Some(content) = get_decompressed(&candidate) {
             return Some(content);
         }
     }
 
     None
+}
+
+fn doc_id_candidates(id: &str) -> Vec<String> {
+    let mut candidates = Vec::new();
+    let normalized = id.replace('.', "/");
+    for candidate in [id.to_string(), normalized] {
+        push_candidate(&mut candidates, candidate.clone());
+        if let Some(stripped) = candidate
+            .strip_suffix(".json")
+            .or_else(|| candidate.strip_suffix(".md"))
+        {
+            push_candidate(&mut candidates, stripped.to_string());
+        }
+    }
+    candidates
+}
+
+fn push_candidate(candidates: &mut Vec<String>, candidate: String) {
+    if !candidates.iter().any(|existing| existing == &candidate) {
+        candidates.push(candidate);
+    }
 }
 
 /// List all available constitution document IDs
@@ -48,6 +50,19 @@ pub fn list_docs() -> Vec<String> {
 /// Legacy function - now just forwards to get_embedded_doc
 pub fn get_doc(path: &str) -> Option<String> {
     get_embedded_doc(path)
+}
+
+pub fn get_doc_metadata(id: &str) -> Option<(String, String, Vec<String>)> {
+    for candidate in doc_id_candidates(id) {
+        if let Some((category, title, dependencies)) = get_metadata(&candidate) {
+            return Some((
+                category.to_string(),
+                title.to_string(),
+                dependencies.into_iter().map(ToString::to_string).collect(),
+            ));
+        }
+    }
+    None
 }
 
 /// Get only the override document from .decapod/OVERRIDE.md for a specific component
@@ -94,10 +109,11 @@ fn extract_component_override(override_content: &str, id: &str) -> Option<String
     let override_start = override_content.find("CHANGES ARE NOT PERMITTED ABOVE THIS LINE")?;
     let searchable_content = &override_content[override_start..];
 
-    // Look for the section heading: ### core.DECAPOD
-    let section_marker = format!("### {}", id);
-
-    let start = searchable_content.find(&section_marker)?;
+    let start = doc_id_candidates(id).into_iter().find_map(|candidate| {
+        let section_marker = format!("### {}", candidate);
+        searchable_content.find(&section_marker).map(|start| (start, section_marker))
+    })?;
+    let (start, section_marker) = start;
 
     // Ensure it's a real header (either at start of searchable_content or after a newline)
     if start > 0 && searchable_content.as_bytes()[start - 1] != b'\n' {
@@ -126,7 +142,7 @@ fn extract_component_override(override_content: &str, id: &str) -> Option<String
 /// Get merged document (embedded base + optional project override from OVERRIDE.md)
 pub fn get_merged_doc(repo_root: &Path, id: &str) -> Option<String> {
     // Get embedded base
-    let embedded_content = get_embedded_doc(id)?;
+    let embedded_content = render_embedded_doc_text(id, &get_embedded_doc(id)?);
 
     // Check for component-specific override in .decapod/OVERRIDE.md
     if let Some(override_content) = get_override_doc(repo_root, id) {
@@ -134,6 +150,46 @@ pub fn get_merged_doc(repo_root: &Path, id: &str) -> Option<String> {
     }
 
     Some(embedded_content)
+}
+
+fn render_embedded_doc_text(id: &str, raw_content: &str) -> String {
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(raw_content) else {
+        return raw_content.to_string();
+    };
+
+    let mut rendered = String::new();
+    rendered.push_str("# ");
+    rendered.push_str(id);
+    rendered.push('\n');
+
+    if let Some(summary) = value.get("summary").and_then(|summary| summary.as_str())
+        && !summary.trim().is_empty()
+    {
+        rendered.push('\n');
+        rendered.push_str(summary.trim());
+        rendered.push('\n');
+    }
+
+    if let Some(sections) = value.get("sections").and_then(|sections| sections.as_object()) {
+        for (title, section) in sections {
+            rendered.push('\n');
+            rendered.push_str("## ");
+            rendered.push_str(title);
+            rendered.push_str("\n\n");
+            if let Some(text) = section.as_str() {
+                rendered.push_str(text.trim());
+            } else {
+                rendered.push_str(&section.to_string());
+            }
+            rendered.push('\n');
+        }
+    } else {
+        rendered.push('\n');
+        rendered.push_str(&value.to_string());
+        rendered.push('\n');
+    }
+
+    rendered
 }
 
 /// Merge embedded content with override additions
@@ -160,13 +216,14 @@ See `AGENTS.md` for the universal contract.
 
 ```bash
 cargo install decapod
-decapod validate && decapod docs ingest && decapod session acquire
+decapod validate && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
 decapod infer orientation --task-id <task-id>
 decapod workspace ensure
 cd .decapod/workspaces/<your-worktree>
+decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'
 decapod rpc --op context.resolve
 ```
 
@@ -187,11 +244,11 @@ decapod data schema --deterministic
 - Read and update `.decapod/config.toml` as project context; use Decapod CLI for other `.decapod/` state.
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides when present.
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
-- Read canonical router: `decapod docs show core/DECAPOD.json`.
+- Read canonical router: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`.
 - Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
-- Operator reference: `decapod docs show docs/PLAYBOOK.json`.
+- Operator reference: `decapod rpc --op constitution.get --params '{"section":"docs/PLAYBOOK"}'`.
 - Capability authority: `decapod capabilities --format json`.
-- Scoped context feature: `decapod docs search --query "<problem>" --op <op>` or `decapod rpc --op context.scope`.
+- Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod rpc --op context.scope`.
 
 Stop if requirements are ambiguous or conflicting.
 "#
@@ -208,13 +265,14 @@ This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any ot
 
 ```bash
 cargo install decapod
-decapod validate && decapod docs ingest && decapod session acquire
+decapod validate && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
 decapod infer orientation --task-id <task-id>
 decapod workspace ensure
 cd .decapod/workspaces/<your-worktree>
+decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'
 decapod rpc --op context.resolve
 ```
 
@@ -243,14 +301,25 @@ decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
 8. **MUST** stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
 9. **MUST** respect the Interface abstraction boundary.
 
-## Orientation & Precision (Doctrine)
+## Decapod Invocation Contract
 
-Before starting expensive exploration, broad refactors, or multi-path architecture work:
-- Call `decapod infer orientation`.
-- Treat the returned `orientation_packet` as the authoritative starting context.
-- If the packet contains `decision_gates`, present the options to the human and wait for a choice.
-- Do not bypass decision gates; they are placed where ambiguity would otherwise cause expensive waste.
-- Use the `allowed_scope` and `proof_required` fields to bound your work.
+Agents act. Decapod orients.
+
+Decapod is not your executor, model runtime, or workflow replacement. You remain responsible for implementation. Call Decapod as the repo-native pressure relief valve when the next responsible step requires explicit intent, boundaries, context, coordination, or proof.
+
+Call Decapod before proceeding when continuing would require guessing about:
+- **Intent pressure:** what you are actually trying to do.
+- **Boundary pressure:** what you are allowed to touch.
+- **Context pressure:** what matters right now.
+- **Coordination pressure:** whether this collides with other work.
+- **Proof pressure:** what evidence makes this complete.
+- **Completion pressure:** whether you can truthfully claim done.
+
+Concrete triggers: ambiguous requests, public behavior/security/data/migration/generated/release/architecture impact, unclear proof, todo create/update/split/complete, scope expansion, conflicting intent/specs/instructions/repo state, context loss, multi-agent collision risk, or readiness to claim completion.
+
+Do not call Decapod for every trivial file read, local edit, or mechanical command. Call it at decision boundaries that need governance, memory, boundaries, coordination, or proof. Decapod calls should produce or update explicit artifacts: intent, context, constraints, todos, decisions, proof, and completion state.
+
+When using `decapod infer orientation`, treat the returned packet as starting context; stop on decision gates; use `allowed_scope` and `proof_required` to bound work.
 
 ## Invariants (Normative)
 
@@ -264,31 +333,20 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 - **INV-ROOT-ISOLATION**: Agents MUST NOT check out branches or mutate files in the main repository checkout. All work must happen in isolated `.decapod/workspaces/*` worktrees to avoid disrupting the human user's environment. (enforced by workspace validation)
 
 ## Safety Invariants
-- ✅ Router pointer: `core/DECAPOD.json` | ✅ Validation gate: `decapod validate`
-- ✅ Constitution ingestion gate: `decapod docs ingest`
+- ✅ Router pointer: `core/DECAPOD` | ✅ Validation gate: `decapod validate`
+- ✅ Constitution RPC gate: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
 - ✅ Workspace status gate: `decapod workspace status`
 - ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`
 - ✅ Session auth gate: `DECAPOD_SESSION_PASSWORD`
 - ✅ Workspace gate: Docker git workspaces
 - ✅ Privilege gate: request elevated permissions before Docker/container workspace commands
 
-## Universal Agent Operating Contract
-
-Decapod is the governance kernel that governs AI coding agents to ensure convergence on human intent and proof-backed completion.
-
-- **Doctrine:** Establish intent, shape context, bound mutation, and define proof BEFORE implementation.
-- **Rules:** Avoid opportunistic rewrites; preserve behavior; stop at subsystem boundaries; run strong verification.
-- **Workflow:** Claim task -> Orient -> Ensure Workspace -> Work in Worktree -> Validate -> Publish.
-- **Hierarchy:** Constitution and project intent outrank agent-local execution.
-
-Call Decapod before editing. Let Decapod validate after editing.
-
 ## Operating Notes
 
 - Read `.decapod/config.toml` (human-editable) for project context and architecture direction.
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides.
 - DO NOT mutate `.decapod/` state directly; use Decapod CLI for specs, data, workspaces, and sessions. Access to `.decapod/` is strictly via decapod CLI.
-- Use `decapod docs show core/DECAPOD.json` for binding contracts.
+- Use `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'` for binding contracts.
 - Use `decapod capabilities --format json` to discover available operations.
 - Stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
 - Respect the Interface abstraction boundary.
@@ -311,7 +369,7 @@ fn template_readme() -> String {
 Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to turn intent into context, then context into explicit specifications before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
 
 GitHub: https://github.com/DecapodLabs/decapod
-Canonical Contract: [core/DECAPOD.json](core/DECAPOD.json)
+Canonical Contract: `assets/constitution.json` section `core/DECAPOD`
 
 ## What This Directory Is
 
@@ -324,7 +382,7 @@ It keeps Decapod-owned state, generated artifacts, and isolated workspaces separ
 
 1. `decapod init`
 2. `decapod validate`
-3. `decapod docs ingest`
+3. `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
 4. `decapod session acquire`
 5. `decapod rpc --op agent.init`
 6. `decapod workspace status`

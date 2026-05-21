@@ -4,7 +4,7 @@
 #
 # Usage:
 #   ./selective-test.sh                    # Auto-detect changed files
-#   ./selective-test.sh src/core/todo.json.rs   # Run tests for specific files
+#   ./selective-test.sh src/core/todo.rs   # Run tests for specific files
 #   ./selective-test.sh --all             # Run all tests
 
 set -euo pipefail
@@ -38,28 +38,28 @@ echo "$IMPACT_OUTPUT" | jq -r '.predicted_affected_gates[]? // .gates[]? // .imp
 # Map changed files to test targets (file pattern -> test name associations)
 declare -A FILE_TO_TESTS=(
     # Core modules -> corresponding tests
-    ["src/core/todo.json.rs"]="todo_enforcement todo_rebuild_compat"
-    ["src/core/validate.json.rs"]="validate_termination validate_optional_artifact_gates"
-    ["src/core/gatekeeper.json.rs"]="validate_termination validate_optional_artifact_gates"
-    ["src/core/workspace.json.rs"]="workspace_interlock"
-    ["src/core/workunit.json.rs"]="workunit_cli workunit_publish_gate"
-    ["src/core/obligation.json.rs"]="obligation"
-    ["src/core/docs.json.rs"]="context_capsule_cli context_capsule_rpc lcm_determinism"
-    ["src/core/context_capsule.json.rs"]="context_capsule_cli context_capsule_rpc context_capsule_schema"
-    ["src/core/rpc.json.rs"]="agent_rpc_suite"
-    ["src/core/migration.json.rs"]="core_tests"
+    ["src/core/todo.rs"]="todo_enforcement todo_rebuild_compat"
+    ["src/core/validate.rs"]="validate_termination validate_optional_artifact_gates"
+    ["src/core/gatekeeper.rs"]="validate_termination validate_optional_artifact_gates"
+    ["src/core/workspace.rs"]="workspace_interlock"
+    ["src/core/workunit.rs"]="workunit_cli workunit_publish_gate"
+    ["src/core/obligation.rs"]="obligation"
+    ["src/core/docs.rs"]="context_capsule_cli context_capsule_rpc lcm_determinism"
+    ["src/core/context_capsule.rs"]="context_capsule_cli context_capsule_rpc context_capsule_schema"
+    ["src/core/rpc.rs"]="agent_rpc_suite"
+    ["src/core/migration.rs"]="core_tests"
     ["src/lib.rs"]="entrypoint_correctness"
     ["src/cli.rs"]="cli_contract_enforcement"
     
     # Plugins -> corresponding tests
-    ["src/plugins/todo.json.rs"]="plugins_todo_tests"
-    ["src/plugins/policy.json.rs"]="plugins_policy_tests"
-    ["src/plugins/health.json.rs"]="plugins_health_tests"
-    ["src/plugins/aptitude.json.rs"]="plugins_aptitude_tests"
-    ["src/plugins/internalize.json.rs"]="plugins_internalize_tests"
-    ["src/plugins/federation.json.rs"]="plugins_federation_tests"
-    ["src/plugins/decide.json.rs"]="plugins_decide_tests"
-    ["src/plugins/obligation.json.rs"]="plugins_obligation_tests"
+    ["src/plugins/todo.rs"]="plugins_todo_tests"
+    ["src/plugins/policy.rs"]="plugins_policy_tests"
+    ["src/plugins/health.rs"]="plugins_health_tests"
+    ["src/plugins/aptitude.rs"]="plugins_aptitude_tests"
+    ["src/plugins/internalize.rs"]="plugins_internalize_tests"
+    ["src/plugins/federation.rs"]="plugins_federation_tests"
+    ["src/plugins/decide.rs"]="plugins_decide_tests"
+    ["src/plugins/obligation.rs"]="plugins_obligation_tests"
     
     # Test infrastructure changes
     ["tests/"]="entrypoint_correctness"
@@ -113,7 +113,7 @@ else
             fi
         done
         
-        # Heuristic: src/core/X.json.rs -> tests related to X
+        # Heuristic: src/core/X.rs -> tests related to X
         if [[ "$changed_file" =~ ^src/core/([^/]+)\.rs$ ]]; then
             module="${BASH_REMATCH[1]}"
             if [[ -v MODULE_HEURISTICS[$module] ]]; then
@@ -126,7 +126,7 @@ else
             fi
         fi
         
-        # Heuristic: src/plugins/X.json.rs -> plugins_X_tests
+        # Heuristic: src/plugins/X.rs -> plugins_X_tests
         if [[ "$changed_file" =~ ^src/plugins/([^/]+)\.rs$ ]]; then
             plugin="${BASH_REMATCH[1]}"
             TESTS_TO_RUN["plugins_${plugin}_tests"]=1

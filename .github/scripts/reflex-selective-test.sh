@@ -22,11 +22,11 @@ echo "Impact: $IMPACT"
 FAILED=0
 for file in $CHANGED_FILES; do
     case "$file" in
-        src/core/todo.json.rs)
+        src/core/todo.rs)
             echo "Testing: todo module"
             cargo test --all-features --test todo_enforcement -- --test-threads=2 || FAILED=1
             ;;
-        src/core/validate.json.rs)
+        src/core/validate.rs)
             echo "Testing: validate module"
             cargo test --all-features --test validate_termination -- --test-threads=2 || FAILED=1
             cargo test --all-features --test validate_optional_artifact_gates -- --test-threads=2 || FAILED=1

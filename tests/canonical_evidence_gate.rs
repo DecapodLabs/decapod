@@ -10,7 +10,7 @@ fn repo_root() -> PathBuf {
 fn read_kcr_trend(root: &Path) -> String {
     let candidates = [
         ".decapod/generated/artifacts/provenance/kcr_trend.jsonl",
-        "docs/metrics.json/KCR_TREND.jsonl",
+        "docs/metrics/KCR_TREND.jsonl",
     ];
     for rel in candidates {
         let path = root.join(rel);
@@ -45,11 +45,21 @@ struct KcrTrendRow {
 fn enforced_claims_must_have_gate_mapping_and_kcr_trend_must_match() {
     let root = repo_root();
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["docs", "show", "interfaces/CLAIMS.json"])
+        .args([
+            "rpc",
+            "--op",
+            "constitution.get",
+            "--params",
+            r#"{"section":"interfaces/CLAIMS","subsection":"2. Claims (Binding Registry)"}"#,
+        ])
         .output()
-        .expect("run decapod docs show");
-    assert!(output.status.success(), "decapod docs show failed");
-    let claims = String::from_utf8_lossy(&output.stdout);
+        .expect("run decapod constitution.get");
+    assert!(output.status.success(), "constitution.get failed");
+    let response: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("parse constitution.get response");
+    let claims = response["result"]["content"]["value"]
+        .as_str()
+        .expect("constitution.get claims table");
 
     let mut in_table = false;
     let mut enforced_total = 0u64;
@@ -86,14 +96,14 @@ fn enforced_claims_must_have_gate_mapping_and_kcr_trend_must_match() {
                 && !proof_lc.contains("planned ");
             assert!(
                 has_mapping,
-                "ENFORCED claim lacks gate/test mapping in interfaces/CLAIMS.json: {}",
+                "ENFORCED claim lacks gate/test mapping in interfaces/CLAIMS: {}",
                 line
             );
             enforced_with_gate += 1;
         }
     }
 
-    assert!(enforced_total > 0, "No enforced claims found in interfaces/CLAIMS.json");
+    assert!(enforced_total > 0, "No enforced claims found in interfaces/CLAIMS");
     let kcr = enforced_with_gate as f64 / enforced_total as f64;
 
     let trend = read_kcr_trend(&root);

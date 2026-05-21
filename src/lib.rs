@@ -1819,7 +1819,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Docs(docs_cli) => {
                     let result = docs_cli::run_docs_cli(docs_cli)?;
                     if result.ingested_core_constitution {
-                        mark_core_constitution_ingested(&project_root)?;
+                        mark_core_constitution_ingested(&project_root, "docs.ingest")?;
                     }
                 }
                 Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
@@ -2134,6 +2134,7 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "context.scope"
             | "context.capsule.query"
             | "context.bindings"
+            | "constitution.get"
             | "schema.get"
             | "store.upsert"
             | "store.query"
@@ -2193,6 +2194,7 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "context.scope"
             | "context.capsule.query"
             | "context.bindings"
+            | "constitution.get"
             | "schema.get"
             | "store.upsert"
             | "store.query"
@@ -2503,7 +2505,10 @@ fn mark_validation_completed(project_root: &Path) -> Result<(), error::DecapodEr
     write_awareness_record(project_root, &rec)
 }
 
-fn mark_core_constitution_ingested(project_root: &Path) -> Result<(), error::DecapodError> {
+fn mark_core_constitution_ingested(
+    project_root: &Path,
+    source_op: &str,
+) -> Result<(), error::DecapodError> {
     let agent_id = current_agent_id();
     let mut rec =
         read_awareness_record(project_root, &agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
@@ -2516,8 +2521,8 @@ fn mark_core_constitution_ingested(project_root: &Path) -> Result<(), error::Dec
             source_ops: Vec::new(),
         });
     rec.core_constitution_ingested_at_epoch_secs = Some(now_epoch_secs());
-    if !rec.source_ops.iter().any(|op| op == "docs.ingest") {
-        rec.source_ops.push("docs.ingest".to_string());
+    if !rec.source_ops.iter().any(|op| op == source_op) {
+        rec.source_ops.push(source_op.to_string());
     }
     write_awareness_record(project_root, &rec)
 }
@@ -3853,8 +3858,8 @@ fn build_release_inventory(project_root: &Path) -> Result<serde_json::Value, err
             collect_files_recursive(&p, &mut paths)?;
         }
     }
-    if project_root.join("constitution.json").exists() {
-        paths.push(PathBuf::from("constitution.json"));
+    if project_root.join("assets/constitution.json").exists() {
+        paths.push(PathBuf::from("assets/constitution.json"));
     }
     paths.sort();
 
@@ -3875,7 +3880,7 @@ fn build_release_inventory(project_root: &Path) -> Result<serde_json::Value, err
             *totals_by_root.entry("src_loc").or_insert(0) += loc;
         } else if rel_s.starts_with("tests/") {
             *totals_by_root.entry("tests_loc").or_insert(0) += loc;
-        } else if rel_s.starts_with("constitution/") || rel_s == "constitution.json" {
+        } else if rel_s.starts_with("constitution/") || rel_s == "assets/constitution.json" {
             *totals_by_root.entry("constitution_loc").or_insert(0) += loc;
         }
         if rel_s.ends_with(".rs") {
@@ -3901,7 +3906,7 @@ fn build_release_inventory(project_root: &Path) -> Result<serde_json::Value, err
     Ok(serde_json::json!({
         "schema_version": "1.0.0",
         "kind": "repo_inventory",
-        "scope": ["src", "tests", "constitution.json"],
+        "scope": ["src", "tests", "assets/constitution.json"],
         "totals": {
             "src_loc": src_loc,
             "tests_loc": tests_loc,
@@ -3959,7 +3964,7 @@ fn git_changed_paths(project_root: &Path) -> Vec<String> {
 
 fn has_schema_or_interface_changes(paths: &[String]) -> bool {
     paths.iter().any(|path| {
-        path == "constitution.json"
+        path == "assets/constitution.json"
             || path == "src/core/schemas.rs"
             || path == "src/core/rpc.rs"
             || path.starts_with("tests/golden/rpc/")
@@ -4600,6 +4605,7 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "context.scope"
             | "context.bindings"
             | "context.capsule.query"
+            | "constitution.get"
             | "schema.get"
     )
 }
@@ -4616,7 +4622,7 @@ fn enforce_constitutional_awareness_for_rpc(
     let rec = read_awareness_record(project_root, &agent_id)?;
     let Some(rec) = rec else {
         return Err(error::DecapodError::ValidationError(
-            "Constitutional awareness required before mutating operations. Run `decapod validate`, then `decapod docs ingest`, then `decapod session acquire`, `decapod rpc --op agent.init`, and `decapod rpc --op context.resolve`."
+            r#"Constitutional awareness required before mutating operations. Run `decapod validate`, then `decapod session acquire`, `decapod rpc --op agent.init`, `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`, and `decapod rpc --op context.resolve`."#
                 .to_string(),
         ));
     };
@@ -4630,7 +4636,7 @@ fn enforce_constitutional_awareness_for_rpc(
 
     if rec.core_constitution_ingested_at_epoch_secs.is_none() {
         return Err(error::DecapodError::ValidationError(
-            "Constitutional awareness incomplete: core constitution ingestion missing. Run `decapod docs ingest` before mutating operations."
+            r#"Constitutional awareness incomplete: core constitution RPC resolution missing. Run `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'` before mutating operations."#
                 .to_string(),
         ));
     }
@@ -6360,6 +6366,86 @@ mod rpc_handlers {
         ))
     }
 
+    pub(crate) fn handle_constitution_get(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let params: ConstitutionGetParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
+        let Some(raw_content) = core::assets::get_embedded_doc(&params.section) else {
+            return Ok(error_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                "unknown_section".to_string(),
+                format!("Unknown constitution section: {}", params.section),
+                None,
+                ctx.mandates.clone(),
+            ));
+        };
+
+        let mut content: serde_json::Value = serde_json::from_str(&raw_content)
+            .unwrap_or_else(|_| serde_json::json!({ "text": raw_content }));
+
+        if let Some(subsection) = params.subsection.as_deref() {
+            let selected = content
+                .get("sections")
+                .and_then(|sections| sections.get(subsection))
+                .cloned();
+            match selected {
+                Some(section) => {
+                    content = serde_json::json!({
+                        "subsection": subsection,
+                        "value": section
+                    });
+                }
+                None => {
+                    return Ok(error_response(
+                        ctx.request.id.clone(),
+                        ctx.request.op.clone(),
+                        ctx.request.params.clone(),
+                        "unknown_subsection".to_string(),
+                        format!(
+                            "Unknown subsection '{}' in constitution section '{}'",
+                            subsection, params.section
+                        ),
+                        None,
+                        ctx.mandates.clone(),
+                    ));
+                }
+            }
+        }
+
+        let (category, title, dependencies) =
+            core::assets::get_doc_metadata(&params.section).unwrap_or((
+                "unknown".to_string(),
+                params.section.clone(),
+                Vec::new(),
+            ));
+
+        mark_core_constitution_ingested(ctx.project_root, "constitution.get")?;
+
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(ConstitutionGetResult {
+                    section: params.section,
+                    title,
+                    category,
+                    dependencies,
+                    content,
+                })
+                .unwrap(),
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
     pub(crate) fn handle_schema_get(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let params: SchemaGetParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
@@ -7121,6 +7207,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         "context.resolve" | "context.scope" => rpc_handlers::handle_context_resolve(&rpc_ctx)?,
         "context.capsule.query" => rpc_handlers::handle_context_capsule_query(&rpc_ctx)?,
         "context.bindings" => rpc_handlers::handle_context_bindings(&rpc_ctx)?,
+        "constitution.get" => rpc_handlers::handle_constitution_get(&rpc_ctx)?,
         "schema.get" => rpc_handlers::handle_schema_get(&rpc_ctx)?,
         "store.upsert" => rpc_handlers::handle_store_upsert(&rpc_ctx)?,
         "store.query" => rpc_handlers::handle_store_query(&rpc_ctx)?,

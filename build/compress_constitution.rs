@@ -1,5 +1,6 @@
 use flate2::{write::GzEncoder, Compression};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
 use std::fs::{self, File};
@@ -16,19 +17,19 @@ struct ConstitutionNode {
     title: String,
     category: String,
     dependencies: Vec<String>,
-    content: String,
+    content: Value,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("cargo:rerun-if-changed=constitution.json");
+    println!("cargo:rerun-if-changed=assets/constitution.json");
     println!("cargo:rerun-if-changed=build/compress_constitution.rs");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
     let out_dir = env::var("OUT_DIR")?;
-    let json_path = Path::new(&manifest_dir).join("constitution.json");
+    let json_path = Path::new(&manifest_dir).join("assets/constitution.json");
 
     if !json_path.exists() {
-        panic!("constitution.json not found at {}", json_path.display());
+        panic!("assets/constitution.json not found at {}", json_path.display());
     }
 
     let json_content = fs::read_to_string(&json_path)?;
@@ -73,7 +74,8 @@ fn generate_rust_module(graph: &ConstitutionGraph, out_dir: &Path) -> Result<(),
     for id in &ids {
         let node = &graph.nodes[*id];
         let struct_name = id_to_const_name(id);
-        let compressed = gzip_compress(node.content.as_bytes());
+        let content = serde_json::to_string(&node.content)?;
+        let compressed = gzip_compress(content.as_bytes());
 
         writeln!(file, "/// Compressed content for: {}", id)?;
         writeln!(file, "pub const {}_GZ: &[u8] = &{:?};", struct_name, compressed)?;

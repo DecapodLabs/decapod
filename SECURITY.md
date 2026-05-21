@@ -7,7 +7,7 @@ Decapod takes security seriously. This document provides an overview of our secu
 **Read the constitutional security contract via embedded docs:**
 
 ```bash
-decapod docs show specs/SECURITY.json
+decapod rpc --op constitution.get --params '{"section":"core/SECURITY"}'
 ```
 
 This document is binding. All agents must follow the security principles outlined therein, including:

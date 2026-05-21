@@ -8,13 +8,14 @@ This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any ot
 
 ```bash
 cargo install decapod
-decapod validate && decapod docs ingest && decapod session acquire
+decapod validate && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
 decapod infer orientation --task-id <task-id>
 decapod workspace ensure
 cd .decapod/workspaces/<your-worktree>
+decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'
 decapod rpc --op context.resolve
 ```
 
@@ -43,14 +44,25 @@ decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
 8. **MUST** stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
 9. **MUST** respect the Interface abstraction boundary.
 
-## Orientation & Precision (Doctrine)
+## Decapod Invocation Contract
 
-Before starting expensive exploration, broad refactors, or multi-path architecture work:
-- Call `decapod infer orientation`.
-- Treat the returned `orientation_packet` as the authoritative starting context.
-- If the packet contains `decision_gates`, present the options to the human and wait for a choice.
-- Do not bypass decision gates; they are placed where ambiguity would otherwise cause expensive waste.
-- Use the `allowed_scope` and `proof_required` fields to bound your work.
+Agents act. Decapod orients.
+
+Decapod is not your executor, model runtime, or workflow replacement. You remain responsible for implementation. Call Decapod as the repo-native pressure relief valve when the next responsible step requires explicit intent, boundaries, context, coordination, or proof.
+
+Call Decapod before proceeding when continuing would require guessing about:
+- **Intent pressure:** what you are actually trying to do.
+- **Boundary pressure:** what you are allowed to touch.
+- **Context pressure:** what matters right now.
+- **Coordination pressure:** whether this collides with other work.
+- **Proof pressure:** what evidence makes this complete.
+- **Completion pressure:** whether you can truthfully claim done.
+
+Concrete triggers: ambiguous requests, public behavior/security/data/migration/generated/release/architecture impact, unclear proof, todo create/update/split/complete, scope expansion, conflicting intent/specs/instructions/repo state, context loss, multi-agent collision risk, or readiness to claim completion.
+
+Do not call Decapod for every trivial file read, local edit, or mechanical command. Call it at decision boundaries that need governance, memory, boundaries, coordination, or proof. Decapod calls should produce or update explicit artifacts: intent, context, constraints, todos, decisions, proof, and completion state.
+
+When using `decapod infer orientation`, treat the returned packet as starting context; stop on decision gates; use `allowed_scope` and `proof_required` to bound work.
 
 ## Invariants (Normative)
 
@@ -64,31 +76,20 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 - **INV-ROOT-ISOLATION**: Agents MUST NOT check out branches or mutate files in the main repository checkout. All work must happen in isolated `.decapod/workspaces/*` worktrees to avoid disrupting the human user's environment. (enforced by workspace validation)
 
 ## Safety Invariants
-- ✅ Router pointer: `core/DECAPOD.json` | ✅ Validation gate: `decapod validate`
-- ✅ Constitution ingestion gate: `decapod docs ingest`
+- ✅ Router pointer: `core/DECAPOD` | ✅ Validation gate: `decapod validate`
+- ✅ Constitution RPC gate: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
 - ✅ Workspace status gate: `decapod workspace status`
 - ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`
 - ✅ Session auth gate: `DECAPOD_SESSION_PASSWORD`
 - ✅ Workspace gate: Docker git workspaces
 - ✅ Privilege gate: request elevated permissions before Docker/container workspace commands
 
-## Universal Agent Operating Contract
-
-Decapod governs AI coding agents to ensure convergence on human intent and proof-backed completion.
-
-- **Doctrine:** Establish intent, shape context, bound mutation, and define proof BEFORE implementation.
-- **Rules:** Avoid opportunistic rewrites; preserve behavior; stop at subsystem boundaries; run strong verification.
-- **Workflow:** Claim task -> Orient -> Ensure Workspace -> Work in Worktree -> Validate -> Publish.
-- **Hierarchy:** Constitution and project intent outrank agent-local execution.
-
-Call Decapod before editing. Let Decapod validate after editing.
-
 ## Operating Notes
 
 - Read `.decapod/config.toml` (human-editable) for project context and architecture direction.
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides.
 - DO NOT mutate `.decapod/` state directly; use Decapod CLI for specs, data, workspaces, and sessions. Access to `.decapod/` is strictly via decapod CLI.
-- Use `decapod docs show core/DECAPOD.json` for binding contracts.
+- Use `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'` for binding contracts.
 - Use `decapod capabilities --format json` to discover available operations.
 - Stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
 - Respect the Interface abstraction boundary.
