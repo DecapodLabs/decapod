@@ -1,5 +1,6 @@
 use serde_json::Value;
 use std::io::Write;
+use std::os::unix::fs::PermissionsExt;
 use std::process::{Command, Stdio};
 use tempfile::TempDir;
 
@@ -342,5 +343,64 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
         worktree_path,
         task_hash,
         task_id
+    );
+}
+
+#[test]
+fn test_workspace_ensure_container_bypasses_claimed_todo_gate() {
+    let (_tmp, dir, password) = setup_workspace();
+    let agent_id = "test-agent-container-no-todo";
+
+    let fake_bin = dir.join("fake-bin");
+    std::fs::create_dir_all(&fake_bin).expect("create fake bin");
+    let fake_docker = fake_bin.join("docker");
+    std::fs::write(&fake_docker, "#!/bin/sh\nexit 0\n").expect("write fake docker");
+    let mut perms = std::fs::metadata(&fake_docker)
+        .expect("fake docker metadata")
+        .permissions();
+    perms.set_mode(0o755);
+    std::fs::set_permissions(&fake_docker, perms).expect("chmod fake docker");
+
+    let path = std::env::var_os("PATH").expect("PATH");
+    let mut paths = vec![fake_bin];
+    paths.extend(std::env::split_paths(&path));
+    let fake_path = std::env::join_paths(paths).expect("join PATH");
+
+    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["workspace", "ensure", "--container"])
+        .current_dir(&dir)
+        .env("PATH", fake_path)
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .output()
+        .expect("workspace ensure --container");
+
+    assert!(
+        out.status.success(),
+        "workspace ensure --container should not require a claimed todo: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        !stderr.contains("WORKSPACE_NO_CLAIMED_TODO"),
+        "container remediation must not be blocked by todo claim gate: {}",
+        stderr
+    );
+
+    let json: serde_json::Value =
+        serde_json::from_slice(&out.stdout).expect("workspace ensure --container json");
+    let branch = json["branch"].as_str().expect("branch");
+    let worktree_path = json["worktree_path"].as_str().expect("worktree_path");
+
+    assert!(
+        branch.contains("todo-unassigned"),
+        "unclaimed container branch should use unassigned scope, got: {}",
+        branch
+    );
+    assert!(
+        worktree_path.contains("todo-unassigned"),
+        "unclaimed container worktree should use unassigned scope, got: {}",
+        worktree_path
     );
 }
