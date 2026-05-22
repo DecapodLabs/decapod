@@ -3696,8 +3696,8 @@ fn validate_git_workspace_context(
         fail(
             &auto_remediable_validation_message(
                 "container_workspace_required",
-                "Not running in container workspace - git-tracked work must execute in Docker-isolated workspace (claim.git.container_workspace_required)",
-                "Agent: rerun through `decapod workspace ensure --container`, or continue inside a Decapod-created container workspace.",
+                "Container workspace proof is still needed. This is expected on the host: Decapod can capture a coordination todo and prepare the isolated container workspace before final validation (claim.git.container_workspace_required)",
+                "Agent: run `decapod workspace ensure --container`; Decapod will ensure a coordination todo is captured, then enter the printed container command and rerun validation.",
             ),
             ctx,
         );

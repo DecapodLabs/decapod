@@ -287,7 +287,7 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
     let (_tmp, dir, password) = setup_workspace();
     let agent_id = "test-agent-enforce";
 
-    let no_todo = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let auto_todo = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["workspace", "ensure"])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", agent_id)
@@ -295,14 +295,73 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
         .output()
         .expect("workspace ensure");
     assert!(
-        !no_todo.status.success(),
-        "workspace ensure should fail without claimed todo"
+        auto_todo.status.success(),
+        "workspace ensure should auto-create and claim a coordination todo: {}",
+        String::from_utf8_lossy(&auto_todo.stderr)
     );
-    let no_todo_stderr = String::from_utf8_lossy(&no_todo.stderr);
+    let auto_json: serde_json::Value =
+        serde_json::from_slice(&auto_todo.stdout).expect("workspace ensure json");
+    let auto_branch = auto_json["branch"].as_str().expect("branch");
+    let tasks = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["todo", "--format", "json", "list", "--status", "open"])
+        .current_dir(&dir)
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .output()
+        .expect("todo list");
     assert!(
-        no_todo_stderr.contains("Agent must claim a todo"),
-        "expected todo claim guidance, got: {}",
-        no_todo_stderr
+        tasks.status.success(),
+        "todo list failed: {}",
+        String::from_utf8_lossy(&tasks.stderr)
+    );
+    let tasks_json: serde_json::Value =
+        serde_json::from_slice(&tasks.stdout).expect("todo list json");
+    let task_items = tasks_json
+        .get("tasks")
+        .and_then(|tasks| tasks.as_array())
+        .or_else(|| tasks_json.get("items").and_then(|items| items.as_array()))
+        .or_else(|| tasks_json.as_array())
+        .expect("tasks");
+    let generated_task = task_items
+        .iter()
+        .find(|task| {
+            task["title"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("Decapod workspace coordination")
+        })
+        .expect("auto-created coordination todo");
+    assert_eq!(generated_task["assigned_to"].as_str(), Some(agent_id));
+    let generated_task_id = generated_task["id"].as_str().expect("generated task id");
+    let generated_task_hash = generated_task["hash"]
+        .as_str()
+        .expect("generated task hash");
+    let generated_task_sanitized = sanitize_todo_component(generated_task_id);
+    assert!(
+        auto_branch.contains(generated_task_id)
+            || auto_branch.contains(generated_task_hash)
+            || auto_branch.contains(&generated_task_sanitized),
+        "auto-created workspace branch '{}' must contain generated Decapod todo id/hash",
+        auto_branch
+    );
+
+    Command::new("git")
+        .args(["checkout", "feat/test-enforcement"])
+        .current_dir(&dir)
+        .output()
+        .expect("git checkout original branch");
+
+    let no_todo_again = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["workspace", "ensure"])
+        .current_dir(&dir)
+        .env("DECAPOD_AGENT_ID", "other-agent")
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .output()
+        .expect("workspace ensure");
+    assert!(
+        no_todo_again.status.success(),
+        "workspace ensure should also generate a coordination todo for another agent: {}",
+        String::from_utf8_lossy(&no_todo_again.stderr)
     );
 
     let (task_id, task_hash) =
@@ -326,28 +385,70 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
     let worktree_path = json["worktree_path"].as_str().expect("worktree_path");
     let sanitized_todo = sanitize_todo_component(&task_id);
 
+    let sanitized_generated = sanitize_todo_component(generated_task_id);
     assert!(
         branch.contains(&task_hash)
             || branch.contains(&task_id)
-            || branch.contains(&sanitized_todo),
-        "branch '{}' must contain todo hash '{}' (or id '{}')",
-        branch,
-        task_hash,
-        task_id
+            || branch.contains(&sanitized_todo)
+            || branch.contains(generated_task_hash)
+            || branch.contains(generated_task_id)
+            || branch.contains(&sanitized_generated),
+        "branch '{}' must contain an assigned todo hash/id",
+        branch
     );
     assert!(
         worktree_path.contains(&task_hash)
             || worktree_path.contains(&task_id)
-            || worktree_path.contains(&sanitized_todo),
-        "worktree path '{}' must contain todo hash '{}' (or id '{}')",
-        worktree_path,
-        task_hash,
-        task_id
+            || worktree_path.contains(&sanitized_todo)
+            || worktree_path.contains(generated_task_hash)
+            || worktree_path.contains(generated_task_id)
+            || worktree_path.contains(&sanitized_generated),
+        "worktree path '{}' must contain an assigned todo hash/id",
+        worktree_path
     );
 }
 
 #[test]
-fn test_workspace_ensure_container_bypasses_claimed_todo_gate() {
+fn test_workspace_ensure_reuses_external_todo_ref_for_exclusive_claims() {
+    let (_tmp, dir, password) = setup_workspace();
+    let external_ref = "bd-568";
+
+    let first = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["workspace", "ensure"])
+        .current_dir(&dir)
+        .env("DECAPOD_AGENT_ID", "external-agent-one")
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .env("BD_TASK_ID", external_ref)
+        .output()
+        .expect("workspace ensure");
+    assert!(
+        first.status.success(),
+        "first workspace ensure should create and claim external coordination todo: {}",
+        String::from_utf8_lossy(&first.stderr)
+    );
+
+    let second = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["workspace", "ensure"])
+        .current_dir(&dir)
+        .env("DECAPOD_AGENT_ID", "external-agent-two")
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .env("BD_TASK_ID", external_ref)
+        .output()
+        .expect("workspace ensure");
+    assert!(
+        !second.status.success(),
+        "second workspace ensure should not create a duplicate Decapod todo for the same external task"
+    );
+    let second_stderr = String::from_utf8_lossy(&second.stderr);
+    assert!(
+        second_stderr.contains("WORKSPACE_TODO_CLAIM_CONFLICT"),
+        "expected claim conflict for reused external task ref, got: {}",
+        second_stderr
+    );
+}
+
+#[test]
+fn test_workspace_ensure_container_creates_coordination_todo() {
     let (_tmp, dir, password) = setup_workspace();
     let agent_id = "test-agent-container-no-todo";
 
@@ -377,7 +478,7 @@ fn test_workspace_ensure_container_bypasses_claimed_todo_gate() {
 
     assert!(
         out.status.success(),
-        "workspace ensure --container should not require a claimed todo: {}",
+        "workspace ensure --container should create and claim a coordination todo: {}",
         String::from_utf8_lossy(&out.stderr)
     );
 
@@ -392,15 +493,54 @@ fn test_workspace_ensure_container_bypasses_claimed_todo_gate() {
         serde_json::from_slice(&out.stdout).expect("workspace ensure --container json");
     let branch = json["branch"].as_str().expect("branch");
     let worktree_path = json["worktree_path"].as_str().expect("worktree_path");
+    let tasks = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["todo", "--format", "json", "list", "--status", "open"])
+        .current_dir(&dir)
+        .env("DECAPOD_AGENT_ID", agent_id)
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .output()
+        .expect("todo list");
+    assert!(
+        tasks.status.success(),
+        "todo list failed: {}",
+        String::from_utf8_lossy(&tasks.stderr)
+    );
+    let tasks_json: serde_json::Value =
+        serde_json::from_slice(&tasks.stdout).expect("todo list json");
+    let task_items = tasks_json
+        .get("tasks")
+        .and_then(|tasks| tasks.as_array())
+        .or_else(|| tasks_json.get("items").and_then(|items| items.as_array()))
+        .or_else(|| tasks_json.as_array())
+        .expect("tasks");
+    let generated_task = task_items
+        .iter()
+        .find(|task| {
+            task["title"]
+                .as_str()
+                .unwrap_or_default()
+                .contains("Decapod workspace coordination")
+        })
+        .expect("auto-created coordination todo");
+    assert_eq!(generated_task["assigned_to"].as_str(), Some(agent_id));
+    let generated_task_id = generated_task["id"].as_str().expect("generated task id");
+    let generated_task_hash = generated_task["hash"]
+        .as_str()
+        .expect("generated task hash");
+    let generated_task_sanitized = sanitize_todo_component(generated_task_id);
 
     assert!(
-        branch.contains("todo-unassigned"),
-        "unclaimed container branch should use unassigned scope, got: {}",
+        branch.contains(generated_task_id)
+            || branch.contains(generated_task_hash)
+            || branch.contains(&generated_task_sanitized),
+        "container branch should use generated todo scope, got: {}",
         branch
     );
     assert!(
-        worktree_path.contains("todo-unassigned"),
-        "unclaimed container worktree should use unassigned scope, got: {}",
+        worktree_path.contains(generated_task_id)
+            || worktree_path.contains(generated_task_hash)
+            || worktree_path.contains(&generated_task_sanitized),
+        "container worktree should use generated todo scope, got: {}",
         worktree_path
     );
 }

@@ -2897,7 +2897,7 @@ fn claim_status(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
     }))
 }
 
-fn claim_task(
+pub fn claim_task(
     root: &Path,
     id: &str,
     agent_id: &str,

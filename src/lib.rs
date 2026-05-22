@@ -561,6 +561,7 @@ const DIAGRAM_NOTATION_DESCRIPTIONS: &[&str] = &[
     "ASCII/text blocks readable in terminals and plain Markdown",
     "Mermaid diagrams rendered by GitHub Markdown from readable text source",
 ];
+const SELECTOR_VISIBLE_OPTIONS: usize = 10;
 
 fn normalize_language(input: &str) -> String {
     match input.trim().to_lowercase().as_str() {
@@ -700,6 +701,14 @@ fn selector_default_index(options: &[&str], default: &[String]) -> Option<usize>
         .and_then(|d| options.iter().position(|o| d.eq_ignore_ascii_case(o)))
 }
 
+fn selector_window_start(options_len: usize, selected: usize) -> usize {
+    if options_len <= SELECTOR_VISIBLE_OPTIONS {
+        0
+    } else {
+        selected.min(options_len - SELECTOR_VISIBLE_OPTIONS)
+    }
+}
+
 fn selector_render_lines(
     options: &[&str],
     descriptions: Option<&[&str]>,
@@ -715,7 +724,17 @@ fn selector_render_lines(
         typed.to_string()
     };
     let mut lines = vec![format!("{prompt}{input}")];
-    for (i, option) in options.iter().enumerate() {
+    let window_start = selector_window_start(options.len(), selected);
+    let window_end = (window_start + SELECTOR_VISIBLE_OPTIONS).min(options.len());
+    if window_start > 0 {
+        lines.push("    ↑ more".to_string());
+    }
+    for (i, option) in options
+        .iter()
+        .enumerate()
+        .skip(window_start)
+        .take(window_end.saturating_sub(window_start))
+    {
         let cursor = if i == selected { ">" } else { " " };
         let marker = if default_idx == Some(i) { "✓" } else { " " };
         let suffix = descriptions
@@ -726,6 +745,11 @@ fn selector_render_lines(
             "    {cursor} {marker} {:>2}. {option}{suffix}",
             i + 1
         ));
+    }
+    if window_end < options.len() {
+        lines.push("    ↓ more".to_string());
+    } else if options.len() > SELECTOR_VISIBLE_OPTIONS {
+        lines.push("    ↓ wraps to 1".to_string());
     }
     lines
 }
@@ -5746,10 +5770,9 @@ fn run_workspace_command(
         WorkspaceCommand::Ensure { branch, container } => {
             let agent_id =
                 std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
-
             let config = if branch.is_some() || container {
                 Some(workspace::WorkspaceConfig {
-                    branch: branch.unwrap_or_else(|| "".to_string()), // ensure_workspace handles empty branch if needed, but actually it creates one
+                    branch,
                     use_container: container,
                     base_image: if container {
                         Some("rust:1.91-slim".to_string())
@@ -5760,7 +5783,6 @@ fn run_workspace_command(
             } else {
                 None
             };
-
             let status = workspace::ensure_workspace(project_root, config, &agent_id)?;
 
             println!(
@@ -6093,7 +6115,7 @@ mod rpc_handlers {
 
         let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
         let config = params.branch.map(|b| workspace::WorkspaceConfig {
-            branch: b,
+            branch: Some(b),
             use_container: false,
             base_image: None,
         });
@@ -7984,6 +8006,66 @@ mod init_prompt_tests {
         let custom_lines =
             selector_render_for_input(LANGUAGES, None, &default, b"not-a-language\n");
         assert_eq!(custom_lines[0], "    choice: not-a-language");
+    }
+
+    #[test]
+    fn language_selector_limits_visible_options_and_marks_more_below() {
+        let default = vec!["Rust".to_string()];
+
+        let lines = selector_render_for_input(LANGUAGES, None, &default, b"\n");
+        let option_lines = lines
+            .iter()
+            .filter(|line| line.contains(". "))
+            .collect::<Vec<_>>();
+
+        assert_eq!(option_lines.len(), SELECTOR_VISIBLE_OPTIONS);
+        assert!(lines.iter().any(|line| line == "    ↓ more"));
+        assert!(
+            !lines
+                .iter()
+                .any(|line| line.contains(" 11. ") || line.contains(" 30. "))
+        );
+    }
+
+    #[test]
+    fn language_selector_wraps_from_bottom_to_top() {
+        let default = vec!["Other".to_string()];
+        let selected = selector_result_for_input(LANGUAGES, &default, b"\x1b[B\n");
+
+        assert_eq!(selected, "Rust");
+    }
+
+    #[test]
+    fn language_selector_shows_wrap_hint_at_bottom() {
+        let default = vec!["Other".to_string()];
+
+        let lines = selector_render_for_input(LANGUAGES, None, &default, b"\n");
+
+        assert!(lines.iter().any(|line| line == "    ↑ more"));
+        assert!(lines.iter().any(|line| line == "    ↓ wraps to 1"));
+        assert!(lines.iter().any(|line| line == "    > ✓ 30. Other"));
+    }
+
+    #[test]
+    fn language_selector_numeric_typing_moves_selection_into_view() {
+        let default = vec!["Rust".to_string()];
+
+        let lines = selector_render_for_input(LANGUAGES, None, &default, b"30\n");
+
+        assert_eq!(lines[0], "    choice: 30");
+        assert!(lines.iter().any(|line| line == "    >   30. Other"));
+        assert!(!lines.iter().any(|line| line.contains("  1. Rust")));
+    }
+
+    #[test]
+    fn language_selector_text_typing_moves_selection_into_view() {
+        let default = vec!["Rust".to_string()];
+
+        let lines = selector_render_for_input(LANGUAGES, None, &default, b"powershell\n");
+
+        assert_eq!(lines[0], "    choice: powershell");
+        assert!(lines.iter().any(|line| line == "    >   29. PowerShell"));
+        assert!(!lines.iter().any(|line| line.contains("  1. Rust")));
     }
 
     #[test]

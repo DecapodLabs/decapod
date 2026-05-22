@@ -67,7 +67,7 @@ pub struct ContainerStatus {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct WorkspaceConfig {
     /// Git branch name
-    pub branch: String,
+    pub branch: Option<String>,
     /// Whether to use container
     pub use_container: bool,
     /// Base image for container (if use_container is true)
@@ -297,6 +297,165 @@ fn check_container_status(_repo_root: &Path) -> Result<ContainerStatus, DecapodE
     })
 }
 
+fn external_task_ref() -> String {
+    [
+        "DECAPOD_TASK_ID",
+        "DECAPOD_EXTERNAL_TASK_ID",
+        "BD_TASK_ID",
+        "BEADS_TASK_ID",
+    ]
+    .iter()
+    .find_map(|key| {
+        std::env::var(key)
+            .ok()
+            .filter(|value| !value.trim().is_empty())
+    })
+    .unwrap_or_default()
+}
+
+fn create_and_claim_coordination_todo(
+    repo_root: &Path,
+    agent_id: &str,
+) -> Result<AssignedTodoRef, DecapodError> {
+    let main_repo = get_main_repo_root(repo_root)?;
+    let store_root = main_repo.join(".decapod").join("data");
+    let external_ref = external_task_ref();
+    if !external_ref.is_empty() {
+        let tasks = todo::list_tasks(
+            &store_root,
+            Some("open".to_string()),
+            None,
+            None,
+            None,
+            None,
+        )?;
+        if let Some(task) = tasks.into_iter().find(|task| task.r#ref == external_ref) {
+            let claim =
+                todo::claim_task(&store_root, &task.id, agent_id, todo::ClaimMode::Exclusive)?;
+            if claim.get("status").and_then(|value| value.as_str()) != Some("ok") {
+                return Err(DecapodError::ValidationError(format!(
+                    "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"inspect `decapod todo list`; Decapod already captured external task {} as a coordination todo, so coordinate with the current claimant or wait for release before launching another workspace\" user_note=\"Decapod is protecting this external task with an exclusive todo claim; no work is lost, but another agent already owns the isolated workspace slot.\"\n{}",
+                    external_ref, claim
+                )));
+            }
+            return Ok(AssignedTodoRef {
+                id: task.id,
+                hash: task.hash,
+            });
+        }
+    }
+    let title = if external_ref.is_empty() {
+        format!("Decapod workspace coordination for {}", agent_id)
+    } else {
+        format!("Decapod workspace coordination for {}", external_ref)
+    };
+    let description = if external_ref.is_empty() {
+        "Auto-created by decapod workspace ensure so Decapod can enforce exclusive agent ownership while an external todo system may also be in use.".to_string()
+    } else {
+        format!(
+            "Auto-created by decapod workspace ensure to coordinate exclusive Decapod ownership for external task {}.",
+            external_ref
+        )
+    };
+    let command = todo::TodoCommand::Add {
+        title,
+        description,
+        priority: "medium".to_string(),
+        tags: "workspace,coordination,auto-generated".to_string(),
+        owner: String::new(),
+        due: None,
+        r#ref: external_ref,
+        scope: "workspace".to_string(),
+        dir: Some(main_repo.to_string_lossy().to_string()),
+        depends_on: String::new(),
+        blocks: String::new(),
+        parent: None,
+        one_shot: 1,
+    };
+    let added = todo::add_task(&store_root, &command)?;
+    let id = added
+        .get("id")
+        .and_then(|value| value.as_str())
+        .ok_or_else(|| {
+            DecapodError::ValidationError("workspace auto-created todo without id".to_string())
+        })?
+        .to_string();
+    let hash = added
+        .get("hash")
+        .and_then(|value| value.as_str())
+        .unwrap_or("")
+        .to_string();
+    let claim = todo::claim_task(&store_root, &id, agent_id, todo::ClaimMode::Exclusive)?;
+    if claim.get("status").and_then(|value| value.as_str()) != Some("ok") {
+        return Err(DecapodError::ValidationError(format!(
+            "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"inspect `decapod todo list`; Decapod created a workspace coordination todo and is waiting for an exclusive claim before container launch continues\" user_note=\"Decapod has captured the workspace intent as a todo; resolve the claim conflict and rerun the command.\"\n{}",
+            claim
+        )));
+    }
+    Ok(AssignedTodoRef { id, hash })
+}
+
+fn ensure_assigned_open_tasks(
+    repo_root: &Path,
+    agent_id: &str,
+    current_branch: &str,
+) -> Result<Vec<AssignedTodoRef>, DecapodError> {
+    let mut assigned_todos = get_assigned_open_tasks(repo_root, agent_id)?;
+    claim_branch_scoped_open_tasks(repo_root, agent_id, current_branch, &mut assigned_todos)?;
+    if assigned_todos.is_empty() {
+        assigned_todos.push(create_and_claim_coordination_todo(repo_root, agent_id)?);
+    }
+    assigned_todos.sort_by(|a, b| a.id.cmp(&b.id));
+    assigned_todos.dedup_by(|a, b| a.id == b.id);
+    Ok(assigned_todos)
+}
+
+fn claim_branch_scoped_open_tasks(
+    repo_root: &Path,
+    agent_id: &str,
+    current_branch: &str,
+    assigned_todos: &mut Vec<AssignedTodoRef>,
+) -> Result<(), DecapodError> {
+    let main_repo = get_main_repo_root(repo_root)?;
+    let store_root = main_repo.join(".decapod").join("data");
+    let tasks = todo::list_tasks(
+        &store_root,
+        Some("open".to_string()),
+        None,
+        None,
+        None,
+        None,
+    )?;
+    for task in tasks {
+        let todo_ref = AssignedTodoRef {
+            id: task.id.clone(),
+            hash: task.hash.clone(),
+        };
+        if !branch_contains_any_todo_id_or_hash(current_branch, std::slice::from_ref(&todo_ref)) {
+            continue;
+        }
+        if task.assigned_to == agent_id {
+            assigned_todos.push(todo_ref);
+            continue;
+        }
+        if !task.assigned_to.is_empty() {
+            return Err(DecapodError::ValidationError(format!(
+                "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"switch to the agent that owns todo {} or choose a different todo-scoped workspace; Decapod is preventing cross-work while preserving the captured todo\" user_note=\"This branch already belongs to another agent's Decapod todo claim; use the owner or a different todo-scoped workspace.\"\nBranch '{}' is scoped to todo {} but it is already claimed by {}.",
+                task.id, current_branch, task.id, task.assigned_to
+            )));
+        }
+        let claim = todo::claim_task(&store_root, &task.id, agent_id, todo::ClaimMode::Exclusive)?;
+        if claim.get("status").and_then(|value| value.as_str()) != Some("ok") {
+            return Err(DecapodError::ValidationError(format!(
+                "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"inspect `decapod todo list`; Decapod found the branch-scoped todo {} and needs its exclusive claim before container launch continues\" user_note=\"The branch todo is captured; resolve the claim conflict and rerun the workspace command.\"\n{}",
+                task.id, claim
+            )));
+        }
+        assigned_todos.push(todo_ref);
+    }
+    Ok(())
+}
+
 /// Ensure/create isolated workspace
 pub fn ensure_workspace(
     repo_root: &Path,
@@ -318,15 +477,9 @@ pub fn ensure_workspace(
             "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_INTERLOCK_DIRTY_PROTECTED severity=transient auto_remediable=true audience=agent agent_action=\"commit, stash, or discard local changes on the protected branch, then retry workspace creation\" user_note=\"Protected branch has local modifications; the agent should resolve this before creating an isolated worktree.\"\nprotected branch has local modifications. Agent must commit, stash, or discard changes before creating a Decapod worktree.".to_string(),
         ));
     }
-    let assigned_todos = get_assigned_open_tasks(repo_root, agent_id)?;
     let upgrade_container = config.as_ref().map(|c| c.use_container).unwrap_or(false);
-
-    if assigned_todos.is_empty() && !upgrade_container {
-        return Err(DecapodError::ValidationError(format!(
-            "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_NO_CLAIMED_TODO severity=transient auto_remediable=true audience=agent agent_action=\"claim a todo with `decapod todo claim --id <task-id>` before spawning a worktree\" user_note=\"No todo is assigned to this agent; the agent should claim an open task first.\"\nNo claimed or open todo assigned to agent '{}'. Agent must claim a todo before spawning a worktree.",
-            agent_id
-        )));
-    }
+    let assigned_todos =
+        ensure_assigned_open_tasks(repo_root, agent_id, &status.git.current_branch)?;
 
     // If we're already in a valid worktree, on todo-scoped branch, and no upgrade needed, we're good.
     if status.git.in_worktree
@@ -350,61 +503,67 @@ pub fn ensure_workspace(
     }
 
     let todo_scope = build_todo_scope_component(&assigned_todos);
-    let config = if let Some(mut cfg) = config {
-        if cfg.branch.is_empty() {
+    let config = if let Some(cfg) = config {
+        if let Some(branch) = cfg.branch.as_ref()
+            && !branch_contains_any_todo_id_or_hash(branch, &assigned_todos)
+        {
+            return Err(DecapodError::ValidationError(format!(
+                "Requested branch '{}' must include an assigned todo ID/hash (one of: {}).",
+                branch,
+                render_todo_refs(&assigned_todos)
+            )));
+        }
+        let branch = cfg.branch.unwrap_or_else(|| {
             let ts = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_secs();
-            cfg.branch = format!(
+            format!(
                 "agent/{}/{}-{}",
                 sanitize_agent_id(agent_id),
                 todo_scope,
                 ts
-            );
+            )
+        });
+        WorkspaceConfig {
+            branch: Some(branch),
+            use_container: cfg.use_container,
+            base_image: cfg.base_image,
         }
-
-        if !assigned_todos.is_empty()
-            && !branch_contains_any_todo_id_or_hash(&cfg.branch, &assigned_todos)
-        {
-            return Err(DecapodError::ValidationError(format!(
-                "Requested branch '{}' must include an assigned todo ID/hash (one of: {}).",
-                cfg.branch,
-                render_todo_refs(&assigned_todos)
-            )));
-        }
-        cfg
     } else {
         let ts = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
         WorkspaceConfig {
-            branch: format!(
+            branch: Some(format!(
                 "agent/{}/{}-{}",
                 sanitize_agent_id(agent_id),
                 todo_scope,
                 ts
-            ),
+            )),
             use_container: false,
             base_image: None,
         }
     };
+    let branch = config.branch.as_deref().ok_or_else(|| {
+        DecapodError::ValidationError("workspace branch resolution failed".to_string())
+    })?;
 
     // 1. Ensure git worktree
     let worktree_path = if status.git.in_worktree {
         repo_root.to_path_buf()
     } else {
-        create_worktree(repo_root, &config.branch, agent_id, &todo_scope)?
+        create_worktree(repo_root, branch, agent_id, &todo_scope)?
     };
 
     // 2. Ensure container (if requested)
     if config.use_container {
         ensure_dockerfile(&worktree_path)?;
         let image_tag = format!(
-            "decapod-workspace:{}-{}",
+            "localhost/decapod-workspace:{}-{}",
             sanitize_agent_id(agent_id),
-            config.branch.replace('/', "-")
+            branch.replace('/', "-")
         );
         build_workspace_image(&worktree_path, &image_tag)?;
 
@@ -415,9 +574,10 @@ pub fn ensure_workspace(
             kind: BlockerKind::WorkspaceRequired,
             message: "Container environment prepared.".to_string(),
             resolve_hint: format!(
-                "cd {} && docker run -it -v $(pwd):/workspace {} bash",
+                "docker run -it -e DECAPOD_CONTAINER=1 -v {main_repo}:{main_repo} -w {} {} bash",
                 worktree_path.display(),
-                image_tag
+                image_tag,
+                main_repo = main_repo.display(),
             ),
         });
         status
@@ -556,6 +716,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     build-essential \
     pkg-config \
+    libsqlite3-dev \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
