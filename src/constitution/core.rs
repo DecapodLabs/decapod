@@ -3,6 +3,7 @@
 pub use crate::core::assets;
 pub use crate::core::broker;
 pub use crate::core::db;
+pub use crate::core::docs_cli;
 pub use crate::core::error;
 pub use crate::core::migration;
 pub use crate::core::proof;

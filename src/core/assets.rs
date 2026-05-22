@@ -221,7 +221,7 @@ See `AGENTS.md` for the universal contract.
 
 ```bash
 cargo install decapod
-decapod validate && decapod session acquire
+decapod validate && decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -262,7 +262,7 @@ Stop if requirements are ambiguous or conflicting.
 fn template_agents() -> String {
     r#"# AGENTS.md — Universal Agent Contract
 
-This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod control plane.**
+This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
 
 This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any other agent operating here.
 
@@ -270,7 +270,7 @@ This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any ot
 
 ```bash
 cargo install decapod
-decapod validate && decapod session acquire
+decapod validate && decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -339,6 +339,7 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 
 ## Safety Invariants
 - ✅ Router pointer: `core/DECAPOD` | ✅ Validation gate: `decapod validate`
+- ✅ Constitution ingestion gate: `decapod docs ingest`
 - ✅ Constitution RPC gate: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
 - ✅ Workspace status gate: `decapod workspace status`
 - ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`
@@ -522,14 +523,29 @@ over the embedded JSON constitution.
     .to_string();
 
     // Group nodes by category for the template
-    let mut categories: HashMap<&str, Vec<&str>> = HashMap::new();
+    let mut categories: std::collections::HashMap<&str, Vec<&str>> = std::collections::HashMap::new();
     let mut ids = list_ids();
     ids.sort();
 
-    for id in ids {
+    for id in &ids {
         if let Some((cat, _title, _deps)) = get_metadata(id) {
             categories.entry(cat).or_default().push(id);
         }
+    }
+    
+    // Manually add specs to the template since they are generated
+    let specs = [
+        "specs/README.md",
+        "specs/INTENT.md",
+        "specs/ARCHITECTURE.md",
+        "specs/INTERFACES.md",
+        "specs/VALIDATION.md",
+        "specs/SEMANTICS.md",
+        "specs/OPERATIONS.md",
+        "specs/SECURITY.md",
+    ];
+    for spec in &specs {
+        categories.entry("specs").or_default().push(spec);
     }
 
     let cat_order = [

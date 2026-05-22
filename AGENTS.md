@@ -1,6 +1,6 @@
 # AGENTS.md — Universal Agent Contract
 
-This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod control plane.**
+This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
 
 This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any other agent operating here.
 
@@ -8,7 +8,7 @@ This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any ot
 
 ```bash
 cargo install decapod
-decapod validate && decapod session acquire
+decapod validate && decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -77,6 +77,7 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 
 ## Safety Invariants
 - ✅ Router pointer: `core/DECAPOD` | ✅ Validation gate: `decapod validate`
+- ✅ Constitution ingestion gate: `decapod docs ingest`
 - ✅ Constitution RPC gate: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
 - ✅ Workspace status gate: `decapod workspace status`
 - ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`

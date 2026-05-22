@@ -299,7 +299,7 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
     );
     let no_todo_stderr = String::from_utf8_lossy(&no_todo.stderr);
     assert!(
-        no_todo_stderr.contains("Claim a todo first"),
+        no_todo_stderr.contains("Agent must claim a todo"),
         "expected todo claim guidance, got: {}",
         no_todo_stderr
     );

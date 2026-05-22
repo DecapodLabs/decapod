@@ -14,6 +14,7 @@ pub mod context_capsule;
 pub mod coplayer;
 pub mod db;
 pub mod docs;
+pub mod docs_cli;
 pub mod error;
 pub mod external_action;
 pub mod flight_recorder;

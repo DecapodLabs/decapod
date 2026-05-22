@@ -1265,7 +1265,7 @@ pub fn scaffold_project_entrypoints(
         let seed = opts.specs_seed.as_ref();
         let mut specs_files: Vec<(&str, String)> = Vec::new();
         for spec in LOCAL_PROJECT_SPECS {
-            let content = match spec.path {
+            let mut content = match spec.path {
                 LOCAL_PROJECT_SPECS_README => specs_readme_template(seed),
                 LOCAL_PROJECT_SPECS_INTENT => specs_intent_template(seed),
                 LOCAL_PROJECT_SPECS_ARCHITECTURE => {
@@ -1278,6 +1278,17 @@ pub fn scaffold_project_entrypoints(
                 LOCAL_PROJECT_SPECS_SECURITY => specs_security_template(seed),
                 _ => continue,
             };
+
+            // Check for overrides in OVERRIDE.md
+            let override_id = spec.path.strip_prefix(".decapod/generated/").unwrap_or(spec.path);
+            if let Some(override_content) = assets::get_override_doc(&opts.target_dir, override_id) {
+                content = format!(
+                    "{}\n\n---\n\n## Project Overrides\n\n{}",
+                    content.trim(),
+                    override_content.trim()
+                );
+            }
+
             specs_files.push((spec.path, content));
         }
 
