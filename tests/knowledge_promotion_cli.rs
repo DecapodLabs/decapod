@@ -67,7 +67,7 @@ fn knowledge_promote_writes_append_only_ledger_event() {
             "--evidence-ref",
             "commit:abc123",
             "--evidence-ref",
-            "file:docs/spec.json#L10",
+            "file:docs/spec.md#L10",
             "--approved-by",
             "human/reviewer-1",
             "--reason",

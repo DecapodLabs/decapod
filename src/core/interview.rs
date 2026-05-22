@@ -103,7 +103,8 @@ fn get_all_questions() -> Vec<Question> {
             text: "What is the name of this project?".to_string(),
             why_it_matters:
                 "The project name appears in all documentation and identifies the work.".to_string(),
-            lands_in: "docs/spec.json (title), docs/architecture.json".to_string(),
+            lands_in: "constitution.json#docs/SPEC (title), constitution.json#docs/ARCHITECTURE"
+                .to_string(),
             answer_type: AnswerType::Text,
             default_value: None,
             options: None,
@@ -116,7 +117,7 @@ fn get_all_questions() -> Vec<Question> {
             why_it_matters:
                 "A clear one-liner helps everyone quickly understand the project's purpose."
                     .to_string(),
-            lands_in: "docs/spec.json (summary), README.md".to_string(),
+            lands_in: "constitution.json#docs/SPEC (summary), README.md".to_string(),
             answer_type: AnswerType::Text,
             default_value: None,
             options: None,
@@ -129,7 +130,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "What problem does this project solve?".to_string(),
             why_it_matters: "Understanding the problem ensures the solution is fit for purpose."
                 .to_string(),
-            lands_in: "docs/spec.json (problem statement)".to_string(),
+            lands_in: "constitution.json#docs/SPEC (problem statement)".to_string(),
             answer_type: AnswerType::Text,
             default_value: None,
             options: None,
@@ -141,7 +142,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "How will we know this project is successful?".to_string(),
             why_it_matters: "Success criteria define when the work is done and working."
                 .to_string(),
-            lands_in: "docs/spec.json (success criteria)".to_string(),
+            lands_in: "constitution.json#docs/SPEC (success criteria)".to_string(),
             answer_type: AnswerType::Text,
             default_value: None,
             options: None,
@@ -154,7 +155,8 @@ fn get_all_questions() -> Vec<Question> {
             text: "What programming language will you use?".to_string(),
             why_it_matters: "Language choice affects tooling, dependencies, and deployment."
                 .to_string(),
-            lands_in: "docs/architecture.json (runtime), docs/ops.json".to_string(),
+            lands_in: "constitution.json#docs/ARCHITECTURE (runtime), constitution.json#docs/OPS"
+                .to_string(),
             answer_type: AnswerType::Choice,
             default_value: Some("Rust".to_string()),
             options: Some(vec![
@@ -172,7 +174,9 @@ fn get_all_questions() -> Vec<Question> {
             text: "How will this be deployed?".to_string(),
             why_it_matters: "Deployment approach affects build configuration and operations."
                 .to_string(),
-            lands_in: "docs/ops.json (deployment), docs/architecture.json".to_string(),
+            lands_in:
+                "constitution.json#docs/OPS (deployment), constitution.json#docs/ARCHITECTURE"
+                    .to_string(),
             answer_type: AnswerType::Choice,
             default_value: Some("Docker container".to_string()),
             options: Some(vec![
@@ -191,7 +195,7 @@ fn get_all_questions() -> Vec<Question> {
             section: "architecture".to_string(),
             text: "What are the main components/modules?".to_string(),
             why_it_matters: "Component breakdown guides implementation structure.".to_string(),
-            lands_in: "docs/architecture.json (components)".to_string(),
+            lands_in: "constitution.json#docs/ARCHITECTURE (components)".to_string(),
             answer_type: AnswerType::Text,
             default_value: None,
             options: None,
@@ -203,7 +207,8 @@ fn get_all_questions() -> Vec<Question> {
             text: "How will data be stored?".to_string(),
             why_it_matters: "Storage choices affect reliability, performance, and operations."
                 .to_string(),
-            lands_in: "docs/architecture.json (data), docs/ops.json".to_string(),
+            lands_in: "constitution.json#docs/ARCHITECTURE (data), constitution.json#docs/OPS"
+                .to_string(),
             answer_type: AnswerType::Choice,
             default_value: Some("SQLite (local)".to_string()),
             options: Some(vec![
@@ -258,7 +263,7 @@ fn get_all_questions() -> Vec<Question> {
             section: "operations".to_string(),
             text: "What log level is appropriate for production?".to_string(),
             why_it_matters: "Log levels affect observability and storage costs.".to_string(),
-            lands_in: "docs/ops.json (monitoring)".to_string(),
+            lands_in: "constitution.json#docs/OPS (monitoring)".to_string(),
             answer_type: AnswerType::Choice,
             default_value: Some("info".to_string()),
             options: Some(vec![
@@ -274,7 +279,7 @@ fn get_all_questions() -> Vec<Question> {
             section: "operations".to_string(),
             text: "What health checks are needed?".to_string(),
             why_it_matters: "Health checks enable automated recovery and monitoring.".to_string(),
-            lands_in: "docs/ops.json (health)".to_string(),
+            lands_in: "constitution.json#docs/OPS (health)".to_string(),
             answer_type: AnswerType::Text,
             default_value: Some("Basic liveness check".to_string()),
             options: None,
@@ -409,7 +414,7 @@ This specification defines the functional and non-functional requirements for {p
 
     Ok(Artifact {
         artifact_type: "spec".to_string(),
-        path: output_dir.join("docs/spec.json"),
+        path: output_dir.join("docs/spec.md"),
         content,
     })
 }
@@ -460,7 +465,7 @@ fn generate_architecture(
 
     Ok(Artifact {
         artifact_type: "architecture".to_string(),
-        path: output_dir.join("docs/architecture.json"),
+        path: output_dir.join("docs/architecture.md"),
         content,
     })
 }

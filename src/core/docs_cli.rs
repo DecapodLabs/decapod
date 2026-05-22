@@ -120,7 +120,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             let docs = assets::list_docs();
             println!("Embedded Decapod Constitution Sections:");
             for doc in docs {
-                println!("- constitution.json#{}", doc);
+                println!("- embedded/constitution.json#{}", doc);
             }
             if let Ok(current_dir) = std::env::current_dir()
                 && let Ok(repo_root) = find_repo_root(&current_dir)
@@ -217,9 +217,9 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
                 }
 
                 if let Some(content) = assets::get_merged_doc(&repo_root, relative_path) {
-                    println!("--- BEGIN constitution.json#{} ---", doc_path);
+                    println!("--- BEGIN embedded/constitution.json#{} ---", doc_path);
                     println!("{}", content);
-                    println!("--- END constitution.json#{} ---", doc_path);
+                    println!("--- END embedded/constitution.json#{} ---", doc_path);
                 }
             }
             Ok(DocsRunResult {
