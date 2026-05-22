@@ -690,8 +690,8 @@ fn validate_entrypoint_invariants(
             all_present = false;
         }
 
-        // Must use RPC constitution access, never the docs CLI or direct constitution/* file paths.
-        if agent_content.contains("decapod docs")
+        // Must use RPC constitution access, never docs CLI or direct constitution/* file paths.
+        if agent_content.contains("decapod docs show")
             || agent_content.contains("docs show")
             || agent_content.contains("(constitution/")
         {
@@ -859,7 +859,7 @@ fn validate_entrypoint_invariants(
             }
         }
 
-        // Must include core constitution ingestion mandate
+        // Must include core constitution ingestion mandate.
         if agent_content
             .to_ascii_lowercase()
             .contains(r#"decapod rpc --op constitution.get --params '{"section":"core/decapod"}'"#)

@@ -588,6 +588,11 @@ fn test_entrypoints_use_embedded_docs_paths_only() {
             file
         );
         assert!(
+            !content.contains("decapod docs show"),
+            "{} must use constitution.get RPC instead of docs show",
+            file
+        );
+        assert!(
             content.contains(
                 r#"decapod rpc --op constitution.get --params '{"section":"docs/PLAYBOOK"}'"#,
             ),
