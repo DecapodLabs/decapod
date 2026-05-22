@@ -2,7 +2,7 @@
 //!
 //! All clap-derived types live here. Dispatch logic lives in `dispatch/`.
 
-use crate::core::{docs_cli, flight_recorder, obligation, plan_governance, todo, workunit};
+use crate::core::{flight_recorder, obligation, plan_governance, todo, workunit};
 use crate::plugins::{
     aptitude, container, cron, decide, doctor, eval, federation, health, internalize, lcm, map_ops,
     policy, primitives, reflex, verify, workflow,
@@ -708,9 +708,6 @@ pub(crate) enum Command {
     #[clap(name = "session", visible_alias = "s")]
     Session(SessionCli),
 
-    /// Access methodology documentation
-    #[clap(name = "docs", visible_alias = "d")]
-    Docs(docs_cli::DocsCli),
 
     /// Track tasks and work items
     #[clap(name = "todo", visible_alias = "t")]

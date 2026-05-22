@@ -15,7 +15,7 @@ pub(crate) mod subsystems;
 use cli::*;
 
 use core::{
-    db, docs, docs_cli, error, flight_recorder, migration, obligation, plan_governance, proof,
+    db, docs, error, flight_recorder, migration, obligation, plan_governance, proof,
     repomap, scaffold, state_commit,
     store::{Store, StoreKind},
     todo, trace, validate, workspace,
@@ -129,7 +129,7 @@ fn seed_init_generated_state(target_dir: &Path, dry_run: bool) -> Result<(), err
         return Ok(());
     }
 
-    let _ = docs_cli::sync_override_checksum(target_dir, false)?;
+    let _ = docs::sync_override_checksum(target_dir, false)?;
     Ok(())
 }
 
@@ -1816,12 +1816,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                     run_validate_command(validate_cli, &project_root, &project_store)?;
                 }
                 Command::Version => show_version_info()?,
-                Command::Docs(docs_cli) => {
-                    let result = docs_cli::run_docs_cli(docs_cli)?;
-                    if result.ingested_core_constitution {
-                        mark_core_constitution_ingested(&project_root, "docs.ingest")?;
-                    }
-                }
                 Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
                 Command::Obligation(obligation_cli) => {
                     obligation::run_obligation_cli(&project_store, obligation_cli)?
@@ -1993,7 +1987,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Capabilities(_)
         | Command::Trace(_)
         | Command::FlightRecorder(_)
-        | Command::Docs(_)
+        
         | Command::Handshake(_)
         | Command::Release(_)
         | Command::Todo(_)
@@ -2026,7 +2020,7 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
         command,
         Command::Validate(_)
             | Command::Activate
-            | Command::Docs(_)
+            
             | Command::Release(_)
             | Command::Trace(_)
             | Command::Capabilities(_)
@@ -2041,7 +2035,7 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
         command,
         Command::Validate(_)
             | Command::Activate
-            | Command::Docs(_)
+            
             | Command::Release(_)
             | Command::Trace(_)
             | Command::Capabilities(_)
@@ -2212,7 +2206,7 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Session(_)
         | Command::Version
         | Command::Activate
-        | Command::Docs(_)
+        
         | Command::Capabilities(_)
         | Command::Release(_)
         | Command::Trace(_)
@@ -4098,15 +4092,15 @@ fn heal_validation_scaffold(
 fn heal_override_checksum(
     project_root: &Path,
 ) -> Result<Option<ValidationHealAction>, error::DecapodError> {
-    match docs_cli::sync_override_checksum(project_root, false)? {
-        docs_cli::OverrideChecksumStatus::MissingOverride
-        | docs_cli::OverrideChecksumStatus::Unchanged => Ok(None),
-        docs_cli::OverrideChecksumStatus::Cached => Ok(Some(ValidationHealAction {
+    match docs::sync_override_checksum(project_root, false)? {
+        docs::OverrideChecksumStatus::MissingOverride
+        | docs::OverrideChecksumStatus::Unchanged => Ok(None),
+        docs::OverrideChecksumStatus::Cached => Ok(Some(ValidationHealAction {
             action: "heal_override_checksum".to_string(),
             outcome: "cached".to_string(),
             detail: "Cached OVERRIDE.md checksum for deterministic governance reads.".to_string(),
         })),
-        docs_cli::OverrideChecksumStatus::Updated => Ok(Some(ValidationHealAction {
+        docs::OverrideChecksumStatus::Updated => Ok(Some(ValidationHealAction {
             action: "heal_override_checksum".to_string(),
             outcome: "refreshed".to_string(),
             detail: "Refreshed OVERRIDE.md checksum after local override drift.".to_string(),
@@ -5374,7 +5368,6 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("federation", federation::schema());
     schemas.insert("primitives", primitives::schema());
     schemas.insert("decide", decide::schema());
-    schemas.insert("docs", docs_cli::schema());
     schemas.insert("deprecations", deprecation_metadata());
     schemas.insert("lcm", lcm::schema());
     schemas.insert("map", map_ops::schema());

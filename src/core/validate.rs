@@ -580,7 +580,6 @@ fn validate_entrypoint_invariants(
         ("core/decapod", "Router pointer to core/DECAPOD"),
         ("cargo install decapod", "Version update gate language"),
         ("decapod validate", "Validation gate language"),
-        ("decapod docs ingest", "Constitution ingestion gate language"),
         (
             r#"decapod rpc --op constitution.get --params '{"section":"core/decapod"}'"#,
             "Core constitution RPC mandate language",
@@ -691,20 +690,8 @@ fn validate_entrypoint_invariants(
             all_present = false;
         }
 
-        // Must use RPC constitution access, never docs CLI or direct constitution/* file paths.
-        if agent_content.contains("decapod docs show")
-            || agent_content.contains("docs show")
-            || agent_content.contains("(constitution/")
-        {
-            fail(
-                &format!(
-                    "{} references docs CLI or direct constitution paths; use constitution.get RPC",
-                    agent_file
-                ),
-                ctx,
-            );
-            all_present = false;
-        } else if agent_content.contains("constitution.get") {
+        // Must use RPC constitution access.
+        if agent_content.contains("constitution.get") {
             pass(
                 &format!("{} references constitution.get RPC", agent_file),
                 ctx,
