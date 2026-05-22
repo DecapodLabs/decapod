@@ -546,7 +546,7 @@ fn ensure_dockerfile(workspace_path: &Path) -> Result<(), DecapodError> {
     let dockerfile_content = r#"# Decapod Workspace Dockerfile
 # Auto-generated for reproducible agent environments
 
-FROM rust:1.75-slim
+FROM rust:1.91-slim
 
 # Install essential tools
 RUN apt-get update && apt-get install -y \

@@ -5752,7 +5752,7 @@ fn run_workspace_command(
                     branch: branch.unwrap_or_else(|| "".to_string()), // ensure_workspace handles empty branch if needed, but actually it creates one
                     use_container: container,
                     base_image: if container {
-                        Some("rust:1.75-slim".to_string())
+                        Some("rust:1.91-slim".to_string())
                     } else {
                         None
                     },
