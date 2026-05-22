@@ -319,18 +319,18 @@ pub fn ensure_workspace(
         ));
     }
     let assigned_todos = get_assigned_open_tasks(repo_root, agent_id)?;
-    if assigned_todos.is_empty() {
+    let upgrade_container = config.as_ref().map(|c| c.use_container).unwrap_or(false);
+
+    if assigned_todos.is_empty() && !upgrade_container {
         return Err(DecapodError::ValidationError(format!(
             "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_NO_CLAIMED_TODO severity=transient auto_remediable=true audience=agent agent_action=\"claim a todo with `decapod todo claim --id <task-id>` before spawning a worktree\" user_note=\"No todo is assigned to this agent; the agent should claim an open task first.\"\nNo claimed or open todo assigned to agent '{}'. Agent must claim a todo before spawning a worktree.",
             agent_id
         )));
     }
 
-    // If config is provided, check if we need to upgrade context (e.g. add container)
-    let upgrade_container = config.as_ref().map(|c| c.use_container).unwrap_or(false);
-
     // If we're already in a valid worktree, on todo-scoped branch, and no upgrade needed, we're good.
     if status.git.in_worktree
+        && !assigned_todos.is_empty()
         && !branch_contains_any_todo_id_or_hash(&status.git.current_branch, &assigned_todos)
     {
         return Err(DecapodError::ValidationError(format!(
@@ -350,8 +350,21 @@ pub fn ensure_workspace(
     }
 
     let todo_scope = build_todo_scope_component(&assigned_todos);
-    let config = if let Some(cfg) = config {
-        if !branch_contains_any_todo_id_or_hash(&cfg.branch, &assigned_todos) {
+    let config = if let Some(mut cfg) = config {
+        if cfg.branch.is_empty() {
+            let ts = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_secs();
+            cfg.branch = format!(
+                "agent/{}/{}-{}",
+                sanitize_agent_id(agent_id),
+                todo_scope,
+                ts
+            );
+        }
+
+        if !assigned_todos.is_empty() && !branch_contains_any_todo_id_or_hash(&cfg.branch, &assigned_todos) {
             return Err(DecapodError::ValidationError(format!(
                 "Requested branch '{}' must include an assigned todo ID/hash (one of: {}).",
                 cfg.branch,

@@ -5746,15 +5746,21 @@ fn run_workspace_command(
         WorkspaceCommand::Ensure { branch, container } => {
             let agent_id =
                 std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
-            let config = branch.map(|b| workspace::WorkspaceConfig {
-                branch: b,
-                use_container: container,
-                base_image: if container {
-                    Some("rust:1.75-slim".to_string())
-                } else {
-                    None
-                },
-            });
+            
+            let config = if branch.is_some() || container {
+                Some(workspace::WorkspaceConfig {
+                    branch: branch.unwrap_or_else(|| "".to_string()), // ensure_workspace handles empty branch if needed, but actually it creates one
+                    use_container: container,
+                    base_image: if container {
+                        Some("rust:1.75-slim".to_string())
+                    } else {
+                        None
+                    },
+                })
+            } else {
+                None
+            };
+
             let status = workspace::ensure_workspace(project_root, config, &agent_id)?;
 
             println!(
