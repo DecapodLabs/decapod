@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 
 /// Binding contract for the Decapod Constitution Graph
@@ -17,6 +18,18 @@ pub struct ConstitutionNode {
     pub category: String,
     /// IDs of nodes this node depends on
     pub dependencies: Vec<String>,
-    /// Full Markdown content
-    pub content: String,
+    /// Structured section content rendered from the embedded constitution asset.
+    pub content: ConstitutionContent,
+}
+
+/// Structured content for a constitution node.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ConstitutionContent {
+    /// Short node summary.
+    pub summary: String,
+    /// Named subsections for sectional retrieval.
+    pub sections: HashMap<String, Value>,
+    /// Optional cross-reference metadata for this node.
+    #[serde(default)]
+    pub links: HashMap<String, Value>,
 }

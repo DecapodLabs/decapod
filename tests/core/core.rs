@@ -604,9 +604,13 @@ fn repomap_detects_manifests_entrypoints_and_docs() {
     fs::write(root.join("Makefile"), "all:\n\techo ok\n").expect("write Makefile");
     fs::write(root.join("src/main.rs"), "fn main() {}\n").expect("write main.rs");
 
-    fs::write(root.join("docs/a"), "Link: [B](b.md)\nMention docs/c\n").expect("write a.md");
-    fs::write(root.join("docs/b"), "Backlink ../docs/a\n").expect("write b.md");
-    fs::write(root.join("docs/c"), "Leaf\n").expect("write c.md");
+    fs::write(
+        root.join("docs/a.md"),
+        "Link: [B](b.md)\nMention docs/c.md\n",
+    )
+    .expect("write a.md");
+    fs::write(root.join("docs/b.md"), "Backlink ../docs/a.md\n").expect("write b.md");
+    fs::write(root.join("docs/c.md"), "Leaf\n").expect("write c.md");
 
     let map = repomap::generate_map(root);
     assert_eq!(map.manifests.get("Cargo.toml"), Some(&"rust".to_string()));
@@ -617,13 +621,13 @@ fn repomap_detects_manifests_entrypoints_and_docs() {
     assert!(map.skill_hints.contains(&"rust".to_string()));
 
     let graph = map.doc_graph.expect("doc graph");
-    assert!(graph.nodes.iter().any(|n| n == "docs/a"));
-    assert!(graph.nodes.iter().any(|n| n == "docs/b"));
+    assert!(graph.nodes.iter().any(|n| n == "docs/a.md"));
+    assert!(graph.nodes.iter().any(|n| n == "docs/b.md"));
     assert!(
         graph
             .edges
             .iter()
-            .any(|(src, dst)| src == "docs/a" && dst == "docs/b")
+            .any(|(src, dst)| src == "docs/a.md" && dst == "docs/b.md")
     );
 
     let schema = repomap::schema();
@@ -697,29 +701,31 @@ fn scaffold_store_and_docs_cli_behaviors() {
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/ARCHITECTURE")
+            .join(".decapod/generated/specs/ARCHITECTURE.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/ARCHITECTURE"
-    );
-    assert!(
-        live_target.join(".decapod/generated/specs/INTENT").exists(),
-        "decapod init must scaffold .decapod/generated/specs/INTENT"
+        "decapod init must scaffold .decapod/generated/specs/ARCHITECTURE.md"
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/INTERFACES")
+            .join(".decapod/generated/specs/INTENT.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/INTERFACES"
+        "decapod init must scaffold .decapod/generated/specs/INTENT.md"
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/VALIDATION")
+            .join(".decapod/generated/specs/INTERFACES.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/VALIDATION"
+        "decapod init must scaffold .decapod/generated/specs/INTERFACES.md"
+    );
+    assert!(
+        live_target
+            .join(".decapod/generated/specs/VALIDATION.md")
+            .exists(),
+        "decapod init must scaffold .decapod/generated/specs/VALIDATION.md"
     );
     let architecture =
-        fs::read_to_string(live_target.join(".decapod/generated/specs/ARCHITECTURE"))
-            .expect("read .decapod/generated/specs/ARCHITECTURE");
+        fs::read_to_string(live_target.join(".decapod/generated/specs/ARCHITECTURE.md"))
+            .expect("read .decapod/generated/specs/ARCHITECTURE.md");
     assert!(
         architecture.contains("```text"),
         "default diagram style should scaffold ascii topology block"
@@ -755,7 +761,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
     };
     scaffold_project_entrypoints(&mermaid_opts).expect("mermaid scaffold");
     let mermaid_arch =
-        fs::read_to_string(mermaid_target.join(".decapod/generated/specs/ARCHITECTURE"))
+        fs::read_to_string(mermaid_target.join(".decapod/generated/specs/ARCHITECTURE.md"))
             .expect("read mermaid architecture");
     assert!(
         mermaid_arch.contains("```mermaid"),
@@ -849,17 +855,17 @@ fn schemas_errors_and_validate_entrypoint_are_exercised() {
     fs::create_dir_all(repo.path().join(".decapod")).expect("mkdir .decapod");
     fs::write(repo.path().join(".decapod/README.md"), "decapod readme\n").expect("write readme");
     fs::write(
-        repo.path().join(".decapod/generated/specs/INTENT"),
+        repo.path().join(".decapod/generated/specs/INTENT.md"),
         "**Version:** 0.0.1\n",
     )
     .expect("write intent");
     fs::write(
-        repo.path().join(".decapod/generated/specs/ARCHITECTURE"),
+        repo.path().join(".decapod/generated/specs/ARCHITECTURE.md"),
         "architecture\n",
     )
     .expect("write architecture");
     fs::write(
-        repo.path().join(".decapod/generated/specs/SYSTEM"),
+        repo.path().join(".decapod/generated/specs/SYSTEM.md"),
         "system\n",
     )
     .expect("write system");

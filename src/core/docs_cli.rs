@@ -118,9 +118,9 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
     match cli.command {
         DocsCommand::List => {
             let docs = assets::list_docs();
-            println!("Embedded Decapod Methodology Docs:");
+            println!("Embedded Decapod Constitution Sections:");
             for doc in docs {
-                println!("- {}", doc);
+                println!("- constitution.json#{}", doc);
             }
             if let Ok(current_dir) = std::env::current_dir()
                 && let Ok(repo_root) = find_repo_root(&current_dir)
@@ -136,11 +136,16 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             Ok(DocsRunResult::default())
         }
         DocsCommand::Show { path, source } => {
+            let normalized_path = path
+                .strip_prefix("embedded/constitution.json#")
+                .or_else(|| path.strip_prefix("constitution.json#"))
+                .unwrap_or(&path)
+                .to_string();
             // Split path and anchor
-            let (relative_path, anchor) = if let Some(pos) = path.find('#') {
-                (&path[..pos], Some(&path[pos + 1..]))
+            let (relative_path, anchor) = if let Some(pos) = normalized_path.find('#') {
+                (&normalized_path[..pos], Some(&normalized_path[pos + 1..]))
             } else {
-                (path.as_str(), None)
+                (normalized_path.as_str(), None)
             };
 
             // Convert to relative path
@@ -212,9 +217,9 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
                 }
 
                 if let Some(content) = assets::get_merged_doc(&repo_root, relative_path) {
-                    println!("--- BEGIN {} ---", doc_path);
+                    println!("--- BEGIN constitution.json#{} ---", doc_path);
                     println!("{}", content);
-                    println!("--- END {} ---", doc_path);
+                    println!("--- END constitution.json#{} ---", doc_path);
                 }
             }
             Ok(DocsRunResult {

@@ -31,7 +31,36 @@
           },
           "content": {
             "type": "object",
-            "additionalProperties": true
+            "required": [
+              "summary",
+              "sections"
+            ],
+            "properties": {
+              "summary": {
+                "type": "string"
+              },
+              "sections": {
+                "type": "object",
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object"
+                    },
+                    {
+                      "type": "array"
+                    }
+                  ]
+                }
+              },
+              "links": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false
           }
         }
       }

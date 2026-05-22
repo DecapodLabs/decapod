@@ -628,10 +628,8 @@ fn test_top_level_docs_avoid_direct_constitution_file_links() {
         "SECURITY.md should not instruct direct constitution file access"
     );
     assert!(
-        security.contains(
-            r#"decapod rpc --op constitution.get --params '{"section":"core/SECURITY"}'"#,
-        ),
-        "SECURITY.md should route constitutional access through constitution.get RPC"
+        security.contains("constitution.json#core/SECURITY"),
+        "SECURITY.md should point to the embedded security constitution section"
     );
 }
 

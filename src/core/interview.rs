@@ -1,4 +1,4 @@
-//! Interview engine for spec/architecture/security.json/ops generation
+//! Interview engine for spec/architecture/security/ops generation
 //!
 //! The interview engine helps agents gather requirements from humans
 //! through a structured question-and-answer process. It produces
@@ -223,7 +223,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "Will this handle secrets or credentials?".to_string(),
             why_it_matters: "Secret handling requires special care for security compliance."
                 .to_string(),
-            lands_in: "docs/security.json (secrets)".to_string(),
+            lands_in: "constitution.json#docs/SECURITY (secrets)".to_string(),
             answer_type: AnswerType::Boolean,
             default_value: Some("false".to_string()),
             options: None,
@@ -234,7 +234,7 @@ fn get_all_questions() -> Vec<Question> {
             section: "security".to_string(),
             text: "Will this process user data or PII?".to_string(),
             why_it_matters: "User data requires privacy considerations and compliance.".to_string(),
-            lands_in: "docs/security.json (privacy)".to_string(),
+            lands_in: "constitution.json#docs/SECURITY (privacy)".to_string(),
             answer_type: AnswerType::Boolean,
             default_value: Some("false".to_string()),
             options: None,
@@ -246,7 +246,7 @@ fn get_all_questions() -> Vec<Question> {
             text: "Will this accept network connections?".to_string(),
             why_it_matters: "Network exposure increases attack surface and requires hardening."
                 .to_string(),
-            lands_in: "docs/security.json (network)".to_string(),
+            lands_in: "constitution.json#docs/SECURITY (network)".to_string(),
             answer_type: AnswerType::Boolean,
             default_value: Some("false".to_string()),
             options: None,
@@ -542,7 +542,7 @@ fn generate_security(state: &InterviewState, output_dir: &Path) -> Result<Artifa
 
     Ok(Artifact {
         artifact_type: "security".to_string(),
-        path: output_dir.join("docs/security.json"),
+        path: output_dir.join("docs/security.md"),
         content,
     })
 }
@@ -587,7 +587,7 @@ fn generate_ops(state: &InterviewState, output_dir: &Path) -> Result<Artifact, D
 
     Ok(Artifact {
         artifact_type: "ops".to_string(),
-        path: output_dir.join("docs/ops.json"),
+        path: output_dir.join("docs/ops.md"),
         content,
     })
 }
@@ -634,7 +634,7 @@ Initial technology selection for {project_name}.
     );
 
     let adr_path = output_dir.join(format!(
-        "docs/decisions.json/ADR-0001-{}-core-tech.md",
+        "docs/decisions/ADR-0001-{}-core-tech.md",
         project_name.to_lowercase().replace(" ", "-")
     ));
 
