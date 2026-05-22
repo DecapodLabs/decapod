@@ -1280,8 +1280,12 @@ pub fn scaffold_project_entrypoints(
             };
 
             // Check for overrides in OVERRIDE.md
-            let override_id = spec.path.strip_prefix(".decapod/generated/").unwrap_or(spec.path);
-            if let Some(override_content) = assets::get_override_doc(&opts.target_dir, override_id) {
+            let override_id = spec
+                .path
+                .strip_prefix(".decapod/generated/")
+                .unwrap_or(spec.path);
+            if let Some(override_content) = assets::get_override_doc(&opts.target_dir, override_id)
+            {
                 content = format!(
                     "{}\n\n---\n\n## Project Overrides\n\n{}",
                     content.trim(),

@@ -580,7 +580,10 @@ fn validate_entrypoint_invariants(
         ("core/decapod", "Router pointer to core/DECAPOD"),
         ("cargo install decapod", "Version update gate language"),
         ("decapod validate", "Validation gate language"),
-        ("decapod docs ingest", "Constitution ingestion gate language"),
+        (
+            "decapod docs ingest",
+            "Constitution ingestion gate language",
+        ),
         (
             r#"decapod rpc --op constitution.get --params '{"section":"core/decapod"}'"#,
             "Core constitution RPC mandate language",

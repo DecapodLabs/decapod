@@ -523,7 +523,8 @@ over the embedded JSON constitution.
     .to_string();
 
     // Group nodes by category for the template
-    let mut categories: std::collections::HashMap<&str, Vec<&str>> = std::collections::HashMap::new();
+    let mut categories: std::collections::HashMap<&str, Vec<&str>> =
+        std::collections::HashMap::new();
     let mut ids = list_ids();
     ids.sort();
 
@@ -532,7 +533,7 @@ over the embedded JSON constitution.
             categories.entry(cat).or_default().push(id);
         }
     }
-    
+
     // Manually add specs to the template since they are generated
     let specs = [
         "specs/README.md",

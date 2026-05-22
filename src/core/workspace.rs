@@ -364,7 +364,9 @@ pub fn ensure_workspace(
             );
         }
 
-        if !assigned_todos.is_empty() && !branch_contains_any_todo_id_or_hash(&cfg.branch, &assigned_todos) {
+        if !assigned_todos.is_empty()
+            && !branch_contains_any_todo_id_or_hash(&cfg.branch, &assigned_todos)
+        {
             return Err(DecapodError::ValidationError(format!(
                 "Requested branch '{}' must include an assigned todo ID/hash (one of: {}).",
                 cfg.branch,

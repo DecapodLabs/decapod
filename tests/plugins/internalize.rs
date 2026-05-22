@@ -126,8 +126,12 @@ fn test_schema_files_exist_and_parse() {
         );
         let raw = String::from_utf8_lossy(&output.stdout);
         let wrapped: serde_json::Value = serde_json::from_str(&raw).expect("parse wrapper");
-        let schema_str = wrapped.get("summary").and_then(|s| s.as_str()).unwrap_or(&raw);
-        let parsed: serde_json::Value = serde_json::from_str(schema_str).expect("parse schema fixture");
+        let schema_str = wrapped
+            .get("summary")
+            .and_then(|s| s.as_str())
+            .unwrap_or(&raw);
+        let parsed: serde_json::Value =
+            serde_json::from_str(schema_str).expect("parse schema fixture");
         assert!(
             parsed.get("$id").is_some(),
             "schema {} must declare $id",
