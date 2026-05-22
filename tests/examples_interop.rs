@@ -24,9 +24,10 @@ fn claude_workflow_example_contains_required_ops() {
         ],
     );
     assert!(workflow.contains("decapod validate"));
-    assert!(workflow.contains(
-        r#"decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'"#
-    ));
+    assert!(
+        workflow
+            .contains(r#"decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'"#)
+    );
     assert!(
         workflow.contains("decapod session acquire") || workflow.contains("decapod session init")
     );
@@ -93,7 +94,7 @@ fn verification_guide_pins_jit_capsule_flow() {
             ".decapod/generated/specs/VALIDATION.md",
         ],
     );
-    
+
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args([
             "rpc",

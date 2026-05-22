@@ -1,4 +1,4 @@
-use flate2::{write::GzEncoder, Compression};
+use flate2::{Compression, write::GzEncoder};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -29,7 +29,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let json_path = Path::new(&manifest_dir).join("assets/constitution.json");
 
     if !json_path.exists() {
-        panic!("assets/constitution.json not found at {}", json_path.display());
+        panic!(
+            "assets/constitution.json not found at {}",
+            json_path.display()
+        );
     }
 
     let json_content = fs::read_to_string(&json_path)?;
@@ -46,7 +49,10 @@ fn gzip_compress(data: &[u8]) -> Vec<u8> {
     encoder.finish().unwrap()
 }
 
-fn generate_rust_module(graph: &ConstitutionGraph, out_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+fn generate_rust_module(
+    graph: &ConstitutionGraph,
+    out_dir: &Path,
+) -> Result<(), Box<dyn std::error::Error>> {
     let out_path = out_dir.join("constitution_compressed.rs");
     let mut file = File::create(&out_path)?;
 
@@ -58,7 +64,10 @@ fn generate_rust_module(graph: &ConstitutionGraph, out_dir: &Path) -> Result<(),
     writeln!(file, "use std::collections::HashMap;")?;
     writeln!(file)?;
     writeln!(file, "/// Decompress gzipped constitution document")?;
-    writeln!(file, "pub fn decompress(bytes: &[u8]) -> Result<String, std::io::Error> {{")?;
+    writeln!(
+        file,
+        "pub fn decompress(bytes: &[u8]) -> Result<String, std::io::Error> {{"
+    )?;
     writeln!(file, "    let mut decoder = GzDecoder::new(bytes);")?;
     writeln!(file, "    let mut s = String::new();")?;
     writeln!(file, "    decoder.read_to_string(&mut s)?;")?;
@@ -78,18 +87,29 @@ fn generate_rust_module(graph: &ConstitutionGraph, out_dir: &Path) -> Result<(),
         let compressed = gzip_compress(content.as_bytes());
 
         writeln!(file, "/// Compressed content for: {}", id)?;
-        writeln!(file, "pub const {}_GZ: &[u8] = &{:?};", struct_name, compressed)?;
+        writeln!(
+            file,
+            "pub const {}_GZ: &[u8] = &{:?};",
+            struct_name, compressed
+        )?;
     }
 
     writeln!(file)?;
     writeln!(file, "/// Get decompressed constitution document by ID")?;
-    writeln!(file, "pub fn get_decompressed(id: &str) -> Option<String> {{")?;
+    writeln!(
+        file,
+        "pub fn get_decompressed(id: &str) -> Option<String> {{"
+    )?;
     writeln!(file, "    match id {{")?;
 
     for id in &ids {
         let struct_name = id_to_const_name(id);
         writeln!(file, "        \"{}\" => {{", id)?;
-        writeln!(file, "            let mut decoder = GzDecoder::new({}_GZ);", struct_name)?;
+        writeln!(
+            file,
+            "            let mut decoder = GzDecoder::new({}_GZ);",
+            struct_name
+        )?;
         writeln!(file, "            let mut s = String::new();")?;
         writeln!(file, "            decoder.read_to_string(&mut s).ok()?;")?;
         writeln!(file, "            Some(s)")?;
@@ -113,14 +133,30 @@ fn generate_rust_module(graph: &ConstitutionGraph, out_dir: &Path) -> Result<(),
 
     // Generate graph metadata function
     writeln!(file)?;
-    writeln!(file, "/// Get node metadata (category, title, dependencies)")?;
-    writeln!(file, "pub fn get_metadata(id: &str) -> Option<(&'static str, &'static str, Vec<&'static str>)> {{")?;
+    writeln!(
+        file,
+        "/// Get node metadata (category, title, dependencies)"
+    )?;
+    writeln!(
+        file,
+        "pub fn get_metadata(id: &str) -> Option<(&'static str, &'static str, Vec<&'static str>)> {{"
+    )?;
     writeln!(file, "    match id {{")?;
     for id in &ids {
         let node = &graph.nodes[*id];
-        let deps: Vec<String> = node.dependencies.iter().map(|s| format!("\"{}\"", s)).collect();
-        writeln!(file, "        \"{}\" => Some((\"{}\", \"{}\", vec![{}])),", 
-            id, node.category, node.title, deps.join(", "))?;
+        let deps: Vec<String> = node
+            .dependencies
+            .iter()
+            .map(|s| format!("\"{}\"", s))
+            .collect();
+        writeln!(
+            file,
+            "        \"{}\" => Some((\"{}\", \"{}\", vec![{}])),",
+            id,
+            node.category,
+            node.title,
+            deps.join(", ")
+        )?;
     }
     writeln!(file, "        _ => None,")?;
     writeln!(file, "    }}")?;
@@ -130,9 +166,7 @@ fn generate_rust_module(graph: &ConstitutionGraph, out_dir: &Path) -> Result<(),
 }
 
 fn id_to_const_name(id: &str) -> String {
-    id.replace('.', "_")
-        .replace('/', "_")
-        .replace('-', "_")
+    id.replace(['.', '/', '-'], "_")
         .chars()
         .filter(|c| c.is_alphanumeric() || *c == '_')
         .collect::<String>()

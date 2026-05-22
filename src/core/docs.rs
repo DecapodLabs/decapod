@@ -222,11 +222,7 @@ fn get_mandate_by_id(repo_root: &Path, id: &str) -> Option<Mandate> {
         "mandatory-init" => Some(Mandate {
             id: id.to_string(),
             severity: "non-negotiable".to_string(),
-            fragment: get_fragment(
-                repo_root,
-                "core/DECAPOD",
-                Some("For Agents: Quick Start"),
-            )?,
+            fragment: get_fragment(repo_root, "core/DECAPOD", Some("For Agents: Quick Start"))?,
             check_tag: "gate.session.active".to_string(),
         }),
         "mandatory-todo" => Some(Mandate {

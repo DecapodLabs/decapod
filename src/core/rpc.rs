@@ -225,7 +225,6 @@ pub struct StoreQueryResult {
     pub next_page: Option<serde_json::Value>,
 }
 
-
 // Validate Subsystem
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ValidateRunParams {

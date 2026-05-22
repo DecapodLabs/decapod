@@ -860,9 +860,10 @@ fn validate_entrypoint_invariants(
         }
 
         // Must include core constitution ingestion mandate
-        if agent_content.to_ascii_lowercase().contains(
-            r#"decapod rpc --op constitution.get --params '{"section":"core/decapod"}'"#,
-        ) {
+        if agent_content
+            .to_ascii_lowercase()
+            .contains(r#"decapod rpc --op constitution.get --params '{"section":"core/decapod"}'"#)
+        {
             pass(
                 &format!(
                     "{} includes core constitution ingestion mandate",
@@ -967,9 +968,15 @@ fn validate_interface_contract_bootstrap(
         (context_pack_id, "AGENT_CONTEXT_PACK interface"),
     ] {
         if assets::get_embedded_doc(id).is_some() {
-            pass(&format!("{} present in embedded assets: {}", label, id), ctx);
+            pass(
+                &format!("{} present in embedded assets: {}", label, id),
+                ctx,
+            );
         } else {
-            fail(&format!("{} missing from embedded assets: {}", label, id), ctx);
+            fail(
+                &format!("{} missing from embedded assets: {}", label, id),
+                ctx,
+            );
         }
     }
 
@@ -992,10 +999,7 @@ fn validate_interface_contract_bootstrap(
                     ctx,
                 );
             } else {
-                fail(
-                    &format!("RISK_POLICY_GATE missing marker: {}", marker),
-                    ctx,
-                );
+                fail(&format!("RISK_POLICY_GATE missing marker: {}", marker), ctx);
             }
         }
     }

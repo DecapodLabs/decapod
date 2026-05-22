@@ -604,11 +604,7 @@ fn repomap_detects_manifests_entrypoints_and_docs() {
     fs::write(root.join("Makefile"), "all:\n\techo ok\n").expect("write Makefile");
     fs::write(root.join("src/main.rs"), "fn main() {}\n").expect("write main.rs");
 
-    fs::write(
-        root.join("docs/a"),
-        "Link: [B](b.md)\nMention docs/c\n",
-    )
-    .expect("write a.md");
+    fs::write(root.join("docs/a"), "Link: [B](b.md)\nMention docs/c\n").expect("write a.md");
     fs::write(root.join("docs/b"), "Backlink ../docs/a\n").expect("write b.md");
     fs::write(root.join("docs/c"), "Leaf\n").expect("write c.md");
 
@@ -706,9 +702,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must scaffold .decapod/generated/specs/ARCHITECTURE"
     );
     assert!(
-        live_target
-            .join(".decapod/generated/specs/INTENT")
-            .exists(),
+        live_target.join(".decapod/generated/specs/INTENT").exists(),
         "decapod init must scaffold .decapod/generated/specs/INTENT"
     );
     assert!(
@@ -860,8 +854,7 @@ fn schemas_errors_and_validate_entrypoint_are_exercised() {
     )
     .expect("write intent");
     fs::write(
-        repo.path()
-            .join(".decapod/generated/specs/ARCHITECTURE"),
+        repo.path().join(".decapod/generated/specs/ARCHITECTURE"),
         "architecture\n",
     )
     .expect("write architecture");
@@ -958,11 +951,7 @@ This is a test override for core/CONTROL_PLANE
     let override_sections = assets::list_override_sections(root);
     assert_eq!(
         override_sections,
-        vec![
-            "core/DECAPOD",
-            "core/CONTROL_PLANE",
-            "plugins/TODO"
-        ]
+        vec!["core/DECAPOD", "core/CONTROL_PLANE", "plugins/TODO"]
     );
 }
 

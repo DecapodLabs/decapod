@@ -103,7 +103,10 @@ fn enforced_claims_must_have_gate_mapping_and_kcr_trend_must_match() {
         }
     }
 
-    assert!(enforced_total > 0, "No enforced claims found in interfaces/CLAIMS");
+    assert!(
+        enforced_total > 0,
+        "No enforced claims found in interfaces/CLAIMS"
+    );
     let kcr = enforced_with_gate as f64 / enforced_total as f64;
 
     let trend = read_kcr_trend(&root);

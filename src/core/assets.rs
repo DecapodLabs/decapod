@@ -111,7 +111,9 @@ fn extract_component_override(override_content: &str, id: &str) -> Option<String
 
     let start = doc_id_candidates(id).into_iter().find_map(|candidate| {
         let section_marker = format!("### {}", candidate);
-        searchable_content.find(&section_marker).map(|start| (start, section_marker))
+        searchable_content
+            .find(&section_marker)
+            .map(|start| (start, section_marker))
     })?;
     let (start, section_marker) = start;
 
@@ -170,7 +172,10 @@ fn render_embedded_doc_text(id: &str, raw_content: &str) -> String {
         rendered.push('\n');
     }
 
-    if let Some(sections) = value.get("sections").and_then(|sections| sections.as_object()) {
+    if let Some(sections) = value
+        .get("sections")
+        .and_then(|sections| sections.as_object())
+    {
         for (title, section) in sections {
             rendered.push('\n');
             rendered.push_str("## ");
@@ -513,7 +518,8 @@ fn template_override() -> String {
 Use this file to override specific constitution directives. Decapod indexes these sections
 using the H3 headers below (e.g., `### core/DECAPOD`). Overrides in this file take precedence
 over the embedded JSON constitution.
-"#.to_string();
+"#
+    .to_string();
 
     // Group nodes by category for the template
     let mut categories: HashMap<&str, Vec<&str>> = HashMap::new();
@@ -526,8 +532,16 @@ over the embedded JSON constitution.
         }
     }
 
-    let cat_order = ["core", "specs", "interfaces", "methodology", "architecture", "plugins", "docs"];
-    
+    let cat_order = [
+        "core",
+        "specs",
+        "interfaces",
+        "methodology",
+        "architecture",
+        "plugins",
+        "docs",
+    ];
+
     for cat in cat_order {
         if let Some(nodes) = categories.get(cat) {
             s.push_str(&format!("\n## {} Overrides\n", cat.to_uppercase()));

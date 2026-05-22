@@ -6131,7 +6131,8 @@ mod rpc_handlers {
             todo_id: None,
         })?;
 
-        let result = workspace::publish_workspace(ctx.project_root, params.title, params.description)?;
+        let result =
+            workspace::publish_workspace(ctx.project_root, params.title, params.description)?;
 
         let rpc_result = WorkspacePublishResult {
             branch: result.branch.clone(),
@@ -6416,12 +6417,8 @@ mod rpc_handlers {
             }
         }
 
-        let (category, title, dependencies) =
-            core::assets::get_doc_metadata(&params.section).unwrap_or((
-                "unknown".to_string(),
-                params.section.clone(),
-                Vec::new(),
-            ));
+        let (category, title, dependencies) = core::assets::get_doc_metadata(&params.section)
+            .unwrap_or(("unknown".to_string(), params.section.clone(), Vec::new()));
 
         mark_core_constitution_ingested(ctx.project_root, "constitution.get")?;
 
@@ -6716,14 +6713,18 @@ mod rpc_handlers {
 
         match params.entity.as_deref() {
             Some("todo") => {
-                let status = params.query
+                let status = params
+                    .query
                     .as_ref()
                     .and_then(|q| q.get("status"))
                     .and_then(|v| v.as_str())
                     .map(|s| s.to_string());
                 let tasks = todo::list_tasks(&ctx.store.root, status, None, None, None, None)?;
                 let result = StoreQueryResult {
-                    items: tasks.into_iter().map(|t| serde_json::to_value(t).unwrap()).collect(),
+                    items: tasks
+                        .into_iter()
+                        .map(|t| serde_json::to_value(t).unwrap())
+                        .collect(),
                     next_page: None,
                 };
                 Ok(success_response(
@@ -6738,7 +6739,8 @@ mod rpc_handlers {
                 ))
             }
             Some("knowledge") => {
-                let text = params.query
+                let text = params
+                    .query
                     .as_ref()
                     .and_then(|q| q.get("text"))
                     .and_then(|v| v.as_str())
@@ -6754,7 +6756,10 @@ mod rpc_handlers {
                     },
                 )?;
                 let result = StoreQueryResult {
-                    items: entries.into_iter().map(|e| serde_json::to_value(e).unwrap()).collect(),
+                    items: entries
+                        .into_iter()
+                        .map(|e| serde_json::to_value(e).unwrap())
+                        .collect(),
                     next_page: None,
                 };
                 Ok(success_response(
@@ -6777,7 +6782,10 @@ mod rpc_handlers {
                     None,
                 )?;
                 let result = StoreQueryResult {
-                    items: nodes.into_iter().map(|n| serde_json::to_value(n).unwrap()).collect(),
+                    items: nodes
+                        .into_iter()
+                        .map(|n| serde_json::to_value(n).unwrap())
+                        .collect(),
                     next_page: None,
                 };
                 Ok(success_response(
@@ -6856,7 +6864,9 @@ mod rpc_handlers {
         let params: ScaffoldNextQuestionParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
 
-        let project_name = params.project_name.unwrap_or_else(|| "Untitled".to_string());
+        let project_name = params
+            .project_name
+            .unwrap_or_else(|| "Untitled".to_string());
 
         let interview_state = interview::init_interview(project_name);
         let question = interview::next_question(&interview_state);
@@ -6933,8 +6943,10 @@ mod rpc_handlers {
     pub(crate) fn handle_scaffold_generate_artifacts(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
-        let _params: ScaffoldGenerateArtifactsParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+        let _params: ScaffoldGenerateArtifactsParams =
+            serde_json::from_value(ctx.request.params.clone()).map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid params: {}", e))
+            })?;
 
         let interview_state = interview::init_interview("project".to_string());
         let output_dir = ctx.project_root.to_path_buf();
@@ -7031,7 +7043,12 @@ mod rpc_handlers {
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            Some(serde_json::to_value(MentorObligationsResult { obligations: obligations.clone() }).unwrap()),
+            Some(
+                serde_json::to_value(MentorObligationsResult {
+                    obligations: obligations.clone(),
+                })
+                .unwrap(),
+            ),
             vec![],
             Some(context_capsule),
             vec![AllowedOp {
@@ -7071,10 +7088,13 @@ mod rpc_handlers {
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            Some(serde_json::to_value(AssuranceEvaluateResult {
-                assurance_evaluated: true,
-                interlock_code: evaluated.interlock.as_ref().map(|i| i.code.clone()),
-            }).unwrap()),
+            Some(
+                serde_json::to_value(AssuranceEvaluateResult {
+                    assurance_evaluated: true,
+                    interlock_code: evaluated.interlock.as_ref().map(|i| i.code.clone()),
+                })
+                .unwrap(),
+            ),
             input.touched_paths.clone(),
             None,
             if let Some(interlock) = &evaluated.interlock {
@@ -7116,7 +7136,6 @@ mod rpc_handlers {
 
         Ok(response)
     }
-
 }
 
 /// Run RPC command

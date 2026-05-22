@@ -211,7 +211,13 @@ fn test_capabilities_includes_core_commands() {
 
     let caps_list = json["capabilities"].as_array().expect("capabilities array");
 
-    let required_commands = ["validate", "workspace", "todo", "session", "docs"];
+    let required_commands = [
+        "validate",
+        "workspace",
+        "todo",
+        "session",
+        "constitution.get",
+    ];
 
     for cmd in &required_commands {
         let has_cmd = caps_list.iter().any(|c| {
