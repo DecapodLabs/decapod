@@ -1446,6 +1446,8 @@ fn run_init_apply(
 
     let mut created_backups = false;
     let mut backup_count = 0usize;
+    let mut preserved_agent_content = vec![];
+
     if !init_with.dry_run {
         for file in &existing_agent_files {
             let path = target_dir.join(file);
@@ -1460,6 +1462,7 @@ fn run_init_apply(
             if template_hash != existing_hash {
                 created_backups = true;
                 backup_count += 1;
+                preserved_agent_content.push((file.to_string(), existing_content));
                 let backup_path = target_dir.join(format!("{}.bak", file));
                 fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
             }
@@ -1498,6 +1501,7 @@ fn run_init_apply(
         agent_files: agent_files_to_generate,
         created_backups,
         all: init_with.all,
+        preserved_agent_content,
         generate_specs: init_with.specs,
         diagram_style: match init_with.diagram_style {
             InitDiagramStyle::Ascii => scaffold::DiagramStyle::Ascii,
@@ -4092,6 +4096,7 @@ fn heal_validation_scaffold(
         agent_files: Vec::new(),
         created_backups: false,
         all: false,
+        preserved_agent_content: Vec::new(),
         generate_specs: true,
         diagram_style: scaffold::DiagramStyle::Ascii,
         specs_seed: Some(scaffold::SpecsSeed {

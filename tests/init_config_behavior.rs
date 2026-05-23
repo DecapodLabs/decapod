@@ -322,3 +322,82 @@ fn init_with_accepts_noninteractive_spec_seed_env() {
         "architecture spec should include env-seeded architecture direction"
     );
 }
+
+#[test]
+fn init_blends_existing_agent_entrypoints_into_override_md() {
+    let tmp = tempdir().expect("tempdir");
+    let repo_dir = tmp.path();
+
+    // 1. Create a custom AGENTS.md
+    let custom_agents_content =
+        "# Custom Agents\n\nThis is my custom agent configuration.\n- Agent X\n- Agent Y";
+    fs::write(repo_dir.join("AGENTS.md"), custom_agents_content).expect("write AGENTS.md");
+
+    // 2. Run decapod init
+    let out = run_decapod(repo_dir, &["init", "--force"]);
+    assert!(
+        out.status.success(),
+        "decapod init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    // 3. Check if AGENTS.md is overwritten by template
+    let new_agents_content =
+        fs::read_to_string(repo_dir.join("AGENTS.md")).expect("read new AGENTS.md");
+    assert!(
+        new_agents_content.contains("Universal Agent Contract"),
+        "AGENTS.md should be overwritten by template"
+    );
+    assert!(
+        !new_agents_content.contains("Custom Agents"),
+        "AGENTS.md should not contain custom content anymore"
+    );
+
+    // 4. Check if custom content is in .decapod/OVERRIDE.md
+    let override_path = repo_dir.join(".decapod/OVERRIDE.md");
+    assert!(
+        override_path.exists(),
+        ".decapod/OVERRIDE.md should be created"
+    );
+    let override_content = fs::read_to_string(override_path).expect("read OVERRIDE.md");
+
+    assert!(
+        override_content.contains("Custom Agents"),
+        "OVERRIDE.md should contain custom AGENTS.md content"
+    );
+    assert!(
+        override_content.contains("This is my custom agent configuration."),
+        "OVERRIDE.md should contain custom AGENTS.md content"
+    );
+    assert!(
+        override_content.contains("Agent X"),
+        "OVERRIDE.md should contain custom AGENTS.md content"
+    );
+    assert!(
+        override_content.contains("## Preserved from AGENTS.md"),
+        "OVERRIDE.md should have a header for preserved content"
+    );
+}
+
+#[test]
+fn init_blends_all_agent_entrypoints_when_forced() {
+    let tmp = tempdir().expect("tempdir");
+    let repo_dir = tmp.path();
+
+    fs::write(repo_dir.join("CLAUDE.md"), "# Custom Claude").expect("write CLAUDE.md");
+    fs::write(repo_dir.join("GEMINI.md"), "# Custom Gemini").expect("write GEMINI.md");
+    fs::write(repo_dir.join("CODEX.md"), "# Custom Codex").expect("write CODEX.md");
+
+    let out = run_decapod(repo_dir, &["init", "--force", "--all"]);
+    assert!(out.status.success(), "decapod init failed");
+
+    let override_content =
+        fs::read_to_string(repo_dir.join(".decapod/OVERRIDE.md")).expect("read OVERRIDE.md");
+
+    assert!(override_content.contains("## Preserved from CLAUDE.md"));
+    assert!(override_content.contains("# Custom Claude"));
+    assert!(override_content.contains("## Preserved from GEMINI.md"));
+    assert!(override_content.contains("# Custom Gemini"));
+    assert!(override_content.contains("## Preserved from CODEX.md"));
+    assert!(override_content.contains("# Custom Codex"));
+}

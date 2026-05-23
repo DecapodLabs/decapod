@@ -35,6 +35,8 @@ pub struct ScaffoldOptions {
     pub created_backups: bool,
     /// Force creation of all 5 entrypoint files regardless of existing state
     pub all: bool,
+    /// Preserved content from hijacked agent entrypoints to be blended into OVERRIDE.md.
+    pub preserved_agent_content: Vec<(String, String)>,
     /// Generate project-facing specs/ scaffolding.
     pub generate_specs: bool,
     /// Diagram style for generated architecture document.
@@ -1167,7 +1169,22 @@ pub fn scaffold_project_entrypoints(
 
     // Root entrypoints from embedded templates
     let readme_md = assets::get_template("README.md").expect("Missing template: README.md");
-    let override_md = assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
+    let mut override_md =
+        assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
+
+    // Blend preserved agent content into OVERRIDE.md if present
+    if !opts.preserved_agent_content.is_empty() {
+        if !override_md.ends_with('\n') {
+            override_md.push('\n');
+        }
+        for (file, content) in &opts.preserved_agent_content {
+            override_md.push_str(&format!(
+                "\n## Preserved from {}\n\n{}\n",
+                file,
+                content.trim()
+            ));
+        }
+    }
 
     // AGENT ENTRYPOINTS - Neural Interfaces (only generate specified files)
     let mut ep_created = 0usize;
@@ -1193,9 +1210,23 @@ pub fn scaffold_project_entrypoints(
         FileAction::Preserved => cfg_preserved += 1,
     }
 
-    // Preserve existing OVERRIDE.md - it contains project-specific customizations.
+    // Blend into existing OVERRIDE.md or create new one
     let override_path = opts.target_dir.join(".decapod/OVERRIDE.md");
     if override_path.exists() {
+        if !opts.preserved_agent_content.is_empty() && !opts.dry_run {
+            let mut existing_override = fs::read_to_string(&override_path).unwrap_or_default();
+            if !existing_override.ends_with('\n') {
+                existing_override.push('\n');
+            }
+            for (file, content) in &opts.preserved_agent_content {
+                existing_override.push_str(&format!(
+                    "\n## Preserved from {}\n\n{}\n",
+                    file,
+                    content.trim()
+                ));
+            }
+            fs::write(&override_path, existing_override).map_err(error::DecapodError::IoError)?;
+        }
         cfg_preserved += 1;
     } else {
         match write_file(opts, ".decapod/OVERRIDE.md", &override_md)? {
