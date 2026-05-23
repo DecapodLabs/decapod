@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.50.1](https://github.com/DecapodLabs/decapod/compare/v0.50.0...v0.50.1) - 2026-05-23
+
+### Other
+
+- fix Mermaid diagram rendering in README.md ([#577](https://github.com/DecapodLabs/decapod/pull/577))
+
 ## [0.50.0](https://github.com/DecapodLabs/decapod/compare/v0.49.2...v0.50.0) - 2026-05-23
 
 ### Other
