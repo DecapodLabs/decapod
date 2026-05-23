@@ -1142,6 +1142,7 @@ fn write_file(
 pub fn scaffold_project_entrypoints(
     opts: &ScaffoldOptions,
 ) -> Result<ScaffoldSummary, error::DecapodError> {
+    eprintln!("DEBUG: target_dir: {:?}", opts.target_dir);
     let data_dir_rel = ".decapod/data";
 
     // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
@@ -1265,7 +1266,7 @@ pub fn scaffold_project_entrypoints(
         let seed = opts.specs_seed.as_ref();
         let mut specs_files: Vec<(&str, String)> = Vec::new();
         for spec in LOCAL_PROJECT_SPECS {
-            let content = match spec.path {
+            let mut content = match spec.path {
                 LOCAL_PROJECT_SPECS_README => specs_readme_template(seed),
                 LOCAL_PROJECT_SPECS_INTENT => specs_intent_template(seed),
                 LOCAL_PROJECT_SPECS_ARCHITECTURE => {
@@ -1278,6 +1279,14 @@ pub fn scaffold_project_entrypoints(
                 LOCAL_PROJECT_SPECS_SECURITY => specs_security_template(seed),
                 _ => continue,
             };
+
+            // Respect component-specific override in .decapod/OVERRIDE.md if present
+            if let Some(override_content) =
+                assets::get_override_doc(&opts.target_dir, spec.constitution_ref)
+            {
+                content = assets::merge_override_content(&content, &override_content);
+            }
+
             specs_files.push((spec.path, content));
         }
 

@@ -24,7 +24,7 @@
 - API / RPC entrypoints:
 - CLI surfaces:
 - Event/webhook consumers:
-- Repository-detected surfaces: cargo
+- Repository-detected surfaces: cargo, rust, shell
 
 ## Data Ownership
 - Source-of-truth tables/collections:

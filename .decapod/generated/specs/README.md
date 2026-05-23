@@ -6,8 +6,8 @@ These files are the project-local contract for humans and agents.
 ## Snapshot
 - Project: decapod
 - Outcome: Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to converge on human intent, shape context before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
-- Detected languages: rust
-- Detected surfaces: cargo
+- Detected languages: rust, shell
+- Detected surfaces: cargo, rust, shell
 
 ## How to use this folder
 - [INTENT.md](./INTENT.md): what success means and what is explicitly out of scope.

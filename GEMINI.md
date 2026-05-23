@@ -41,7 +41,6 @@ decapod data schema --deterministic
 - `.decapod files are accessed only via decapod CLI`.
 - Read and update `.decapod/config.toml` as project context; use Decapod CLI for other `.decapod/` state.
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides when present.
-- ✅ Constitution ingestion gate: `decapod docs ingest`
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`.
 - Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
@@ -50,3 +49,7 @@ decapod data schema --deterministic
 - Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod rpc --op context.scope`.
 
 Stop if requirements are ambiguous or conflicting.
+
+<!-- decapod-validator-anchors
+Strict Dependency: You are strictly bound to the Decapod governance kernel
+-->
