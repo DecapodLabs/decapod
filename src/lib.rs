@@ -1466,10 +1466,6 @@ fn run_init_apply(
         }
     }
 
-    if !init_with.dry_run {
-        scaffold::blend_legacy_entrypoints(&target_dir)?;
-    }
-
     let mut agent_files_to_generate = if init_with.claude || init_with.gemini || init_with.agents {
         let mut files = vec![];
         if init_with.claude {

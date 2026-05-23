@@ -126,7 +126,7 @@ fn test_decapod_init_regenerates_from_templates() {
 
     let content = fs::read_to_string(&agents_path).unwrap();
     assert!(
-        content.contains("External task managers may be used for user workflow")
+        content.contains("External task managers are allowed")
             && content.contains("Decapod todos are still mandatory"),
         "Regenerated AGENTS.md should use updated template. Content was:\n{}",
         content

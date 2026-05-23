@@ -31,6 +31,10 @@ fn doc_id_candidates(id: &str) -> Vec<String> {
             .or_else(|| candidate.strip_suffix(".md"))
         {
             push_candidate(&mut candidates, stripped.to_string());
+        } else {
+            // If it doesn't have a suffix, add them as candidates
+            push_candidate(&mut candidates, format!("{}.md", candidate));
+            push_candidate(&mut candidates, format!("{}.json", candidate));
         }
     }
     candidates
