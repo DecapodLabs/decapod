@@ -119,7 +119,7 @@ fn extract_component_override(override_content: &str, id: &str) -> Option<String
     while i < lines.len() {
         let line = lines[i].trim();
         let is_target = candidates.iter().any(|c| line == format!("### {}", c));
-        
+
         if is_target {
             let mut extracted_lines = Vec::new();
             i += 1;
@@ -160,15 +160,15 @@ fn render_embedded_doc_text(id: &str, raw_content: &str) -> String {
     // For JSON and schema files, return only the raw content from summary/sections
     // to avoid breaking machine-readable consumers with markdown headers.
     if id.ends_with(".json") || id.ends_with(".schema") {
-        if let Some(summary) = value.get("summary").and_then(|v| v.as_str()) {
-            if !summary.is_empty() {
-                return summary.to_string();
-            }
+        if let Some(summary) = value.get("summary").and_then(|v| v.as_str())
+            && !summary.is_empty()
+        {
+            return summary.to_string();
         }
-        if let Some(sections) = value.get("sections").and_then(|v| v.as_object()) {
-            if let Some(first_val) = sections.values().next().and_then(|v| v.as_str()) {
-                return first_val.to_string();
-            }
+        if let Some(sections) = value.get("sections").and_then(|v| v.as_object())
+            && let Some(first_val) = sections.values().next().and_then(|v| v.as_str())
+        {
+            return first_val.to_string();
         }
         return raw_content.to_string();
     }
