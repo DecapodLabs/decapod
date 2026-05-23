@@ -4053,7 +4053,7 @@ fn heal_agents_contract(
     for marker in [
         "Stop if",
         "via decapod CLI",
-        "Interface abstraction boundary",
+        "interface abstraction boundary",
         "Strict Dependency: You are strictly bound to the Decapod governance kernel",
     ] {
         if !content.contains(marker) {

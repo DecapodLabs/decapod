@@ -37,6 +37,8 @@ decapod data schema --deterministic
 
 - Use Docker git workspaces and execute in `.decapod/workspaces/*`.
 - Call `decapod workspace status` at startup and before implementation work.
+- External task managers are allowed, but Decapod still requires its own todo layer for isolation, proof, and exclusive cross-agent ownership.
+- Create and claim a Decapod todo before `decapod workspace ensure`, `decapod workspace ensure --container`, or any container run.
 - request elevated permissions before Docker/container workspace commands.
 - `.decapod files are accessed only via decapod CLI`.
 - Read and update `.decapod/config.toml` as project context; use Decapod CLI for other `.decapod/` state.
@@ -49,7 +51,7 @@ decapod data schema --deterministic
 - Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod rpc --op context.scope`.
 
 Stop if requirements are ambiguous or conflicting.
-
 <!-- decapod-validator-anchors
+Strict Dependency: You are strictly bound to the Decapod control plane
 Strict Dependency: You are strictly bound to the Decapod governance kernel
 -->
