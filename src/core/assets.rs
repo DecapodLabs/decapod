@@ -273,7 +273,15 @@ decapod data schema --deterministic
 - Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
 - Operator reference: `decapod rpc --op constitution.get --params '{"section":"docs/PLAYBOOK"}'`.
 - Capability authority: `decapod capabilities --format json`.
-- Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod rpc --op context.scope`.
+-- Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod rpc --op context.scope`.
+
+## Living Specs Governance
+
+Treat `.decapod/generated/specs/*` as living documents.
+- **Continuous Alignment**: Adjust specs as intent and code change over time.
+- **Intent-Driven**: Generally, specs only change when user intent evolves.
+- **Clarification**: When specs change, clarify the code change in terms of the updated intent.
+
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors
@@ -330,12 +338,20 @@ decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
+11. **MUST** maintain **Living Specs**: treat `.decapod/generated/specs/*` as dynamic documents; align them with reality before and after every implementation.
 
 ## Decapod Invocation Contract
 
 Agents act. Decapod orients.
 
 Decapod is not your executor, model runtime, or workflow replacement. You remain responsible for implementation. Call Decapod as the repo-native pressure relief valve when the next responsible step requires explicit intent, boundaries, context, coordination, or proof.
+
+## Living Specs & Governance
+
+The files under `.decapod/generated/specs/` are not static documentation; they are living contracts.
+- **Before Changes**: Review the specs. If the task changes intent, update [INTENT.md](.decapod/generated/specs/INTENT.md) first.
+- **During Implementation**: If architectural or interface decisions shift, update [ARCHITECTURE.md](.decapod/generated/specs/ARCHITECTURE.md) and [INTERFACES.md](.decapod/generated/specs/INTERFACES.md).
+- **After Changes**: Ensure all specs align with the new reality. Clarify code changes in the context of these spec updates. Spec changes should generally only occur when user intent has evolved.
 
 End users and host agents may use any task manager alongside Decapod. That external tracker does not replace Decapod todos: Decapod uses its own todo claims to isolate worktrees, scope containers, prove completion, and prevent multiple agents from working the same Decapod work item concurrently.
 

@@ -425,7 +425,7 @@ These files are the project-local contract for humans and agents.
 
 ## Canonical `.decapod/` Layout
 - `.decapod/data/`: canonical control-plane state (SQLite + ledgers).
-- `.decapod/generated/specs/`: living project specs for humans and agents.
+- `.decapod/generated/specs/`: **Living project specs** for humans and agents.
 - `.decapod/generated/context/`: deterministic context capsules.
 - `.decapod/generated/policy/context_capsule_policy.json`: repo-native JIT context policy contract.
 - `.decapod/generated/artifacts/provenance/`: promotion manifests and convergence checklist.
@@ -446,7 +446,9 @@ These files are the project-local contract for humans and agents.
 - [ ] Run all validation/test commands and attach evidence artifacts.
 
 ## Agent Directive
-- Treat these files as executable governance surfaces. Before implementation: resolve ambiguity and update specs. After implementation: refresh drifted sections, rerun proof gates, and attach evidence.
+- **Living Specs**: Treat these files as executable governance surfaces.
+- **Continuous Alignment**: Before implementation: resolve ambiguity and update specs. During/After implementation: align specs with reality.
+- **Intent-Driven**: Spec changes should generally only occur when user intent has evolved. Clarify code changes in the context of these updates.
 "#
     )
 }
