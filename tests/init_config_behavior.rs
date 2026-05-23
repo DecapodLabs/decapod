@@ -381,10 +381,10 @@ fn init_blends_existing_agent_entrypoints_into_override_md() {
         override_content.contains("### adoption/AGENTS.md"),
         "OVERRIDE.md should have a sub-header for adopted content"
     );
-    }
+}
 
-    #[test]
-    fn init_blends_all_agent_entrypoints_when_forced() {
+#[test]
+fn init_blends_all_agent_entrypoints_when_forced() {
     let tmp = tempdir().expect("tempdir");
     let repo_dir = tmp.path();
 
@@ -405,10 +405,10 @@ fn init_blends_existing_agent_entrypoints_into_override_md() {
     assert!(override_content.contains("# Custom Gemini"));
     assert!(override_content.contains("### adoption/CODEX.md"));
     assert!(override_content.contains("# Custom Codex"));
-    }
+}
 
-    #[test]
-    fn init_with_claude_only_adopts_it_and_generates_all_four_entrypoints() {
+#[test]
+fn init_with_claude_only_adopts_it_and_generates_all_four_entrypoints() {
     let tmp = tempdir().expect("tempdir");
     let repo_dir = tmp.path();
 
@@ -436,5 +436,4 @@ fn init_blends_existing_agent_entrypoints_into_override_md() {
     assert!(override_content.contains("## PENDING CONSOLIDATION (ADOPTED INTENT)"));
     assert!(override_content.contains("### adoption/CLAUDE.md"));
     assert!(override_content.contains("# Original Claude Intent"));
-    }
-
+}

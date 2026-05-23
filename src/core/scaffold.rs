@@ -1180,11 +1180,7 @@ pub fn scaffold_project_entrypoints(
         override_md.push_str("\n## PENDING CONSOLIDATION (ADOPTED INTENT)\n\n");
         override_md.push_str("> **AGENT INSTRUCTION:** Analyze the content below and consolidate relevant rules into the appropriate `### section/ID` headers within this file. The `### adoption/*` headers below represent your previous project-specific intent which MUST be preserved in the substrate above.\n");
         for (file, content) in &opts.preserved_agent_content {
-            override_md.push_str(&format!(
-                "\n### adoption/{}\n\n{}\n",
-                file,
-                content.trim()
-            ));
+            override_md.push_str(&format!("\n### adoption/{}\n\n{}\n", file, content.trim()));
         }
         override_md.push_str("\n---\n");
     }
@@ -1234,8 +1230,7 @@ pub fn scaffold_project_entrypoints(
             fs::write(&override_path, existing_override).map_err(error::DecapodError::IoError)?;
         }
         cfg_preserved += 1;
-    }
- else {
+    } else {
         match write_file(opts, ".decapod/OVERRIDE.md", &override_md)? {
             FileAction::Created => cfg_created += 1,
             FileAction::Unchanged => cfg_unchanged += 1,
