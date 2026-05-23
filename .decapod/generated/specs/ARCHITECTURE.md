@@ -1,16 +1,21 @@
 # Architecture
 
 ## Direction
-lambda
+Composable repository architecture with explicit boundaries and proof-backed delivery invariants.
 
 ## Current Facts
-- Runtime/languages: rust, shell
-- Detected surfaces/framework hints: cargo, rust, shell
+- Runtime/languages: rust
+- Detected surfaces/framework hints: cargo
 - Product type: service_or_library
 
 ## Topology
-```text
-Host Application -> Library API -> Domain Core -> Adapters (Store / Network)
+```mermaid
+flowchart LR
+  H[Host Application] --> L[Library API]
+  L --> D[Domain Core]
+  D --> AD[Adapter Layer]
+  AD --> DB[(Store)]
+  AD --> N[Network]
 ```
 
 ## Store Boundaries
@@ -24,8 +29,18 @@ flowchart LR
 ```
 
 ## Happy Path Sequence
-```text
-Client request -> API validation -> domain execution -> persistence -> response with trace id
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant G as API
+  participant D as Domain
+  participant DB as Datastore
+  C->>G: Request
+  G->>D: Validate + execute
+  D->>DB: Commit transaction
+  DB-->>D: Commit ok
+  D-->>G: Domain result
+  G-->>C: Response + trace_id
 ```
 
 ## Error Path

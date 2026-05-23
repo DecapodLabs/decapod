@@ -2,7 +2,7 @@ schema_version = "1.0.0"
 
 [init]
 specs = true
-diagram_style = "ascii"
+diagram_style = "mermaid"
 entrypoints = [
     "AGENTS.md",
     "CLAUDE.md",
@@ -13,15 +13,8 @@ entrypoints = [
 [repo]
 product_name = "decapod"
 product_summary = "Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to converge on human intent, shape context before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work."
-architecture_direction = "lambda"
+architecture_direction = "Composable repository architecture with explicit boundaries and proof-backed delivery invariants."
 product_type = "service_or_library"
 done_criteria = "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
-primary_languages = [
-    "rust",
-    "shell",
-]
-detected_surfaces = [
-    "cargo",
-    "rust",
-    "shell",
-]
+primary_languages = ["rust"]
+detected_surfaces = ["cargo"]

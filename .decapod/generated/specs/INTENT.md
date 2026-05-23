@@ -15,8 +15,8 @@ flowchart LR
 ## Inferred Baseline
 - Repository: decapod
 - Product type: service_or_library
-- Primary languages: rust, shell
-- Detected surfaces: cargo, rust, shell
+- Primary languages: rust
+- Detected surfaces: cargo
 
 ## Scope
 | Area | In Scope | Proof Surface |
