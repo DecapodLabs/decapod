@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.51.2](https://github.com/DecapodLabs/decapod/compare/v0.51.1...v0.51.2) - 2026-05-23
+
+### Added
+
+- implement living specs governance rules in templates ([#584](https://github.com/DecapodLabs/decapod/pull/584))
+
 ## [0.51.1](https://github.com/DecapodLabs/decapod/compare/v0.51.0...v0.51.1) - 2026-05-23
 
 ### Added
