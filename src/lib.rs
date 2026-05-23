@@ -1488,10 +1488,12 @@ fn run_init_apply(
             }
             files
         } else {
-            existing_agent_files
-                .into_iter()
-                .map(|s| s.to_string())
-                .collect()
+            vec![
+                "AGENTS.md".to_string(),
+                "CLAUDE.md".to_string(),
+                "GEMINI.md".to_string(),
+                "CODEX.md".to_string(),
+            ]
         };
 
     if !agent_files_to_generate.is_empty()

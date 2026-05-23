@@ -401,3 +401,34 @@ fn init_blends_all_agent_entrypoints_when_forced() {
     assert!(override_content.contains("## Adopted from CODEX.md"));
     assert!(override_content.contains("# Custom Codex"));
 }
+
+#[test]
+fn init_with_claude_only_adopts_it_and_generates_all_four_entrypoints() {
+    let tmp = tempdir().expect("tempdir");
+    let repo_dir = tmp.path();
+
+    // 1. Create only CLAUDE.md
+    fs::write(repo_dir.join("CLAUDE.md"), "# Original Claude Intent")
+        .expect("write CLAUDE.md");
+
+    // 2. Run decapod init
+    let out = run_decapod(repo_dir, &["init"]);
+    assert!(out.status.success(), "decapod init failed");
+
+    // 3. Verify ALL four entrypoints now exist
+    assert!(repo_dir.join("AGENTS.md").exists());
+    assert!(repo_dir.join("CLAUDE.md").exists());
+    assert!(repo_dir.join("GEMINI.md").exists());
+    assert!(repo_dir.join("CODEX.md").exists());
+
+    // 4. Verify CLAUDE.md content is the template
+    let new_claude = fs::read_to_string(repo_dir.join("CLAUDE.md")).expect("read new CLAUDE.md");
+    assert!(new_claude.contains("Agent Entrypoint"));
+    assert!(!new_claude.contains("Original Claude Intent"));
+
+    // 5. Verify adoption in OVERRIDE.md
+    let override_content =
+        fs::read_to_string(repo_dir.join(".decapod/OVERRIDE.md")).expect("read OVERRIDE.md");
+    assert!(override_content.contains("## Adopted from CLAUDE.md"));
+    assert!(override_content.contains("# Original Claude Intent"));
+}
