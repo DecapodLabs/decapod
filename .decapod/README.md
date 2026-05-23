@@ -27,7 +27,7 @@ It keeps Decapod-owned state, generated artifacts, and isolated workspaces separ
 
 If you have existing files like `SKILLS.md`, `SOUL.md`, or `MEMORY.md` that were used for agent instructions, you can easily migrate them into the Decapod governance layer. 
 
-After running `decapod init`, simply ask your agent to **"blend my [FILE.md] content into .decapod/OVERRIDE.md"**. This preserves your custom intent while allowing Decapod to manage the primary entrypoints.
+After running `decapod init`, simply ask your agent to **"consolidate my [FILE.md] content into the .decapod/OVERRIDE.md substrate"**. This ensures your project-specific intent is merged into the correct constitutional sections while allowing Decapod to manage the primary entrypoints.
 
 ## Skills - Your Personal Optimization Layer
 
