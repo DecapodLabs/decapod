@@ -23,6 +23,12 @@ It keeps Decapod-owned state, generated artifacts, and isolated workspaces separ
 7. `decapod todo add \"<task>\" && decapod todo claim --id <task-id>`
 8. `decapod workspace ensure`
 
+## Migrating Custom Agent Files
+
+If you have existing files like `SKILLS.md`, `SOUL.md`, or `MEMORY.md` that were used for agent instructions, you can easily migrate them into the Decapod governance layer. 
+
+After running `decapod init`, simply ask your agent to **"blend my [FILE.md] content into .decapod/OVERRIDE.md"**. This preserves your custom intent while allowing Decapod to manage the primary entrypoints.
+
 ## Skills - Your Personal Optimization Layer
 
 **Skills are how you shape agent behavior.** Import skills to train agents how to interact with your codebase, your conventions, and your preferences.
@@ -73,10 +79,10 @@ allowed-tools: Bash
 4. Report findings
 ```
 
-Place SKILL.md files in `constitution/metadata/skills/` and import them:
+Place SKILL.md files in `metadata/skills/` and import them:
 
 ```bash
-decapod data aptitude skill import --path constitution/metadata/skills/my-security-review/SKILL.md
+decapod data aptitude skill import --path metadata.skills.my-security-review.SKILL.md
 ```
 
 ### Aptitude Memory
@@ -97,7 +103,7 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 ## Canonical Layout
 
 - `README.md`: operator onboarding and control-plane map.
-- `OVERRIDE.md`: project-local override layer for embedded constitution.
+- `OVERRIDE.md`: project-local override layer for embedded constitution directives.
 - `data/`: canonical control-plane state (SQLite + ledgers).
 - `skills/`: imported skill cards (auto-generated, tracked for reproducibility).
 - `generated/specs/`: living project specs scaffolded by `decapod init`.
@@ -106,6 +112,14 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 - `generated/artifacts/inventory/`: deterministic release inventory artifacts.
 - `generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `workspaces/`: isolated todo-scoped git worktrees for implementation.
+
+## How It Works
+
+Decapod uses a **JSON-based constitution** to govern agent behavior. Instead of the agent reading full Markdown documents, it uses the Decapod CLI to query specific directives.
+
+1. **Indexing**: Decapod indexes the constitution graph when called.
+2. **Selective Context**: Agents query exact sections (directives) needed for the current task, minimizing context overhead.
+3. **Local Overrides**: You can override any constitution directive in [.decapod/OVERRIDE.md](OVERRIDE.md) using the specific directive ID.
 
 ## Why Teams Use This
 

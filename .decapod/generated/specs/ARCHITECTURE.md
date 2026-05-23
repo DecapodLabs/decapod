@@ -1,10 +1,10 @@
 # Architecture
 
 ## Direction
-Composable repository architecture with explicit boundaries and proof-backed delivery invariants.
+webapp
 
 ## Current Facts
-- Runtime/languages: rust
+- Runtime/languages: Rust
 - Detected surfaces/framework hints: cargo
 - Product type: service_or_library
 

@@ -410,6 +410,12 @@ It keeps Decapod-owned state, generated artifacts, and isolated workspaces separ
 7. `decapod todo add \"<task>\" && decapod todo claim --id <task-id>`
 8. `decapod workspace ensure`
 
+## Migrating Custom Agent Files
+
+If you have existing files like `SKILLS.md`, `SOUL.md`, or `MEMORY.md` that were used for agent instructions, you can easily migrate them into the Decapod governance layer. 
+
+After running `decapod init`, simply ask your agent to **"blend my [FILE.md] content into .decapod/OVERRIDE.md"**. This preserves your custom intent while allowing Decapod to manage the primary entrypoints.
+
 ## Skills - Your Personal Optimization Layer
 
 **Skills are how you shape agent behavior.** Import skills to train agents how to interact with your codebase, your conventions, and your preferences.
