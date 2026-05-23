@@ -773,9 +773,9 @@
       "category": "architecture",
       "dependencies": [],
       "content": {
-        "summary": "",
+        "summary": "Infrastructure engineering, IaC, networking, and scale.",
         "sections": {
-          "INFRASTRUCTURE": "Authority: guidance (comprehensive topic with exact specifications)\nLayer: Architecture\nBinding: No\nScope: Comprehensive topic coverage for pre-inference context",
+          "INFRASTRUCTURE": "Authority: guidance (infrastructure as code and platform operations)\nLayer: Architecture\nBinding: No",
           "Table of Contents": "Terraform Patterns\nPulumi Patterns\nHelm Charts\nAnsible Playbooks\nCrossplane Compositions\nCluster Provisioning\nGitOps Workflows\nSecurity and Compliance\nDisaster Recovery\nReferences",
           "1.1 Terraform Directory Structure": "infrastructure/\n├── environments/\n│   ├── dev/\n│   │   ├── main.tf\n│   │   ├── variables.tf\n│   │   ├── outputs.tf\n│   │   └── terraform.tfvars\n│   ├── staging/\n│   └── production/\n├── modules/\n│   ├── networking/\n│   │   ├── main.tf\n│   │   ├── variables.tf\n│   │   ├── outputs.tf\n│   │   └── versions.tf\n│   ├── kubernetes/\n│   ├── database/\n│   └── monitoring/\n├── shared/\n│   └── modules/\n└── templates/",
           "1.2 Terraform Module Examples": "# modules/networking/vpc/main.tf\nterraform {\nrequired_version = \">= 1.5.0\"\nrequired_providers {\naws = {\nsource  = \"hashicorp/aws\"\nversion = \"~> 5.0\"\n}\n}\nbackend \"s3\" {\nbucket         = \"terraform-state-bucket\"\nkey            = \"networking/vpc\"\nregion         = \"us-east-1\"\nencrypt        = true\ndynamodb_table = \"terraform-locks\"\n}\n}\nvariable \"environment\" {\ndescription = \"Environment name (dev, staging, prod)\"\ntype        = string\n}\nvariable \"cidr_block\" {\ndescription = \"CIDR block for VPC\"\ntype        = string\ndefault     = \"10.0.0.0/16\"\n}\nvariable \"availability_zones\" {\ndescription = \"List of AZs for subnets\"\ntype        = list(string)\ndefault     = [\"us-east-1a\", \"us-east-1b\", \"us-east-1c\"]\n}\nvariable \"public_subnet_cidrs\" {\ndescription = \"CIDR blocks for public subnets\"\ntype        = list(string)\ndefault     = [\"10.0.1.0/24\", \"10.0.2.0/24\", \"10.0.3.0/24\"]\n}\nvariable \"private_subnet_cidrs\" {\ndescription = \"CIDR blocks for private subnets\"\ntype        = list(string)\ndefault     = [\"10.0.11.0/24\", \"10.0.12.0/24\", \"10.0.13.0/24\"]\n}\nvariable \"enable_nat_gateway\" {\ndescription = \"Enable NAT Gateway for private subnets\"\ntype        = bool\ndefault     = true\n}\nvariable \"tags\" {\ndescription = \"Common tags to apply to resources\"\ntype        = map(string)\ndefault     = {}\n}\nlocals {\nname_prefix = \"${var.environment}-vpc\"\ncommon_tags = merge(\nvar.tags,\n{\nEnvironment = var.environment\nManagedBy   = \"terraform\"\nProject     = \"decapod\"\n}\n)\n}\nresource \"aws_vpc\" \"main\" {\ncidr_block           = var.cidr_block\nenable_dns_hostnames = true\nenable_dns_support   = true\ntags = merge(\nlocal.common_tags,\n{\nName = \"${local.name_prefix}-vpc\"\n}\n)\n}\nresource \"aws_internet_gateway\" \"main\" {\nvpc_id = aws_vpc.main.id\ntags = merge(\nlocal.common_tags,\n{\nName = \"${local.name_prefix}-igw\"\n}\n)\n}\nresource \"aws_subnet\" \"public\" {\ncount             = length(var.public_subnet_cidrs)\nvpc_id            = aws_vpc.main.id\ncidr_block        = var.public_subnet_cidrs[count.index]\navailability_zone = var.availability_zones[count.index]\nmap_public_ip_on_launch = true\ntags = merge(\nlocal.common_tags,\n{\nName = \"${local.name_prefix}-public-${count.index + 1}\"\nType = \"public\"\n}\n)\n}\nresource \"aws_subnet\" \"private\" {\ncount             = length(var.private_subnet_cidrs)\nvpc_id            = aws_vpc.main.id\ncidr_block        = var.private_subnet_cidrs[count.index]\navailability_zone = var.availability_zones[count.index]\ntags = merge(\nlocal.common_tags,\n{\nName = \"${local.name_prefix}-private-${count.index + 1}\"\nType = \"private\"\n}\n)\n}\nresource \"aws_eip\" \"nat\" {\ncount  = var.enable_nat_gateway ? length(var.availability_zones) : 0\ndomain = \"vpc\"\ntags = merge(\nlocal.common_tags,\n{\nName = \"${local.name_prefix}-nat-eip-${count.index + 1}\"\n}\n)\ndepends_on = [aws_internet_gateway.main]\n}\nresource \"aws_nat_gateway\" \"main\" {\ncount         = var.enable_nat_gateway ? length(var.availability_zones) : 0\nallocation_id = aws_eip.nat[count.index].id\nsubnet_id     = aws_subnet.public[count.index].id\ntags = merge(\nlocal.common_tags,\n{\nName = \"${local.name_prefix}-nat-${count.index + 1}\"\n}\n)\ndepends_on = [aws_internet_gateway.main]\n}\nresource \"aws_route_table\" \"public\" {\nvpc_id = aws_vpc.main.id\nroute {\ncidr_block = \"0.0.0.0/0\"\ngateway_id = aws_internet_gateway.main.id\n}\ntags = merge(\nlocal.common_tags,\n{\nName = \"${local.name_prefix}-public-rt\"\n}\n)\n}\nresource \"aws_route_table\" \"private\" {\ncount  = var.enable_nat_gateway ? length(var.availability_zones) : 0\nvpc_id = aws_vpc.main.id\nroute {\ncidr_block     = \"0.0.0.0/0\"\nnat_gateway_id = aws_nat_gateway.main[count.index].id\n}\ntags = merge(\nlocal.common_tags,\n{\nName = \"${local.name_prefix}-private-rt-${count.index + 1}\"\n}\n)\n}\nresource \"aws_route_table_association\" \"public\" {\ncount          = length(var.public_subnet_cidrs)\nsubnet_id      = aws_subnet.public[count.index].id\nroute_table_id = aws_route_table.public.id\n}\nresource \"aws_route_table_association\" \"private\" {\ncount          = length(var.private_subnet_cidrs)\nsubnet_id      = aws_subnet.private[count.index].id\nroute_table_id = aws_route_table.private[count.index % length(var.availability_zones)].id\n}\n# VPC Endpoints for private connectivity to AWS services\nresource \"aws_vpc_endpoint\" \"s3\" {\nvpc_id       = aws_vpc.main.id\nservice_name = \"com.amazonaws.${var.availability_zones[0].split(\"-\")[0]}-${var.availability_zones[0].split(\"-\")[1]}.s3\"\nroute_table_ids = concat(\n[aws_route_table.public.id],\naws_route_table.private[*].id\n)\ntags = merge(\nlocal.common_tags,\n{\nName = \"${local.name_prefix}-s3-endpoint\"\n}\n)\n}\nresource \"aws_vpc_endpoint\" \"ecr_api\" {\nvpc_id       = aws_vpc.main.id\nservice_name = \"com.amazonaws.${var.availability_zones[0].split(\"-\")[0]}-${var.availability_zones[0].split(\"-\")[1]}.ecr.api\"\nvpc_endpoint_type = \"Interface\"\nsecurity_groups = [aws_security_group.vpc_endpoints.id]\nprivate_dns_enabled = true\nsubnet_ids = aws_subnet.private[*].id\ntags = merge(\nlocal.common_tags,\n{\nName = \"${local.name_prefix}-ecr-api-endpoint\"\n}\n)\n}\nresource \"aws_security_group\" \"vpc_endpoints\" {\nname        = \"${local.name_prefix}-vpc-endpoints\"\ndescription = \"Security group for VPC endpoints\"\nvpc_id      = aws_vpc.main.id\ntags = merge(\nlocal.common_tags,\n{\nName = \"${local.name_prefix}-vpc-endpoints-sg\"\n}\n)\n}\nresource \"aws_security_group_rule\" \"vpc_endpoints_ingress\" {\ntype              = \"ingress\"\nfrom_port         = 443\nto_port           = 443\nprotocol          = \"tcp\"\ncidr_blocks       = [var.cidr_block]\nsecurity_group_id = aws_security_group.vpc_endpoints.id\ndescription       = \"Allow HTTPS from VPC\"\n}\noutput \"vpc_id\" {\ndescription = \"ID of the created VPC\"\nvalue       = aws_vpc.main.id\n}\noutput \"vpc_cidr\" {\ndescription = \"CIDR block of the VPC\"\nvalue       = aws_vpc.main.cidr_block\n}\noutput \"public_subnet_ids\" {\ndescription = \"IDs of public subnets\"\nvalue       = aws_subnet.public[*].id\n}\noutput \"private_subnet_ids\" {\ndescription = \"IDs of private subnets\"\nvalue       = aws_subnet.private[*].id\n}\noutput \"nat_gateway_ips\" {\ndescription = \"IP addresses of NAT Gateways\"\nvalue       = var.enable_nat_gateway ? aws_eip.nat[*].public_ip : []\n}",
@@ -795,7 +795,9 @@
           "Pulumi": "Pulumi Documentation\nPulumi GitHub\nPulumi EKS",
           "Helm": "Helm Documentation\nHelm Charts Best Practices\nBitnami Charts",
           "Crossplane": "Crossplane Documentation\nCrossplane GitHub\nUpbound Registry",
-          "Kubernetes": "Kubernetes Documentation\nAWS EKS Best Practices\nProduction Kubernetes"
+          "Kubernetes": "Kubernetes Documentation\nAWS EKS Best Practices\nProduction Kubernetes",
+          "IaC Patterns": "Declarative vs Imperative, Immutable Infrastructure, GitOps",
+          "Scaling": "Auto-scaling groups, load distribution, global reach"
         }
       }
     },
@@ -1464,8 +1466,8 @@
           "Emergency": "If Decapod is blocking legitimate work:\nCheck decapod workspace status\nEnsure you're not on main/master\nRun decapod validate to see specific failures\nReview blockers in RPC response envelope",
           "Core Entry Points": "core/DECAPOD - Router and navigation charter (START HERE) ← You are here\ncore/INTERFACES - Interface contracts index\ncore/METHODOLOGY - Methodology guides index\ncore/PLUGINS - Subsystem registry\ncore/ENGINEERING_EXCELLENCE - Engineering standards oracle\ncore/GAPS - Gap analysis methodology",
           "Governance": "core/DEMANDS - Non-negotiable demands\ncore/DEPRECATION - Deprecation contract\ncore/EMERGENCY_PROTOCOL - Emergency procedures",
-          "Architecture (by Domain)": "architecture/SECURITY - Threat modeling, cryptography, supply chain\narchitecture/CLOUD - Cloud patterns, networking, storage\narchitecture/DATA - Data modeling, pipelines, governance\narchitecture/CACHING - Caching patterns and strategies\narchitecture/OBSERVABILITY - Observability and monitoring",
-          "Methodology": "methodology/TESTING - Testing strategies, TDD, BDD\nmethodology/CI_CD - CI/CD and release workflow\nmethodology/SOUL - Agent identity and behavioral style"
+          "Architecture (by Domain)": "architecture/SECURITY - Threat modeling, cryptography, supply chain\narchitecture/CLOUD - Cloud patterns, networking, storage\narchitecture/DATA - Data modeling, pipelines, governance\narchitecture/CACHING - Caching patterns and strategies\narchitecture/OBSERVABILITY - Observability and monitoring\narchitecture/SYSTEMS_DESIGN - Distributed systems, CAP, PACELC, consensus\narchitecture/ENTERPRISE - Enterprise architecture, TOGAF, microservices, DDD\narchitecture/INFRASTRUCTURE - Infrastructure engineering, IaC, networking, scale",
+          "Methodology": "methodology/TESTING - Testing strategies, TDD, BDD\nmethodology/CI_CD - CI/CD and release workflow\nmethodology/SOUL - Agent identity and behavioral style\nmethodology/PRODUCT - Product development, OKRs, prioritization, experiments\nmethodology/PLATFORM - Platform engineering, SRE, SLIs/SLOs, error budgets\nmethodology/OPERATIONS - Operations, incident response, chaos engineering\nmethodology/RESEARCH - Research & seminal papers, industry proofs"
         }
       }
     },
@@ -1540,7 +1542,7 @@
           "Core Router": "core/DECAPOD - Router and navigation charter (START HERE)",
           "Authority (Constitution Layer)": "specs/INTENT - Methodology contract (READ FIRST)\nspecs/SYSTEM - System definition and authority doctrine",
           "Practice (Methodology Layer)": "methodology/ARCHITECTURE - Architecture practice\nmethodology/TESTING - Testing practice\nmethodology/CI_CD - CI/CD practice\nmethodology/SOUL - Agent identity and behavioral style\nmethodology/KNOWLEDGE - Knowledge curation\nmethodology/MEMORY - Memory and learning",
-          "Architecture Patterns": "architecture/ALGORITHMS - Algorithm selection\narchitecture/DATA - Data architecture\narchitecture/SECURITY - Security architecture (threat modeling, cryptography, supply chain, SECCOMP)\narchitecture/OBSERVABILITY - Observability architecture\narchitecture/CONCURRENCY - Concurrency architecture\narchitecture/CLOUD - Cloud deployment patterns\narchitecture/CACHING - Caching patterns"
+          "Architecture Patterns": "architecture/ALGORITHMS - Algorithm selection\narchitecture/DATA - Data architecture\narchitecture/SECURITY - Security architecture (threat modeling, cryptography, supply chain, SECCOMP)\narchitecture/OBSERVABILITY - Observability architecture\narchitecture/CONCURRENCY - Concurrency architecture\narchitecture/CLOUD - Cloud deployment patterns\narchitecture/CACHING - Caching patterns\narchitecture/SYSTEMS_DESIGN - Distributed systems, CAP, PACELC, consensus\narchitecture/ENTERPRISE - Enterprise architecture, TOGAF, microservices, DDD\narchitecture/INFRASTRUCTURE - Infrastructure engineering, IaC, networking, scale"
         }
       }
     },
@@ -3706,6 +3708,84 @@
           "Activation": "Meta-skills activate when:\nAgent initializes (agent.init triggers interface skill)\nHuman gives vague intent (triggers refinement)\nAgent needs to communicate with human (triggers UX)",
           "Agent Onboarding": "For new agents, ensure these meta-skills are loaded:\nagent-decapod-interface - Required for any Decapod interaction\nhuman-agent-ux - Required for human-facing work\nintent-refinement - Required for any task involving intent",
           "Links": "core/DECAPOD - Router and navigation charter (START HERE)\nspecs/INTENT - Methodology contract\nspecs/SYSTEM - System definition and authority doctrine\nTo add domain-specific skills:\nCreate metadata/skills/<skill-name>/SKILL.md\nAdd YAML frontmatter with name, description, allowed-tools\nRun decapod docs ingest to register\nSkills become available via decapod context.capsule.query"
+        }
+      }
+    },
+    "architecture/SYSTEMS_DESIGN": {
+      "title": "architecture/SYSTEMS_DESIGN",
+      "category": "architecture",
+      "dependencies": [],
+      "content": {
+        "summary": "Distributed systems, CAP, PACELC, consensus, and scalability patterns.",
+        "sections": {
+          "SYSTEMS_DESIGN": "Authority: guidance (system design principles and distributed patterns)\nLayer: Architecture\nBinding: No\nScope: cross-cutting system design concerns",
+          "Fundamental Principles": "1. Scalability: Horizontal vs Vertical\n2. Availability vs Consistency (CAP/PACELC)\n3. Reliability and Fault Tolerance\n4. Latency and Throughput",
+          "Common Patterns": "Load Balancing, Caching, Sharding, Replication, Circuit Breakers"
+        }
+      }
+    },
+    "architecture/ENTERPRISE": {
+      "title": "architecture/ENTERPRISE",
+      "category": "architecture",
+      "dependencies": [],
+      "content": {
+        "summary": "Enterprise architecture, TOGAF, microservices, DDD, and bounded contexts.",
+        "sections": {
+          "ENTERPRISE_ARCHITECTURE": "Authority: guidance (strategic architectural alignment and domain modeling)\nLayer: Architecture\nBinding: No",
+          "Domain Driven Design": "Bounded Contexts, Ubiquitous Language, Aggregate Roots",
+          "Strategic Alignment": "Mapping technology to business value and organizational goals"
+        }
+      }
+    },
+    "methodology/PRODUCT": {
+      "title": "methodology/PRODUCT",
+      "category": "methodology",
+      "dependencies": [],
+      "content": {
+        "summary": "Product development, OKRs, prioritization, and experiments.",
+        "sections": {
+          "PRODUCT_DEVELOPMENT": "Authority: guidance (product discovery and delivery workflow)\nLayer: Guides\nBinding: No",
+          "Prioritization": "RICE, MoSCoW, Opportunity Scoring",
+          "Experiments": "A/B testing, Canary releases, Feature flags"
+        }
+      }
+    },
+    "methodology/PLATFORM": {
+      "title": "methodology/PLATFORM",
+      "category": "methodology",
+      "dependencies": [],
+      "content": {
+        "summary": "Platform engineering, SRE, SLIs/SLOs, and error budgets.",
+        "sections": {
+          "PLATFORM_ENGINEERING": "Authority: guidance (internal developer platforms and reliability engineering)\nLayer: Guides\nBinding: No",
+          "Reliability": "SLIs, SLOs, SLAs, Error Budgets",
+          "SRE Practices": "Toil reduction, incident response, post-mortems"
+        }
+      }
+    },
+    "methodology/OPERATIONS": {
+      "title": "methodology/OPERATIONS",
+      "category": "methodology",
+      "dependencies": [],
+      "content": {
+        "summary": "Operations, incident response, and chaos engineering.",
+        "sections": {
+          "OPERATIONS": "Authority: guidance (production operations and resilience testing)\nLayer: Guides\nBinding: No",
+          "Incident Management": "On-call rotation, runbooks, communication",
+          "Chaos Engineering": "Game days, fault injection, blast radius"
+        }
+      }
+    },
+    "methodology/RESEARCH": {
+      "title": "methodology/RESEARCH",
+      "category": "methodology",
+      "dependencies": [],
+      "content": {
+        "summary": "Research & seminal papers, industry proofs, and academic foundations.",
+        "sections": {
+          "RESEARCH": "Authority: guidance (foundational engineering knowledge and research curation)\nLayer: Guides\nBinding: No",
+          "Seminal Papers": "Lamport, Brewer, Shapiro, etc.",
+          "Industry Trends": "Whitepapers, case studies, academic proofs"
         }
       }
     }

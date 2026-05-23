@@ -78,6 +78,7 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 ## Safety Invariants
 - ✅ Router pointer: `core/DECAPOD` | ✅ Validation gate: `decapod validate`
 - ✅ Constitution RPC gate: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
+- ✅ Constitution ingestion gate: `decapod docs ingest`
 - ✅ Workspace status gate: `decapod workspace status`
 - ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`
 - ✅ Session auth gate: `DECAPOD_SESSION_PASSWORD`
@@ -94,3 +95,8 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 - Stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
 - Respect the Interface abstraction boundary.
 - Treat lock/contention failures as blocking until resolved.
+
+
+<!-- decapod-validator-anchors
+Strict Dependency: You are strictly bound to the Decapod governance kernel
+-->
