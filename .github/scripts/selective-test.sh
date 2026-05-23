@@ -47,9 +47,10 @@ declare -A FILE_TO_TESTS=(
     ["src/core/docs.rs"]="context_capsule_cli context_capsule_rpc lcm_determinism"
     ["src/core/context_capsule.rs"]="context_capsule_cli context_capsule_rpc context_capsule_schema"
     ["src/core/rpc.rs"]="agent_rpc_suite"
-    ["src/core/migration.rs"]="core_tests"
-    ["src/lib.rs"]="entrypoint_correctness"
+    ["src/migration.rs"]="core_tests"
+    ["src/lib.rs"]="entrypoint_correctness init_config_behavior init_validate_green_field"
     ["src/cli.rs"]="cli_contract_enforcement"
+
     
     # Plugins -> corresponding tests
     ["src/plugins/todo.rs"]="plugins_todo_tests"
@@ -90,6 +91,7 @@ if [ "$CHANGED_FILES" = "--all" ]; then
     # Add all known test targets
     for test in todo_enforcement validate_termination workspace_interlock workunit_cli \
         context_capsule_cli agent_rpc_suite entrypoint_correctness cli_contract_enforcement \
+        init_config_behavior init_validate_green_field \
         plugins_todo_tests plugins_policy_tests plugins_health_tests plugins_aptitude_tests \
         plugins_internalize_tests plugins_federation_tests plugins_decide_tests plugins_obligation_tests; do
         TESTS_TO_RUN[$test]=1
