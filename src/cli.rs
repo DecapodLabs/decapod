@@ -112,7 +112,7 @@ pub(crate) struct InitGroupCli {
 
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
     pub diagram_style: InitDiagramStyle,
-    /// Force creation of all 3 entrypoint files (GEMINI.md, AGENTS.md, CLAUDE.md).
+    /// Force creation of all 4 entrypoint files (AGENTS.md, CLAUDE.md, GEMINI.md, CODEX.md).
     #[clap(long)]
     pub all: bool,
     /// Create only CLAUDE.md entrypoint file.
@@ -121,6 +121,9 @@ pub(crate) struct InitGroupCli {
     /// Create only GEMINI.md entrypoint file.
     #[clap(long)]
     pub gemini: bool,
+    /// Create only CODEX.md entrypoint file.
+    #[clap(long)]
+    pub codex: bool,
     /// Create only AGENTS.md entrypoint file.
     #[clap(long)]
     pub agents: bool,
@@ -174,7 +177,7 @@ pub(crate) struct InitWithCli {
     /// Show what would change without writing files.
     #[clap(long)]
     pub dry_run: bool,
-    /// Force creation of all entrypoint files.
+    /// Force creation of all 4 entrypoint files (AGENTS.md, CLAUDE.md, GEMINI.md, CODEX.md).
     #[clap(long)]
     pub all: bool,
     /// Create only CLAUDE.md entrypoint file.
@@ -183,6 +186,9 @@ pub(crate) struct InitWithCli {
     /// Create only GEMINI.md entrypoint file.
     #[clap(long)]
     pub gemini: bool,
+    /// Create only CODEX.md entrypoint file.
+    #[clap(long)]
+    pub codex: bool,
     /// Create only AGENTS.md entrypoint file.
     #[clap(long)]
     pub agents: bool,
