@@ -235,7 +235,7 @@ See `AGENTS.md` for the universal contract.
 
 ```bash
 cargo install decapod
-decapod validate && decapod session acquire
+decapod validate && decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -258,6 +258,8 @@ decapod data schema --deterministic
 
 - Use Docker git workspaces and execute in `.decapod/workspaces/*`.
 - Call `decapod workspace status` at startup and before implementation work.
+- External task managers are allowed, but Decapod still requires its own todo layer for isolation, proof, and exclusive cross-agent ownership.
+- Create and claim a Decapod todo before `decapod workspace ensure`, `decapod workspace ensure --container`, or any container run.
 - request elevated permissions before Docker/container workspace commands.
 - `.decapod files are accessed only via decapod CLI`.
 - Read and update `.decapod/config.toml` as project context; use Decapod CLI for other `.decapod/` state.
@@ -272,6 +274,7 @@ decapod data schema --deterministic
 Stop if requirements are ambiguous or conflicting.
 
 <!-- decapod-validator-anchors
+Strict Dependency: You are strictly bound to the Decapod control plane
 Strict Dependency: You are strictly bound to the Decapod governance kernel
 -->
 "#
@@ -280,7 +283,7 @@ Strict Dependency: You are strictly bound to the Decapod governance kernel
 fn template_agents() -> String {
     r#"# AGENTS.md — Universal Agent Contract
 
-This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod control plane.**
+This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
 
 This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any other agent operating here.
 
@@ -288,7 +291,7 @@ This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any ot
 
 ```bash
 cargo install decapod
-decapod validate && decapod session acquire
+decapod validate && decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -317,18 +320,19 @@ decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
 1. **MUST** refine intent with the user before inference-heavy work.
 2. **MUST** use `decapod infer orientation` before non-trivial implementation.
 3. **MUST** stop and ask the human when Decapod emits a **Decision Gate**.
-4. **MUST NOT** work on main/master or modify the root repository's active branch. **MUST** use `decapod workspace ensure` and `cd .decapod/workspaces/<worktree>`.
-5. **MUST** read [.decapod/config.toml](.decapod/config.toml) as user-editable project context and may update it when user intent changes.
-6. **MUST NOT** claim done without `decapod validate` passing.
-7. **MUST NOT** invent capabilities that are not exposed by the binary.
-8. **MUST** stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
-9. **MUST** respect the Interface abstraction boundary.
+4. **MUST** create and claim a Decapod todo before `decapod workspace ensure`, `decapod workspace ensure --container`, or any container run, even if the human or host agent also uses another task manager.
+5. **MUST NOT** work on main/master or modify the root repository's active branch. **MUST** use `decapod workspace ensure` and `cd .decapod/workspaces/<worktree>`.
+6. **MUST** read [.decapod/config.toml](.decapod/config.toml) as user-editable project context and may update it when user intent changes.
+7. **MUST NOT** claim done without `decapod validate` passing.
+8. **MUST NOT** invent capabilities that are not exposed by the binary.
+9. **MUST** stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
+10. **MUST** respect the Interface abstraction boundary.
 
 ## Decapod Invocation Contract
 
-Agents act. Decapod orients.
-
 Decapod is not your executor, model runtime, or workflow replacement. You remain responsible for implementation. Call Decapod as the repo-native pressure relief valve when the next responsible step requires explicit intent, boundaries, context, coordination, or proof.
+
+End users and host agents may use any task manager alongside Decapod. That external tracker does not replace Decapod todos: Decapod uses its own todo claims to isolate worktrees, scope containers, prove completion, and prevent multiple agents from working the same Decapod work item concurrently.
 
 Call Decapod before proceeding when continuing would require guessing about:
 - **Intent pressure:** what you are actually trying to do.
@@ -357,9 +361,10 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 
 ## Safety Invariants
 - ✅ Router pointer: `core/DECAPOD` | ✅ Validation gate: `decapod validate`
+- ✅ Constitution ingestion gate: `decapod docs ingest`
 - ✅ Constitution RPC gate: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
 - ✅ Workspace status gate: `decapod workspace status`
-- ✅ Claim-before-work gate: `decapod todo claim --id <task-id>`
+- ✅ Claim-before-work gate: `decapod todo add "<task>"` then `decapod todo claim --id <task-id>`
 - ✅ Session auth gate: `DECAPOD_SESSION_PASSWORD`
 - ✅ Workspace gate: Docker git workspaces
 - ✅ Privilege gate: request elevated permissions before Docker/container workspace commands
@@ -368,14 +373,15 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 
 - Read `.decapod/config.toml` (human-editable) for project context and architecture direction.
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides.
+- External task managers may be used for user workflow, but Decapod todos are still mandatory for workspace/container isolation and cross-agent exclusion.
 - DO NOT mutate `.decapod/` state directly; use Decapod CLI for specs, data, workspaces, and sessions. Access to `.decapod/` is strictly via decapod CLI.
 - Use `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'` for binding contracts.
 - Use `decapod capabilities --format json` to discover available operations.
 - Stop if requirements conflict, intent is ambiguous, or policy boundaries are unclear.
 - Respect the Interface abstraction boundary.
 - Treat lock/contention failures as blocking until resolved.
-
 <!-- decapod-validator-anchors
+Strict Dependency: You are strictly bound to the Decapod control plane
 Strict Dependency: You are strictly bound to the Decapod governance kernel
 -->
 "#
@@ -544,14 +550,30 @@ over the embedded JSON constitution.
     .to_string();
 
     // Group nodes by category for the template
-    let mut categories: HashMap<&str, Vec<&str>> = HashMap::new();
+    let mut categories: std::collections::HashMap<&str, Vec<&str>> =
+        std::collections::HashMap::new();
     let mut ids = list_ids();
     ids.sort();
 
-    for id in ids {
+    for id in &ids {
         if let Some((cat, _title, _deps)) = get_metadata(id) {
             categories.entry(cat).or_default().push(id);
         }
+    }
+
+    // Manually add specs to the template since they are generated
+    let specs = [
+        "specs/README.md",
+        "specs/INTENT.md",
+        "specs/ARCHITECTURE.md",
+        "specs/INTERFACES.md",
+        "specs/VALIDATION.md",
+        "specs/SEMANTICS.md",
+        "specs/OPERATIONS.md",
+        "specs/SECURITY.md",
+    ];
+    for spec in &specs {
+        categories.entry("specs").or_default().push(spec);
     }
 
     let cat_order = [

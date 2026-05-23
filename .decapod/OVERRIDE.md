@@ -152,7 +152,7 @@
 
 # AGENTS.md — Universal Agent Contract
 
-This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod control plane.**
+This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
 
 This contract applies equally to Claude, Codex, OpenCode, Kilo, Pi, Cursor, Windsurf, Gemini, Aider, Devin, and future agents.
 
@@ -233,7 +233,7 @@ These invariants are directly enforced by tests. Violations will cause CI failur
 
 ## Decapod Governance
 
-Decapod is the repo-native control plane agents call on demand. It shapes context before inference, prevents scope drift, enforces boundaries, coordinates shared state, and requires proof-backed completion.
+Decapod is the repo-native governance kernel agents call on demand. It shapes context before inference, prevents scope drift, enforces boundaries, coordinates shared state, and requires proof-backed completion.
 
 - **The agent performs the work.** Decapod does not implement or decide.
 - **Decapod governs the work.** It validates, tracks, and surfaces convergence proof.
@@ -256,7 +256,7 @@ Call Decapod before editing. Let Decapod validate after editing.
 
 # AGENTS.md — Universal Agent Contract
 
-This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod control plane.**
+This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
 
 This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any other agent operating here.
 
@@ -530,7 +530,7 @@ Stop if requirements are ambiguous or conflicting.
 
 # AGENTS.md — Universal Agent Contract
 
-This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod control plane.**
+This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
 
 This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any other agent operating here.
 

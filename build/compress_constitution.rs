@@ -61,7 +61,6 @@ fn generate_rust_module(
     writeln!(file)?;
     writeln!(file, "use flate2::read::GzDecoder;")?;
     writeln!(file, "use std::io::Read;")?;
-    writeln!(file, "use std::collections::HashMap;")?;
     writeln!(file)?;
     writeln!(file, "/// Decompress gzipped constitution document")?;
     writeln!(

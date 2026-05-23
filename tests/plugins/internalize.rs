@@ -115,7 +115,7 @@ fn test_schema_files_exist_and_parse() {
 
     for file in files {
         let output = std::process::Command::new(env!("CARGO_BIN_EXE_decapod"))
-            .args(["docs", "show", file])
+            .args(["docs", "show", file, "--source", "embedded"])
             .output()
             .expect("run decapod docs show");
         assert!(
@@ -125,7 +125,13 @@ fn test_schema_files_exist_and_parse() {
             String::from_utf8_lossy(&output.stderr)
         );
         let raw = String::from_utf8_lossy(&output.stdout);
-        let parsed: serde_json::Value = serde_json::from_str(&raw).expect("parse schema fixture");
+        let wrapped: serde_json::Value = serde_json::from_str(&raw).expect("parse wrapper");
+        let schema_str = wrapped
+            .get("summary")
+            .and_then(|s| s.as_str())
+            .unwrap_or(&raw);
+        let parsed: serde_json::Value =
+            serde_json::from_str(schema_str).expect("parse schema fixture");
         assert!(
             parsed.get("$id").is_some(),
             "schema {} must declare $id",
