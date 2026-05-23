@@ -1179,7 +1179,7 @@ pub fn scaffold_project_entrypoints(
         }
         for (file, content) in &opts.preserved_agent_content {
             override_md.push_str(&format!(
-                "\n## Preserved from {}\n\n{}\n",
+                "\n## Adopted from {}\n\n{}\n",
                 file,
                 content.trim()
             ));
@@ -1220,7 +1220,7 @@ pub fn scaffold_project_entrypoints(
             }
             for (file, content) in &opts.preserved_agent_content {
                 existing_override.push_str(&format!(
-                    "\n## Preserved from {}\n\n{}\n",
+                    "\n## Adopted from {}\n\n{}\n",
                     file,
                     content.trim()
                 ));
