@@ -408,8 +408,7 @@ fn init_with_claude_only_adopts_it_and_generates_all_four_entrypoints() {
     let repo_dir = tmp.path();
 
     // 1. Create only CLAUDE.md
-    fs::write(repo_dir.join("CLAUDE.md"), "# Original Claude Intent")
-        .expect("write CLAUDE.md");
+    fs::write(repo_dir.join("CLAUDE.md"), "# Original Claude Intent").expect("write CLAUDE.md");
 
     // 2. Run decapod init
     let out = run_decapod(repo_dir, &["init"]);
