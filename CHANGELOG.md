@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.51.0](https://github.com/DecapodLabs/decapod/compare/v0.50.1...v0.51.0) - 2026-05-23
+
+### Added
+
+- adopt existing agent entrypoints into OVERRIDE.md during init ([#580](https://github.com/DecapodLabs/decapod/pull/580))
+
 ## [0.50.1](https://github.com/DecapodLabs/decapod/compare/v0.50.0...v0.50.1) - 2026-05-23
 
 ### Other
