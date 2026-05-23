@@ -123,7 +123,7 @@ pub(crate) struct InitGroupCli {
     pub gemini: bool,
     /// Create only CODEX.md entrypoint file.
     #[clap(long)]
-    pub codex: bool,
+    pub cdx_ep: bool,
     /// Create only AGENTS.md entrypoint file.
     #[clap(long)]
     pub agents: bool,
@@ -160,7 +160,7 @@ pub(crate) enum InitCommand {
     },
     /// Apply explicit init options (non-interactive).
     #[clap(alias = "wtih")]
-    With(InitWithCli),
+    With(Box<InitWithCli>),
 }
 
 #[derive(clap::Args, Debug, Clone)]
@@ -188,7 +188,7 @@ pub(crate) struct InitWithCli {
     pub gemini: bool,
     /// Create only CODEX.md entrypoint file.
     #[clap(long)]
-    pub codex: bool,
+    pub cdx_ep: bool,
     /// Create only AGENTS.md entrypoint file.
     #[clap(long)]
     pub agents: bool,

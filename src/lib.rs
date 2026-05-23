@@ -1303,7 +1303,7 @@ fn init_with_from_config(
         all: all_entrypoints,
         claude: has("CLAUDE.md"),
         gemini: has("GEMINI.md"),
-        codex: has("CODEX.md"),
+        cdx_ep: has("CODEX.md"),
         agents: has("AGENTS.md"),
         specs: config.init.specs,
         diagram_style: config.init.diagram_style,
@@ -1319,7 +1319,7 @@ fn init_with_from_config(
 
 fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjectConfig {
     let mut entrypoints = Vec::new();
-    let no_entrypoint_flags = !init.claude && !init.gemini && !init.codex && !init.agents;
+    let no_entrypoint_flags = !init.claude && !init.gemini && !init.cdx_ep && !init.agents;
     if init.all || init.agents || no_entrypoint_flags {
         entrypoints.push("AGENTS.md".to_string());
     }
@@ -1329,7 +1329,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
     if init.all || init.gemini || no_entrypoint_flags {
         entrypoints.push("GEMINI.md".to_string());
     }
-    if init.all || init.codex || no_entrypoint_flags {
+    if init.all || init.cdx_ep || no_entrypoint_flags {
         entrypoints.push("CODEX.md".to_string());
     }
     DecapodProjectConfig {
@@ -1364,7 +1364,7 @@ fn interactive_init_with(
             next.agents = true;
             next.claude = true;
             next.gemini = true;
-            next.codex = true;
+            next.cdx_ep = true;
         }
     }
     if config.init.specs {
@@ -1471,27 +1471,28 @@ fn run_init_apply(
         }
     }
 
-    let mut agent_files_to_generate = if init_with.claude || init_with.gemini || init_with.codex || init_with.agents {
-        let mut files = vec![];
-        if init_with.claude {
-            files.push("CLAUDE.md".to_string());
-        }
-        if init_with.gemini {
-            files.push("GEMINI.md".to_string());
-        }
-        if init_with.codex {
-            files.push("CODEX.md".to_string());
-        }
-        if init_with.agents {
-            files.push("AGENTS.md".to_string());
-        }
-        files
-    } else {
-        existing_agent_files
-            .into_iter()
-            .map(|s| s.to_string())
-            .collect()
-    };
+    let mut agent_files_to_generate =
+        if init_with.claude || init_with.gemini || init_with.cdx_ep || init_with.agents {
+            let mut files = vec![];
+            if init_with.claude {
+                files.push("CLAUDE.md".to_string());
+            }
+            if init_with.gemini {
+                files.push("GEMINI.md".to_string());
+            }
+            if init_with.cdx_ep {
+                files.push("CODEX.md".to_string());
+            }
+            if init_with.agents {
+                files.push("AGENTS.md".to_string());
+            }
+            files
+        } else {
+            existing_agent_files
+                .into_iter()
+                .map(|s| s.to_string())
+                .collect()
+        };
 
     if !agent_files_to_generate.is_empty()
         && !agent_files_to_generate.iter().any(|f| f == "AGENTS.md")
@@ -1606,7 +1607,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     clean_project(dir)?;
                     return Ok(());
                 }
-                Some(InitCommand::With(with)) => with,
+                Some(InitCommand::With(with)) => *with,
                 None => {
                     if init_group.dir.is_some() && init_group.project_dir.is_some() {
                         return Err(error::DecapodError::ValidationError(
@@ -1649,7 +1650,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             with.agents = true;
                             with.claude = true;
                             with.gemini = true;
-                            with.codex = true;
+                            with.cdx_ep = true;
                         }
                         if init_group.agents {
                             with.agents = true;
@@ -1660,8 +1661,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                         if init_group.gemini {
                             with.gemini = true;
                         }
-                        if init_group.codex {
-                            with.codex = true;
+                        if init_group.cdx_ep {
+                            with.cdx_ep = true;
                         }
                         if init_group.product_name.is_some() {
                             with.product_name = init_group.product_name.clone();
@@ -1699,7 +1700,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             all: init_group.all,
                             claude: init_group.claude,
                             gemini: init_group.gemini,
-                            codex: init_group.codex,
+                            cdx_ep: init_group.cdx_ep,
                             agents: init_group.agents,
                             specs: true,
                             diagram_style,
