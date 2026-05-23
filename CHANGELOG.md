@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.50.0](https://github.com/DecapodLabs/decapod/compare/v0.49.2...v0.50.0) - 2026-05-23
+
+### Other
+
+- densify constitution and restore safety invariants ([#574](https://github.com/DecapodLabs/decapod/pull/574))
+
 ## [0.49.2](https://github.com/DecapodLabs/decapod/compare/v0.49.1...v0.49.2) - 2026-05-23
 
 ### Fixed
