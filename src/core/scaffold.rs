@@ -1334,4 +1334,3 @@ pub fn scaffold_project_entrypoints(
         specs_preserved,
     })
 }
-
