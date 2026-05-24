@@ -5809,6 +5809,7 @@ fn run_workspace_command(
                     "in_container": status.container.in_container,
                     "docker_available": status.container.docker_available,
                     "worktree_path": status.git.worktree_path,
+                    "blockers": status.blockers,
                     "required_actions": status.required_actions,
                 })
             );

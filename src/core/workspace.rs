@@ -90,6 +90,8 @@ const PROTECTED_PATTERNS: &[&str] = &[
     "hotfix/*",
 ];
 
+pub(crate) const EXTERNAL_TRACKER_OVERRIDE_MARKER: &str = "DECAPOD_EXTERNAL_TRACKER=true";
+
 /// Prune stale git worktree metadata and remove stale worktree sections from .git/config.
 ///
 /// This is a best-effort maintenance operation to keep worktree state healthy after
@@ -482,9 +484,14 @@ pub fn ensure_workspace(
         ensure_assigned_open_tasks(repo_root, agent_id, &status.git.current_branch)?;
 
     // If we're already in a valid worktree, on todo-scoped branch, and no upgrade needed, we're good.
+    // Relaxation for Issue #586: Allow non-scoped branches in worktrees if using external tracker
+    // or if the project has explicitly opted into external tracker compatibility in OVERRIDE.md.
+    let allow_unscoped = !external_task_ref().is_empty() || is_external_tracker_override(repo_root);
+
     if status.git.in_worktree
         && !assigned_todos.is_empty()
         && !branch_contains_any_todo_id_or_hash(&status.git.current_branch, &assigned_todos)
+        && !allow_unscoped
     {
         return Err(DecapodError::ValidationError(format!(
             "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_BRANCH_NOT_TODO_SCOPED severity=transient auto_remediable=true audience=agent agent_action=\"switch to a branch that includes one of the assigned todo IDs or hashes: {}\" user_note=\"Current branch is not todo-scoped; the agent should switch to a properly scoped branch or create one.\"\nCurrent worktree branch '{}' is not todo-scoped. Branch must include one of assigned todo IDs or hashes: {}.",
@@ -569,12 +576,14 @@ pub fn ensure_workspace(
 
         // Return blocker telling agent to enter container
         // We re-read status but override the blocker/container info
+        let runtime = container_runtime::find_container_runtime()?;
         status = get_workspace_status(&worktree_path)?;
         status.blockers.push(Blocker {
             kind: BlockerKind::WorkspaceRequired,
             message: "Container environment prepared.".to_string(),
             resolve_hint: format!(
-                "docker run -it -e DECAPOD_CONTAINER=1 -v {main_repo}:{main_repo} -w {} {} bash",
+                "{} run -it -e DECAPOD_CONTAINER=1 -v {main_repo}:{main_repo} -w {} {} bash",
+                runtime,
                 worktree_path.display(),
                 image_tag,
                 main_repo = main_repo.display(),
@@ -739,7 +748,8 @@ CMD ["/bin/bash"]
 
 /// Build workspace container image
 fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), DecapodError> {
-    let output = Command::new("docker")
+    let runtime = container_runtime::find_container_runtime()?;
+    let output = Command::new(runtime)
         .args([
             "build",
             "-t",
@@ -821,6 +831,18 @@ fn is_branch_protected(branch: &str) -> bool {
         }
     }
     false
+}
+
+fn is_external_tracker_override(repo_root: &Path) -> bool {
+    let main_repo = get_main_repo_root(repo_root).unwrap_or_else(|_| repo_root.to_path_buf());
+    let override_path = main_repo.join(".decapod").join("OVERRIDE.md");
+    if !override_path.exists() {
+        return false;
+    }
+    match std::fs::read_to_string(override_path) {
+        Ok(content) => content.contains(EXTERNAL_TRACKER_OVERRIDE_MARKER),
+        Err(_) => false,
+    }
 }
 
 fn get_current_branch(repo_root: &Path) -> Result<String, DecapodError> {
