@@ -353,11 +353,13 @@ fn init_blends_existing_agent_entrypoints_into_override_md() {
         "AGENTS.md should not contain custom content anymore"
     );
 
-// 4. Check if custom content is in .bak (for agent to process)
+    // 4. Check if custom content is in .bak (for agent to process)
     let bak_path = repo_dir.join("AGENTS.md.bak");
-    assert!(bak_path.exists(), "AGENTS.md.bak should exist for agent processing");
-    let bak_content =
-        fs::read_to_string(&bak_path).expect("read AGENTS.md.bak");
+    assert!(
+        bak_path.exists(),
+        "AGENTS.md.bak should exist for agent processing"
+    );
+    let bak_content = fs::read_to_string(&bak_path).expect("read AGENTS.md.bak");
     assert!(
         bak_content.contains("Custom Agents"),
         "AGENTS.md.bak should contain custom content"
@@ -383,12 +385,22 @@ fn init_blends_all_agent_entrypoints_when_forced() {
 
     // Legacy content stays in .bak files for agent to process
     // Agent calls get_legacy_entrypoint_contents() to retrieve and manually blend
-    assert!(repo_dir.join("CLAUDE.md.bak").exists(), "CLAUDE.md.bak should exist for agent");
-    assert!(repo_dir.join("GEMINI.md.bak").exists(), "GEMINI.md.bak should exist for agent");
-    assert!(repo_dir.join("CODEX.md.bak").exists(), "CODEX.md.bak should exist for agent");
+    assert!(
+        repo_dir.join("CLAUDE.md.bak").exists(),
+        "CLAUDE.md.bak should exist for agent"
+    );
+    assert!(
+        repo_dir.join("GEMINI.md.bak").exists(),
+        "GEMINI.md.bak should exist for agent"
+    );
+    assert!(
+        repo_dir.join("CODEX.md.bak").exists(),
+        "CODEX.md.bak should exist for agent"
+    );
 
     // Verify .bak files contain the custom content
-    let claude_bak = fs::read_to_string(repo_dir.join("CLAUDE.md.bak")).expect("read CLAUDE.md.bak");
+    let claude_bak =
+        fs::read_to_string(repo_dir.join("CLAUDE.md.bak")).expect("read CLAUDE.md.bak");
     assert!(claude_bak.contains("# Custom Claude"));
 }
 

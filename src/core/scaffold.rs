@@ -1199,17 +1199,17 @@ pub fn get_legacy_entrypoint_contents(
 
     for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let bak_path = target_dir.join(format!("{}.bak", file));
-        if bak_path.exists() {
-            if let Ok(bak_content) = fs::read_to_string(&bak_path) {
-                let trimmed = bak_content.trim();
-                if !trimmed.is_empty() {
-                    match file {
-                        "AGENTS.md" => contents.agents_md = Some(trimmed.to_string()),
-                        "CLAUDE.md" => contents.claude_md = Some(trimmed.to_string()),
-                        "GEMINI.md" => contents.gemini_md = Some(trimmed.to_string()),
-                        "CODEX.md" => contents.codex_md = Some(trimmed.to_string()),
-                        _ => {}
-                    }
+        if bak_path.exists()
+            && let Ok(bak_content) = fs::read_to_string(&bak_path)
+        {
+            let trimmed = bak_content.trim();
+            if !trimmed.is_empty() {
+                match file {
+                    "AGENTS.md" => contents.agents_md = Some(trimmed.to_string()),
+                    "CLAUDE.md" => contents.claude_md = Some(trimmed.to_string()),
+                    "GEMINI.md" => contents.gemini_md = Some(trimmed.to_string()),
+                    "CODEX.md" => contents.codex_md = Some(trimmed.to_string()),
+                    _ => {}
                 }
             }
         }
@@ -1257,7 +1257,7 @@ pub fn scaffold_project_entrypoints(
 
     // Root entrypoints from embedded templates
     let readme_md = assets::get_template("README.md").expect("Missing template: README.md");
-    let mut override_md =
+    let override_md =
         assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
 
     // AGENT ENTRYPOINTS - Neural Interfaces (only generate specified files)
