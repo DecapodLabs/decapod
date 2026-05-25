@@ -1204,19 +1204,6 @@ pub fn scaffold_project_entrypoints(
     let mut override_md =
         assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
 
-    // Blend preserved agent content into OVERRIDE.md if present
-    if !opts.preserved_agent_content.is_empty() {
-        if !override_md.ends_with('\n') {
-            override_md.push('\n');
-        }
-        override_md.push_str("\n## PENDING CONSOLIDATION (ADOPTED INTENT)\n\n");
-        override_md.push_str("> **AGENT INSTRUCTION:** Analyze the content below and consolidate relevant rules into the appropriate `### section/ID` headers within this file. The `### adoption/*` headers below represent your previous project-specific intent which MUST be preserved in the substrate above.\n");
-        for (file, content) in &opts.preserved_agent_content {
-            override_md.push_str(&format!("\n### adoption/{}\n\n{}\n", file, content.trim()));
-        }
-        override_md.push_str("\n---\n");
-    }
-
     // AGENT ENTRYPOINTS - Neural Interfaces (only generate specified files)
     let mut ep_created = 0usize;
     let mut ep_unchanged = 0usize;
@@ -1244,23 +1231,6 @@ pub fn scaffold_project_entrypoints(
     // Blend into existing OVERRIDE.md or create new one
     let override_path = opts.target_dir.join(".decapod/OVERRIDE.md");
     if override_path.exists() {
-        if !opts.preserved_agent_content.is_empty() && !opts.dry_run {
-            let mut existing_override = fs::read_to_string(&override_path).unwrap_or_default();
-            if !existing_override.ends_with('\n') {
-                existing_override.push('\n');
-            }
-            existing_override.push_str("\n## PENDING CONSOLIDATION (ADOPTED INTENT)\n\n");
-            existing_override.push_str("> **AGENT INSTRUCTION:** Analyze the content below and consolidate relevant rules into the appropriate `### section/ID` headers within this file. The `### adoption/*` headers below represent your previous project-specific intent which MUST be preserved in the substrate above.\n");
-            for (file, content) in &opts.preserved_agent_content {
-                existing_override.push_str(&format!(
-                    "\n### adoption/{}\n\n{}\n",
-                    file,
-                    content.trim()
-                ));
-            }
-            existing_override.push_str("\n---\n");
-            fs::write(&override_path, existing_override).map_err(error::DecapodError::IoError)?;
-        }
         cfg_preserved += 1;
     } else {
         match write_file(opts, ".decapod/OVERRIDE.md", &override_md)? {

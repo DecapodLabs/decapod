@@ -61,7 +61,7 @@ fn find_decapod_project_root(start_dir: &Path) -> Result<PathBuf, error::Decapod
 }
 
 // Process-local session password - eliminates unsafe env::set_var
-static SESSION_PASSWORD: OnceLock<String> = OnceLock::new();
+static SESSION_P_VAL: OnceLock<String> = OnceLock::new();
 
 fn clean_project(dir: Option<PathBuf>) -> Result<(), error::DecapodError> {
     let raw_dir = match dir {
@@ -1471,10 +1471,6 @@ fn run_init_apply(
         }
     }
 
-    if !init_with.dry_run {
-        scaffold::blend_legacy_entrypoints(&target_dir)?;
-    }
-
     let mut agent_files_to_generate =
         if init_with.claude || init_with.gemini || init_with.cdx_ep || init_with.agents {
             let mut files = vec![];
@@ -1584,6 +1580,15 @@ fn run_init_apply(
         "  Diagram Notation: {}",
         diagram_style_label(init_with.diagram_style).bright_white()
     );
+
+    if backup_count > 0 {
+        println!("\n{}", "TASK: Legacy entrypoints were backed up (.bak). Blend their project-specific rules into the appropriate sections of `.decapod/OVERRIDE.md`.".bright_yellow());
+        println!("{}", "      Do NOT dump them in an `entrypoint override` section. Things related to code should go in coding sections, arch in arch sections, etc.".bright_yellow());
+        println!(
+            "{}",
+            "      Delete the .bak files when done.".bright_yellow()
+        );
+    }
     println!(
         "{} {}",
         "✓".bright_green().bold(),
@@ -2645,23 +2650,23 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
     }
 
     // Read from OnceLock first (process-local), fall back to env if not set
-    let supplied_password = SESSION_PASSWORD
+    let supplied_p = SESSION_P_VAL
         .get()
         .cloned()
         .or_else(|| std::env::var("DECAPOD_SESSION_PASSWORD").ok())
         .inspect(|p| {
             // Cache it in OnceLock if found in env
-            let _ = SESSION_PASSWORD.get_or_init(|| p.clone());
+            let _ = SESSION_P_VAL.get_or_init(|| p.clone());
         });
 
-    let supplied_password = match supplied_password {
+    let supplied_p = match supplied_p {
         Some(p) => p,
         None => {
             // No password in env - auto-acquire new session (entrypoint funnel)
             return auto_acquire_session(&project_root, &agent_id);
         }
     };
-    let supplied_hash = hash_password(&supplied_password, &session.token);
+    let supplied_hash = hash_password(&supplied_p, &session.token);
     if supplied_hash != session.password_hash {
         // Password invalid - auto-acquire new session (entrypoint funnel)
         return auto_acquire_session(&project_root, &agent_id);
@@ -2673,11 +2678,11 @@ fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error
     let issued = now_epoch_secs();
     let expires = issued.saturating_add(session_ttl_secs());
     let token = crate::core::ulid::new_ulid();
-    let password = generate_ephemeral_password()?;
+    let temp_p = generate_ephemeral_password()?;
     let rec = AgentSessionRecord {
         agent_id: agent_id.to_string(),
         token: token.clone(),
-        password_hash: hash_password(&password, &token),
+        password_hash: hash_password(&temp_p, &token),
         issued_at_epoch_secs: issued,
         expires_at_epoch_secs: expires,
     };
@@ -2685,7 +2690,7 @@ fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error
 
     // Set the password for subsequent operations in this process using process-local OnceLock
     // Eliminates unsafe env::set_var and multi-threading UB
-    SESSION_PASSWORD.get_or_init(|| password);
+    SESSION_P_VAL.get_or_init(|| temp_p.clone());
 
     eprintln!("session: auto-acquired for agent '{}'.", agent_id);
 
@@ -2894,11 +2899,11 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
             let issued = now_epoch_secs();
             let expires = issued.saturating_add(session_ttl_secs());
             let token = crate::core::ulid::new_ulid();
-            let password = generate_ephemeral_password()?;
+            let temp_p = generate_ephemeral_password()?;
             let rec = AgentSessionRecord {
                 agent_id: agent_id.clone(),
                 token: token.clone(),
-                password_hash: hash_password(&password, &token),
+                password_hash: hash_password(&temp_p, &token),
                 issued_at_epoch_secs: issued,
                 expires_at_epoch_secs: expires,
             };
@@ -2908,10 +2913,10 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
             println!("Session acquired successfully.");
             println!("Agent: {}", agent_id);
             println!("Token: {}", token);
-            println!("Password: {}", password);
+            println!("Password: {}", temp_p);
             println!("ExpiresAtEpoch: {}", expires);
             println!(
-                "Export before running other commands: DECAPOD_AGENT_ID='{}' and DECAPOD_SESSION_PASSWORD='<password>'",
+                "Export before running other commands: DECAPOD_AGENT_ID='{}' and DECAPOD_SESSION_PASSWORD='<token>'",
                 rec.agent_id
             );
             println!("\nYou may now use other decapod commands.");
@@ -4070,7 +4075,7 @@ fn heal_agents_contract(
     for marker in [
         "Stop if",
         "via decapod CLI",
-        "Interface abstraction boundary",
+        "interface abstraction boundary",
         "Strict Dependency: You are strictly bound to the Decapod governance kernel",
     ] {
         if !content.contains(marker) {
