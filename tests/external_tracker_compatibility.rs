@@ -140,6 +140,42 @@ fn test_external_tracker_override_md_relaxation() {
 }
 
 #[test]
+fn test_external_tracker_config_toml_relaxation() {
+    let tmp = TempDir::new().expect("tempdir");
+    let dir = tmp.path();
+    setup_repo(dir);
+
+    let branch = "feature/config-toml-task";
+    let worktree_dir = dir.join(".decapod/workspaces/config-test");
+    
+    Command::new("git")
+        .args(["worktree", "add", "-b", branch, worktree_dir.to_str().unwrap()])
+        .current_dir(dir)
+        .status()
+        .expect("git worktree add");
+
+    // 1. Add toggle to config.toml
+    let config_path = dir.join(".decapod/config.toml");
+    let mut content = fs::read_to_string(&config_path).expect("read config");
+    content.push_str("\nexternal_tracker = true\n");
+    fs::write(&config_path, content).expect("write config");
+
+    // 2. Run - should succeed and STAY
+    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["workspace", "ensure"])
+        .current_dir(&worktree_dir)
+        .output()
+        .expect("workspace ensure with config.toml");
+    
+    assert!(out.status.success(), "should succeed with config.toml toggle. Stderr: {}", String::from_utf8_lossy(&out.stderr));
+    
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let json: serde_json::Value = serde_json::from_str(&stdout).expect("valid json");
+    assert_eq!(json["branch"], branch, "should have stayed on branch with config.toml toggle. JSON: {}", stdout);
+    assert_eq!(json["status"], "ok");
+}
+
+#[test]
 fn test_workspace_ensure_json_orchestration_data() {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path();

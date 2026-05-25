@@ -260,6 +260,8 @@ pub(crate) struct RepoContext {
     pub primary_languages: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub detected_surfaces: Vec<String>,
+    #[serde(default)]
+    pub external_tracker: bool,
 }
 
 impl Default for DecapodProjectConfig {
