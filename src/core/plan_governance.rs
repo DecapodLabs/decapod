@@ -405,6 +405,9 @@ mod tests {
                 proof_hooks: vec!["validate_passes".to_string()],
                 unknowns: vec![],
                 human_questions: vec![],
+                stop_conditions: vec![],
+                unresolved_contradictions: vec![],
+                deferred_questions: vec![],
                 constraints: ScopeConstraints::default(),
             },
         )

@@ -1378,33 +1378,26 @@ Agents operating in this repo MUST maintain these artifacts to ensure long-horiz
             // If we are regenerating INTENT.md and it already exists, try to preserve the Epistemic Custody Fields section.
             if rel_path == LOCAL_PROJECT_SPECS_INTENT {
                 let dest = opts.target_dir.join(rel_path);
-                if dest.exists() {
-                    if let Ok(existing_content) = fs::read_to_string(&dest) {
-                        if let Some(start_idx) =
-                            existing_content.find("## Epistemic Custody Fields")
-                        {
-                            let end_marker = "## Tradeoffs Register";
-                            let custody_section = if let Some(end_idx) =
-                                existing_content[start_idx..].find(end_marker)
-                            {
-                                &existing_content[start_idx..start_idx + end_idx]
-                            } else {
-                                &existing_content[start_idx..]
-                            };
+                if let Ok(existing_content) = fs::read_to_string(&dest)
+                    && let Some(start_idx) = existing_content.find("## Epistemic Custody Fields")
+                {
+                    let end_marker = "## Tradeoffs Register";
+                    let custody_section =
+                        if let Some(end_idx) = existing_content[start_idx..].find(end_marker) {
+                            &existing_content[start_idx..start_idx + end_idx]
+                        } else {
+                            &existing_content[start_idx..]
+                        };
 
-                            // Now replace it in the new content
-                            if let Some(new_start_idx) = content.find("## Epistemic Custody Fields")
-                            {
-                                if let Some(new_end_idx) = content[new_start_idx..].find(end_marker)
-                                {
-                                    let mut new_merged = content[..new_start_idx].to_string();
-                                    new_merged.push_str(custody_section.trim_end());
-                                    new_merged.push_str("\n\n");
-                                    new_merged.push_str(&content[new_start_idx + new_end_idx..]);
-                                    content = new_merged;
-                                }
-                            }
-                        }
+                    // Now replace it in the new content
+                    if let Some(new_start_idx) = content.find("## Epistemic Custody Fields")
+                        && let Some(new_end_idx) = content[new_start_idx..].find(end_marker)
+                    {
+                        let mut new_merged = content[..new_start_idx].to_string();
+                        new_merged.push_str(custody_section.trim_end());
+                        new_merged.push_str("\n\n");
+                        new_merged.push_str(&content[new_start_idx + new_end_idx..]);
+                        content = new_merged;
                     }
                 }
             }

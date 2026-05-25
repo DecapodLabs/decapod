@@ -50,13 +50,7 @@ decapod data schema --deterministic
 - Capability authority: `decapod capabilities --format json`.
 -- Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod rpc --op context.scope`.
 
-## Living Specs Governance
-
-Treat `.decapod/generated/specs/*` as living documents.
-- **Continuous Alignment**: Adjust specs as intent and code change over time.
-- **Intent-Driven**: Generally, specs only change when user intent evolves.
-- **Clarification**: When specs change, clarify the code change in terms of the updated intent.
-
+Treat `.decapod/generated/specs/*` as living documents. Adjust specs as intent and code change over time.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors

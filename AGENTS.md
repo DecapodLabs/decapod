@@ -68,7 +68,6 @@ Call Decapod before proceeding when continuing would require guessing about:
 Concrete triggers: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, conflicting intent/specs, context loss, multi-agent collision risk, or readiness to claim completion.
 
 Do not call Decapod for every trivial file read, local edit, or mechanical command. Call it at decision boundaries that need governance, memory, boundaries, coordination, or proof. Decapod calls should produce or update explicit artifacts.
-
 ## Epistemic Custody
 
 **Epistemic custody** is the preserved chain between intent, context, assumptions, action, evidence, contradiction, and proof, so agent work remains inspectable, bounded, and falsifiable across time, agents, and recursive passes.
@@ -84,7 +83,7 @@ Do not call Decapod for every trivial file read, local edit, or mechanical comma
 
 ### Custody Rules
 1. **Preserve Uncertainty**: Summaries must preserve uncertainty, risk, and unresolved contradictions instead of compressing them away into polished prose.
-2. **Recursive Continuity**: Prior assumptions and unresolved contradictions MUST carry forward across recursive agent passes or different agents until explicitly resolved or falsified.
+2. **Recursive Continuity**: Prior assumptions and unresolved contradictions MUST carry forward across recursive agent passes until resolved.
 3. **Evidence-Based Claims**: Any claim of success or completion must be tied to measured evidence (artifacts, tests, or explicit user instruction).
 4. **Falsifiability**: Work must be structured so a human can quickly identify where an assumption was wrong or where proof failed.
 5. **Clarification Trigger**: If a critical assumption cannot be proven or a contradiction cannot be resolved, you MUST stop and request human clarification.
