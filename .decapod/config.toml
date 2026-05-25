@@ -18,3 +18,4 @@ product_type = "service_or_library"
 done_criteria = "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
 primary_languages = ["Rust"]
 detected_surfaces = ["cargo"]
+external_tracker = true

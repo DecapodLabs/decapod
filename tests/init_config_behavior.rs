@@ -437,3 +437,33 @@ fn init_with_claude_only_adopts_it_and_generates_all_four_entrypoints() {
     assert!(override_content.contains("### adoption/CLAUDE.md"));
     assert!(override_content.contains("# Original Claude Intent"));
 }
+
+
+#[test]
+fn init_creates_custody_directory_and_intent_has_epistemic_custody_fields() {
+    let tmp = tempdir().expect("tempdir");
+    let out = run_decapod(tmp.path(), &["init", "with", "--force"]);
+    assert!(out.status.success(), "decapod init with failed: {}", String::from_utf8_lossy(&out.stderr));
+    let custody_dir = tmp.path().join(".decapod/generated/artifacts/custody");
+    assert!(custody_dir.exists(), "expected .decapod/generated/artifacts/custody/ directory to exist");
+    let intent = fs::read_to_string(tmp.path().join(".decapod/generated/specs/INTENT.md")).expect("read INTENT.md");
+    assert!(intent.contains("## Epistemic Custody Fields"), "INTENT.md should contain Epistemic Custody Fields section");
+    assert!(intent.contains("### Active Assumptions"), "INTENT.md should contain Active Assumptions subsection");
+    assert!(intent.contains("### Measured vs Inferred Facts"), "INTENT.md should contain Measured vs Inferred Facts subsection");
+    assert!(intent.contains("### Unresolved Contradictions"), "INTENT.md should contain Unresolved Contradictions subsection");
+    assert!(intent.contains("### Deferred Questions"), "INTENT.md should contain Deferred Questions subsection");
+    assert!(intent.contains("### Stop Conditions"), "INTENT.md should contain Stop Conditions subsection");
+    assert!(intent.contains("### Proof Required Before Completion"), "INTENT.md should contain Proof Required Before Completion subsection");
+}
+
+#[test]
+fn agents_md_contains_epistemic_custody_section() {
+    let tmp = tempdir().expect("tempdir");
+    let out = run_decapod(tmp.path(), &["init", "with", "--force", "--all"]);
+    assert!(out.status.success(), "decapod init with failed: {}", String::from_utf8_lossy(&out.stderr));
+    let agents_md = fs::read_to_string(tmp.path().join("AGENTS.md")).expect("read AGENTS.md");
+    assert!(agents_md.contains("## Epistemic Custody"), "AGENTS.md should contain Epistemic Custody section");
+    assert!(agents_md.contains("**Epistemic custody** is the preserved chain"), "AGENTS.md should define epistemic custody");
+    assert!(agents_md.contains("| Term | Meaning |"), "AGENTS.md should contain epistemic custody vocabulary table");
+    assert!(agents_md.contains("## Custody artifacts"), "AGENTS.md should describe custody artifacts directory");
+}

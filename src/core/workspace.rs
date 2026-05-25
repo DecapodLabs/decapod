@@ -90,8 +90,6 @@ const PROTECTED_PATTERNS: &[&str] = &[
     "hotfix/*",
 ];
 
-pub(crate) const EXTERNAL_TRACKER_OVERRIDE_MARKER: &str = "DECAPOD_EXTERNAL_TRACKER=true";
-
 /// Prune stale git worktree metadata and remove stale worktree sections from .git/config.
 ///
 /// This is a best-effort maintenance operation to keep worktree state healthy after
@@ -485,10 +483,8 @@ pub fn ensure_workspace(
 
     // If we're already in a valid worktree, on todo-scoped branch, and no upgrade needed, we're good.
     // Relaxation for Issue #586: Allow non-scoped branches in worktrees if using external tracker
-    // or if the project has explicitly opted into external tracker compatibility in OVERRIDE.md or config.toml.
-    let allow_unscoped = !external_task_ref().is_empty()
-        || is_external_tracker_override(repo_root)
-        || is_external_tracker_config(repo_root);
+    // or if the project has explicitly opted into external tracker compatibility in config.toml.
+    let allow_unscoped = !external_task_ref().is_empty() || is_external_tracker_config(repo_root);
 
     if status.git.in_worktree
         && !assigned_todos.is_empty()
@@ -833,21 +829,6 @@ fn is_branch_protected(branch: &str) -> bool {
         }
     }
     false
-}
-
-fn is_external_tracker_override(repo_root: &Path) -> bool {
-    let main_repo = get_main_repo_root(repo_root).unwrap_or_else(|_| repo_root.to_path_buf());
-    let override_path = main_repo.join(".decapod").join("OVERRIDE.md");
-    if !override_path.exists() {
-        return false;
-    }
-    match std::fs::read_to_string(override_path) {
-        Ok(content) => {
-            content.contains(EXTERNAL_TRACKER_OVERRIDE_MARKER)
-                || content.contains("DECAPOD_EXTERNAL_TRACKER=true")
-        }
-        Err(_) => false,
-    }
 }
 
 fn is_external_tracker_config(repo_root: &Path) -> bool {

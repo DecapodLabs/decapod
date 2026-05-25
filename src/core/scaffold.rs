@@ -429,6 +429,7 @@ These files are the project-local contract for humans and agents.
 - `.decapod/generated/context/`: deterministic context capsules.
 - `.decapod/generated/policy/context_capsule_policy.json`: repo-native JIT context policy contract.
 - `.decapod/generated/artifacts/provenance/`: promotion manifests and convergence checklist.
+- `.decapod/generated/artifacts/custody/`: epistemic custody artifacts (assumptions, contradictions, deferred questions).
 - `.decapod/generated/artifacts/inventory/`: deterministic release inventory.
 - `.decapod/generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
@@ -1058,6 +1059,8 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     "!.decapod/generated/artifacts/provenance/",
     "!.decapod/generated/artifacts/provenance/*.json",
     "!.decapod/generated/artifacts/provenance/kcr_trend.jsonl",
+    "!.decapod/generated/artifacts/custody/",
+    "!.decapod/generated/artifacts/custody/*.md",
     "!.decapod/generated/specs/",
     "!.decapod/generated/specs/*.md",
     "!.decapod/generated/specs/.manifest.json",
