@@ -1184,7 +1184,7 @@ pub struct LegacyEntrypointContent {
     pub agents_md: Option<String>,
     pub claude_md: Option<String>,
     pub gemini_md: Option<String>,
-    pub codex_md: Option<String>,
+    pub codex_entrypoint_md: Option<String>,
 }
 
 /// Read legacy agent entrypoint files (backed up to *.bak during init) and return their contents.
@@ -1208,7 +1208,7 @@ pub fn get_legacy_entrypoint_contents(
                     "AGENTS.md" => contents.agents_md = Some(trimmed.to_string()),
                     "CLAUDE.md" => contents.claude_md = Some(trimmed.to_string()),
                     "GEMINI.md" => contents.gemini_md = Some(trimmed.to_string()),
-                    "CODEX.md" => contents.codex_md = Some(trimmed.to_string()),
+                    "CODEX.md" => contents.codex_entrypoint_md = Some(trimmed.to_string()),
                     _ => {}
                 }
             }
