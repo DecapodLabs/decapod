@@ -45,6 +45,33 @@ flowchart LR
 - [ ] `cargo clippy -- -D warnings` passes with no denied lints
 - [ ] `cargo fmt --check` passes on the repo
 
+## Epistemic Custody Fields
+
+### Active Assumptions
+- [ ] List any assumptions made to proceed.
+- [ ] Flag assumptions that require future verification.
+
+### Confidence & Risk Level
+- **Confidence**: Low/Medium/High (Rationale: )
+- **Risk**: Low/Medium/High (Impact of wrong assumptions: )
+
+### Measured vs Inferred Facts
+| Fact | Source (Provenance) | Type (Measured/Inferred) |
+|---|---|---|
+| | | |
+
+### Unresolved Contradictions
+- [ ] List any evidence that conflicts with current assumptions or intent.
+
+### Deferred Questions
+- [ ] Questions to be answered later.
+
+### Stop Conditions
+- [ ] Explicit conditions under which the agent should stop and ask for help.
+
+### Proof Required Before Completion
+- [ ] Specific evidence needed to prove the outcome is met.
+
 ## Tradeoffs Register
 | Decision | Benefit | Cost | Review Trigger |
 |---|---|---|---|
