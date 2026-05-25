@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.0](https://github.com/DecapodLabs/decapod/compare/v0.51.4...v0.52.0) - 2026-05-25
+
+### Added
+
+- implement epistemic custody preservation ([#592](https://github.com/DecapodLabs/decapod/pull/592))
+
 ## [0.51.4](https://github.com/DecapodLabs/decapod/compare/v0.51.3...v0.51.4) - 2026-05-25
 
 ### Other
