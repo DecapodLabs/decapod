@@ -112,7 +112,7 @@ Decapod maintains custody via:
 - External task managers are allowed, but Decapod todos are still mandatory for workspace isolation.
 - DO NOT mutate `.decapod/` state directly; use decapod CLI. Access to `.decapod/` is strictly via decapod CLI.
 - Use `decapod capabilities --format json` to discover available operations.
-- Stop if requirements conflict or intent is ambiguous. Respect the interface abstraction boundary.
+- Stop if requirements conflict or intent is ambiguous. Respect the Interface abstraction boundary.
 - Treat lock/contention failures as blocking until resolved.
 <!-- decapod-validator-anchors
 Strict Dependency: You are strictly bound to the Decapod control plane

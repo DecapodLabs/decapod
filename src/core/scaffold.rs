@@ -1450,3 +1450,38 @@ Agents operating in this repo MUST maintain these artifacts to ensure long-horiz
         specs_preserved,
     })
 }
+
+/// Restore legacy agent entrypoints (AGENTS.md, CLAUDE.md, etc.) into .decapod/OVERRIDE.md.
+pub fn blend_legacy_entrypoints(target_dir: &Path) -> Result<(), error::DecapodError> {
+    let override_path = target_dir.join(".decapod/OVERRIDE.md");
+    let mut overrides_added = false;
+    let mut content_to_add = String::new();
+
+    for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
+        let bak_path = target_dir.join(format!("{}.bak", file));
+        if bak_path.exists() {
+            if let Ok(bak_content) = fs::read_to_string(&bak_path) {
+                // Only add if not empty
+                let trimmed = bak_content.trim();
+                if !trimmed.is_empty() {
+                    content_to_add.push_str(&format!(
+                        "\n\n### Blended from Legacy {} Entrypoint\n\n{}\n",
+                        file.replace(".md", ""),
+                        trimmed
+                    ));
+                    overrides_added = true;
+                }
+            }
+            // Delete backup file after blending (or if empty)
+            let _ = fs::remove_file(&bak_path);
+        }
+    }
+
+    if overrides_added && override_path.exists() {
+        let mut existing = fs::read_to_string(&override_path).unwrap_or_default();
+        existing.push_str(&content_to_add);
+        fs::write(&override_path, existing).map_err(error::DecapodError::IoError)?;
+    }
+
+    Ok(())
+}
