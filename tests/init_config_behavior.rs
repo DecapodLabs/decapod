@@ -353,33 +353,18 @@ fn init_blends_existing_agent_entrypoints_into_override_md() {
         "AGENTS.md should not contain custom content anymore"
     );
 
-    // 4. Check if custom content is in .decapod/OVERRIDE.md
-    let override_path = repo_dir.join(".decapod/OVERRIDE.md");
+// 4. Check if custom content is in .bak (for agent to process)
+    let bak_path = repo_dir.join("AGENTS.md.bak");
+    assert!(bak_path.exists(), "AGENTS.md.bak should exist for agent processing");
+    let bak_content =
+        fs::read_to_string(&bak_path).expect("read AGENTS.md.bak");
     assert!(
-        override_path.exists(),
-        ".decapod/OVERRIDE.md should be created"
-    );
-    let override_content = fs::read_to_string(override_path).expect("read OVERRIDE.md");
-
-    assert!(
-        override_content.contains("Custom Agents"),
-        "OVERRIDE.md should contain custom AGENTS.md content"
+        bak_content.contains("Custom Agents"),
+        "AGENTS.md.bak should contain custom content"
     );
     assert!(
-        override_content.contains("This is my custom agent configuration."),
-        "OVERRIDE.md should contain custom AGENTS.md content"
-    );
-    assert!(
-        override_content.contains("Agent X"),
-        "OVERRIDE.md should contain custom AGENTS.md content"
-    );
-    assert!(
-        override_content.contains("## PENDING CONSOLIDATION (ADOPTED INTENT)"),
-        "OVERRIDE.md should have a header for pending consolidation"
-    );
-    assert!(
-        override_content.contains("### adoption/AGENTS.md"),
-        "OVERRIDE.md should have a sub-header for adopted content"
+        bak_content.contains("Agent X"),
+        "AGENTS.md.bak should contain Agent X"
     );
 }
 
@@ -388,6 +373,7 @@ fn init_blends_all_agent_entrypoints_when_forced() {
     let tmp = tempdir().expect("tempdir");
     let repo_dir = tmp.path();
 
+    // Create custom entrypoints
     fs::write(repo_dir.join("CLAUDE.md"), "# Custom Claude").expect("write CLAUDE.md");
     fs::write(repo_dir.join("GEMINI.md"), "# Custom Gemini").expect("write GEMINI.md");
     fs::write(repo_dir.join("CODEX.md"), "# Custom Codex").expect("write CODEX.md");
@@ -395,16 +381,15 @@ fn init_blends_all_agent_entrypoints_when_forced() {
     let out = run_decapod(repo_dir, &["init", "--force", "--all"]);
     assert!(out.status.success(), "decapod init failed");
 
-    let override_content =
-        fs::read_to_string(repo_dir.join(".decapod/OVERRIDE.md")).expect("read OVERRIDE.md");
+    // Legacy content stays in .bak files for agent to process
+    // Agent calls get_legacy_entrypoint_contents() to retrieve and manually blend
+    assert!(repo_dir.join("CLAUDE.md.bak").exists(), "CLAUDE.md.bak should exist for agent");
+    assert!(repo_dir.join("GEMINI.md.bak").exists(), "GEMINI.md.bak should exist for agent");
+    assert!(repo_dir.join("CODEX.md.bak").exists(), "CODEX.md.bak should exist for agent");
 
-    assert!(override_content.contains("## PENDING CONSOLIDATION (ADOPTED INTENT)"));
-    assert!(override_content.contains("### adoption/CLAUDE.md"));
-    assert!(override_content.contains("# Custom Claude"));
-    assert!(override_content.contains("### adoption/GEMINI.md"));
-    assert!(override_content.contains("# Custom Gemini"));
-    assert!(override_content.contains("### adoption/CODEX.md"));
-    assert!(override_content.contains("# Custom Codex"));
+    // Verify .bak files contain the custom content
+    let claude_bak = fs::read_to_string(repo_dir.join("CLAUDE.md.bak")).expect("read CLAUDE.md.bak");
+    assert!(claude_bak.contains("# Custom Claude"));
 }
 
 #[test]
@@ -430,12 +415,11 @@ fn init_with_claude_only_adopts_it_and_generates_all_four_entrypoints() {
     assert!(new_claude.contains("Agent Entrypoint"));
     assert!(!new_claude.contains("Original Claude Intent"));
 
-    // 5. Verify adoption in OVERRIDE.md
-    let override_content =
-        fs::read_to_string(repo_dir.join(".decapod/OVERRIDE.md")).expect("read OVERRIDE.md");
-    assert!(override_content.contains("## PENDING CONSOLIDATION (ADOPTED INTENT)"));
-    assert!(override_content.contains("### adoption/CLAUDE.md"));
-    assert!(override_content.contains("# Original Claude Intent"));
+    // 5. Verify CLAUDE.md is in .bak for agent processing
+    let bak_path = repo_dir.join("CLAUDE.md.bak");
+    assert!(bak_path.exists(), "CLAUDE.md.bak should exist for agent");
+    let bak_content = fs::read_to_string(&bak_path).expect("read CLAUDE.md.bak");
+    assert!(bak_content.contains("# Original Claude Intent"));
 }
 
 #[test]

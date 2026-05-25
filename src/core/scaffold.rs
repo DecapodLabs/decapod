@@ -1173,15 +1173,29 @@ fn write_file(
     Ok(FileAction::Created)
 }
 
-/// Blend legacy agent entrypoint files (that were backed up to *.bak) into OVERRIDE.md.
+/// LegacyEntrypointContent holds the contents of backed-up agent entrypoint files.
+///
+/// These contents should be returned to the agent so it can manually consolidate
+/// them into the appropriate sections of OVERRIDE.md (skill stuff into skill sections,
+/// memory stuff into memory sections, plugin stuff into plugin sections, etc.).
+/// This is NOT auto-blended - the agent handles the consolidation.
+#[derive(Debug, Default, serde::Serialize)]
+pub struct LegacyEntrypointContent {
+    pub agents_md: Option<String>,
+    pub claude_md: Option<String>,
+    pub gemini_md: Option<String>,
+    pub codex_md: Option<String>,
+}
+
+/// Read legacy agent entrypoint files (backed up to *.bak during init) and return their contents.
 ///
 /// During `decapod init`, existing agent entrypoint files are backed up to *.bak.
-/// After scaffolding, this function blends any backed-up content into the project's
-/// OVERRIDE.md file, then deletes the backup files.
-pub fn blend_legacy_entrypoints(target_dir: &Path) -> Result<(), error::DecapodError> {
-    let override_path = target_dir.join(".decapod/OVERRIDE.md");
-    let mut overrides_added = false;
-    let mut content_to_add = String::new();
+/// This function reads those backups and returns their contents for the agent to process.
+/// The agent should then manually blend the content into appropriate OVERRIDE.md sections.
+pub fn get_legacy_entrypoint_contents(
+    target_dir: &Path,
+) -> Result<LegacyEntrypointContent, error::DecapodError> {
+    let mut contents = LegacyEntrypointContent::default();
 
     for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let bak_path = target_dir.join(format!("{}.bak", file));
@@ -1189,24 +1203,29 @@ pub fn blend_legacy_entrypoints(target_dir: &Path) -> Result<(), error::DecapodE
             if let Ok(bak_content) = fs::read_to_string(&bak_path) {
                 let trimmed = bak_content.trim();
                 if !trimmed.is_empty() {
-                    content_to_add.push_str(&format!(
-                        "\n\n### Blended from Legacy {} Entrypoint\n\n{}\n",
-                        file.replace(".md", ""),
-                        trimmed
-                    ));
-                    overrides_added = true;
+                    match file {
+                        "AGENTS.md" => contents.agents_md = Some(trimmed.to_string()),
+                        "CLAUDE.md" => contents.claude_md = Some(trimmed.to_string()),
+                        "GEMINI.md" => contents.gemini_md = Some(trimmed.to_string()),
+                        "CODEX.md" => contents.codex_md = Some(trimmed.to_string()),
+                        _ => {}
+                    }
                 }
             }
-            let _ = fs::remove_file(&bak_path);
         }
     }
 
-    if overrides_added && override_path.exists() {
-        let mut existing = fs::read_to_string(&override_path).unwrap_or_default();
-        existing.push_str(&content_to_add);
-        fs::write(&override_path, existing).map_err(error::DecapodError::IoError)?;
-    }
+    Ok(contents)
+}
 
+/// Delete legacy agent entrypoint backup files after agent has processed them.
+pub fn cleanup_legacy_entrypoint_backups(target_dir: &Path) -> Result<(), error::DecapodError> {
+    for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
+        let bak_path = target_dir.join(format!("{}.bak", file));
+        if bak_path.exists() {
+            let _ = fs::remove_file(&bak_path);
+        }
+    }
     Ok(())
 }
 
@@ -1277,10 +1296,9 @@ pub fn scaffold_project_entrypoints(
         }
     }
 
-    // Blend legacy agent entrypoints (backed up to *.bak) into OVERRIDE.md
-    if !opts.dry_run {
-        blend_legacy_entrypoints(&opts.target_dir)?;
-    }
+    // Legacy agent entrypoint backups (*.bak) are NOT auto-blended here.
+    // Use get_legacy_entrypoint_contents() to read them and return to the agent.
+    // The agent will manually consolidate content into appropriate OVERRIDE.md sections.
 
     // Generate .decapod/generated/Dockerfile from Rust-owned template component.
     let generated_dir = opts.target_dir.join(".decapod/generated");
