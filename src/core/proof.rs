@@ -47,6 +47,10 @@ pub struct ProofEvent {
     pub store: String,
     pub root: String,
     pub actor: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stop_conditions: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proof_requirements: Option<Vec<String>>,
 }
 
 /// Summary of a proof run
@@ -60,6 +64,10 @@ pub struct ProofRunSummary {
     pub skipped: usize,
     pub all_passed: bool,
     pub results: Vec<ProofResult>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stop_conditions: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proof_requirements: Option<Vec<String>>,
 }
 
 /// Result of running a single proof
@@ -169,6 +177,8 @@ pub fn run_proofs(
             store: format!("{:?}", store.kind),
             root: store.root.to_string_lossy().to_string(),
             actor: actor.to_string(),
+            stop_conditions: None,
+            proof_requirements: None,
         };
 
         append_proof_event(store, &event)?;
@@ -201,6 +211,8 @@ pub fn run_proofs(
         skipped: 0,
         all_passed: failed == 0,
         results,
+        stop_conditions: None,
+        proof_requirements: None,
     })
 }
 

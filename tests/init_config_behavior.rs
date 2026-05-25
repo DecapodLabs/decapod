@@ -511,3 +511,30 @@ fn agents_md_contains_epistemic_custody_section() {
         "AGENTS.md should describe custody artifacts directory"
     );
 }
+
+#[test]
+fn init_preserves_manually_added_custody_fields_in_intent_md() {
+    let tmp = tempdir().expect("tempdir");
+    // 1. Initial init
+    run_decapod(tmp.path(), &["init", "with", "--force"]);
+
+    let intent_path = tmp.path().join(".decapod/generated/specs/INTENT.md");
+    let mut intent_content = fs::read_to_string(&intent_path).expect("read intent");
+
+    // 2. Manually add an assumption
+    intent_content = intent_content.replace(
+        "### Active Assumptions\n- [ ] List any assumptions made to proceed.",
+        "### Active Assumptions\n- [ ] List any assumptions made to proceed.\n- [ ] MANUALLY_ADDED_ASSUMPTION"
+    );
+    fs::write(&intent_path, intent_content).expect("write modified intent");
+
+    // 3. Re-init
+    run_decapod(tmp.path(), &["init", "--force"]);
+
+    // 4. Verify assumption is still there
+    let re_init_intent = fs::read_to_string(&intent_path).expect("read re-init intent");
+    assert!(
+        re_init_intent.contains("MANUALLY_ADDED_ASSUMPTION"),
+        "re-init should preserve manually added assumptions in INTENT.md"
+    );
+}

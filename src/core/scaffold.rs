@@ -527,6 +527,33 @@ flowchart LR
 - [ ] Validation gates pass and artifacts are attached.
 {language_criteria}
 
+## Epistemic Custody Fields
+
+### Active Assumptions
+- [ ] List any assumptions made to proceed.
+- [ ] Flag assumptions that require future verification.
+
+### Confidence & Risk Level
+- **Confidence**: Low/Medium/High (Rationale: )
+- **Risk**: Low/Medium/High (Impact of wrong assumptions: )
+
+### Measured vs Inferred Facts
+| Fact | Source (Provenance) | Type (Measured/Inferred) |
+|---|---|---|
+| | | |
+
+### Unresolved Contradictions
+- [ ] List any evidence that conflicts with current assumptions or intent.
+
+### Deferred Questions
+- [ ] Questions to be answered later.
+
+### Stop Conditions
+- [ ] Explicit conditions under which the agent should stop and ask for help.
+
+### Proof Required Before Completion
+- [ ] Specific evidence needed to prove the outcome is met.
+
 ## Tradeoffs Register
 | Decision | Benefit | Cost | Review Trigger |
 |---|---|---|---|
@@ -1250,6 +1277,29 @@ pub fn scaffold_project_entrypoints(
     fs::create_dir_all(generated_dir.join("policy")).map_err(error::DecapodError::IoError)?;
     fs::create_dir_all(generated_dir.join("artifacts").join("provenance"))
         .map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(generated_dir.join("artifacts").join("custody"))
+        .map_err(error::DecapodError::IoError)?;
+    let custody_readme_path = generated_dir
+        .join("artifacts")
+        .join("custody")
+        .join("README.md");
+    if !custody_readme_path.exists() {
+        let custody_readme_content = r#"# Epistemic Custody Artifacts
+
+This directory tracks the preserved chain of intent, context, assumptions, and proof for this repository.
+
+## Directory Structure
+- `assumptions.md`: Log of active and verified assumptions.
+- `contradictions.md`: Log of evidence that conflicts with current plans or assumptions.
+- `deferred_questions.md`: Questions identified during work that were postponed.
+- `evidence/`: Detailed proof artifacts (logs, screenshots, data captures) tied to specific claims.
+
+## Agent Guidance
+Agents operating in this repo MUST maintain these artifacts to ensure long-horizon integrity. Do not compress away uncertainty; surface it here so it remains inspectable by humans and future agent passes.
+"#;
+        fs::write(&custody_readme_path, custody_readme_content)
+            .map_err(error::DecapodError::IoError)?;
+    }
     fs::create_dir_all(generated_dir.join("artifacts").join("inventory"))
         .map_err(error::DecapodError::IoError)?;
     fs::create_dir_all(
@@ -1323,7 +1373,42 @@ pub fn scaffold_project_entrypoints(
             specs_files.push((spec.path, content));
         }
 
-        for (rel_path, content) in specs_files {
+        for (rel_path, mut content) in specs_files {
+            // Epistemic Custody Preservation:
+            // If we are regenerating INTENT.md and it already exists, try to preserve the Epistemic Custody Fields section.
+            if rel_path == LOCAL_PROJECT_SPECS_INTENT {
+                let dest = opts.target_dir.join(rel_path);
+                if dest.exists() {
+                    if let Ok(existing_content) = fs::read_to_string(&dest) {
+                        if let Some(start_idx) =
+                            existing_content.find("## Epistemic Custody Fields")
+                        {
+                            let end_marker = "## Tradeoffs Register";
+                            let custody_section = if let Some(end_idx) =
+                                existing_content[start_idx..].find(end_marker)
+                            {
+                                &existing_content[start_idx..start_idx + end_idx]
+                            } else {
+                                &existing_content[start_idx..]
+                            };
+
+                            // Now replace it in the new content
+                            if let Some(new_start_idx) = content.find("## Epistemic Custody Fields")
+                            {
+                                if let Some(new_end_idx) = content[new_start_idx..].find(end_marker)
+                                {
+                                    let mut new_merged = content[..new_start_idx].to_string();
+                                    new_merged.push_str(custody_section.trim_end());
+                                    new_merged.push_str("\n\n");
+                                    new_merged.push_str(&content[new_start_idx + new_end_idx..]);
+                                    content = new_merged;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             let template_hash = hash_text(&content);
             match write_file(opts, rel_path, &content)? {
                 FileAction::Created => created += 1,

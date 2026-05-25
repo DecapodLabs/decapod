@@ -412,6 +412,12 @@ pub(crate) enum PlanCommand {
         unknowns: Vec<String>,
         #[clap(long = "question")]
         human_questions: Vec<String>,
+        #[clap(long = "stop-condition")]
+        stop_conditions: Vec<String>,
+        #[clap(long = "contradiction")]
+        unresolved_contradictions: Vec<String>,
+        #[clap(long = "deferred-question")]
+        deferred_questions: Vec<String>,
         #[clap(long = "forbidden-path")]
         forbidden_paths: Vec<String>,
         #[clap(long)]
@@ -431,10 +437,22 @@ pub(crate) enum PlanCommand {
         unknowns: Vec<String>,
         #[clap(long = "question")]
         human_questions: Vec<String>,
+        #[clap(long = "stop-condition")]
+        stop_conditions: Vec<String>,
+        #[clap(long = "contradiction")]
+        unresolved_contradictions: Vec<String>,
+        #[clap(long = "deferred-question")]
+        deferred_questions: Vec<String>,
         #[clap(long, default_value_t = false)]
         clear_unknowns: bool,
         #[clap(long, default_value_t = false)]
         clear_questions: bool,
+        #[clap(long, default_value_t = false)]
+        clear_stop_conditions: bool,
+        #[clap(long, default_value_t = false)]
+        clear_contradictions: bool,
+        #[clap(long, default_value_t = false)]
+        clear_deferred_questions: bool,
         #[clap(long = "forbidden-path")]
         forbidden_paths: Vec<String>,
         #[clap(long)]

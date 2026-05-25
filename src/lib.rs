@@ -4988,6 +4988,9 @@ fn run_plan_command(plan_cli: PlanCli, project_store: &Store) -> Result<(), erro
             proof_hooks,
             unknowns,
             human_questions,
+            stop_conditions,
+            unresolved_contradictions,
+            deferred_questions,
             forbidden_paths,
             file_touch_budget,
         } => {
@@ -5000,6 +5003,9 @@ fn run_plan_command(plan_cli: PlanCli, project_store: &Store) -> Result<(), erro
                     proof_hooks,
                     unknowns,
                     human_questions,
+                    stop_conditions,
+                    unresolved_contradictions,
+                    deferred_questions,
                     constraints: plan_governance::ScopeConstraints {
                         forbidden_paths,
                         file_touch_budget,
@@ -5015,8 +5021,14 @@ fn run_plan_command(plan_cli: PlanCli, project_store: &Store) -> Result<(), erro
             proof_hooks,
             unknowns,
             human_questions,
+            stop_conditions,
+            unresolved_contradictions,
+            deferred_questions,
             clear_unknowns,
             clear_questions,
+            clear_stop_conditions,
+            clear_contradictions,
+            clear_deferred_questions,
             forbidden_paths,
             file_touch_budget,
         } => {
@@ -5049,6 +5061,27 @@ fn run_plan_command(plan_cli: PlanCli, project_store: &Store) -> Result<(), erro
                         None
                     } else {
                         Some(human_questions)
+                    },
+                    stop_conditions: if clear_stop_conditions {
+                        Some(vec![])
+                    } else if stop_conditions.is_empty() {
+                        None
+                    } else {
+                        Some(stop_conditions)
+                    },
+                    unresolved_contradictions: if clear_contradictions {
+                        Some(vec![])
+                    } else if unresolved_contradictions.is_empty() {
+                        None
+                    } else {
+                        Some(unresolved_contradictions)
+                    },
+                    deferred_questions: if clear_deferred_questions {
+                        Some(vec![])
+                    } else if deferred_questions.is_empty() {
+                        None
+                    } else {
+                        Some(deferred_questions)
                     },
                     constraints: if forbidden_paths.is_empty() && file_touch_budget.is_none() {
                         None
