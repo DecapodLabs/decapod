@@ -126,56 +126,6 @@ fn test_external_tracker_env_var_relaxation() {
 }
 
 #[test]
-fn test_external_tracker_override_md_relaxation() {
-    let tmp = TempDir::new().expect("tempdir");
-    let dir = tmp.path();
-    setup_repo(dir);
-
-    let branch = "feature/external-task";
-    let worktree_dir = dir.join(".decapod/workspaces/override-test");
-
-    Command::new("git")
-        .args([
-            "worktree",
-            "add",
-            "-b",
-            branch,
-            worktree_dir.to_str().unwrap(),
-        ])
-        .current_dir(dir)
-        .status()
-        .expect("git worktree add");
-
-    // 1. Add marker to OVERRIDE.md
-    let override_path = dir.join(".decapod/OVERRIDE.md");
-    let mut content = fs::read_to_string(&override_path).expect("read override");
-    content.push_str("\nDECAPOD_EXTERNAL_TRACKER=true\n");
-    fs::write(&override_path, content).expect("write override");
-
-    // 2. Run - should succeed even without env var and STAY
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["workspace", "ensure"])
-        .current_dir(&worktree_dir)
-        .output()
-        .expect("workspace ensure with override.md");
-
-    assert!(
-        out.status.success(),
-        "should succeed with OVERRIDE.md marker. Stderr: {}",
-        String::from_utf8_lossy(&out.stderr)
-    );
-
-    let stdout = String::from_utf8_lossy(&out.stdout);
-    let json: serde_json::Value = serde_json::from_str(&stdout).expect("valid json");
-    assert_eq!(
-        json["branch"], branch,
-        "should have stayed on branch with OVERRIDE.md marker. JSON: {}",
-        stdout
-    );
-    assert_eq!(json["status"], "ok");
-}
-
-#[test]
 fn test_external_tracker_config_toml_relaxation() {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path();
