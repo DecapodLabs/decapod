@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.51.3](https://github.com/DecapodLabs/decapod/compare/v0.51.2...v0.51.3) - 2026-05-25
+
+### Fixed
+
+- *(workspace)* resolve Issue #586 - yield branch-naming authority to external task trackers ([#587](https://github.com/DecapodLabs/decapod/pull/587))
+
 ## [0.51.2](https://github.com/DecapodLabs/decapod/compare/v0.51.1...v0.51.2) - 2026-05-23
 
 ### Added
