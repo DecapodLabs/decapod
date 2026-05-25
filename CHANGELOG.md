@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.1](https://github.com/DecapodLabs/decapod/compare/v0.52.0...v0.52.1) - 2026-05-25
+
+### Other
+
+- Align constitution assets and scaffold entrypoints ([#576](https://github.com/DecapodLabs/decapod/pull/576))
+
 ## [0.52.0](https://github.com/DecapodLabs/decapod/compare/v0.51.4...v0.52.0) - 2026-05-25
 
 ### Added
