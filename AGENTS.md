@@ -86,3 +86,8 @@ Do not call Decapod for every trivial file read, local edit, or mechanical comma
 Strict Dependency: You are strictly bound to the Decapod control plane
 Strict Dependency: You are strictly bound to the Decapod governance kernel
 -->
+
+
+<!-- decapod-validator-anchors
+Interface abstraction boundary
+-->
