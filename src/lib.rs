@@ -476,6 +476,7 @@ fn apply_repo_context_cli_overrides(ctx: &mut RepoContext, init_with: &InitWithC
             .filter(|s| !s.is_empty())
             .collect();
     }
+    ctx.container_workspaces = init_with.container_workspaces;
     dedupe_sorted(&mut ctx.primary_languages);
     dedupe_sorted(&mut ctx.detected_surfaces);
 }
@@ -1314,6 +1315,7 @@ fn init_with_from_config(
         done_criteria: config.repo.done_criteria.clone(),
         primary_languages: config.repo.primary_languages.clone(),
         detected_surfaces: config.repo.detected_surfaces.clone(),
+        container_workspaces: config.repo.container_workspaces,
     }
 }
 
@@ -1722,6 +1724,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             done_criteria: init_group.done_criteria.clone(),
                             primary_languages: init_group.primary_languages.clone(),
                             detected_surfaces: init_group.detected_surfaces.clone(),
+                            container_workspaces: init_group.container_workspaces,
                         }
                     }
                 }

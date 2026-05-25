@@ -148,6 +148,14 @@ pub(crate) struct InitGroupCli {
     /// Seed detected surfaces (repeatable and/or comma-separated).
     #[clap(long = "surface", value_delimiter = ',')]
     pub detected_surfaces: Vec<String>,
+    /// Enable container workspaces (enabled by default).
+    ///
+    /// WARNING: Disabling container workspaces is only safe for single-agent workflows.
+    /// Multi-agent concurrent runs require container isolation to prevent environment
+    /// corruption and race conditions. Only disable if you are the only agent working
+    /// in this repository.
+    #[clap(long, default_value_t = true)]
+    pub container_workspaces: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -220,6 +228,14 @@ pub(crate) struct InitWithCli {
     /// Seed detected surfaces (repeatable and/or comma-separated).
     #[clap(long = "surface", value_delimiter = ',')]
     pub detected_surfaces: Vec<String>,
+    /// Enable container workspaces (enabled by default).
+    ///
+    /// WARNING: Disabling container workspaces is only safe for single-agent workflows.
+    /// Multi-agent concurrent runs require container isolation to prevent environment
+    /// corruption and race conditions. Only disable if you are the only agent working
+    /// in this repository.
+    #[clap(long, default_value_t = true)]
+    pub container_workspaces: bool,
 }
 
 #[derive(clap::ValueEnum, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -262,6 +278,12 @@ pub(crate) struct RepoContext {
     pub detected_surfaces: Vec<String>,
     #[serde(default)]
     pub external_tracker: bool,
+    #[serde(default = "default_container_workspaces_true")]
+    pub container_workspaces: bool,
+}
+
+fn default_container_workspaces_true() -> bool {
+    true
 }
 
 impl Default for DecapodProjectConfig {
