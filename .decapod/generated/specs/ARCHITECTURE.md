@@ -1,21 +1,21 @@
 # Architecture
 
 ## Direction
-webapp
+cli
 
 ## Current Facts
 - Runtime/languages: Rust
 - Detected surfaces/framework hints: cargo
-- Product type: service_or_library
+- Product type: cli
 
 ## Topology
 ```mermaid
 flowchart LR
-  H[Host Application] --> L[Library API]
-  L --> D[Domain Core]
-  D --> AD[Adapter Layer]
-  AD --> DB[(Store)]
-  AD --> N[Network]
+  U[User] --> C[CLI Entrypoint]
+  C --> R[Command Router]
+  R --> E[Core Engine]
+  E --> S[(Local Store)]
+  E --> X[External APIs / Filesystem]
 ```
 
 ## Store Boundaries
@@ -31,16 +31,16 @@ flowchart LR
 ## Happy Path Sequence
 ```mermaid
 sequenceDiagram
-  participant C as Client
-  participant G as API
-  participant D as Domain
-  participant DB as Datastore
-  C->>G: Request
-  G->>D: Validate + execute
-  D->>DB: Commit transaction
-  DB-->>D: Commit ok
-  D-->>G: Domain result
-  G-->>C: Response + trace_id
+  participant U as User
+  participant C as CLI
+  participant E as Core Engine
+  participant S as Store
+  U->>C: Run command
+  C->>E: Parse + validate
+  E->>S: Persist mutation
+  S-->>E: Ack
+  E-->>C: Result
+  C-->>U: Structured output
 ```
 
 ## Error Path

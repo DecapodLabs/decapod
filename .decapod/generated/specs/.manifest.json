@@ -1,28 +1,28 @@
 {
   "schema_version": "1.0.0",
   "template_version": "scaffold-v2",
-  "generated_at": "1779571668Z",
-  "repo_signal_fingerprint": "81fd4ba8e55e5d376dd32a44f1a4ab7df662aea52c337180334cc0c981e9faea",
+  "generated_at": "1779678743Z",
+  "repo_signal_fingerprint": "c199830b21bba0c2265dbe139b358db4575f9a673a9c4248f44b288d572f9c6c",
   "files": [
     {
       "path": ".decapod/generated/specs/README.md",
-      "template_hash": "14c0255251cbf0b9423a1262517978cda5ee77be9c0893b2f1501781d5ab27b1",
-      "content_hash": "14c0255251cbf0b9423a1262517978cda5ee77be9c0893b2f1501781d5ab27b1"
+      "template_hash": "ca0c70016626403b25952658cd1a689ea820839a2901bd617437a11663f14458",
+      "content_hash": "ca0c70016626403b25952658cd1a689ea820839a2901bd617437a11663f14458"
     },
     {
       "path": ".decapod/generated/specs/INTENT.md",
-      "template_hash": "585a5bb16e65702cf5bd3dbbb450e9962676a0450810e0d705f63aaf238cd6a3",
-      "content_hash": "585a5bb16e65702cf5bd3dbbb450e9962676a0450810e0d705f63aaf238cd6a3"
+      "template_hash": "6a345714f2df2b8e345e65ab1054627c904019e3e720cf3213a413f38a70f233",
+      "content_hash": "6a345714f2df2b8e345e65ab1054627c904019e3e720cf3213a413f38a70f233"
     },
     {
       "path": ".decapod/generated/specs/ARCHITECTURE.md",
-      "template_hash": "54c2f887f04cfa3da6d6afdf3439aa86b10c2bc6fc2b07a19193c6d7f7229ce1",
-      "content_hash": "54c2f887f04cfa3da6d6afdf3439aa86b10c2bc6fc2b07a19193c6d7f7229ce1"
+      "template_hash": "c59235a1c326fcc6c543b1a112d04a2ce49c543481b2ad658956280db0f5954b",
+      "content_hash": "c59235a1c326fcc6c543b1a112d04a2ce49c543481b2ad658956280db0f5954b"
     },
     {
       "path": ".decapod/generated/specs/INTERFACES.md",
-      "template_hash": "60163ea031c507eb45e47eb3bed84d3c877c38661b10d994143d21be75afcf90",
-      "content_hash": "60163ea031c507eb45e47eb3bed84d3c877c38661b10d994143d21be75afcf90"
+      "template_hash": "59173d7fecfc89c6d9ab8f7f43c150f171650f44e02bc6b61763af5888e60cff",
+      "content_hash": "59173d7fecfc89c6d9ab8f7f43c150f171650f44e02bc6b61763af5888e60cff"
     },
     {
       "path": ".decapod/generated/specs/VALIDATION.md",
