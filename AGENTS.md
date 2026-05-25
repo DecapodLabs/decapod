@@ -44,12 +44,20 @@ decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
+11. **MUST** maintain **Living Specs**: treat `.decapod/generated/specs/*` as dynamic documents; align them with reality before and after every implementation.
 
 ## Decapod Invocation Contract
 
 Agents act. Decapod orients.
 
 Decapod is not your executor, model runtime, or workflow replacement. You remain responsible for implementation. Call Decapod as the repo-native pressure relief valve when the next responsible step requires explicit intent, boundaries, context, coordination, or proof.
+
+## Living Specs & Governance
+
+The files under `.decapod/generated/specs/` are not static documentation; they are living contracts.
+- **Before Changes**: Review the specs. If the task changes intent, update [INTENT.md](.decapod/generated/specs/INTENT.md) first.
+- **During Implementation**: If architectural or interface decisions shift, update [ARCHITECTURE.md](.decapod/generated/specs/ARCHITECTURE.md) and [INTERFACES.md](.decapod/generated/specs/INTERFACES.md).
+- **After Changes**: Ensure all specs align with the new reality. Clarify code changes in the context of these spec updates. Spec changes should generally only occur when user intent has evolved.
 
 End users and host agents may use any task manager alongside Decapod. That external tracker does not replace Decapod todos: Decapod uses its own todo claims to isolate worktrees, scope containers, prove completion, and prevent multiple agents from working the same Decapod work item concurrently.
 
@@ -60,6 +68,30 @@ Call Decapod before proceeding when continuing would require guessing about:
 Concrete triggers: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, conflicting intent/specs, context loss, multi-agent collision risk, or readiness to claim completion.
 
 Do not call Decapod for every trivial file read, local edit, or mechanical command. Call it at decision boundaries that need governance, memory, boundaries, coordination, or proof. Decapod calls should produce or update explicit artifacts.
+## Epistemic Custody
+
+**Epistemic custody** is the preserved chain between intent, context, assumptions, action, evidence, contradiction, and proof, so agent work remains inspectable, bounded, and falsifiable across time, agents, and recursive passes.
+
+| Term | Meaning |
+|---|---|
+| Intent | Original human goal; the "Why" that must not be lost during compression. |
+| Assumption | A belief or prior used to proceed when evidence is incomplete. |
+| Contradiction | Evidence or observation that conflicts with a prior assumption or intent. |
+| Measured | Direct observation (e.g., test output, file content, shell exit code). |
+| Inferred | Derived conclusion or guess (e.g., "this looks like a bug in the parser"). |
+| Provenance | The source of a fact or change (e.g., "User said X", "File Y contains Z"). |
+
+### Custody Rules
+1. **Preserve Uncertainty**: Summaries must preserve uncertainty, risk, and unresolved contradictions instead of compressing them away into polished prose.
+2. **Recursive Continuity**: Prior assumptions and unresolved contradictions MUST carry forward across recursive agent passes until resolved.
+3. **Evidence-Based Claims**: Any claim of success or completion must be tied to measured evidence (artifacts, tests, or explicit user instruction).
+4. **Falsifiability**: Work must be structured so a human can quickly identify where an assumption was wrong or where proof failed.
+5. **Clarification Trigger**: If a critical assumption cannot be proven or a contradiction cannot be resolved, you MUST stop and request human clarification.
+
+## Custody artifacts
+Decapod maintains custody via:
+- `.decapod/generated/specs/INTENT.md`: Tracks active assumptions and stop conditions.
+- `.decapod/generated/artifacts/custody/`: Directory for detailed evidence, contradiction logs, and deferred questions.
 
 ## Invariants (Normative)
 - **INV-DAEMONLESS**: Decapod MUST NOT leave background processes running.
@@ -85,9 +117,4 @@ Do not call Decapod for every trivial file read, local edit, or mechanical comma
 <!-- decapod-validator-anchors
 Strict Dependency: You are strictly bound to the Decapod control plane
 Strict Dependency: You are strictly bound to the Decapod governance kernel
--->
-
-
-<!-- decapod-validator-anchors
-Interface abstraction boundary
 -->

@@ -35,6 +35,8 @@ pub struct ScaffoldOptions {
     pub created_backups: bool,
     /// Force creation of all 5 entrypoint files regardless of existing state
     pub all: bool,
+    /// Preserved content from hijacked agent entrypoints to be blended into OVERRIDE.md.
+    pub preserved_agent_content: Vec<(String, String)>,
     /// Generate project-facing specs/ scaffolding.
     pub generate_specs: bool,
     /// Diagram style for generated architecture document.
@@ -423,10 +425,11 @@ These files are the project-local contract for humans and agents.
 
 ## Canonical `.decapod/` Layout
 - `.decapod/data/`: canonical control-plane state (SQLite + ledgers).
-- `.decapod/generated/specs/`: living project specs for humans and agents.
+- `.decapod/generated/specs/`: **Living project specs** for humans and agents.
 - `.decapod/generated/context/`: deterministic context capsules.
 - `.decapod/generated/policy/context_capsule_policy.json`: repo-native JIT context policy contract.
 - `.decapod/generated/artifacts/provenance/`: promotion manifests and convergence checklist.
+- `.decapod/generated/artifacts/custody/`: epistemic custody artifacts (assumptions, contradictions, deferred questions).
 - `.decapod/generated/artifacts/inventory/`: deterministic release inventory.
 - `.decapod/generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
@@ -444,7 +447,9 @@ These files are the project-local contract for humans and agents.
 - [ ] Run all validation/test commands and attach evidence artifacts.
 
 ## Agent Directive
-- Treat these files as executable governance surfaces. Before implementation: resolve ambiguity and update specs. After implementation: refresh drifted sections, rerun proof gates, and attach evidence.
+- **Living Specs**: Treat these files as executable governance surfaces.
+- **Continuous Alignment**: Before implementation: resolve ambiguity and update specs. During/After implementation: align specs with reality.
+- **Intent-Driven**: Spec changes should generally only occur when user intent has evolved. Clarify code changes in the context of these updates.
 "#
     )
 }
@@ -521,6 +526,33 @@ flowchart LR
 - [ ] Non-functional targets are met (latency, reliability, cost, etc.).
 - [ ] Validation gates pass and artifacts are attached.
 {language_criteria}
+
+## Epistemic Custody Fields
+
+### Active Assumptions
+- [ ] List any assumptions made to proceed.
+- [ ] Flag assumptions that require future verification.
+
+### Confidence & Risk Level
+- **Confidence**: Low/Medium/High (Rationale: )
+- **Risk**: Low/Medium/High (Impact of wrong assumptions: )
+
+### Measured vs Inferred Facts
+| Fact | Source (Provenance) | Type (Measured/Inferred) |
+|---|---|---|
+| | | |
+
+### Unresolved Contradictions
+- [ ] List any evidence that conflicts with current assumptions or intent.
+
+### Deferred Questions
+- [ ] Questions to be answered later.
+
+### Stop Conditions
+- [ ] Explicit conditions under which the agent should stop and ask for help.
+
+### Proof Required Before Completion
+- [ ] Specific evidence needed to prove the outcome is met.
 
 ## Tradeoffs Register
 | Decision | Benefit | Cost | Review Trigger |
@@ -1054,6 +1086,8 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     "!.decapod/generated/artifacts/provenance/",
     "!.decapod/generated/artifacts/provenance/*.json",
     "!.decapod/generated/artifacts/provenance/kcr_trend.jsonl",
+    "!.decapod/generated/artifacts/custody/",
+    "!.decapod/generated/artifacts/custody/*.md",
     "!.decapod/generated/specs/",
     "!.decapod/generated/specs/*.md",
     "!.decapod/generated/specs/.manifest.json",
@@ -1167,7 +1201,21 @@ pub fn scaffold_project_entrypoints(
 
     // Root entrypoints from embedded templates
     let readme_md = assets::get_template("README.md").expect("Missing template: README.md");
-    let override_md = assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
+    let mut override_md =
+        assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
+
+    // Blend preserved agent content into OVERRIDE.md if present
+    if !opts.preserved_agent_content.is_empty() {
+        if !override_md.ends_with('\n') {
+            override_md.push('\n');
+        }
+        override_md.push_str("\n## PENDING CONSOLIDATION (ADOPTED INTENT)\n\n");
+        override_md.push_str("> **AGENT INSTRUCTION:** Analyze the content below and consolidate relevant rules into the appropriate `### section/ID` headers within this file. The `### adoption/*` headers below represent your previous project-specific intent which MUST be preserved in the substrate above.\n");
+        for (file, content) in &opts.preserved_agent_content {
+            override_md.push_str(&format!("\n### adoption/{}\n\n{}\n", file, content.trim()));
+        }
+        override_md.push_str("\n---\n");
+    }
 
     // AGENT ENTRYPOINTS - Neural Interfaces (only generate specified files)
     let mut ep_created = 0usize;
@@ -1193,9 +1241,26 @@ pub fn scaffold_project_entrypoints(
         FileAction::Preserved => cfg_preserved += 1,
     }
 
-    // Preserve existing OVERRIDE.md - it contains project-specific customizations.
+    // Blend into existing OVERRIDE.md or create new one
     let override_path = opts.target_dir.join(".decapod/OVERRIDE.md");
     if override_path.exists() {
+        if !opts.preserved_agent_content.is_empty() && !opts.dry_run {
+            let mut existing_override = fs::read_to_string(&override_path).unwrap_or_default();
+            if !existing_override.ends_with('\n') {
+                existing_override.push('\n');
+            }
+            existing_override.push_str("\n## PENDING CONSOLIDATION (ADOPTED INTENT)\n\n");
+            existing_override.push_str("> **AGENT INSTRUCTION:** Analyze the content below and consolidate relevant rules into the appropriate `### section/ID` headers within this file. The `### adoption/*` headers below represent your previous project-specific intent which MUST be preserved in the substrate above.\n");
+            for (file, content) in &opts.preserved_agent_content {
+                existing_override.push_str(&format!(
+                    "\n### adoption/{}\n\n{}\n",
+                    file,
+                    content.trim()
+                ));
+            }
+            existing_override.push_str("\n---\n");
+            fs::write(&override_path, existing_override).map_err(error::DecapodError::IoError)?;
+        }
         cfg_preserved += 1;
     } else {
         match write_file(opts, ".decapod/OVERRIDE.md", &override_md)? {
@@ -1212,6 +1277,29 @@ pub fn scaffold_project_entrypoints(
     fs::create_dir_all(generated_dir.join("policy")).map_err(error::DecapodError::IoError)?;
     fs::create_dir_all(generated_dir.join("artifacts").join("provenance"))
         .map_err(error::DecapodError::IoError)?;
+    fs::create_dir_all(generated_dir.join("artifacts").join("custody"))
+        .map_err(error::DecapodError::IoError)?;
+    let custody_readme_path = generated_dir
+        .join("artifacts")
+        .join("custody")
+        .join("README.md");
+    if !custody_readme_path.exists() {
+        let custody_readme_content = r#"# Epistemic Custody Artifacts
+
+This directory tracks the preserved chain of intent, context, assumptions, and proof for this repository.
+
+## Directory Structure
+- `assumptions.md`: Log of active and verified assumptions.
+- `contradictions.md`: Log of evidence that conflicts with current plans or assumptions.
+- `deferred_questions.md`: Questions identified during work that were postponed.
+- `evidence/`: Detailed proof artifacts (logs, screenshots, data captures) tied to specific claims.
+
+## Agent Guidance
+Agents operating in this repo MUST maintain these artifacts to ensure long-horizon integrity. Do not compress away uncertainty; surface it here so it remains inspectable by humans and future agent passes.
+"#;
+        fs::write(&custody_readme_path, custody_readme_content)
+            .map_err(error::DecapodError::IoError)?;
+    }
     fs::create_dir_all(generated_dir.join("artifacts").join("inventory"))
         .map_err(error::DecapodError::IoError)?;
     fs::create_dir_all(
@@ -1285,7 +1373,35 @@ pub fn scaffold_project_entrypoints(
             specs_files.push((spec.path, content));
         }
 
-        for (rel_path, content) in specs_files {
+        for (rel_path, mut content) in specs_files {
+            // Epistemic Custody Preservation:
+            // If we are regenerating INTENT.md and it already exists, try to preserve the Epistemic Custody Fields section.
+            if rel_path == LOCAL_PROJECT_SPECS_INTENT {
+                let dest = opts.target_dir.join(rel_path);
+                if let Ok(existing_content) = fs::read_to_string(&dest)
+                    && let Some(start_idx) = existing_content.find("## Epistemic Custody Fields")
+                {
+                    let end_marker = "## Tradeoffs Register";
+                    let custody_section =
+                        if let Some(end_idx) = existing_content[start_idx..].find(end_marker) {
+                            &existing_content[start_idx..start_idx + end_idx]
+                        } else {
+                            &existing_content[start_idx..]
+                        };
+
+                    // Now replace it in the new content
+                    if let Some(new_start_idx) = content.find("## Epistemic Custody Fields")
+                        && let Some(new_end_idx) = content[new_start_idx..].find(end_marker)
+                    {
+                        let mut new_merged = content[..new_start_idx].to_string();
+                        new_merged.push_str(custody_section.trim_end());
+                        new_merged.push_str("\n\n");
+                        new_merged.push_str(&content[new_start_idx + new_end_idx..]);
+                        content = new_merged;
+                    }
+                }
+            }
+
             let template_hash = hash_text(&content);
             match write_file(opts, rel_path, &content)? {
                 FileAction::Created => created += 1,
@@ -1334,4 +1450,3 @@ pub fn scaffold_project_entrypoints(
         specs_preserved,
     })
 }
-

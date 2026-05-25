@@ -56,4 +56,4 @@ stateDiagram-v2
 | async enqueue | event_id | ignore duplicate enqueue |
 
 ## Language Note
-- Primary language inferred: rust
+- Primary language inferred: Rust

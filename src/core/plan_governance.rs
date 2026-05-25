@@ -41,6 +41,12 @@ pub struct GovernedPlan {
     #[serde(default)]
     pub human_questions: Vec<String>,
     #[serde(default)]
+    pub stop_conditions: Vec<String>,
+    #[serde(default)]
+    pub unresolved_contradictions: Vec<String>,
+    #[serde(default)]
+    pub deferred_questions: Vec<String>,
+    #[serde(default)]
     pub constraints: ScopeConstraints,
     pub updated_at: String,
 }
@@ -54,6 +60,9 @@ pub struct PlanPatch {
     pub proof_hooks: Option<Vec<String>>,
     pub unknowns: Option<Vec<String>>,
     pub human_questions: Option<Vec<String>>,
+    pub stop_conditions: Option<Vec<String>>,
+    pub unresolved_contradictions: Option<Vec<String>>,
+    pub deferred_questions: Option<Vec<String>>,
     pub constraints: Option<ScopeConstraints>,
 }
 
@@ -64,6 +73,9 @@ pub struct InitPlanInput {
     pub proof_hooks: Vec<String>,
     pub unknowns: Vec<String>,
     pub human_questions: Vec<String>,
+    pub stop_conditions: Vec<String>,
+    pub unresolved_contradictions: Vec<String>,
+    pub deferred_questions: Vec<String>,
     pub constraints: ScopeConstraints,
 }
 
@@ -114,6 +126,9 @@ pub fn init_plan(
         proof_hooks: input.proof_hooks,
         unknowns: input.unknowns,
         human_questions: input.human_questions,
+        stop_conditions: input.stop_conditions,
+        unresolved_contradictions: input.unresolved_contradictions,
+        deferred_questions: input.deferred_questions,
         constraints: input.constraints,
         updated_at: crate::core::time::now_epoch_z(),
     };
@@ -153,6 +168,15 @@ pub fn patch_plan(
     }
     if let Some(human_questions) = patch.human_questions {
         plan.human_questions = human_questions;
+    }
+    if let Some(stop_conditions) = patch.stop_conditions {
+        plan.stop_conditions = stop_conditions;
+    }
+    if let Some(unresolved_contradictions) = patch.unresolved_contradictions {
+        plan.unresolved_contradictions = unresolved_contradictions;
+    }
+    if let Some(deferred_questions) = patch.deferred_questions {
+        plan.deferred_questions = deferred_questions;
     }
     if let Some(constraints) = patch.constraints {
         plan.constraints = constraints;
@@ -381,6 +405,9 @@ mod tests {
                 proof_hooks: vec!["validate_passes".to_string()],
                 unknowns: vec![],
                 human_questions: vec![],
+                stop_conditions: vec![],
+                unresolved_contradictions: vec![],
+                deferred_questions: vec![],
                 constraints: ScopeConstraints::default(),
             },
         )

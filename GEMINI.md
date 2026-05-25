@@ -48,7 +48,9 @@ decapod data schema --deterministic
 - Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
 - Operator reference: `decapod rpc --op constitution.get --params '{"section":"docs/PLAYBOOK"}'`.
 - Capability authority: `decapod capabilities --format json`.
-- Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod rpc --op context.scope`.
+-- Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod rpc --op context.scope`.
+
+Treat `.decapod/generated/specs/*` as living documents. Adjust specs as intent and code change over time.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors

@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.0](https://github.com/DecapodLabs/decapod/compare/v0.51.4...v0.52.0) - 2026-05-25
+
+### Added
+
+- implement epistemic custody preservation ([#592](https://github.com/DecapodLabs/decapod/pull/592))
+
+## [0.51.4](https://github.com/DecapodLabs/decapod/compare/v0.51.3...v0.51.4) - 2026-05-25
+
+### Other
+
+- *(workspace)* remove legacy OVERRIDE.md tracker marker logic ([#589](https://github.com/DecapodLabs/decapod/pull/589))
+
+## [0.51.3](https://github.com/DecapodLabs/decapod/compare/v0.51.2...v0.51.3) - 2026-05-25
+
+### Fixed
+
+- *(workspace)* resolve Issue #586 - yield branch-naming authority to external task trackers ([#587](https://github.com/DecapodLabs/decapod/pull/587))
+
+## [0.51.2](https://github.com/DecapodLabs/decapod/compare/v0.51.1...v0.51.2) - 2026-05-23
+
+### Added
+
+- implement living specs governance rules in templates ([#584](https://github.com/DecapodLabs/decapod/pull/584))
+
+## [0.51.1](https://github.com/DecapodLabs/decapod/compare/v0.51.0...v0.51.1) - 2026-05-23
+
+### Added
+
+- refine agent entrypoint adoption with structured consolidation ([#582](https://github.com/DecapodLabs/decapod/pull/582))
+
+## [0.51.0](https://github.com/DecapodLabs/decapod/compare/v0.50.1...v0.51.0) - 2026-05-23
+
+### Added
+
+- adopt existing agent entrypoints into OVERRIDE.md during init ([#580](https://github.com/DecapodLabs/decapod/pull/580))
+
+## [0.50.1](https://github.com/DecapodLabs/decapod/compare/v0.50.0...v0.50.1) - 2026-05-23
+
+### Other
+
+- fix Mermaid diagram rendering in README.md ([#577](https://github.com/DecapodLabs/decapod/pull/577))
+
+## [0.50.0](https://github.com/DecapodLabs/decapod/compare/v0.49.2...v0.50.0) - 2026-05-23
+
+### Other
+
+- densify constitution and restore safety invariants ([#574](https://github.com/DecapodLabs/decapod/pull/574))
+
 ## [0.49.2](https://github.com/DecapodLabs/decapod/compare/v0.49.1...v0.49.2) - 2026-05-23
 
 ### Fixed

@@ -31,7 +31,7 @@
 - Cross-boundary read models:
 - Consistency expectations:
 
-## Error Taxonomy Example (service_or_library)
+## Error Taxonomy Example (cli)
 ```rust
 #[derive(Debug, thiserror::Error)]
 pub enum ApiError {

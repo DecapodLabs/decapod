@@ -45,6 +45,20 @@ AI coding agents often lose the plot: they forget intent, pull too much context,
 
 ```mermaid
 flowchart TD
+    UserIn["User"] -->|"intent"| AgentPre["Agent (Pre)"]
+    AgentPre -->|"governed request"| Model["Model"]
+    Model -->|"response"| AgentPost["Agent (Post)"]
+    AgentPost -->|"verified result"| UserOut["User"]
+
+    AgentPre -.->|"ping for context"| UserIn
+
+    AgentPre -. "optional governance path" .-> DecapodPre["Decapod (Pre)"]
+    DecapodPre -. "intent, context, gates" .-> AgentPre
+
+    AgentPost -. "optional proof path" .-> DecapodPost["Decapod (Post)"]
+    DecapodPost -. "boundaries, checks, proof" .-> AgentPost
+    DecapodPost -. "needs more context" .-> AgentPre
+
     style UserIn fill:#ff6b9d,stroke:#c44569,color:#fff
     style UserOut fill:#ff6b9d,stroke:#c44569,color:#fff
     style AgentPre fill:#a855f7,stroke:#7c3aed,color:#fff
@@ -52,20 +66,6 @@ flowchart TD
     style Model fill:#06b6d4,stroke:#0891b2,color:#fff
     style DecapodPre fill:#fbbf24,stroke:#f59e0b,color:#000
     style DecapodPost fill:#fbbf24,stroke:#f59e0b,color:#000
-
-    UserIn["User"] -->|"intent"| AgentPre
-    AgentPre -->|"governed request"| Model
-    Model -->|"response"| AgentPost
-    AgentPost -->|"verified result"| UserOut
-
-    AgentPre -.->|"ping for context"| UserIn
-
-    AgentPre -. "optional governance path" .-> DecapodPre
-    DecapodPre -. "intent · context · gates" .-> AgentPre
-
-    AgentPost -. "optional proof path" .-> DecapodPost
-    DecapodPost -. "boundaries · checks · proof" .-> AgentPost
-    DecapodPost -. "needs more context" .-> AgentPre
 ```
 
 **Agent ↔ User pings** — The 1st agent (governance) and 2nd agent (proof) can ping the user for additional context when intent is unclear or verification needs human input.

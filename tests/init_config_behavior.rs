@@ -322,3 +322,219 @@ fn init_with_accepts_noninteractive_spec_seed_env() {
         "architecture spec should include env-seeded architecture direction"
     );
 }
+
+#[test]
+fn init_blends_existing_agent_entrypoints_into_override_md() {
+    let tmp = tempdir().expect("tempdir");
+    let repo_dir = tmp.path();
+
+    // 1. Create a custom AGENTS.md
+    let custom_agents_content =
+        "# Custom Agents\n\nThis is my custom agent configuration.\n- Agent X\n- Agent Y";
+    fs::write(repo_dir.join("AGENTS.md"), custom_agents_content).expect("write AGENTS.md");
+
+    // 2. Run decapod init (without --force, as it's a fresh repo)
+    let out = run_decapod(repo_dir, &["init"]);
+    assert!(
+        out.status.success(),
+        "decapod init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    // 3. Check if AGENTS.md is overwritten by template
+    let new_agents_content =
+        fs::read_to_string(repo_dir.join("AGENTS.md")).expect("read new AGENTS.md");
+    assert!(
+        new_agents_content.contains("Universal Agent Contract"),
+        "AGENTS.md should be overwritten by template"
+    );
+    assert!(
+        !new_agents_content.contains("Custom Agents"),
+        "AGENTS.md should not contain custom content anymore"
+    );
+
+    // 4. Check if custom content is in .decapod/OVERRIDE.md
+    let override_path = repo_dir.join(".decapod/OVERRIDE.md");
+    assert!(
+        override_path.exists(),
+        ".decapod/OVERRIDE.md should be created"
+    );
+    let override_content = fs::read_to_string(override_path).expect("read OVERRIDE.md");
+
+    assert!(
+        override_content.contains("Custom Agents"),
+        "OVERRIDE.md should contain custom AGENTS.md content"
+    );
+    assert!(
+        override_content.contains("This is my custom agent configuration."),
+        "OVERRIDE.md should contain custom AGENTS.md content"
+    );
+    assert!(
+        override_content.contains("Agent X"),
+        "OVERRIDE.md should contain custom AGENTS.md content"
+    );
+    assert!(
+        override_content.contains("## PENDING CONSOLIDATION (ADOPTED INTENT)"),
+        "OVERRIDE.md should have a header for pending consolidation"
+    );
+    assert!(
+        override_content.contains("### adoption/AGENTS.md"),
+        "OVERRIDE.md should have a sub-header for adopted content"
+    );
+}
+
+#[test]
+fn init_blends_all_agent_entrypoints_when_forced() {
+    let tmp = tempdir().expect("tempdir");
+    let repo_dir = tmp.path();
+
+    fs::write(repo_dir.join("CLAUDE.md"), "# Custom Claude").expect("write CLAUDE.md");
+    fs::write(repo_dir.join("GEMINI.md"), "# Custom Gemini").expect("write GEMINI.md");
+    fs::write(repo_dir.join("CODEX.md"), "# Custom Codex").expect("write CODEX.md");
+
+    let out = run_decapod(repo_dir, &["init", "--force", "--all"]);
+    assert!(out.status.success(), "decapod init failed");
+
+    let override_content =
+        fs::read_to_string(repo_dir.join(".decapod/OVERRIDE.md")).expect("read OVERRIDE.md");
+
+    assert!(override_content.contains("## PENDING CONSOLIDATION (ADOPTED INTENT)"));
+    assert!(override_content.contains("### adoption/CLAUDE.md"));
+    assert!(override_content.contains("# Custom Claude"));
+    assert!(override_content.contains("### adoption/GEMINI.md"));
+    assert!(override_content.contains("# Custom Gemini"));
+    assert!(override_content.contains("### adoption/CODEX.md"));
+    assert!(override_content.contains("# Custom Codex"));
+}
+
+#[test]
+fn init_with_claude_only_adopts_it_and_generates_all_four_entrypoints() {
+    let tmp = tempdir().expect("tempdir");
+    let repo_dir = tmp.path();
+
+    // 1. Create only CLAUDE.md
+    fs::write(repo_dir.join("CLAUDE.md"), "# Original Claude Intent").expect("write CLAUDE.md");
+
+    // 2. Run decapod init
+    let out = run_decapod(repo_dir, &["init"]);
+    assert!(out.status.success(), "decapod init failed");
+
+    // 3. Verify ALL four entrypoints now exist
+    assert!(repo_dir.join("AGENTS.md").exists());
+    assert!(repo_dir.join("CLAUDE.md").exists());
+    assert!(repo_dir.join("GEMINI.md").exists());
+    assert!(repo_dir.join("CODEX.md").exists());
+
+    // 4. Verify CLAUDE.md content is the template
+    let new_claude = fs::read_to_string(repo_dir.join("CLAUDE.md")).expect("read new CLAUDE.md");
+    assert!(new_claude.contains("Agent Entrypoint"));
+    assert!(!new_claude.contains("Original Claude Intent"));
+
+    // 5. Verify adoption in OVERRIDE.md
+    let override_content =
+        fs::read_to_string(repo_dir.join(".decapod/OVERRIDE.md")).expect("read OVERRIDE.md");
+    assert!(override_content.contains("## PENDING CONSOLIDATION (ADOPTED INTENT)"));
+    assert!(override_content.contains("### adoption/CLAUDE.md"));
+    assert!(override_content.contains("# Original Claude Intent"));
+}
+
+#[test]
+fn init_creates_custody_directory_and_intent_has_epistemic_custody_fields() {
+    let tmp = tempdir().expect("tempdir");
+    let out = run_decapod(tmp.path(), &["init", "with", "--force"]);
+    assert!(
+        out.status.success(),
+        "decapod init with failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let custody_dir = tmp.path().join(".decapod/generated/artifacts/custody");
+    assert!(
+        custody_dir.exists(),
+        "expected .decapod/generated/artifacts/custody/ directory to exist"
+    );
+    let intent = fs::read_to_string(tmp.path().join(".decapod/generated/specs/INTENT.md"))
+        .expect("read INTENT.md");
+    assert!(
+        intent.contains("## Epistemic Custody Fields"),
+        "INTENT.md should contain Epistemic Custody Fields section"
+    );
+    assert!(
+        intent.contains("### Active Assumptions"),
+        "INTENT.md should contain Active Assumptions subsection"
+    );
+    assert!(
+        intent.contains("### Measured vs Inferred Facts"),
+        "INTENT.md should contain Measured vs Inferred Facts subsection"
+    );
+    assert!(
+        intent.contains("### Unresolved Contradictions"),
+        "INTENT.md should contain Unresolved Contradictions subsection"
+    );
+    assert!(
+        intent.contains("### Deferred Questions"),
+        "INTENT.md should contain Deferred Questions subsection"
+    );
+    assert!(
+        intent.contains("### Stop Conditions"),
+        "INTENT.md should contain Stop Conditions subsection"
+    );
+    assert!(
+        intent.contains("### Proof Required Before Completion"),
+        "INTENT.md should contain Proof Required Before Completion subsection"
+    );
+}
+
+#[test]
+fn agents_md_contains_epistemic_custody_section() {
+    let tmp = tempdir().expect("tempdir");
+    let out = run_decapod(tmp.path(), &["init", "with", "--force", "--all"]);
+    assert!(
+        out.status.success(),
+        "decapod init with failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let agents_md = fs::read_to_string(tmp.path().join("AGENTS.md")).expect("read AGENTS.md");
+    assert!(
+        agents_md.contains("## Epistemic Custody"),
+        "AGENTS.md should contain Epistemic Custody section"
+    );
+    assert!(
+        agents_md.contains("**Epistemic custody** is the preserved chain"),
+        "AGENTS.md should define epistemic custody"
+    );
+    assert!(
+        agents_md.contains("| Term | Meaning |"),
+        "AGENTS.md should contain epistemic custody vocabulary table"
+    );
+    assert!(
+        agents_md.contains("## Custody artifacts"),
+        "AGENTS.md should describe custody artifacts directory"
+    );
+}
+
+#[test]
+fn init_preserves_manually_added_custody_fields_in_intent_md() {
+    let tmp = tempdir().expect("tempdir");
+    // 1. Initial init
+    run_decapod(tmp.path(), &["init", "with", "--force"]);
+
+    let intent_path = tmp.path().join(".decapod/generated/specs/INTENT.md");
+    let mut intent_content = fs::read_to_string(&intent_path).expect("read intent");
+
+    // 2. Manually add an assumption
+    intent_content = intent_content.replace(
+        "### Active Assumptions\n- [ ] List any assumptions made to proceed.",
+        "### Active Assumptions\n- [ ] List any assumptions made to proceed.\n- [ ] MANUALLY_ADDED_ASSUMPTION"
+    );
+    fs::write(&intent_path, intent_content).expect("write modified intent");
+
+    // 3. Re-init
+    run_decapod(tmp.path(), &["init", "--force"]);
+
+    // 4. Verify assumption is still there
+    let re_init_intent = fs::read_to_string(&intent_path).expect("read re-init intent");
+    assert!(
+        re_init_intent.contains("MANUALLY_ADDED_ASSUMPTION"),
+        "re-init should preserve manually added assumptions in INTENT.md"
+    );
+}

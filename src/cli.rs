@@ -112,7 +112,7 @@ pub(crate) struct InitGroupCli {
 
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
     pub diagram_style: InitDiagramStyle,
-    /// Force creation of all 3 entrypoint files (GEMINI.md, AGENTS.md, CLAUDE.md).
+    /// Force creation of all 4 entrypoint files (AGENTS.md, CLAUDE.md, GEMINI.md, CODEX.md).
     #[clap(long)]
     pub all: bool,
     /// Create only CLAUDE.md entrypoint file.
@@ -121,6 +121,9 @@ pub(crate) struct InitGroupCli {
     /// Create only GEMINI.md entrypoint file.
     #[clap(long)]
     pub gemini: bool,
+    /// Create only CODEX.md entrypoint file.
+    #[clap(long)]
+    pub cdx_ep: bool,
     /// Create only AGENTS.md entrypoint file.
     #[clap(long)]
     pub agents: bool,
@@ -157,7 +160,7 @@ pub(crate) enum InitCommand {
     },
     /// Apply explicit init options (non-interactive).
     #[clap(alias = "wtih")]
-    With(InitWithCli),
+    With(Box<InitWithCli>),
 }
 
 #[derive(clap::Args, Debug, Clone)]
@@ -174,7 +177,7 @@ pub(crate) struct InitWithCli {
     /// Show what would change without writing files.
     #[clap(long)]
     pub dry_run: bool,
-    /// Force creation of all entrypoint files.
+    /// Force creation of all 4 entrypoint files (AGENTS.md, CLAUDE.md, GEMINI.md, CODEX.md).
     #[clap(long)]
     pub all: bool,
     /// Create only CLAUDE.md entrypoint file.
@@ -183,6 +186,9 @@ pub(crate) struct InitWithCli {
     /// Create only GEMINI.md entrypoint file.
     #[clap(long)]
     pub gemini: bool,
+    /// Create only CODEX.md entrypoint file.
+    #[clap(long)]
+    pub cdx_ep: bool,
     /// Create only AGENTS.md entrypoint file.
     #[clap(long)]
     pub agents: bool,
@@ -254,6 +260,8 @@ pub(crate) struct RepoContext {
     pub primary_languages: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub detected_surfaces: Vec<String>,
+    #[serde(default)]
+    pub external_tracker: bool,
 }
 
 impl Default for DecapodProjectConfig {
@@ -404,6 +412,12 @@ pub(crate) enum PlanCommand {
         unknowns: Vec<String>,
         #[clap(long = "question")]
         human_questions: Vec<String>,
+        #[clap(long = "stop-condition")]
+        stop_conditions: Vec<String>,
+        #[clap(long = "contradiction")]
+        unresolved_contradictions: Vec<String>,
+        #[clap(long = "deferred-question")]
+        deferred_questions: Vec<String>,
         #[clap(long = "forbidden-path")]
         forbidden_paths: Vec<String>,
         #[clap(long)]
@@ -423,10 +437,22 @@ pub(crate) enum PlanCommand {
         unknowns: Vec<String>,
         #[clap(long = "question")]
         human_questions: Vec<String>,
+        #[clap(long = "stop-condition")]
+        stop_conditions: Vec<String>,
+        #[clap(long = "contradiction")]
+        unresolved_contradictions: Vec<String>,
+        #[clap(long = "deferred-question")]
+        deferred_questions: Vec<String>,
         #[clap(long, default_value_t = false)]
         clear_unknowns: bool,
         #[clap(long, default_value_t = false)]
         clear_questions: bool,
+        #[clap(long, default_value_t = false)]
+        clear_stop_conditions: bool,
+        #[clap(long, default_value_t = false)]
+        clear_contradictions: bool,
+        #[clap(long, default_value_t = false)]
+        clear_deferred_questions: bool,
         #[clap(long = "forbidden-path")]
         forbidden_paths: Vec<String>,
         #[clap(long)]
