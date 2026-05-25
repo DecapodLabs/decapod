@@ -1257,8 +1257,7 @@ pub fn scaffold_project_entrypoints(
 
     // Root entrypoints from embedded templates
     let readme_md = assets::get_template("README.md").expect("Missing template: README.md");
-    let override_md =
-        assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
+    let override_md = assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
 
     // AGENT ENTRYPOINTS - Neural Interfaces (only generate specified files)
     let mut ep_created = 0usize;
