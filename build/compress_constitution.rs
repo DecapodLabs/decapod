@@ -60,7 +60,7 @@ fn ingest_docs_recursive(
         let path = entry.path();
         if path.is_dir() {
             ingest_docs_recursive(base_dir, &path, graph)?;
-        } else if path.extension().map_or(false, |ext| ext == "md") {
+        } else if path.extension().is_some_and(|ext| ext == "md") {
             let rel_path = path.strip_prefix(base_dir)?;
             let id = format!("docs/{}", rel_path.to_string_lossy().replace('\\', "/"));
             let content = fs::read_to_string(&path)?;

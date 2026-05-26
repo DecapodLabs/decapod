@@ -2,36 +2,102 @@
 
 This document defines the normative operational contracts for the Decapod CLI.
 
-## `decapod todo claim`
-- **Intent:** Establish exclusive or shared ownership of a work unit.
-- **Preconditions:**
-  - Agent must have an active session (`session acquire`).
-  - Task status must be `open`.
-- **Arguments:**
-  - `--id <ULID>`: The unique identifier for the task.
-  - `--mode <exclusive|shared>`: Exclusive claims prevent any other agent from claiming.
-- **State Transition:** Moves task from `open` to `claimed`.
-- **Post-Failure:** If `Conflict` is returned, the task is locked by another agent. **STOP** and select a different task.
+## `decapod activate`
+- **Intent:** Activate local control plane state and run startup migrations
 
-## `decapod workspace ensure`
-- **Intent:** Provide a clean, isolated environment for implementation.
-- **Preconditions:**
-  - Task must be `claimed` by the calling agent.
-- **Arguments:**
-  - `--container`: Wraps the worktree in a Docker container. **Required if `repo.container_workspaces = true`.**
-- **State Transition:** Creates a git worktree and (optionally) starts a container.
-- **Operational Requirement:** You MUST `cd` into the returned directory path before acting on the codebase.
+## `decapod init`
+- **Intent:** Bootstrap system and manage lifecycle
+
+## `decapod setup`
+- **Intent:** Configure repository (hooks, settings)
+
+## `decapod session`
+- **Intent:** Session token management (required for agent operation)
+
+## `decapod docs`
+- **Intent:** Access methodology documentation
+
+## `decapod todo`
+- **Intent:** Track tasks and work items
+- **Preconditions:** Agent must have an active session.
+- **State Transition:** Managed via `todo.db`.
+
+## `decapod obligation`
+- **Intent:** Governance-native obligation graph
 
 ## `decapod validate`
-- **Intent:** Verify that the repository state satisfies all governance gates.
-- **Arguments:**
-  - `--store <repo|user>`: Usually `repo`.
-  - `--format json`: Use for deterministic machine parsing of failures.
-- **Outcome:** Exit code `0` on success. Exit code `1` on failure.
-- **Failure Protocol:** Read the specific gate failure in the output. Remediate the code or state before attempting to mark the task as done.
+- **Intent:** Validate methodology compliance
+- **Intent:** Verify methodology compliance.
+- **Outcome:** Exit code 0 on success, 1 on failure.
 
-## `decapod rpc --op constitution.get`
-- **Intent:** Retrieve authoritative guidance from the embedded or project-overridden constitution.
-- **Arguments:**
-  - `--params '{"section": "path/to/directive"}'`: The unique ID of the directive.
-- **Orientation:** If the section is unknown, use `decapod docs search` or `decapod capabilities` to discover the doc graph.
+## `decapod version`
+- **Intent:** Show version information
+
+## `decapod govern`
+- **Intent:** Governance: policy, health, proofs, audits
+
+## `decapod data`
+- **Intent:** Data: archives, knowledge, context, schemas
+
+## `decapod auto`
+- **Intent:** Automation: scheduled and event-driven
+
+## `decapod qa`
+- **Intent:** Quality assurance: verification and checks
+
+## `decapod decide`
+- **Intent:** Architecture decision prompting
+
+## `decapod workspace`
+- **Intent:** Agent workspace management
+- **Preconditions:** Task must be claimed.
+- **State Transition:** Creates git worktrees/containers.
+
+## `decapod rpc`
+- **Intent:** Structured JSON-RPC interface for agents
+
+## `decapod handshake`
+- **Intent:** Deterministic agent handshake artifact (repo-native)
+
+## `decapod release`
+- **Intent:** Release lifecycle checks and guards
+
+## `decapod capabilities`
+- **Intent:** Show Decapod capabilities (for agent discovery)
+
+## `decapod internalize`
+- **Intent:** Internalized context artifacts: create, attach, and inspect context adapters
+
+## `decapod preflight`
+- **Intent:** Preflight check: before any operation, predict what will fail
+
+## `decapod impact`
+- **Intent:** Impact analysis: predict validation outcomes for changed files
+
+## `decapod infer`
+- **Intent:** Inference governance: shape context before model, validate after
+
+## `decapod trace`
+- **Intent:** Local trace management
+
+## `decapod eval`
+- **Intent:** Variance-aware evaluation artifacts and promotion gates
+
+## `decapod flight-recorder`
+- **Intent:** Governance Flight Recorder - render timeline from event logs
+
+## `decapod state-commit`
+- **Intent:** STATE_COMMIT: prove and verify cryptographic state commitments
+
+## `decapod doctor`
+- **Intent:** Preflight health checks for the workspace
+
+## `decapod lcm`
+- **Intent:** Lossless Context Management — immutable originals + deterministic summaries
+
+## `decapod map`
+- **Intent:** Deterministic map operators — structured parallel processing
+
+## `decapod demo`
+- **Intent:** Run demonstrations of Decapod features
+
