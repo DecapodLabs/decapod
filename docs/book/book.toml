@@ -1,0 +1,10 @@
+[book]
+authors = ["Decapod Contributors"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Decapod Book"
+
+[output.html]
+git-repository-url = "https://github.com/DecapodLabs/decapod"
+edit-url-template = "https://github.com/DecapodLabs/decapod/edit/main/docs/book/{path}"

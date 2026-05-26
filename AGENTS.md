@@ -4,6 +4,14 @@ This is a Decapod-managed repository. **Strict Dependency: You are strictly boun
 
 This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any other agent operating here.
 
+## Mandatory Orientation
+
+**Before performing any Decapod operations beyond help/version checks, you MUST read the Agent API Orientation corpus:**
+
+1. Read **[docs/agent/api-index.md](docs/agent/api-index.md)** for high-level orientation.
+2. Consult **[docs/agent/command-contracts.md](docs/agent/command-contracts.md)** for specific command requirements and recovery paths.
+3. Reference **[docs/agent/payload-examples.md](docs/agent/payload-examples.md)** for valid call shapes.
+
 ## Mandatory Initialization
 
 ```bash
@@ -45,6 +53,7 @@ decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
 11. **MUST** maintain **Living Specs**: treat `.decapod/generated/specs/*` as dynamic documents; align them with reality before and after every implementation.
+12. **MUST** use the command contracts in `docs/agent/command-contracts.md` instead of guessing arguments.
 
 ## Decapod Invocation Contract
 
@@ -112,7 +121,7 @@ Decapod maintains custody via:
 - External task managers are allowed, but Decapod todos are still mandatory for workspace isolation.
 - DO NOT mutate `.decapod/` state directly; use decapod CLI. Access to `.decapod/` is strictly via decapod CLI.
 - Use `decapod capabilities --format json` to discover available operations.
-- Stop if requirements conflict or intent is ambiguous. Respect the Interface abstraction boundary.
+- Stop if requirements conflict or intent is ambiguous. Respect the interface abstraction boundary.
 - Treat lock/contention failures as blocking until resolved.
 <!-- decapod-validator-anchors
 Strict Dependency: You are strictly bound to the Decapod control plane

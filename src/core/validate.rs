@@ -64,6 +64,17 @@ fn container_signal_reasons(repo_root: &Path) -> Vec<&'static str> {
     .collect()
 }
 
+fn is_container_workspaces_disabled(repo_root: &Path) -> bool {
+    let config_path = repo_root.join(".decapod").join("config.toml");
+    if !config_path.exists() {
+        return false;
+    }
+    match std::fs::read_to_string(config_path) {
+        Ok(content) => content.contains("container_workspaces = false"),
+        Err(_) => false,
+    }
+}
+
 fn auto_remediable_validation_message(code: &str, message: &str, agent_action: &str) -> String {
     format!(
         "AUTOREMEDIABLE_VALIDATION_ERROR code={} severity=transient auto_remediable=true audience=agent agent_action=\"{}\" user_note=\"Recoverable validation issue; the agent should take this action or report the concrete blocker.\"\n{}",
@@ -3688,7 +3699,12 @@ fn validate_git_workspace_context(
     }
 
     let container_reasons = container_signal_reasons(repo_root);
-    if !container_reasons.is_empty() {
+    if is_container_workspaces_disabled(repo_root) {
+        skip(
+            "Container workspace requirement disabled (container_workspaces = false in .decapod/config.toml). This is only safe for single-agent workflows; multi-agent concurrent runs require container isolation.",
+            ctx,
+        );
+    } else if !container_reasons.is_empty() {
         pass(
             &format!(
                 "Container-detected: (signals: {})",

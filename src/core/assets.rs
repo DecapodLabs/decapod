@@ -228,6 +228,14 @@ fn agent_entrypoint_body() -> &'static str {
     r#"You are working in a Decapod-managed repository.
 See `AGENTS.md` for the universal contract.
 
+## Orientation & Documentation
+
+- **Read `docs/agent/api-index.md` before using Decapod beyond help/version checks.**
+- Use `docs/agent/command-contracts.md` instead of guessing command arguments.
+- Treat Decapod errors as recovery instructions.
+- Respect repo-local config policy and workspace boundaries.
+- Do not bypass Decapod boundaries to appear productive.
+
 ## Project Context
 
 - Read `.decapod/config.toml` before planning; it captures project name, summary, architecture, primary languages, and entrypoint preferences.
@@ -292,6 +300,14 @@ This is a Decapod-managed repository. **Strict Dependency: You are strictly boun
 
 This contract applies equally to Claude, Codex, Gemini, Cursor, Kilo, and any other agent operating here.
 
+## Mandatory Orientation
+
+**Before performing any Decapod operations beyond help/version checks, you MUST read the Agent API Orientation corpus:**
+
+1. Read **[docs/agent/api-index.md](docs/agent/api-index.md)** for high-level orientation.
+2. Consult **[docs/agent/command-contracts.md](docs/agent/command-contracts.md)** for specific command requirements and recovery paths.
+3. Reference **[docs/agent/payload-examples.md](docs/agent/payload-examples.md)** for valid call shapes.
+
 ## Mandatory Initialization
 
 ```bash
@@ -333,6 +349,7 @@ decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
 11. **MUST** maintain **Living Specs**: treat `.decapod/generated/specs/*` as dynamic documents; align them with reality before and after every implementation.
+12. **MUST** use the command contracts in `docs/agent/command-contracts.md` instead of guessing arguments.
 
 ## Decapod Invocation Contract
 
