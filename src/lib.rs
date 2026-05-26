@@ -1634,6 +1634,24 @@ pub fn run() -> Result<(), error::DecapodError> {
                     return Ok(());
                 }
                 Some(InitCommand::With(with)) => *with,
+                Some(InitCommand::Refresh) => {
+                    let target = resolve_existing_init_dir(&current_dir)?;
+                    let cfg = match load_project_config_if_present(&target)? {
+                        Some(c) => c,
+                        None => {
+                            return Err(error::DecapodError::ValidationError(
+                                "No Decapod project found to refresh. Run `decapod init` first."
+                                    .to_string(),
+                            ));
+                        }
+                    };
+                    // Blend OVERRIDE.md additions
+                    let _ = scaffold::blend_overrides(&target)?;
+                    // Sync config (adds missing default fields)
+                    write_project_config(&target, &cfg, false)?;
+                    // Get 'with' from existing config
+                    init_with_from_config(&cfg, target.clone(), false, false)
+                }
                 None => {
                     if init_group.dir.is_some() && init_group.project_dir.is_some() {
                         return Err(error::DecapodError::ValidationError(

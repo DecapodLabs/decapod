@@ -169,6 +169,8 @@ pub(crate) enum InitCommand {
     /// Apply explicit init options (non-interactive).
     #[clap(alias = "wtih")]
     With(Box<InitWithCli>),
+    /// Update existing Decapod state without manual entries (blends config and overrides).
+    Refresh,
 }
 
 #[derive(clap::Args, Debug, Clone)]
