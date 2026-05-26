@@ -3784,7 +3784,9 @@ fn is_non_code_path(line: &str) -> bool {
 /// Strip surrounding double-quotes that git uses when filenames contain
 /// special characters.  Git format: `"path"` or `"\342\200\250path"`.
 fn strip_git_quotes(s: &str) -> &str {
-    s.strip_prefix('"').and_then(|s| s.strip_suffix('"')).unwrap_or(s)
+    s.strip_prefix('"')
+        .and_then(|s| s.strip_suffix('"'))
+        .unwrap_or(s)
 }
 
 fn is_allowed_non_code_path(path: &str) -> bool {
@@ -5369,8 +5371,8 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
 
 #[cfg(test)]
 mod tests {
+    use super::{is_allowed_non_code_path, is_non_code_path, strip_git_quotes};
     use super::{is_protected_git_branch, parse_ahead_behind_counts};
-    use super::{is_non_code_path, is_allowed_non_code_path, strip_git_quotes};
 
     #[test]
     fn protected_branch_matching_is_limited_to_protected_refs() {
@@ -5417,9 +5419,15 @@ mod tests {
 
     #[test]
     fn non_code_allows_generated_specs_and_artifacts() {
-        assert!(is_allowed_non_code_path(".decapod/generated/specs/INTENT.md"));
-        assert!(is_allowed_non_code_path(".decapod/generated/artifacts/plan.json"));
-        assert!(is_allowed_non_code_path(".decapod/generated/specs/deep/nested.md"));
+        assert!(is_allowed_non_code_path(
+            ".decapod/generated/specs/INTENT.md"
+        ));
+        assert!(is_allowed_non_code_path(
+            ".decapod/generated/artifacts/plan.json"
+        ));
+        assert!(is_allowed_non_code_path(
+            ".decapod/generated/specs/deep/nested.md"
+        ));
         // .md files always pass via the ends_with(".md") rule, so this is allowed too
         assert!(is_allowed_non_code_path(".decapod/generated/other.md"));
         // A non-.md file in generated/ but outside specs/ or artifacts/ is rejected

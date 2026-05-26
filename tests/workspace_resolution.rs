@@ -231,7 +231,11 @@ fn test_is_non_code_change_with_source_file() {
         .expect("git status");
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("main.rs"), "expected main.rs in status: {}", stdout);
+    assert!(
+        stdout.contains("main.rs"),
+        "expected main.rs in status: {}",
+        stdout
+    );
 }
 
 // ---- get_workspace_status ----
@@ -246,7 +250,10 @@ fn test_workspace_status_in_main_repo() {
     git_commit(&repo, "init");
 
     let status = workspace::get_workspace_status(&repo).expect("workspace status");
-    assert!(!status.git.in_worktree, "main repo should not report as worktree");
+    assert!(
+        !status.git.in_worktree,
+        "main repo should not report as worktree"
+    );
 }
 
 #[test]
@@ -258,7 +265,10 @@ fn test_workspace_status_in_worktree() {
     git_init(&main_root);
     git_commit(&main_root, "init");
 
-    let wt_path = main_root.join(".decapod").join("workspaces").join("test-wt");
+    let wt_path = main_root
+        .join(".decapod")
+        .join("workspaces")
+        .join("test-wt");
     fs::create_dir_all(wt_path.parent().unwrap()).ok();
 
     std::process::Command::new("git")
@@ -305,5 +315,9 @@ fn test_worktree_prune_after_add() {
     let _ = fs::remove_dir_all(&wt_path);
     let prune_result = workspace::prune_stale_worktree_config(&main_root);
     // Should succeed (prune stale entries)
-    assert!(prune_result.is_ok(), "prune should succeed: {:?}", prune_result);
+    assert!(
+        prune_result.is_ok(),
+        "prune should succeed: {:?}",
+        prune_result
+    );
 }
