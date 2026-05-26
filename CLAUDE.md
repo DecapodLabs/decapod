@@ -21,8 +21,9 @@ See `AGENTS.md` for the universal contract.
 ## Quick Start
 
 ```bash
-cargo install decapod
-decapod init refresh && decapod docs ingest && decapod validate && decapod session acquire
+# Smart bootstrap: only install/init if a newer version is available
+(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init)
+decapod docs ingest && decapod validate && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>

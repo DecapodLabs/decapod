@@ -13,8 +13,9 @@ This is a Decapod-managed repository. **Strict Dependency: You are strictly boun
 ## Mandatory Initialization
 
 ```bash
-cargo install decapod
-decapod init refresh && decapod docs ingest && decapod validate && decapod session acquire
+# Smart bootstrap: only install/init if a newer version is available
+(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init)
+decapod docs ingest && decapod validate && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -76,7 +77,7 @@ Preserve the chain between intent, context, assumptions, action, and proof.
 
 ## Safety Invariants
 - ✅ Router: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
-- ✅ Gates: `cargo install decapod` | `decapod init refresh` | `decapod docs ingest` | `decapod validate`
+- ✅ Gates: `decapod capabilities` | `decapod docs ingest` | `decapod validate`
 - ✅ Claims: `decapod todo claim --id <task-id>` | ✅ Auth: `DECAPOD_SESSION_PASSWORD`
 - ✅ Workspace: Docker git workspaces | ✅ Privilege: request elevated permissions before Docker/container workspace commands
 

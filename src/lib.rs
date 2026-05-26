@@ -1447,10 +1447,16 @@ fn run_init_apply(
         println!(
             "{} {}",
             "init:".bright_yellow(),
-            "already initialized (.decapod exists); rerun with --force, or use `decapod init with --force`"
-                .bright_red()
+            "Existing Decapod project detected. Refreshing environment..."
         );
-        return Ok(target_dir);
+        // Blend OVERRIDE.md additions
+        let _ = scaffold::blend_overrides(&target_dir)?;
+        // Sync config (adds missing default fields)
+        if let Some(cfg) = load_project_config_if_present(&target_dir)? {
+            write_project_config(&target_dir, &cfg, false)?;
+        }
+        // Sync override checksums
+        let _ = docs_cli::sync_override_checksum(&target_dir, false)?;
     }
 
     use sha2::{Digest, Sha256};
@@ -1634,24 +1640,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                     return Ok(());
                 }
                 Some(InitCommand::With(with)) => *with,
-                Some(InitCommand::Refresh) => {
-                    let target = resolve_existing_init_dir(&current_dir)?;
-                    let cfg = match load_project_config_if_present(&target)? {
-                        Some(c) => c,
-                        None => {
-                            return Err(error::DecapodError::ValidationError(
-                                "No Decapod project found to refresh. Run `decapod init` first."
-                                    .to_string(),
-                            ));
-                        }
-                    };
-                    // Blend OVERRIDE.md additions
-                    let _ = scaffold::blend_overrides(&target)?;
-                    // Sync config (adds missing default fields)
-                    write_project_config(&target, &cfg, false)?;
-                    // Get 'with' from existing config
-                    init_with_from_config(&cfg, target.clone(), false, false)
-                }
                 None => {
                     if init_group.dir.is_some() && init_group.project_dir.is_some() {
                         return Err(error::DecapodError::ValidationError(
