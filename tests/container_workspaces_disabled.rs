@@ -242,7 +242,7 @@ fn test_agent_rpc_with_container_workspaces_disabled() {
     let request = serde_json::json!({
         "jsonrpc": "2.0",
         "id": "test-1",
-        "method": "agent.init",
+        "op": "agent.init",
         "params": {}
     });
 
