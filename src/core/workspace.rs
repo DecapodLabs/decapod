@@ -768,7 +768,7 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
     Ok(())
 }
 
-fn get_main_repo_root(current_dir: &Path) -> Result<PathBuf, DecapodError> {
+pub fn get_main_repo_root(current_dir: &Path) -> Result<PathBuf, DecapodError> {
     let output = Command::new("git")
         .args([
             "-C",
@@ -785,14 +785,22 @@ fn get_main_repo_root(current_dir: &Path) -> Result<PathBuf, DecapodError> {
     }
 
     let common_dir = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    let common_path = Path::new(&common_dir);
 
-    // If common_dir is ".git", then current_dir IS the main repo
-    if common_dir == ".git" {
-        return get_repo_root(current_dir);
+    // Canonicalize to handle relative paths from git
+    let common_path = if Path::new(&common_dir).is_absolute() {
+        PathBuf::from(common_dir)
+    } else {
+        current_dir.join(common_dir)
+    };
+
+    let common_path = std::fs::canonicalize(&common_path).unwrap_or(common_path);
+
+    // If common_path ends in .git, the root is its parent
+    if common_path.file_name().and_then(|n| n.to_str()) == Some(".git") {
+        return Ok(common_path.parent().unwrap_or(&common_path).to_path_buf());
     }
 
-    Ok(common_path.parent().unwrap_or(common_path).to_path_buf())
+    Ok(common_path)
 }
 
 /// Discover the Decapod repository root by searching upwards from a directory.
@@ -886,7 +894,7 @@ fn get_current_branch(repo_root: &Path) -> Result<String, DecapodError> {
     Ok(branch)
 }
 
-fn is_worktree(repo_root: &Path) -> Result<bool, DecapodError> {
+pub fn is_worktree(repo_root: &Path) -> Result<bool, DecapodError> {
     let output = Command::new("git")
         .args([
             "-C",

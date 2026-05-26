@@ -199,12 +199,12 @@ fn collect_repo_files(
 
 fn validate_no_legacy_namespaces(
     ctx: &ValidationContext,
-    decapod_dir: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Namespace Purge Gate");
 
     let mut files = Vec::new();
-    collect_repo_files(decapod_dir, &mut files, ctx)?;
+    collect_repo_files(working_root, &mut files, ctx)?;
 
     let needles = [
         [".".to_string(), "globex".to_string()].concat(),
@@ -418,7 +418,7 @@ fn validate_user_store_blank_slate(ctx: &ValidationContext) -> Result<(), error:
 fn validate_repo_store_dogfood(
     store: &Store,
     ctx: &ValidationContext,
-    _decapod_dir: &Path,
+    _working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Store: repo (dogfood backlog semantics)");
 
@@ -490,7 +490,7 @@ fn validate_repo_store_dogfood(
 
 fn validate_repo_map(
     ctx: &ValidationContext,
-    _decapod_dir: &Path, // decapod_dir is no longer used for filesystem constitution checks
+    _working_root: &Path, // working_root is no longer used for filesystem constitution checks
 ) -> Result<(), error::DecapodError> {
     info("Repo Map");
 
@@ -522,14 +522,14 @@ fn validate_repo_map(
 
 fn validate_docs_templates_bucket(
     ctx: &ValidationContext,
-    decapod_dir: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Entrypoint Gate");
 
     // Entrypoints MUST be in the project root
     let required = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"];
     for a in required {
-        let p = decapod_dir.join(a);
+        let p = working_root.join(a);
         if p.is_file() {
             pass(&format!("Root entrypoint {} present", a), ctx);
         } else {
@@ -540,14 +540,14 @@ fn validate_docs_templates_bucket(
         }
     }
 
-    if decapod_dir.join(".decapod").join("README.md").is_file() {
+    if working_root.join(".decapod").join("README.md").is_file() {
         pass(".decapod/README.md present", ctx);
     } else {
         fail(".decapod/README.md missing", ctx);
     }
 
     // NEGATIVE GATE: Decapod docs MUST NOT be copied into the project
-    let forbidden_docs = decapod_dir.join(".decapod").join("docs");
+    let forbidden_docs = working_root.join(".decapod").join("docs");
     if forbidden_docs.exists() {
         fail(
             "Decapod internal docs were copied into .decapod/docs/ (Forbidden)",
@@ -561,7 +561,7 @@ fn validate_docs_templates_bucket(
     }
 
     // NEGATIVE GATE: projects/<id> MUST NOT exist
-    let forbidden_projects = decapod_dir.join(".decapod").join("projects");
+    let forbidden_projects = working_root.join(".decapod").join("projects");
     if forbidden_projects.exists() {
         fail("Legacy .decapod/projects/ directory found (Forbidden)", ctx);
     } else {
@@ -573,12 +573,12 @@ fn validate_docs_templates_bucket(
 
 fn validate_entrypoint_invariants(
     ctx: &ValidationContext,
-    decapod_dir: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Four Invariants Gate");
 
     // Check AGENTS.md for the four invariants
-    let agents_path = decapod_dir.join("AGENTS.md");
+    let agents_path = working_root.join("AGENTS.md");
     if !agents_path.is_file() {
         fail("AGENTS.md missing, cannot check invariants", ctx);
         return Ok(());
@@ -678,7 +678,7 @@ fn validate_entrypoint_invariants(
     // Check that agent-specific files defer to AGENTS.md and are thin
     const MAX_AGENT_SPECIFIC_LINES: usize = 70;
     for agent_file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
-        let agent_path = decapod_dir.join(agent_file);
+        let agent_path = working_root.join(agent_file);
         if !agent_path.is_file() {
             fail(&format!("{} missing from project root", agent_file), ctx);
             all_present = false;
@@ -1066,17 +1066,17 @@ fn extract_md_version(content: &str) -> Option<String> {
 
 fn validate_health_purity(
     ctx: &ValidationContext,
-    decapod_dir: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Health Purity Gate");
     let mut files = Vec::new();
-    collect_repo_files(decapod_dir, &mut files, ctx)?;
+    collect_repo_files(working_root, &mut files, ctx)?;
 
     let forbidden =
         Regex::new(r"(?i)\(health:\s*(VERIFIED|ASSERTED|STALE|CONTRADICTED)\)").unwrap();
     let mut offenders = Vec::new();
 
-    let generated_path = decapod_dir.join(".decapod").join("generated");
+    let generated_path = working_root.join(".decapod").join("generated");
 
     for path in files {
         if path.extension().is_some_and(|e| e == "md") {
@@ -1112,7 +1112,7 @@ fn validate_health_purity(
 fn validate_project_scoped_state(
     store: &Store,
     ctx: &ValidationContext,
-    decapod_dir: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Project-Scoped State Gate");
     if store.kind != StoreKind::Repo {
@@ -1122,7 +1122,7 @@ fn validate_project_scoped_state(
 
     // Check if any .db or .jsonl files exist outside .decapod/ in the project root
     let mut offenders = Vec::new();
-    for entry in fs::read_dir(decapod_dir).map_err(error::DecapodError::IoError)? {
+    for entry in fs::read_dir(working_root).map_err(error::DecapodError::IoError)? {
         let entry = entry.map_err(error::DecapodError::IoError)?;
         let path = entry.path();
         if path.is_file() {
@@ -1150,7 +1150,7 @@ fn validate_project_scoped_state(
 fn validate_generated_artifact_whitelist(
     store: &Store,
     ctx: &ValidationContext,
-    decapod_dir: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Generated Artifact Whitelist Gate");
 
@@ -1162,7 +1162,7 @@ fn validate_generated_artifact_whitelist(
         return Ok(());
     }
 
-    let gitignore_path = decapod_dir.join(".gitignore");
+    let gitignore_path = working_root.join(".gitignore");
     let gitignore = fs::read_to_string(&gitignore_path).map_err(error::DecapodError::IoError)?;
     for rule in DECAPOD_GITIGNORE_RULES {
         if gitignore.lines().any(|line| line.trim() == *rule) {
@@ -1180,7 +1180,7 @@ fn validate_generated_artifact_whitelist(
 
     let output = std::process::Command::new("git")
         .arg("-C")
-        .arg(decapod_dir)
+        .arg(working_root)
         .args(["ls-files", ".decapod/generated", ".decapod/data"])
         .output();
 
@@ -2517,7 +2517,7 @@ fn validate_internalization_artifacts_if_present(
 
 fn validate_schema_determinism(
     ctx: &ValidationContext,
-    _decapod_dir: &Path,
+    _working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Schema Determinism Gate");
     let run_schema = || -> Result<String, error::DecapodError> {
@@ -3276,12 +3276,12 @@ fn validate_lineage_hard_gate(
 
 fn validate_repomap_determinism(
     ctx: &ValidationContext,
-    decapod_dir: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Repo Map Determinism Gate");
     use crate::core::repomap;
-    let dir1 = decapod_dir.to_path_buf();
-    let dir2 = decapod_dir.to_path_buf();
+    let dir1 = working_root.to_path_buf();
+    let dir2 = working_root.to_path_buf();
     let h1 =
         std::thread::spawn(move || serde_json::to_string(&repomap::generate_map(&dir1)).unwrap());
     let h2 =
@@ -3508,12 +3508,12 @@ fn validate_canon_mutation(
 
 fn validate_heartbeat_invocation_gate(
     ctx: &ValidationContext,
-    decapod_dir: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Heartbeat Invocation Gate");
 
-    let lib_rs = decapod_dir.join("src").join("lib.rs");
-    let todo_rs = decapod_dir.join("src").join("plugins").join("todo.rs");
+    let lib_rs = working_root.join("src").join("lib.rs");
+    let todo_rs = working_root.join("src").join("plugins").join("todo.rs");
     if lib_rs.exists() && todo_rs.exists() {
         let lib_content = fs::read_to_string(&lib_rs).unwrap_or_default();
         let todo_content = fs::read_to_string(&todo_rs).unwrap_or_default();
@@ -3636,6 +3636,7 @@ fn validate_markdown_primitives_roundtrip_gate(
 /// This gate ensures formatting, linting, and type checking pass before promotion.
 fn validate_git_workspace_context(
     ctx: &ValidationContext,
+    main_root: &Path,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Git Workspace Context Gate");
@@ -3682,13 +3683,10 @@ fn validate_git_workspace_context(
         return Ok(());
     }
 
-    let git_dir = repo_root.join(".git");
-    let is_worktree = git_dir.is_file() && {
-        let content = std::fs::read_to_string(&git_dir).unwrap_or_default();
-        content.contains("gitdir:")
-    };
+    let is_worktree = crate::core::workspace::is_worktree(repo_root).unwrap_or(false);
 
-    let is_isolated = is_worktree || repo_root.to_string_lossy().contains(".decapod/workspaces");
+    let workspaces_path = main_root.join(".decapod").join("workspaces");
+    let is_isolated = is_worktree && repo_root.starts_with(&workspaces_path);
 
     if is_isolated {
         pass("Running in isolated workspace (.decapod/workspaces/)", ctx);
@@ -3700,7 +3698,9 @@ fn validate_git_workspace_context(
     }
 
     let container_reasons = container_signal_reasons(repo_root);
-    if is_container_workspaces_disabled(repo_root) {
+    let is_non_code = is_non_code_change(repo_root);
+
+    if is_container_workspaces_disabled(main_root) {
         skip(
             "Container workspace requirement disabled (container_workspaces = false in .decapod/config.toml). This is only safe for single-agent workflows; multi-agent concurrent runs require container isolation.",
             ctx,
@@ -3711,6 +3711,11 @@ fn validate_git_workspace_context(
                 "Container-detected: (signals: {})",
                 container_reasons.join(", ")
             ),
+            ctx,
+        );
+    } else if is_non_code {
+        skip(
+            "Container workspace relaxation: only non-code files (docs, config, specs) are modified. Host-side execution is permitted for these tasks.",
             ctx,
         );
     } else {
@@ -3727,6 +3732,40 @@ fn validate_git_workspace_context(
     validate_commit_often_gate(ctx, repo_root)?;
 
     Ok(())
+}
+
+fn is_non_code_change(repo_root: &Path) -> bool {
+    let output = std::process::Command::new("git")
+        .args(["status", "--porcelain"])
+        .current_dir(repo_root)
+        .output()
+        .ok();
+
+    let Some(output) = output else {
+        return false;
+    };
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let lines: Vec<&str> = stdout.lines().filter(|l| !l.is_empty()).collect();
+
+    if lines.is_empty() {
+        return true; // No changes is "non-code" for validation purposes
+    }
+
+    lines.iter().all(|line| {
+        if line.len() < 4 {
+            return false;
+        }
+        let path = line[3..].trim();
+
+        // Allowed paths for non-code relaxation
+        path.starts_with("docs/")
+            || path.ends_with(".md")
+            || path == ".decapod/config.toml"
+            || path == ".decapod/OVERRIDE.md"
+            || path.starts_with(".decapod/generated/specs/")
+            || path.starts_with(".decapod/generated/artifacts/")
+            || path.starts_with(".decapod/contracts/")
+    })
 }
 
 fn validate_commit_often_gate(
@@ -3784,7 +3823,7 @@ fn validate_commit_often_gate(
 fn validate_plan_governed_execution_gate(
     store: &Store,
     ctx: &ValidationContext,
-    repo_root: &Path,
+    main_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Plan-Governed Execution Gate");
 
@@ -3799,7 +3838,7 @@ fn validate_plan_governed_execution_gate(
         return Ok(());
     }
 
-    let plan = plan_governance::load_plan(repo_root)?;
+    let plan = plan_governance::load_plan(main_root)?;
     if let Some(plan) = plan {
         if plan.state != plan_governance::PlanState::Approved
             && plan.state != plan_governance::PlanState::Done
@@ -4551,14 +4590,14 @@ fn validate_lcm_rebuild_gate(
 
 fn validate_gatekeeper_gate(
     ctx: &ValidationContext,
-    decapod_dir: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Gatekeeper Safety Gate");
 
     // Get staged files from git (if in a git repo)
     let output = std::process::Command::new("git")
         .args(["diff", "--cached", "--name-only"])
-        .current_dir(decapod_dir)
+        .current_dir(working_root)
         .output();
 
     let staged_paths: Vec<PathBuf> = match output {
@@ -4582,7 +4621,7 @@ fn validate_gatekeeper_gate(
     }
 
     let config = crate::core::gatekeeper::GatekeeperConfig::default();
-    let result = crate::core::gatekeeper::run_gatekeeper(decapod_dir, &staged_paths, 0, &config)?;
+    let result = crate::core::gatekeeper::run_gatekeeper(working_root, &staged_paths, 0, &config)?;
 
     if result.passed {
         pass(
@@ -4722,7 +4761,7 @@ pub fn evaluate_mandates(
 /// no snapshot should produce a policy that is looser than a less-reliable one.
 fn validate_coplayer_policy_tightening(
     ctx: &ValidationContext,
-    _decapod_dir: &Path,
+    _working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Co-Player Policy Tightening Gate");
 
@@ -4789,8 +4828,8 @@ fn validate_coplayer_policy_tightening(
 
 pub fn run_validation(
     store: &Store,
-    decapod_dir: &Path,
-    _home_dir: &Path,
+    main_root: &Path,
+    working_root: &Path,
     _verbose: bool,
 ) -> Result<ValidationReport, error::DecapodError> {
     let total_start = Instant::now();
@@ -4814,7 +4853,7 @@ pub fn run_validation(
         }
         StoreKind::Repo => {
             let start = Instant::now();
-            validate_repo_store_dogfood(store, &ctx, decapod_dir)?;
+            validate_repo_store_dogfood(store, &ctx, main_root)?;
             let _ = start;
         }
     }
@@ -4832,147 +4871,147 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_repo_map",
-            validate_repo_map(ctx, decapod_dir)
+            validate_repo_map(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_no_legacy_namespaces",
-            validate_no_legacy_namespaces(ctx, decapod_dir)
+            validate_no_legacy_namespaces(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_embedded_self_contained",
-            validate_embedded_self_contained(ctx, decapod_dir)
+            validate_embedded_self_contained(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_docs_templates_bucket",
-            validate_docs_templates_bucket(ctx, decapod_dir)
+            validate_docs_templates_bucket(ctx, main_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_entrypoint_invariants",
-            validate_entrypoint_invariants(ctx, decapod_dir)
+            validate_entrypoint_invariants(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_interface_contract_bootstrap",
-            validate_interface_contract_bootstrap(ctx, decapod_dir)
+            validate_interface_contract_bootstrap(ctx, main_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_health_purity",
-            validate_health_purity(ctx, decapod_dir)
+            validate_health_purity(ctx, main_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_project_scoped_state",
-            validate_project_scoped_state(store, ctx, decapod_dir)
+            validate_project_scoped_state(store, ctx, main_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_generated_artifact_whitelist",
-            validate_generated_artifact_whitelist(store, ctx, decapod_dir)
+            validate_generated_artifact_whitelist(store, ctx, main_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_project_config_toml",
-            validate_project_config_toml(ctx, decapod_dir)
+            validate_project_config_toml(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_project_specs_docs",
-            validate_project_specs_docs(ctx, decapod_dir)
+            validate_project_specs_docs(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_spec_drift",
-            validate_spec_drift(ctx, decapod_dir)
+            validate_spec_drift(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_machine_contract",
-            validate_machine_contract(ctx, decapod_dir)
+            validate_machine_contract(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_workunit_manifests_if_present",
-            validate_workunit_manifests_if_present(ctx, decapod_dir)
+            validate_workunit_manifests_if_present(ctx, main_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_recursive_improvement_passes_if_present",
-            validate_recursive_improvement_passes_if_present(ctx, decapod_dir)
+            validate_recursive_improvement_passes_if_present(ctx, main_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_context_capsule_policy_contract",
-            validate_context_capsule_policy_contract(ctx, decapod_dir)
+            validate_context_capsule_policy_contract(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_context_capsules_if_present",
-            validate_context_capsules_if_present(ctx, decapod_dir)
+            validate_context_capsules_if_present(ctx, main_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_knowledge_promotions_if_present",
-            validate_knowledge_promotions_if_present(ctx, decapod_dir)
+            validate_knowledge_promotions_if_present(ctx, main_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_skill_cards_if_present",
-            validate_skill_cards_if_present(ctx, decapod_dir)
+            validate_skill_cards_if_present(ctx, main_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_skill_resolutions_if_present",
-            validate_skill_resolutions_if_present(ctx, decapod_dir)
+            validate_skill_resolutions_if_present(ctx, main_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_internalization_artifacts_if_present",
-            validate_internalization_artifacts_if_present(ctx, decapod_dir)
+            validate_internalization_artifacts_if_present(ctx, main_root)
         );
         gate!(
             s,
@@ -4986,7 +5025,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_schema_determinism",
-            validate_schema_determinism(ctx, decapod_dir)
+            validate_schema_determinism(ctx, working_root)
         );
         gate!(
             s,
@@ -5042,7 +5081,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_repomap_determinism",
-            validate_repomap_determinism(ctx, decapod_dir)
+            validate_repomap_determinism(ctx, working_root)
         );
         gate!(
             s,
@@ -5084,7 +5123,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_heartbeat_invocation_gate",
-            validate_heartbeat_invocation_gate(ctx, decapod_dir)
+            validate_heartbeat_invocation_gate(ctx, working_root)
         );
         gate!(
             s,
@@ -5105,28 +5144,28 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_git_workspace_context",
-            validate_git_workspace_context(ctx, decapod_dir)
+            validate_git_workspace_context(ctx, main_root, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_git_protected_branch",
-            validate_git_protected_branch(ctx, decapod_dir)
+            validate_git_protected_branch(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_tooling_gate",
-            validate_tooling_gate(ctx, decapod_dir)
+            validate_tooling_gate(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_state_commit_gate",
-            validate_state_commit_gate(ctx, decapod_dir)
+            validate_state_commit_gate(ctx, working_root)
         );
         gate!(
             s,
@@ -5141,14 +5180,14 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_gatekeeper_gate",
-            validate_gatekeeper_gate(ctx, decapod_dir)
+            validate_gatekeeper_gate(ctx, working_root)
         );
         gate!(
             s,
             timings,
             ctx,
             "validate_coplayer_policy_tightening",
-            validate_coplayer_policy_tightening(ctx, decapod_dir)
+            validate_coplayer_policy_tightening(ctx, working_root)
         );
         gate!(
             s,
@@ -5169,7 +5208,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_plan_governed_execution_gate",
-            validate_plan_governed_execution_gate(store, ctx, decapod_dir)
+            validate_plan_governed_execution_gate(store, ctx, main_root)
         );
     }
 

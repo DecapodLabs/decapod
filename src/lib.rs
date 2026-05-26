@@ -60,6 +60,12 @@ fn find_decapod_project_root(start_dir: &Path) -> Result<PathBuf, error::Decapod
     }
 }
 
+fn find_governance_root(workspace_root: &Path) -> PathBuf {
+    // If we are in a worktree, the governance root is the main repo.
+    // Otherwise, it's just the workspace root.
+    workspace::get_main_repo_root(workspace_root).unwrap_or_else(|_| workspace_root.to_path_buf())
+}
+
 // Process-local session password - eliminates unsafe env::set_var
 static SESSION_P_VAL: OnceLock<String> = OnceLock::new();
 
@@ -1762,17 +1768,20 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
         },
         _ => {
-            let project_root = decapod_root_option?;
+            let workspace_root = decapod_root_option?;
+            let governance_root = find_governance_root(&workspace_root);
+
             let is_validate_cmd = matches!(&cli.command, Command::Validate(_));
             if requires_session_token(&cli.command) {
                 ensure_session_valid()?;
             }
-            enforce_worktree_requirement(&cli.command, &project_root)?;
+            enforce_worktree_requirement(&cli.command, &workspace_root)?;
 
-            // For other commands, ensure .decapod exists
-            let decapod_root_path = project_root.join(".decapod");
+            // For other commands, ensure .decapod exists in the GOVERNANCE root
+            let decapod_root_path = governance_root.join(".decapod");
             store_root = decapod_root_path.join("data");
             std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
+
             if should_route_via_group_broker(&cli.command, &argv) {
                 match core::group_broker::maybe_route_mutation(&store_root, &argv) {
                     Err(e) => {
@@ -1810,7 +1819,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     let normalized = normalize_validate_error(e);
                     return Err(attach_validate_diagnostic_if_enabled(
                         normalized,
-                        &project_root,
+                        &workspace_root,
                         0,
                         validate_timeout_secs(),
                     ));
@@ -1820,7 +1829,7 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Best-effort hygiene: routinely scrub stale git worktree metadata/config.
             // This must not block primary command execution.
-            if let Err(e) = workspace::prune_stale_worktree_config(&project_root)
+            if let Err(e) = workspace::prune_stale_worktree_config(&workspace_root)
                 && !is_not_git_repository_error(&e)
             {
                 eprintln!("warn: worktree maintenance skipped: {e}");
@@ -1849,13 +1858,18 @@ pub fn run() -> Result<(), error::DecapodError> {
                     println!("decapod.activate: ok");
                 }
                 Command::Validate(validate_cli) => {
-                    run_validate_command(validate_cli, &project_root, &project_store)?;
+                    run_validate_command(
+                        validate_cli,
+                        &governance_root,
+                        &workspace_root,
+                        &project_store,
+                    )?;
                 }
                 Command::Version => show_version_info()?,
                 Command::Docs(docs_cli) => {
                     let result = docs_cli::run_docs_cli(docs_cli)?;
                     if result.ingested_core_constitution {
-                        mark_core_constitution_ingested(&project_root, "docs.ingest")?;
+                        mark_core_constitution_ingested(&governance_root, "docs.ingest")?;
                     }
                 }
                 Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
@@ -1863,25 +1877,31 @@ pub fn run() -> Result<(), error::DecapodError> {
                     obligation::run_obligation_cli(&project_store, obligation_cli)?
                 }
                 Command::Govern(govern_cli) => {
-                    run_govern_command(govern_cli, &project_store, &store_root)?;
+                    run_govern_command(govern_cli, &project_store, &store_root, &workspace_root)?;
                 }
                 Command::Data(data_cli) => {
-                    run_data_command(data_cli, &project_store, &project_root, &store_root)?;
+                    run_data_command(
+                        data_cli,
+                        &project_store,
+                        &governance_root,
+                        &workspace_root,
+                        &store_root,
+                    )?;
                 }
                 Command::Auto(auto_cli) => run_auto_command(auto_cli, &project_store)?,
-                Command::Qa(qa_cli) => run_qa_command(qa_cli, &project_store, &project_root)?,
+                Command::Qa(qa_cli) => run_qa_command(qa_cli, &project_store, &workspace_root)?,
                 Command::Decide(decide_cli) => decide::run_decide_cli(&project_store, decide_cli)?,
                 Command::Workspace(workspace_cli) => {
-                    run_workspace_command(workspace_cli, &project_root)?;
+                    run_workspace_command(workspace_cli, &workspace_root)?;
                 }
                 Command::Rpc(rpc_cli) => {
-                    run_rpc_command(rpc_cli, &project_root)?;
+                    run_rpc_command(rpc_cli, &workspace_root)?;
                 }
                 Command::Handshake(handshake_cli) => {
-                    run_handshake_command(handshake_cli, &project_root)?;
+                    run_handshake_command(handshake_cli, &workspace_root)?;
                 }
                 Command::Release(release_cli) => {
-                    run_release_command(release_cli, &project_root)?;
+                    run_release_command(release_cli, &workspace_root)?;
                 }
                 Command::Capabilities(cap_cli) => {
                     run_capabilities_command(cap_cli)?;
@@ -1890,16 +1910,16 @@ pub fn run() -> Result<(), error::DecapodError> {
                     internalize::run_internalize_cli(&project_store, &store_root, internalize_cli)?;
                 }
                 Command::Preflight(preflight_cli) => {
-                    run_preflight_command(preflight_cli, &project_root)?;
+                    run_preflight_command(preflight_cli, &workspace_root)?;
                 }
                 Command::Impact(impact_cli) => {
-                    run_impact_command(impact_cli, &project_root)?;
+                    run_impact_command(impact_cli, &workspace_root)?;
                 }
                 Command::Infer(infer_cli) => {
-                    run_infer_command(infer_cli, &project_root)?;
+                    run_infer_command(infer_cli, &workspace_root)?;
                 }
                 Command::Trace(trace_cli) => {
-                    run_trace_command(trace_cli, &project_root)?;
+                    run_trace_command(trace_cli, &workspace_root)?;
                 }
                 Command::Eval(eval_cli) => {
                     eval::run_eval_cli(&project_store, eval_cli)?;
@@ -1908,10 +1928,10 @@ pub fn run() -> Result<(), error::DecapodError> {
                     flight_recorder::run_flight_recorder_cli(&project_store, fr_cli)?;
                 }
                 Command::StateCommit(sc_cli) => {
-                    run_state_commit_command(sc_cli, &project_root)?;
+                    run_state_commit_command(sc_cli, &workspace_root)?;
                 }
                 Command::Doctor(doctor_cli) => {
-                    doctor::run_doctor_cli(&project_store, &project_root, doctor_cli)?;
+                    doctor::run_doctor_cli(&project_store, &workspace_root, doctor_cli)?;
                 }
                 Command::Lcm(lcm_cli) => {
                     lcm::run_lcm_cli(&project_store, lcm_cli)?;
@@ -1920,7 +1940,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     map_ops::run_map_cli(&project_store, map_cli)?;
                 }
                 Command::Demo(demo_cli) => {
-                    run_demo_command(demo_cli, &project_root)?;
+                    run_demo_command(demo_cli, &workspace_root)?;
                 }
                 _ => unreachable!(),
             }
@@ -2116,7 +2136,7 @@ fn branch_contains_todo_ticket_id(branch: &str) -> bool {
 
 fn enforce_worktree_requirement(
     command: &Command,
-    project_root: &Path,
+    _project_root: &Path,
 ) -> Result<(), error::DecapodError> {
     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
         return Ok(());
@@ -2125,13 +2145,14 @@ fn enforce_worktree_requirement(
         return Ok(());
     }
 
-    let status = crate::core::workspace::get_workspace_status(project_root)?;
+    let current_dir = std::env::current_dir()?;
+    let status = crate::core::workspace::get_workspace_status(&current_dir)?;
     if status.git.in_worktree {
         let worktree_path = status
             .git
             .worktree_path
             .clone()
-            .unwrap_or_else(|| project_root.to_path_buf());
+            .unwrap_or_else(|| current_dir.to_path_buf());
         if command_requires_canonical_worktree_path(command)
             && !is_canonical_decapod_worktree_path(&worktree_path)
         {
@@ -2181,7 +2202,7 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
 
 fn enforce_worktree_requirement_for_rpc(
     op: &str,
-    project_root: &Path,
+    _project_root: &Path,
 ) -> Result<(), error::DecapodError> {
     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
         return Ok(());
@@ -2190,13 +2211,14 @@ fn enforce_worktree_requirement_for_rpc(
         return Ok(());
     }
 
-    let status = crate::core::workspace::get_workspace_status(project_root)?;
+    let current_dir = std::env::current_dir()?;
+    let status = crate::core::workspace::get_workspace_status(&current_dir)?;
     if status.git.in_worktree {
         let worktree_path = status
             .git
             .worktree_path
             .clone()
-            .unwrap_or_else(|| project_root.to_path_buf());
+            .unwrap_or_else(|| current_dir.to_path_buf());
         if !matches!(
             op,
             "validate.run"
@@ -4247,7 +4269,8 @@ fn render_validation_text(
 
 fn run_validate_command(
     validate_cli: ValidateCli,
-    project_root: &Path,
+    governance_root: &Path,
+    workspace_root: &Path,
     project_store: &Store,
 ) -> Result<(), error::DecapodError> {
     use crate::core::workspace;
@@ -4256,7 +4279,8 @@ fn run_validate_command(
         // Skip workspace check if gates are explicitly skipped
     } else {
         // FIRST: Check workspace enforcement (non-negotiable)
-        let workspace_status = workspace::get_workspace_status(project_root)?;
+        // Check protection in the current workspace/worktree
+        let workspace_status = workspace::get_workspace_status(workspace_root)?;
 
         if !workspace_status.can_work {
             let blocker = workspace_status
@@ -4287,7 +4311,6 @@ fn run_validate_command(
         }
     }
 
-    let decapod_root = project_root.to_path_buf();
     let store = match validate_cli.store.as_str() {
         "user" => {
             // User store uses a temp directory for blank-slate validation
@@ -4305,30 +4328,40 @@ fn run_validate_command(
     };
 
     let mut heal_actions = Vec::new();
-    if let Some(action) = heal_override_checksum(project_root)? {
+    if let Some(action) = heal_override_checksum(workspace_root)? {
         heal_actions.push(action);
     }
-    if let Some(action) = heal_validation_scaffold(project_root)? {
+    if let Some(action) = heal_validation_scaffold(workspace_root)? {
         heal_actions.push(action);
     }
-    if let Some(action) = heal_agents_contract(project_root)? {
+    if let Some(action) = heal_agents_contract(workspace_root)? {
         heal_actions.push(action);
     }
-    if let Some(action) = heal_container_runtime_override(project_root)? {
+    if let Some(action) = heal_container_runtime_override(workspace_root)? {
         heal_actions.push(action);
     }
 
-    let mut report = run_validation_bounded(&store, &decapod_root, validate_cli.verbose)?;
+    let mut report = run_validation_bounded(
+        &store,
+        governance_root,
+        workspace_root,
+        validate_cli.verbose,
+    )?;
     for _ in 0..2 {
         if report.fail_count == 0 {
             break;
         }
-        let mut round_actions = attempt_validation_failure_heal(&report, project_root, &store)?;
+        let mut round_actions = attempt_validation_failure_heal(&report, workspace_root, &store)?;
         if round_actions.is_empty() {
             break;
         }
         heal_actions.append(&mut round_actions);
-        report = run_validation_bounded(&store, &decapod_root, validate_cli.verbose)?;
+        report = run_validation_bounded(
+            &store,
+            governance_root,
+            workspace_root,
+            validate_cli.verbose,
+        )?;
     }
 
     if validate_cli.format == "json" {
@@ -4350,7 +4383,7 @@ fn run_validate_command(
     if report.fail_count > 0 {
         std::process::exit(1);
     }
-    mark_validation_completed(project_root)?;
+    mark_validation_completed(workspace_root)?;
     Ok(())
 }
 
@@ -4571,17 +4604,19 @@ fn is_transient_sqlite_contention_error(err: &error::DecapodError) -> bool {
 
 fn run_validation_bounded(
     store: &Store,
-    project_root: &Path,
+    governance_root: &Path,
+    workspace_root: &Path,
     verbose: bool,
 ) -> Result<validate::ValidationReport, error::DecapodError> {
     let timeout_secs = validate_timeout_secs();
     let started = std::time::Instant::now();
     let (tx, rx) = mpsc::channel();
     let store_cloned = store.clone();
-    let root = project_root.to_path_buf();
+    let g_root = governance_root.to_path_buf();
+    let w_root = workspace_root.to_path_buf();
 
     std::thread::spawn(move || {
-        let mut result = validate::run_validation(&store_cloned, &root, &root, verbose);
+        let mut result = validate::run_validation(&store_cloned, &g_root, &w_root, verbose);
         for attempt in 1..=2 {
             let should_retry = match &result {
                 Err(error::DecapodError::RusqliteError(err)) => {
@@ -4600,7 +4635,7 @@ fn run_validation_bounded(
             }
             let backoff_ms = 200_u64 * attempt as u64;
             std::thread::sleep(std::time::Duration::from_millis(backoff_ms));
-            result = validate::run_validation(&store_cloned, &root, &root, verbose);
+            result = validate::run_validation(&store_cloned, &g_root, &w_root, verbose);
         }
         let _ = tx.send(result);
     });
@@ -4618,7 +4653,7 @@ fn run_validation_bounded(
     result.map_err(|err| {
         attach_validate_diagnostic_if_enabled(
             err,
-            project_root,
+            workspace_root,
             started.elapsed().as_millis() as u64,
             timeout_secs,
         )
@@ -4701,6 +4736,7 @@ fn run_govern_command(
     govern_cli: GovernCli,
     project_store: &Store,
     store_root: &Path,
+    workspace_root: &Path,
 ) -> Result<(), error::DecapodError> {
     match govern_cli.command {
         GovernCommand::Policy(policy_cli) => policy::run_policy_cli(project_store, policy_cli)?,
@@ -4739,11 +4775,7 @@ fn run_govern_command(
             } => {
                 use crate::core::gatekeeper;
 
-                let repo_root = project_store
-                    .root
-                    .parent()
-                    .and_then(|p| p.parent())
-                    .unwrap_or(&project_store.root);
+                let repo_root = workspace_root;
 
                 // Collect paths: explicit or git staged files
                 let check_paths: Vec<std::path::PathBuf> = if let Some(explicit) = paths {
@@ -4801,9 +4833,13 @@ fn run_govern_command(
                 }
             }
         },
-        GovernCommand::Plan(plan_cli) => run_plan_command(plan_cli, project_store)?,
-        GovernCommand::Workunit(workunit_cli) => run_workunit_command(workunit_cli, project_store)?,
-        GovernCommand::Capsule(capsule_cli) => run_capsule_command(capsule_cli, project_store)?,
+        GovernCommand::Plan(plan_cli) => run_plan_command(plan_cli, project_store, workspace_root)?,
+        GovernCommand::Workunit(workunit_cli) => {
+            run_workunit_command(workunit_cli, project_store, workspace_root)?
+        }
+        GovernCommand::Capsule(capsule_cli) => {
+            run_capsule_command(capsule_cli, project_store, workspace_root)?
+        }
     }
 
     Ok(())
@@ -4811,17 +4847,10 @@ fn run_govern_command(
 
 fn run_capsule_command(
     capsule_cli: CapsuleCli,
-    project_store: &Store,
+    _project_store: &Store,
+    workspace_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    let project_root = project_store
-        .root
-        .parent()
-        .and_then(|p| p.parent())
-        .ok_or_else(|| {
-            error::DecapodError::ValidationError(
-                "unable to resolve project root from store root".to_string(),
-            )
-        })?;
+    let project_root = workspace_root;
 
     match capsule_cli.command {
         CapsuleCommand::Query {
@@ -4877,17 +4906,10 @@ fn run_capsule_command(
 
 fn run_workunit_command(
     workunit_cli: WorkunitCli,
-    project_store: &Store,
+    _project_store: &Store,
+    workspace_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    let project_root = project_store
-        .root
-        .parent()
-        .and_then(|p| p.parent())
-        .ok_or_else(|| {
-            error::DecapodError::ValidationError(
-                "unable to resolve project root from store root".to_string(),
-            )
-        })?;
+    let project_root = workspace_root;
 
     match workunit_cli.command {
         WorkunitCommand::Init {
@@ -4968,16 +4990,12 @@ fn run_workunit_command(
     Ok(())
 }
 
-fn run_plan_command(plan_cli: PlanCli, project_store: &Store) -> Result<(), error::DecapodError> {
-    let project_root = project_store
-        .root
-        .parent()
-        .and_then(|p| p.parent())
-        .ok_or_else(|| {
-            error::DecapodError::ValidationError(
-                "unable to resolve project root from store root".to_string(),
-            )
-        })?;
+fn run_plan_command(
+    plan_cli: PlanCli,
+    project_store: &Store,
+    workspace_root: &Path,
+) -> Result<(), error::DecapodError> {
+    let project_root = workspace_root;
 
     match plan_cli.command {
         PlanCommand::Init {
@@ -5151,7 +5169,8 @@ fn run_plan_command(plan_cli: PlanCli, project_store: &Store) -> Result<(), erro
 fn run_data_command(
     data_cli: DataCli,
     project_store: &Store,
-    project_root: &Path,
+    _governance_root: &Path,
+    workspace_root: &Path,
     store_root: &Path,
 ) -> Result<(), error::DecapodError> {
     match data_cli.command {
@@ -5319,11 +5338,11 @@ fn run_data_command(
         }
         DataCommand::Repo(repo_cli) => match repo_cli.command {
             RepoCommand::Map => {
-                let map = repomap::generate_map(project_root);
+                let map = repomap::generate_map(workspace_root);
                 println!("{}", serde_json::to_string_pretty(&map).unwrap());
             }
             RepoCommand::Graph => {
-                let graph = repomap::generate_doc_graph(project_root);
+                let graph = repomap::generate_doc_graph(workspace_root);
                 println!("{}", graph.mermaid);
             }
         },
@@ -5586,11 +5605,11 @@ fn run_auto_command(auto_cli: AutoCli, project_store: &Store) -> Result<(), erro
 fn run_qa_command(
     qa_cli: QaCli,
     project_store: &Store,
-    project_root: &Path,
+    workspace_root: &Path,
 ) -> Result<(), error::DecapodError> {
     match qa_cli.command {
         QaCommand::Verify(verify_cli) => {
-            verify::run_verify_cli(project_store, project_root, verify_cli)?
+            verify::run_verify_cli(project_store, workspace_root, verify_cli)?
         }
         QaCommand::Check {
             crate_description,
@@ -5847,41 +5866,57 @@ fn run_workspace_command(
             );
         }
         WorkspaceCommand::Status => {
-            let status = workspace::get_workspace_status(project_root)?;
+            let workspace_root = project_root;
+            let status = workspace::get_workspace_status(workspace_root)?;
+            let governance_root = find_governance_root(workspace_root);
+
+            let mut report_summary = None;
+            let store_root = governance_root.join(".decapod").join("data");
+            if store_root.exists() {
+                let project_store = Store {
+                    kind: StoreKind::Repo,
+                    root: store_root,
+                };
+                let report = run_validation_bounded(
+                    &project_store,
+                    &governance_root,
+                    workspace_root,
+                    false,
+                )?;
+                report_summary = Some(report);
+            }
 
             println!(
                 "{}",
-                serde_json::json!({
-                    "can_work": status.can_work,
-                    "git_branch": status.git.current_branch,
-                    "git_is_protected": status.git.is_protected,
-                    "git_has_local_mods": status.git.has_local_mods,
-                    "in_container": status.container.in_container,
-                    "container_image": status.container.image,
-                    "docker_available": status.container.docker_available,
-                    "blockers": status.blockers.len(),
-                    "required_actions": status.required_actions,
-                })
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "status": "ok",
+                    "workspace": status,
+                    "validation": report_summary,
+                }))
+                .unwrap()
             );
         }
         WorkspaceCommand::Publish { title, description } => {
+            let governance_root = find_governance_root(project_root);
+            let workspace_root = project_root;
             let project_store = Store {
                 kind: StoreKind::Repo,
-                root: project_root.join(".decapod").join("data"),
+                root: governance_root.join(".decapod").join("data"),
             };
             plan_governance::ensure_execute_ready(plan_governance::ExecuteCheckInput {
-                project_root,
+                project_root: &governance_root,
                 store_root: &project_store.root,
                 todo_id: None,
             })?;
-            let report = run_validation_bounded(&project_store, project_root, false)?;
+            let report =
+                run_validation_bounded(&project_store, &governance_root, workspace_root, false)?;
             if report.fail_count > 0 {
                 return Err(error::DecapodError::ValidationError(format!(
                     "{} test(s) failed before workspace publish.",
                     report.fail_count
                 )));
             }
-            let result = workspace::publish_workspace(project_root, title, description)?;
+            let result = workspace::publish_workspace(workspace_root, title, description)?;
             println!(
                 "{}",
                 serde_json::json!({
@@ -6890,11 +6925,15 @@ mod rpc_handlers {
         let _params: ValidateRunParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
 
+        let workspace_root = &ctx.project_root;
+        let governance_root = super::find_governance_root(workspace_root);
         let project_store = Store {
             kind: StoreKind::Repo,
-            root: ctx.project_root.join(".decapod").join("data"),
+            root: governance_root.join(".decapod").join("data"),
         };
-        let res = run_validation_bounded(&project_store, ctx.project_root, false);
+        let res =
+            super::run_validation_bounded(&project_store, &governance_root, workspace_root, false);
+
         match res {
             Ok(report) if report.fail_count == 0 => {
                 let result = ValidateRunResult {
