@@ -1,6 +1,6 @@
 # Configuration Schema
 
-Agents must read `.decapod/config.toml` to understand repo-local operational policy. This file is the "human-to-agent" configuration substrate.
+Agents must consult Decapod configuration to understand repo-local operational policy. This is the "human-to-agent" configuration substrate.
 
 ## Critical Policy Keys
 

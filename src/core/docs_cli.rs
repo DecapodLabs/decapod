@@ -117,11 +117,23 @@ pub fn sync_override_checksum(
 pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> {
     match cli.command {
         DocsCommand::List => {
-            let docs = assets::list_docs();
+            let all_docs = assets::list_docs();
+            let (docs, constitution): (Vec<_>, Vec<_>) =
+                all_docs.into_iter().partition(|d| d.starts_with("docs/"));
+
+            if !docs.is_empty() {
+                println!("Decapod Documentation:");
+                for doc in docs {
+                    println!("- embedded/{}", doc);
+                }
+                println!();
+            }
+
             println!("Embedded Decapod Constitution Sections:");
-            for doc in docs {
+            for doc in constitution {
                 println!("- embedded/constitution.json#{}", doc);
             }
+
             if let Ok(current_dir) = std::env::current_dir()
                 && let Ok(repo_root) = find_repo_root(&current_dir)
             {
@@ -136,69 +148,81 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             Ok(DocsRunResult::default())
         }
         DocsCommand::Show { path, source } => {
-            let normalized_path = path
-                .strip_prefix("embedded/constitution.json#")
-                .or_else(|| path.strip_prefix("constitution.json#"))
-                .unwrap_or(&path)
-                .to_string();
-            // Split path and anchor
-            let (relative_path, anchor) = if let Some(pos) = normalized_path.find('#') {
-                (&normalized_path[..pos], Some(&normalized_path[pos + 1..]))
-            } else {
-                (normalized_path.as_str(), None)
-            };
+            let normalized_path = path.strip_prefix("embedded/").unwrap_or(&path).to_string();
 
-            // Convert to relative path
-            let relative_path = relative_path
-                .strip_prefix("embedded/")
-                .unwrap_or(relative_path);
-
-            if let Some(a) = anchor {
-                let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
-                let repo_root = find_repo_root(&current_dir)?;
-                if let Some(fragment) = docs::get_fragment(&repo_root, relative_path, Some(a)) {
-                    println!("--- {} ---", fragment.title);
-                    println!("{}", fragment.excerpt); // Note: this is still truncated if excerpt is truncated
-                    // Should we show full section? The user asked for "exact markdown fragment".
-                    // I will add a full extraction to docs.rs later if needed.
-                    Ok(DocsRunResult::default())
-                } else {
-                    Err(error::DecapodError::NotFound(format!(
-                        "Section not found: {} in {}",
-                        a, relative_path
-                    )))
-                }
-            } else {
-                let content = match source {
-                    DocumentSource::Embedded => {
-                        // Show only embedded content from binary
-                        assets::get_embedded_doc(relative_path)
-                    }
-                    DocumentSource::Override => {
-                        // Show only override content from .decapod/OVERRIDE.md
-                        let current_dir =
-                            std::env::current_dir().map_err(error::DecapodError::IoError)?;
-                        let repo_root = find_repo_root(&current_dir)?;
-                        assets::get_override_doc(&repo_root, relative_path)
-                    }
-                    DocumentSource::Merged => {
-                        // Show merged content (embedded + override)
-                        let current_dir =
-                            std::env::current_dir().map_err(error::DecapodError::IoError)?;
-                        let repo_root = find_repo_root(&current_dir)?;
-                        assets::get_merged_doc(&repo_root, relative_path)
-                    }
-                };
-
+            if normalized_path.starts_with("docs/") {
+                // It's a direct document, not a constitution section
+                let content = assets::get_embedded_doc(&normalized_path);
                 match content {
                     Some(content) => {
                         println!("{}", content);
                         Ok(DocsRunResult::default())
                     }
                     None => Err(error::DecapodError::NotFound(format!(
-                        "Document not found: {} (source: {:?})",
-                        path, source
+                        "Document not found: {}",
+                        path
                     ))),
+                }
+            } else {
+                let normalized_path = normalized_path
+                    .strip_prefix("constitution.json#")
+                    .unwrap_or(&normalized_path)
+                    .to_string();
+
+                // Split path and anchor
+                let (relative_path, anchor) = if let Some(pos) = normalized_path.find('#') {
+                    (&normalized_path[..pos], Some(&normalized_path[pos + 1..]))
+                } else {
+                    (normalized_path.as_str(), None)
+                };
+
+                let relative_path = if relative_path.is_empty() {
+                    "constitution.json"
+                } else {
+                    relative_path
+                };
+
+                if let Some(a) = anchor {
+                    let current_dir =
+                        std::env::current_dir().map_err(error::DecapodError::IoError)?;
+                    let repo_root = find_repo_root(&current_dir)?;
+                    if let Some(fragment) = docs::get_fragment(&repo_root, relative_path, Some(a)) {
+                        println!("--- {} ---", fragment.title);
+                        println!("{}", fragment.excerpt);
+                        Ok(DocsRunResult::default())
+                    } else {
+                        Err(error::DecapodError::NotFound(format!(
+                            "Section not found: {} in {}",
+                            a, relative_path
+                        )))
+                    }
+                } else {
+                    let content = match source {
+                        DocumentSource::Embedded => assets::get_embedded_doc(relative_path),
+                        DocumentSource::Override => {
+                            let current_dir =
+                                std::env::current_dir().map_err(error::DecapodError::IoError)?;
+                            let repo_root = find_repo_root(&current_dir)?;
+                            assets::get_override_doc(&repo_root, relative_path)
+                        }
+                        DocumentSource::Merged => {
+                            let current_dir =
+                                std::env::current_dir().map_err(error::DecapodError::IoError)?;
+                            let repo_root = find_repo_root(&current_dir)?;
+                            assets::get_merged_doc(&repo_root, relative_path)
+                        }
+                    };
+
+                    match content {
+                        Some(content) => {
+                            println!("{}", content);
+                            Ok(DocsRunResult::default())
+                        }
+                        None => Err(error::DecapodError::NotFound(format!(
+                            "Document not found: {} (source: {:?})",
+                            path, source
+                        ))),
+                    }
                 }
             }
         }

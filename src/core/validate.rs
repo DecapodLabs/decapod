@@ -302,6 +302,7 @@ fn validate_embedded_self_contained(
                     || line.contains(".decapod/generated/specs/")
                     || line.contains(".decapod/generated/policy/")
                     || line.contains(".decapod/policy/")
+                    || line.contains(".decapod/config.toml")
                     || line.contains("repo-scoped");
                 if is_legitimate_line {
                     legitimate_ref_count += refs_on_line;

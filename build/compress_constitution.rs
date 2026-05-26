@@ -22,6 +22,7 @@ struct ConstitutionNode {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=assets/constitution.json");
+    println!("cargo:rerun-if-changed=docs/");
     println!("cargo:rerun-if-changed=build/compress_constitution.rs");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
@@ -36,10 +37,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let json_content = fs::read_to_string(&json_path)?;
-    let graph: ConstitutionGraph = serde_json::from_str(&json_content)?;
+    let mut graph: ConstitutionGraph = serde_json::from_str(&json_content)?;
+
+    // Also ingest files from docs/ directory
+    let docs_dir = Path::new(&manifest_dir).join("docs");
+    if docs_dir.exists() {
+        ingest_docs_recursive(&docs_dir, &docs_dir, &mut graph)?;
+    }
 
     generate_rust_module(&graph, Path::new(&out_dir))?;
 
+    Ok(())
+}
+
+fn ingest_docs_recursive(
+    base_dir: &Path,
+    current_dir: &Path,
+    graph: &mut ConstitutionGraph,
+) -> Result<(), Box<dyn std::error::Error>> {
+    for entry in fs::read_dir(current_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_dir() {
+            ingest_docs_recursive(base_dir, &path, graph)?;
+        } else if path.extension().map_or(false, |ext| ext == "md") {
+            let rel_path = path.strip_prefix(base_dir)?;
+            let id = format!("docs/{}", rel_path.to_string_lossy().replace('\\', "/"));
+            let content = fs::read_to_string(&path)?;
+
+            graph.nodes.insert(
+                id,
+                ConstitutionNode {
+                    title: rel_path.file_name().unwrap().to_string_lossy().to_string(),
+                    category: "docs".to_string(),
+                    dependencies: vec![],
+                    content: Value::String(content),
+                },
+            );
+        }
+    }
     Ok(())
 }
 

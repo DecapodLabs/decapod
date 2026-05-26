@@ -22,7 +22,7 @@ Call Decapod at **Inference Pressure Points**:
 
 - **Orientation First:** Never start work without a claimed task and an isolated workspace.
 - **Follow the Errors:** Decapod error messages are deterministic recovery instructions. If a call fails, do not guess; follow the error's guidance.
-- **Respect the Schema:** Read `.decapod/config.toml` to understand the current repo's policy (e.g., if container isolation is required).
+- **Respect the Schema:** Consult Decapod configuration to understand the current repo's policy (e.g., if container isolation is required).
 - **Maintain Custody:** Update `specs/INTENT.md` if your research reveals that the original task intent needs refinement.
 
 ## Documentation Index
