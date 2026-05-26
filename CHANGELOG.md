@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.1](https://github.com/DecapodLabs/decapod/compare/v0.53.0...v0.53.1) - 2026-05-26
+
+### Added
+
+- implement non-interactive initialization with --proof flag ([#599](https://github.com/DecapodLabs/decapod/pull/599))
+
 ## [0.53.0](https://github.com/DecapodLabs/decapod/compare/v0.52.2...v0.53.0) - 2026-05-26
 
 ### Added
