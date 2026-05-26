@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.0](https://github.com/DecapodLabs/decapod/compare/v0.52.2...v0.53.0) - 2026-05-26
+
+### Added
+
+- implement comprehensive dual-audience documentation system ([#596](https://github.com/DecapodLabs/decapod/pull/596))
+
 ## [0.52.2](https://github.com/DecapodLabs/decapod/compare/v0.52.1...v0.52.2) - 2026-05-26
 
 ### Added
