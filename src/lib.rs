@@ -1736,7 +1736,8 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Only do full TUI experience if not refreshing an existing project
             let is_refresh = init_target.join(".decapod").exists();
-            if base_init_invocation && io::stdin().is_terminal() && !is_refresh && !init_with.proof {
+            if base_init_invocation && io::stdin().is_terminal() && !is_refresh && !init_with.proof
+            {
                 enrich_repo_context_interactive(&mut repo_ctx)?;
             }
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
