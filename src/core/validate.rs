@@ -3744,6 +3744,9 @@ fn is_non_code_change(repo_root: &Path) -> bool {
     let Some(output) = output else {
         return false;
     };
+    if !output.status.success() {
+        return false;
+    }
     let stdout = String::from_utf8_lossy(&output.stdout);
     let lines: Vec<&str> = stdout.lines().filter(|l| !l.is_empty()).collect();
 
@@ -3751,21 +3754,48 @@ fn is_non_code_change(repo_root: &Path) -> bool {
         return true; // No changes is "non-code" for validation purposes
     }
 
-    lines.iter().all(|line| {
-        if line.len() < 4 {
-            return false;
-        }
-        let path = line[3..].trim();
+    lines.iter().all(|line| is_non_code_path(line))
+}
 
-        // Allowed paths for non-code relaxation
-        path.starts_with("docs/")
-            || path.ends_with(".md")
-            || path == ".decapod/config.toml"
-            || path == ".decapod/OVERRIDE.md"
-            || path.starts_with(".decapod/generated/specs/")
-            || path.starts_with(".decapod/generated/artifacts/")
-            || path.starts_with(".decapod/contracts/")
-    })
+/// Extract file path(s) from a `git status --porcelain` line and check if all
+/// are non-code. Handles ordinary entries (XY PATH), renames/copies
+/// (XY ORIG -> DEST), and git-quoted filenames ("\"\"path\"\"").
+fn is_non_code_path(line: &str) -> bool {
+    if line.len() < 4 {
+        return false;
+    }
+
+    // XY index at positions 0..2; a space at position 2.
+    // Ordinary:   "XY PATH"
+    // Rename/copy: "XY ORIG -> DEST"
+    let body = line[3..].trim();
+
+    // For renames/copies, git prints "ORIG -> DEST". Both sides must qualify.
+    if let Some(arrow_pos) = body.find(" -> ") {
+        let orig = body[..arrow_pos].trim();
+        let dest = body[arrow_pos + 4..].trim();
+        return is_allowed_non_code_path(strip_git_quotes(orig))
+            && is_allowed_non_code_path(strip_git_quotes(dest));
+    }
+
+    is_allowed_non_code_path(strip_git_quotes(body))
+}
+
+/// Strip surrounding double-quotes that git uses when filenames contain
+/// special characters.  Git format: `"path"` or `"\342\200\250path"`.
+fn strip_git_quotes(s: &str) -> &str {
+    s.strip_prefix('"').and_then(|s| s.strip_suffix('"')).unwrap_or(s)
+}
+
+fn is_allowed_non_code_path(path: &str) -> bool {
+    // Allowed paths for non-code relaxation
+    path.starts_with("docs/")
+        || path.ends_with(".md")
+        || path == ".decapod/config.toml"
+        || path == ".decapod/OVERRIDE.md"
+        || path.starts_with(".decapod/generated/specs/")
+        || path.starts_with(".decapod/generated/artifacts/")
+        || path.starts_with(".decapod/contracts/")
 }
 
 fn validate_commit_often_gate(
@@ -5340,6 +5370,7 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
 #[cfg(test)]
 mod tests {
     use super::{is_protected_git_branch, parse_ahead_behind_counts};
+    use super::{is_non_code_path, is_allowed_non_code_path, strip_git_quotes};
 
     #[test]
     fn protected_branch_matching_is_limited_to_protected_refs() {
@@ -5355,5 +5386,100 @@ mod tests {
         assert_eq!(parse_ahead_behind_counts("3\t1\n"), Some((3, 1)));
         assert_eq!(parse_ahead_behind_counts("0 12"), Some((0, 12)));
         assert_eq!(parse_ahead_behind_counts("bad 12"), None);
+    }
+
+    // --- is_allowed_non_code_path ---
+
+    #[test]
+    fn non_code_allows_docs_directory() {
+        assert!(is_allowed_non_code_path("docs/agent/api-index.md"));
+        assert!(is_allowed_non_code_path("docs/sub/deep/file.txt"));
+        assert!(!is_allowed_non_code_path("src/main.rs"));
+    }
+
+    #[test]
+    fn non_code_allows_markdown_anywhere() {
+        // .md extension is always allowed regardless of directory
+        assert!(is_allowed_non_code_path("README.md"));
+        assert!(is_allowed_non_code_path("docs/guide.md"));
+        assert!(is_allowed_non_code_path("sub/dir/notes.md"));
+        assert!(is_allowed_non_code_path("src/lib.md"));
+        assert!(!is_allowed_non_code_path("src/lib.rs"));
+    }
+
+    #[test]
+    fn non_code_allows_decapod_config_and_override() {
+        assert!(is_allowed_non_code_path(".decapod/config.toml"));
+        assert!(is_allowed_non_code_path(".decapod/OVERRIDE.md"));
+        assert!(!is_allowed_non_code_path(".decapod/other.toml"));
+        assert!(!is_allowed_non_code_path(".decapod/data/store.jsonl"));
+    }
+
+    #[test]
+    fn non_code_allows_generated_specs_and_artifacts() {
+        assert!(is_allowed_non_code_path(".decapod/generated/specs/INTENT.md"));
+        assert!(is_allowed_non_code_path(".decapod/generated/artifacts/plan.json"));
+        assert!(is_allowed_non_code_path(".decapod/generated/specs/deep/nested.md"));
+        // .md files always pass via the ends_with(".md") rule, so this is allowed too
+        assert!(is_allowed_non_code_path(".decapod/generated/other.md"));
+        // A non-.md file in generated/ but outside specs/ or artifacts/ is rejected
+        assert!(!is_allowed_non_code_path(".decapod/generated/other.json"));
+    }
+
+    #[test]
+    fn non_code_allows_contracts() {
+        assert!(is_allowed_non_code_path(".decapod/contracts/interface.md"));
+        assert!(!is_allowed_non_code_path(".decapod/contracts")); // no trailing slash/file
+    }
+
+    #[test]
+    fn non_code_rejects_source_files() {
+        assert!(!is_allowed_non_code_path("src/lib.rs"));
+        assert!(!is_allowed_non_code_path("lib/python/main.py"));
+        assert!(!is_allowed_non_code_path("package.json"));
+        assert!(!is_allowed_non_code_path("Cargo.toml"));
+    }
+
+    // --- is_non_code_path (porcelain line parsing) ---
+
+    #[test]
+    fn non_code_path_ordinary_modified() {
+        assert!(is_non_code_path(" M docs/guide.md"));
+        assert!(is_non_code_path("M  .decapod/config.toml"));
+        assert!(!is_non_code_path(" M src/main.rs"));
+    }
+
+    #[test]
+    fn non_code_path_short_line_rejected() {
+        assert!(!is_non_code_path(" M ")); // too short
+        assert!(!is_non_code_path(""));
+    }
+
+    #[test]
+    fn non_code_path_rename_both_sides_must_qualify() {
+        assert!(is_non_code_path("R  docs/old.md -> docs/new.md"));
+        assert!(!is_non_code_path("R  docs/old.md -> src/new.rs"));
+        assert!(!is_non_code_path("R  src/old.rs -> docs/new.md"));
+    }
+
+    #[test]
+    fn non_code_path_copy_both_sides_must_qualify() {
+        assert!(is_non_code_path("C  docs/template.md -> docs/copy.md"));
+        assert!(!is_non_code_path("C  docs/template.md -> src/copy.rs"));
+    }
+
+    // --- strip_git_quotes ---
+
+    #[test]
+    fn strip_quotes_removes_surrounding_double_quotes() {
+        assert_eq!(strip_git_quotes("\"weird file.md\""), "weird file.md");
+        assert_eq!(strip_git_quotes("normal.md"), "normal.md");
+        assert_eq!(strip_git_quotes("\"\""), "");
+    }
+
+    #[test]
+    fn non_code_path_quoted_filename() {
+        assert!(is_non_code_path(" M \"weird name.md\""));
+        assert!(!is_non_code_path(" M \"weird name.rs\""));
     }
 }

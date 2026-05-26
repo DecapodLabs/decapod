@@ -307,6 +307,8 @@ This is a Decapod-managed repository. **Strict Dependency: You are strictly boun
 2. Consult **[docs/agent/command-contracts.md](docs/agent/command-contracts.md)** for specific command requirements and recovery paths.
 3. Reference **[docs/agent/payload-examples.md](docs/agent/payload-examples.md)** for valid call shapes.
 
+**Note on Constitution vs Docs:** Agents use `decapod constitution` to discover technology, primitives in software engineering and delivery, and for scoping pre-inference context. Agents use `decapod docs` to learn the decapod binary interface - its commands, CLI flags, and payloads to run against the decapod binary itself.
+
 ## Mandatory Initialization
 
 ```bash
