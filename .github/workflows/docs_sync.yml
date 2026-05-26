@@ -28,12 +28,17 @@ jobs:
       - name: Get changed files
         id: changed-files
         run: |
-          echo "files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | xargs)" >> $GITHUB_OUTPUT
+          FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | xargs)
+          echo "files=$FILES" >> $GITHUB_OUTPUT
 
       - name: Run Docs Build
         run: |
-          # Pass changed files to build command
-          ./target/debug/decapod docs build --touched ${{ steps.changed-files.outputs.files }}
+          FILES="${{ steps.changed-files.outputs.files }}"
+          if [ -n "$FILES" ]; then
+            ./target/debug/decapod docs build --touched $FILES
+          else
+            ./target/debug/decapod docs build
+          fi
 
       - name: Commit and push changes
         run: |

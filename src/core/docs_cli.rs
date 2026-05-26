@@ -72,7 +72,7 @@ pub enum DocsCommand {
     Build {
         /// Only update docs for specific files that were touched.
         #[clap(long)]
-        touched: Vec<PathBuf>,
+        touched: Option<Vec<PathBuf>>,
     },
 }
 
@@ -233,9 +233,10 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             }
         }
         DocsCommand::Build { touched } => {
-            build_docs(touched)?;
+            build_docs(touched.unwrap_or_default())?;
             Ok(DocsRunResult::default())
         }
+
         DocsCommand::Ingest => {
             let docs = assets::list_docs();
             // Determine repo root for override merging
