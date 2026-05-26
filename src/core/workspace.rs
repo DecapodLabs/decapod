@@ -795,6 +795,17 @@ fn get_main_repo_root(current_dir: &Path) -> Result<PathBuf, DecapodError> {
     Ok(common_path.parent().unwrap_or(common_path).to_path_buf())
 }
 
+/// Discover the Decapod repository root by searching upwards from a directory.
+///
+/// If `start_dir` is None, it starts from the current working directory.
+pub fn discover_repo_root(start_dir: Option<&Path>) -> Result<PathBuf, DecapodError> {
+    let start = match start_dir {
+        Some(p) => p.to_path_buf(),
+        None => std::env::current_dir()?,
+    };
+    get_repo_root(&start)
+}
+
 fn get_repo_root(start_dir: &Path) -> Result<PathBuf, DecapodError> {
     let output = Command::new("git")
         .args([

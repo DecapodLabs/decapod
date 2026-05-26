@@ -26,6 +26,8 @@ pub enum DecapodError {
     NotFound(String),
     /// Feature not yet implemented
     NotImplemented(String),
+    /// Configuration error (config.toml parsing, etc.)
+    Config(String),
     /// Context pack/archive error
     ContextPackError(String),
     /// Session token error (not found, invalid, expired, etc.)
@@ -61,6 +63,7 @@ impl fmt::Display for DecapodError {
             }
             Self::NotFound(s) => write!(f, "Not found: {s}"),
             Self::NotImplemented(s) => write!(f, "Not implemented: {s}"),
+            Self::Config(s) => write!(f, "Configuration error: {s}"),
             Self::ContextPackError(s) => write!(f, "Context pack error: {s}"),
             Self::SessionError(s) => write!(f, "Session error: {s}"),
         }

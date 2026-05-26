@@ -447,6 +447,9 @@ pub struct CapabilitiesReport {
     pub interview: InterviewCapabilities,
     /// Stable interlock codes exposed by the assurance harness
     pub interlock_codes: Vec<String>,
+    /// Active repository configuration
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub config: Option<crate::cli::DecapodProjectConfig>,
 }
 
 /// Individual capability
@@ -566,6 +569,9 @@ pub struct Attestation {
 /// Generate capabilities report
 pub fn generate_capabilities() -> CapabilitiesReport {
     let docker_available = container_runtime::container_runtime_available();
+    let config = crate::core::workspace::discover_repo_root(None)
+        .map(|root| crate::cli::DecapodProjectConfig::load(&root).ok())
+        .unwrap_or_default();
 
     CapabilitiesReport {
         version: env!("CARGO_PKG_VERSION").to_string(),
@@ -779,6 +785,7 @@ pub fn generate_capabilities() -> CapabilitiesReport {
             "store_boundary_violation".to_string(),
             "decision_required".to_string(),
         ],
+        config,
     }
 }
 

@@ -37,9 +37,6 @@ Decapod provides comprehensive documentation for both human operators and AI age
 ```bash
 cargo install decapod
 decapod init
-decapod validate
-decapod session acquire
-decapod rpc --op agent.init
 ```
 
 `decapod init` creates `.decapod/`, a local folder your agent uses to remember intent, rules, context, specs, and proof.
