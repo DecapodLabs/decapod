@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.2](https://github.com/DecapodLabs/decapod/compare/v0.52.1...v0.52.2) - 2026-05-26
+
+### Added
+
+- add container_workspaces config to disable container workspace requirement (fixes #568) ([#595](https://github.com/DecapodLabs/decapod/pull/595))
+
 ## [0.52.1](https://github.com/DecapodLabs/decapod/compare/v0.52.0...v0.52.1) - 2026-05-25
 
 ### Other
