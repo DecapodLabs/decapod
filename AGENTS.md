@@ -83,7 +83,7 @@ Preserve the chain between intent, context, assumptions, action, and proof.
 ## Operating Notes
 - Read `.decapod/config.toml` and `.decapod/OVERRIDE.md`.
 - External task managers are allowed, but Decapod todos are still mandatory for workspace isolation.
-- DO NOT mutate `.decapod/` state directly; use decapod CLI. Access to `.decapod/` is strictly via decapod CLI.
+- DO NOT mutate `.decapod/` state directly; all access MUST use CLI. Access to `.decapod/` is strictly via decapod CLI.
 - Stop if requirements conflict or intent is ambiguous. Respect the interface abstraction boundary.
 <!-- decapod-validator-anchors
 Strict Dependency: You are strictly bound to the Decapod control plane

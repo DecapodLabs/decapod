@@ -33,7 +33,6 @@ decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'
 decapod rpc --op context.resolve
 ```
 
-
 ## Control-Plane First
 
 ```bash
