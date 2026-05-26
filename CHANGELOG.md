@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.3](https://github.com/DecapodLabs/decapod/compare/v0.53.2...v0.53.3) - 2026-05-26
+
+### Fixed
+
+- align constitution CLI Surface with double-dash flags and clarify constitution vs docs in AGENTS.md ([#612](https://github.com/DecapodLabs/decapod/pull/612))
+
 ## [0.53.2](https://github.com/DecapodLabs/decapod/compare/v0.53.1...v0.53.2) - 2026-05-26
 
 ### Fixed
