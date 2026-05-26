@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.2](https://github.com/DecapodLabs/decapod/compare/v0.53.1...v0.53.2) - 2026-05-26
+
+### Fixed
+
+- workspace ergonomics and detection (#601, #602, #603, #604, #605) ([#606](https://github.com/DecapodLabs/decapod/pull/606))
+
 ## [0.53.1](https://github.com/DecapodLabs/decapod/compare/v0.53.0...v0.53.1) - 2026-05-26
 
 ### Added
