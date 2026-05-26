@@ -247,7 +247,7 @@ See `AGENTS.md` for the universal contract.
 
 ```bash
 cargo install decapod
-decapod validate && decapod docs ingest && decapod session acquire
+decapod docs ingest && decapod validate && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -310,7 +310,7 @@ This is a Decapod-managed repository. **Strict Dependency: You are strictly boun
 
 ```bash
 cargo install decapod
-decapod validate && decapod docs ingest && decapod session acquire
+decapod docs ingest && decapod validate && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -372,7 +372,7 @@ Preserve the chain between intent, context, assumptions, action, and proof.
 
 ## Safety Invariants
 - ✅ Router: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
-- ✅ Gates: `decapod validate` | `decapod docs ingest`
+- ✅ Gates: `cargo install decapod` | `decapod docs ingest` | `decapod validate`
 - ✅ Claims: `decapod todo claim --id <task-id>` | ✅ Auth: `DECAPOD_SESSION_PASSWORD`
 - ✅ Workspace: Docker git workspaces | ✅ Privilege: request elevated permissions before Docker/container workspace commands
 

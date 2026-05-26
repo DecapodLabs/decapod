@@ -22,7 +22,7 @@ See `AGENTS.md` for the universal contract.
 
 ```bash
 cargo install decapod
-decapod validate && decapod docs ingest && decapod session acquire
+decapod docs ingest && decapod validate && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
@@ -32,6 +32,7 @@ cd .decapod/workspaces/<your-worktree>
 decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'
 decapod rpc --op context.resolve
 ```
+
 
 ## Control-Plane First
 
