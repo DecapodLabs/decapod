@@ -1414,9 +1414,8 @@ fn run_init_apply(
     if setup_decapod_root.exists() && !init_with.force {
         use crate::core::ansi::AnsiExt;
         println!(
-            "{} {}",
-            "init:".bright_yellow(),
-            "Existing Decapod project detected. Refreshing environment..."
+            "{} Existing Decapod project detected. Refreshing environment...",
+            "init:".bright_yellow()
         );
         // Blend OVERRIDE.md additions
         let _ = scaffold::blend_overrides(&target_dir)?;

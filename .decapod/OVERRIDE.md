@@ -316,3 +316,32 @@ over the embedded JSON constitution.
 ### docs/SKILL_TRANSLATION_MAP
 
 ---
+
+<!-- --- NEW SECTIONS FROM UPDATE --- -->
+### methodology/ENGINEERING_MANAGEMENT
+### methodology/RESEARCH_PRODUCTION
+### docs/agent/README.md
+### docs/agent/api-index.md
+### docs/agent/command-contracts.md
+### docs/agent/config-schema.md
+### docs/agent/error-recovery.md
+### docs/agent/payload-examples.md
+### docs/agent/state-model.md
+### docs/book/src/SUMMARY.md
+### docs/book/src/concepts/constitution.md
+### docs/book/src/concepts/intent.md
+### docs/book/src/concepts/overrides.md
+### docs/book/src/concepts/proof.md
+### docs/book/src/concepts/workspaces.md
+### docs/book/src/configuration.md
+### docs/book/src/introduction.md
+### docs/book/src/mental-model.md
+### docs/book/src/quickstart.md
+### docs/book/src/reference/artifacts.md
+### docs/book/src/reference/cli.md
+### docs/book/src/reference/config-toml.md
+### docs/book/src/reference/errors.md
+### docs/book/src/workflows/external-trackers.md
+### docs/book/src/workflows/multi-agent.md
+### docs/book/src/workflows/single-agent.md
+### docs/book/src/workflows/workspace-isolation.md

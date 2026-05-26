@@ -1236,7 +1236,8 @@ pub fn blend_overrides(target_dir: &Path) -> Result<FileAction, error::DecapodEr
         return Ok(FileAction::Unchanged);
     }
 
-    let existing_content = fs::read_to_string(&override_path).map_err(error::DecapodError::IoError)?;
+    let existing_content =
+        fs::read_to_string(&override_path).map_err(error::DecapodError::IoError)?;
     let template = assets::get_template("OVERRIDE.md").expect("Missing template: OVERRIDE.md");
 
     // Extract H3 headers from existing content

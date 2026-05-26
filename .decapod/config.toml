@@ -19,3 +19,4 @@ done_criteria = "Decapod validate passes, required tests pass, and promotion-rel
 primary_languages = ["Rust"]
 detected_surfaces = ["cargo"]
 external_tracker = false
+container_workspaces = true
