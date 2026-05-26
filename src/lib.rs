@@ -1410,6 +1410,19 @@ fn enrich_repo_context_interactive(repo: &mut RepoContext) -> Result<(), error::
         });
         repo.done_criteria = Some(prompt_line_default("Done criteria", &current_done)?);
     }
+
+    let use_external_tracker = prompt_yes_no(
+        "Use an external task tracker (e.g. Beads) instead of Decapod todos?",
+        false,
+    )?;
+    repo.external_tracker = use_external_tracker;
+
+    let enable_container_workspaces = prompt_yes_no(
+        "Enable container workspaces? (Required for multi-agent concurrent runs. Disable only for single-agent workflows.)",
+        true,
+    )?;
+    repo.container_workspaces = enable_container_workspaces;
+
     Ok(())
 }
 

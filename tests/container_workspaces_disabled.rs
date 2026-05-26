@@ -1,6 +1,6 @@
 use std::fs;
-use std::process::{Command, Stdio};
 use std::io::Write;
+use std::process::{Command, Stdio};
 use tempfile::TempDir;
 
 fn setup_isolated_repo_with_worktree(base_dir: &std::path::Path) -> std::path::PathBuf {
@@ -37,7 +37,11 @@ fn setup_isolated_repo_with_worktree(base_dir: &std::path::Path) -> std::path::P
         .current_dir(base_dir)
         .output()
         .expect("decapod init");
-    assert!(init_out.status.success(), "init failed: {}", String::from_utf8_lossy(&init_out.stderr));
+    assert!(
+        init_out.status.success(),
+        "init failed: {}",
+        String::from_utf8_lossy(&init_out.stderr)
+    );
 
     fs::write(base_dir.join("test.rs"), "fn main() {}\n").expect("write test file");
     Command::new("git")
@@ -53,7 +57,13 @@ fn setup_isolated_repo_with_worktree(base_dir: &std::path::Path) -> std::path::P
 
     let worktree_dir = base_dir.join(".decapod/workspaces/test-cw-worktree");
     Command::new("git")
-        .args(["worktree", "add", "-b", "agent/test-cw", worktree_dir.to_str().unwrap()])
+        .args([
+            "worktree",
+            "add",
+            "-b",
+            "agent/test-cw",
+            worktree_dir.to_str().unwrap(),
+        ])
         .current_dir(base_dir)
         .status()
         .expect("git worktree add");
@@ -61,7 +71,10 @@ fn setup_isolated_repo_with_worktree(base_dir: &std::path::Path) -> std::path::P
     worktree_dir
 }
 
-fn run_decapod_validate(dir: &std::path::Path, extra_envs: &[(&str, &str)]) -> std::process::Output {
+fn run_decapod_validate(
+    dir: &std::path::Path,
+    extra_envs: &[(&str, &str)],
+) -> std::process::Output {
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
     cmd.args(["validate", "-v"]).current_dir(dir);
     for (k, v) in extra_envs {
@@ -77,7 +90,11 @@ fn acquire_session(dir: &std::path::Path) -> String {
         .current_dir(dir)
         .output()
         .expect("session acquire");
-    assert!(out.status.success(), "session acquire failed: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "session acquire failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 
     let stdout = String::from_utf8_lossy(&out.stdout);
     stdout
@@ -95,7 +112,8 @@ fn set_container_workspaces_in_config(worktree_dir: &std::path::Path, enabled: b
     let content = fs::read_to_string(&config_path).expect("read config");
 
     let new_content = if content.contains("container_workspaces") {
-        content.lines()
+        content
+            .lines()
             .map(|line| {
                 if line.trim().starts_with("container_workspaces") {
                     format!("container_workspaces = {}", enabled)
@@ -196,7 +214,11 @@ fn test_init_with_no_container_workspaces_flag() {
         .output()
         .expect("decapod init --no-container-workspaces");
 
-    assert!(out.status.success(), "init failed: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
 
     let config_path = base_dir.join(".decapod").join("config.toml");
     let config_content = fs::read_to_string(&config_path).expect("read config");
@@ -401,7 +423,13 @@ fn test_e2e_init_then_validate_flow_with_workspaces_disabled() {
 
     let worktree_dir = base_dir.join(".decapod/workspaces/test-cw-init-flow");
     Command::new("git")
-        .args(["worktree", "add", "-b", "agent/test-cw-init", worktree_dir.to_str().unwrap()])
+        .args([
+            "worktree",
+            "add",
+            "-b",
+            "agent/test-cw-init",
+            worktree_dir.to_str().unwrap(),
+        ])
         .current_dir(base_dir)
         .status()
         .expect("git worktree add");
