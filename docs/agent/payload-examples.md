@@ -45,6 +45,16 @@ decapod workspace ensure --container --branch "feat/rate-limiting"
 decapod workspace publish --title "Feat: Rate Limiting" --description "Implemented token bucket rate limiting for the API surface."
 ```
 
+## Smart Bootstrap
+
+Efficiently install and initialize Decapod only when updates are available.
+
+### Version-Aware Installation
+```bash
+# Checks crates.io and installs/refreshes only if a newer version exists
+(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init)
+```
+
 ## Subsystem Queries
 
 ### Subsystem Schema Discovery
