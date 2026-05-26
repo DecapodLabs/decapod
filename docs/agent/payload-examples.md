@@ -52,7 +52,7 @@ Efficiently install and initialize Decapod only when updates are available.
 ### Version-Aware Installation
 ```bash
 # Checks crates.io and installs/refreshes only if a newer version exists
-(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init)
+(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
 ```
 
 ## Subsystem Queries

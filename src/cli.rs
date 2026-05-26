@@ -115,6 +115,9 @@ pub(crate) struct InitGroupCli {
     /// Force creation of all 4 entrypoint files (AGENTS.md, CLAUDE.md, GEMINI.md, CODEX.md).
     #[clap(long)]
     pub all: bool,
+    /// Support non-interactive agent initialization for proof-gated flows.
+    #[clap(long)]
+    pub proof: bool,
     /// Create only CLAUDE.md entrypoint file.
     #[clap(long)]
     pub claude: bool,
@@ -188,6 +191,9 @@ pub(crate) struct InitWithCli {
     /// Force creation of all 4 entrypoint files (AGENTS.md, CLAUDE.md, GEMINI.md, CODEX.md).
     #[clap(long)]
     pub all: bool,
+    /// Support non-interactive agent initialization for proof-gated flows.
+    #[clap(long)]
+    pub proof: bool,
     /// Create only CLAUDE.md entrypoint file.
     #[clap(long)]
     pub claude: bool,

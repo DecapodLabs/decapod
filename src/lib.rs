@@ -1300,6 +1300,7 @@ fn init_with_from_config(
         dir: Some(target_dir),
         project_dir: None,
         force,
+        proof: false,
         dry_run,
         all: all_entrypoints,
         claude: has("CLAUDE.md"),
@@ -1622,6 +1623,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                         )?
                     } else if let Some(dir) = init_group.dir.as_ref() {
                         resolve_existing_init_dir(dir)?
+                    } else if init_group.proof {
+                        resolve_existing_init_dir(&current_dir)?
                     } else if io::stdin().is_terminal() {
                         prompt_init_target_dir(&current_dir)?
                     } else {
@@ -1679,7 +1682,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                         }
                         with
                     } else {
-                        let diagram_style = if io::stdin().is_terminal() {
+                        let diagram_style = if io::stdin().is_terminal() && !init_group.proof {
                             prompt_diagram_style(init_group.diagram_style)?
                         } else {
                             init_group.diagram_style
@@ -1688,6 +1691,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             dir: Some(target),
                             project_dir: None,
                             force: init_group.force,
+                            proof: init_group.proof,
                             dry_run: init_group.dry_run,
                             all: init_group.all,
                             claude: init_group.claude,
@@ -1732,7 +1736,7 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Only do full TUI experience if not refreshing an existing project
             let is_refresh = init_target.join(".decapod").exists();
-            if base_init_invocation && io::stdin().is_terminal() && !is_refresh {
+            if base_init_invocation && io::stdin().is_terminal() && !is_refresh && !init_with.proof {
                 enrich_repo_context_interactive(&mut repo_ctx)?;
             }
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;

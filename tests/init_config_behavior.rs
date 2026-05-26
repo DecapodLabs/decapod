@@ -151,6 +151,27 @@ fn init_uses_existing_config_for_noninteractive_defaults() {
 }
 
 #[test]
+fn init_with_proof_bypasses_interaction_and_initializes_cwd() {
+    let tmp = tempdir().expect("tempdir");
+    // Ensure it's a git repo so init works correctly
+    let _ = std::process::Command::new("git")
+        .arg("init")
+        .current_dir(tmp.path())
+        .output()
+        .expect("git init");
+
+    let out = run_decapod(tmp.path(), &["init", "--proof"]);
+    assert!(
+        out.status.success(),
+        "decapod init --proof failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    assert!(tmp.path().join(".decapod").is_dir());
+    assert!(tmp.path().join("AGENTS.md").is_file());
+}
+
+#[test]
 fn init_with_accepts_noninteractive_spec_seed_flags() {
     let tmp = tempdir().expect("tempdir");
     let out = run_decapod(

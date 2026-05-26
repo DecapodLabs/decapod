@@ -247,7 +247,7 @@ See `AGENTS.md` for the universal contract.
 
 ```bash
 # Smart bootstrap: only install/init if a newer version is available
-(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init)
+(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
 decapod docs ingest && decapod validate && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
@@ -311,7 +311,7 @@ This is a Decapod-managed repository. **Strict Dependency: You are strictly boun
 
 ```bash
 # Smart bootstrap: only install/init if a newer version is available
-(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init)
+(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
 decapod docs ingest && decapod validate && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
@@ -416,7 +416,7 @@ It keeps Decapod-owned state, generated artifacts, and isolated workspaces separ
 
 ## Quick Start
 
-1. `decapod init`
+1. `decapod init --proof`
 2. `decapod validate`
 3. `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
 4. `decapod session acquire`

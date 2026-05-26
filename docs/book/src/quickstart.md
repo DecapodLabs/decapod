@@ -12,10 +12,10 @@ cargo install decapod
 
 ## 2. Initialization
 
-Initialize your repository. This creates the `.decapod/` directory and scaffolds the initial agent entrypoints (`AGENTS.md`, etc.).
+Initialize your repository. This creates the `.decapod/` directory and scaffolds the initial agent entrypoints (`AGENTS.md`, etc.). Use the `--proof` flag for non-interactive agent-driven setup.
 
 ```bash
-decapod init
+decapod init --proof
 ```
 
 ## 3. Orientation
