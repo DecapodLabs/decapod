@@ -28,7 +28,8 @@ jobs:
       - name: Get changed files
         id: changed-files
         run: |
-          FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | xargs)
+          git fetch origin master
+          FILES=$(git diff --name-only origin/master HEAD | xargs)
           echo "files=$FILES" >> $GITHUB_OUTPUT
 
       - name: Run Docs Build

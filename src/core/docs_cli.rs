@@ -71,7 +71,7 @@ pub enum DocsCommand {
     /// Autogenerate/Sync documentation from code implementation.
     Build {
         /// Only update docs for specific files that were touched.
-        #[clap(long)]
+        #[clap(long, num_args(1..), value_delimiter = ' ')]
         touched: Option<Vec<PathBuf>>,
     },
 }
