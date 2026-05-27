@@ -4289,7 +4289,8 @@
           "Determine the next allowed operation based on the receipt from the previous step."
         ],
         "standards": [
-          "All agent mutations must produce a receipt linked to a governing anchor in the constitution."
+          "All agent mutations must produce a receipt linked to a governing anchor in the constitution.",
+          "Enforce invocation heartbeat for continuous presence tracking."
         ],
         "failure_modes": [
           "Attempting to bypass the control plane by editing internal .decapod files directly."

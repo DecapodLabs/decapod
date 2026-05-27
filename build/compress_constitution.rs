@@ -94,7 +94,7 @@ fn ingest_docs_recursive(
                     terms: vec![],
                     sections: {
                         let mut map = std::collections::HashMap::new();
-                        map.insert("content".to_string(), vec![content]);
+                        map.insert("concepts".to_string(), vec![content]);
                         map
                     },
                 },
