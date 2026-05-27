@@ -10,6 +10,7 @@ pub mod broker;
 pub mod capsule_policy;
 pub mod constitution_schema;
 pub mod container_runtime;
+pub mod constitution_cli;
 pub mod context_capsule;
 pub mod coplayer;
 pub mod db;

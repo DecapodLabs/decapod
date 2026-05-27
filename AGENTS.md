@@ -24,7 +24,7 @@ decapod todo add "<task>" && decapod todo claim --id <task-id>
 decapod infer orientation --task-id <task-id>
 decapod workspace ensure
 cd .decapod/workspaces/<your-worktree>
-decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'
+decapod constitution get core/DECAPOD
 decapod rpc --op context.resolve
 ```
 
@@ -35,7 +35,7 @@ decapod capabilities --format json
 decapod data schema --deterministic
 decapod infer orientation --intent "<your-goal>" --task-id <id>
 decapod govern capsule query --topic "<topic>" --scope interfaces --task-id <task-id>
-decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
+decapod constitution search --query "<problem>"
 ```
 
 ## Golden Rules (Non-Negotiable)
@@ -78,7 +78,7 @@ Preserve the chain between intent, context, assumptions, action, and proof.
 - **INV-ROOT-ISOLATION**: Agents MUST NOT mutate files in the main repository checkout.
 
 ## Safety Invariants
-- ✅ Router: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
+- ✅ Router: `decapod constitution get core/DECAPOD`
 - ✅ Gates: `decapod capabilities` | `decapod docs ingest` | `decapod validate`
 - ✅ Claims: `decapod todo claim --id <task-id>` | ✅ Auth: `DECAPOD_SESSION_PASSWORD`
 - ✅ Workspace: Docker git workspaces | ✅ Privilege: request elevated permissions before Docker/container workspace commands

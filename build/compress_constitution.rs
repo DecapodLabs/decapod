@@ -16,8 +16,22 @@ struct ConstitutionGraph {
 struct ConstitutionNode {
     title: String,
     category: String,
-    dependencies: Vec<String>,
-    content: Value,
+    #[serde(default)]
+    summary: String,
+    #[serde(default)]
+    terms: Vec<String>,
+    #[serde(default)]
+    links: ConstitutionLinks,
+    #[serde(default)]
+    sections: std::collections::HashMap<String, Vec<String>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+struct ConstitutionLinks {
+    #[serde(default)]
+    references: Vec<String>,
+    #[serde(default)]
+    referenced_by: Vec<String>,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -70,8 +84,14 @@ fn ingest_docs_recursive(
                 ConstitutionNode {
                     title: rel_path.file_name().unwrap().to_string_lossy().to_string(),
                     category: "docs".to_string(),
-                    dependencies: vec![],
-                    content: Value::String(content),
+                    links: ConstitutionLinks::default(),
+                    summary: "".to_string(),
+                    terms: vec![],
+                    sections: {
+                        let mut map = std::collections::HashMap::new();
+                        map.insert("content".to_string(), vec![content]);
+                        map
+                    },
                 },
             );
         }
@@ -118,7 +138,7 @@ fn generate_rust_module(
     for id in &ids {
         let node = &graph.nodes[*id];
         let struct_name = id_to_const_name(id);
-        let content = serde_json::to_string(&node.content)?;
+        let content = serde_json::to_string(&node)?;
         let compressed = gzip_compress(content.as_bytes());
 
         writeln!(file, "/// Compressed content for: {}", id)?;
@@ -180,7 +200,8 @@ fn generate_rust_module(
     for id in &ids {
         let node = &graph.nodes[*id];
         let deps: Vec<String> = node
-            .dependencies
+            .links
+            .references
             .iter()
             .map(|s| format!("\"{}\"", s))
             .collect();

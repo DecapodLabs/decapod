@@ -199,7 +199,14 @@ fn render_embedded_doc_text(id: &str, raw_content: &str) -> String {
             rendered.push_str("## ");
             rendered.push_str(title);
             rendered.push_str("\n\n");
-            if let Some(text) = section.as_str() {
+            if let Some(texts) = section.as_array() {
+                for text in texts {
+                    if let Some(t) = text.as_str() {
+                        rendered.push_str(t.trim());
+                        rendered.push('\n');
+                    }
+                }
+            } else if let Some(text) = section.as_str() {
                 rendered.push_str(text.trim());
             } else {
                 rendered.push_str(&section.to_string());
@@ -263,7 +270,7 @@ decapod rpc --op context.resolve
 
 ```bash
 decapod capabilities --format json
-decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
+decapod constitution search --query "<problem>"
 decapod data schema --deterministic
 ```
 
@@ -278,11 +285,11 @@ decapod data schema --deterministic
 - Read and update `.decapod/config.toml` as project context; use Decapod CLI for other `.decapod/` state.
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides when present.
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
-- Read canonical router: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`.
+- Read canonical router: `decapod constitution get core/DECAPOD`.
 - Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
-- Operator reference: `decapod rpc --op constitution.get --params '{"section":"docs/PLAYBOOK"}'`.
+- Operator reference: `decapod constitution get docs/PLAYBOOK`.
 - Capability authority: `decapod capabilities --format json`.
--- Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod rpc --op context.scope`.
+-- Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod constitution search --query "<problem>"`.
 
 Treat `.decapod/generated/specs/*` as living documents. Adjust specs as intent and code change over time.
 
@@ -332,7 +339,7 @@ decapod capabilities --format json
 decapod data schema --deterministic
 decapod infer orientation --intent "<your-goal>" --task-id <id>
 decapod govern capsule query --topic "<topic>" --scope interfaces --task-id <task-id>
-decapod rpc --op context.scope --params '{"query":"<problem>","limit":8}'
+decapod constitution search --query "<problem>"
 ```
 
 ## Golden Rules (Non-Negotiable)
@@ -375,7 +382,7 @@ Preserve the chain between intent, context, assumptions, action, and proof.
 - **INV-ROOT-ISOLATION**: Agents MUST NOT mutate files in the main repository checkout.
 
 ## Safety Invariants
-- ✅ Router: `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
+- ✅ Router: `decapod constitution get core/DECAPOD`
 - ✅ Gates: `decapod capabilities` | `decapod docs ingest` | `decapod validate`
 - ✅ Claims: `decapod todo claim --id <task-id>` | ✅ Auth: `DECAPOD_SESSION_PASSWORD`
 - ✅ Workspace: Docker git workspaces | ✅ Privilege: request elevated permissions before Docker/container workspace commands
@@ -420,7 +427,7 @@ It keeps Decapod-owned state, generated artifacts, and isolated workspaces separ
 
 1. `decapod init --proof`
 2. `decapod validate`
-3. `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
+3. `decapod constitution get core/DECAPOD`
 4. `decapod session acquire`
 5. `decapod rpc --op agent.init`
 6. `decapod workspace status`

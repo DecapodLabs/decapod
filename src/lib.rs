@@ -1866,6 +1866,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     )?;
                 }
                 Command::Version => show_version_info()?,
+                Command::Constitution(cli) => crate::core::constitution_cli::run_constitution_cli(cli)?,
                 Command::Docs(docs_cli) => {
                     let result = docs_cli::run_docs_cli(docs_cli)?;
                     if result.ingested_core_constitution {
@@ -2049,6 +2050,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Capabilities(_)
         | Command::Trace(_)
         | Command::FlightRecorder(_)
+        | Command::Constitution(_)
         | Command::Docs(_)
         | Command::Handshake(_)
         | Command::Release(_)
@@ -2082,6 +2084,7 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
         command,
         Command::Validate(_)
             | Command::Activate
+            | Command::Constitution(_)
             | Command::Docs(_)
             | Command::Release(_)
             | Command::Trace(_)
@@ -2097,6 +2100,7 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
         command,
         Command::Validate(_)
             | Command::Activate
+            | Command::Constitution(_)
             | Command::Docs(_)
             | Command::Release(_)
             | Command::Trace(_)
@@ -2270,6 +2274,7 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Session(_)
         | Command::Version
         | Command::Activate
+        | Command::Constitution(_)
         | Command::Docs(_)
         | Command::Capabilities(_)
         | Command::Release(_)
