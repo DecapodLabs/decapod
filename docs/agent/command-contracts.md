@@ -101,3 +101,27 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod demo`
 - **Intent:** Run demonstrations of Decapod features
 
+# RPC Operations (Auto-generated)
+
+### Operation: `AgentInit`
+### Operation: `WorkspaceStatus`
+### Operation: `WorkspaceEnsure`
+### Operation: `WorkspacePublish`
+### Operation: `ContextResolve`
+### Operation: `ContextCapsuleQuery`
+### Operation: `ContextBindings`
+### Operation: `ConstitutionGet`
+### Operation: `ConstitutionLinksQuery`
+### Operation: `ConstitutionLinksNavigate`
+### Operation: `ConstitutionMigrate`
+### Operation: `AgentRegistryQuery`
+### Operation: `SchemaGet`
+### Operation: `StoreUpsert`
+### Operation: `StoreQuery`
+### Operation: `ValidateRun`
+### Operation: `ScaffoldNextQuestion`
+### Operation: `ScaffoldApplyAnswer`
+### Operation: `ScaffoldGenerateArtifacts`
+### Operation: `StandardsResolve`
+### Operation: `MentorObligations`
+### Operation: `AssuranceEvaluate`
