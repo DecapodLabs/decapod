@@ -345,3 +345,21 @@ over the embedded JSON constitution.
 ### docs/book/src/workflows/multi-agent.md
 ### docs/book/src/workflows/single-agent.md
 ### docs/book/src/workflows/workspace-isolation.md
+
+<!-- --- NEW SECTIONS FROM UPDATE --- -->
+### core/ARCHITECTURE
+### core/DATA
+### core/DOCS
+### core/METADATA
+### core/SPECS
+
+## DATA Overrides
+### data/CACHING
+### data/DATABASE
+### data/PIPELINES
+
+## METADATA Overrides
+### metadata/skills/AGENT_DECAPOD_INTERFACE
+### metadata/skills/BUNDLE
+### metadata/skills/HUMAN_AGENT_UX
+### metadata/skills/INTENT_REFINEMENT

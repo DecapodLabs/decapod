@@ -600,8 +600,10 @@ over the embedded JSON constitution.
         "interfaces",
         "methodology",
         "architecture",
+        "data",
         "plugins",
         "docs",
+        "metadata",
     ];
 
     for cat in cat_order {
