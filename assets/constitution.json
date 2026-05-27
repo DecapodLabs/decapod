@@ -1,4 +1,5 @@
 {
+  "$schema": "./constitution.schema.json",
   "nodes": {
     "architecture/ALGORITHMS": {
       "title": "architecture/ALGORITHMS",
