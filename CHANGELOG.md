@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.0](https://github.com/DecapodLabs/decapod/compare/v0.53.3...v0.54.0) - 2026-05-27
+
+### Added
+
+- constitution v2 upgrade, container best-practices, and multi-agent coordination ([#615](https://github.com/DecapodLabs/decapod/pull/615))
+
 ## [0.53.3](https://github.com/DecapodLabs/decapod/compare/v0.53.2...v0.53.3) - 2026-05-26
 
 ### Fixed
