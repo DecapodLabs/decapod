@@ -2,7 +2,9 @@
 //!
 //! All clap-derived types live here. Dispatch logic lives in `dispatch/`.
 
-use crate::core::{constitution_cli, docs_cli, flight_recorder, obligation, plan_governance, todo, workunit};
+use crate::core::{
+    constitution_cli, docs_cli, flight_recorder, obligation, plan_governance, todo, workunit,
+};
 use crate::plugins::{
     aptitude, container, cron, decide, doctor, eval, federation, health, internalize, lcm, map_ops,
     policy, primitives, reflex, verify, workflow,

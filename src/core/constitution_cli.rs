@@ -51,19 +51,26 @@ pub fn run_constitution_cli(cli: ConstitutionCli) -> Result<(), error::DecapodEr
             // we can parse it and print it formatted.
             if let Some(content) = assets::get_embedded_doc(&node) {
                 if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&content) {
-                    println!("{}", serde_json::to_string_pretty(&parsed).unwrap_or(content));
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&parsed).unwrap_or(content)
+                    );
                 } else {
                     println!("{}", content);
                 }
                 Ok(())
             } else {
-                Err(error::DecapodError::NotFound(format!("Node not found: {}", node)))
+                Err(error::DecapodError::NotFound(format!(
+                    "Node not found: {}",
+                    node
+                )))
             }
         }
         ConstitutionCommand::Search { query, limit } => {
             let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
             let repo_root = find_repo_root(&current_dir)?;
-            let fragments = docs::resolve_scoped_fragments(&repo_root, Some(&query), None, &[], &[], limit);
+            let fragments =
+                docs::resolve_scoped_fragments(&repo_root, Some(&query), None, &[], &[], limit);
 
             println!("Scoped constitution context:");
             for (idx, fragment) in fragments.iter().enumerate() {

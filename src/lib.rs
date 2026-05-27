@@ -1866,7 +1866,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                     )?;
                 }
                 Command::Version => show_version_info()?,
-                Command::Constitution(cli) => crate::core::constitution_cli::run_constitution_cli(cli)?,
+                Command::Constitution(cli) => {
+                    crate::core::constitution_cli::run_constitution_cli(cli)?
+                }
                 Command::Docs(docs_cli) => {
                     let result = docs_cli::run_docs_cli(docs_cli)?;
                     if result.ingested_core_constitution {

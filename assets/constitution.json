@@ -151,9 +151,9 @@
           "Separate product uncertainty from technical uncertainty; product uncertainty routes through methodology/PRODUCT before hard architecture decisions."
         ],
         "route": [
-          "app -> architecture/WEB, architecture/FRONTEND, architecture/UI, architecture/API_DESIGN, architecture/DATA, architecture/AUTH, architecture/SECURITY.",
+          "app -> architecture/WEB, architecture/FRONTEND, architecture/UI, architecture/API_DESIGN, core/DATA, architecture/AUTH, architecture/SECURITY.",
           "frontend -> architecture/FRONTEND, architecture/UI, architecture/WEB, architecture/PERFORMANCE, architecture/TESTING_STRATEGY.",
-          "backend -> architecture/API_DESIGN, architecture/DATABASE, architecture/MESSAGING, architecture/OBSERVABILITY, architecture/SECURITY.",
+          "backend -> architecture/API_DESIGN, data/DATABASE, architecture/MESSAGING, architecture/OBSERVABILITY, architecture/SECURITY.",
           "secure -> architecture/SECURITY, architecture/AUTH, architecture/SECRETS, architecture/ENCRYPTION, architecture/COMPLIANCE.",
           "kubernetes -> architecture/KUBERNETES, architecture/CONTAINERS, architecture/NETWORKING, architecture/OBSERVABILITY, architecture/CI_CD_PIPELINES."
         ],
