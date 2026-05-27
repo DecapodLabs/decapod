@@ -19,35 +19,31 @@ struct ConstitutionTable {
 
 fn load_constitution_claims() -> Vec<ConstitutionTable> {
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args([
-            "constitution",
-            "get",
-            "interfaces/CLAIMS",
-        ])
+        .args(["constitution", "get", "interfaces/CLAIMS"])
         .output()
         .expect("run decapod constitution get");
     assert!(output.status.success(), "constitution get failed");
     let response: serde_json::Value =
         serde_json::from_slice(&output.stdout).expect("parse constitution get response");
-    
+
     let mut claims = Vec::new();
-    
+
     if let Some(sections) = response["sections"].as_object() {
         for (sec_name, sec_val) in sections {
-             if let Some(texts) = sec_val.as_array() {
-                 for (idx, text) in texts.iter().enumerate() {
-                     if let Some(t) = text.as_str() {
-                         claims.push(ConstitutionTable {
-                             claim_id: format!("claim.{}.{}", sec_name, idx),
-                             claim: t.to_string(),
-                             owner_doc: "interfaces/CLAIMS".to_string(),
-                             enforcement: "enforced".to_string(),
-                             proof_surface: "embedded".to_string(),
-                             notes: String::new(),
-                         });
-                     }
-                 }
-             }
+            if let Some(texts) = sec_val.as_array() {
+                for (idx, text) in texts.iter().enumerate() {
+                    if let Some(t) = text.as_str() {
+                        claims.push(ConstitutionTable {
+                            claim_id: format!("claim.{}.{}", sec_name, idx),
+                            claim: t.to_string(),
+                            owner_doc: "interfaces/CLAIMS".to_string(),
+                            enforcement: "enforced".to_string(),
+                            proof_surface: "embedded".to_string(),
+                            notes: String::new(),
+                        });
+                    }
+                }
+            }
         }
     }
 
