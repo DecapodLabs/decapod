@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Decapod Constitution Core Discovery Graph",
-  "version": "3.0.0-core-discovery",
+  "version": "v3.0.0",
   "type": "object",
   "required": [
     "$schema",
