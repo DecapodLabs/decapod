@@ -38,6 +38,16 @@ decapod govern capsule query --topic "<topic>" --scope interfaces --task-id <tas
 decapod constitution search --query "<problem>"
 ```
 
+
+## Pre-Inference Governance
+
+**Decapod is pre-inference faculty, not post-hoc validation.**
+- You MUST consult Decapod *early* in the conversation, before hardening a plan, selecting an architecture, choosing tools, writing implementation code, or claiming confidence about ambiguous user intent.
+- Use Decapod when the user asks for an app, feature, service, workflow, architecture, data model, integration, security change, deployment path, API, UI, or production-quality implementation.
+- Start with `core/DECAPOD` for broad prompts. Use `core/*` nodes as secondary routers. Use non-core nodes as institutional doctrine.
+- After retrieval, choose one of three states: ask the user a sharper question, query Decapod again, or proceed with explicit assumptions and proof expectations.
+- Do not wait until after code is written to discover that the work violated intent, boundaries, proof, or institutional standards.
+
 ## Golden Rules (Non-Negotiable)
 
 1. **MUST** refine intent with the user before inference-heavy work.
