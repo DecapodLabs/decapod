@@ -1,6 +1,6 @@
 {
   "$schema": "./constitution.schema.json",
-  "version": "v3.0.0",
+  "version": "3.0.0",
   "nodes": {
     "core/DECAPOD": {
       "id": "core/DECAPOD",
