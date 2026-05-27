@@ -37,7 +37,8 @@
           "core/GAPS",
           "core/DEMANDS",
           "core/DEPRECATION",
-          "core/EMERGENCY_PROTOCOL"
+          "core/EMERGENCY_PROTOCOL",
+          "core/DATA"
         ],
         "referenced_by": []
       },
@@ -53,6 +54,7 @@
         ],
         "route": [
           "app, feature, UI, backend, API, data, auth, scale, deploy, secure -> core/ARCHITECTURE plus methodology/PRODUCT when product shape is unclear.",
+          "database, cache, pipeline, schema, state, migrations -> core/DATA.",
           "schema, contract, envelope, store, control plane, context pack, claim, machine surface -> core/INTERFACES.",
           "workflow, testing, release, incident, research, product, platform, operating practice -> core/METHODOLOGY.",
           "todo, validate, knowledge, context, capsule, container, health, policy, watcher, skill, eval -> core/PLUGINS.",
@@ -98,7 +100,7 @@
           "architecture/ALGORITHMS",
           "architecture/API_DESIGN",
           "architecture/AUTH",
-          "architecture/CACHING",
+          "data/CACHING",
           "architecture/CI_CD_PIPELINES",
           "architecture/CLOUD",
           "architecture/CODING_STANDARDS",
@@ -106,8 +108,8 @@
           "architecture/CONCURRENCY",
           "architecture/CONTAINERS",
           "architecture/COST_OPTIMIZATION",
-          "architecture/DATA",
-          "architecture/DATABASE",
+          "data/PIPELINES",
+          "data/DATABASE",
           "architecture/DISTRIBUTED_SYSTEMS",
           "architecture/DR",
           "architecture/ENCRYPTION",
@@ -597,7 +599,7 @@
           "architecture/ALGORITHMS",
           "architecture/API_DESIGN",
           "architecture/AUTH",
-          "architecture/CACHING",
+          "data/CACHING",
           "architecture/CI_CD_PIPELINES",
           "architecture/CLOUD",
           "architecture/CODING_STANDARDS",
@@ -605,8 +607,8 @@
           "architecture/CONCURRENCY",
           "architecture/CONTAINERS",
           "architecture/COST_OPTIMIZATION",
-          "architecture/DATA",
-          "architecture/DATABASE",
+          "data/PIPELINES",
+          "data/DATABASE",
           "architecture/DISTRIBUTED_SYSTEMS",
           "architecture/DR",
           "architecture/ENCRYPTION",
@@ -1077,10 +1079,10 @@
         ]
       }
     },
-    "architecture/CACHING": {
-      "id": "architecture/CACHING",
-      "category": "architecture",
-      "title": "architecture/CACHING",
+    "data/CACHING": {
+      "id": "data/CACHING",
+      "category": "data",
+      "title": "data/CACHING",
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "This domain covers replicated state, cache tiers, invalidation, stale data tolerance, stampede prevention, and cache observability.",
@@ -1100,14 +1102,14 @@
       ],
       "links": {
         "references": [
-          "architecture/DATA",
+          "data/PIPELINES",
           "architecture/DISTRIBUTED_SYSTEMS",
           "architecture/OBSERVABILITY",
           "architecture/PERFORMANCE",
           "core/ENGINEERING_EXCELLENCE"
         ],
         "referenced_by": [
-          "architecture/DATABASE",
+          "data/DATABASE",
           "core/ENGINEERING_EXCELLENCE"
         ]
       },
@@ -1679,10 +1681,10 @@
         ]
       }
     },
-    "architecture/DATA": {
-      "id": "architecture/DATA",
-      "category": "architecture",
-      "title": "architecture/DATA",
+    "data/PIPELINES": {
+      "id": "data/PIPELINES",
+      "category": "data",
+      "title": "data/PIPELINES",
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "This domain covers data modeling, ownership, pipelines, lineage, quality, retention, governance, privacy, and analytical/operational separation.",
@@ -1706,8 +1708,8 @@
           "core/ENGINEERING_EXCELLENCE"
         ],
         "referenced_by": [
-          "architecture/CACHING",
-          "architecture/DATABASE",
+          "data/CACHING",
+          "data/DATABASE",
           "core/ENGINEERING_EXCELLENCE",
           "docs/MIGRATIONS"
         ]
@@ -1757,10 +1759,10 @@
         ]
       }
     },
-    "architecture/DATABASE": {
-      "id": "architecture/DATABASE",
-      "category": "architecture",
-      "title": "architecture/DATABASE",
+    "data/DATABASE": {
+      "id": "data/DATABASE",
+      "category": "data",
+      "title": "data/DATABASE",
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "This domain covers schema design, indexing, transactions, migrations, consistency, replication, backups, performance, and operational safety.",
@@ -1781,8 +1783,8 @@
       ],
       "links": {
         "references": [
-          "architecture/CACHING",
-          "architecture/DATA",
+          "data/CACHING",
+          "data/PIPELINES",
           "architecture/DR",
           "core/ENGINEERING_EXCELLENCE",
           "docs/MIGRATIONS",
@@ -1866,7 +1868,7 @@
           "core/ENGINEERING_EXCELLENCE"
         ],
         "referenced_by": [
-          "architecture/CACHING",
+          "data/CACHING",
           "core/ENGINEERING_EXCELLENCE"
         ]
       },
@@ -1942,7 +1944,7 @@
         ],
         "referenced_by": [
           "architecture/CLOUD",
-          "architecture/DATABASE",
+          "data/DATABASE",
           "core/ENGINEERING_EXCELLENCE"
         ]
       },
@@ -3062,7 +3064,7 @@
         ],
         "referenced_by": [
           "architecture/API_DESIGN",
-          "architecture/CACHING",
+          "data/CACHING",
           "architecture/CLOUD",
           "architecture/KUBERNETES",
           "core/ENGINEERING_EXCELLENCE"
@@ -3134,7 +3136,7 @@
           "core/ENGINEERING_EXCELLENCE"
         ],
         "referenced_by": [
-          "architecture/CACHING",
+          "data/CACHING",
           "core/ENGINEERING_EXCELLENCE"
         ]
       },
@@ -4093,13 +4095,13 @@
       ],
       "links": {
         "references": [
-          "architecture/DATA",
-          "architecture/DATABASE",
+          "data/PIPELINES",
+          "data/DATABASE",
           "plugins/DB_BROKER",
           "specs/DB_BROKER_QUEUE"
         ],
         "referenced_by": [
-          "architecture/DATABASE",
+          "data/DATABASE",
           "docs/README"
         ]
       },
@@ -7922,7 +7924,7 @@
           "core/PLUGINS"
         ],
         "referenced_by": [
-          "architecture/DATABASE",
+          "data/DATABASE",
           "core/PLUGINS",
           "docs/MIGRATIONS"
         ]
@@ -8982,7 +8984,7 @@
           "core/DEMANDS"
         ],
         "referenced_by": [
-          "architecture/DATABASE",
+          "data/DATABASE",
           "core/DEMANDS",
           "docs/MIGRATIONS"
         ]
@@ -9590,6 +9592,55 @@
           "Proceed when validation passes and proof of correctness exists for specs/skills/SKILL_GOVERNANCE."
         ]
       }
+    },
+    "core/DATA": {
+      "id": "core/DATA",
+      "category": "core",
+      "title": "Data Discovery Surface",
+      "authority": "namespace-router",
+      "binding": "binding",
+      "summary": "Route data modeling, databases, pipelines, caching, and state management intent into the appropriate data concepts before inference.",
+      "terms": [
+        "data",
+        "database",
+        "store",
+        "cache",
+        "pipeline",
+        "state",
+        "schema",
+        "partitions"
+      ],
+      "links": {
+        "references": [
+          "data/DATABASE",
+          "data/CACHING",
+          "data/PIPELINES",
+          "architecture/DISTRIBUTED_SYSTEMS"
+        ],
+        "referenced_by": [
+          "core/DECAPOD"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when the task involves database schemas, caching layers, data pipelines, state management, or data migrations."
+        ],
+        "decide": [
+          "Determine if the task alters persistent stores, ephemeral caches, or data transit layers."
+        ],
+        "route": [
+          "databases, tables, schema, queries -> data/DATABASE.",
+          "redis, memcached, ephemeral state -> data/CACHING.",
+          "ETL, streaming, data lineage -> data/PIPELINES.",
+          "partitions, consistency, consensus -> architecture/DISTRIBUTED_SYSTEMS."
+        ],
+        "apply": [
+          "Carry data consistency, privacy, and retention constraints into implementation planning."
+        ],
+        "avoid": [
+          "Do not mutate data schemas without verifying migration and rollback paths."
+        ]
+      }
     }
   },
   "lookup": {
@@ -9671,8 +9722,8 @@
       "architecture/CI_CD_PIPELINES",
       "architecture/CLOUD",
       "architecture/COST_OPTIMIZATION",
-      "architecture/DATA",
-      "architecture/DATABASE",
+      "data/PIPELINES",
+      "data/DATABASE",
       "architecture/ENTERPRISE",
       "architecture/EVENT_DRIVEN",
       "architecture/FRONTEND",
@@ -9699,8 +9750,8 @@
     "data": [
       "core/ARCHITECTURE",
       "architecture/ALGORITHMS",
-      "architecture/CACHING",
-      "architecture/DATA",
+      "data/CACHING",
+      "data/PIPELINES",
       "architecture/MICROSERVICES",
       "docs/MIGRATIONS"
     ],
@@ -9735,7 +9786,7 @@
     ],
     "performance": [
       "core/ARCHITECTURE",
-      "architecture/DATABASE",
+      "data/DATABASE",
       "architecture/ENTERPRISE",
       "architecture/FRONTEND",
       "architecture/PERFORMANCE",
@@ -9802,7 +9853,7 @@
     ],
     "schema": [
       "core/INTERFACES",
-      "architecture/DATABASE",
+      "data/DATABASE",
       "architecture/GRAPHQL",
       "docs/MIGRATIONS",
       "interfaces/DEMANDS_SCHEMA",
@@ -10047,7 +10098,7 @@
     ],
     "governance": [
       "core/SPECS",
-      "architecture/DATA",
+      "data/PIPELINES",
       "docs/ARCHITECTURE_OVERVIEW",
       "docs/GOVERNANCE_AUDIT",
       "docs/MAINTAINERS",
@@ -10105,7 +10156,7 @@
     ],
     "quality": [
       "core/ENGINEERING_EXCELLENCE",
-      "architecture/DATA"
+      "data/PIPELINES"
     ],
     "standards": [
       "core/ENGINEERING_EXCELLENCE",
@@ -10340,7 +10391,7 @@
     ],
     "design": [
       "architecture/API_DESIGN",
-      "architecture/DATABASE",
+      "data/DATABASE",
       "architecture/ENTERPRISE",
       "architecture/GRAPHQL",
       "architecture/SYSTEMS_DESIGN",
@@ -10431,44 +10482,44 @@
       "specs/evaluations/JUDGE_CONTRACT"
     ],
     "tiers": [
-      "architecture/CACHING"
+      "data/CACHING"
     ],
     "stale": [
-      "architecture/CACHING",
+      "data/CACHING",
       "plugins/HEARTBEAT"
     ],
     "observability": [
-      "architecture/CACHING",
+      "data/CACHING",
       "architecture/OBSERVABILITY"
     ],
     "prevention": [
-      "architecture/CACHING",
+      "data/CACHING",
       "architecture/CONCURRENCY",
       "architecture/SECRETS"
     ],
     "stampede": [
-      "architecture/CACHING"
+      "data/CACHING"
     ],
     "replicated": [
-      "architecture/CACHING"
+      "data/CACHING"
     ],
     "invalidation": [
-      "architecture/CACHING"
+      "data/CACHING"
     ],
     "caching": [
-      "architecture/CACHING",
+      "data/CACHING",
       "architecture/MEMORY",
       "architecture/WEB",
       "methodology/MEMORY"
     ],
     "cache": [
-      "architecture/CACHING"
+      "data/CACHING"
     ],
     "tolerance": [
-      "architecture/CACHING"
+      "data/CACHING"
     ],
     "state": [
-      "architecture/CACHING",
+      "data/CACHING",
       "architecture/FRONTEND",
       "architecture/UI",
       "interfaces/INTERNALIZATION_SCHEMA",
@@ -10529,7 +10580,7 @@
     ],
     "pipelines": [
       "architecture/CI_CD_PIPELINES",
-      "architecture/DATA"
+      "data/PIPELINES"
     ],
     "scan": [
       "architecture/CI_CD_PIPELINES"
@@ -10649,7 +10700,7 @@
     ],
     "retention": [
       "architecture/COMPLIANCE",
-      "architecture/DATA",
+      "data/PIPELINES",
       "plugins/ARCHIVE"
     ],
     "regulated": [
@@ -10816,18 +10867,18 @@
       "architecture/COST_OPTIMIZATION"
     ],
     "modeling": [
-      "architecture/DATA",
+      "data/PIPELINES",
       "architecture/SECURITY",
       "specs/SECURITY"
     ],
     "privacy": [
-      "architecture/DATA"
+      "data/PIPELINES"
     ],
     "analytical": [
-      "architecture/DATA"
+      "data/PIPELINES"
     ],
     "ownership": [
-      "architecture/DATA",
+      "data/PIPELINES",
       "architecture/INFRASTRUCTURE",
       "architecture/MICROSERVICES",
       "docs/MAINTAINERS",
@@ -10836,16 +10887,16 @@
       "plugins/TODO"
     ],
     "lineage": [
-      "architecture/DATA"
+      "data/PIPELINES"
     ],
     "separation": [
-      "architecture/DATA",
+      "data/PIPELINES",
       "architecture/MEMORY",
       "methodology/MEMORY"
     ],
     "operational": [
-      "architecture/DATA",
-      "architecture/DATABASE",
+      "data/PIPELINES",
+      "data/DATABASE",
       "architecture/INFRASTRUCTURE",
       "architecture/KUBERNETES",
       "architecture/METRICS",
@@ -10856,39 +10907,39 @@
       "plugins/HEALTH"
     ],
     "database": [
-      "architecture/DATABASE",
+      "data/DATABASE",
       "plugins/DB_BROKER",
       "specs/DB_BROKER_QUEUE"
     ],
     "consistency": [
-      "architecture/DATABASE",
+      "data/DATABASE",
       "architecture/DISTRIBUTED_SYSTEMS",
       "architecture/EVENT_DRIVEN",
       "interfaces/GLOSSARY"
     ],
     "transactions": [
-      "architecture/DATABASE"
+      "data/DATABASE"
     ],
     "indexing": [
-      "architecture/DATABASE",
+      "data/DATABASE",
       "interfaces/KNOWLEDGE_STORE",
       "interfaces/MEMORY_SCHEMA",
       "methodology/KNOWLEDGE",
       "plugins/KNOWLEDGE"
     ],
     "backups": [
-      "architecture/DATABASE"
+      "data/DATABASE"
     ],
     "replication": [
-      "architecture/DATABASE"
+      "data/DATABASE"
     ],
     "safety": [
-      "architecture/DATABASE",
+      "data/DATABASE",
       "docs/MIGRATIONS",
       "specs/GIT"
     ],
     "migrations": [
-      "architecture/DATABASE",
+      "data/DATABASE",
       "docs/MIGRATIONS"
     ],
     "retries": [

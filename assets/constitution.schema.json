@@ -31,7 +31,7 @@
         "maxItems": 12,
         "items": {
           "type": "string",
-          "pattern": "^(core|architecture|docs|interfaces|methodology|plugins|specs|metadata)/[a-zA-Z0-9_./-]+$"
+          "pattern": "^(core|architecture|docs|interfaces|methodology|plugins|specs|metadata|data)/[a-zA-Z0-9_./-]+$"
         }
       }
     }
@@ -54,7 +54,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "pattern": "^(core|architecture|docs|interfaces|methodology|plugins|specs|metadata)/[a-zA-Z0-9_./-]+$"
+          "pattern": "^(core|architecture|docs|interfaces|methodology|plugins|specs|metadata|data)/[a-zA-Z0-9_./-]+$"
         },
         "category": {
           "type": "string",
@@ -66,7 +66,8 @@
             "methodology",
             "plugins",
             "specs",
-            "metadata"
+            "metadata",
+            "data"
           ]
         },
         "title": {
