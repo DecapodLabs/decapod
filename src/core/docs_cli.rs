@@ -418,7 +418,8 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
 
         // Auto-scan for RPCs
         writeln!(file, "# RPC Operations (Auto-generated)\n")?;
-        let rpc_src = std::fs::read_to_string(repo_root.join("src/core/rpc.rs")).unwrap_or_default();
+        let rpc_src =
+            std::fs::read_to_string(repo_root.join("src/core/rpc.rs")).unwrap_or_default();
         for line in rpc_src.lines() {
             if line.contains("pub struct ") && line.contains("Params {") {
                 let rpc_name = line
@@ -440,7 +441,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
         let schema_path = repo_root.join("docs/agent/config-schema.md");
         let mut file = std::fs::File::create(&schema_path)?;
         writeln!(file, "# Configuration Schema (Auto-generated)\n")?;
-        
+
         let config_src = std::fs::read_to_string(repo_root.join("src/cli.rs")).unwrap_or_default();
         if let Some(start) = config_src.find("pub struct DecapodProjectConfig {") {
             let end = config_src[start..].find('}').unwrap_or(0);

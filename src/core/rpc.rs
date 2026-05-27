@@ -755,29 +755,25 @@ pub fn generate_capabilities() -> CapabilitiesReport {
             },
             Capability {
                 name: "constitution.links.query".to_string(),
-                description: "Discover bidirectional links for a constitution section"
-                    .to_string(),
+                description: "Discover bidirectional links for a constitution section".to_string(),
                 stability: "beta".to_string(),
                 cost: "low".to_string(),
             },
             Capability {
                 name: "constitution.links.navigate".to_string(),
-                description: "Navigate the constitution graph based on intent"
-                    .to_string(),
+                description: "Navigate the constitution graph based on intent".to_string(),
                 stability: "alpha".to_string(),
                 cost: "low".to_string(),
             },
             Capability {
                 name: "constitution.migrate".to_string(),
-                description: "Migrate constitution data between schema versions"
-                    .to_string(),
+                description: "Migrate constitution data between schema versions".to_string(),
                 stability: "beta".to_string(),
                 cost: "medium".to_string(),
             },
             Capability {
                 name: "agent.registry.query".to_string(),
-                description: "Query active agent sessions and task claims"
-                    .to_string(),
+                description: "Query active agent sessions and task claims".to_string(),
                 stability: "alpha".to_string(),
                 cost: "low".to_string(),
             },

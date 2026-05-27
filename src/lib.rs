@@ -7254,8 +7254,10 @@ mod rpc_handlers {
     pub(crate) fn handle_constitution_links_query(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
-        let params: ConstitutionLinksQueryParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+        let params: ConstitutionLinksQueryParams =
+            serde_json::from_value(ctx.request.params.clone()).map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid params: {}", e))
+            })?;
 
         let Some(raw_content) = core::assets::get_embedded_doc(&params.section) else {
             return Ok(error_response(
@@ -7401,9 +7403,7 @@ mod rpc_handlers {
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            Some(
-                serde_json::to_value(AgentRegistryQueryResult { agents }).unwrap(),
-            ),
+            Some(serde_json::to_value(AgentRegistryQueryResult { agents }).unwrap()),
             vec![],
             None,
             vec![],
@@ -7502,7 +7502,9 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         "context.bindings" => rpc_handlers::handle_context_bindings(&rpc_ctx)?,
         "constitution.get" => rpc_handlers::handle_constitution_get(&rpc_ctx)?,
         "constitution.links.query" => rpc_handlers::handle_constitution_links_query(&rpc_ctx)?,
-        "constitution.links.navigate" => rpc_handlers::handle_constitution_links_navigate(&rpc_ctx)?,
+        "constitution.links.navigate" => {
+            rpc_handlers::handle_constitution_links_navigate(&rpc_ctx)?
+        }
         "constitution.migrate" => rpc_handlers::handle_constitution_migrate(&rpc_ctx)?,
         "agent.registry.query" => rpc_handlers::handle_agent_registry_query(&rpc_ctx)?,
         "schema.get" => rpc_handlers::handle_schema_get(&rpc_ctx)?,
