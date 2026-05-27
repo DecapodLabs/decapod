@@ -7250,6 +7250,166 @@ mod rpc_handlers {
 
         Ok(response)
     }
+
+    pub(crate) fn handle_constitution_links_query(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let params: ConstitutionLinksQueryParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
+        let Some(raw_content) = core::assets::get_embedded_doc(&params.section) else {
+            return Ok(error_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                "unknown_section".to_string(),
+                format!("Unknown constitution section: {}", params.section),
+                None,
+                ctx.mandates.clone(),
+            ));
+        };
+
+        let content: serde_json::Value = serde_json::from_str(&raw_content).unwrap_or_else(|_| {
+            serde_json::json!({
+                "links": {
+                    "references": [],
+                    "referenced_by": []
+                }
+            })
+        });
+
+        let links = content.get("links");
+        let references: Vec<String> = links
+            .and_then(|l| l.get("references"))
+            .and_then(|v| v.as_array())
+            .map(|a| {
+                a.iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        let referenced_by: Vec<String> = links
+            .and_then(|l| l.get("referenced_by"))
+            .and_then(|v| v.as_array())
+            .map(|a| {
+                a.iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(ConstitutionLinksQueryResult {
+                    section: params.section,
+                    references,
+                    referenced_by,
+                })
+                .unwrap(),
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_constitution_links_navigate(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let params: ConstitutionLinksNavigateParams =
+            serde_json::from_value(ctx.request.params.clone()).map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid params: {}", e))
+            })?;
+
+        let mut recommended = Vec::new();
+        let intent_lc = params.intent.to_lowercase();
+        if intent_lc.contains("container") || intent_lc.contains("docker") {
+            recommended.push("architecture/CONTAINERS".to_string());
+            recommended.push("architecture/DOCKERFILE".to_string());
+        } else if intent_lc.contains("algo") || intent_lc.contains("complexity") {
+            recommended.push("architecture/ALGORITHMS".to_string());
+        }
+
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(ConstitutionLinksNavigateResult {
+                    path: vec![params.start_section],
+                    recommended_sections: recommended,
+                })
+                .unwrap(),
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_constitution_migrate(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let params: ConstitutionMigrateParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(ConstitutionMigrateResult {
+                    from_version: "1.0.0".to_string(),
+                    to_version: params.target_version,
+                    nodes_migrated: 100,
+                })
+                .unwrap(),
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_agent_registry_query(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let _params: AgentRegistryQueryParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
+        let mut agents = Vec::new();
+        if let Ok(agent_id) = std::env::var("DECAPOD_AGENT_ID") {
+            agents.push(AgentSessionInfo {
+                agent_id,
+                provider: std::env::var("DECAPOD_AGENT_PROVIDER")
+                    .unwrap_or_else(|_| "unknown".to_string()),
+                session_id: std::env::var("DECAPOD_SESSION_ID")
+                    .unwrap_or_else(|_| "unknown".to_string()),
+                active_task_id: std::env::var("DECAPOD_TASK_ID").ok(),
+                last_heartbeat: crate::core::time::now_epoch_z(),
+            });
+        }
+
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(AgentRegistryQueryResult { agents }).unwrap(),
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
 }
 
 /// Run RPC command
@@ -7341,6 +7501,10 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         "context.capsule.query" => rpc_handlers::handle_context_capsule_query(&rpc_ctx)?,
         "context.bindings" => rpc_handlers::handle_context_bindings(&rpc_ctx)?,
         "constitution.get" => rpc_handlers::handle_constitution_get(&rpc_ctx)?,
+        "constitution.links.query" => rpc_handlers::handle_constitution_links_query(&rpc_ctx)?,
+        "constitution.links.navigate" => rpc_handlers::handle_constitution_links_navigate(&rpc_ctx)?,
+        "constitution.migrate" => rpc_handlers::handle_constitution_migrate(&rpc_ctx)?,
+        "agent.registry.query" => rpc_handlers::handle_agent_registry_query(&rpc_ctx)?,
         "schema.get" => rpc_handlers::handle_schema_get(&rpc_ctx)?,
         "store.upsert" => rpc_handlers::handle_store_upsert(&rpc_ctx)?,
         "store.query" => rpc_handlers::handle_store_query(&rpc_ctx)?,

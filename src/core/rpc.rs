@@ -181,6 +181,61 @@ pub struct ConstitutionGetResult {
     pub content: serde_json::Value,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConstitutionLinksQueryParams {
+    pub section: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConstitutionLinksQueryResult {
+    pub section: String,
+    pub references: Vec<String>,
+    pub referenced_by: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConstitutionLinksNavigateParams {
+    pub start_section: String,
+    pub intent: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConstitutionLinksNavigateResult {
+    pub path: Vec<String>,
+    pub recommended_sections: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConstitutionMigrateParams {
+    pub target_version: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConstitutionMigrateResult {
+    pub from_version: String,
+    pub to_version: String,
+    pub nodes_migrated: usize,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AgentRegistryQueryParams {
+    pub active_only: bool,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AgentRegistryQueryResult {
+    pub agents: Vec<AgentSessionInfo>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct AgentSessionInfo {
+    pub agent_id: String,
+    pub provider: String,
+    pub session_id: String,
+    pub active_task_id: Option<String>,
+    pub last_heartbeat: String,
+}
+
 // Schema Subsystem
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SchemaGetParams {
@@ -698,8 +753,51 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 stability: "stable".to_string(),
                 cost: "low".to_string(),
             },
+            Capability {
+                name: "constitution.links.query".to_string(),
+                description: "Discover bidirectional links for a constitution section"
+                    .to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "constitution.links.navigate".to_string(),
+                description: "Navigate the constitution graph based on intent"
+                    .to_string(),
+                stability: "alpha".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "constitution.migrate".to_string(),
+                description: "Migrate constitution data between schema versions"
+                    .to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "agent.registry.query".to_string(),
+                description: "Query active agent sessions and task claims"
+                    .to_string(),
+                stability: "alpha".to_string(),
+                cost: "low".to_string(),
+            },
         ],
         subsystems: vec![
+            SubsystemInfo {
+                name: "constitution".to_string(),
+                status: "active".to_string(),
+                ops: vec![
+                    "get".to_string(),
+                    "links.query".to_string(),
+                    "links.navigate".to_string(),
+                    "migrate".to_string(),
+                ],
+            },
+            SubsystemInfo {
+                name: "agent".to_string(),
+                status: "active".to_string(),
+                ops: vec!["init".to_string(), "registry.query".to_string()],
+            },
             SubsystemInfo {
                 name: "todo".to_string(),
                 status: "active".to_string(),

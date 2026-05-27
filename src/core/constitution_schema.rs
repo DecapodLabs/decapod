@@ -29,7 +29,20 @@ pub struct ConstitutionContent {
     pub summary: String,
     /// Named subsections for sectional retrieval.
     pub sections: HashMap<String, Value>,
-    /// Optional cross-reference metadata for this node.
+    /// Cross-reference metadata for this node.
+    pub links: Links,
+}
+
+/// Bidirectional cross-reference metadata for a constitution node.
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct Links {
+    /// Outbound references to other nodes.
     #[serde(default)]
-    pub links: HashMap<String, Value>,
+    pub references: Vec<String>,
+    /// Inbound references from other nodes.
+    #[serde(default)]
+    pub referenced_by: Vec<String>,
+    /// Catch-all for additional metadata.
+    #[serde(flatten)]
+    pub extra: HashMap<String, Value>,
 }

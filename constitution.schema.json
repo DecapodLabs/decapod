@@ -1,9 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Decapod Constitution Graph",
+  "version": "2.0.0",
   "type": "object",
   "required": [
-    "nodes"
+    "nodes",
+    "index"
   ],
   "properties": {
     "nodes": {
@@ -17,53 +19,71 @@
           "content"
         ],
         "properties": {
-          "title": {
-            "type": "string"
-          },
-          "category": {
-            "type": "string"
-          },
+          "title": { "type": "string" },
+          "category": { "type": "string" },
           "dependencies": {
             "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "items": { "type": "string" }
           },
           "content": {
             "type": "object",
             "required": [
               "summary",
-              "sections"
+              "sections",
+              "links"
             ],
             "properties": {
-              "summary": {
-                "type": "string"
-              },
-              "sections": {
-                "type": "object",
-                "additionalProperties": {
-                  "oneOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "object"
-                    },
-                    {
-                      "type": "array"
-                    }
-                  ]
-                }
-              },
-              "links": {
-                "type": "object",
-                "additionalProperties": true
-              }
+              "summary": { "type": "string" },
+              "sections": { "type": "object" },
+              "links": { "$ref": "#/definitions/links" }
             },
             "additionalProperties": false
           }
         }
       }
+    },
+    "index": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "title",
+            "links"
+          ],
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "authority": { "type": "string" },
+            "binding": { "type": "string" },
+            "links": { "$ref": "#/definitions/links" }
+          }
+        }
+      }
+    },
+    "metadata": { "type": "object" }
+  },
+  "definitions": {
+    "links": {
+      "type": "object",
+      "required": [
+        "references",
+        "referenced_by"
+      ],
+      "properties": {
+        "references": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "referenced_by": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
     }
   }
 }

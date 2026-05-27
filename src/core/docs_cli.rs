@@ -415,13 +415,38 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
             }
             writeln!(file)?;
         }
+
+        // Auto-scan for RPCs
+        writeln!(file, "# RPC Operations (Auto-generated)\n")?;
+        let rpc_src = std::fs::read_to_string(repo_root.join("src/core/rpc.rs")).unwrap_or_default();
+        for line in rpc_src.lines() {
+            if line.contains("pub struct ") && line.contains("Params {") {
+                let rpc_name = line
+                    .split("pub struct ")
+                    .nth(1)
+                    .unwrap_or("")
+                    .split("Params")
+                    .next()
+                    .unwrap_or("");
+                if !rpc_name.is_empty() {
+                    writeln!(file, "### Operation: `{}`", rpc_name)?;
+                }
+            }
+        }
     }
 
     if update_schema {
         println!("Updating docs/agent/config-schema.md...");
-        // In a real implementation, we would use reflection or a schema generator.
-        // For this pass, we'll ensure the existing file is preserved but verified.
-        // (Stub for now, as config-schema.md is already well-polished).
+        let schema_path = repo_root.join("docs/agent/config-schema.md");
+        let mut file = std::fs::File::create(&schema_path)?;
+        writeln!(file, "# Configuration Schema (Auto-generated)\n")?;
+        
+        let config_src = std::fs::read_to_string(repo_root.join("src/cli.rs")).unwrap_or_default();
+        if let Some(start) = config_src.find("pub struct DecapodProjectConfig {") {
+            let end = config_src[start..].find('}').unwrap_or(0);
+            let fields = &config_src[start..start + end + 1];
+            writeln!(file, "```rust\n{}\n```", fields)?;
+        }
     }
 
     Ok(())
