@@ -1,0 +1,29 @@
+name: Constitution Sync and Validation
+
+on:
+  push:
+    paths:
+      - 'assets/constitution.json'
+      - 'assets/constitution.schema.json'
+  pull_request:
+    paths:
+      - 'assets/constitution.json'
+      - 'assets/constitution.schema.json'
+
+jobs:
+  validate-constitution:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Ajv CLI
+        run: npm install -g ajv-cli
+
+      - name: Validate Constitution against Schema
+        run: ajv validate -s assets/constitution.schema.json -d assets/constitution.json --strict=false
