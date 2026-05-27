@@ -17,11 +17,17 @@ over the embedded JSON constitution.
 
 ## CORE Overrides
 
+### core/ARCHITECTURE
+
+### core/DATA
+
 ### core/DECAPOD
 
 ### core/DEMANDS
 
 ### core/DEPRECATION
+
+### core/DOCS
 
 ### core/EMERGENCY_PROTOCOL
 
@@ -31,9 +37,13 @@ over the embedded JSON constitution.
 
 ### core/INTERFACES
 
+### core/METADATA
+
 ### core/METHODOLOGY
 
 ### core/PLUGINS
+
+### core/SPECS
 
 ---
 
@@ -137,6 +147,8 @@ over the embedded JSON constitution.
 
 ### methodology/CI_CD
 
+### methodology/ENGINEERING_MANAGEMENT
+
 ### methodology/INCIDENT_RESPONSE
 
 ### methodology/KNOWLEDGE
@@ -155,6 +167,8 @@ over the embedded JSON constitution.
 
 ### methodology/RESEARCH
 
+### methodology/RESEARCH_PRODUCTION
+
 ### methodology/SOUL
 
 ### methodology/TESTING
@@ -169,8 +183,6 @@ over the embedded JSON constitution.
 
 ### architecture/AUTH
 
-### architecture/CACHING
-
 ### architecture/CI_CD_PIPELINES
 
 ### architecture/CLOUD
@@ -184,10 +196,6 @@ over the embedded JSON constitution.
 ### architecture/CONTAINERS
 
 ### architecture/COST_OPTIMIZATION
-
-### architecture/DATA
-
-### architecture/DATABASE
 
 ### architecture/DISTRIBUTED_SYSTEMS
 
@@ -238,6 +246,16 @@ over the embedded JSON constitution.
 ### architecture/UI
 
 ### architecture/WEB
+
+---
+
+## DATA Overrides
+
+### data/CACHING
+
+### data/DATABASE
+
+### data/PIPELINES
 
 ---
 
@@ -315,51 +333,66 @@ over the embedded JSON constitution.
 
 ### docs/SKILL_TRANSLATION_MAP
 
----
-
-<!-- --- NEW SECTIONS FROM UPDATE --- -->
-### methodology/ENGINEERING_MANAGEMENT
-### methodology/RESEARCH_PRODUCTION
 ### docs/agent/README.md
+
 ### docs/agent/api-index.md
+
 ### docs/agent/command-contracts.md
+
 ### docs/agent/config-schema.md
+
 ### docs/agent/error-recovery.md
+
 ### docs/agent/payload-examples.md
+
 ### docs/agent/state-model.md
+
 ### docs/book/src/SUMMARY.md
+
 ### docs/book/src/concepts/constitution.md
+
 ### docs/book/src/concepts/intent.md
+
 ### docs/book/src/concepts/overrides.md
+
 ### docs/book/src/concepts/proof.md
+
 ### docs/book/src/concepts/workspaces.md
+
 ### docs/book/src/configuration.md
+
 ### docs/book/src/introduction.md
+
 ### docs/book/src/mental-model.md
+
 ### docs/book/src/quickstart.md
+
 ### docs/book/src/reference/artifacts.md
+
 ### docs/book/src/reference/cli.md
+
 ### docs/book/src/reference/config-toml.md
+
 ### docs/book/src/reference/errors.md
+
 ### docs/book/src/workflows/external-trackers.md
+
 ### docs/book/src/workflows/multi-agent.md
+
 ### docs/book/src/workflows/single-agent.md
+
 ### docs/book/src/workflows/workspace-isolation.md
 
-<!-- --- NEW SECTIONS FROM UPDATE --- -->
-### core/ARCHITECTURE
-### core/DATA
-### core/DOCS
-### core/METADATA
-### core/SPECS
-
-## DATA Overrides
-### data/CACHING
-### data/DATABASE
-### data/PIPELINES
+---
 
 ## METADATA Overrides
+
 ### metadata/skills/AGENT_DECAPOD_INTERFACE
+
 ### metadata/skills/BUNDLE
+
 ### metadata/skills/HUMAN_AGENT_UX
+
 ### metadata/skills/INTENT_REFINEMENT
+
+---
