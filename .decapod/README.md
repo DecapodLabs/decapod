@@ -16,7 +16,7 @@ It keeps Decapod-owned state, generated artifacts, and isolated workspaces separ
 
 1. `decapod init --proof`
 2. `decapod validate`
-3. `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`
+3. `decapod constitution get core/DECAPOD`
 4. `decapod session acquire`
 5. `decapod rpc --op agent.init`
 6. `decapod workspace status`

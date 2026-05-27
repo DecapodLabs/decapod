@@ -16,6 +16,10 @@ struct ConstitutionNode {
     title: String,
     category: String,
     #[serde(default)]
+    authority: String,
+    #[serde(default)]
+    binding: String,
+    #[serde(default)]
     summary: String,
     #[serde(default)]
     terms: Vec<String>,
@@ -83,6 +87,8 @@ fn ingest_docs_recursive(
                 ConstitutionNode {
                     title: rel_path.file_name().unwrap().to_string_lossy().to_string(),
                     category: "docs".to_string(),
+                    authority: "doctrine".to_string(),
+                    binding: "advisory".to_string(),
                     links: ConstitutionLinks::default(),
                     summary: "".to_string(),
                     terms: vec![],

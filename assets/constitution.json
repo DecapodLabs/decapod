@@ -50,7 +50,8 @@
         "decide": [
           "Classify the task surface before solution reasoning: product intent, architecture shape, interface contract, implementation subsystem, docs, spec, or operational risk.",
           "Select the smallest core route that can disambiguate the prompt; do not load adjacent families merely because they may become relevant later.",
-          "If intent remains materially ambiguous after routing, ask a focused question or query a narrower node before inference."
+          "If intent remains materially ambiguous after routing, ask a focused question or query a narrower node before inference.",
+          "Verify liveness via invocation heartbeat contract before proceeding."
         ],
         "route": [
           "app, feature, UI, backend, API, data, auth, scale, deploy, secure -> core/ARCHITECTURE plus methodology/PRODUCT when product shape is unclear.",
@@ -4333,7 +4334,8 @@
         ],
         "standards": [
           "Interfaces must be defined using JSON Schema or similar contract definitions.",
-          "Validation harnesses must verify output conformance."
+          "Validation harnesses must verify output conformance.",
+          "Enforce invocation heartbeat for continuous presence tracking."
         ],
         "failure_modes": [
           "Inferring interface semantics from implementation convenience.",
@@ -7756,7 +7758,8 @@
         ],
         "concepts": [
           "Subsystems use truth labels (REAL, STUB, SPEC, IDEA) to communicate reliability.",
-          "Plugin operations must be invoked through supported CLI commands, not direct file mutation."
+          "Plugin operations must be invoked through supported CLI commands, not direct file mutation.",
+          "Events trigger the todo.heartbeat.autoclaim action for deterministic state ownership."
         ],
         "ambiguity": [
           "Stop inference if the subsystem status, proof surface, or capability boundary is unknown."
@@ -7829,7 +7832,8 @@
         ],
         "standards": [
           "REAL entries must name an executable proof surface.",
-          "Deprecated surfaces must provide a canonical replacement path."
+          "Deprecated surfaces must provide a canonical replacement path.",
+          "Subsystem auto-clocks liveness upon invocation to ensure task accountability."
         ],
         "failure_modes": [
           "Relying on deprecated or SPEC surfaces for production claims.",

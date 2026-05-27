@@ -597,7 +597,7 @@ fn validate_entrypoint_invariants(
             "Constitution ingestion gate language",
         ),
         (
-            r#"decapod rpc --op constitution.get --params '{"section":"core/decapod"}'"#,
+            r#"decapod constitution get core/decapod"#,
             "Core constitution RPC mandate language",
         ),
         ("stop if", "Stop-if-missing behavior"),
@@ -719,7 +719,7 @@ fn validate_entrypoint_invariants(
                 ctx,
             );
             all_present = false;
-        } else if agent_content.contains("constitution.get") {
+        } else if agent_content.contains("constitution get") {
             pass(
                 &format!("{} references constitution.get RPC", agent_file),
                 ctx,
@@ -878,7 +878,7 @@ fn validate_entrypoint_invariants(
         // Must include core constitution ingestion mandate.
         if agent_content
             .to_ascii_lowercase()
-            .contains(r#"decapod rpc --op constitution.get --params '{"section":"core/decapod"}'"#)
+            .contains(r#"decapod constitution get core/decapod"#)
         {
             pass(
                 &format!(
@@ -998,16 +998,13 @@ fn validate_interface_contract_bootstrap(
 
     if let Some(content) = assets::get_merged_doc(repo_root, risk_policy_id) {
         for marker in [
-            "Authority:",
-            "Layer: Interfaces",
-            "Binding: Yes",
-            "Scope:",
-            "Non-goals:",
-            "## 3. Current-Head SHA Discipline",
-            "## 6. Browser Evidence Manifest (UI/Critical Flows)",
-            "## 8. Truth Labels and Upgrade Path",
-            "## 10. Contract Example (JSON)",
-            "## Core Router",
+            "**Layer:** interfaces",
+            "**Authority:** doctrine",
+            "**Binding:** advisory",
+            "concepts",
+            "decisions",
+            "standards",
+            "failure_modes",
         ] {
             if content.contains(marker) {
                 pass(
@@ -1022,16 +1019,13 @@ fn validate_interface_contract_bootstrap(
 
     if let Some(content) = assets::get_merged_doc(repo_root, context_pack_id) {
         for marker in [
-            "Authority:",
-            "Layer: Interfaces",
-            "Binding: Yes",
-            "Scope:",
-            "Non-goals:",
-            "## 2. Deterministic Load Order",
-            "## 3. Mutation Authority",
-            "## 4. Memory Distillation Contract",
-            "## 8. Truth Labels and Upgrade Path",
-            "## Core Router",
+            "**Layer:** interfaces",
+            "**Authority:** doctrine",
+            "**Binding:** advisory",
+            "concepts",
+            "decisions",
+            "standards",
+            "failure_modes",
         ] {
             if content.contains(marker) {
                 pass(

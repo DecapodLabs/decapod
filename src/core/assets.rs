@@ -182,6 +182,16 @@ fn render_embedded_doc_text(id: &str, raw_content: &str) -> String {
     rendered.push_str(id);
     rendered.push('\n');
 
+    if let Some(authority) = value.get("authority").and_then(|v| v.as_str()) {
+        rendered.push_str(&format!("**Authority:** {}\n", authority));
+    }
+    if let Some(category) = value.get("category").and_then(|v| v.as_str()) {
+        rendered.push_str(&format!("**Layer:** {}\n", category));
+    }
+    if let Some(binding) = value.get("binding").and_then(|v| v.as_str()) {
+        rendered.push_str(&format!("**Binding:** {}\n", binding));
+    }
+
     if let Some(summary) = value.get("summary").and_then(|summary| summary.as_str())
         && !summary.trim().is_empty()
     {
@@ -262,7 +272,7 @@ decapod todo add "<task>" && decapod todo claim --id <task-id>
 decapod infer orientation --task-id <task-id>
 decapod workspace ensure
 cd .decapod/workspaces/<your-worktree>
-decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'
+decapod constitution get core/DECAPOD
 decapod rpc --op context.resolve
 ```
 
@@ -328,7 +338,7 @@ decapod todo add "<task>" && decapod todo claim --id <task-id>
 decapod infer orientation --task-id <task-id>
 decapod workspace ensure
 cd .decapod/workspaces/<your-worktree>
-decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'
+decapod constitution get core/DECAPOD
 decapod rpc --op context.resolve
 ```
 
