@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Decapod Constitution Graph",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "object",
   "required": [
     "nodes",
@@ -16,7 +16,11 @@
           "title",
           "category",
           "dependencies",
-          "content"
+          "content",
+          "description",
+          "topic_context",
+          "authority",
+          "links"
         ],
         "properties": {
           "title": { "type": "string" },
@@ -35,10 +39,21 @@
             "properties": {
               "summary": { "type": "string" },
               "sections": { "type": "object" },
+              "description": { "type": "string" },
+              "domain brief_depth": { "type": "string" },
+              "authority": { "type": "string" },
+              "topic_context": { "$ref": "#/definitions/topic_context" },
               "links": { "$ref": "#/definitions/links" }
             },
             "additionalProperties": false
-          }
+          },
+          "description": { "type": "string" },
+          "topic_context": { "$ref": "#/definitions/topic_context" },
+          "authority": { "type": "string" },
+          "binding": { "type": "string" },
+          "scope": { "type": "string" },
+          "responsibility": { "type": "string" },
+          "links": { "$ref": "#/definitions/links" }
         }
       }
     },
@@ -46,25 +61,9 @@
       "type": "object",
       "additionalProperties": {
         "type": "array",
-        "items": {
-          "type": "object",
-          "required": [
-            "id",
-            "title",
-            "links"
-          ],
-          "properties": {
-            "id": { "type": "string" },
-            "title": { "type": "string" },
-            "description": { "type": "string" },
-            "authority": { "type": "string" },
-            "binding": { "type": "string" },
-            "links": { "$ref": "#/definitions/links" }
-          }
-        }
+        "items": { "type": "string" }
       }
-    },
-    "metadata": { "type": "object" }
+    }
   },
   "definitions": {
     "links": {
@@ -84,6 +83,21 @@
         }
       },
       "additionalProperties": true
+    },
+    "topic_context": {
+      "type": "object",
+      "properties": {
+        "domain": { "type": "string" },
+        "summary": { "type": "string" },
+        "core_ideas": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "concept_keywords": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
     }
   }
 }
