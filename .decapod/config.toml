@@ -2,6 +2,7 @@ schema_version = "1.0.0"
 
 [init]
 specs = true
+ci = true
 diagram_style = "mermaid"
 entrypoints = [
     "AGENTS.md",

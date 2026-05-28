@@ -57,3 +57,20 @@ fn init_force_updates_existing_workflow() {
     let content = fs::read_to_string(workflow_path).expect("read workflow file");
     assert!(content.contains("name: Decapod Validate"), "workflow should be updated with --force");
 }
+
+#[test]
+fn init_no_ci_skips_workflow() {
+    let tmp = tempdir().expect("tempdir");
+    let out = run_decapod(tmp.path(), &["init", "--proof", "--no-ci"]);
+    assert!(
+        out.status.success(),
+        "decapod init --no-ci failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let workflow_path = tmp.path().join(".github/workflows/decapod-validate.yml");
+    assert!(
+        !workflow_path.exists(),
+        "expected .github/workflows/decapod-validate.yml NOT to exist with --no-ci"
+    );
+}

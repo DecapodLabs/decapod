@@ -110,6 +110,9 @@ pub(crate) struct InitGroupCli {
     /// Generate project specs docs scaffolding under `.decapod/generated/specs/` (enabled by default).
     #[clap(long = "no-specs", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub specs: bool,
+    /// Generate GitHub Action workflow for project validation (enabled by default).
+    #[clap(long = "no-ci", action = clap::ArgAction::SetFalse, default_value_t = true)]
+    pub ci: bool,
     /// Preferred diagram notation for generated `.decapod/generated/specs/ARCHITECTURE.md`.
 
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
@@ -211,6 +214,9 @@ pub(crate) struct InitWithCli {
     /// Generate project specs docs scaffolding under `.decapod/generated/specs/` (enabled by default).
     #[clap(long = "no-specs", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub specs: bool,
+    /// Generate GitHub Action workflow for project validation (enabled by default).
+    #[clap(long = "no-ci", action = clap::ArgAction::SetFalse, default_value_t = true)]
+    pub ci: bool,
     /// Preferred diagram notation for generated `.decapod/generated/specs/ARCHITECTURE.md`.
 
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
@@ -262,9 +268,16 @@ pub struct DecapodProjectConfig {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InitConfigSection {
+    #[serde(default = "default_true")]
     pub specs: bool,
+    #[serde(default = "default_true")]
+    pub ci: bool,
     pub diagram_style: InitDiagramStyle,
     pub entrypoints: Vec<String>,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -316,6 +329,7 @@ impl Default for DecapodProjectConfig {
             schema_version: "1.0.0".to_string(),
             init: InitConfigSection {
                 specs: true,
+                ci: true,
                 diagram_style: InitDiagramStyle::Ascii,
                 entrypoints: vec![
                     "AGENTS.md".to_string(),

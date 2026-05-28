@@ -39,6 +39,8 @@ pub struct ScaffoldOptions {
     pub preserved_agent_content: Vec<(String, String)>,
     /// Generate project-facing specs/ scaffolding.
     pub generate_specs: bool,
+    /// Generate GitHub Action workflow for project validation.
+    pub generate_ci: bool,
     /// Diagram style for generated architecture document.
     pub diagram_style: DiagramStyle,
     /// Intent/architecture seed captured from inferred or user-confirmed repo context.
@@ -1362,14 +1364,16 @@ pub fn scaffold_project_entrypoints(
     let mut ci_unchanged = 0usize;
     let mut ci_preserved = 0usize;
 
-    let github_workflow_rel = ".github/workflows/decapod-validate.yml";
-    let github_workflow_content = assets::get_template("decapod-validate.yml")
-        .expect("Missing template: decapod-validate.yml");
+    if opts.generate_ci {
+        let github_workflow_rel = ".github/workflows/decapod-validate.yml";
+        let github_workflow_content = assets::get_template("decapod-validate.yml")
+            .expect("Missing template: decapod-validate.yml");
 
-    match write_file(opts, github_workflow_rel, &github_workflow_content)? {
-        FileAction::Created => ci_created += 1,
-        FileAction::Unchanged => ci_unchanged += 1,
-        FileAction::Preserved => ci_preserved += 1,
+        match write_file(opts, github_workflow_rel, &github_workflow_content)? {
+            FileAction::Created => ci_created += 1,
+            FileAction::Unchanged => ci_unchanged += 1,
+            FileAction::Preserved => ci_preserved += 1,
+        }
     }
 
     // Legacy agent entrypoint backups (*.bak) are NOT auto-blended here.
