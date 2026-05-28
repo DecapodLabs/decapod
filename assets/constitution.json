@@ -6345,7 +6345,47 @@
           "research/KAFKA_2011",
           "research/ZOOKEEPER_2010",
           "research/END_TO_END_1984",
-          "research/UNIX_1974"
+          "research/UNIX_1974",
+          "research/PERCEPTRONS_1958",
+          "research/LSTM_1997",
+          "research/SVM_1995",
+          "research/WORD2VEC_2013",
+          "research/GAN_2014",
+          "research/BERT_2018",
+          "research/VIT_2021",
+          "research/ALPHAFOLD_2021",
+          "research/LORA_2021",
+          "research/COT_2022",
+          "research/RLHF_2022",
+          "research/DIFFUSION_2020",
+          "research/BATCH_NORM_2015",
+          "research/ADAM_2014",
+          "research/DROPOUT_2014",
+          "research/YOLO_2016",
+          "research/DQN_2013",
+          "research/GNN_2008",
+          "research/CLIP_2021",
+          "research/LLAMA_2023",
+          "research/VON_NEUMANN_1945",
+          "research/BTREE_1972",
+          "research/RAID_1988",
+          "research/VIRTUAL_MEMORY_1962",
+          "research/LFS_1992",
+          "research/LSM_TREE_1996",
+          "research/HYPERLOGLOG_2007",
+          "research/WAIT_FREE_1991",
+          "research/MESI_1984",
+          "research/EBPF_1993",
+          "research/L4_1995",
+          "research/BORG_2015",
+          "research/DREMEL_2010",
+          "research/MILLWHEEL_2013",
+          "research/ZFS_2003",
+          "research/CONTAINERS_2007",
+          "research/BLOOM_FILTER_1970",
+          "research/REDBLACK_TREE_1978",
+          "research/SPECTRE_MELTDOWN_2018",
+          "research/RDMA_2003"
         ],
         "referenced_by": [
           "core/METHODOLOGY"
@@ -10341,6 +10381,1689 @@
           "The ultimate masterclass in simplicity, elegance, and modular system design."
         ]
       }
+    },
+    "research/PERCEPTRONS_1958": {
+      "id": "research/PERCEPTRONS_1958",
+      "category": "research",
+      "title": "The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain (1958)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Frank Rosenblatt introduced the Perceptron, the simplest form of a neural network used for binary classification.",
+      "terms": [
+        "perceptron",
+        "neural networks",
+        "binary classification",
+        "linear classifier",
+        "ai history",
+        "supervised learning"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Early attempt to model biological learning and brain function.",
+          "Aimed at creating a machine that could learn from experience without explicit programming."
+        ],
+        "concepts": [
+          "Weighted Sum: Input values multiplied by weights and summed.",
+          "Threshold Activation: Outputting 1 if the sum exceeds a threshold, otherwise 0.",
+          "Learning Rule: Adjusting weights based on classification errors."
+        ],
+        "impact": [
+          "The foundational building block of modern artificial neural networks.",
+          "Ignited both optimism and later criticism (Minsky/Papert) that led to the first AI winter."
+        ],
+        "relevance": [
+          "Essential for understanding the basic mechanics of how machines learn linear decision boundaries."
+        ]
+      }
+    },
+    "research/LSTM_1997": {
+      "id": "research/LSTM_1997",
+      "category": "research",
+      "title": "Long Short-Term Memory (1997)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Hochreiter and Schmidhuber introduced LSTM networks, solving the vanishing gradient problem in recurrent neural networks.",
+      "terms": [
+        "lstm",
+        "rnn",
+        "vanishing gradient",
+        "sequence modeling",
+        "deep learning",
+        "time series"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the failure of standard RNNs to learn long-term dependencies in data sequences.",
+          "Introduced at a time when deep learning was still recovering from its second winter."
+        ],
+        "concepts": [
+          "Memory Cell: Maintaining state over long periods.",
+          "Gating Mechanisms: Input, Output, and Forget gates that control information flow.",
+          "Constant Error Carousel: Preventing gradients from vanishing or exploding."
+        ],
+        "impact": [
+          "Enabled major breakthroughs in speech recognition, translation, and handwriting recognition.",
+          "The dominant architecture for sequential data until the rise of Transformers."
+        ],
+        "relevance": [
+          "Crucial for processing any data with temporal dependencies or long-range context."
+        ]
+      }
+    },
+    "research/SVM_1995": {
+      "id": "research/SVM_1995",
+      "category": "research",
+      "title": "Support-Vector Networks (1995)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Cortes and Vapnik introduced Support Vector Machines (SVM), a powerful method for pattern recognition and classification.",
+      "terms": [
+        "svm",
+        "support vector machine",
+        "kernel trick",
+        "classification",
+        "maximum margin",
+        "statistical learning"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Grounded in statistical learning theory (VC dimension).",
+          "Aimed at finding the optimal hyperplane that separates classes with the largest possible margin."
+        ],
+        "concepts": [
+          "Maximum Margin: Maximizing the distance between the decision boundary and the nearest data points.",
+          "Kernel Trick: Mapping data into high-dimensional spaces to solve non-linear problems.",
+          "Support Vectors: The critical data points that define the boundary."
+        ],
+        "impact": [
+          "Became the most popular machine learning algorithm before the deep learning era.",
+          "Highly effective for high-dimensional data with limited samples."
+        ],
+        "relevance": [
+          "A robust alternative to neural networks for many classification and regression tasks."
+        ]
+      }
+    },
+    "research/WORD2VEC_2013": {
+      "id": "research/WORD2VEC_2013",
+      "category": "research",
+      "title": "Efficient Estimation of Word Representations in Vector Space (2013)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Mikolov et al. introduced Word2Vec, a method for learning high-quality vector representations of words from large datasets.",
+      "terms": [
+        "word2vec",
+        "embeddings",
+        "nlp",
+        "vector space",
+        "skip-gram",
+        "continuous bag of words"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the high computational cost of earlier neural language models.",
+          "Showed that simple architectures could learn semantic relationships (e.g., King - Man + Woman = Queen)."
+        ],
+        "concepts": [
+          "CBOW: Predicting a word based on its context.",
+          "Skip-gram: Predicting context words based on a single word.",
+          "Negative Sampling: Optimizing training by only updating a small subset of weights."
+        ],
+        "impact": [
+          "Popularized the use of word embeddings in NLP.",
+          "Enabled transfer learning in text processing by providing pre-trained vectors."
+        ],
+        "relevance": [
+          "Foundation for how modern LLMs represent and process text as high-dimensional vectors."
+        ]
+      }
+    },
+    "research/GAN_2014": {
+      "id": "research/GAN_2014",
+      "category": "research",
+      "title": "Generative Adversarial Nets (2014)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Ian Goodfellow et al. introduced GANs, a framework for training generative models using a game-theoretic approach.",
+      "terms": [
+        "gan",
+        "generative ai",
+        "adversarial",
+        "generator",
+        "discriminator",
+        "synthetic data"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the difficulty of training deep generative models.",
+          "Framed the problem as a competition between two networks."
+        ],
+        "concepts": [
+          "Generator: Tries to create data that looks real.",
+          "Discriminator: Tries to distinguish between real data and generated data.",
+          "Adversarial Training: The two networks improve each other through competition."
+        ],
+        "impact": [
+          "Triggered a massive surge in generative AI research.",
+          "Enabled the creation of highly realistic images, videos, and audio (and deepfakes)."
+        ],
+        "relevance": [
+          "Key architecture for creating synthetic data and artistic generation."
+        ]
+      }
+    },
+    "research/BERT_2018": {
+      "id": "research/BERT_2018",
+      "category": "research",
+      "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding (2018)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced a bidirectional approach to Transformer pre-training, significantly improving performance on NLP tasks.",
+      "terms": [
+        "bert",
+        "transformer",
+        "nlp",
+        "pre-training",
+        "bidirectional",
+        "transfer learning"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the limitation of earlier models (like GPT) which were only unidirectional (left-to-right).",
+          "Designed to pre-train deep representations that could be fine-tuned for many tasks."
+        ],
+        "concepts": [
+          "Masked Language Model (MLM): Predicting hidden words in a sentence using both left and right context.",
+          "Next Sentence Prediction (NSP): Learning relationships between sentences.",
+          "Fine-tuning: Adding a task-specific layer on top of the pre-trained model."
+        ],
+        "impact": [
+          "Became the new state-of-the-art for almost all NLP benchmarks.",
+          "Powering Google Search and many other text-understanding applications."
+        ],
+        "relevance": [
+          "Standard reference for encoder-only transformer architectures."
+        ]
+      }
+    },
+    "research/VIT_2021": {
+      "id": "research/VIT_2021",
+      "category": "research",
+      "title": "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale (2021)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Showed that the Transformer architecture could be applied directly to images, outperforming CNNs on large datasets.",
+      "terms": [
+        "vit",
+        "vision transformer",
+        "computer vision",
+        "transformer",
+        "scaling",
+        "image patches"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Challenged the dominance of Convolutional Neural Networks in computer vision.",
+          "Aimed to unify computer vision and NLP under a single architecture."
+        ],
+        "concepts": [
+          "Image Patches: Breaking images into small squares and treating them like words in a sentence.",
+          "Linear Projection: Flattening patches into vectors.",
+          "Standard Transformer Encoder: Using self-attention to learn relationships between patches."
+        ],
+        "impact": [
+          "Proved that pure Transformers scale better than CNNs for vision tasks.",
+          "Led to the development of many hybrid and specialized vision architectures."
+        ],
+        "relevance": [
+          "Crucial for understanding the convergence of vision and language models."
+        ]
+      }
+    },
+    "research/ALPHAFOLD_2021": {
+      "id": "research/ALPHAFOLD_2021",
+      "category": "research",
+      "title": "Highly accurate protein structure prediction with AlphaFold (2021)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "DeepMind's AlphaFold 2 solved the 50-year-old challenge of protein folding using deep learning.",
+      "terms": [
+        "alphafold",
+        "biology",
+        "protein folding",
+        "deep learning",
+        "science",
+        "3d structure"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the 'protein folding problem': predicting a protein's 3D shape from its amino acid sequence.",
+          "A fundamental problem in biology with huge implications for drug discovery."
+        ],
+        "concepts": [
+          "Evoformer: A specialized block for processing evolutionary and spatial information.",
+          "Invariant Point Attention: Predicting the geometry of the protein backbone.",
+          "End-to-End Prediction: Learning directly from experimental data."
+        ],
+        "impact": [
+          "Provided highly accurate predictions for almost all known proteins.",
+          "Accelerated research in drug development, synthetic biology, and disease understanding."
+        ],
+        "relevance": [
+          "A premier example of AI solving hard physical science problems."
+        ]
+      }
+    },
+    "research/LORA_2021": {
+      "id": "research/LORA_2021",
+      "category": "research",
+      "title": "LoRA: Low-Rank Adaptation of Large Language Models (2021)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced an efficient method for fine-tuning LLMs by injecting trainable low-rank matrices into the model.",
+      "terms": [
+        "lora",
+        "fine-tuning",
+        "efficiency",
+        "llm",
+        "peft",
+        "adaptation"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the extreme cost of fine-tuning models with billions of parameters.",
+          "Aimed at making model customization accessible on consumer hardware."
+        ],
+        "concepts": [
+          "Low-Rank Decomposition: Representing weight changes as the product of two much smaller matrices.",
+          "Frozen Base Model: Keeping original weights unchanged to save memory.",
+          "Additivity: Learning an incremental 'patch' rather than retraining the whole model."
+        ],
+        "impact": [
+          "Enabled the explosion of custom 'community models' and fine-tunes.",
+          "Became the standard for efficient Parameter-Efficient Fine-Tuning (PEFT)."
+        ],
+        "relevance": [
+          "Essential for anyone customizing agents or local LLMs."
+        ]
+      }
+    },
+    "research/COT_2022": {
+      "id": "research/COT_2022",
+      "category": "research",
+      "title": "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models (2022)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Showed that prompting LLMs to show their work significantly improves performance on complex reasoning tasks.",
+      "terms": [
+        "chain of thought",
+        "reasoning",
+        "prompting",
+        "llm",
+        "emergent abilities",
+        "few-shot"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Explored how LLMs handle multi-step arithmetic, symbolic, and commonsense reasoning.",
+          "Found that standard prompting often fails on complex logic."
+        ],
+        "concepts": [
+          "Intermediate Steps: Asking the model to generate a 'rationale' before the final answer.",
+          "System 1 vs System 2: Moving from intuitive reaction to deliberate reasoning.",
+          "Elicitation: Showing that reasoning is an emergent ability triggered by specific input patterns."
+        ],
+        "impact": [
+          "Transformed prompt engineering and agent design.",
+          "Led to techniques like Self-Consistency and Tree of Thoughts."
+        ],
+        "relevance": [
+          "The core principle behind modern 'reasoning' agents."
+        ]
+      }
+    },
+    "research/RLHF_2022": {
+      "id": "research/RLHF_2022",
+      "category": "research",
+      "title": "Training language models to follow instructions with human feedback (2022)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced RLHF (Reinforcement Learning from Human Feedback), the technique used to align GPT-3 into InstructGPT and ChatGPT.",
+      "terms": [
+        "rlhf",
+        "alignment",
+        "human feedback",
+        "ppo",
+        "instructions",
+        "safety"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the 'alignment problem': models generating toxic, false, or unhelpful content despite high performance.",
+          "Aimed to make models follow human intent more accurately."
+        ],
+        "concepts": [
+          "Reward Model: Training a separate network to predict human preferences.",
+          "PPO (Proximal Policy Optimization): Using reinforcement learning to tune the LLM towards higher rewards.",
+          "Alignment: Bridging the gap between 'predict next token' and 'solve the user's task'."
+        ],
+        "impact": [
+          "Enabled the public release of helpful and safe AI assistants (ChatGPT, Claude).",
+          "Became the standard method for aligning large foundation models."
+        ],
+        "relevance": [
+          "Critical for understanding why modern agents are so much more usable than raw base models."
+        ]
+      }
+    },
+    "research/DIFFUSION_2020": {
+      "id": "research/DIFFUSION_2020",
+      "category": "research",
+      "title": "Denoising Diffusion Probabilistic Models (2020)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced the modern diffusion-based approach to image generation, the core of Stable Diffusion and Midjourney.",
+      "terms": [
+        "diffusion",
+        "generative ai",
+        "denoising",
+        "stable diffusion",
+        "latent space",
+        "image synthesis"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "A new class of generative models that outperformed GANs in stability and sample quality.",
+          "Based on the physical concept of diffusion (adding noise and then reversing it)."
+        ],
+        "concepts": [
+          "Forward Process: Gradually adding Gaussian noise to an image until it's just white noise.",
+          "Reverse Process: Training a model (U-Net) to remove the noise step-by-step.",
+          "Denoising Score Matching: Predicting the noise added at each step."
+        ],
+        "impact": [
+          "Replaced GANs as the state-of-the-art for high-resolution image generation.",
+          "Led to the 'generative art' explosion of 2021-2022."
+        ],
+        "relevance": [
+          "Fundamental for understanding modern image and video synthesis systems."
+        ]
+      }
+    },
+    "research/BATCH_NORM_2015": {
+      "id": "research/BATCH_NORM_2015",
+      "category": "research",
+      "title": "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift (2015)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced Batch Normalization, allowing for significantly faster training and more stable deep networks.",
+      "terms": [
+        "batch normalization",
+        "optimization",
+        "deep learning",
+        "regularization",
+        "training",
+        "stability"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the problem of 'internal covariate shift': the distribution of each layer's inputs changing as parameters change.",
+          "Aimed at enabling higher learning rates and reducing sensitivity to initialization."
+        ],
+        "concepts": [
+          "Normalization: Scaling layer inputs to have zero mean and unit variance.",
+          "Learnable Parameters: Adding scale (gamma) and shift (beta) parameters that the network can learn.",
+          "Mini-batch Statistics: Computing mean and variance over the current training batch."
+        ],
+        "impact": [
+          "Became a standard component in almost every deep neural network (ResNet, etc.).",
+          "Reduced the need for careful weight initialization and dropout."
+        ],
+        "relevance": [
+          "Foundational trick for making deep models converge reliably."
+        ]
+      }
+    },
+    "research/ADAM_2014": {
+      "id": "research/ADAM_2014",
+      "category": "research",
+      "title": "Adam: A Method for Stochastic Optimization (2014)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced the Adam optimizer, combining the benefits of AdaGrad and RMSProp for efficient deep learning training.",
+      "terms": [
+        "adam",
+        "optimizer",
+        "gradient descent",
+        "stochastic",
+        "deep learning",
+        "training"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the limitations of standard SGD (Stochastic Gradient Descent) on sparse gradients and noisy data.",
+          "Aimed for an optimizer with low memory requirements and intuitive hyperparameters."
+        ],
+        "concepts": [
+          "Adaptive Learning Rates: Computing individual rates for different parameters.",
+          "Momentum: Using the moving average of gradients.",
+          "Bias Correction: Adjusting estimates for the initial steps of training."
+        ],
+        "impact": [
+          "Became the default optimizer for most deep learning practitioners.",
+          "Enabled faster training of complex architectures across many domains."
+        ],
+        "relevance": [
+          "The most commonly used optimization algorithm in modern AI training."
+        ]
+      }
+    },
+    "research/DROPOUT_2014": {
+      "id": "research/DROPOUT_2014",
+      "category": "research",
+      "title": "Dropout: A Simple Way to Prevent Neural Networks from Overfitting (2014)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced Dropout, a highly effective regularization technique for deep neural networks.",
+      "terms": [
+        "dropout",
+        "regularization",
+        "overfitting",
+        "deep learning",
+        "generalization",
+        "ensembling"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed 'overfitting': models performing well on training data but poorly on unseen data.",
+          "Inspired by how sexual reproduction prevents co-adaptation of genes."
+        ],
+        "concepts": [
+          "Random Deactivation: Randomly dropping out neurons (setting to zero) during each training step.",
+          "Ensemble Effect: Forcing the network to learn redundant representations.",
+          "Inference Scaling: Using all neurons but scaling their outputs by the dropout probability."
+        ],
+        "impact": [
+          "Significantly improved the generalization of deep networks.",
+          "Became a staple in almost all vision and language models before Batch Norm."
+        ],
+        "relevance": [
+          "Core concept in robust model design and regularization."
+        ]
+      }
+    },
+    "research/YOLO_2016": {
+      "id": "research/YOLO_2016",
+      "category": "research",
+      "title": "You Only Look Once: Unified, Real-Time Object Detection (2016)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced YOLO, the first architecture to perform object detection as a single regression problem, enabling real-time speeds.",
+      "terms": [
+        "yolo",
+        "object detection",
+        "computer vision",
+        "real-time",
+        "deep learning",
+        "bounding boxes"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Prior detection systems (like R-CNN) were multi-stage and very slow.",
+          "Aimed at enabling computer vision for robots, self-driving cars, and real-time video."
+        ],
+        "concepts": [
+          "Single Pass: Predicting all bounding boxes and class probabilities at once.",
+          "Grid Cells: Dividing the image into a grid, where each cell is responsible for detections.",
+          "Global Context: Seeing the whole image during training and testing."
+        ],
+        "impact": [
+          "Revolutionized real-time computer vision.",
+          "Led to a long series of YOLO versions (v2-v11) used across industry."
+        ],
+        "relevance": [
+          "Key reference for high-efficiency, real-world vision applications."
+        ]
+      }
+    },
+    "research/DQN_2013": {
+      "id": "research/DQN_2013",
+      "category": "research",
+      "title": "Playing Atari with Deep Reinforcement Learning (2013)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "DeepMind showed that a single deep learning model could learn to play multiple Atari games from raw pixels alone.",
+      "terms": [
+        "dqn",
+        "reinforcement learning",
+        "q-learning",
+        "atari",
+        "pixels",
+        "experience replay"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "The first successful combination of deep learning and reinforcement learning (Deep RL).",
+          "Aimed at creating 'general' AI that could solve diverse tasks without task-specific engineering."
+        ],
+        "concepts": [
+          "Deep Q-Network: Using a CNN to estimate the value of different actions.",
+          "Experience Replay: Storing past transitions and sampling them randomly to break correlations.",
+          "Target Network: Using a separate, stable network to compute learning targets."
+        ],
+        "impact": [
+          "Brought RL into the deep learning era.",
+          "Led directly to AlphaGo and many other achievements in robotics and strategy."
+        ],
+        "relevance": [
+          "Foundation for autonomous agents that learn through trial and error."
+        ]
+      }
+    },
+    "research/GNN_2008": {
+      "id": "research/GNN_2008",
+      "category": "research",
+      "title": "The Graph Neural Network Model (2008)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced Graph Neural Networks (GNNs), extending deep learning to non-Euclidean data structured as graphs.",
+      "terms": [
+        "gnn",
+        "graph neural networks",
+        "topology",
+        "relational data",
+        "non-euclidean",
+        "representation learning"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Standard CNNs and RNNs assume grid-like (images) or sequential (text) data.",
+          "Many real-world problems (social networks, molecules, power grids) are best modeled as graphs."
+        ],
+        "concepts": [
+          "Message Passing: Nodes update their state by aggregating information from neighbors.",
+          "Neighborhood Aggregation: Combining feature vectors from adjacent nodes.",
+          "Graph Symmetries: Ensuring the model is invariant to node permutations."
+        ],
+        "impact": [
+          "Revolutionized drug discovery, recommendation engines, and fraud detection.",
+          "Became the standard for processing relational and topological data."
+        ],
+        "relevance": [
+          "Essential for building AI that understands complex systems and relationships."
+        ]
+      }
+    },
+    "research/CLIP_2021": {
+      "id": "research/CLIP_2021",
+      "category": "research",
+      "title": "Learning Transferable Visual Models from Natural Language Supervision (2021)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "OpenAI's CLIP unified vision and language by learning to connect images with their natural language descriptions.",
+      "terms": [
+        "clip",
+        "multimodal",
+        "vision-language",
+        "contrastive learning",
+        "zero-shot",
+        "openai"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Aimed at creating vision models that don't need fixed labels (like 'dog' vs 'cat') and can understand any concept.",
+          "Used a massive dataset of 400 million image-text pairs from the internet."
+        ],
+        "concepts": [
+          "Contrastive Pre-training: Predicting which text goes with which image in a batch.",
+          "Dual Encoder: One Transformer for text, one for images.",
+          "Zero-Shot Transfer: Using the text encoder as a 'classifier' for any new concept."
+        ],
+        "impact": [
+          "The 'bridge' that enabled Stable Diffusion and DALL-E.",
+          "Revolutionized how we think about multimodal AI."
+        ],
+        "relevance": [
+          "Key technology for agents that need to see and talk about the world simultaneously."
+        ]
+      }
+    },
+    "research/LLAMA_2023": {
+      "id": "research/LLAMA_2023",
+      "category": "research",
+      "title": "LLaMA: Open and Efficient Foundation Language Models (2023)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Meta's LLaMA showed that smaller, well-trained models can outperform much larger ones, igniting the open-source LLM movement.",
+      "terms": [
+        "llama",
+        "open-source",
+        "llm",
+        "efficiency",
+        "scaling laws",
+        "meta"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Aimed at providing high-performance models that can run on affordable hardware.",
+          "Challenged the 'bigger is always better' paradigm of GPT-3/4."
+        ],
+        "concepts": [
+          "Chinchilla Scaling: Training models on much more data than previously thought optimal.",
+          "Transformer Improvements: Using Pre-normalization, SwiGLU activation, and Rotary Embeddings.",
+          "Efficiency: Optimized training on thousands of GPUs."
+        ],
+        "impact": [
+          "Triggered the 'LLaMA moment': a massive wave of open-source AI innovation.",
+          "Enabled the creation of Alpaca, Vicuna, and thousands of other local models."
+        ],
+        "relevance": [
+          "The most important reference for the current state of open AI weights and local deployment."
+        ]
+      }
+    },
+    "research/VON_NEUMANN_1945": {
+      "id": "research/VON_NEUMANN_1945",
+      "category": "research",
+      "title": "First Draft of a Report on the EDVAC (1945)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "John von Neumann described the foundational architecture of the modern computer, featuring a stored-program design.",
+      "terms": [
+        "von neumann",
+        "architecture",
+        "stored-program",
+        "cpu",
+        "memory",
+        "foundations"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Written during the design of the EDVAC, one of the first electronic computers.",
+          "Moved away from computers that were hard-wired for specific tasks."
+        ],
+        "concepts": [
+          "Von Neumann Architecture: CPU, Control Unit, Registers, and Memory.",
+          "Stored-Program: Both data and instructions are stored in the same memory space.",
+          "The Bottleneck: The limited throughput between CPU and memory."
+        ],
+        "impact": [
+          "The template for virtually every computer built in the last 80 years.",
+          "Defined the core components and fetch-decode-execute cycle."
+        ],
+        "relevance": [
+          "The absolute starting point for understanding how hardware functions."
+        ]
+      }
+    },
+    "research/BTREE_1972": {
+      "id": "research/BTREE_1972",
+      "category": "research",
+      "title": "Organization and Maintenance of Large Ordered Indices (1972)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Bayer and McCreight introduced the B-Tree, the fundamental data structure for disk-based storage and databases.",
+      "terms": [
+        "b-tree",
+        "data structures",
+        "indexing",
+        "database",
+        "disk storage",
+        "search"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the need for an efficient way to index massive amounts of data stored on slow spinning disks.",
+          "Aimed at minimizing the number of disk reads (I/O) required to find an item."
+        ],
+        "concepts": [
+          "Multi-way Search Tree: Nodes can have more than two children.",
+          "Self-Balancing: The tree stays perfectly balanced, ensuring O(log N) performance.",
+          "Page-aligned: Nodes are sized to match hardware disk pages."
+        ],
+        "impact": [
+          "The basis for indices in almost every relational database (Postgres, MySQL, SQLite).",
+          "Enabled efficient search and range queries on massive datasets."
+        ],
+        "relevance": [
+          "Essential knowledge for database optimization and storage engine design."
+        ]
+      }
+    },
+    "research/RAID_1988": {
+      "id": "research/RAID_1988",
+      "category": "research",
+      "title": "A Case for Redundant Arrays of Inexpensive Disks (RAID) (1988)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Patterson et al. introduced RAID, a method for combining multiple cheap disks to improve performance and reliability.",
+      "terms": [
+        "raid",
+        "storage",
+        "redundancy",
+        "reliability",
+        "performance",
+        "availability"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Challenged the use of single, expensive, large disks (SLED).",
+          "Proposed using many small, cheap disks in parallel."
+        ],
+        "concepts": [
+          "Striping: Spreading data across disks for speed (RAID 0).",
+          "Mirroring: Copying data for redundancy (RAID 1).",
+          "Parity: Using math to reconstruct data if a disk fails (RAID 5)."
+        ],
+        "impact": [
+          "The standard for server storage and enterprise data protection.",
+          "Enabled high-availability storage systems that can survive hardware failure."
+        ],
+        "relevance": [
+          "Core concept for understanding infrastructure reliability and storage throughput."
+        ]
+      }
+    },
+    "research/VIRTUAL_MEMORY_1962": {
+      "id": "research/VIRTUAL_MEMORY_1962",
+      "category": "research",
+      "title": "One-Level Storage System (1962)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "The Atlas computer team introduced Virtual Memory, allowing programs to use more memory than physically available.",
+      "terms": [
+        "virtual memory",
+        "paging",
+        "mmu",
+        "os",
+        "memory management",
+        "abstraction"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Early computers required programmers to manually manage data movement between RAM and drum storage (overlays).",
+          "The Atlas team at Manchester University aimed to automate this."
+        ],
+        "concepts": [
+          "Paging: Dividing memory into fixed-size blocks.",
+          "Address Translation: Mapping virtual addresses used by programs to physical hardware addresses.",
+          "Demand Paging: Loading data into RAM only when it's accessed."
+        ],
+        "impact": [
+          "Revolutionized operating system design and programmer productivity.",
+          "The basis for process isolation and secure memory protection in modern OSs."
+        ],
+        "relevance": [
+          "Fundamental for understanding how operating systems handle memory and isolation."
+        ]
+      }
+    },
+    "research/LFS_1992": {
+      "id": "research/LFS_1992",
+      "category": "research",
+      "title": "The Design and Implementation of a Log-Structured File System (1992)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced the Log-Structured File System (LFS), optimized for high-speed writes by treating the entire disk as a log.",
+      "terms": [
+        "lfs",
+        "file system",
+        "log-structured",
+        "storage",
+        "performance",
+        "write optimization"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Recognized that CPU and RAM speeds were increasing much faster than disk seek times.",
+          "Aimed at turning small, random writes into large, sequential writes."
+        ],
+        "concepts": [
+          "Append-only: All new data and metadata are written to the end of the log.",
+          "Segment Cleaning: A 'garbage collector' that reclaims space from deleted files.",
+          "Fast Recovery: Using checkpoints to recover quickly after a crash."
+        ],
+        "impact": [
+          "Inspired modern file systems like ZFS and many NoSQL database storage engines.",
+          "Particularly relevant for SSDs, which prefer sequential-like write patterns."
+        ],
+        "relevance": [
+          "Crucial for understanding high-performance storage and write-heavy workloads."
+        ]
+      }
+    },
+    "research/LSM_TREE_1996": {
+      "id": "research/LSM_TREE_1996",
+      "category": "research",
+      "title": "The Log-Structured Merge-Tree (LSM-Tree) (1996)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "O'Neil et al. introduced the LSM-Tree, the data structure behind high-throughput NoSQL databases like Cassandra and RocksDB.",
+      "terms": [
+        "lsm-tree",
+        "nosql",
+        "storage engine",
+        "write throughput",
+        "compaction",
+        "database"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Designed to provide much higher write throughput than B-Trees by avoiding random disk seeks.",
+          "Optimized for systems that receive a massive stream of incoming data."
+        ],
+        "concepts": [
+          "Memtable: In-memory buffer for incoming writes.",
+          "SSTables: Sorted, immutable files on disk.",
+          "Compaction: Background process that merges and deduplicates SSTables."
+        ],
+        "impact": [
+          "The foundation for modern distributed databases (Bigtable, Cassandra, LevelDB).",
+          "Enabled the 'Big Data' era by providing ultra-fast write performance."
+        ],
+        "relevance": [
+          "Key knowledge for choosing and tuning modern database storage engines."
+        ]
+      }
+    },
+    "research/HYPERLOGLOG_2007": {
+      "id": "research/HYPERLOGLOG_2007",
+      "category": "research",
+      "title": "HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm (2007)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced a probabilistic algorithm for estimating the number of unique elements in a massive dataset with very little memory.",
+      "terms": [
+        "hyperloglog",
+        "hll",
+        "probabilistic algorithm",
+        "cardinality",
+        "big data",
+        "approximation"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Counting unique items (e.g., daily active users) exactly requires O(N) memory, which is impossible at scale.",
+          "Aimed at providing a near-exact count with constant memory."
+        ],
+        "concepts": [
+          "Hashing: Mapping elements to random bit strings.",
+          "Maximum Zeros: Estimating count based on the longest run of leading zeros seen in the hashes.",
+          "Harmonic Mean: Combining multiple estimates to improve accuracy."
+        ],
+        "impact": [
+          "Used by Redis, BigQuery, and Google for real-time analytics on billions of items.",
+          "Standard tool for high-scale data engineering."
+        ],
+        "relevance": [
+          "Teaches the power of approximation in solving 'impossible' scaling problems."
+        ]
+      }
+    },
+    "research/WAIT_FREE_1991": {
+      "id": "research/WAIT_FREE_1991",
+      "category": "research",
+      "title": "Wait-Free Synchronization (1991)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Maurice Herlihy introduced the concept of wait-free synchronization, enabling concurrent data structures that never block.",
+      "terms": [
+        "wait-free",
+        "lock-free",
+        "concurrency",
+        "synchronization",
+        "non-blocking",
+        "parallelism"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Locks (Mutexes) can lead to deadlocks, priority inversion, and performance bottlenecks in multi-core systems.",
+          "Aimed at proving that any object can be implemented without locks."
+        ],
+        "concepts": [
+          "Wait-Freedom: Every thread makes progress in a finite number of steps regardless of others.",
+          "Lock-Freedom: At least one thread is guaranteed to make progress.",
+          "CAS (Compare-and-Swap): The foundational atomic hardware primitive for non-blocking sync."
+        ],
+        "impact": [
+          "Led to the development of ultra-high-performance concurrent queues and maps.",
+          "Standard practice for high-frequency trading and low-level kernel programming."
+        ],
+        "relevance": [
+          "Critical for building highly parallel systems that don't scale linearly with lock contention."
+        ]
+      }
+    },
+    "research/MESI_1984": {
+      "id": "research/MESI_1984",
+      "category": "research",
+      "title": "A Low-Overhead Coherence Solution for Multiprocessors with Hierarchical Cache Store (1984)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced the MESI protocol, the foundation of cache coherence in modern multi-core CPUs.",
+      "terms": [
+        "mesi",
+        "cache coherence",
+        "cpu",
+        "multi-core",
+        "memory",
+        "hardware"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "In multi-core systems, multiple CPUs have their own local caches. What happens if they all try to edit the same memory address?",
+          "Aimed to prevent inconsistent data across cores."
+        ],
+        "concepts": [
+          "States: Modified, Exclusive, Shared, Invalid.",
+          "Snooping: Cores monitoring the memory bus to see what others are doing.",
+          "Invalidation: Telling other cores to discard their cached copy when you write to a value."
+        ],
+        "impact": [
+          "The reason multi-core programming works 'automatically' for most developers.",
+          "Defined how hardware handles the 'distributed system' inside a single chip."
+        ],
+        "relevance": [
+          "Fundamental for understanding true hardware-level concurrency and memory visibility."
+        ]
+      }
+    },
+    "research/EBPF_1993": {
+      "id": "research/EBPF_1993",
+      "category": "research",
+      "title": "The BSD Packet Filter: A New Architecture for User-level Packet Capture (1993)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced BPF, which evolved into eBPF: a way to run safe, sandboxed programs inside the operating system kernel.",
+      "terms": [
+        "ebpf",
+        "bpf",
+        "kernel",
+        "linux",
+        "networking",
+        "observability",
+        "security"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Traditional packet filtering required copying every packet to user-space, which was too slow.",
+          "Aimed to provide a programmable, high-performance filter inside the kernel."
+        ],
+        "concepts": [
+          "Virtual Machine: A simple, registers-based VM inside the kernel.",
+          "JIT Compilation: Compiling BPF code into native machine code at runtime.",
+          "Safety Verification: Ensuring the code can't crash the kernel or loop infinitely."
+        ],
+        "impact": [
+          "Transformed Linux into a fully programmable kernel.",
+          "Enabled a new generation of tools for networking (Cilium), observability (Pixie), and security (Falco)."
+        ],
+        "relevance": [
+          "The modern 'superpower' for system engineering and deep observability."
+        ]
+      }
+    },
+    "research/L4_1995": {
+      "id": "research/L4_1995",
+      "category": "research",
+      "title": "On Micro-Kernel Construction (1995)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Jochen Liedtke introduced L4, proving that microkernels could be as fast as traditional monolithic kernels.",
+      "terms": [
+        "microkernel",
+        "l4",
+        "os",
+        "kernel",
+        "ipc",
+        "isolation",
+        "security"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Early microkernels (like Mach) were slow because of high IPC (Inter-Process Communication) overhead.",
+          "Aimed to move as much as possible out of the kernel into user-space safely."
+        ],
+        "concepts": [
+          "Minimalism: Only Address Space, Thread Management, and IPC stay in the kernel.",
+          "Fast IPC: Highly optimized message passing between processes.",
+          "Mechanism vs Policy: The kernel provides the tools; user-space defines how to use them."
+        ],
+        "impact": [
+          "Used in highly secure systems and embedded devices (e.g., Apple's Secure Enclave).",
+          "Influenced modern 'modular' kernel designs."
+        ],
+        "relevance": [
+          "Teaches the ultimate trade-off between isolation/security and performance."
+        ]
+      }
+    },
+    "research/BORG_2015": {
+      "id": "research/BORG_2015",
+      "category": "research",
+      "title": "Large-scale cluster management at Google with Borg (2015)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Google finally revealed Borg, the internal system that manages their entire global fleet and inspired Kubernetes.",
+      "terms": [
+        "borg",
+        "kubernetes",
+        "cluster management",
+        "orchestration",
+        "containers",
+        "google"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "How does Google run millions of containers across thousands of clusters?",
+          "Aimed at maximizing resource utilization and simplifying application deployment."
+        ],
+        "concepts": [
+          "Jobs and Tasks: The basic units of work (similar to K8s Deployments and Pods).",
+          "Allocations: Reserved resources for specific tasks.",
+          "Resource Reclamation: Over-subscribing resources to avoid wasting idle CPU/RAM."
+        ],
+        "impact": [
+          "The direct ancestor of Kubernetes.",
+          "Proved that 'the data center is the computer' at massive scale."
+        ],
+        "relevance": [
+          "Essential for understanding the philosophy and design of modern cloud orchestration."
+        ]
+      }
+    },
+    "research/DREMEL_2010": {
+      "id": "research/DREMEL_2010",
+      "category": "research",
+      "title": "Dremel: Interactive Analysis of Web-Scale Datasets (2010)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced the columnar storage format and execution engine that powers Google BigQuery and Apache Parquet.",
+      "terms": [
+        "dremel",
+        "bigquery",
+        "columnar storage",
+        "analytics",
+        "big data",
+        "parquet"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Traditional row-based databases are slow for scanning billions of records for a single column (e.g., 'sum all sales').",
+          "Aimed at interactive-speed queries on petabytes of data."
+        ],
+        "concepts": [
+          "Columnar Storage: Storing all values for a column together on disk.",
+          "Nested Data: A method for storing complex JSON-like structures in columns efficiently.",
+          "Multi-level Execution Trees: Distributing query execution across thousands of nodes."
+        ],
+        "impact": [
+          "Enabled the modern cloud data warehouse industry.",
+          "Inspired Apache Parquet and Apache Drill."
+        ],
+        "relevance": [
+          "Foundational knowledge for data engineering and analytical query optimization."
+        ]
+      }
+    },
+    "research/MILLWHEEL_2013": {
+      "id": "research/MILLWHEEL_2013",
+      "category": "research",
+      "title": "MillWheel: Fault-Tolerant Stream Processing at Internet Scale (2013)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Described Google's framework for low-latency, stateful stream processing, leading to Google Cloud Dataflow.",
+      "terms": [
+        "millwheel",
+        "stream processing",
+        "dataflow",
+        "low latency",
+        "stateful",
+        "exactly-once"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "How do you process data in real-time while ensuring you never lose a single event, even if servers crash?",
+          "Aimed at exactly-once processing with high availability."
+        ],
+        "concepts": [
+          "Persistent State: Automatic checkpointing of application state to stable storage.",
+          "Watermarks: Tracking progress through event-time to handle late-arriving data.",
+          "Exactly-once: Ensuring every record affects the output exactly once."
+        ],
+        "impact": [
+          "Defined the 'Dataflow Model' for unified batch and stream processing.",
+          "Led to Apache Beam and Google Cloud Dataflow."
+        ],
+        "relevance": [
+          "The gold standard for reliable, real-time data pipelines."
+        ]
+      }
+    },
+    "research/ZFS_2003": {
+      "id": "research/ZFS_2003",
+      "category": "research",
+      "title": "ZFS: The Last Word in File Systems (2003)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Sun Microsystems introduced ZFS, combining file system and volume management with absolute data integrity.",
+      "terms": [
+        "zfs",
+        "file system",
+        "data integrity",
+        "checksums",
+        "copy-on-write",
+        "snapshots"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Traditional file systems were vulnerable to 'bit rot' and silent data corruption on disk.",
+          "Aimed at ensuring that what you read is EXACTLY what you wrote."
+        ],
+        "concepts": [
+          "Merkle Trees: Hierarchical checksums for every piece of data and metadata.",
+          "Copy-on-Write: Never overwriting data; writing changes to new blocks instead.",
+          "Pooled Storage: Removing the rigid boundary between file system and physical disk."
+        ],
+        "impact": [
+          "Became the preferred choice for enterprise storage and high-reliability servers.",
+          "Introduced advanced features like instant snapshots and compression as defaults."
+        ],
+        "relevance": [
+          "The definitive reference for data durability and 'self-healing' storage."
+        ]
+      }
+    },
+    "research/CONTAINERS_2007": {
+      "id": "research/CONTAINERS_2007",
+      "category": "research",
+      "title": "Operating System-level Virtualization (2007)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Early research and implementation of Linux Namespaces and Cgroups, the technologies that enable Docker.",
+      "terms": [
+        "containers",
+        "docker",
+        "namespaces",
+        "cgroups",
+        "virtualization",
+        "isolation"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Traditional Virtual Machines (VMs) are heavy and slow because they run a full guest OS.",
+          "Aimed at providing isolation with near-zero performance overhead."
+        ],
+        "concepts": [
+          "Namespaces: Isolating what a process can SEE (Network, PID, Mount).",
+          "Cgroups: Controlling how much a process can USE (CPU, RAM, I/O).",
+          "Shared Kernel: All containers use the host OS kernel, making them ultra-lightweight."
+        ],
+        "impact": [
+          "Enabled the modern 'Cloud Native' and microservices revolution.",
+          "The technical foundation for Docker, Kubernetes, and Serverless."
+        ],
+        "relevance": [
+          "Fundamental for understanding how modern applications are packaged and isolated."
+        ]
+      }
+    },
+    "research/BLOOM_FILTER_1970": {
+      "id": "research/BLOOM_FILTER_1970",
+      "category": "research",
+      "title": "Space/Time Trade-offs in Hash Coding with Allowable Errors (1970)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Burton Bloom introduced the Bloom Filter, a space-efficient probabilistic data structure for set membership testing.",
+      "terms": [
+        "bloom filter",
+        "data structures",
+        "probabilistic",
+        "hashing",
+        "memory",
+        "efficiency"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Checking if an item exists in a set usually requires storing the whole set.",
+          "Aimed at a method that uses much less space, at the cost of a small chance of false positives."
+        ],
+        "concepts": [
+          "Bit Array: A simple array of 0s and 1s.",
+          "Multiple Hash Functions: Setting multiple bits for each inserted item.",
+          "No False Negatives: If the filter says 'No', it's definitely not there. If it says 'Yes', it might be there."
+        ],
+        "impact": [
+          "Widely used in databases (Bigtable, Cassandra) to avoid unnecessary disk lookups.",
+          "Essential for web caches, spell checkers, and network routers."
+        ],
+        "relevance": [
+          "Classic example of trading exactness for extreme efficiency."
+        ]
+      }
+    },
+    "research/REDBLACK_TREE_1978": {
+      "id": "research/REDBLACK_TREE_1978",
+      "category": "research",
+      "title": "A Dichromatic Framework for Balanced Trees (1978)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Guibas and Sedgewick formalized Red-Black Trees, the most common self-balancing binary search tree.",
+      "terms": [
+        "red-black tree",
+        "data structures",
+        "balanced tree",
+        "search",
+        "binary search tree",
+        "algorithms"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Standard binary search trees can become unbalanced (O(N) performance).",
+          "Aimed for a tree that stays balanced (O(log N)) with minimal rotation overhead."
+        ],
+        "concepts": [
+          "Coloring: Each node is either Red or Black.",
+          "Balance Rules: No two red nodes can be adjacent; every path from root to leaf must have the same number of black nodes.",
+          "Rotations: Simple operations to restore balance after insertion or deletion."
+        ],
+        "impact": [
+          "The default balanced tree in most standard libraries (e.g., C++ std::map, Java TreeMap).",
+          "Provides highly predictable performance for in-memory data."
+        ],
+        "relevance": [
+          "Core data structure knowledge for every software engineer."
+        ]
+      }
+    },
+    "research/SPECTRE_MELTDOWN_2018": {
+      "id": "research/SPECTRE_MELTDOWN_2018",
+      "category": "research",
+      "title": "Spectre Attacks: Exploiting Speculative Execution (2018)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Revealed a massive hardware vulnerability where CPUs leak sensitive data during performance-boosting speculative execution.",
+      "terms": [
+        "spectre",
+        "meltdown",
+        "cpu",
+        "speculative execution",
+        "side-channel",
+        "security",
+        "hardware"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Modern CPUs use 'branch prediction' to guess future instructions and execute them early to save time.",
+          "Found that this leaves a 'side-channel' that can be read by malicious code."
+        ],
+        "concepts": [
+          "Speculative Execution: Executing code before we're sure it should run.",
+          "Cache Timing: Measuring how long a memory access takes to see if data was speculatively loaded.",
+          "Transient Instructions: Instructions that run but are later 'undone' - except for their effect on the cache."
+        ],
+        "impact": [
+          "Forced the redesign of OS kernels and browser security models.",
+          "Showed that performance and security are often in direct conflict at the hardware level."
+        ],
+        "relevance": [
+          "Critical warning for anyone building multi-tenant or security-sensitive systems."
+        ]
+      }
+    },
+    "research/RDMA_2003": {
+      "id": "research/RDMA_2003",
+      "category": "research",
+      "title": "Remote Direct Memory Access over Ethernet (2003)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced RDMA, allowing one computer to access the memory of another without involving either computer's OS kernel.",
+      "terms": [
+        "rdma",
+        "networking",
+        "low latency",
+        "zero-copy",
+        "infiniband",
+        "high performance"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Traditional TCP/IP networking is too slow for supercomputers and high-speed database clusters because of kernel overhead.",
+          "Aimed at 'Zero-Copy' data transfer."
+        ],
+        "concepts": [
+          "Kernel Bypass: Hardware-to-hardware communication skipping the OS.",
+          "Direct Memory Access: One machine's NIC writing directly into another machine's RAM.",
+          "Low Latency: Microsecond-scale communication for distributed systems."
+        ],
+        "impact": [
+          "The foundation of high-performance computing (HPC) and modern high-speed data centers.",
+          "Enables ultra-fast distributed databases like RAMCloud and Microsoft's Azure storage."
+        ],
+        "relevance": [
+          "The 'elite' tier of networking for building ultra-low-latency distributed systems."
+        ]
+      }
     }
   },
   "lookup": {
@@ -10429,7 +12152,8 @@
       "architecture/FRONTEND",
       "architecture/GRAPHQL",
       "architecture/GRPC",
-      "research/END_TO_END_1984"
+      "research/END_TO_END_1984",
+      "research/VON_NEUMANN_1945"
     ],
     "web": [
       "core/ARCHITECTURE"
@@ -10476,11 +12200,15 @@
       "research/DIFFIE_HELLMAN_1976",
       "research/RSA_1978",
       "research/SALTZER_SCHROEDER_1975",
-      "research/THOMPSON_1984"
+      "research/THOMPSON_1984",
+      "research/EBPF_1993",
+      "research/L4_1995",
+      "research/SPECTRE_MELTDOWN_2018"
     ],
     "kubernetes": [
       "core/ARCHITECTURE",
-      "architecture/KUBERNETES"
+      "architecture/KUBERNETES",
+      "research/BORG_2015"
     ],
     "cloud": [
       "core/ARCHITECTURE",
@@ -10496,7 +12224,9 @@
       "architecture/FRONTEND",
       "architecture/PERFORMANCE",
       "architecture/SYSTEMS_DESIGN",
-      "architecture/WEB"
+      "architecture/WEB",
+      "research/RAID_1988",
+      "research/LFS_1992"
     ],
     "wasm": [
       "core/ARCHITECTURE"
@@ -10683,7 +12413,11 @@
       "architecture/MEMORY",
       "interfaces/MEMORY_INDEX",
       "interfaces/MEMORY_SCHEMA",
-      "methodology/MEMORY"
+      "methodology/MEMORY",
+      "research/VON_NEUMANN_1945",
+      "research/VIRTUAL_MEMORY_1962",
+      "research/MESI_1984",
+      "research/BLOOM_FILTER_1970"
     ],
     "knowledge": [
       "core/METHODOLOGY",
@@ -10838,7 +12572,8 @@
     ],
     "classification": [
       "core/METADATA",
-      "interfaces/RISK_POLICY_GATE"
+      "interfaces/RISK_POLICY_GATE",
+      "research/SVM_1995"
     ],
     "corpus": [
       "core/METADATA"
@@ -11074,7 +12809,8 @@
       "architecture/ALGORITHMS"
     ],
     "algorithms": [
-      "architecture/ALGORITHMS"
+      "architecture/ALGORITHMS",
+      "research/REDBLACK_TREE_1978"
     ],
     "locality": [
       "architecture/ALGORITHMS",
@@ -11197,7 +12933,8 @@
     ],
     "observability": [
       "data/CACHING",
-      "architecture/OBSERVABILITY"
+      "architecture/OBSERVABILITY",
+      "research/EBPF_1993"
     ],
     "prevention": [
       "data/CACHING",
@@ -11344,7 +13081,8 @@
       "interfaces/RISK_POLICY_GATE"
     ],
     "topology": [
-      "architecture/CLOUD"
+      "architecture/CLOUD",
+      "research/GNN_2008"
     ],
     "elasticity": [
       "architecture/CLOUD"
@@ -11472,7 +13210,8 @@
       "architecture/CONCURRENCY"
     ],
     "parallelism": [
-      "architecture/CONCURRENCY"
+      "architecture/CONCURRENCY",
+      "research/WAIT_FREE_1991"
     ],
     "queues": [
       "architecture/CONCURRENCY",
@@ -11484,7 +13223,8 @@
     ],
     "concurrency": [
       "architecture/CONCURRENCY",
-      "research/LAMPORT_1978"
+      "research/LAMPORT_1978",
+      "research/WAIT_FREE_1991"
     ],
     "chain": [
       "architecture/CONTAINERS",
@@ -11503,7 +13243,9 @@
       "architecture/MICROSERVICES",
       "plugins/CONTAINER",
       "specs/DB_BROKER_QUEUE",
-      "research/GRAY_1981"
+      "research/GRAY_1981",
+      "research/L4_1995",
+      "research/CONTAINERS_2007"
     ],
     "image": [
       "architecture/CONTAINERS"
@@ -11532,7 +13274,9 @@
       "architecture/CONTAINERS"
     ],
     "containers": [
-      "architecture/CONTAINERS"
+      "architecture/CONTAINERS",
+      "research/BORG_2015",
+      "research/CONTAINERS_2007"
     ],
     "unit": [
       "architecture/COST_OPTIMIZATION",
@@ -11579,7 +13323,8 @@
     "optimization": [
       "architecture/COST_OPTIMIZATION",
       "research/DIJKSTRA_1959",
-      "research/BACKPROP_1986"
+      "research/BACKPROP_1986",
+      "research/BATCH_NORM_2015"
     ],
     "modeling": [
       "data/PIPELINES",
@@ -11626,7 +13371,9 @@
       "data/DATABASE",
       "plugins/DB_BROKER",
       "specs/DB_BROKER_QUEUE",
-      "research/CODD_1970"
+      "research/CODD_1970",
+      "research/BTREE_1972",
+      "research/LSM_TREE_1996"
     ],
     "consistency": [
       "data/DATABASE",
@@ -11644,7 +13391,8 @@
       "interfaces/KNOWLEDGE_STORE",
       "interfaces/MEMORY_SCHEMA",
       "methodology/KNOWLEDGE",
-      "plugins/KNOWLEDGE"
+      "plugins/KNOWLEDGE",
+      "research/BTREE_1972"
     ],
     "backups": [
       "data/DATABASE"
@@ -11656,7 +13404,8 @@
     "safety": [
       "data/DATABASE",
       "docs/MIGRATIONS",
-      "specs/GIT"
+      "specs/GIT",
+      "research/RLHF_2022"
     ],
     "migrations": [
       "data/DATABASE",
@@ -11900,7 +13649,8 @@
     "reliability": [
       "architecture/FRONTEND",
       "methodology/OPERATIONS",
-      "research/END_TO_END_1984"
+      "research/END_TO_END_1984",
+      "research/RAID_1988"
     ],
     "federation": [
       "architecture/GRAPHQL",
@@ -11953,7 +13703,9 @@
       "architecture/SECRETS",
       "docs/ARCHITECTURE_OVERVIEW",
       "plugins/ARCHIVE",
-      "plugins/DB_BROKER"
+      "plugins/DB_BROKER",
+      "research/RAID_1988",
+      "research/LFS_1992"
     ],
     "environments": [
       "architecture/INFRASTRUCTURE"
@@ -12146,7 +13898,9 @@
     ],
     "networking": [
       "architecture/NETWORKING",
-      "research/END_TO_END_1984"
+      "research/END_TO_END_1984",
+      "research/EBPF_1993",
+      "research/RDMA_2003"
     ],
     "routing": [
       "architecture/NETWORKING",
@@ -12215,7 +13969,8 @@
       "architecture/PERFORMANCE"
     ],
     "scaling": [
-      "architecture/SCALING"
+      "architecture/SCALING",
+      "research/VIT_2021"
     ],
     "partitioning": [
       "architecture/SCALING"
@@ -12401,7 +14156,9 @@
     ],
     "kernel": [
       "docs/GOVERNANCE_AUDIT",
-      "specs/SYSTEM"
+      "specs/SYSTEM",
+      "research/EBPF_1993",
+      "research/L4_1995"
     ],
     "inventory": [
       "docs/GOVERNANCE_AUDIT",
@@ -12681,7 +14438,8 @@
     ],
     "foundations": [
       "interfaces/ARCHITECTURE_FOUNDATIONS",
-      "research/TURING_1936"
+      "research/TURING_1936",
+      "research/VON_NEUMANN_1945"
     ],
     "accountability": [
       "interfaces/CLAIMS",
@@ -12953,7 +14711,8 @@
     ],
     "synchronization": [
       "interfaces/STORE_MODEL",
-      "research/LAMPORT_1978"
+      "research/LAMPORT_1978",
+      "research/WAIT_FREE_1991"
     ],
     "commands": [
       "interfaces/TESTING",
@@ -13240,7 +14999,8 @@
     ],
     "abstraction": [
       "plugins/DB_BROKER",
-      "research/LISKOV_1974"
+      "research/LISKOV_1974",
+      "research/VIRTUAL_MEMORY_1962"
     ],
     "write": [
       "plugins/DB_BROKER"
@@ -13387,7 +15147,8 @@
       "plugins/VERIFY"
     ],
     "orchestration": [
-      "plugins/VERIFY"
+      "plugins/VERIFY",
+      "research/BORG_2015"
     ],
     "check": [
       "plugins/VERIFY"
@@ -13479,7 +15240,8 @@
       "specs/evaluations/VARIANCE_EVALS"
     ],
     "stability": [
-      "specs/evaluations/VARIANCE_EVALS"
+      "specs/evaluations/VARIANCE_EVALS",
+      "research/BATCH_NORM_2015"
     ],
     "runs": [
       "specs/evaluations/VARIANCE_EVALS"
@@ -13636,7 +15398,8 @@
       "research/CODD_1970"
     ],
     "1970": [
-      "research/CODD_1970"
+      "research/CODD_1970",
+      "research/BLOOM_FILTER_1970"
     ],
     "relational model": [
       "research/CODD_1970"
@@ -13705,7 +15468,8 @@
     ],
     "1978": [
       "research/RSA_1978",
-      "research/LAMPORT_1978"
+      "research/LAMPORT_1978",
+      "research/REDBLACK_TREE_1978"
     ],
     "digital signatures": [
       "research/RSA_1978"
@@ -13859,7 +15623,8 @@
     ],
     "1984": [
       "research/THOMPSON_1984",
-      "research/END_TO_END_1984"
+      "research/END_TO_END_1984",
+      "research/MESI_1984"
     ],
     "compiler": [
       "research/THOMPSON_1984"
@@ -13902,7 +15667,9 @@
       "research/GFS_2003"
     ],
     "2003": [
-      "research/GFS_2003"
+      "research/GFS_2003",
+      "research/ZFS_2003",
+      "research/RDMA_2003"
     ],
     "distributed file system": [
       "research/GFS_2003"
@@ -13911,7 +15678,8 @@
       "research/GFS_2003",
       "research/MAPREDUCE_2004",
       "research/BIGTABLE_2006",
-      "research/SPANNER_2012"
+      "research/SPANNER_2012",
+      "research/BORG_2015"
     ],
     "mapreduce": [
       "research/MAPREDUCE_2004"
@@ -13934,7 +15702,8 @@
     ],
     "nosql": [
       "research/BIGTABLE_2006",
-      "research/DYNAMO_2007"
+      "research/DYNAMO_2007",
+      "research/LSM_TREE_1996"
     ],
     "distributed storage": [
       "research/BIGTABLE_2006"
@@ -13946,10 +15715,13 @@
       "research/DYNAMO_2007"
     ],
     "2007": [
-      "research/DYNAMO_2007"
+      "research/DYNAMO_2007",
+      "research/HYPERLOGLOG_2007",
+      "research/CONTAINERS_2007"
     ],
     "availability": [
-      "research/DYNAMO_2007"
+      "research/DYNAMO_2007",
+      "research/RAID_1988"
     ],
     "eventual consistency": [
       "research/DYNAMO_2007"
@@ -13975,7 +15747,10 @@
       "research/SPANNER_2012"
     ],
     "2014": [
-      "research/RAFT_2014"
+      "research/RAFT_2014",
+      "research/GAN_2014",
+      "research/ADAM_2014",
+      "research/DROPOUT_2014"
     ],
     "log replication": [
       "research/RAFT_2014"
@@ -13987,7 +15762,9 @@
       "research/RAFT_2014"
     ],
     "transformer": [
-      "research/TRANSFORMER_2017"
+      "research/TRANSFORMER_2017",
+      "research/BERT_2018",
+      "research/VIT_2021"
     ],
     "2017": [
       "research/TRANSFORMER_2017"
@@ -13997,16 +15774,22 @@
     ],
     "nlp": [
       "research/TRANSFORMER_2017",
-      "research/GPT3_2020"
+      "research/GPT3_2020",
+      "research/WORD2VEC_2013",
+      "research/BERT_2018"
     ],
     "llm": [
       "research/TRANSFORMER_2017",
-      "research/GPT3_2020"
+      "research/GPT3_2020",
+      "research/LORA_2021",
+      "research/COT_2022",
+      "research/LLAMA_2023"
     ],
     "neural networks": [
       "research/TRANSFORMER_2017",
       "research/MCCULLOCH_PITTS_1943",
-      "research/BACKPROP_1986"
+      "research/BACKPROP_1986",
+      "research/PERCEPTRONS_1958"
     ],
     "machine learning": [
       "research/TRANSFORMER_2017",
@@ -14016,7 +15799,8 @@
       "research/BITCOIN_2008"
     ],
     "2008": [
-      "research/BITCOIN_2008"
+      "research/BITCOIN_2008",
+      "research/GNN_2008"
     ],
     "blockchain": [
       "research/BITCOIN_2008"
@@ -14062,7 +15846,9 @@
       "research/MINSKY_1961"
     ],
     "search": [
-      "research/MINSKY_1961"
+      "research/MINSKY_1961",
+      "research/BTREE_1972",
+      "research/REDBLACK_TREE_1978"
     ],
     "pattern recognition": [
       "research/MINSKY_1961"
@@ -14077,13 +15863,20 @@
       "research/BACKPROP_1986"
     ],
     "gradient descent": [
-      "research/BACKPROP_1986"
+      "research/BACKPROP_1986",
+      "research/ADAM_2014"
     ],
     "deep learning": [
       "research/BACKPROP_1986",
       "research/LECUN_1998",
       "research/ALEXNET_2012",
-      "research/ALPHAGO_2016"
+      "research/ALPHAGO_2016",
+      "research/LSTM_1997",
+      "research/ALPHAFOLD_2021",
+      "research/BATCH_NORM_2015",
+      "research/ADAM_2014",
+      "research/DROPOUT_2014",
+      "research/YOLO_2016"
     ],
     "weights": [
       "research/BACKPROP_1986"
@@ -14098,7 +15891,9 @@
     "computer vision": [
       "research/LECUN_1998",
       "research/ALEXNET_2012",
-      "research/RESNET_2015"
+      "research/RESNET_2015",
+      "research/VIT_2021",
+      "research/YOLO_2016"
     ],
     "lenet": [
       "research/LECUN_1998"
@@ -14124,10 +15919,12 @@
     ],
     "2016": [
       "research/ALPHAGO_2016",
-      "research/TENSORFLOW_2016"
+      "research/TENSORFLOW_2016",
+      "research/YOLO_2016"
     ],
     "reinforcement learning": [
-      "research/ALPHAGO_2016"
+      "research/ALPHAGO_2016",
+      "research/DQN_2013"
     ],
     "mcts": [
       "research/ALPHAGO_2016"
@@ -14142,7 +15939,9 @@
       "research/RESNET_2015"
     ],
     "2015": [
-      "research/RESNET_2015"
+      "research/RESNET_2015",
+      "research/BATCH_NORM_2015",
+      "research/BORG_2015"
     ],
     "residual learning": [
       "research/RESNET_2015"
@@ -14160,7 +15959,8 @@
       "research/GPT3_2020"
     ],
     "2020": [
-      "research/GPT3_2020"
+      "research/GPT3_2020",
+      "research/DIFFUSION_2020"
     ],
     "gpt-3": [
       "research/GPT3_2020"
@@ -14172,7 +15972,8 @@
       "research/GPT3_2020"
     ],
     "zero-shot": [
-      "research/GPT3_2020"
+      "research/GPT3_2020",
+      "research/CLIP_2021"
     ],
     "tensorflow": [
       "research/TENSORFLOW_2016"
@@ -14196,7 +15997,9 @@
       "research/SPARK_2012"
     ],
     "big data": [
-      "research/SPARK_2012"
+      "research/SPARK_2012",
+      "research/HYPERLOGLOG_2007",
+      "research/DREMEL_2010"
     ],
     "iterative": [
       "research/SPARK_2012"
@@ -14223,7 +16026,8 @@
       "research/ZOOKEEPER_2010"
     ],
     "2010": [
-      "research/ZOOKEEPER_2010"
+      "research/ZOOKEEPER_2010",
+      "research/DREMEL_2010"
     ],
     "configuration": [
       "research/ZOOKEEPER_2010"
@@ -14254,6 +16058,619 @@
     ],
     "files": [
       "research/UNIX_1974"
+    ],
+    "perceptrons": [
+      "research/PERCEPTRONS_1958"
+    ],
+    "1958": [
+      "research/PERCEPTRONS_1958"
+    ],
+    "perceptron": [
+      "research/PERCEPTRONS_1958"
+    ],
+    "binary classification": [
+      "research/PERCEPTRONS_1958"
+    ],
+    "linear classifier": [
+      "research/PERCEPTRONS_1958"
+    ],
+    "ai history": [
+      "research/PERCEPTRONS_1958"
+    ],
+    "supervised learning": [
+      "research/PERCEPTRONS_1958"
+    ],
+    "lstm": [
+      "research/LSTM_1997"
+    ],
+    "1997": [
+      "research/LSTM_1997"
+    ],
+    "rnn": [
+      "research/LSTM_1997"
+    ],
+    "vanishing gradient": [
+      "research/LSTM_1997"
+    ],
+    "sequence modeling": [
+      "research/LSTM_1997"
+    ],
+    "time series": [
+      "research/LSTM_1997"
+    ],
+    "svm": [
+      "research/SVM_1995"
+    ],
+    "1995": [
+      "research/SVM_1995",
+      "research/L4_1995"
+    ],
+    "support vector machine": [
+      "research/SVM_1995"
+    ],
+    "kernel trick": [
+      "research/SVM_1995"
+    ],
+    "maximum margin": [
+      "research/SVM_1995"
+    ],
+    "statistical learning": [
+      "research/SVM_1995"
+    ],
+    "word2vec": [
+      "research/WORD2VEC_2013"
+    ],
+    "2013": [
+      "research/WORD2VEC_2013",
+      "research/DQN_2013",
+      "research/MILLWHEEL_2013"
+    ],
+    "embeddings": [
+      "research/WORD2VEC_2013"
+    ],
+    "vector space": [
+      "research/WORD2VEC_2013"
+    ],
+    "skip-gram": [
+      "research/WORD2VEC_2013"
+    ],
+    "continuous bag of words": [
+      "research/WORD2VEC_2013"
+    ],
+    "gan": [
+      "research/GAN_2014"
+    ],
+    "generative ai": [
+      "research/GAN_2014",
+      "research/DIFFUSION_2020"
+    ],
+    "adversarial": [
+      "research/GAN_2014"
+    ],
+    "generator": [
+      "research/GAN_2014"
+    ],
+    "discriminator": [
+      "research/GAN_2014"
+    ],
+    "synthetic data": [
+      "research/GAN_2014"
+    ],
+    "bert": [
+      "research/BERT_2018"
+    ],
+    "2018": [
+      "research/BERT_2018",
+      "research/SPECTRE_MELTDOWN_2018"
+    ],
+    "pre-training": [
+      "research/BERT_2018"
+    ],
+    "bidirectional": [
+      "research/BERT_2018"
+    ],
+    "transfer learning": [
+      "research/BERT_2018"
+    ],
+    "vit": [
+      "research/VIT_2021"
+    ],
+    "2021": [
+      "research/VIT_2021",
+      "research/ALPHAFOLD_2021",
+      "research/LORA_2021",
+      "research/CLIP_2021"
+    ],
+    "vision transformer": [
+      "research/VIT_2021"
+    ],
+    "image patches": [
+      "research/VIT_2021"
+    ],
+    "alphafold": [
+      "research/ALPHAFOLD_2021"
+    ],
+    "biology": [
+      "research/ALPHAFOLD_2021"
+    ],
+    "protein folding": [
+      "research/ALPHAFOLD_2021"
+    ],
+    "science": [
+      "research/ALPHAFOLD_2021"
+    ],
+    "3d structure": [
+      "research/ALPHAFOLD_2021"
+    ],
+    "lora": [
+      "research/LORA_2021"
+    ],
+    "fine-tuning": [
+      "research/LORA_2021"
+    ],
+    "efficiency": [
+      "research/LORA_2021",
+      "research/LLAMA_2023",
+      "research/BLOOM_FILTER_1970"
+    ],
+    "peft": [
+      "research/LORA_2021"
+    ],
+    "adaptation": [
+      "research/LORA_2021"
+    ],
+    "cot": [
+      "research/COT_2022"
+    ],
+    "2022": [
+      "research/COT_2022",
+      "research/RLHF_2022"
+    ],
+    "chain of thought": [
+      "research/COT_2022"
+    ],
+    "reasoning": [
+      "research/COT_2022"
+    ],
+    "prompting": [
+      "research/COT_2022"
+    ],
+    "emergent abilities": [
+      "research/COT_2022"
+    ],
+    "few-shot": [
+      "research/COT_2022"
+    ],
+    "rlhf": [
+      "research/RLHF_2022"
+    ],
+    "alignment": [
+      "research/RLHF_2022"
+    ],
+    "human feedback": [
+      "research/RLHF_2022"
+    ],
+    "ppo": [
+      "research/RLHF_2022"
+    ],
+    "instructions": [
+      "research/RLHF_2022"
+    ],
+    "diffusion": [
+      "research/DIFFUSION_2020"
+    ],
+    "denoising": [
+      "research/DIFFUSION_2020"
+    ],
+    "stable diffusion": [
+      "research/DIFFUSION_2020"
+    ],
+    "latent space": [
+      "research/DIFFUSION_2020"
+    ],
+    "image synthesis": [
+      "research/DIFFUSION_2020"
+    ],
+    "batch": [
+      "research/BATCH_NORM_2015"
+    ],
+    "norm": [
+      "research/BATCH_NORM_2015"
+    ],
+    "batch normalization": [
+      "research/BATCH_NORM_2015"
+    ],
+    "regularization": [
+      "research/BATCH_NORM_2015",
+      "research/DROPOUT_2014"
+    ],
+    "training": [
+      "research/BATCH_NORM_2015",
+      "research/ADAM_2014"
+    ],
+    "adam": [
+      "research/ADAM_2014"
+    ],
+    "optimizer": [
+      "research/ADAM_2014"
+    ],
+    "stochastic": [
+      "research/ADAM_2014"
+    ],
+    "dropout": [
+      "research/DROPOUT_2014"
+    ],
+    "overfitting": [
+      "research/DROPOUT_2014"
+    ],
+    "generalization": [
+      "research/DROPOUT_2014"
+    ],
+    "ensembling": [
+      "research/DROPOUT_2014"
+    ],
+    "yolo": [
+      "research/YOLO_2016"
+    ],
+    "object detection": [
+      "research/YOLO_2016"
+    ],
+    "real-time": [
+      "research/YOLO_2016"
+    ],
+    "bounding boxes": [
+      "research/YOLO_2016"
+    ],
+    "dqn": [
+      "research/DQN_2013"
+    ],
+    "q-learning": [
+      "research/DQN_2013"
+    ],
+    "atari": [
+      "research/DQN_2013"
+    ],
+    "pixels": [
+      "research/DQN_2013"
+    ],
+    "experience replay": [
+      "research/DQN_2013"
+    ],
+    "gnn": [
+      "research/GNN_2008"
+    ],
+    "graph neural networks": [
+      "research/GNN_2008"
+    ],
+    "relational data": [
+      "research/GNN_2008"
+    ],
+    "non-euclidean": [
+      "research/GNN_2008"
+    ],
+    "representation learning": [
+      "research/GNN_2008"
+    ],
+    "clip": [
+      "research/CLIP_2021"
+    ],
+    "multimodal": [
+      "research/CLIP_2021"
+    ],
+    "vision-language": [
+      "research/CLIP_2021"
+    ],
+    "contrastive learning": [
+      "research/CLIP_2021"
+    ],
+    "openai": [
+      "research/CLIP_2021"
+    ],
+    "llama": [
+      "research/LLAMA_2023"
+    ],
+    "2023": [
+      "research/LLAMA_2023"
+    ],
+    "open-source": [
+      "research/LLAMA_2023"
+    ],
+    "scaling laws": [
+      "research/LLAMA_2023"
+    ],
+    "meta": [
+      "research/LLAMA_2023"
+    ],
+    "von": [
+      "research/VON_NEUMANN_1945"
+    ],
+    "neumann": [
+      "research/VON_NEUMANN_1945"
+    ],
+    "1945": [
+      "research/VON_NEUMANN_1945"
+    ],
+    "von neumann": [
+      "research/VON_NEUMANN_1945"
+    ],
+    "stored-program": [
+      "research/VON_NEUMANN_1945"
+    ],
+    "cpu": [
+      "research/VON_NEUMANN_1945",
+      "research/MESI_1984",
+      "research/SPECTRE_MELTDOWN_2018"
+    ],
+    "btree": [
+      "research/BTREE_1972"
+    ],
+    "1972": [
+      "research/BTREE_1972"
+    ],
+    "b-tree": [
+      "research/BTREE_1972"
+    ],
+    "data structures": [
+      "research/BTREE_1972",
+      "research/BLOOM_FILTER_1970",
+      "research/REDBLACK_TREE_1978"
+    ],
+    "disk storage": [
+      "research/BTREE_1972"
+    ],
+    "raid": [
+      "research/RAID_1988"
+    ],
+    "1988": [
+      "research/RAID_1988"
+    ],
+    "redundancy": [
+      "research/RAID_1988"
+    ],
+    "virtual": [
+      "research/VIRTUAL_MEMORY_1962"
+    ],
+    "1962": [
+      "research/VIRTUAL_MEMORY_1962"
+    ],
+    "virtual memory": [
+      "research/VIRTUAL_MEMORY_1962"
+    ],
+    "paging": [
+      "research/VIRTUAL_MEMORY_1962"
+    ],
+    "mmu": [
+      "research/VIRTUAL_MEMORY_1962"
+    ],
+    "os": [
+      "research/VIRTUAL_MEMORY_1962",
+      "research/L4_1995"
+    ],
+    "memory management": [
+      "research/VIRTUAL_MEMORY_1962"
+    ],
+    "lfs": [
+      "research/LFS_1992"
+    ],
+    "1992": [
+      "research/LFS_1992"
+    ],
+    "file system": [
+      "research/LFS_1992",
+      "research/ZFS_2003"
+    ],
+    "log-structured": [
+      "research/LFS_1992"
+    ],
+    "write optimization": [
+      "research/LFS_1992"
+    ],
+    "lsm": [
+      "research/LSM_TREE_1996"
+    ],
+    "tree": [
+      "research/LSM_TREE_1996",
+      "research/REDBLACK_TREE_1978"
+    ],
+    "1996": [
+      "research/LSM_TREE_1996"
+    ],
+    "lsm-tree": [
+      "research/LSM_TREE_1996"
+    ],
+    "storage engine": [
+      "research/LSM_TREE_1996"
+    ],
+    "write throughput": [
+      "research/LSM_TREE_1996"
+    ],
+    "compaction": [
+      "research/LSM_TREE_1996"
+    ],
+    "hyperloglog": [
+      "research/HYPERLOGLOG_2007"
+    ],
+    "hll": [
+      "research/HYPERLOGLOG_2007"
+    ],
+    "probabilistic algorithm": [
+      "research/HYPERLOGLOG_2007"
+    ],
+    "cardinality": [
+      "research/HYPERLOGLOG_2007"
+    ],
+    "approximation": [
+      "research/HYPERLOGLOG_2007"
+    ],
+    "wait": [
+      "research/WAIT_FREE_1991"
+    ],
+    "free": [
+      "research/WAIT_FREE_1991"
+    ],
+    "1991": [
+      "research/WAIT_FREE_1991"
+    ],
+    "wait-free": [
+      "research/WAIT_FREE_1991"
+    ],
+    "lock-free": [
+      "research/WAIT_FREE_1991"
+    ],
+    "non-blocking": [
+      "research/WAIT_FREE_1991"
+    ],
+    "mesi": [
+      "research/MESI_1984"
+    ],
+    "cache coherence": [
+      "research/MESI_1984"
+    ],
+    "multi-core": [
+      "research/MESI_1984"
+    ],
+    "hardware": [
+      "research/MESI_1984",
+      "research/SPECTRE_MELTDOWN_2018"
+    ],
+    "ebpf": [
+      "research/EBPF_1993"
+    ],
+    "1993": [
+      "research/EBPF_1993"
+    ],
+    "bpf": [
+      "research/EBPF_1993"
+    ],
+    "linux": [
+      "research/EBPF_1993"
+    ],
+    "l4": [
+      "research/L4_1995"
+    ],
+    "microkernel": [
+      "research/L4_1995"
+    ],
+    "ipc": [
+      "research/L4_1995"
+    ],
+    "borg": [
+      "research/BORG_2015"
+    ],
+    "cluster management": [
+      "research/BORG_2015"
+    ],
+    "dremel": [
+      "research/DREMEL_2010"
+    ],
+    "bigquery": [
+      "research/DREMEL_2010"
+    ],
+    "columnar storage": [
+      "research/DREMEL_2010"
+    ],
+    "analytics": [
+      "research/DREMEL_2010"
+    ],
+    "parquet": [
+      "research/DREMEL_2010"
+    ],
+    "millwheel": [
+      "research/MILLWHEEL_2013"
+    ],
+    "stream processing": [
+      "research/MILLWHEEL_2013"
+    ],
+    "dataflow": [
+      "research/MILLWHEEL_2013"
+    ],
+    "low latency": [
+      "research/MILLWHEEL_2013",
+      "research/RDMA_2003"
+    ],
+    "stateful": [
+      "research/MILLWHEEL_2013"
+    ],
+    "exactly-once": [
+      "research/MILLWHEEL_2013"
+    ],
+    "zfs": [
+      "research/ZFS_2003"
+    ],
+    "data integrity": [
+      "research/ZFS_2003"
+    ],
+    "checksums": [
+      "research/ZFS_2003"
+    ],
+    "copy-on-write": [
+      "research/ZFS_2003"
+    ],
+    "snapshots": [
+      "research/ZFS_2003"
+    ],
+    "docker": [
+      "research/CONTAINERS_2007"
+    ],
+    "namespaces": [
+      "research/CONTAINERS_2007"
+    ],
+    "cgroups": [
+      "research/CONTAINERS_2007"
+    ],
+    "virtualization": [
+      "research/CONTAINERS_2007"
+    ],
+    "bloom": [
+      "research/BLOOM_FILTER_1970"
+    ],
+    "filter": [
+      "research/BLOOM_FILTER_1970"
+    ],
+    "bloom filter": [
+      "research/BLOOM_FILTER_1970"
+    ],
+    "probabilistic": [
+      "research/BLOOM_FILTER_1970"
+    ],
+    "hashing": [
+      "research/BLOOM_FILTER_1970"
+    ],
+    "redblack": [
+      "research/REDBLACK_TREE_1978"
+    ],
+    "red-black tree": [
+      "research/REDBLACK_TREE_1978"
+    ],
+    "balanced tree": [
+      "research/REDBLACK_TREE_1978"
+    ],
+    "binary search tree": [
+      "research/REDBLACK_TREE_1978"
+    ],
+    "spectre": [
+      "research/SPECTRE_MELTDOWN_2018"
+    ],
+    "meltdown": [
+      "research/SPECTRE_MELTDOWN_2018"
+    ],
+    "speculative execution": [
+      "research/SPECTRE_MELTDOWN_2018"
+    ],
+    "side-channel": [
+      "research/SPECTRE_MELTDOWN_2018"
+    ],
+    "rdma": [
+      "research/RDMA_2003"
+    ],
+    "zero-copy": [
+      "research/RDMA_2003"
+    ],
+    "infiniband": [
+      "research/RDMA_2003"
+    ],
+    "high performance": [
+      "research/RDMA_2003"
     ]
   }
 }
