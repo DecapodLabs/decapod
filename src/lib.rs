@@ -7417,6 +7417,32 @@ mod rpc_handlers {
             ctx.mandates.clone(),
         ))
     }
+
+    pub(crate) fn handle_specs_refresh(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let _params: SpecsRefreshParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+
+        let manifest = crate::core::project_specs::refresh_specs_manifest(ctx.project_root)?;
+
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(SpecsRefreshResult {
+                    manifest_path: crate::core::project_specs::LOCAL_PROJECT_SPECS_MANIFEST
+                        .to_string(),
+                    repo_signal_fingerprint: manifest.repo_signal_fingerprint,
+                    refreshed_at: manifest.generated_at,
+                })
+                .unwrap(),
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
 }
 
 /// Run RPC command
@@ -7514,6 +7540,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         }
         "constitution.migrate" => rpc_handlers::handle_constitution_migrate(&rpc_ctx)?,
         "agent.registry.query" => rpc_handlers::handle_agent_registry_query(&rpc_ctx)?,
+        "specs.refresh" => rpc_handlers::handle_specs_refresh(&rpc_ctx)?,
         "schema.get" => rpc_handlers::handle_schema_get(&rpc_ctx)?,
         "store.upsert" => rpc_handlers::handle_store_upsert(&rpc_ctx)?,
         "store.query" => rpc_handlers::handle_store_query(&rpc_ctx)?,

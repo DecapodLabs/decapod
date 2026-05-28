@@ -1402,6 +1402,7 @@ fn validate_project_specs_docs(
         }
 
         let mut untouched_templates = Vec::new();
+        let mut out_of_sync_specs = Vec::new();
         for entry in &manifest.files {
             let path = repo_root.join(&entry.path);
             if !path.exists() {
@@ -1412,7 +1413,23 @@ fn validate_project_specs_docs(
             if current_hash == entry.template_hash {
                 untouched_templates.push(entry.path.clone());
             }
+            if current_hash != entry.content_hash {
+                out_of_sync_specs.push(entry.path.clone());
+            }
         }
+
+        if out_of_sync_specs.is_empty() {
+            pass("Project specs content hashes match manifest", ctx);
+        } else {
+            fail(
+                &format!(
+                    "OUT_OF_SYNC_SPECS: Spec content changed on disk but manifest is not updated for {:?}. Review changes and call `decapod rpc --op specs.refresh` to acknowledge.",
+                    out_of_sync_specs
+                ),
+                ctx,
+            );
+        }
+
         if untouched_templates.is_empty() {
             pass(
                 "Project specs are not raw scaffold templates (content evolved)",
@@ -1435,8 +1452,8 @@ fn validate_project_specs_docs(
                 ctx,
             );
         } else {
-            warn(
-                "TASK: Significant repo surfaces changed since specs scaffold/hydration. Review and update INTENT/ARCHITECTURE/INTERFACES/VALIDATION accordingly.",
+            fail(
+                "STALE_SPECS_FINGERPRINT: Significant repo surfaces changed since last specs refresh. Review and update INTENT/ARCHITECTURE/INTERFACES/VALIDATION accordingly, then call `decapod rpc --op specs.refresh`.",
                 ctx,
             );
         }

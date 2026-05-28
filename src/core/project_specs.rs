@@ -275,6 +275,55 @@ pub fn read_specs_manifest(
     Ok(Some(manifest))
 }
 
+pub fn refresh_specs_manifest(
+    project_root: &Path,
+) -> Result<ProjectSpecsManifest, error::DecapodError> {
+    let existing = read_specs_manifest(project_root)?.ok_or_else(|| {
+        error::DecapodError::NotFound(
+            "Project specs manifest not found. Run `decapod init` first.".to_string(),
+        )
+    })?;
+
+    let mut manifest_entries = Vec::new();
+    for spec in LOCAL_PROJECT_SPECS {
+        let path = project_root.join(spec.path);
+        if !path.exists() {
+            continue;
+        }
+        let body = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+        let content_hash = hash_text(&body);
+
+        let template_hash = existing
+            .files
+            .iter()
+            .find(|f| f.path == spec.path)
+            .map(|f| f.template_hash.clone())
+            .unwrap_or_else(|| content_hash.clone());
+
+        manifest_entries.push(ProjectSpecManifestEntry {
+            path: spec.path.to_string(),
+            template_hash,
+            content_hash,
+        });
+    }
+
+    let manifest = ProjectSpecsManifest {
+        schema_version: LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA.to_string(),
+        template_version: existing.template_version,
+        generated_at: crate::core::time::now_epoch_z(),
+        repo_signal_fingerprint: repo_signal_fingerprint(project_root)?,
+        files: manifest_entries,
+    };
+
+    let manifest_path = project_root.join(LOCAL_PROJECT_SPECS_MANIFEST);
+    let manifest_body = serde_json::to_string_pretty(&manifest).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Failed to serialize specs manifest: {}", e))
+    })?;
+    fs::write(manifest_path, manifest_body).map_err(error::DecapodError::IoError)?;
+
+    Ok(manifest)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

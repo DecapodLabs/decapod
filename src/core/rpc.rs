@@ -205,6 +205,17 @@ pub struct ConstitutionLinksNavigateResult {
     pub recommended_sections: Vec<String>,
 }
 
+// Specs Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SpecsRefreshParams {}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SpecsRefreshResult {
+    pub manifest_path: String,
+    pub repo_signal_fingerprint: String,
+    pub refreshed_at: String,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ConstitutionMigrateParams {
     pub target_version: String,
@@ -692,6 +703,14 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 description: "Retrieve canonical entities deterministically".to_string(),
                 stability: "stable".to_string(),
                 cost: "medium".to_string(),
+            },
+            Capability {
+                name: "specs.refresh".to_string(),
+                description:
+                    "Update the project specs manifest to acknowledge current codebase state"
+                        .to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
             },
             Capability {
                 name: "validate.run".to_string(),
