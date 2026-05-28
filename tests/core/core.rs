@@ -648,6 +648,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         all: false,
         preserved_agent_content: vec![],
         generate_specs: true,
+        generate_ci: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Ascii,
         specs_seed: None,
     };
@@ -664,6 +665,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         all: false,
         preserved_agent_content: vec![],
         generate_specs: true,
+        generate_ci: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Ascii,
         specs_seed: None,
     };
@@ -745,6 +747,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         all: false,
         preserved_agent_content: vec![],
         generate_specs: true,
+        generate_ci: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Ascii,
         specs_seed: None,
     };
@@ -760,6 +763,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         all: false,
         preserved_agent_content: vec![],
         generate_specs: true,
+        generate_ci: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Mermaid,
         specs_seed: None,
     };
