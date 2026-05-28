@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.2](https://github.com/DecapodLabs/decapod/compare/v0.57.1...v0.57.2) - 2026-05-28
+
+### Added
+
+- *(constitution)* comprehensive expansion and 80 seminal research papers ([#655](https://github.com/DecapodLabs/decapod/pull/655))
+
 ## [0.57.1](https://github.com/DecapodLabs/decapod/compare/v0.57.0...v0.57.1) - 2026-05-28
 
 ### Other
