@@ -1404,10 +1404,7 @@ fn enrich_repo_context_interactive(
     )?;
     repo.container_workspaces = enable_container_workspaces;
 
-    let enable_ci = prompt_yes_no(
-        "Scaffold GitHub Action for decapod validate?",
-        init.ci,
-    )?;
+    let enable_ci = prompt_yes_no("Scaffold GitHub Action for decapod validate?", init.ci)?;
     init.ci = enable_ci;
 
     Ok(())
@@ -4183,7 +4180,10 @@ fn heal_validation_scaffold(
         outcome: "updated".to_string(),
         detail: format!(
             "Scaffolded missing validation surfaces (entrypoints_created={}, config_created={}, specs_created={}, ci_created={}).",
-            summary.entrypoints_created, summary.config_created, summary.specs_created, summary.ci_created
+            summary.entrypoints_created,
+            summary.config_created,
+            summary.specs_created,
+            summary.ci_created
         ),
     }))
 }

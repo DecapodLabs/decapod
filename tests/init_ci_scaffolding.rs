@@ -55,7 +55,10 @@ fn init_force_updates_existing_workflow() {
     );
 
     let content = fs::read_to_string(workflow_path).expect("read workflow file");
-    assert!(content.contains("name: Decapod Validate"), "workflow should be updated with --force");
+    assert!(
+        content.contains("name: Decapod Validate"),
+        "workflow should be updated with --force"
+    );
 }
 
 #[test]
