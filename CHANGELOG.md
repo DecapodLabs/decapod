@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.56.2](https://github.com/DecapodLabs/decapod/compare/v0.56.1...v0.56.2) - 2026-05-28
+
+### Other
+
+- expand agent-first documentation for Skills and MCP ([#650](https://github.com/DecapodLabs/decapod/pull/650))
+
 ## [0.56.1](https://github.com/DecapodLabs/decapod/compare/v0.56.0...v0.56.1) - 2026-05-28
 
 ### Other
