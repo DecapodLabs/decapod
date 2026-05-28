@@ -12151,9 +12151,7 @@
       "architecture/EVENT_DRIVEN",
       "architecture/FRONTEND",
       "architecture/GRAPHQL",
-      "architecture/GRPC",
-      "research/END_TO_END_1984",
-      "research/VON_NEUMANN_1945"
+      "architecture/GRPC"
     ],
     "web": [
       "core/ARCHITECTURE"
@@ -12189,21 +12187,9 @@
       "core/SPECS",
       "core/ENGINEERING_EXCELLENCE",
       "core/EMERGENCY_PROTOCOL",
-      "architecture/ENTERPRISE",
-      "architecture/FRONTEND",
       "architecture/SECURITY",
-      "architecture/SYSTEMS_DESIGN",
-      "architecture/TESTING_STRATEGY",
-      "architecture/WEB",
       "docs/SECURITY_THREAT_MODEL",
-      "specs/SECURITY",
-      "research/DIFFIE_HELLMAN_1976",
-      "research/RSA_1978",
-      "research/SALTZER_SCHROEDER_1975",
-      "research/THOMPSON_1984",
-      "research/EBPF_1993",
-      "research/L4_1995",
-      "research/SPECTRE_MELTDOWN_2018"
+      "specs/SECURITY"
     ],
     "kubernetes": [
       "core/ARCHITECTURE",
