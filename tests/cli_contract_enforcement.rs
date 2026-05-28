@@ -171,10 +171,10 @@ fn test_todo_command_structure() {
 }
 
 #[test]
-fn test_constitution_docs_accessible() {
+fn test_agent_docs_accessible() {
     let (_tmp, dir) = setup_repo();
 
-    let docs = run_decapod(dir, &["docs", "show", "core/DECAPOD"]);
+    let docs = run_decapod(dir, &["docs", "show", "docs/agent/api-index.md"]);
     assert!(
         docs.status.success(),
         "docs show should succeed: {}",
@@ -183,8 +183,8 @@ fn test_constitution_docs_accessible() {
 
     let output = String::from_utf8_lossy(&docs.stdout);
     assert!(
-        output.contains("Decapod"),
-        "docs show should return Decapod content"
+        output.contains("Agent API"),
+        "docs show should return Agent API content"
     );
 }
 
@@ -252,43 +252,23 @@ fn test_interlock_drift_detection_capability() {
 }
 
 #[test]
-fn test_constitution_docs_are_accessible() {
+fn test_agent_docs_are_accessible() {
     let (_tmp, dir) = setup_repo();
 
     let list_output = run_decapod(dir, &["docs", "list"]);
     assert!(list_output.status.success(), "docs list should succeed");
 
     let docs_list = String::from_utf8_lossy(&list_output.stdout);
-    let all_doc_paths: Vec<String> = docs_list
-        .lines()
-        .filter_map(|l| {
-            let parts: Vec<&str> = l.split('-').collect();
-            let path = parts.last().copied().unwrap_or(l).trim();
-            if !path.is_empty() {
-                Some(path.to_string())
-            } else {
-                None
-            }
-        })
-        .collect();
-
-    assert!(
-        !all_doc_paths.is_empty(),
-        "docs list should return at least one doc"
-    );
-
+    
     let required_docs = [
-        "core/DECAPOD",
-        "interfaces/CLAIMS",
-        "specs/INTENT",
-        "methodology/ARCHITECTURE",
-        "architecture/SECURITY",
-        "plugins/TODO",
+        "docs/agent/api-index.md",
+        "docs/agent/command-contracts.md",
+        "docs/agent/payload-examples.md",
     ];
 
     for required in &required_docs {
         assert!(
-            all_doc_paths.iter().any(|p| p == required),
+            docs_list.contains(required),
             "docs list should include {}",
             required
         );
@@ -310,7 +290,48 @@ fn test_constitution_docs_are_accessible() {
 }
 
 #[test]
-fn test_constitution_docs_ingest_shows_links() {
+fn test_constitution_nodes_are_accessible() {
+    let (_tmp, dir) = setup_repo();
+
+    let list_output = run_decapod(dir, &["constitution", "list"]);
+    assert!(list_output.status.success(), "constitution list should succeed");
+
+    let nodes_list = String::from_utf8_lossy(&list_output.stdout);
+
+    let required_nodes = [
+        "core/DECAPOD",
+        "interfaces/CLAIMS",
+        "specs/INTENT",
+        "methodology/ARCHITECTURE",
+        "architecture/SECURITY",
+        "plugins/TODO",
+    ];
+
+    for required in &required_nodes {
+        assert!(
+            nodes_list.contains(required),
+            "constitution list should include {}",
+            required
+        );
+
+        let get_output = run_decapod(dir, &["constitution", "get", required]);
+        assert!(
+            get_output.status.success(),
+            "constitution get {} should succeed",
+            required
+        );
+
+        let content = String::from_utf8_lossy(&get_output.stdout);
+        assert!(
+            !content.is_empty() && content.len() > 50,
+            "constitution get {} should return content",
+            required
+        );
+    }
+}
+
+#[test]
+fn test_agent_docs_ingest_works() {
     let (_tmp, dir) = setup_repo();
 
     // Run docs ingest which dumps all docs
@@ -321,12 +342,11 @@ fn test_constitution_docs_ingest_shows_links() {
 
     // Verify each embedded doc appears in ingest output
     let required_docs = [
-        "core/DECAPOD",
-        "interfaces/CLAIMS",
-        "specs/INTENT",
-        "methodology/ARCHITECTURE",
-        "architecture/SECURITY",
-        "plugins/TODO",
+        "docs/agent/api-index.md",
+        "docs/agent/command-contracts.md",
+        "docs/agent/payload-examples.md",
+        "docs/agent/error-recovery.md",
+        "docs/agent/state-model.md",
     ];
 
     for doc_path in &required_docs {
