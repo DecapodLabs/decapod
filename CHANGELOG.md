@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.56.0](https://github.com/DecapodLabs/decapod/compare/v0.55.2...v0.56.0) - 2026-05-28
+
+### Added
+
+- scaffold GitHub Action for project validation in decapod init ([#622](https://github.com/DecapodLabs/decapod/pull/622)) ([#625](https://github.com/DecapodLabs/decapod/pull/625))
+
 ## [0.55.2](https://github.com/DecapodLabs/decapod/compare/v0.55.1...v0.55.2) - 2026-05-28
 
 ### Added
