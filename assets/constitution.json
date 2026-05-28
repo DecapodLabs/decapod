@@ -6305,7 +6305,47 @@
       "links": {
         "references": [
           "core/METHODOLOGY",
-          "methodology/RESEARCH_PRODUCTION"
+          "methodology/RESEARCH_PRODUCTION",
+          "research/TURING_1936",
+          "research/SHANNON_1948",
+          "research/DIJKSTRA_1959",
+          "research/HOARE_1969",
+          "research/CODD_1970",
+          "research/COOK_1971",
+          "research/DIFFIE_HELLMAN_1976",
+          "research/RSA_1978",
+          "research/LAMPORT_1978",
+          "research/SALTZER_SCHROEDER_1975",
+          "research/GRAY_1981",
+          "research/LISKOV_1974",
+          "research/BROOKS_1986",
+          "research/LAMPSON_1983",
+          "research/FLP_1985",
+          "research/PAXOS_1998",
+          "research/THOMPSON_1984",
+          "research/CHORD_2001",
+          "research/GFS_2003",
+          "research/MAPREDUCE_2004",
+          "research/BIGTABLE_2006",
+          "research/DYNAMO_2007",
+          "research/SPANNER_2012",
+          "research/RAFT_2014",
+          "research/TRANSFORMER_2017",
+          "research/BITCOIN_2008",
+          "research/MCCULLOCH_PITTS_1943",
+          "research/MINSKY_1961",
+          "research/BACKPROP_1986",
+          "research/LECUN_1998",
+          "research/ALEXNET_2012",
+          "research/ALPHAGO_2016",
+          "research/RESNET_2015",
+          "research/GPT3_2020",
+          "research/TENSORFLOW_2016",
+          "research/SPARK_2012",
+          "research/KAFKA_2011",
+          "research/ZOOKEEPER_2010",
+          "research/END_TO_END_1984",
+          "research/UNIX_1974"
         ],
         "referenced_by": [
           "core/METHODOLOGY"
@@ -8627,6 +8667,1680 @@
           "Proceed when the quality strategy is defined and automation is the default path."
         ]
       }
+    },
+    "research/TURING_1936": {
+      "id": "research/TURING_1936",
+      "category": "research",
+      "title": "On Computable Numbers, with an Application to the Entscheidungsproblem (1936)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Alan Turing introduced the Turing Machine, providing a formal definition of an algorithm and proving the existence of undecidable problems.",
+      "terms": [
+        "turing machine",
+        "computability",
+        "algorithm",
+        "halting problem",
+        "decidability",
+        "foundations"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Foundational work in computer science, written to address Hilbert's decision problem.",
+          "Established the mathematical limits of what can be computed by a machine."
+        ],
+        "concepts": [
+          "The Turing Machine: A theoretical model of computation using a tape and a head.",
+          "Universal Turing Machine: A machine capable of simulating any other Turing machine."
+        ],
+        "impact": [
+          "Defined the formal boundaries of computation.",
+          "Provided the theoretical basis for the modern stored-program computer."
+        ],
+        "relevance": [
+          "Essential for understanding algorithmic complexity and the theoretical limits of software."
+        ]
+      }
+    },
+    "research/SHANNON_1948": {
+      "id": "research/SHANNON_1948",
+      "category": "research",
+      "title": "A Mathematical Theory of Communication (1948)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Claude Shannon established the field of information theory, introducing the bit as a unit of information and defining entropy.",
+      "terms": [
+        "information theory",
+        "entropy",
+        "bit",
+        "communication",
+        "bandwidth",
+        "signal-to-noise"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Written at Bell Labs to address the problem of transmitting information over noisy channels.",
+          "Transformed communication from a qualitative problem into a rigorous mathematical one."
+        ],
+        "concepts": [
+          "Information Entropy: A measure of the uncertainty or information content in a message.",
+          "Channel Capacity: The maximum rate at which information can be transmitted reliably."
+        ],
+        "impact": [
+          "Enabled the development of modern digital communications, including the internet and mobile phones.",
+          "Foundational for data compression and error correction algorithms."
+        ],
+        "relevance": [
+          "Guides the design of efficient encoding schemes and communication protocols."
+        ]
+      }
+    },
+    "research/DIJKSTRA_1959": {
+      "id": "research/DIJKSTRA_1959",
+      "category": "research",
+      "title": "A Note on Two Problems in Connexion with Graphs (1959)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Edsger Dijkstra introduced the shortest path algorithm and the minimum spanning tree algorithm.",
+      "terms": [
+        "dijkstra algorithm",
+        "shortest path",
+        "graph theory",
+        "minimum spanning tree",
+        "optimization",
+        "routing"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed foundational problems in graph theory related to finding efficient connections and paths.",
+          "Focused on minimizing computational steps for pathfinding."
+        ],
+        "concepts": [
+          "Shortest Path: An iterative algorithm for finding the lowest-cost path between nodes in a weighted graph.",
+          "Minimum Spanning Tree: Connecting all nodes with the minimum total edge weight."
+        ],
+        "impact": [
+          "Widely used in network routing protocols (like OSPF and IS-IS).",
+          "Essential for GPS navigation systems and logistics optimization."
+        ],
+        "relevance": [
+          "Core algorithm for any developer working with networked or spatial data structures."
+        ]
+      }
+    },
+    "research/HOARE_1969": {
+      "id": "research/HOARE_1969",
+      "category": "research",
+      "title": "An Axiomatic Basis for Computer Programming (1969)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Tony Hoare introduced Hoare logic, a formal system for reasoning about the correctness of computer programs.",
+      "terms": [
+        "hoare logic",
+        "formal verification",
+        "precondition",
+        "postcondition",
+        "correctness",
+        "invariant"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Proposed a method to mathematically prove that a program meets its specification.",
+          "Introduced the concept of 'Hoare Triples' {P} C {Q}."
+        ],
+        "concepts": [
+          "Preconditions (P): Conditions that must hold before execution.",
+          "Postconditions (Q): Conditions that must hold after successful execution.",
+          "Loop Invariants: Properties that remain true throughout an iterative process."
+        ],
+        "impact": [
+          "Laid the groundwork for formal verification and modern static analysis tools.",
+          "Influenced the design of safe programming languages and assertion-based testing."
+        ],
+        "relevance": [
+          "Crucial for building high-assurance systems where correctness is paramount."
+        ]
+      }
+    },
+    "research/CODD_1970": {
+      "id": "research/CODD_1970",
+      "category": "research",
+      "title": "A Relational Model of Data for Large Shared Data Banks (1970)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "E.F. Codd proposed the relational database model, separating logical data structure from physical storage.",
+      "terms": [
+        "relational model",
+        "database",
+        "sql",
+        "normalization",
+        "data independence",
+        "algebra"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Written to solve the rigidity and complexity of hierarchical and network data models used at the time.",
+          "Aimed at providing data independence from physical hardware changes."
+        ],
+        "concepts": [
+          "Relations (Tables): Data organized into tuples and attributes.",
+          "Normalization: Reducing data redundancy and improving integrity.",
+          "Relational Algebra: Mathematical operations for querying data."
+        ],
+        "impact": [
+          "Led to the development of SQL and the multi-billion dollar RDBMS industry.",
+          "Became the dominant standard for data management for over 50 years."
+        ],
+        "relevance": [
+          "The theoretical foundation for all relational databases (PostgreSQL, MySQL, Oracle)."
+        ]
+      }
+    },
+    "research/COOK_1971": {
+      "id": "research/COOK_1971",
+      "category": "research",
+      "title": "The Complexity of Theorem-Proving Procedures (1971)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Stephen Cook introduced the concept of NP-completeness and proved that the Boolean satisfiability problem (SAT) is NP-complete.",
+      "terms": [
+        "np-complete",
+        "complexity classes",
+        "sat",
+        "p vs np",
+        "reductions",
+        "computational complexity"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Investigated the relative difficulty of solving different types of computational problems.",
+          "Established the P vs NP problem, one of the most famous unsolved problems in CS."
+        ],
+        "concepts": [
+          "NP-Completeness: A class of problems that are as hard as any problem in NP.",
+          "Polynomial-time reduction: Converting one problem into another to compare their difficulty."
+        ],
+        "impact": [
+          "Enabled computer scientists to classify problems by their inherent hardness.",
+          "Transformed algorithm design by showing which problems are likely intractable."
+        ],
+        "relevance": [
+          "Helps engineers recognize when a problem they are facing is NP-hard, requiring heuristic approaches."
+        ]
+      }
+    },
+    "research/DIFFIE_HELLMAN_1976": {
+      "id": "research/DIFFIE_HELLMAN_1976",
+      "category": "research",
+      "title": "New Directions in Cryptography (1976)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Diffie and Hellman introduced public-key cryptography and the key exchange protocol, enabling secure communication.",
+      "terms": [
+        "public-key",
+        "cryptography",
+        "key exchange",
+        "asymmetric",
+        "security",
+        "privacy"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Published at a time when cryptography required pre-shared secret keys.",
+          "Solved the 'key distribution problem' for secure communication between strangers."
+        ],
+        "concepts": [
+          "Public-Key Cryptography: Using a public key for encryption and a private key for decryption.",
+          "One-way Functions: Mathematical operations that are easy to compute but hard to invert."
+        ],
+        "impact": [
+          "The basis for all secure communication on the internet (SSL/TLS, HTTPS).",
+          "Revolutionized digital privacy and identity verification."
+        ],
+        "relevance": [
+          "Fundamental for understanding how modern secure protocols work."
+        ]
+      }
+    },
+    "research/RSA_1978": {
+      "id": "research/RSA_1978",
+      "category": "research",
+      "title": "A Method for Obtaining Digital Signatures and Public-Key Cryptosystems (1978)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Rivest, Shamir, and Adleman implemented the first practical public-key cryptosystem based on prime factorization.",
+      "terms": [
+        "rsa",
+        "encryption",
+        "digital signatures",
+        "prime numbers",
+        "asymmetric",
+        "security"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Practical implementation of the concepts proposed by Diffie and Hellman.",
+          "Utilized the computational difficulty of factoring large integers."
+        ],
+        "concepts": [
+          "Modular Exponentiation: The core mathematical operation of RSA.",
+          "Public/Private Key Pair: Generated from two large distinct prime numbers.",
+          "Digital Signatures: Providing authenticity and non-repudiation."
+        ],
+        "impact": [
+          "Became the most widely used public-key encryption algorithm in history.",
+          "Enabled secure e-commerce, software updates, and encrypted messaging."
+        ],
+        "relevance": [
+          "Foundational knowledge for anyone working with certificates, JWTs, and secure APIs."
+        ]
+      }
+    },
+    "research/LAMPORT_1978": {
+      "id": "research/LAMPORT_1978",
+      "category": "research",
+      "title": "Time, Clocks, and the Ordering of Events in a Distributed System (1978)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Leslie Lamport introduced logical clocks to order events in distributed systems without synchronized physical clocks.",
+      "terms": [
+        "logical clocks",
+        "distributed systems",
+        "event ordering",
+        "causality",
+        "synchronization",
+        "concurrency"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the challenge of determining the order of events across multiple machines in a network.",
+          "Recognized that physical clocks cannot be perfectly synchronized."
+        ],
+        "concepts": [
+          "Happened-before relation: A partial ordering of events based on causality.",
+          "Lamport Timestamps: Simple counters that track causal relationships between events.",
+          "Total Ordering: Extending logical clocks to order all events in a system."
+        ],
+        "impact": [
+          "Foundational for all distributed systems research and implementation.",
+          "Led to the development of vector clocks and consistency models in distributed databases."
+        ],
+        "relevance": [
+          "Critical for designing systems that require consensus or causal consistency."
+        ]
+      }
+    },
+    "research/SALTZER_SCHROEDER_1975": {
+      "id": "research/SALTZER_SCHROEDER_1975",
+      "category": "research",
+      "title": "The Protection of Information in Computer Systems (1975)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Defined foundational security principles like Least Privilege, Open Design, and Economy of Mechanism.",
+      "terms": [
+        "security",
+        "least privilege",
+        "protection",
+        "access control",
+        "defense in depth",
+        "open design"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Comprehensive survey of information protection techniques in multi-user systems.",
+          "Established the 'Eight Principles' of secure system design."
+        ],
+        "concepts": [
+          "Least Privilege: Every user and process should operate with the minimum set of permissions required.",
+          "Fail-safe Defaults: Access decisions should be based on permission rather than exclusion.",
+          "Complete Mediation: Every access must be checked against the protection policy."
+        ],
+        "impact": [
+          "The standard reference for secure system design for decades.",
+          "Influenced the development of RBAC, SELinux, and modern cloud IAM policies."
+        ],
+        "relevance": [
+          "The bible of security engineering; its principles are still valid and essential today."
+        ]
+      }
+    },
+    "research/GRAY_1981": {
+      "id": "research/GRAY_1981",
+      "category": "research",
+      "title": "The Transaction Concept: Virtues and Limitations (1981)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Jim Gray formalized the concept of ACID transactions, ensuring reliability and consistency in database systems.",
+      "terms": [
+        "acid",
+        "transactions",
+        "consistency",
+        "atomicity",
+        "durability",
+        "isolation",
+        "recovery"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Formalized the abstractions used in mainframe transaction processing systems (like IMS and CICS).",
+          "Aimed at providing a simple, reliable interface for complex data operations."
+        ],
+        "concepts": [
+          "Atomicity: All-or-nothing execution.",
+          "Consistency: Preserving system invariants.",
+          "Isolation: Concurrent transactions do not interfere.",
+          "Durability: Changes persist after a crash."
+        ],
+        "impact": [
+          "Standardized the way databases handle concurrency and failure.",
+          "Enabled the creation of robust financial and enterprise applications."
+        ],
+        "relevance": [
+          "Fundamental for anyone building systems that manage state or handle financial transactions."
+        ]
+      }
+    },
+    "research/LISKOV_1974": {
+      "id": "research/LISKOV_1974",
+      "category": "research",
+      "title": "Programming with Abstract Data Types (1974)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Barbara Liskov introduced the concept of data abstraction and encapsulation, central to object-oriented programming.",
+      "terms": [
+        "abstract data types",
+        "encapsulation",
+        "abstraction",
+        "modular",
+        "interface",
+        "liskov substitution"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the problem of managing large, complex software systems.",
+          "Proposed separating the behavior of data from its internal implementation."
+        ],
+        "concepts": [
+          "Encapsulation: Hiding implementation details behind a stable interface.",
+          "Data Abstraction: Defining types by the operations that can be performed on them.",
+          "Type Invariants: Ensuring objects remain in a valid state."
+        ],
+        "impact": [
+          "Directly influenced the design of languages like CLU, Ada, and Java.",
+          "Formed the basis for modern Object-Oriented Analysis and Design (OOAD)."
+        ],
+        "relevance": [
+          "Teaches the core principles of modularity and maintainable software architecture."
+        ]
+      }
+    },
+    "research/BROOKS_1986": {
+      "id": "research/BROOKS_1986",
+      "category": "research",
+      "title": "No Silver Bullet - Essence and Accident in Software Engineering (1986)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Fred Brooks argued that no single technological or management innovation could provide an order-of-magnitude improvement in productivity.",
+      "terms": [
+        "software engineering",
+        "productivity",
+        "complexity",
+        "mythical man-month",
+        "management",
+        "silver bullet"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Written as a retrospective on software development challenges after the era of high-level languages.",
+          "Distinguished between 'Essential' and 'Accidental' complexity."
+        ],
+        "concepts": [
+          "Essential Complexity: The inherent difficulty of the problem itself.",
+          "Accidental Complexity: Difficulties caused by our tools, languages, and processes.",
+          "The invisibility, changeability, and conformity of software."
+        ],
+        "impact": [
+          "Tempered expectations for new technologies as cure-alls for software project failures.",
+          "Shifted focus towards better requirements gathering and rapid prototyping."
+        ],
+        "relevance": [
+          "Reminds engineers that complexity is the primary challenge in software development."
+        ]
+      }
+    },
+    "research/LAMPSON_1983": {
+      "id": "research/LAMPSON_1983",
+      "category": "research",
+      "title": "Hints for Computer System Design (1983)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Butler Lampson provided practical advice for building robust systems, including 'keep it simple' and 'use end-to-end arguments'.",
+      "terms": [
+        "system design",
+        "heuristics",
+        "simplicity",
+        "robustness",
+        "hints",
+        "engineering"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "A collection of wisdom from the design and implementation of early interactive systems at Xerox PARC.",
+          "Focuses on the trade-offs and 'rules of thumb' that lead to successful systems."
+        ],
+        "concepts": [
+          "Keep it simple: Avoid complex solutions to simple problems.",
+          "Plan to throw one away: You never understand a problem until you've tried to solve it once.",
+          "Use end-to-end arguments: Correctness belongs at the highest level."
+        ],
+        "impact": [
+          "Became a legendary checklist for systems engineers.",
+          "Guided the design of networking protocols, operating systems, and distributed databases."
+        ],
+        "relevance": [
+          "Invaluable set of heuristics for making architectural decisions under uncertainty."
+        ]
+      }
+    },
+    "research/FLP_1985": {
+      "id": "research/FLP_1985",
+      "category": "research",
+      "title": "Impossibility of Distributed Consensus with One Faulty Process (1985)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Proved that it is impossible to reach consensus in an asynchronous distributed system if even one process can fail.",
+      "terms": [
+        "consensus",
+        "impossibility",
+        "distributed systems",
+        "asynchronous",
+        "fault tolerance",
+        "liveness"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Known as the 'FLP Impossibility', this paper defined a major theoretical constraint on distributed computing.",
+          "Challenged the assumption that perfect consensus could always be achieved."
+        ],
+        "concepts": [
+          "Asynchronous System: A system with no bounds on message delay or processing time.",
+          "Consensus: All non-faulty processes agreeing on a single value.",
+          "Non-termination: Showing that an adversarial scheduler can prevent consensus forever."
+        ],
+        "impact": [
+          "Forces systems designers to make trade-offs between consistency, availability, and termination.",
+          "Led researchers to explore randomized algorithms and failure detectors."
+        ],
+        "relevance": [
+          "Explains why consensus protocols like Raft and Paxos require timeouts and leader election."
+        ]
+      }
+    },
+    "research/PAXOS_1998": {
+      "id": "research/PAXOS_1998",
+      "category": "research",
+      "title": "The Part-Time Parliament (1998)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Leslie Lamport introduced the Paxos algorithm, a foundational consensus protocol for distributed systems.",
+      "terms": [
+        "paxos",
+        "consensus",
+        "distributed systems",
+        "fault tolerance",
+        "replication",
+        "quorum"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Introduced the most famous and difficult-to-understand algorithm in distributed systems.",
+          "Framed as a parable about a fictional ancient parliament."
+        ],
+        "concepts": [
+          "Proposers, Acceptors, and Learners: The three roles in the Paxos protocol.",
+          "Two-Phase Commit: Prepare/Promise and Accept/Accepted phases.",
+          "Quorums: Ensuring agreement by involving a majority of participants."
+        ],
+        "impact": [
+          "The standard for building consistent, replicated state machines (databases, lock services).",
+          "Directly influenced Google's Chubby, Apache ZooKeeper, and many others."
+        ],
+        "relevance": [
+          "The 'gold standard' for distributed consistency; essential for senior systems engineers."
+        ]
+      }
+    },
+    "research/THOMPSON_1984": {
+      "id": "research/THOMPSON_1984",
+      "category": "research",
+      "title": "Reflections on Trusting Trust (1984)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Ken Thompson demonstrated a security vulnerability where a compiler can be subverted to inject backdoors into any program it compiles.",
+      "terms": [
+        "security",
+        "trust",
+        "compiler",
+        "backdoor",
+        "trojan horse",
+        "binary",
+        "source code"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Thompson's Turing Award lecture, highlighting the limits of trusting software based on source code alone.",
+          "Demonstrated a self-replicating backdoor that leaves no trace in the source."
+        ],
+        "concepts": [
+          "Compiler subversion: Modifying the compiler to recognize it's compiling itself and inject the malicious code.",
+          "Binary trust: You cannot trust a program if you didn't create the compiler yourself."
+        ],
+        "impact": [
+          "Raised fundamental questions about software supply chain security.",
+          "Led to research in 'bootstrapping' trust and reproducible builds."
+        ],
+        "relevance": [
+          "A stark warning about the invisible trust we place in our development toolchains."
+        ]
+      }
+    },
+    "research/CHORD_2001": {
+      "id": "research/CHORD_2001",
+      "category": "research",
+      "title": "Chord: A Scalable Peer-to-peer Lookup Service for Internet Applications (2001)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced a distributed hash table (DHT) for efficient resource location in large-scale P2P networks.",
+      "terms": [
+        "dht",
+        "peer-to-peer",
+        "consistent hashing",
+        "lookup",
+        "scalability",
+        "network"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Designed to solve the resource location problem in massive, decentralized peer-to-peer systems.",
+          "Addressed the instability caused by nodes frequently joining and leaving (churn)."
+        ],
+        "concepts": [
+          "Consistent Hashing: Maps keys to nodes in a way that minimizes movement when nodes change.",
+          "Finger Tables: Routing tables that allow lookups in O(log N) steps.",
+          "Self-organization: Automatic repair of the DHT as nodes join/leave."
+        ],
+        "impact": [
+          "The basis for many P2P systems and distributed key-value stores.",
+          "Influenced the design of Dynamo, Cassandra, and IPFS."
+        ],
+        "relevance": [
+          "Key algorithm for building highly scalable, decentralized indexing and storage."
+        ]
+      }
+    },
+    "research/GFS_2003": {
+      "id": "research/GFS_2003",
+      "category": "research",
+      "title": "The Google File System (2003)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "GFS described a scalable, fault-tolerant distributed file system designed for thousands of inexpensive nodes.",
+      "terms": [
+        "gfs",
+        "distributed file system",
+        "google",
+        "scalability",
+        "fault tolerance",
+        "streaming"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Built to meet the storage needs of Google's indexing and search pipelines.",
+          "Assumed that component failures are the norm rather than the exception."
+        ],
+        "concepts": [
+          "Master/Chunkserver Architecture: Centralized metadata management with decentralized data storage.",
+          "Chunk size: Large 64MB chunks to minimize master interaction.",
+          "Append-only focus: Optimized for large streaming reads and sequential appends."
+        ],
+        "impact": [
+          "Proved that petabyte-scale storage was possible on commodity hardware.",
+          "Inspired the creation of Apache Hadoop HDFS."
+        ],
+        "relevance": [
+          "Classic example of designing for massive scale and inevitable hardware failure."
+        ]
+      }
+    },
+    "research/MAPREDUCE_2004": {
+      "id": "research/MAPREDUCE_2004",
+      "category": "research",
+      "title": "MapReduce: Simplified Data Processing on Large Clusters (2004)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced a programming model and execution environment for processing massive datasets in parallel.",
+      "terms": [
+        "mapreduce",
+        "data processing",
+        "parallel",
+        "distributed",
+        "google",
+        "scalability"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Designed at Google to handle petabytes of data on commodity hardware where failures are common.",
+          "Simplified distributed programming by hiding details of parallelization and fault-tolerance."
+        ],
+        "concepts": [
+          "Map: Processes key/value pairs to generate intermediate sets.",
+          "Reduce: Merges all intermediate values associated with the same intermediate key.",
+          "Fault tolerance via re-execution of failed tasks."
+        ],
+        "impact": [
+          "Enabled massive scalability for data processing tasks.",
+          "Inspired Apache Hadoop and the entire Big Data ecosystem."
+        ],
+        "relevance": [
+          "Foundation for modern batch processing pipelines; teaches functional primitives in distributed systems."
+        ]
+      }
+    },
+    "research/BIGTABLE_2006": {
+      "id": "research/BIGTABLE_2006",
+      "category": "research",
+      "title": "Bigtable: A Distributed Storage System for Structured Data (2006)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Described a sparse, distributed, multi-dimensional sorted map designed to scale to petabytes.",
+      "terms": [
+        "bigtable",
+        "nosql",
+        "distributed storage",
+        "structured data",
+        "scalability",
+        "google"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Created to store massive amounts of data for Google Earth, Google Analytics, and web indexing.",
+          "Sat between GFS and application logic, providing structured access to data."
+        ],
+        "concepts": [
+          "Row/Column/Timestamp: Data is indexed by a row key, column key, and a timestamp.",
+          "Tablets: Horizontal partitions of the table distributed across machines.",
+          "LSM-Trees: Optimized for high-throughput writes using sorted strings on disk."
+        ],
+        "impact": [
+          "Defined the 'Wide-Column' NoSQL database category.",
+          "Inspired Apache HBase and Apache Cassandra."
+        ],
+        "relevance": [
+          "Crucial for understanding how to design storage for extremely high write volumes and large datasets."
+        ]
+      }
+    },
+    "research/DYNAMO_2007": {
+      "id": "research/DYNAMO_2007",
+      "category": "research",
+      "title": "Dynamo: Amazon's Highly Available Key-value Store (2007)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced a highly available, eventually consistent storage system using consistent hashing and vector clocks.",
+      "terms": [
+        "dynamo",
+        "availability",
+        "eventual consistency",
+        "nosql",
+        "consistent hashing",
+        "amazon"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Built for Amazon's shopping cart and order services where 'always writable' was a core requirement.",
+          "Focused on the 'A' in CAP, sacrificing strong consistency for extreme availability."
+        ],
+        "concepts": [
+          "Sloppy Quorums: Allowing writes to any available nodes during a partition.",
+          "Vector Clocks: Tracking causal versioning to detect and resolve write conflicts.",
+          "Hinted Handoff: Ensuring durability when the target node is temporarily unavailable."
+        ],
+        "impact": [
+          "Popularized the 'Eventually Consistent' model and the Dynamo-style architecture.",
+          "Led to the creation of DynamoDB, Cassandra, and Riak."
+        ],
+        "relevance": [
+          "Teaches the trade-offs between availability and consistency in distributed systems."
+        ]
+      }
+    },
+    "research/SPANNER_2012": {
+      "id": "research/SPANNER_2012",
+      "category": "research",
+      "title": "Spanner: Google's Globally-Distributed Database (2012)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Spanner described the first database to provide both global scale and external consistency using atomic clocks.",
+      "terms": [
+        "spanner",
+        "distributed database",
+        "external consistency",
+        "truetime",
+        "google",
+        "sql"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Google's evolution from Bigtable to a database that supports semi-structured data and ACID transactions.",
+          "Aimed at providing global scalability without the pain of eventual consistency."
+        ],
+        "concepts": [
+          "TrueTime API: Uses GPS and atomic clocks to bound clock uncertainty globally.",
+          "Snapshot Isolation: Providing consistent reads without locking.",
+          "Paxog-groups: Replicating data across regions while maintaining strong consistency."
+        ],
+        "impact": [
+          "Proved that global strong consistency is possible at scale.",
+          "Inspired CockroachDB, YugabyteDB, and the 'NewSQL' movement."
+        ],
+        "relevance": [
+          "The state-of-the-art in distributed database design; critical for global system architecture."
+        ]
+      }
+    },
+    "research/RAFT_2014": {
+      "id": "research/RAFT_2014",
+      "category": "research",
+      "title": "In Search of an Understandable Consensus Algorithm (2014)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced Raft, a consensus protocol designed as a more understandable alternative to Paxos.",
+      "terms": [
+        "raft",
+        "consensus",
+        "log replication",
+        "leader election",
+        "distributed systems",
+        "understandable"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Designed specifically for education and ease of implementation, while providing the same safety as Paxos.",
+          "Addressed the 'Paxos is too hard' problem in the systems community."
+        ],
+        "concepts": [
+          "Leader Election: A randomized timeout mechanism to select a central coordinator.",
+          "Log Replication: Ensuring all nodes agree on the sequence of operations.",
+          "Safety: Ensuring that committed entries are never lost or overwritten."
+        ],
+        "impact": [
+          "Became the preferred choice for new distributed systems (etcd, Consul, CockroachDB).",
+          "Significantly lowered the barrier for engineers to implement consistent replication."
+        ],
+        "relevance": [
+          "The most practical consensus algorithm for modern developers; essential for building distributed control planes."
+        ]
+      }
+    },
+    "research/TRANSFORMER_2017": {
+      "id": "research/TRANSFORMER_2017",
+      "category": "research",
+      "title": "Attention Is All You Need (2017)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced the Transformer architecture, relying entirely on self-attention mechanisms, enabling large language models.",
+      "terms": [
+        "transformer",
+        "attention",
+        "nlp",
+        "llm",
+        "neural networks",
+        "machine learning"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the limitations of recurrent neural networks (RNNs) in processing long-range dependencies in text.",
+          "Aimed at improving translation quality and training speed through parallelization."
+        ],
+        "concepts": [
+          "Self-Attention: Allowing the model to weigh the importance of different words in a sequence regardless of distance.",
+          "Multi-Head Attention: Attending to information from different representation subspaces.",
+          "Positional Encoding: Injecting information about the order of words without using recursion."
+        ],
+        "impact": [
+          "The foundation for GPT, BERT, and almost all modern AI breakthroughs.",
+          "Transformed the entire field of Natural Language Processing and beyond."
+        ],
+        "relevance": [
+          "Critical for understanding the architecture behind the very agents and AI systems we use today."
+        ]
+      }
+    },
+    "research/BITCOIN_2008": {
+      "id": "research/BITCOIN_2008",
+      "category": "research",
+      "title": "Bitcoin: A Peer-to-Peer Electronic Cash System (2008)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Satoshi Nakamoto introduced the blockchain and proof-of-work consensus for decentralized financial systems.",
+      "terms": [
+        "bitcoin",
+        "blockchain",
+        "proof-of-work",
+        "decentralized",
+        "cryptocurrency",
+        "consensus"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Proposed as a solution to the 'double-spending problem' in digital currency without a central authority.",
+          "Published in the wake of the 2008 financial crisis."
+        ],
+        "concepts": [
+          "Blockchain: A chain of hashed blocks providing an immutable ledger.",
+          "Proof-of-Work: A computational challenge that secures the network against manipulation.",
+          "Nodes: Participants who verify transactions and mine blocks."
+        ],
+        "impact": [
+          "Created the entire cryptocurrency and blockchain industry.",
+          "Introduced the world to decentralized finance (DeFi) and trustless systems."
+        ],
+        "relevance": [
+          "Essential for understanding decentralized consensus and the security of distributed ledgers."
+        ]
+      }
+    },
+    "research/MCCULLOCH_PITTS_1943": {
+      "id": "research/MCCULLOCH_PITTS_1943",
+      "category": "research",
+      "title": "A Logical Calculus of the Ideas Immanent in Nervous Activity (1943)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Provided the first mathematical model of a biological neuron, laying the groundwork for artificial neural networks.",
+      "terms": [
+        "neural networks",
+        "ai",
+        "neuron",
+        "mathematical model",
+        "logic",
+        "cybernetics"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Early attempt to bridge the gap between biology and logic/computation.",
+          "Aimed at understanding how the brain produces complex behavior from simple units."
+        ],
+        "concepts": [
+          "Threshold Logic: A model where a neuron fires if its inputs exceed a certain value.",
+          "Logic Gates: Showed that networks of simple neurons could represent ANY logical function."
+        ],
+        "impact": [
+          "The absolute starting point for the field of Artificial Intelligence.",
+          "Guided the design of the first computers and early AI research."
+        ],
+        "relevance": [
+          "Historical foundation that reminds us that modern AI is rooted in simple mathematical logic."
+        ]
+      }
+    },
+    "research/MINSKY_1961": {
+      "id": "research/MINSKY_1961",
+      "category": "research",
+      "title": "Steps Toward Artificial Intelligence (1961)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Marvin Minsky surveyed early progress in AI and identified key challenges in search, pattern recognition, and learning.",
+      "terms": [
+        "ai",
+        "search",
+        "pattern recognition",
+        "learning",
+        "heuristics",
+        "problem solving"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "A comprehensive roadmap for the AI field written during its optimistic early years.",
+          "Categorized the diverse approaches to machine intelligence at the time."
+        ],
+        "concepts": [
+          "Search: Navigating complex state spaces efficiently.",
+          "Heuristic Programming: Using 'rules of thumb' to solve intractable problems.",
+          "Pattern Recognition: Extracting meaning from raw data."
+        ],
+        "impact": [
+          "Defined the research agenda for AI for the next several decades.",
+          "Identified the core problems that modern AI is still tackling today."
+        ],
+        "relevance": [
+          "Provides historical context for the current 'scaling' vs 'symbolic' AI debates."
+        ]
+      }
+    },
+    "research/BACKPROP_1986": {
+      "id": "research/BACKPROP_1986",
+      "category": "research",
+      "title": "Learning representations by back-propagating errors (1986)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Rumelhart et al. described the backpropagation algorithm for training multi-layer neural networks.",
+      "terms": [
+        "backpropagation",
+        "neural networks",
+        "gradient descent",
+        "deep learning",
+        "optimization",
+        "weights"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Solved the problem of how to efficiently train neural networks with hidden layers.",
+          "Brought neural networks out of the 'AI winter' of the 70s."
+        ],
+        "concepts": [
+          "Chain Rule: Using calculus to propagate the error signal backwards through the network.",
+          "Gradient Descent: Adjusting weights to minimize the error function.",
+          "Hidden Layers: Enabling the learning of complex, non-linear representations."
+        ],
+        "impact": [
+          "The engine that powers almost all modern deep learning systems.",
+          "Enabled the training of networks for speech recognition, vision, and language."
+        ],
+        "relevance": [
+          "The core algorithm for anyone developing or optimizing neural network models."
+        ]
+      }
+    },
+    "research/LECUN_1998": {
+      "id": "research/LECUN_1998",
+      "category": "research",
+      "title": "Gradient-based learning applied to document recognition (1998)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced Convolutional Neural Networks (CNNs) and demonstrated their effectiveness in image recognition.",
+      "terms": [
+        "cnn",
+        "computer vision",
+        "lenet",
+        "image recognition",
+        "convolutions",
+        "deep learning"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Applied backpropagation and convolutions to the practical problem of digit recognition (checks/mail).",
+          "Developed at Bell Labs by Yann LeCun and colleagues."
+        ],
+        "concepts": [
+          "Convolutional Layers: Automatically learning spatial hierarchies of features from images.",
+          "Subsampling (Pooling): Reducing dimensionality while preserving important features.",
+          "Weight Sharing: Significantly reducing the number of parameters to learn."
+        ],
+        "impact": [
+          "Led to the development of modern computer vision systems.",
+          "LeNet-5 became the standard for handwriting recognition."
+        ],
+        "relevance": [
+          "Foundational for understanding how machines process visual information."
+        ]
+      }
+    },
+    "research/ALEXNET_2012": {
+      "id": "research/ALEXNET_2012",
+      "category": "research",
+      "title": "ImageNet Classification with Deep Convolutional Neural Networks (2012)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Utilized GPUs to train a large CNN, significantly outperforming prior methods and igniting the deep learning era.",
+      "terms": [
+        "deep learning",
+        "alexnet",
+        "gpu",
+        "imagenet",
+        "computer vision",
+        "cnn"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Entered the ImageNet competition and crushed the previous state-of-the-art results.",
+          "Proved that deep networks + large datasets + GPUs = super-human performance."
+        ],
+        "concepts": [
+          "GPU Acceleration: Using parallel hardware to train massive models efficiently.",
+          "ReLU Activation: Enabling faster training and better gradients.",
+          "Dropout: A regularization technique to prevent overfitting in deep models."
+        ],
+        "impact": [
+          "Triggered the global 'Deep Learning' revolution.",
+          "Shifted the AI field towards massive scale and hardware-intensive training."
+        ],
+        "relevance": [
+          "The paper that started the modern AI era; teaches the power of scale."
+        ]
+      }
+    },
+    "research/ALPHAGO_2016": {
+      "id": "research/ALPHAGO_2016",
+      "category": "research",
+      "title": "Mastering the game of Go with deep neural networks and tree search (2016)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Described how AlphaGo defeated a world champion by combining deep learning with Monte Carlo tree search.",
+      "terms": [
+        "alphago",
+        "reinforcement learning",
+        "mcts",
+        "go",
+        "deep learning",
+        "game theory"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Solved a problem (the game of Go) that was previously thought to be decades away from a machine solution.",
+          "Developed by DeepMind using reinforcement learning."
+        ],
+        "concepts": [
+          "Policy Networks: Predicting the next move.",
+          "Value Networks: Evaluating the strength of a game position.",
+          "Monte Carlo Tree Search (MCTS): Simulating future moves to find the best path."
+        ],
+        "impact": [
+          "A landmark achievement in artificial intelligence and game theory.",
+          "Demonstrated the power of combining search with learned intuition."
+        ],
+        "relevance": [
+          "Teaches how to combine multiple AI techniques to solve complex, high-dimensional problems."
+        ]
+      }
+    },
+    "research/RESNET_2015": {
+      "id": "research/RESNET_2015",
+      "category": "research",
+      "title": "Deep Residual Learning for Image Recognition (2015)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced residual connections, allowing the training of extremely deep neural networks (100+ layers).",
+      "terms": [
+        "resnet",
+        "residual learning",
+        "deep networks",
+        "computer vision",
+        "gradients",
+        "skip connections"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Addressed the 'vanishing gradient' problem where deeper networks performed worse than shallower ones.",
+          "Winner of ILSVRC and COCO competitions in 2015."
+        ],
+        "concepts": [
+          "Residual Blocks: Learning the difference (residual) from the input instead of a direct mapping.",
+          "Skip Connections: Bypassing layers to allow gradients to flow through deep networks unimpeded."
+        ],
+        "impact": [
+          "Enabled the use of much deeper and more powerful models in all AI domains.",
+          "Became the standard backbone for computer vision and many other architectures."
+        ],
+        "relevance": [
+          "Essential concept for building deep, stable, and high-performance neural networks."
+        ]
+      }
+    },
+    "research/GPT3_2020": {
+      "id": "research/GPT3_2020",
+      "category": "research",
+      "title": "Language Models are Few-Shot Learners (2020)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Demonstrated that massive language models can perform diverse tasks with minimal examples, showing emergent capabilities.",
+      "terms": [
+        "gpt-3",
+        "few-shot learning",
+        "llm",
+        "emergence",
+        "zero-shot",
+        "nlp"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Published by OpenAI, exploring the scaling laws of Transformer-based language models.",
+          "Used a model with 175 billion parameters, the largest at the time."
+        ],
+        "concepts": [
+          "Few-Shot Learning: Performing a task by seeing just a few examples in the prompt.",
+          "In-Context Learning: Adapting to tasks without updating the model weights.",
+          "Scaling Laws: The relationship between model size, data, and performance."
+        ],
+        "impact": [
+          "Changed the AI paradigm from task-specific fine-tuning to prompt engineering and foundation models.",
+          "Paved the way for ChatGPT and the current wave of generative AI."
+        ],
+        "relevance": [
+          "The primary reference for how modern LLMs (like the ones we use) function and scale."
+        ]
+      }
+    },
+    "research/TENSORFLOW_2016": {
+      "id": "research/TENSORFLOW_2016",
+      "category": "research",
+      "title": "TensorFlow: A System for Large-Scale Machine Learning (2016)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Described a flexible and scalable framework for expressing and executing machine learning algorithms across diverse hardware.",
+      "terms": [
+        "tensorflow",
+        "machine learning",
+        "distributed",
+        "gpu",
+        "tpu",
+        "dataflow graph"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Built by Google Brain to replace DistBelief and provide a single platform from research to production.",
+          "Open-sourced to accelerate the AI community."
+        ],
+        "concepts": [
+          "Dataflow Graph: Representing computations as a directed graph of tensors.",
+          "Hardware Agnostic: Running the same code on CPUs, GPUs, and TPUs.",
+          "Distributed Training: Scaling models across clusters of machines."
+        ],
+        "impact": [
+          "Became one of the most widely used libraries for machine learning and deep learning.",
+          "Enabled the rapid productionization of complex AI models."
+        ],
+        "relevance": [
+          "Foundational architecture for modern AI frameworks and pipelines."
+        ]
+      }
+    },
+    "research/SPARK_2012": {
+      "id": "research/SPARK_2012",
+      "category": "research",
+      "title": "Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing (2012)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced a fault-tolerant abstraction for in-memory cluster computing, enabling significantly faster data processing than MapReduce.",
+      "terms": [
+        "apache spark",
+        "rdd",
+        "in-memory",
+        "big data",
+        "data processing",
+        "iterative"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Developed at UC Berkeley to solve the inefficiencies of MapReduce for iterative and interactive workloads.",
+          "Aimed at reducing the heavy disk I/O overhead of earlier distributed systems."
+        ],
+        "concepts": [
+          "Resilient Distributed Datasets (RDDs): Immutable, partitioned collections of records that can be computed in parallel.",
+          "Lineage: Tracking the history of transformations to reconstruct lost data without expensive replication.",
+          "Lazy Evaluation: Delaying computation until an action is requested to optimize execution."
+        ],
+        "impact": [
+          "Replaced MapReduce as the industry standard for large-scale data processing.",
+          "Enabled faster machine learning and real-time analytics."
+        ],
+        "relevance": [
+          "The core architecture for modern big data engineering; teaches the value of in-memory computing."
+        ]
+      }
+    },
+    "research/KAFKA_2011": {
+      "id": "research/KAFKA_2011",
+      "category": "research",
+      "title": "Kafka: a Distributed Messaging System for Log Processing (2011)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Introduced a high-throughput, distributed, persistent messaging system designed for real-time event streaming.",
+      "terms": [
+        "apache kafka",
+        "event streaming",
+        "messaging",
+        "distributed log",
+        "throughput",
+        "pub-sub"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Built at LinkedIn to handle their massive internal log and activity data streams.",
+          "Bridged the gap between traditional messaging and offline log processing."
+        ],
+        "concepts": [
+          "Distributed Log: An append-only sequence of records partitioned across nodes.",
+          "Publish-Subscribe: Decoupling producers and consumers through topics.",
+          "Zero-Copy: Optimizing data transfer by avoiding expensive copying between kernel and application."
+        ],
+        "impact": [
+          "Defined the 'Event Streaming Platform' category.",
+          "Became the central nervous system for thousands of modern companies."
+        ],
+        "relevance": [
+          "Key technology for building event-driven architectures and real-time pipelines."
+        ]
+      }
+    },
+    "research/ZOOKEEPER_2010": {
+      "id": "research/ZOOKEEPER_2010",
+      "category": "research",
+      "title": "ZooKeeper: Wait-free coordination for Internet-scale systems (2010)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Provided a centralized service for maintaining configuration, naming, and providing distributed synchronization.",
+      "terms": [
+        "zookeeper",
+        "coordination",
+        "consensus",
+        "configuration",
+        "locking",
+        "distributed systems"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Created at Yahoo to solve the recurring coordination problems in their growing cluster applications.",
+          "Aimed at providing a high-performance, fault-tolerant 'kernel' for building distributed services."
+        ],
+        "concepts": [
+          "Zab Protocol: A custom consensus protocol designed for primary-backup replication.",
+          "ZNodes: A hierarchical namespace similar to a filesystem for storing metadata.",
+          "Wait-free: Allowing clients to make progress even if other clients are slow or failed."
+        ],
+        "impact": [
+          "Became a critical dependency for the entire Hadoop and Big Data ecosystem.",
+          "Popularized the 'Service Discovery' and 'Distributed Locking' patterns."
+        ],
+        "relevance": [
+          "Foundational system for understanding distributed coordination and metadata management."
+        ]
+      }
+    },
+    "research/END_TO_END_1984": {
+      "id": "research/END_TO_END_1984",
+      "category": "research",
+      "title": "End-to-End Arguments in System Design (1984)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Argued that functions placed at low levels of a system may be redundant or of little value compared to higher levels.",
+      "terms": [
+        "end-to-end",
+        "system design",
+        "networking",
+        "reliability",
+        "architecture",
+        "correctness"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Foundational principle for the design of the Internet and its protocols (TCP/IP).",
+          "Addressed where to place reliability and security checks in a networked system."
+        ],
+        "concepts": [
+          "The Argument: Functions like error checking can only be completely and correctly implemented with the help of the application at the endpoints.",
+          "Lower Level Efficiency: Lower levels can provide partial optimizations, but never a complete solution."
+        ],
+        "impact": [
+          "The guiding philosophy for the 'dumb network, smart endpoints' architecture of the modern Internet.",
+          "Prevented networks from becoming overly complex and fragile."
+        ],
+        "relevance": [
+          "Essential for making architectural decisions about where to place logic and verification."
+        ]
+      }
+    },
+    "research/UNIX_1974": {
+      "id": "research/UNIX_1974",
+      "category": "research",
+      "title": "The UNIX Time-Sharing System (1974)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Ritchie and Thompson described the design of the UNIX operating system, emphasizing simplicity and composability.",
+      "terms": [
+        "unix",
+        "operating system",
+        "simplicity",
+        "composability",
+        "shell",
+        "files"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Published by the creators of UNIX at Bell Labs, describing the system that would define modern computing.",
+          "Introduced at a time when OSs were massive, complex, and hardware-specific."
+        ],
+        "concepts": [
+          "Everything is a File: A unified interface for disk files, devices, and inter-process communication.",
+          "Composability: Building complex systems from small, simple tools linked by pipes.",
+          "Hierarchical Filesystem: A clean, recursive structure for organizing data."
+        ],
+        "impact": [
+          "Became the most influential OS design in history, leading to Linux, macOS, and Android.",
+          "Established the 'UNIX Philosophy' of software development."
+        ],
+        "relevance": [
+          "The ultimate masterclass in simplicity, elegance, and modular system design."
+        ]
+      }
     }
   },
   "lookup": {
@@ -8714,7 +10428,8 @@
       "architecture/EVENT_DRIVEN",
       "architecture/FRONTEND",
       "architecture/GRAPHQL",
-      "architecture/GRPC"
+      "architecture/GRPC",
+      "research/END_TO_END_1984"
     ],
     "web": [
       "core/ARCHITECTURE"
@@ -8757,7 +10472,11 @@
       "architecture/TESTING_STRATEGY",
       "architecture/WEB",
       "docs/SECURITY_THREAT_MODEL",
-      "specs/SECURITY"
+      "specs/SECURITY",
+      "research/DIFFIE_HELLMAN_1976",
+      "research/RSA_1978",
+      "research/SALTZER_SCHROEDER_1975",
+      "research/THOMPSON_1984"
     ],
     "kubernetes": [
       "core/ARCHITECTURE",
@@ -9138,7 +10857,8 @@
       "methodology/ENGINEERING_MANAGEMENT",
       "methodology/INCIDENT_RESPONSE",
       "methodology/RELEASE_MANAGEMENT",
-      "methodology/SOUL"
+      "methodology/SOUL",
+      "research/LAMPSON_1983"
     ],
     "quality": [
       "core/ENGINEERING_EXCELLENCE",
@@ -9314,7 +11034,8 @@
     ],
     "complexity": [
       "architecture/ALGORITHMS",
-      "architecture/GRAPHQL"
+      "architecture/GRAPHQL",
+      "research/BROOKS_1986"
     ],
     "profiles": [
       "architecture/ALGORITHMS"
@@ -9597,11 +11318,13 @@
     ],
     "recovery": [
       "architecture/CLOUD",
-      "architecture/DR"
+      "architecture/DR",
+      "research/GRAY_1981"
     ],
     "network": [
       "architecture/CLOUD",
-      "architecture/NETWORKING"
+      "architecture/NETWORKING",
+      "research/CHORD_2001"
     ],
     "infrastructure": [
       "architecture/CLOUD",
@@ -9730,14 +11453,16 @@
     ],
     "coordination": [
       "architecture/CONCURRENCY",
-      "architecture/DISTRIBUTED_SYSTEMS"
+      "architecture/DISTRIBUTED_SYSTEMS",
+      "research/ZOOKEEPER_2010"
     ],
     "liveness": [
       "architecture/CONCURRENCY",
       "interfaces/CONTROL_PLANE",
       "interfaces/TODO_SCHEMA",
       "plugins/HEALTH",
-      "plugins/HEARTBEAT"
+      "plugins/HEARTBEAT",
+      "research/FLP_1985"
     ],
     "deterministic": [
       "architecture/CONCURRENCY",
@@ -9758,7 +11483,8 @@
       "architecture/CONCURRENCY"
     ],
     "concurrency": [
-      "architecture/CONCURRENCY"
+      "architecture/CONCURRENCY",
+      "research/LAMPORT_1978"
     ],
     "chain": [
       "architecture/CONTAINERS",
@@ -9776,7 +11502,8 @@
       "architecture/DISTRIBUTED_SYSTEMS",
       "architecture/MICROSERVICES",
       "plugins/CONTAINER",
-      "specs/DB_BROKER_QUEUE"
+      "specs/DB_BROKER_QUEUE",
+      "research/GRAY_1981"
     ],
     "image": [
       "architecture/CONTAINERS"
@@ -9850,7 +11577,9 @@
       "architecture/COST_OPTIMIZATION"
     ],
     "optimization": [
-      "architecture/COST_OPTIMIZATION"
+      "architecture/COST_OPTIMIZATION",
+      "research/DIJKSTRA_1959",
+      "research/BACKPROP_1986"
     ],
     "modeling": [
       "data/PIPELINES",
@@ -9858,7 +11587,8 @@
       "specs/SECURITY"
     ],
     "privacy": [
-      "data/PIPELINES"
+      "data/PIPELINES",
+      "research/DIFFIE_HELLMAN_1976"
     ],
     "analytical": [
       "data/PIPELINES"
@@ -9895,16 +11625,19 @@
     "database": [
       "data/DATABASE",
       "plugins/DB_BROKER",
-      "specs/DB_BROKER_QUEUE"
+      "specs/DB_BROKER_QUEUE",
+      "research/CODD_1970"
     ],
     "consistency": [
       "data/DATABASE",
       "architecture/DISTRIBUTED_SYSTEMS",
       "architecture/EVENT_DRIVEN",
-      "interfaces/GLOSSARY"
+      "interfaces/GLOSSARY",
+      "research/GRAY_1981"
     ],
     "transactions": [
-      "data/DATABASE"
+      "data/DATABASE",
+      "research/GRAY_1981"
     ],
     "indexing": [
       "data/DATABASE",
@@ -9917,7 +11650,8 @@
       "data/DATABASE"
     ],
     "replication": [
-      "data/DATABASE"
+      "data/DATABASE",
+      "research/PAXOS_1998"
     ],
     "safety": [
       "data/DATABASE",
@@ -9933,7 +11667,12 @@
       "architecture/MESSAGING"
     ],
     "consensus": [
-      "architecture/DISTRIBUTED_SYSTEMS"
+      "architecture/DISTRIBUTED_SYSTEMS",
+      "research/FLP_1985",
+      "research/PAXOS_1998",
+      "research/RAFT_2014",
+      "research/BITCOIN_2008",
+      "research/ZOOKEEPER_2010"
     ],
     "ordering": [
       "architecture/DISTRIBUTED_SYSTEMS",
@@ -9950,7 +11689,9 @@
       "specs/DB_BROKER_QUEUE"
     ],
     "distributed": [
-      "architecture/DISTRIBUTED_SYSTEMS"
+      "architecture/DISTRIBUTED_SYSTEMS",
+      "research/MAPREDUCE_2004",
+      "research/TENSORFLOW_2016"
     ],
     "systems": [
       "architecture/DISTRIBUTED_SYSTEMS",
@@ -9995,7 +11736,8 @@
       "architecture/ENCRYPTION"
     ],
     "encryption": [
-      "architecture/ENCRYPTION"
+      "architecture/ENCRYPTION",
+      "research/RSA_1978"
     ],
     "boundaries": [
       "architecture/ENCRYPTION",
@@ -10020,7 +11762,8 @@
       "architecture/SECRETS"
     ],
     "protection": [
-      "architecture/ENCRYPTION"
+      "architecture/ENCRYPTION",
+      "research/SALTZER_SCHROEDER_1975"
     ],
     "rotation": [
       "architecture/ENCRYPTION",
@@ -10036,7 +11779,8 @@
       "interfaces/LCM",
       "methodology/ENGINEERING_MANAGEMENT",
       "methodology/OPERATIONS",
-      "methodology/RELEASE_MANAGEMENT"
+      "methodology/RELEASE_MANAGEMENT",
+      "research/BROOKS_1986"
     ],
     "cryptographic": [
       "architecture/ENCRYPTION"
@@ -10054,7 +11798,9 @@
     ],
     "correctness": [
       "architecture/ENTERPRISE",
-      "architecture/SYSTEMS_DESIGN"
+      "architecture/SYSTEMS_DESIGN",
+      "research/HOARE_1969",
+      "research/END_TO_END_1984"
     ],
     "affect": [
       "architecture/ENTERPRISE",
@@ -10075,7 +11821,8 @@
       "architecture/UI",
       "docs/SECURITY_THREAT_MODEL",
       "plugins/FEDERATION",
-      "plugins/TRUST"
+      "plugins/TRUST",
+      "research/THOMPSON_1984"
     ],
     "decisions": [
       "architecture/ENTERPRISE",
@@ -10152,7 +11899,8 @@
     ],
     "reliability": [
       "architecture/FRONTEND",
-      "methodology/OPERATIONS"
+      "methodology/OPERATIONS",
+      "research/END_TO_END_1984"
     ],
     "federation": [
       "architecture/GRAPHQL",
@@ -10186,7 +11934,8 @@
       "architecture/GRPC"
     ],
     "streaming": [
-      "architecture/GRPC"
+      "architecture/GRPC",
+      "research/GFS_2003"
     ],
     "deadlines": [
       "architecture/GRPC"
@@ -10322,7 +12071,8 @@
       "architecture/MESSAGING"
     ],
     "messaging": [
-      "architecture/MESSAGING"
+      "architecture/MESSAGING",
+      "research/KAFKA_2011"
     ],
     "topics": [
       "architecture/MESSAGING"
@@ -10395,12 +12145,14 @@
       "architecture/MICROSERVICES"
     ],
     "networking": [
-      "architecture/NETWORKING"
+      "architecture/NETWORKING",
+      "research/END_TO_END_1984"
     ],
     "routing": [
       "architecture/NETWORKING",
       "architecture/WEB",
-      "interfaces/MEMORY_INDEX"
+      "interfaces/MEMORY_INDEX",
+      "research/DIJKSTRA_1959"
     ],
     "balancing": [
       "architecture/NETWORKING"
@@ -10446,7 +12198,8 @@
       "architecture/PERFORMANCE"
     ],
     "throughput": [
-      "architecture/PERFORMANCE"
+      "architecture/PERFORMANCE",
+      "research/KAFKA_2011"
     ],
     "visible": [
       "architecture/PERFORMANCE",
@@ -10555,7 +12308,8 @@
       "architecture/UI",
       "interfaces/DEMANDS_SCHEMA",
       "interfaces/TESTING",
-      "methodology/TESTING"
+      "methodology/TESTING",
+      "research/LISKOV_1974"
     ],
     "navigation": [
       "architecture/UI",
@@ -10833,7 +12587,8 @@
     ],
     "communication": [
       "docs/RELEASE_PROCESS",
-      "plugins/EMERGENCY_PROTOCOL"
+      "plugins/EMERGENCY_PROTOCOL",
+      "research/SHANNON_1948"
     ],
     "changelogs": [
       "docs/RELEASE_PROCESS"
@@ -10925,7 +12680,8 @@
       "interfaces/ARCHITECTURE_FOUNDATIONS"
     ],
     "foundations": [
-      "interfaces/ARCHITECTURE_FOUNDATIONS"
+      "interfaces/ARCHITECTURE_FOUNDATIONS",
+      "research/TURING_1936"
     ],
     "accountability": [
       "interfaces/CLAIMS",
@@ -11196,7 +12952,8 @@
       "interfaces/STORE_MODEL"
     ],
     "synchronization": [
-      "interfaces/STORE_MODEL"
+      "interfaces/STORE_MODEL",
+      "research/LAMPORT_1978"
     ],
     "commands": [
       "interfaces/TESTING",
@@ -11368,7 +13125,8 @@
     ],
     "learning": [
       "methodology/RESEARCH",
-      "plugins/FEDERATION"
+      "plugins/FEDERATION",
+      "research/MINSKY_1961"
     ],
     "uncertainty": [
       "methodology/RESEARCH"
@@ -11414,7 +13172,8 @@
       "plugins/ARCHIVE"
     ],
     "lookup": [
-      "plugins/ARCHIVE"
+      "plugins/ARCHIVE",
+      "research/CHORD_2001"
     ],
     "reconstructable": [
       "plugins/AUDIT"
@@ -11480,7 +13239,8 @@
       "plugins/DB_BROKER"
     ],
     "abstraction": [
-      "plugins/DB_BROKER"
+      "plugins/DB_BROKER",
+      "research/LISKOV_1974"
     ],
     "write": [
       "plugins/DB_BROKER"
@@ -11746,10 +13506,12 @@
       "architecture/DISTRIBUTED_SYSTEMS"
     ],
     "raft": [
-      "architecture/DISTRIBUTED_SYSTEMS"
+      "architecture/DISTRIBUTED_SYSTEMS",
+      "research/RAFT_2014"
     ],
     "paxos": [
-      "architecture/DISTRIBUTED_SYSTEMS"
+      "architecture/DISTRIBUTED_SYSTEMS",
+      "research/PAXOS_1998"
     ],
     "crdt": [
       "architecture/DISTRIBUTED_SYSTEMS"
@@ -11788,6 +13550,710 @@
     ],
     "seminal papers": [
       "methodology/RESEARCH"
+    ],
+    "turing": [
+      "research/TURING_1936"
+    ],
+    "1936": [
+      "research/TURING_1936"
+    ],
+    "turing machine": [
+      "research/TURING_1936"
+    ],
+    "computability": [
+      "research/TURING_1936"
+    ],
+    "algorithm": [
+      "research/TURING_1936"
+    ],
+    "halting problem": [
+      "research/TURING_1936"
+    ],
+    "decidability": [
+      "research/TURING_1936"
+    ],
+    "shannon": [
+      "research/SHANNON_1948"
+    ],
+    "1948": [
+      "research/SHANNON_1948"
+    ],
+    "information theory": [
+      "research/SHANNON_1948"
+    ],
+    "entropy": [
+      "research/SHANNON_1948"
+    ],
+    "bit": [
+      "research/SHANNON_1948"
+    ],
+    "bandwidth": [
+      "research/SHANNON_1948"
+    ],
+    "signal-to-noise": [
+      "research/SHANNON_1948"
+    ],
+    "dijkstra": [
+      "research/DIJKSTRA_1959"
+    ],
+    "1959": [
+      "research/DIJKSTRA_1959"
+    ],
+    "dijkstra algorithm": [
+      "research/DIJKSTRA_1959"
+    ],
+    "shortest path": [
+      "research/DIJKSTRA_1959"
+    ],
+    "graph theory": [
+      "research/DIJKSTRA_1959"
+    ],
+    "minimum spanning tree": [
+      "research/DIJKSTRA_1959"
+    ],
+    "hoare": [
+      "research/HOARE_1969"
+    ],
+    "1969": [
+      "research/HOARE_1969"
+    ],
+    "hoare logic": [
+      "research/HOARE_1969"
+    ],
+    "formal verification": [
+      "research/HOARE_1969"
+    ],
+    "precondition": [
+      "research/HOARE_1969"
+    ],
+    "postcondition": [
+      "research/HOARE_1969"
+    ],
+    "invariant": [
+      "research/HOARE_1969"
+    ],
+    "codd": [
+      "research/CODD_1970"
+    ],
+    "1970": [
+      "research/CODD_1970"
+    ],
+    "relational model": [
+      "research/CODD_1970"
+    ],
+    "sql": [
+      "research/CODD_1970",
+      "research/SPANNER_2012"
+    ],
+    "normalization": [
+      "research/CODD_1970"
+    ],
+    "data independence": [
+      "research/CODD_1970"
+    ],
+    "algebra": [
+      "research/CODD_1970"
+    ],
+    "cook": [
+      "research/COOK_1971"
+    ],
+    "1971": [
+      "research/COOK_1971"
+    ],
+    "np-complete": [
+      "research/COOK_1971"
+    ],
+    "complexity classes": [
+      "research/COOK_1971"
+    ],
+    "sat": [
+      "research/COOK_1971"
+    ],
+    "p vs np": [
+      "research/COOK_1971"
+    ],
+    "reductions": [
+      "research/COOK_1971"
+    ],
+    "computational complexity": [
+      "research/COOK_1971"
+    ],
+    "diffie": [
+      "research/DIFFIE_HELLMAN_1976"
+    ],
+    "hellman": [
+      "research/DIFFIE_HELLMAN_1976"
+    ],
+    "1976": [
+      "research/DIFFIE_HELLMAN_1976"
+    ],
+    "public-key": [
+      "research/DIFFIE_HELLMAN_1976"
+    ],
+    "cryptography": [
+      "research/DIFFIE_HELLMAN_1976"
+    ],
+    "key exchange": [
+      "research/DIFFIE_HELLMAN_1976"
+    ],
+    "asymmetric": [
+      "research/DIFFIE_HELLMAN_1976",
+      "research/RSA_1978"
+    ],
+    "rsa": [
+      "research/RSA_1978"
+    ],
+    "1978": [
+      "research/RSA_1978",
+      "research/LAMPORT_1978"
+    ],
+    "digital signatures": [
+      "research/RSA_1978"
+    ],
+    "prime numbers": [
+      "research/RSA_1978"
+    ],
+    "lamport": [
+      "research/LAMPORT_1978"
+    ],
+    "logical clocks": [
+      "research/LAMPORT_1978"
+    ],
+    "distributed systems": [
+      "research/LAMPORT_1978",
+      "research/FLP_1985",
+      "research/PAXOS_1998",
+      "research/RAFT_2014",
+      "research/ZOOKEEPER_2010"
+    ],
+    "event ordering": [
+      "research/LAMPORT_1978"
+    ],
+    "causality": [
+      "research/LAMPORT_1978"
+    ],
+    "saltzer": [
+      "research/SALTZER_SCHROEDER_1975"
+    ],
+    "schroeder": [
+      "research/SALTZER_SCHROEDER_1975"
+    ],
+    "1975": [
+      "research/SALTZER_SCHROEDER_1975"
+    ],
+    "least privilege": [
+      "research/SALTZER_SCHROEDER_1975"
+    ],
+    "access control": [
+      "research/SALTZER_SCHROEDER_1975"
+    ],
+    "defense in depth": [
+      "research/SALTZER_SCHROEDER_1975"
+    ],
+    "open design": [
+      "research/SALTZER_SCHROEDER_1975"
+    ],
+    "gray": [
+      "research/GRAY_1981"
+    ],
+    "1981": [
+      "research/GRAY_1981"
+    ],
+    "acid": [
+      "research/GRAY_1981"
+    ],
+    "atomicity": [
+      "research/GRAY_1981"
+    ],
+    "durability": [
+      "research/GRAY_1981"
+    ],
+    "liskov": [
+      "research/LISKOV_1974"
+    ],
+    "1974": [
+      "research/LISKOV_1974",
+      "research/UNIX_1974"
+    ],
+    "abstract data types": [
+      "research/LISKOV_1974"
+    ],
+    "encapsulation": [
+      "research/LISKOV_1974"
+    ],
+    "modular": [
+      "research/LISKOV_1974"
+    ],
+    "liskov substitution": [
+      "research/LISKOV_1974"
+    ],
+    "brooks": [
+      "research/BROOKS_1986"
+    ],
+    "1986": [
+      "research/BROOKS_1986",
+      "research/BACKPROP_1986"
+    ],
+    "software engineering": [
+      "research/BROOKS_1986"
+    ],
+    "productivity": [
+      "research/BROOKS_1986"
+    ],
+    "mythical man-month": [
+      "research/BROOKS_1986"
+    ],
+    "silver bullet": [
+      "research/BROOKS_1986"
+    ],
+    "lampson": [
+      "research/LAMPSON_1983"
+    ],
+    "1983": [
+      "research/LAMPSON_1983"
+    ],
+    "system design": [
+      "research/LAMPSON_1983",
+      "research/END_TO_END_1984"
+    ],
+    "heuristics": [
+      "research/LAMPSON_1983",
+      "research/MINSKY_1961"
+    ],
+    "simplicity": [
+      "research/LAMPSON_1983",
+      "research/UNIX_1974"
+    ],
+    "robustness": [
+      "research/LAMPSON_1983"
+    ],
+    "hints": [
+      "research/LAMPSON_1983"
+    ],
+    "flp": [
+      "research/FLP_1985"
+    ],
+    "1985": [
+      "research/FLP_1985"
+    ],
+    "impossibility": [
+      "research/FLP_1985"
+    ],
+    "asynchronous": [
+      "research/FLP_1985"
+    ],
+    "fault tolerance": [
+      "research/FLP_1985",
+      "research/PAXOS_1998",
+      "research/GFS_2003"
+    ],
+    "1998": [
+      "research/PAXOS_1998",
+      "research/LECUN_1998"
+    ],
+    "quorum": [
+      "research/PAXOS_1998"
+    ],
+    "thompson": [
+      "research/THOMPSON_1984"
+    ],
+    "1984": [
+      "research/THOMPSON_1984",
+      "research/END_TO_END_1984"
+    ],
+    "compiler": [
+      "research/THOMPSON_1984"
+    ],
+    "backdoor": [
+      "research/THOMPSON_1984"
+    ],
+    "trojan horse": [
+      "research/THOMPSON_1984"
+    ],
+    "binary": [
+      "research/THOMPSON_1984"
+    ],
+    "source code": [
+      "research/THOMPSON_1984"
+    ],
+    "chord": [
+      "research/CHORD_2001"
+    ],
+    "2001": [
+      "research/CHORD_2001"
+    ],
+    "dht": [
+      "research/CHORD_2001"
+    ],
+    "peer-to-peer": [
+      "research/CHORD_2001"
+    ],
+    "consistent hashing": [
+      "research/CHORD_2001",
+      "research/DYNAMO_2007"
+    ],
+    "scalability": [
+      "research/CHORD_2001",
+      "research/GFS_2003",
+      "research/MAPREDUCE_2004",
+      "research/BIGTABLE_2006"
+    ],
+    "gfs": [
+      "research/GFS_2003"
+    ],
+    "2003": [
+      "research/GFS_2003"
+    ],
+    "distributed file system": [
+      "research/GFS_2003"
+    ],
+    "google": [
+      "research/GFS_2003",
+      "research/MAPREDUCE_2004",
+      "research/BIGTABLE_2006",
+      "research/SPANNER_2012"
+    ],
+    "mapreduce": [
+      "research/MAPREDUCE_2004"
+    ],
+    "2004": [
+      "research/MAPREDUCE_2004"
+    ],
+    "data processing": [
+      "research/MAPREDUCE_2004",
+      "research/SPARK_2012"
+    ],
+    "parallel": [
+      "research/MAPREDUCE_2004"
+    ],
+    "bigtable": [
+      "research/BIGTABLE_2006"
+    ],
+    "2006": [
+      "research/BIGTABLE_2006"
+    ],
+    "nosql": [
+      "research/BIGTABLE_2006",
+      "research/DYNAMO_2007"
+    ],
+    "distributed storage": [
+      "research/BIGTABLE_2006"
+    ],
+    "structured data": [
+      "research/BIGTABLE_2006"
+    ],
+    "dynamo": [
+      "research/DYNAMO_2007"
+    ],
+    "2007": [
+      "research/DYNAMO_2007"
+    ],
+    "availability": [
+      "research/DYNAMO_2007"
+    ],
+    "eventual consistency": [
+      "research/DYNAMO_2007"
+    ],
+    "amazon": [
+      "research/DYNAMO_2007"
+    ],
+    "spanner": [
+      "research/SPANNER_2012"
+    ],
+    "2012": [
+      "research/SPANNER_2012",
+      "research/ALEXNET_2012",
+      "research/SPARK_2012"
+    ],
+    "distributed database": [
+      "research/SPANNER_2012"
+    ],
+    "external consistency": [
+      "research/SPANNER_2012"
+    ],
+    "truetime": [
+      "research/SPANNER_2012"
+    ],
+    "2014": [
+      "research/RAFT_2014"
+    ],
+    "log replication": [
+      "research/RAFT_2014"
+    ],
+    "leader election": [
+      "research/RAFT_2014"
+    ],
+    "understandable": [
+      "research/RAFT_2014"
+    ],
+    "transformer": [
+      "research/TRANSFORMER_2017"
+    ],
+    "2017": [
+      "research/TRANSFORMER_2017"
+    ],
+    "attention": [
+      "research/TRANSFORMER_2017"
+    ],
+    "nlp": [
+      "research/TRANSFORMER_2017",
+      "research/GPT3_2020"
+    ],
+    "llm": [
+      "research/TRANSFORMER_2017",
+      "research/GPT3_2020"
+    ],
+    "neural networks": [
+      "research/TRANSFORMER_2017",
+      "research/MCCULLOCH_PITTS_1943",
+      "research/BACKPROP_1986"
+    ],
+    "machine learning": [
+      "research/TRANSFORMER_2017",
+      "research/TENSORFLOW_2016"
+    ],
+    "bitcoin": [
+      "research/BITCOIN_2008"
+    ],
+    "2008": [
+      "research/BITCOIN_2008"
+    ],
+    "blockchain": [
+      "research/BITCOIN_2008"
+    ],
+    "proof-of-work": [
+      "research/BITCOIN_2008"
+    ],
+    "decentralized": [
+      "research/BITCOIN_2008"
+    ],
+    "cryptocurrency": [
+      "research/BITCOIN_2008"
+    ],
+    "mcculloch": [
+      "research/MCCULLOCH_PITTS_1943"
+    ],
+    "pitts": [
+      "research/MCCULLOCH_PITTS_1943"
+    ],
+    "1943": [
+      "research/MCCULLOCH_PITTS_1943"
+    ],
+    "ai": [
+      "research/MCCULLOCH_PITTS_1943",
+      "research/MINSKY_1961"
+    ],
+    "neuron": [
+      "research/MCCULLOCH_PITTS_1943"
+    ],
+    "mathematical model": [
+      "research/MCCULLOCH_PITTS_1943"
+    ],
+    "logic": [
+      "research/MCCULLOCH_PITTS_1943"
+    ],
+    "cybernetics": [
+      "research/MCCULLOCH_PITTS_1943"
+    ],
+    "minsky": [
+      "research/MINSKY_1961"
+    ],
+    "1961": [
+      "research/MINSKY_1961"
+    ],
+    "search": [
+      "research/MINSKY_1961"
+    ],
+    "pattern recognition": [
+      "research/MINSKY_1961"
+    ],
+    "problem solving": [
+      "research/MINSKY_1961"
+    ],
+    "backprop": [
+      "research/BACKPROP_1986"
+    ],
+    "backpropagation": [
+      "research/BACKPROP_1986"
+    ],
+    "gradient descent": [
+      "research/BACKPROP_1986"
+    ],
+    "deep learning": [
+      "research/BACKPROP_1986",
+      "research/LECUN_1998",
+      "research/ALEXNET_2012",
+      "research/ALPHAGO_2016"
+    ],
+    "weights": [
+      "research/BACKPROP_1986"
+    ],
+    "lecun": [
+      "research/LECUN_1998"
+    ],
+    "cnn": [
+      "research/LECUN_1998",
+      "research/ALEXNET_2012"
+    ],
+    "computer vision": [
+      "research/LECUN_1998",
+      "research/ALEXNET_2012",
+      "research/RESNET_2015"
+    ],
+    "lenet": [
+      "research/LECUN_1998"
+    ],
+    "image recognition": [
+      "research/LECUN_1998"
+    ],
+    "convolutions": [
+      "research/LECUN_1998"
+    ],
+    "alexnet": [
+      "research/ALEXNET_2012"
+    ],
+    "gpu": [
+      "research/ALEXNET_2012",
+      "research/TENSORFLOW_2016"
+    ],
+    "imagenet": [
+      "research/ALEXNET_2012"
+    ],
+    "alphago": [
+      "research/ALPHAGO_2016"
+    ],
+    "2016": [
+      "research/ALPHAGO_2016",
+      "research/TENSORFLOW_2016"
+    ],
+    "reinforcement learning": [
+      "research/ALPHAGO_2016"
+    ],
+    "mcts": [
+      "research/ALPHAGO_2016"
+    ],
+    "go": [
+      "research/ALPHAGO_2016"
+    ],
+    "game theory": [
+      "research/ALPHAGO_2016"
+    ],
+    "resnet": [
+      "research/RESNET_2015"
+    ],
+    "2015": [
+      "research/RESNET_2015"
+    ],
+    "residual learning": [
+      "research/RESNET_2015"
+    ],
+    "deep networks": [
+      "research/RESNET_2015"
+    ],
+    "gradients": [
+      "research/RESNET_2015"
+    ],
+    "skip connections": [
+      "research/RESNET_2015"
+    ],
+    "gpt3": [
+      "research/GPT3_2020"
+    ],
+    "2020": [
+      "research/GPT3_2020"
+    ],
+    "gpt-3": [
+      "research/GPT3_2020"
+    ],
+    "few-shot learning": [
+      "research/GPT3_2020"
+    ],
+    "emergence": [
+      "research/GPT3_2020"
+    ],
+    "zero-shot": [
+      "research/GPT3_2020"
+    ],
+    "tensorflow": [
+      "research/TENSORFLOW_2016"
+    ],
+    "tpu": [
+      "research/TENSORFLOW_2016"
+    ],
+    "dataflow graph": [
+      "research/TENSORFLOW_2016"
+    ],
+    "spark": [
+      "research/SPARK_2012"
+    ],
+    "apache spark": [
+      "research/SPARK_2012"
+    ],
+    "rdd": [
+      "research/SPARK_2012"
+    ],
+    "in-memory": [
+      "research/SPARK_2012"
+    ],
+    "big data": [
+      "research/SPARK_2012"
+    ],
+    "iterative": [
+      "research/SPARK_2012"
+    ],
+    "kafka": [
+      "research/KAFKA_2011"
+    ],
+    "2011": [
+      "research/KAFKA_2011"
+    ],
+    "apache kafka": [
+      "research/KAFKA_2011"
+    ],
+    "event streaming": [
+      "research/KAFKA_2011"
+    ],
+    "distributed log": [
+      "research/KAFKA_2011"
+    ],
+    "pub-sub": [
+      "research/KAFKA_2011"
+    ],
+    "zookeeper": [
+      "research/ZOOKEEPER_2010"
+    ],
+    "2010": [
+      "research/ZOOKEEPER_2010"
+    ],
+    "configuration": [
+      "research/ZOOKEEPER_2010"
+    ],
+    "locking": [
+      "research/ZOOKEEPER_2010"
+    ],
+    "end": [
+      "research/END_TO_END_1984"
+    ],
+    "to": [
+      "research/END_TO_END_1984"
+    ],
+    "end-to-end": [
+      "research/END_TO_END_1984"
+    ],
+    "unix": [
+      "research/UNIX_1974"
+    ],
+    "operating system": [
+      "research/UNIX_1974"
+    ],
+    "composability": [
+      "research/UNIX_1974"
+    ],
+    "shell": [
+      "research/UNIX_1974"
+    ],
+    "files": [
+      "research/UNIX_1974"
     ]
   }
 }
