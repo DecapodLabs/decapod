@@ -856,7 +856,7 @@
       "summary": "Covers complexity, data structures, deterministic behavior, bounded resource usage, streaming vs batch, approximate vs exact algorithms, profiling, and correctness tests.",
       "terms": [
         "complexity",
-        "data",
+        "schema evolution",
         "profiles",
         "determinism",
         "bounded",
@@ -1063,7 +1063,7 @@
       "binding": "advisory",
       "summary": "This domain covers source of truth, invalidation, TTL, stampede prevention, stale tolerance, cache-aside/write-through/write-behind, observability, and failure behavior.",
       "terms": [
-        "data",
+        "schema evolution",
         "tiers",
         "stale",
         "observability",
@@ -1133,8 +1133,8 @@
       "summary": "This domain covers source validation, build, test, scan, sign, package, deploy, smoke tests, rollback, and release evidence.",
       "terms": [
         "sign",
-        "architecture",
-        "delivery",
+        "rollout strategy",
+        "release gate",
         "release",
         "validation",
         "evidence",
@@ -1206,21 +1206,16 @@
       "title": "architecture/CLOUD",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers provider boundary, managed services, IAM, networking, region/AZ design, service quotas, cost model, deployment topology, observability, and failure domains.",
+      "summary": "Covers IAM boundaries, region/AZ topology, managed-service lock-in, and account-level segregation.",
       "terms": [
-        "services",
-        "architecture",
-        "resilience",
-        "cost",
-        "recovery",
-        "cloud",
-        "network",
-        "infrastructure",
-        "posture",
-        "managed",
-        "deployment",
-        "topology",
-        "elasticity"
+        "iam boundary",
+        "region topology",
+        "az topology",
+        "service quota",
+        "managed service",
+        "iac",
+        "tagging",
+        "cost attribution"
       ],
       "links": {
         "references": [
@@ -1240,34 +1235,30 @@
       },
       "sections": {
         "match": [
-          "Use when designing deployment topologies, configuring managed cloud services, or establishing IAM boundaries."
+          "Use when selecting cloud primitives, configuring IAM, or designing regional deployment strategies."
         ],
         "concepts": [
-          "Cloud architecture relies on scaling horizontally across availability zones to survive hardware failures.",
-          "Managed services accelerate delivery but introduce vendor lock-in; abstract core domain logic away from provider-specific APIs.",
-          "Infrastructure as Code (IaC) is the only acceptable way to provision production resources."
+          "IAM Boundaries: Enforce least-privilege using role-based access control (RBAC) across account boundaries.",
+          "Managed Services: Evaluate lock-in risk; favor standards-compliant services over proprietary vendor extensions.",
+          "Failure Domains: Distribute compute across multiple Availability Zones (AZ) to survive zone-level outages."
         ],
         "ambiguity": [
-          "Stop inference if the region topology, IAM least-privilege scope, or cost model for the managed service is undefined."
+          "Stop if the IAM principal, service quota limit, or disaster recovery (DR) region is unspecified."
         ],
         "decisions": [
-          "Determine the correct compute primitive: Serverless (event-driven), Containers (portable microservices), or VMs (legacy/heavy state).",
-          "Evaluate the trade-off between multi-region resilience and the cost/latency of cross-region replication."
+          "Decide whether to use managed platform-as-a-service (PaaS) vs portable container-based infrastructure."
         ],
         "standards": [
-          "Enforce least privilege IAM roles scoped per service, per action, per resource.",
-          "All cloud resources must be tagged for cost attribution and operational ownership."
+          "Infrastructure must be declared in version-controlled code (IaC) with no manual console changes permitted."
         ],
         "failure_modes": [
-          "Click-ops in production: configuring infrastructure via web console instead of version-controlled IaC.",
-          "Using wildcard permissions in IAM roles, creating severe security pivot vulnerabilities."
+          "Hardcoding region-specific ARNs or IDs instead of using dynamic discovery or environment variables."
         ],
         "next_queries": [
-          "Query architecture/COST_OPTIMIZATION for unit economics.",
-          "Query architecture/INFRASTRUCTURE for IaC delivery pipelines."
+          "Query architecture/INFRASTRUCTURE for delivery pipeline details."
         ],
         "proceed_when": [
-          "Proceed when the infrastructure is declared in code, cost impacts are named, and failure domains are isolated."
+          "Proceed when resources are tagged and IAM roles are strictly scoped."
         ]
       }
     },
@@ -1339,21 +1330,16 @@
       "title": "architecture/COMPLIANCE",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "This domain covers data classification, control mapping, audit evidence, retention, access controls, regulated data handling, and subject-rights workflows.",
+      "summary": "Covers data classification, audit evidence, retention, access review, and regulated data handling.",
       "terms": [
-        "policy",
-        "capture",
-        "delivery",
-        "evidence",
-        "engineering",
-        "auditability",
-        "constraints",
-        "compliance",
-        "retention",
-        "regulated",
-        "enforcement",
-        "control",
-        "mapping"
+        "data classification",
+        "audit evidence",
+        "retention policy",
+        "dsar",
+        "right-to-delete",
+        "immutable log",
+        "regulated data",
+        "control mapping"
       ],
       "links": {
         "references": [
@@ -1365,36 +1351,30 @@
       },
       "sections": {
         "match": [
-          "Use when handling PII, PHI, financial data, or designing systems subject to regulatory audit (SOC2, GDPR, HIPAA)."
+          "Use when handling regulated data (PII, PHI, PCI) or preparing for security audits."
         ],
         "concepts": [
-          "Compliance is an architectural constraint, not an afterthought. It dictates data flow and storage.",
-          "Data classification determines the required security controls. Not all data is equal.",
-          "Auditability requires immutable logs of who accessed what data, when, and why."
+          "Data Classification: Categorize every field by sensitivity level and map it to required technical controls.",
+          "Audit Evidence: Automatically collect and store execution logs as immutable evidence of control adherence.",
+          "Subject Rights: Design for Data Subject Access Requests (DSAR) and the right-to-delete from the start."
         ],
         "ambiguity": [
-          "Stop inference if the data classification level, retention period, or regulatory framework is unknown."
+          "Stop if the regulatory framework (GDPR, SOC2, HIPAA) or data retention period is undefined."
         ],
         "decisions": [
-          "Determine where sensitive data is allowed to flow and where it must be blocked or masked.",
-          "Decide on the mechanism for processing Data Subject Access Requests (DSAR) and right-to-be-forgotten."
+          "Determine whether data must be physically segregated or logically masked for specific roles."
         ],
         "standards": [
-          "Encrypt all sensitive data at rest and in transit using approved cryptographic standards.",
-          "Implement strict retention policies to automatically purge data when it is no longer legally required.",
-          "Maintain an immutable, append-only audit log for all actions involving restricted data."
+          "Compliance controls must be mapped to executable tests or proof claims in the verification plan."
         ],
         "failure_modes": [
-          "Logging PII or authentication tokens into application logs or telemetry systems.",
-          "Failing to implement hard deletion, violating right-to-be-forgotten regulations.",
-          "Granting broad access roles instead of least-privilege, failing compliance audits."
+          "Mixing regulated and non-regulated data in the same storage tier without explicit segregation."
         ],
         "next_queries": [
-          "Query architecture/SECURITY for encryption and access control.",
-          "Query data/DATABASE for data storage policies."
+          "Query architecture/SECURITY for boundary protection."
         ],
         "proceed_when": [
-          "Proceed when data flows map to established controls and audit logging is verified."
+          "Proceed when the control mapping is complete and evidence collection is automated."
         ]
       }
     },
@@ -1537,22 +1517,16 @@
       "title": "architecture/COST_OPTIMIZATION",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers unit economics, cost drivers, autoscaling, rightsizing, storage lifecycle, overprovisioning, observability cost, egress, FinOps signals, and cost guardrails.",
+      "summary": "Covers unit economics, egress, rightsizing, autoscaling limits, and storage lifecycle costs.",
       "terms": [
-        "architecture",
-        "engineering",
-        "unit",
-        "cost",
-        "economics",
-        "detection",
-        "planning",
-        "aware",
-        "capacity",
-        "budget",
-        "guardrails",
-        "sizing",
-        "waste",
-        "optimization"
+        "unit economics",
+        "egress",
+        "rightsizing",
+        "autoscaling",
+        "storage lifecycle",
+        "budget alarm",
+        "reserved capacity",
+        "spot instances"
       ],
       "links": {
         "references": [
@@ -1565,34 +1539,30 @@
       },
       "sections": {
         "match": [
-          "Use when evaluating the financial impact of an architecture, provisioning resources, or handling high-volume egress."
+          "Use when evaluating infrastructure spend, rightsizing compute, or managing data transfer costs."
         ],
         "concepts": [
-          "Cost is an engineering signal. Every architectural decision has a direct impact on unit economics.",
-          "Waste is an architectural defect. Overprovisioning 'just in case' masks underlying performance issues.",
-          "Data transfer (egress) and observability (logs/metrics) often become hidden, dominant cost drivers at scale."
+          "Unit Economics: Calculate the marginal cost of a single transaction or user action.",
+          "Scaling Guardrails: Enforce hard floor/ceiling limits on all autoscaling groups to prevent runaway spend.",
+          "Storage Lifecycle: Automatically transition stale data to cold/archive tiers based on access frequency."
         ],
         "ambiguity": [
-          "Stop inference if the cost per transaction, storage lifecycle policy, or auto-scaling bounds are unknown."
+          "Stop if the cost-per-transaction or the expected data transfer (egress) volume is unmodeled."
         ],
         "decisions": [
-          "Determine the correct storage tier (hot, warm, cold, archive) based on access frequency.",
-          "Decide between reserved capacity for steady-state workloads and spot instances for fault-tolerant batch jobs."
+          "Decide between reserved capacity for base load vs spot instances for batch processing."
         ],
         "standards": [
-          "Implement auto-scaling based on accurate bottleneck metrics, scaling to zero where applicable.",
-          "Set strict budget alerts and billing alarms before deploying new infrastructure."
+          "All cloud resources must be tagged for cost attribution; untagged resources are considered defects."
         ],
         "failure_modes": [
-          "Logging highly verbose debug data in production, leading to massive observability ingest costs.",
-          "Failing to implement TTLs on cache or object storage, causing unbounded cost growth."
+          "Provisioning 'just-in-case' capacity instead of tuning autoscaling signals based on bottleneck evidence."
         ],
         "next_queries": [
-          "Query architecture/CLOUD for managed service pricing models.",
-          "Query architecture/SCALING for capacity planning."
+          "Query architecture/CLOUD for service-specific pricing guardrails."
         ],
         "proceed_when": [
-          "Proceed when the unit economics of the design are understood and budget guardrails are in place."
+          "Proceed when budget alarms are set and unit economics are understood."
         ]
       }
     },
@@ -1605,8 +1575,8 @@
       "summary": "This domain covers data ownership, lineage, schema evolution, batch vs stream, quality checks, retention, privacy, replay, and analytical vs operational separation.",
       "terms": [
         "modeling",
-        "architecture",
-        "data",
+        "rollout strategy",
+        "schema evolution",
         "privacy",
         "analytical",
         "ownership",
@@ -1672,12 +1642,12 @@
       "binding": "advisory",
       "summary": "This domain covers schema ownership, migrations, indexes, transactions, consistency, backup/restore, data loss risk, and migration proof.",
       "terms": [
-        "architecture",
+        "rollout strategy",
         "database",
         "consistency",
         "transactions",
         "design",
-        "performance",
+        "p99 latency",
         "indexing",
         "backups",
         "replication",
@@ -1934,21 +1904,17 @@
       "title": "architecture/ENTERPRISE",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers organizational scale, compliance, integration boundaries, identity, auditability, supportability, change control, procurement constraints, and multi-team ownership.",
+      "summary": "Covers multi-team ownership, procurement, SSO/SAML/OIDC, audit logs, data segregation, and integration contracts.",
       "terms": [
-        "enterprise",
-        "architecture",
-        "correctness",
-        "system",
-        "operability",
-        "affect",
-        "design",
-        "performance",
-        "production",
-        "security",
-        "customer",
-        "trust",
-        "decisions"
+        "sso",
+        "scim",
+        "saml",
+        "oidc",
+        "audit logs",
+        "data segregation",
+        "procurement",
+        "multi-team",
+        "integration contract"
       ],
       "links": {
         "references": [
@@ -1960,34 +1926,30 @@
       },
       "sections": {
         "match": [
-          "Use when designing systems that require cross-team integration, strict auditability, or must meet enterprise procurement constraints."
+          "Use when designing for organizational scale, compliance boundaries, or multi-team service ownership."
         ],
         "concepts": [
-          "Enterprise architecture optimizes for organizational scalability and maintainability over localized team velocity.",
-          "Clear integration boundaries (APIs, events) allow independent teams to deploy without coordination bottlenecks.",
-          "Auditability and supportability are first-class functional requirements."
+          "Identity and Access: Enforce SSO (SAML/OIDC) and SCIM-based provisioning for all internal and external surfaces.",
+          "Auditability: Maintain immutable activity logs for all state mutations and access attempts across team boundaries.",
+          "Integration: All cross-team dependencies must be governed by versioned, backward-compatible API contracts."
         ],
         "ambiguity": [
-          "Stop inference if the system owner, integration contract, or compliance requirement is unknown."
+          "Stop if the data steward, procurement constraint, or cross-team support model is undefined."
         ],
         "decisions": [
-          "Choose between a modular monolith for operational simplicity or microservices for organizational decoupling.",
-          "Determine the single source of truth for identity and access management across the enterprise."
+          "Decide between shared-infrastructure clusters versus strict tenant-level account segregation."
         ],
         "standards": [
-          "All cross-team integrations must be governed by versioned, backward-compatible contracts.",
-          "Systems must produce immutable audit logs for all security and state-mutating events."
+          "Enterprise integrations must pass automated contract tests before promotion to production."
         ],
         "failure_modes": [
-          "Creating tight coupling through shared databases between independent domain teams.",
-          "Failing to design for multi-tenancy or strict data segregation from day one."
+          "Allowing ad-hoc database sharing between teams, bypassing explicit API boundaries."
         ],
         "next_queries": [
-          "Query architecture/COMPLIANCE for regulatory alignment.",
-          "Query architecture/API_DESIGN for cross-team contracts."
+          "Query architecture/COMPLIANCE for data classification rules."
         ],
         "proceed_when": [
-          "Proceed when integration boundaries are decoupled and audit/compliance requirements are satisfied."
+          "Proceed when the integration contract is signed off and the audit trail is instrumented."
         ]
       }
     },
@@ -2001,7 +1963,7 @@
       "terms": [
         "consumers",
         "backpressure",
-        "architecture",
+        "rollout strategy",
         "idempotent",
         "events",
         "ordering",
@@ -2063,13 +2025,13 @@
       "binding": "advisory",
       "summary": "This domain covers platform target, rendering model, state ownership, accessibility, API contract, latency, error states, browser constraints, and user workflow.",
       "terms": [
-        "architecture",
+        "rollout strategy",
         "frontend",
         "boundaries",
         "error",
         "rendering",
-        "performance",
-        "security",
+        "p99 latency",
+        "trust boundary",
         "client",
         "user",
         "facing",
@@ -2131,7 +2093,7 @@
       "terms": [
         "authorization",
         "complexity",
-        "architecture",
+        "rollout strategy",
         "graphql",
         "federation",
         "shape",
@@ -2192,7 +2154,7 @@
       "binding": "advisory",
       "summary": "Contract guidance for gRPC APIs covering proto schemas, streaming patterns, status codes, and error handling.",
       "terms": [
-        "architecture",
+        "rollout strategy",
         "rpcs",
         "generated",
         "proto",
@@ -2256,7 +2218,7 @@
       "terms": [
         "identity",
         "drift",
-        "engineering",
+        "drift detection",
         "promotion",
         "storage",
         "environments",
@@ -2319,7 +2281,7 @@
       "summary": "Covers source ingestion, provenance, indexing, retrieval quality, summarization, graph relationships, stale knowledge, authority levels, and agent consumption.",
       "terms": [
         "consumable",
-        "architecture",
+        "rollout strategy",
         "capture",
         "retrieval",
         "agent",
@@ -2523,7 +2485,7 @@
       "terms": [
         "retries",
         "ordering",
-        "delivery",
+        "release gate",
         "dead",
         "backpressure",
         "brokers",
@@ -2645,8 +2607,8 @@
       "binding": "advisory",
       "summary": "Covers service boundaries, data ownership, deployment independence, API contracts, observability, team ownership, distributed failure, and when a modular monolith is better.",
       "terms": [
-        "architecture",
-        "data",
+        "rollout strategy",
+        "schema evolution",
         "service",
         "boundaries",
         "isolation",
@@ -2708,7 +2670,7 @@
       "summary": "Covers DNS, routing, load balancing, ingress/egress, CIDRs, firewall rules, service discovery, TLS, segmentation, latency, and failure diagnosis.",
       "terms": [
         "networking",
-        "architecture",
+        "rollout strategy",
         "routing",
         "balancing",
         "ingress",
@@ -2769,20 +2731,18 @@
       "title": "architecture/OBSERVABILITY",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers logs, metrics, traces, correlation IDs, SLIs/SLOs, customer-impact signals, alert fatigue, cardinality control, and debugging paths.",
+      "summary": "Covers structured logs, metrics, traces, SLIs/SLOs, cardinality, and customer-impact signals.",
       "terms": [
+        "structured logs",
         "metrics",
-        "events",
-        "visibility",
         "traces",
-        "observability",
+        "correlation id",
+        "slis",
+        "slos",
+        "cardinality",
+        "alert fatigue",
         "dashboards",
-        "alerting",
-        "impact",
-        "customer",
-        "debugging",
-        "correlation",
-        "logs"
+        "sampling"
       ],
       "links": {
         "references": [
@@ -2802,34 +2762,30 @@
       },
       "sections": {
         "match": [
-          "Use when configuring logging frameworks, implementing OpenTelemetry, tracing requests, or setting up alert rules."
+          "Use when instrumenting code, configuring telemetry, or defining service level objectives."
         ],
         "concepts": [
-          "Observability is the ability to answer questions about a system's internal state using only its external outputs.",
-          "The Three Pillars: Metrics (is there a problem?), Traces (where is the problem?), Logs (what is the problem?).",
-          "A trace correlation ID must be generated at the edge and passed through every internal service call."
+          "Telemetry Pillars: Unify Metrics (status), Traces (paths), and Logs (context) using a shared Correlation ID.",
+          "SLIs/SLOs: Measure the true customer experience; define acceptable failure thresholds (error budgets).",
+          "Cardinality Control: Limit the number of unique label combinations to prevent telemetry store crashes."
         ],
         "ambiguity": [
-          "Stop inference if the correlation ID strategy, log aggregation target, or alert routing is undefined."
+          "Stop if the SLO burn rate or the specific customer-impact signal is unmeasured."
         ],
         "decisions": [
-          "Decide on the logging format. Structured JSON logging is mandatory for machine parsing and querying.",
-          "Determine the sampling rate for distributed traces to balance visibility against telemetry cost."
+          "Decide on sampling rates to balance visibility against telemetry ingestion costs."
         ],
         "standards": [
-          "Never log PII, passwords, secrets, or authentication tokens.",
-          "Ensure all log entries contain context: timestamp, environment, service name, severity, and correlation ID."
+          "Every log entry must include a Correlation ID and a machine-parseable severity level."
         ],
         "failure_modes": [
-          "Relying on unstructured text logs that cannot be queried or aggregated effectively.",
-          "Alert fatigue: alerting on high CPU or memory instead of actual user-facing request failures."
+          "Optimizing internal system metrics (e.g. CPU) instead of user-visible success signals."
         ],
         "next_queries": [
-          "Query architecture/METRICS for quantitative signals.",
-          "Query architecture/COMPLIANCE for PII logging rules."
+          "Query architecture/METRICS for technical implementation."
         ],
         "proceed_when": [
-          "Proceed when a request can be traced end-to-end and logs are structured securely."
+          "Proceed when the request is traceable end-to-end and SLIs are defined."
         ]
       }
     },
@@ -2842,7 +2798,7 @@
       "summary": "Covers latency, throughput, profiling, bottlenecks, load testing, resource contention, caching, async work, query plans, and user-visible responsiveness.",
       "terms": [
         "responsiveness",
-        "engineering",
+        "drift detection",
         "throughput",
         "visible",
         "latency",
@@ -2852,7 +2808,7 @@
         "load",
         "bottlenecks",
         "testing",
-        "performance"
+        "p99 latency"
       ],
       "links": {
         "references": [
@@ -2904,7 +2860,7 @@
       "binding": "advisory",
       "summary": "Covers horizontal vs vertical scaling, bottleneck evidence, traffic shape, read/write ratio, autoscaling signals, partitioning, quotas, load tests, and capacity planning.",
       "terms": [
-        "architecture",
+        "rollout strategy",
         "scaling",
         "demand",
         "partitioning",
@@ -3032,22 +2988,16 @@
       "title": "architecture/SECURITY",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers threat model, trust boundary, least privilege, input validation, authn/authz, secrets, encryption, dependency trust, abuse cases, and detection.",
+      "summary": "Covers trust boundaries, abuse cases, input validation, least privilege, and incident evidence.",
       "terms": [
-        "modeling",
-        "privilege",
-        "least",
-        "architecture",
-        "chain",
-        "response",
-        "detection",
-        "secure",
-        "supply",
-        "defaults",
-        "security",
-        "paths",
-        "threat",
-        "abuse"
+        "trust boundary",
+        "abuse case",
+        "input validation",
+        "least privilege",
+        "dependency trust",
+        "secret handling",
+        "authn/authz",
+        "incident evidence"
       ],
       "links": {
         "references": [
@@ -3070,34 +3020,30 @@
       },
       "sections": {
         "match": [
-          "Use when performing threat modeling, handling user inputs, defining trust boundaries, or mitigating vulnerabilities."
+          "Use when threat modeling, handling user input, or defining secure communication paths."
         ],
         "concepts": [
-          "Security is built in layers (Defense in Depth). A failure in one layer should not compromise the whole system.",
-          "All input is malicious until proven otherwise. Validate strictly against a known-good schema.",
-          "Trust boundaries exist where data moves between different levels of control or privilege."
+          "Trust Boundaries: Identify every point where data moves from untrusted to trusted control.",
+          "Defense in Depth: Layer security controls so that a single component failure does not lead to total compromise.",
+          "Validation: Treat all external input as malicious; validate against strict, allow-listed schemas."
         ],
         "ambiguity": [
-          "Stop inference if the trust boundary, input validation schema, or specific threat model is unspecified."
+          "Stop if the trust boundary, input schema, or specific threat model is unspecified."
         ],
         "decisions": [
-          "Identify what data requires encryption at rest versus what only requires TLS in transit.",
-          "Determine the blast radius if a specific component is compromised, and design mitigations."
+          "Identify which data requires at-rest encryption vs transit-only protection."
         ],
         "standards": [
-          "Apply the Principle of Least Privilege: components should only have access to the exact resources they need.",
-          "Regularly scan dependencies for known vulnerabilities (CVEs) and enforce updates."
+          "Enforce least-privilege at every layer; default to 'deny-all' for all resource access."
         ],
         "failure_modes": [
-          "Relying on client-side validation for security. Client rules can be bypassed; the server must validate everything.",
-          "Executing dynamic queries or commands using concatenated strings instead of parameterized inputs (Injection)."
+          "Relying on client-side security checks that can be bypassed by an attacker."
         ],
         "next_queries": [
-          "Query architecture/AUTH for access control.",
-          "Query docs/SECURITY_THREAT_MODEL to document abuse cases."
+          "Query architecture/AUTH for identity management."
         ],
         "proceed_when": [
-          "Proceed when inputs are validated, privileges are minimized, and trust boundaries are explicitly defended."
+          "Proceed when trust boundaries are defended and input validation is enforced."
         ]
       }
     },
@@ -3107,21 +3053,16 @@
       "title": "architecture/SYSTEMS_DESIGN",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers requirements, constraints, component boundaries, data flow, state ownership, failure modes, consistency, scalability, observability, and tradeoff explanation.",
+      "summary": "Covers requirements, constraints, data flow, state ownership, consistency models, and failure domains.",
       "terms": [
-        "architecture",
-        "correctness",
-        "system",
-        "operability",
-        "affect",
-        "design",
-        "systems",
-        "performance",
-        "production",
-        "security",
-        "customer",
-        "trust",
-        "decisions"
+        "data flow",
+        "state ownership",
+        "consistency model",
+        "failure domain",
+        "interface contract",
+        "rollout",
+        "capacity",
+        "observability"
       ],
       "links": {
         "references": [
@@ -3133,34 +3074,30 @@
       },
       "sections": {
         "match": [
-          "Use when architecting a new system, integrating large components, defining data flows, or conducting system design reviews."
+          "Use when mapping component boundaries, data flow paths, or state mutation rules."
         ],
         "concepts": [
-          "System design is the process of making tradeoffs to satisfy non-functional requirements (scale, reliability, latency).",
-          "Data flow dictates the architecture. Understand how data enters, mutates, and exits the system.",
-          "Every component added to a design increases operational burden and points of failure."
+          "Data Flow: Map exactly how intent becomes state and how state is synchronized across the system.",
+          "Failure Domains: Design for partial failure; identify which components can safely stay down during an incident.",
+          "Consistency: Explicitly select Strong vs Eventual consistency based on the load-bearing requirements of the domain."
         ],
         "ambiguity": [
-          "Stop inference if the system's core constraints (read/write ratio, latency targets, data volume) are undetermined."
+          "Stop if the authoritative source of truth or the primary bottleneck metric is unknown."
         ],
         "decisions": [
-          "Decide on the communication boundaries: synchronous APIs for immediate consistency, or async events for decoupling.",
-          "Determine which subsystem acts as the authoritative source of truth for each data entity."
+          "Choose between synchronous request-response vs asynchronous event-driven coordination."
         ],
         "standards": [
-          "Document architectural decisions and their rejected alternatives in Architecture Decision Records (ADRs).",
-          "Map out the exact failure modes for every connection point between components."
+          "Systems must expose readiness probes and health signals for every boundary-crossing interface."
         ],
         "failure_modes": [
-          "Designing for hyper-scale (e.g., millions of RPS) when the business requirement is thousands, resulting in crippling complexity.",
-          "Creating circular dependencies between subsystems, making independent deployment impossible."
+          "Designing for infinite scale before naming the first production bottleneck and capacity assumption."
         ],
         "next_queries": [
-          "Query core/DATA for state persistence.",
-          "Query architecture/DISTRIBUTED_SYSTEMS for consensus rules."
+          "Query architecture/DISTRIBUTED_SYSTEMS for consensus patterns."
         ],
         "proceed_when": [
-          "Proceed when the data flow is mapped, tradeoffs are documented, and failure domains are isolated."
+          "Proceed when the data flow is mapped and failure domains are isolated."
         ]
       }
     },
@@ -3179,7 +3116,7 @@
         "unit",
         "strategy",
         "integration",
-        "security",
+        "trust boundary",
         "load",
         "testing"
       ],
@@ -3236,7 +3173,7 @@
       "terms": [
         "interaction",
         "handling",
-        "architecture",
+        "rollout strategy",
         "trust",
         "facing",
         "interface",
@@ -3299,19 +3236,19 @@
       "summary": "Covers HTTP, routing, browser constraints, sessions, cookies, CSRF/XSS, caching headers, SSR/CSR, CDN, API contracts, performance, and deployment.",
       "terms": [
         "routing",
-        "architecture",
+        "rollout strategy",
         "constraints",
         "sessions",
         "frontend",
         "headers",
-        "delivery",
+        "release gate",
         "http",
         "backend",
-        "security",
+        "trust boundary",
         "browser",
         "caching",
         "contracts",
-        "performance"
+        "p99 latency"
       ],
       "links": {
         "references": [
@@ -5713,19 +5650,17 @@
       "title": "methodology/CI_CD",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes delivery sequencing, gates, artifact promotion, environment flow, rollback, and release evidence.",
+      "summary": "Describes immutable artifact promotion, release gates, rollback, and environment flow.",
       "terms": [
-        "delivery",
-        "operating",
-        "processes",
-        "engineering",
-        "systems",
-        "validating",
-        "outcomes",
-        "methodology",
-        "repeatable",
-        "making",
-        "decisions"
+        "immutable artifact",
+        "promotion",
+        "release gate",
+        "rollback plan",
+        "smoke test",
+        "release evidence",
+        "environment flow",
+        "canary",
+        "blue-green"
       ],
       "links": {
         "references": [
@@ -5741,31 +5676,27 @@
           "Use when configuring build pipelines, automating deployments, or establishing release guardrails."
         ],
         "concepts": [
-          "Continuous Integration proves the artifact is safe; Continuous Delivery proves it is deployable.",
-          "Artifacts must be built once, hashed, and promoted through environments unchanged.",
-          "A deployment is a mechanical act; a release is a business decision (e.g., flipping a feature flag)."
+          "Immutable Artifacts: Build the binary once; promote it through dev, staging, and prod without recompilation.",
+          "Release Gates: Every environment transition must be gated by passing tests, scans, and proof claims.",
+          "Rollback: Every deployment must have a verified, automated path to revert to the previous stable state."
         ],
         "ambiguity": [
-          "Stop inference if the rollback mechanism, environment isolation, or required CI gates are missing."
+          "Stop if the rollback trigger or the environment-specific secret injection is unverified."
         ],
         "decisions": [
-          "Choose the deployment strategy (e.g., blue/green, canary) based on the acceptable risk profile.",
-          "Determine which validation steps must block the pipeline versus which can run asynchronously."
+          "Choose between Canary, Blue-Green, or Rolling rollout strategies based on risk."
         ],
         "standards": [
-          "Pipelines must fail fast. Run linting and unit tests before long-running integration or security scans.",
-          "Every deployment must leave an auditable trace linking the deployed artifact to its source commit."
+          "Deployments must leave an auditable trace linking the artifact to the source commit."
         ],
         "failure_modes": [
-          "Recompiling source code for staging and production separately, leading to environment-specific bugs.",
-          "Deploying without automated health checks and a clear, tested rollback path."
+          "Deploying without automated health checks (smoke tests) in the target environment."
         ],
         "next_queries": [
-          "Query architecture/CI_CD_PIPELINES for infrastructure constraints.",
-          "Query methodology/RELEASE_MANAGEMENT for business approvals."
+          "Query architecture/CI_CD_PIPELINES for infrastructure constraints."
         ],
         "proceed_when": [
-          "Proceed when pipeline gates are explicit, artifacts are immutable, and rollback is automated."
+          "Proceed when gates are defined, artifacts are immutable, and rollback is automated."
         ]
       }
     },
@@ -5778,9 +5709,9 @@
       "summary": "Covers prioritization, ownership, review, delivery risk, team health, and decision records.",
       "terms": [
         "health",
-        "delivery",
+        "release gate",
         "accountability",
-        "engineering",
+        "drift detection",
         "leadership",
         "review",
         "execution",
@@ -5837,21 +5768,17 @@
       "title": "methodology/INCIDENT_RESPONSE",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers triage, severity, containment, communication, rollback, evidence, and postmortem.",
+      "summary": "Covers triage, severity, containment, rollback, and postmortem action items.",
       "terms": [
-        "delivery",
-        "operating",
-        "processes",
-        "engineering",
-        "incident",
-        "response",
-        "systems",
-        "validating",
-        "outcomes",
-        "methodology",
-        "repeatable",
-        "making",
-        "decisions"
+        "triage",
+        "severity",
+        "containment",
+        "rollback",
+        "incident commander",
+        "customer impact",
+        "timeline",
+        "postmortem",
+        "root cause"
       ],
       "links": {
         "references": [
@@ -5867,31 +5794,27 @@
           "Use when mitigating an active outage, diagnosing production failures, or writing postmortems."
         ],
         "concepts": [
-          "The primary goal of incident response is mitigation (restoring service), not root cause analysis.",
-          "Containment limits the blast radius. Rollback is usually faster than rolling forward with a hotfix.",
-          "Postmortems are blameless; human error is a symptom of systemic tooling or process failures."
+          "Mitigation First: Prioritize restoring service over finding the root cause during an active incident.",
+          "Containment: Limit the blast radius immediately; disconnect or disable failing subsystems if necessary.",
+          "Blameless Postmortems: Focus on systemic guardrail failures rather than individual human error."
         ],
         "ambiguity": [
-          "Stop inference if the severity level, containment strategy, or customer impact is undefined."
+          "Stop if the incident commander, current customer impact, or containment path is unknown."
         ],
         "decisions": [
-          "Decide immediately if a rollback is possible. If yes, execute it before deep debugging.",
-          "Determine communication cadences and assign explicit roles (Commander, Communicator, Operations)."
+          "Decide immediately between a fast rollback vs a speculative forward-fix."
         ],
         "standards": [
-          "All actions taken during an incident must be logged in a centralized timeline.",
-          "Postmortems must yield actionable, prioritized work items to prevent recurrence."
+          "All incident actions and communications must be recorded in a centralized timeline."
         ],
         "failure_modes": [
-          "Attempting to write and deploy a new patch during an outage instead of reverting to a known good state.",
-          "Focusing on blame rather than identifying the missing guardrails that allowed the incident to occur."
+          "Deep-debugging a live outage while the system remains down for customers."
         ],
         "next_queries": [
-          "Query architecture/OBSERVABILITY for telemetry extraction.",
-          "Query core/EMERGENCY_PROTOCOL for immediate mutation halts."
+          "Query methodology/OPERATIONS for runbook procedures."
         ],
         "proceed_when": [
-          "Proceed when containment is achieved, impact is communicated, and root cause investigation begins."
+          "Proceed when containment is achieved and a blameless investigation begins."
         ]
       }
     },
@@ -6211,19 +6134,15 @@
       "title": "methodology/PRODUCT",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Maps vague user asks to user, problem, workflow, platform, first slice, acceptance criteria, non-goals, and success signal.",
+      "summary": "Maps vague asks to user, workflow, problem, platform, and success signals.",
       "terms": [
-        "bets",
-        "delivery",
-        "signal",
-        "scope",
-        "framing",
-        "sequencing",
-        "customer",
-        "methodology",
-        "adoption",
-        "product",
-        "problem"
+        "user workflow",
+        "first slice",
+        "platform selection",
+        "acceptance criteria",
+        "non-goals",
+        "success signal",
+        "adoption"
       ],
       "links": {
         "references": [
@@ -6235,34 +6154,30 @@
       },
       "sections": {
         "match": [
-          "Use when scoping a new feature, interpreting broad user requests, or clarifying the 'why' behind an implementation."
+          "Use when clarifying feature scope, interpreting user intent, or defining 'why' a change is needed."
         ],
         "concepts": [
-          "Every technical decision must map back to a defined user and problem.",
-          "Non-goals are as important as goals; explicit boundaries prevent scope creep.",
-          "The 'first slice' is the smallest deployable increment that proves value."
+          "User First: Every technical decision must solve a specific problem for a defined user persona.",
+          "The First Slice: Identify the smallest deployable increment that provides measurable user value.",
+          "Non-Goals: Explicitly list what the feature will *not* do to prevent scope creep."
         ],
         "ambiguity": [
-          "Stop inference if the target user, core problem, or non-goals are not explicitly stated."
+          "Stop if the target platform, workflow, or success criteria remain narrative or vague."
         ],
         "decisions": [
-          "Define the success signal: how will we know this feature works and is used?",
-          "Identify what parts of the user request should be deferred to a later iteration."
+          "Identify which parts of a broad user request belong in the 'first slice' versus a backlog."
         ],
         "standards": [
-          "Always formulate acceptance criteria in falsifiable, testable terms.",
-          "Link product intent explicitly to the architectural components that fulfill it."
+          "Acceptance criteria must be falsifiable and verifiable via automated tests or evals."
         ],
         "failure_modes": [
-          "Building robust technical solutions for problems the user did not actually ask to solve.",
-          "Accepting 'build an app' as a requirement without identifying the platform or workflow."
+          "Starting implementation before the product problem and success signals are documented."
         ],
         "next_queries": [
-          "Query core/ARCHITECTURE to map the product workflow to technical domains.",
-          "Query specs/INTENT to lock in the agreed scope."
+          "Query methodology/ARCHITECTURE to map product needs to state and boundaries."
         ],
         "proceed_when": [
-          "Proceed when the user, problem, workflow, and acceptance criteria are explicitly documented."
+          "Proceed when the user, problem, and acceptance criteria are explicitly documented."
         ]
       }
     },
@@ -6272,13 +6187,16 @@
       "title": "methodology/RELEASE_MANAGEMENT",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes release management practice: readiness, scope freeze, versioning, and rollout.",
+      "summary": "Describes readiness assessment, scope freeze, rollout, and post-release verification.",
       "terms": [
-        "readiness",
+        "readiness assessment",
         "scope freeze",
+        "versioning",
+        "changelog",
         "rollout plan",
-        "post-release",
-        "hold criteria"
+        "hold criteria",
+        "rollback",
+        "verification"
       ],
       "links": {
         "references": [
@@ -6292,31 +6210,30 @@
       },
       "sections": {
         "match": [
-          "Use when establishing repeatable practices for preparing and executing software releases."
+          "Use when preparing software releases, managing versions, or coordinating deployment timing."
         ],
         "concepts": [
-          "Readiness Assessment: A formal check of all release gates, proof claims, and documentation freshness.",
-          "Scope Freeze: The point in the release cycle where new intent is blocked to ensure stability.",
-          "Rollout Planning: Defining the sequencing, canary stages, and communication plan for a release.",
-          "Post-Release Verification: Executing verification scripts against production state to confirm success."
+          "Readiness: Verify all release gates, documentation freshness, and rollback paths before publication.",
+          "Scope Freeze: Block new feature intent after a specific date to ensure stability for the release window.",
+          "Verification: Execute post-release tests against production state to confirm successful rollout."
         ],
         "ambiguity": [
-          "Stop inference if the definition of 'ready' or the rollback trigger threshold is unknown."
+          "Stop if the release hold criteria or the customer communication plan is missing."
         ],
         "decisions": [
           "Decide when to execute a hold or rollback based on telemetry and post-release signals."
         ],
         "standards": [
-          "Changelogs must be updated and version tags must be pushed before publication claims."
+          "Tags and changelogs must be pushed to version control before the release is claimed done."
         ],
         "failure_modes": [
-          "Proceeding with rollout without a verified rollback path and communication plan."
+          "Announcing a release before verifying successful deployment and basic functionality."
         ],
         "next_queries": [
-          "Query docs/RELEASE_PROCESS for the specific document surface requirements."
+          "Query docs/RELEASE_PROCESS for specific document surfaces."
         ],
         "proceed_when": [
-          "Proceed when scope is frozen, gates are passed, and the rollout plan is approved."
+          "Proceed when the rollout plan is approved and all readiness criteria are met."
         ]
       }
     },
@@ -6390,7 +6307,7 @@
         "exploration",
         "constraints",
         "validation",
-        "system",
+        "immutable artifact",
         "translation",
         "research",
         "production",
