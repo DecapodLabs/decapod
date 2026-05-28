@@ -6,6 +6,8 @@
 - [Error Recovery](docs/agent/error-recovery.md)
 - [State Model](docs/agent/state-model.md)
 - [Config Schema](docs/agent/config-schema.md)
+- [Agent Skills](docs/agent/skills.md)
+- [MCP Integration](docs/agent/mcp.md)
 
 # Decapod Human Book
 
@@ -22,6 +24,8 @@
 - [Proof](docs/book/src/concepts/proof.md)
 - [Constitution](docs/book/src/concepts/constitution.md)
 - [Overrides](docs/book/src/concepts/overrides.md)
+- [Skills](docs/book/src/concepts/skills.md)
+- [MCP](docs/book/src/concepts/mcp.md)
 - [Config Reference](docs/book/src/reference/config-toml.md)
 - [CLI Reference](docs/book/src/reference/cli.md)
 - [Error Codes](docs/book/src/reference/errors.md)
