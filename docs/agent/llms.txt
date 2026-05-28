@@ -14,6 +14,7 @@
 - [Introduction](docs/book/src/introduction.md)
 - [Quickstart](docs/book/src/quickstart.md)
 - [Mental Model](docs/book/src/mental-model.md)
+- [Agent-First Architecture](docs/book/src/concepts/agent-first.md)
 - [Configuration](docs/book/src/configuration.md)
 - [Single-Agent Workflow](docs/book/src/workflows/single-agent.md)
 - [Multi-Agent Workflow](docs/book/src/workflows/multi-agent.md)

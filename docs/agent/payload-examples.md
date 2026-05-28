@@ -66,3 +66,20 @@ decapod data schema --subsystem "todo" --format "json" --deterministic
 ```bash
 decapod data knowledge search --query "crypto primitives"
 ```
+
+## Aptitude and Skills (`decapod data aptitude`)
+
+### Import a Skill
+```bash
+decapod data aptitude skill import --path metadata/skills/my-feature.SKILL.md --write-card
+```
+
+### Resolve Skills for Context
+```bash
+decapod data aptitude skill resolve --query "implementing a new rpc operation" --limit 3
+```
+
+### Add a Preference
+```bash
+decapod data aptitude add --category "code_style" --key "indentation" --value "4 spaces"
+```

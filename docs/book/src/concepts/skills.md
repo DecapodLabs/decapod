@@ -36,6 +36,26 @@ decapod data aptitude skill import --path metadata/skills/rust-security-audit.SK
 
 The `--write-card` flag generates a deterministic JSON "Skill Card" in `.decapod/skills/`, which serves as a version-controlled proof of the skill's presence and state.
 
+## Deep Integration: The `OVERRIDE.md` Substrate
+
+Skills are not just static documents; they are part of the Decapod Constitution. This means they can be targeted for granular overrides in `.decapod/OVERRIDE.md`.
+
+### Targetting a Skill Node
+Every skill imported into Decapod is assigned a node ID: `metadata/skills/<skill-name>`. You can use this ID to add project-specific layers to a shared skill.
+
+```markdown
+### metadata/skills/rust-security-audit
+
+**Project-Specific Guidance:**
+- In addition to the standard audit, verify that no `panic!` macros are used in production paths.
+- Ensure all `Result` types are handled without `.unwrap()`.
+```
+
+### Why Override Skills?
+1. **Context Blending:** Use a global security skill but add project-specific exceptions.
+2. **Team Norms:** Adjust a shared "Release" skill to match your team's specific QA sign-off process.
+3. **Evolution:** Gradually migrate a global skill to a new version by overriding it locally first.
+
 ## Skill Resolution
 
 Agents don't need to know which skill to use. They can query Decapod for the most relevant skills for their current task.

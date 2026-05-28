@@ -12,6 +12,7 @@
   - [Workspace Isolation](workflows/workspace-isolation.md)
 
 - [Concepts]()
+  - [Agent-First Architecture](concepts/agent-first.md)
   - [Intent](concepts/intent.md)
   - [Workspaces](concepts/workspaces.md)
   - [Proof](concepts/proof.md)
