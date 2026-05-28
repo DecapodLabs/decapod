@@ -647,6 +647,43 @@ pub fn get_template(name: &str) -> Option<String> {
         "CODEX.md" => Some(template_named_agent("CODEX")),
         "README.md" => Some(template_readme()),
         "OVERRIDE.md" => Some(template_override()),
+        "decapod-validate.yml" => Some(template_github_action()),
         _ => None,
     }
+}
+
+fn template_github_action() -> String {
+    r#"name: Decapod Validate
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache Decapod
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/decapod
+          key: ${{ runner.os }}-decapod
+      - name: Install Decapod
+        run: |
+          if ! command -v decapod &> /dev/null; then
+            cargo install decapod
+          fi
+      - name: Decapod Validate
+        env:
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
+        run: |
+          decapod init --proof
+          decapod validate
+"#
+    .to_string()
 }

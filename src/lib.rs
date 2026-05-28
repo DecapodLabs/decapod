@@ -1571,6 +1571,12 @@ fn run_init_apply(
         scaffold_summary.specs_unchanged.to_string().bright_yellow(),
         scaffold_summary.specs_preserved.to_string().bright_white()
     );
+    println!(
+        "  CI: created={}, unchanged={}, preserved={}",
+        scaffold_summary.ci_created.to_string().bright_green(),
+        scaffold_summary.ci_unchanged.to_string().bright_yellow(),
+        scaffold_summary.ci_preserved.to_string().bright_white()
+    );
     println!("  Backups: {}", backup_count.to_string().bright_magenta());
     println!(
         "  Diagram Notation: {}",
@@ -4155,8 +4161,8 @@ fn heal_validation_scaffold(
         action: "heal_validation_scaffold".to_string(),
         outcome: "updated".to_string(),
         detail: format!(
-            "Scaffolded missing validation surfaces (entrypoints_created={}, config_created={}, specs_created={}).",
-            summary.entrypoints_created, summary.config_created, summary.specs_created
+            "Scaffolded missing validation surfaces (entrypoints_created={}, config_created={}, specs_created={}, ci_created={}).",
+            summary.entrypoints_created, summary.config_created, summary.specs_created, summary.ci_created
         ),
     }))
 }

@@ -55,6 +55,9 @@ pub struct ScaffoldSummary {
     pub specs_created: usize,
     pub specs_unchanged: usize,
     pub specs_preserved: usize,
+    pub ci_created: usize,
+    pub ci_unchanged: usize,
+    pub ci_preserved: usize,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -1354,6 +1357,21 @@ pub fn scaffold_project_entrypoints(
         }
     }
 
+    // CI Scaffolding - GitHub Action
+    let mut ci_created = 0usize;
+    let mut ci_unchanged = 0usize;
+    let mut ci_preserved = 0usize;
+
+    let github_workflow_rel = ".github/workflows/decapod-validate.yml";
+    let github_workflow_content = assets::get_template("decapod-validate.yml")
+        .expect("Missing template: decapod-validate.yml");
+
+    match write_file(opts, github_workflow_rel, &github_workflow_content)? {
+        FileAction::Created => ci_created += 1,
+        FileAction::Unchanged => ci_unchanged += 1,
+        FileAction::Preserved => ci_preserved += 1,
+    }
+
     // Legacy agent entrypoint backups (*.bak) are NOT auto-blended here.
     // Use get_legacy_entrypoint_contents() to read them and return to the agent.
     // The agent will manually consolidate content into appropriate OVERRIDE.md sections.
@@ -1536,5 +1554,8 @@ Agents operating in this repo MUST maintain these artifacts to ensure long-horiz
         specs_created,
         specs_unchanged,
         specs_preserved,
+        ci_created,
+        ci_unchanged,
+        ci_preserved,
     })
 }
