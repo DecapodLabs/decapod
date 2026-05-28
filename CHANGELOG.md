@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.55.2](https://github.com/DecapodLabs/decapod/compare/v0.55.1...v0.55.2) - 2026-05-28
+
+### Added
+
+- implement strict spec maintenance with specs.refresh RPC (closes #620) ([#623](https://github.com/DecapodLabs/decapod/pull/623))
+
 ## [0.55.1](https://github.com/DecapodLabs/decapod/compare/v0.55.0...v0.55.1) - 2026-05-28
 
 ### Other
