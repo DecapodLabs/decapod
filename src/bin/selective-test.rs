@@ -1,6 +1,6 @@
+use clap::Parser;
 use std::collections::HashMap;
 use std::process::{Command, Stdio};
-use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(name = "selective-test")]
@@ -31,7 +31,10 @@ fn get_changed_files() -> Vec<String> {
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() >= 2 {
                     let status = parts[0];
-                    if status.chars().any(|c| matches!(c, 'M' | 'A' | 'D' | 'R' | 'C')) {
+                    if status
+                        .chars()
+                        .any(|c| matches!(c, 'M' | 'A' | 'D' | 'R' | 'C'))
+                    {
                         return Some(parts[1].to_string());
                     }
                 }
@@ -44,7 +47,7 @@ fn get_changed_files() -> Vec<String> {
 
 fn get_changed_files_from_arg(files: &str) -> Vec<String> {
     files
-        .split(|c| c == ',' || c == ' ')
+        .split([',', ' '])
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .collect()
@@ -119,7 +122,8 @@ fn add_tests_for_file(file: &str, tests_to_run: &mut HashMap<String, bool>) {
                 tests_to_run.insert(test_name, true);
             }
         }
-        "Cargo.toml" | "AGENTS.md" | "CLAUDE.md" | "CODEX.md" | "GEMINI.md" | "constitution.json" => {
+        "Cargo.toml" | "AGENTS.md" | "CLAUDE.md" | "CODEX.md" | "GEMINI.md"
+        | "constitution.json" => {
             tests_to_run.insert("entrypoint_correctness".to_string(), true);
             tests_to_run.insert("cli_contract_enforcement".to_string(), true);
         }
@@ -187,7 +191,15 @@ fn add_tests_for_file(file: &str, tests_to_run: &mut HashMap<String, bool>) {
 fn run_cargo_test(test: &str, threads: &str) -> bool {
     println!(">>> Running: {}", test);
     let status = Command::new("cargo")
-        .args(["test", "--all-features", "--test", test, "--", "--test-threads", threads])
+        .args([
+            "test",
+            "--all-features",
+            "--test",
+            test,
+            "--",
+            "--test-threads",
+            threads,
+        ])
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .status();
@@ -291,10 +303,10 @@ fn main() {
         get_changed_files()
     };
 
-    if changed_files.is_empty() || (changed_files.len() == 1 && changed_files[0] == "--all") {
-        if !args.all {
-            println!("No changed files detected. Use --all to run all tests.");
-        }
+    if changed_files.is_empty()
+        || (changed_files.len() == 1 && changed_files[0] == "--all") && !args.all
+    {
+        println!("No changed files detected. Use --all to run all tests.");
     }
 
     println!("Changed files: {:?}", changed_files);
