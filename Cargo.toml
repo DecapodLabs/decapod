@@ -28,6 +28,10 @@ path = "src/lib.rs"
 name = "decapod"
 path = "src/main.rs"
 
+[[bin]]
+name = "selective-test"
+path = "src/bin/selective-test.rs"
+
 [workspace]
 # members = ["crates/*"]
 
