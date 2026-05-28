@@ -1026,7 +1026,7 @@
         ],
         "concepts": [
           "Authentication proves who you are; Authorization proves what you can do.",
-          "Tokens are bearer credentials. Their exposure is equivalent to password exposure.",
+          "Tokens are bearer-type credentials. Their exposure is equivalent to password exposure.",
           "Sessions have lifecycles: creation, validation, refresh, and explicit revocation."
         ],
         "ambiguity": [
@@ -3360,13 +3360,20 @@
       "title": "docs/ARCHITECTURE_OVERVIEW",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes Decapod's architecture explanation surface: control plane, repo-native state, generated artifacts, and authority hierarchy.",
+      "summary": "Guides documentation audience, freshness, authority boundaries, and proof expectations for ARCHITECTURE OVERVIEW.",
       "terms": [
-        "control plane",
-        "repo-native",
-        "generated artifacts",
-        "authority hierarchy",
-        "plugin ownership"
+        "overview",
+        "architecture",
+        "flow",
+        "boundaries",
+        "model",
+        "storage",
+        "governance",
+        "execution",
+        "hierarchy",
+        "artifact",
+        "posture",
+        "runtime"
       ],
       "links": {
         "references": [
@@ -3383,31 +3390,29 @@
       },
       "sections": {
         "match": [
-          "Use when explaining how Decapod components interact or when the user asks for a high-level system diagram."
+          "Use when updating or consulting ARCHITECTURE OVERVIEW documentation."
         ],
         "concepts": [
-          "Control Plane: The Decapod binary and RPC interface managing all transitions.",
-          "Repo-Native State: Human-readable authority files and configurations stored in version control.",
-          "Generated Artifacts: Deterministic outputs like specs and dockerfiles managed by Decapod.",
-          "Authority Hierarchy: From embedded constitution to repo overrides to active session state."
+          "Apply domain-specific rules for docs/ARCHITECTURE_OVERVIEW."
         ],
         "ambiguity": [
-          "Stop inference if the boundary between Decapod-managed state and user-managed code is unclear."
+          "Stop inference if the intended audience or operational boundary is unclear."
         ],
         "decisions": [
-          "Determine whether a concept belongs in the persistent constitution or the transient project specs."
+          "Decide whether the change requires updating public READMEs or internal architecture guides."
         ],
         "standards": [
-          "Architecture explanations must align with the current plugin ownership and source-of-truth mapping."
+          "Documentation must match executable behavior and current schemas."
         ],
         "failure_modes": [
-          "Mixing generated artifacts with authoritative source files in documentation."
+          "Documenting aspirational behavior as current behavior.",
+          "Placing operational agent rules in public READMEs instead of AGENTS.md."
         ],
         "next_queries": [
-          "Query docs/CONTROL_PLANE_API for exact operation patterns."
+          "Query core/INTERFACES to verify machine contracts match the prose."
         ],
         "proceed_when": [
-          "Proceed when the system interaction model is understood relative to the repo-native state."
+          "Proceed when the explanation aligns with the current verifiable state."
         ]
       }
     },
@@ -3479,13 +3484,20 @@
       "title": "docs/EVAL_TRANSLATION_MAP",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes how eval concepts become Decapod-operable checks, rubrics, judge contracts, and proof signals.",
+      "summary": "Guides documentation audience, freshness, authority boundaries, and proof expectations for EVAL TRANSLATION MAP.",
       "terms": [
-        "eval rubric",
-        "judge contract",
-        "variance",
-        "proof signals",
-        "scoring"
+        "evaluation",
+        "signals",
+        "rubrics",
+        "operable",
+        "agent",
+        "eval",
+        "checks",
+        "translation",
+        "concepts",
+        "doctrine",
+        "decapod",
+        "mapping"
       ],
       "links": {
         "references": [
@@ -3497,31 +3509,29 @@
       },
       "sections": {
         "match": [
-          "Use when defining evaluation criteria, configuring automated judges, or mapping product risks to test rubrics."
+          "Use when updating or consulting EVAL TRANSLATION MAP documentation."
         ],
         "concepts": [
-          "Rubrics: Qualitative criteria translated into quantitative scoring dimensions.",
-          "Judge Contracts: The expected behavior and interface for automated LLM or script evaluators.",
-          "Variance Expectations: Statistical boundaries for acceptable result fluctuation across runs.",
-          "Proof Signals: Executable evidence that satisfies a specific evaluation gate."
+          "Apply domain-specific rules for docs/EVAL_TRANSLATION_MAP."
         ],
         "ambiguity": [
-          "Stop inference if the rubric scoring scale or the definition of a 'pass' is non-deterministic."
+          "Stop inference if the intended audience or operational boundary is unclear."
         ],
         "decisions": [
-          "Decide between binary success/fail gates versus weighted multi-dimensional scoring."
+          "Decide whether the change requires updating public READMEs or internal architecture guides."
         ],
         "standards": [
-          "Evaluation maps must link every rubric dimension to a specific risk documented in the threat model."
+          "Documentation must match executable behavior and current schemas."
         ],
         "failure_modes": [
-          "Using vague, non-falsifiable eval criteria that a judge cannot objectively verify."
+          "Documenting aspirational behavior as current behavior.",
+          "Placing operational agent rules in public READMEs instead of AGENTS.md."
         ],
         "next_queries": [
-          "Query architecture/TESTING_STRATEGY for evidence capture patterns."
+          "Query core/INTERFACES to verify machine contracts match the prose."
         ],
         "proceed_when": [
-          "Proceed when the eval concepts are mapped to operable Decapod judge contracts."
+          "Proceed when the explanation aligns with the current verifiable state."
         ]
       }
     },
@@ -3595,12 +3605,19 @@
       "title": "docs/MAINTAINERS",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes maintainer stewardship: review bar, release hygiene, deprecation discipline, and emergency protocol.",
+      "summary": "Guides documentation audience, freshness, authority boundaries, and proof expectations for MAINTAINERS.",
       "terms": [
+        "guidance",
+        "maintainer",
+        "hygiene",
+        "expectations",
+        "project",
+        "ownership",
+        "review",
+        "governance",
+        "maintainers",
         "stewardship",
-        "review bar",
-        "release hygiene",
-        "deprecation",
+        "release",
         "triage"
       ],
       "links": {
@@ -3614,31 +3631,29 @@
       },
       "sections": {
         "match": [
-          "Use when acting as a repository steward, performing code reviews, or managing the project lifecycle."
+          "Use when updating or consulting MAINTAINERS documentation."
         ],
         "concepts": [
-          "Review Bar: The minimum quality and security threshold for merging into protected branches.",
-          "Deprecation Discipline: Strict adherence to versioning and removal windows for stale features.",
-          "Authority Preservation: Ensuring that changes do not silently bypass constitutional mandates.",
-          "Triage: Systematic classification of incoming issues by risk and blast radius."
+          "Apply domain-specific rules for docs/MAINTAINERS."
         ],
         "ambiguity": [
-          "Stop inference if the ownership of a subsystem or the emergency contact path is unknown."
+          "Stop inference if the intended audience or operational boundary is unclear."
         ],
         "decisions": [
-          "Determine when to invoke the emergency protocol versus following the standard release process."
+          "Decide whether the change requires updating public READMEs or internal architecture guides."
         ],
         "standards": [
-          "Maintainer actions must be recorded in the audit log or version history with clear rationale."
+          "Documentation must match executable behavior and current schemas."
         ],
         "failure_modes": [
-          "Allowing exception-based merges that weaken the long-term integrity of the constitution."
+          "Documenting aspirational behavior as current behavior.",
+          "Placing operational agent rules in public READMEs instead of AGENTS.md."
         ],
         "next_queries": [
-          "Query core/EMERGENCY_PROTOCOL for stop-work triggers."
+          "Query core/INTERFACES to verify machine contracts match the prose."
         ],
         "proceed_when": [
-          "Proceed when the change preserves system authority and meets the established review bar."
+          "Proceed when the explanation aligns with the current verifiable state."
         ]
       }
     },
@@ -3714,13 +3729,20 @@
       "title": "docs/NEGLECTED_ASPECTS_LEDGER",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes how postponed risks, incomplete surfaces, known gaps, and deferred work are recorded without pretending completion.",
+      "summary": "Guides documentation audience, freshness, authority boundaries, and proof expectations for NEGLECTED ASPECTS LEDGER.",
       "terms": [
-        "neglected aspects",
-        "deferred work",
-        "technical debt",
-        "gap tracking",
-        "risk visibility"
+        "risks",
+        "inventory",
+        "postponed",
+        "neglected",
+        "missing",
+        "work",
+        "unaddressed",
+        "ledger",
+        "surfaces",
+        "aspects",
+        "completion",
+        "explicit"
       ],
       "links": {
         "references": [
@@ -3732,30 +3754,29 @@
       },
       "sections": {
         "match": [
-          "Use when identifying technical debt, deferring a complex requirement, or acknowledging an incomplete implementation surface."
+          "Use when updating or consulting NEGLECTED ASPECTS LEDGER documentation."
         ],
         "concepts": [
-          "Intention: Every entry must explain *why* the work was deferred and under what conditions it must be resumed.",
-          "Risk Visibility: Neglected aspects are not bugs; they are known limitations that must be visible to the control plane.",
-          "Gap Tracking: Linking incomplete work to specific core/GAPS classifications."
+          "Apply domain-specific rules for docs/NEGLECTED_ASPECTS_LEDGER."
         ],
         "ambiguity": [
-          "Stop inference if a deferred risk lacks a recorded mitigation or a 'proceed-unless' trigger."
+          "Stop inference if the intended audience or operational boundary is unclear."
         ],
         "decisions": [
-          "Decide if a limitation should be fixed immediately or added to the ledger with an expiration date."
+          "Decide whether the change requires updating public READMEs or internal architecture guides."
         ],
         "standards": [
-          "Ledger entries must include a severity rating and the specific authority boundary they affect."
+          "Documentation must match executable behavior and current schemas."
         ],
         "failure_modes": [
-          "Using the ledger as a graveyard for critical bugs rather than a disciplined record of deferred intent."
+          "Documenting aspirational behavior as current behavior.",
+          "Placing operational agent rules in public READMEs instead of AGENTS.md."
         ],
         "next_queries": [
-          "Query core/GAPS to classify the neglected aspect."
+          "Query core/INTERFACES to verify machine contracts match the prose."
         ],
         "proceed_when": [
-          "Proceed when the limitation is recorded and its impact on current proof claims is acknowledged."
+          "Proceed when the explanation aligns with the current verifiable state."
         ]
       }
     },
@@ -3890,11 +3911,17 @@
       "title": "docs/RELEASE_PROCESS",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes release gates, changelog expectations, versioning, validation, rollback, and customer-facing readiness.",
+      "summary": "Guides documentation audience, freshness, authority boundaries, and proof expectations for RELEASE PROCESS.",
       "terms": [
-        "release gates",
-        "changelog",
-        "semantic versioning",
+        "gates",
+        "communication",
+        "validation",
+        "changelogs",
+        "process",
+        "customer",
+        "release",
+        "versioning",
+        "publication",
         "rollback",
         "readiness"
       ],
@@ -3913,31 +3940,29 @@
       },
       "sections": {
         "match": [
-          "Use when preparing a deployment, tagging a version, or updating the public changelog."
+          "Use when updating or consulting RELEASE PROCESS documentation."
         ],
         "concepts": [
-          "Release Gates: Executable check-lists (unit tests, eval scores, security scans) that must be green.",
-          "Rollback Readiness: A verified, automated path to revert the system to the previous stable state.",
-          "Customer Readiness: Documentation, migration scripts, and support playbooks must be finalized.",
-          "Versioning: Strict semantic versioning tied to the interface stability contract."
+          "Apply domain-specific rules for docs/RELEASE_PROCESS."
         ],
         "ambiguity": [
-          "Stop inference if the rollback procedure or the current release gate status is unverified."
+          "Stop inference if the intended audience or operational boundary is unclear."
         ],
         "decisions": [
-          "Determine if a release should be halted due to a partial failure in a non-critical gate."
+          "Decide whether the change requires updating public READMEs or internal architecture guides."
         ],
         "standards": [
-          "Changelogs must be human-readable and map changes to specific project intent or bug reports."
+          "Documentation must match executable behavior and current schemas."
         ],
         "failure_modes": [
-          "Releasing features with stale documentation or missing migration paths."
+          "Documenting aspirational behavior as current behavior.",
+          "Placing operational agent rules in public READMEs instead of AGENTS.md."
         ],
         "next_queries": [
-          "Query methodology/CI_CD for automated delivery patterns."
+          "Query core/INTERFACES to verify machine contracts match the prose."
         ],
         "proceed_when": [
-          "Proceed when all gates are satisfied and the rollback path is verified."
+          "Proceed when the explanation aligns with the current verifiable state."
         ]
       }
     },
@@ -4016,13 +4041,21 @@
       "title": "docs/SKILL_TRANSLATION_MAP",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes how external/reusable skill concepts map into Decapod skill governance, invocation boundaries, and capabilities.",
+      "summary": "Guides documentation audience, freshness, authority boundaries, and proof expectations for SKILL TRANSLATION MAP.",
       "terms": [
-        "skill governance",
-        "capability mapping",
-        "invocation boundary",
-        "skill translation",
-        "agent behavior"
+        "reusable",
+        "guidance",
+        "patterns",
+        "agent",
+        "skill",
+        "boundaries",
+        "translation",
+        "operator",
+        "human",
+        "capability",
+        "skills",
+        "invocation",
+        "mapping"
       ],
       "links": {
         "references": [
@@ -4034,30 +4067,29 @@
       },
       "sections": {
         "match": [
-          "Use when importing new skills, mapping agentic behavior to CLI commands, or defining custom capabilities."
+          "Use when updating or consulting SKILL TRANSLATION MAP documentation."
         ],
         "concepts": [
-          "Skill Governance: How skills are authorized, shared, and versioned across the ecosystem.",
-          "Invocation Boundaries: The precise triggers and context windows where a skill is permitted to operate.",
-          "Capability Mapping: Translating a high-level skill intent into specific Decapod CLI/RPC operations."
+          "Apply domain-specific rules for docs/SKILL_TRANSLATION_MAP."
         ],
         "ambiguity": [
-          "Stop inference if a skill's security requirements or allowed tool-set is not explicitly mapped."
+          "Stop inference if the intended audience or operational boundary is unclear."
         ],
         "decisions": [
-          "Determine whether a capability should be a core plugin or a portable skill."
+          "Decide whether the change requires updating public READMEs or internal architecture guides."
         ],
         "standards": [
-          "Skills must be documented with clear input/output expectations and associated proof claims."
+          "Documentation must match executable behavior and current schemas."
         ],
         "failure_modes": [
-          "Mapping a single broad skill to too many unrelated CLI operations, causing context pollution."
+          "Documenting aspirational behavior as current behavior.",
+          "Placing operational agent rules in public READMEs instead of AGENTS.md."
         ],
         "next_queries": [
-          "Query specs/skills/SKILL_GOVERNANCE for authority rules."
+          "Query core/INTERFACES to verify machine contracts match the prose."
         ],
         "proceed_when": [
-          "Proceed when the skill is correctly mapped to a Decapod capability and invocation boundary."
+          "Proceed when the explanation aligns with the current verifiable state."
         ]
       }
     },
@@ -4070,6 +4102,7 @@
       "summary": "Describes retrieved snippets, task scope, authority ordering, bounded context, and agent pre-inference consumption.",
       "terms": [
         "payloads",
+        "task",
         "retrieval",
         "agent",
         "bounded",
@@ -4130,13 +4163,20 @@
       "title": "interfaces/ARCHITECTURE_FOUNDATIONS",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes foundational architecture vocabulary: boundary, state, interface, failure mode, runtime, deployment, and proof.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for ARCHITECTURE FOUNDATIONS.",
       "terms": [
-        "boundary",
-        "state ownership",
-        "failure mode",
-        "runtime",
-        "proof claim"
+        "first",
+        "vocabulary",
+        "architecture",
+        "principles",
+        "system",
+        "boundaries",
+        "failure",
+        "modes",
+        "design",
+        "foundations",
+        "production",
+        "interfaces"
       ],
       "links": {
         "references": [
@@ -4148,31 +4188,30 @@
       },
       "sections": {
         "match": [
-          "Use when discussing high-level design patterns before selecting specific technology-based architecture nodes."
+          "Use when altering schemas, response envelopes, or state stores for ARCHITECTURE FOUNDATIONS."
         ],
         "concepts": [
-          "Boundary: The explicit line where control or data ownership changes.",
-          "State: Where data lives (ephemeral vs persistent) and who governs its mutation.",
-          "Failure Mode: The predicted ways a component can fail and the system's reaction.",
-          "Proof: The executable evidence that an architectural requirement is satisfied."
+          "Apply domain-specific rules for interfaces/ARCHITECTURE_FOUNDATIONS."
         ],
         "ambiguity": [
-          "Stop inference if the basic relationship between state and interface is undefined for a new component."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Identify the primary constraint axis: latency, throughput, consistency, or cost."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "All designs must explicitly name their boundaries, state ownership, and failure modes."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Defaulting to technology choices (e.g., 'use Kafka') before naming the foundational needs."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query architecture/SYSTEMS_DESIGN for implementation patterns."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the foundational vocabulary is used to define the problem boundary."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4249,13 +4288,21 @@
       "title": "interfaces/CONTROL_PLANE",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes operation sequencing, receipts, allowed next operations, blocked_by, and mutation boundaries.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for CONTROL PLANE.",
       "terms": [
-        "control plane",
-        "receipt",
-        "blocked_by",
-        "mutation boundary",
-        "sequencing"
+        "plane",
+        "contract",
+        "agent",
+        "operation",
+        "receipts",
+        "allowed",
+        "next",
+        "actions",
+        "locks",
+        "liveness",
+        "sequencing",
+        "initialization",
+        "control"
       ],
       "links": {
         "references": [
@@ -4274,32 +4321,31 @@
       },
       "sections": {
         "match": [
-          "Use when interacting with the Decapod CLI/RPC, handling response envelopes, or sequencing agent actions."
+          "Use when altering schemas, response envelopes, or state stores for CONTROL PLANE."
         ],
         "concepts": [
-          "Operation Sequencing: The strict order in which Decapod operations must be performed (e.g., claim before ensure).",
-          "Receipts: Structured evidence returned by an operation, including hashes and touched paths.",
-          "Blocked By: Explicit signals indicating missing prerequisite proof or user input.",
-          "Mutation Boundary: The line between Decapod-internal state and the user's working directory."
+          "Apply domain-specific rules for interfaces/CONTROL_PLANE."
         ],
         "ambiguity": [
-          "Stop inference if an RPC response indicates a 'blocked_by' state without a clear resolution hint."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Determine the next allowed operation based on the receipt from the previous step."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "All agent mutations must produce a receipt linked to a governing anchor in the constitution.",
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance.",
           "Enforce invocation heartbeat for continuous presence tracking."
         ],
         "failure_modes": [
-          "Attempting to bypass the control plane by editing internal .decapod files directly."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query docs/CONTROL_PLANE_API for payload examples."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the operation receipt is valid and no blockers are reported."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4309,13 +4355,21 @@
       "title": "interfaces/DEMANDS_SCHEMA",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes how explicit human constraints become structured demands: must/must-not, priority, scope, and durability.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for DEMANDS SCHEMA.",
       "terms": [
-        "structured demands",
-        "must/must-not",
-        "constraint priority",
-        "scope",
-        "durability"
+        "contract",
+        "readable",
+        "agent",
+        "demands",
+        "machine",
+        "interface",
+        "boundaries",
+        "integration",
+        "surfaces",
+        "schema",
+        "contracts",
+        "stable",
+        "schemas"
       ],
       "links": {
         "references": [
@@ -4327,31 +4381,30 @@
       },
       "sections": {
         "match": [
-          "Use when parsing user constraints, updating the demands store, or resolving conflicting requirements."
+          "Use when altering schemas, response envelopes, or state stores for DEMANDS SCHEMA."
         ],
         "concepts": [
-          "Constraint Types: 'Must' (blocking), 'Must-Not' (forbidden), 'Prefer' (weighted).",
-          "Durability: Whether a demand applies only to the current task or is a persistent project rule.",
-          "Scope: The specific files, subsystems, or workflows a demand constrains.",
-          "Conflict Resolution: Precedence rules between multiple demands and the core constitution."
+          "Apply domain-specific rules for interfaces/DEMANDS_SCHEMA."
         ],
         "ambiguity": [
-          "Stop inference if two 'Must' demands are mutually exclusive."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Determine if a user's prompt should be encoded as a new demand or a constitution override."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "Structured demands must be linked to a specific user intent or session ID."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Ignoring a 'Must' demand because it conflicts with a local optimization."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query specs/INTENT to link demands to outcomes."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when demands are structured, scoped, and conflicts are resolved."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4361,13 +4414,21 @@
       "title": "interfaces/DOC_RULES",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes machine-readable documentation rules: canonical vs generated, freshness, authority, and drift handling.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for DOC RULES.",
       "terms": [
-        "canonical docs",
-        "generated docs",
-        "doc drift",
-        "authority layer",
-        "freshness"
+        "structure",
+        "generated",
+        "agent",
+        "boundaries",
+        "freshness",
+        "readme",
+        "docs",
+        "rules",
+        "safe",
+        "conventions",
+        "writing",
+        "canonical",
+        "documentation"
       ],
       "links": {
         "references": [
@@ -4379,31 +4440,30 @@
       },
       "sections": {
         "match": [
-          "Use when creating new documentation files, validating freshness, or distinguishing authority layers."
+          "Use when altering schemas, response envelopes, or state stores for DOC RULES."
         ],
         "concepts": [
-          "Canonical Docs: Hand-written, versioned authority (e.g., OVERRIDE.md, readme).",
-          "Generated Docs: Machine-produced artifacts (e.g., specs/) that must not be manually edited.",
-          "Doc Drift: The measurable delta between code behavior and documented claims.",
-          "Boundaries: Clarifying that README is for humans and AGENTS.md is for machine logic."
+          "Apply domain-specific rules for interfaces/DOC_RULES."
         ],
         "ambiguity": [
-          "Stop inference if a file's status as 'canonical' or 'generated' is unclear."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Decide whether to update a hand-written doc or regenerate a spec after a change."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "Documentation must cite the authority level (e.g., Layer: Interfaces) to prevent authority drift."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Editing generated specs manually, only for them to be overwritten on the next build."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query core/DOCS for routing."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when documentation changes respect the canonical/generated boundary."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4413,13 +4473,19 @@
       "title": "interfaces/GLOSSARY",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes shared vocabulary governance: canonical terms, aliases, ambiguity reduction, and deprecated terms.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for GLOSSARY.",
       "terms": [
-        "canonical terms",
-        "aliases",
-        "ambiguity reduction",
         "glossary",
-        "retrieval support"
+        "vocabulary",
+        "shared",
+        "agent",
+        "boundaries",
+        "understanding",
+        "consistency",
+        "term",
+        "human",
+        "semantic",
+        "canonical"
       ],
       "links": {
         "references": [
@@ -4431,31 +4497,30 @@
       },
       "sections": {
         "match": [
-          "Use when defining domain-specific terms, resolving naming conflicts, or mapping slang to canonical concepts."
+          "Use when altering schemas, response envelopes, or state stores for GLOSSARY."
         ],
         "concepts": [
-          "Canonical Term: The single, authoritative name for a concept (e.g., 'workunit').",
-          "Alias: Alternate terms that route to the same canonical concept (e.g., 'task' -> 'workunit').",
-          "Ambiguity Reduction: Distinguishing between similar terms with different authority levels.",
-          "Retrieval Support: Using the glossary to improve search hits without creating new policy."
+          "Apply domain-specific rules for interfaces/GLOSSARY."
         ],
         "ambiguity": [
-          "Stop inference if a user's term has multiple conflicting meanings in the glossary."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Determine if a new term should be added to the glossary or mapped to an existing one."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "Glossary entries must be descriptive, not prescriptive (use specs/ for rules)."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Allowing term-drift where different subsystems use different names for the same state."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query core/METADATA for taxonomy retrieval."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the vernacular is mapped to canonical system terms."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4465,13 +4530,19 @@
       "title": "interfaces/INTERNALIZATION_SCHEMA",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes the lifecycle of attaching, inspecting, detaching, and validating external knowledge into Decapod-governed state.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for INTERNALIZATION SCHEMA.",
       "terms": [
+        "attached",
+        "inspected",
+        "external",
+        "inside",
         "internalization",
-        "attachment",
-        "inspection",
-        "detachment",
-        "provenance"
+        "knowledge",
+        "governed",
+        "decapod",
+        "detached",
+        "schema",
+        "state"
       ],
       "links": {
         "references": [
@@ -4483,31 +4554,30 @@
       },
       "sections": {
         "match": [
-          "Use when importing external documentation, code snippets, or logs into the Decapod knowledge base."
+          "Use when altering schemas, response envelopes, or state stores for INTERNALIZATION SCHEMA."
         ],
         "concepts": [
-          "Attachment: The act of creating a Decapod-governed link to external information.",
-          "Inspection: Validating the provenance and authority level of internalized data.",
-          "Detachment: Safely removing links without corrupting the underlying repository state.",
-          "Validation: Ensuring the internalized payload matches the required JSON schemas."
+          "Apply domain-specific rules for interfaces/INTERNALIZATION_SCHEMA."
         ],
         "ambiguity": [
-          "Stop inference if the provenance of an internalized artifact is unverifiable."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Decide if external knowledge should be internalized as 'durable' or 'ephemeral' state."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "All internalized data must have an associated owner and timestamp to manage decay."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Internalizing large binary blobs that should remain as external references."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query interfaces/KNOWLEDGE_SCHEMA for object shapes."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the internalization lifecycle is verified and schema-compliant."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4517,13 +4587,16 @@
       "title": "interfaces/KNOWLEDGE_SCHEMA",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes knowledge object shape: source, provenance, authority, summary, and retrieval tags.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for KNOWLEDGE SCHEMA.",
       "terms": [
-        "knowledge object",
+        "relationships",
+        "queryability",
+        "shape",
         "provenance",
-        "authority level",
-        "retrieval tags",
-        "decay"
+        "knowledge",
+        "lifecycle",
+        "schema",
+        "object"
       ],
       "links": {
         "references": [
@@ -4537,31 +4610,30 @@
       },
       "sections": {
         "match": [
-          "Use when generating knowledge objects, parsing search results, or updating the retrieval index."
+          "Use when altering schemas, response envelopes, or state stores for KNOWLEDGE SCHEMA."
         ],
         "concepts": [
-          "Provenance: The chain of custody from the original source to the current knowledge object.",
-          "Authority Level: Categorizing knowledge as 'binding', 'advisory', or 'anecdotal'.",
-          "Decay: Managing the freshness and eventual expiration of non-binding knowledge.",
-          "Retrieval Tags: Dense, semantic labels that optimize for vector and keyword search."
+          "Apply domain-specific rules for interfaces/KNOWLEDGE_SCHEMA."
         ],
         "ambiguity": [
-          "Stop inference if a knowledge object lacks sufficient provenance to establish its authority."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Determine which retrieval tags will provide the highest signal for the intended consumer."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "Knowledge objects must pass the KNOWLEDGE_SCHEMA validation before being indexed."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Over-tagging knowledge objects, leading to high-noise retrieval results."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query interfaces/KNOWLEDGE_STORE for persistence rules."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the knowledge object is fully structured and its authority is clear."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4571,13 +4643,18 @@
       "title": "interfaces/KNOWLEDGE_STORE",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes persistent knowledge storage: indexing, update/delete semantics, and retrieval safety.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for KNOWLEDGE STORE.",
       "terms": [
-        "indexing",
-        "retrieval safety",
-        "stale records",
+        "retrieval",
+        "provenance",
+        "captured",
+        "model",
+        "reuse",
         "persistence",
-        "update semantics"
+        "knowledge",
+        "safe",
+        "indexing",
+        "store"
       ],
       "links": {
         "references": [
@@ -4591,31 +4668,30 @@
       },
       "sections": {
         "match": [
-          "Use when configuring the knowledge database, performing batch updates, or auditing storage integrity."
+          "Use when altering schemas, response envelopes, or state stores for KNOWLEDGE STORE."
         ],
         "concepts": [
-          "Indexing: The mechanism for mapping semantic queries to stored knowledge objects.",
-          "Update/Delete Semantics: Ensuring that state transitions (e.g., 'deprecated') are reflected in search results.",
-          "Retrieval Safety: Bounding the context window to prevent ingestion of conflicting knowledge.",
-          "Stale Record Handling: Automated cleanup or re-verification of expired records."
+          "Apply domain-specific rules for interfaces/KNOWLEDGE_STORE."
         ],
         "ambiguity": [
-          "Stop inference if the knowledge store returns contradictory results with equal authority."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Determine whether to purge a stale record or mark it as 'unverified' in the index."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "The knowledge store must maintain an immutable log of all insertions and deletions."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Allowing the index to grow without bound, degrading retrieval performance and relevance."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query architecture/KNOWLEDGE_BASE for technical implementation."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the store integrity is verified and retrieval paths are optimized."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4625,13 +4701,19 @@
       "title": "interfaces/LCM",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes lossless context management: summary DAGs, deterministic compaction, and avoiding lossy collapse.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for LCM.",
       "terms": [
-        "lossless context",
-        "summary DAG",
-        "compaction",
+        "transfer",
         "recursion",
-        "lossy collapse"
+        "retrieval",
+        "context",
+        "lossy",
+        "summary",
+        "management",
+        "deterministic",
+        "compression",
+        "dags",
+        "lossless"
       ],
       "links": {
         "references": [
@@ -4644,31 +4726,30 @@
       },
       "sections": {
         "match": [
-          "Use when managing an agent's context window, performing recursive summarization, or transferring state between sessions."
+          "Use when altering schemas, response envelopes, or state stores for LCM."
         ],
         "concepts": [
-          "Summary DAGs: A directed acyclic graph of summaries that allows zooming between detail levels.",
-          "Deterministic Compaction: Compressing history based on factual importance rather than time.",
-          "Recursion: The ability for an agent to query its own previous summaries for deeper context.",
-          "Lossy Collapse: The failure mode where critical detail is discarded during summarization."
+          "Apply domain-specific rules for interfaces/LCM."
         ],
         "ambiguity": [
-          "Stop inference if a summary DAG contains a disconnected node or a conflicting claim."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Decide which context branches are 'prunable' versus 'vital' for the current task."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "Summaries must preserve the governing anchors and proof claims of the original work."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Summarizing a failed test result as 'tested' (lossy collapse of negative signal)."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query interfaces/AGENT_CONTEXT_PACK for transfer boundaries."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the context is compacted without losing critical authority or proof signals."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4678,13 +4759,16 @@
       "title": "interfaces/MEMORY_INDEX",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes the memory retrieval index: addressing, categorization, relevance, and authority ranking.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for MEMORY INDEX.",
       "terms": [
-        "memory index",
-        "authority ranking",
-        "categorization",
+        "routing",
+        "retrieval",
+        "index",
+        "addressing",
         "relevance",
-        "tiering"
+        "discovery",
+        "memory",
+        "categorization"
       ],
       "links": {
         "references": [
@@ -4696,31 +4780,30 @@
       },
       "sections": {
         "match": [
-          "Use when searching for past task resolutions, user preferences, or cross-session state."
+          "Use when altering schemas, response envelopes, or state stores for MEMORY INDEX."
         ],
         "concepts": [
-          "Categorization: Segmenting memory into 'personal', 'project', and 'ecosystem' tiers.",
-          "Relevance: Ranking memory records by semantic distance to the current task intent.",
-          "Authority Ranking: Prioritizing verified task outcomes over raw conversational logs.",
-          "Addressing: Using unique identifiers (ULIDs/Hashes) to link memory to specific repo states."
+          "Apply domain-specific rules for interfaces/MEMORY_INDEX."
         ],
         "ambiguity": [
-          "Stop inference if the memory index returns a relevant but unverified claim."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Determine the appropriate tier (personal vs project) for storing a new memory record."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "Index entries must be updated immediately after a memory record is mutated."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Allowing personal preferences to override project-level authority in search results."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query interfaces/MEMORY_SCHEMA for record shapes."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when memory retrieval is ranked by both relevance and authority."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4730,13 +4813,17 @@
       "title": "interfaces/MEMORY_SCHEMA",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes durable memory record shape: subject, claim, provenance, scope, and deletion semantics.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for MEMORY SCHEMA.",
       "terms": [
-        "memory record",
-        "subject",
-        "claim",
+        "constraints",
+        "shape",
         "provenance",
-        "forgetting"
+        "mutation",
+        "record",
+        "lifecycle",
+        "indexing",
+        "schema",
+        "memory"
       ],
       "links": {
         "references": [
@@ -4748,31 +4835,30 @@
       },
       "sections": {
         "match": [
-          "Use when creating memory records, validating stored preferences, or managing memory lifecycles."
+          "Use when altering schemas, response envelopes, or state stores for MEMORY SCHEMA."
         ],
         "concepts": [
-          "Subject: The specific entity or concept the memory concerns (e.g., 'user.preference.coding_style').",
-          "Claim: The actual data or fact being remembered.",
-          "Scope: The boundary within which the memory is valid (e.g., 'repo:decapod').",
-          "Forgetting Semantics: Rules for when a memory record should be purged or anonymized."
+          "Apply domain-specific rules for interfaces/MEMORY_SCHEMA."
         ],
         "ambiguity": [
-          "Stop inference if a memory claim lacks a timestamp or provenance."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Decide if a memory record should be updated or if a new version should be created."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "Memory records must include a confidence score or verification status."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Storing PII or credentials in memory records, violating security and privacy rules."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query methodology/MEMORY for agent cognitive practices."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the memory record is schema-compliant and correctly scoped."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4782,13 +4868,20 @@
       "title": "interfaces/PLAN_GOVERNED_EXECUTION",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes structured execution plans: steps, checkpoints, allowed mutations, and transition state.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for PLAN GOVERNED EXECUTION.",
       "terms": [
-        "execution plan",
+        "plans",
+        "controlled",
+        "approval",
+        "gates",
+        "plan",
+        "proof",
         "checkpoints",
-        "mutation boundary",
-        "transition state",
-        "blockers"
+        "boundaries",
+        "mutation",
+        "execution",
+        "governed",
+        "transitions"
       ],
       "links": {
         "references": [
@@ -4800,31 +4893,30 @@
       },
       "sections": {
         "match": [
-          "Use when generating a multi-step execution plan, validating plan progress, or handling approval gates."
+          "Use when altering schemas, response envelopes, or state stores for PLAN GOVERNED EXECUTION."
         ],
         "concepts": [
-          "Checkpoints: Mandatory validation points where execution must stop for a proof check or human approval.",
-          "Allowed Mutations: The explicit set of files or subsystems the plan is permitted to modify.",
-          "Transition State: Tracking the movement of a plan from 'draft' to 'executing' to 'verified'.",
-          "Blockers: Explicitly linking plan steps to prerequisites and dependencies."
+          "Apply domain-specific rules for interfaces/PLAN_GOVERNED_EXECUTION."
         ],
         "ambiguity": [
-          "Stop inference if a plan step lacks a defined success criteria or proof target."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Determine whether a failed checkpoint requires a full plan rollback or a surgical fix."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "Execution plans must be readable by both agents and humans and stored in the project store."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Proceeding with mutation before the plan is formally 'claimed' and moved to 'executing' state."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query interfaces/TODO_SCHEMA for task linking."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the plan is structured with explicit checkpoints and allowed mutations."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4834,13 +4926,19 @@
       "title": "interfaces/PROCEDURAL_NORMS",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes agent procedural conduct: call Decapod early, ask when blocked, and respect authority.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for PROCEDURAL NORMS.",
       "terms": [
-        "procedural norms",
-        "call early",
-        "evidence preservation",
-        "stop on risk",
-        "agent conduct"
+        "escalation",
+        "agent",
+        "expectations",
+        "procedural",
+        "restraint",
+        "reliable",
+        "sequencing",
+        "norms",
+        "discipline",
+        "conduct",
+        "behavioral"
       ],
       "links": {
         "references": [
@@ -4852,31 +4950,30 @@
       },
       "sections": {
         "match": [
-          "Use when determining the next agent action, evaluating ambiguity, or performing a security-sensitive mutation."
+          "Use when altering schemas, response envelopes, or state stores for PROCEDURAL NORMS."
         ],
         "concepts": [
-          "Call Decapod Early: The constitution is pre-inference faculty; retrieve doctrine before hardening a plan.",
-          "Ask When Blocked: Stop and request human clarification if ambiguity exceeds the threshold for safe inference.",
-          "Preserve Evidence: Every mutation must be accompanied by an executable proof or validation log.",
-          "Stop on Risk: Halt execution immediately if a trust boundary or authority rule is violated."
+          "Apply domain-specific rules for interfaces/PROCEDURAL_NORMS."
         ],
         "ambiguity": [
-          "Stop inference if the 'safe-to-proceed' threshold for a specific mutation is undefined."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Choose between making a documented assumption versus stopping to ask the user."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "Agents must cite the constitution node that authorized their procedural path."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Defaulting to model-internal knowledge when Decapod doctrine provides a project-specific rule."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query core/EMERGENCY_PROTOCOL for risk-based stops."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the procedural conduct aligns with the 'Call Decapod Early' mandate."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -4886,13 +4983,22 @@
       "title": "interfaces/PROJECT_SPECS",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes project-generated specs: intent, acceptance criteria, boundaries, and proof targets.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for PROJECT SPECS.",
       "terms": [
-        "acceptance criteria",
-        "proof targets",
-        "project specs",
+        "delivery",
+        "proof",
+        "documents",
+        "system",
+        "project",
+        "intent",
         "boundaries",
-        "spec drift"
+        "specs",
+        "criteria",
+        "specifications",
+        "backed",
+        "acceptance",
+        "artifacts",
+        "definition"
       ],
       "links": {
         "references": [
@@ -4905,31 +5011,30 @@
       },
       "sections": {
         "match": [
-          "Use when updating .decapod/generated/specs/, validating spec alignment, or checking drift."
+          "Use when altering schemas, response envelopes, or state stores for PROJECT SPECS."
         ],
         "concepts": [
-          "Acceptance Criteria: Falsifiable conditions that define the success of a feature or task.",
-          "Boundaries: The specific files and subsystems that the spec governs.",
-          "Proof Targets: The exact test or verification script that will prove the spec is satisfied.",
-          "Drift Handling: Detecting when the implementation has outpaced the documented intent."
+          "Apply domain-specific rules for interfaces/PROJECT_SPECS."
         ],
         "ambiguity": [
-          "Stop inference if the acceptance criteria are vague or the proof target is missing."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Determine if a spec change requires a corresponding update to the architecture overview."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "Project specs must be updated *before* the final code mutation to guide the implementation."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Treating specs as post-hoc documentation rather than pre-inference requirements."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query specs/INTENT for the parent contract."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the spec is hydrated with repo-specific details and proof targets."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -5063,13 +5168,19 @@
       "title": "interfaces/TESTING",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes testing interface: expected command, expected output, evidence capture, and validation status.",
+      "summary": "Describes machine contracts, producers/consumers, compatibility, validation, and error semantics for TESTING.",
       "terms": [
-        "test command",
-        "evidence capture",
-        "validation status",
-        "remediation mapping",
-        "proof"
+        "contract",
+        "evidence",
+        "validation",
+        "proof",
+        "interface",
+        "commands",
+        "surfaces",
+        "expected",
+        "test",
+        "testing",
+        "mapping"
       ],
       "links": {
         "references": [
@@ -5085,31 +5196,30 @@
       },
       "sections": {
         "match": [
-          "Use when executing tests, recording proof events, or mapping failures to remediation actions."
+          "Use when altering schemas, response envelopes, or state stores for TESTING."
         ],
         "concepts": [
-          "Expected Command: The exact shell command or script used to execute a test.",
-          "Evidence Capture: The structured logs, screenshots, or receipts that prove a test result.",
-          "Validation Status: Mapping test results to truth labels (e.g., 'verified', 'failing', 'stale').",
-          "Remediation Mapping: Linking specific failure codes to automated or suggested fix paths."
+          "Apply domain-specific rules for interfaces/TESTING."
         ],
         "ambiguity": [
-          "Stop inference if a test result is non-deterministic or lacks a captured evidence log."
+          "Stop inference if the compatibility requirement or validation surface is unknown."
         ],
         "decisions": [
-          "Determine whether a failing test is a regression or a symptom of an outdated spec."
+          "Identify whether the change breaks downstream consumers or requires versioning."
         ],
         "standards": [
-          "Test evidence must be stored in the project's verification plan or audit log."
+          "Interfaces must be defined using JSON Schema or similar contract definitions.",
+          "Validation harnesses must verify output conformance."
         ],
         "failure_modes": [
-          "Recording a 'pass' status without capturing the command output as evidence."
+          "Inferring interface semantics from implementation convenience.",
+          "Creating duplicate authority by describing the contract in multiple places."
         ],
         "next_queries": [
-          "Query plugins/VERIFY for the invariant check engine."
+          "Query core/PLUGINS to identify the subsystem responsible for enforcement."
         ],
         "proceed_when": [
-          "Proceed when the test command is known and the evidence capture path is configured."
+          "Proceed when the schema edits include validation, examples, and a named consumer impact."
         ]
       }
     },
@@ -5122,6 +5232,7 @@
       "summary": "Describes todo states, transitions, ownership, blockers, timestamps, evidence, and completion semantics.",
       "terms": [
         "states",
+        "task",
         "history",
         "machine",
         "ownership",
@@ -5470,13 +5581,17 @@
       "title": "metadata/skills/BUNDLE",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes skill bundle metadata: grouping, dependencies, invocation suitability, and discovery tags.",
+      "summary": "Supports retrieval and taxonomy for BUNDLE. It must not become hidden policy.",
       "terms": [
-        "skill bundle",
-        "grouping",
-        "discovery tags",
-        "dependencies",
-        "invocation"
+        "skill",
+        "discoverability",
+        "boundaries",
+        "metadata",
+        "dependency",
+        "composition",
+        "packaging",
+        "sets",
+        "bundle"
       ],
       "links": {
         "references": [],
@@ -5486,30 +5601,29 @@
       },
       "sections": {
         "match": [
-          "Use when classifying groups of related skills, resolving bundle dependencies, or filtering by capability."
+          "Use when evaluating labels, skills, taxonomy, or auxiliary retrieval hints for BUNDLE."
         ],
         "concepts": [
-          "Skill Grouping: Logical clusters of skills that serve a common domain (e.g., 'security-audit-bundle').",
-          "Discovery Tags: Semantic labels that help agents find relevant bundles for a specific task intent.",
-          "Invocation Suitability: Metadata determining if a bundle is appropriate for the current agent/environment."
+          "Apply domain-specific rules for metadata/skills/BUNDLE."
         ],
         "ambiguity": [
-          "Stop if a skill bundle has a circular dependency or missing requirement."
+          "Stop inference if metadata conflicts with binding interfaces or specs."
         ],
         "decisions": [
-          "Determine if a skill should be added to an existing bundle or start a new one."
+          "Identify whether this metadata should trigger a query to a deeper authority node."
         ],
         "standards": [
-          "Bundles must include a manifest documenting the purpose and authority of all member skills."
+          "Keep metadata precise, stable, and tied directly to actual capabilities."
         ],
         "failure_modes": [
-          "Creating overly large 'god bundles' that load irrelevant context for simple tasks."
+          "Letting metadata become a second source of truth for behavior.",
+          "Adding broad tags that cause unrelated retrieval hits."
         ],
         "next_queries": [
-          "Query specs/skills/SKILL_GOVERNANCE for lifecycle rules."
+          "Query specs/skills/SKILL_GOVERNANCE if the metadata involves skill packaging or invocation."
         ],
         "proceed_when": [
-          "Proceed when the skill bundle is correctly categorized and dependencies are resolved."
+          "Proceed when metadata successfully resolves a broader discovery query."
         ]
       }
     },
@@ -5519,13 +5633,20 @@
       "title": "metadata/skills/AGENT_DECAPOD_INTERFACE",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes retrieval tags and skill metadata for agent-to-Decapod interaction patterns.",
+      "summary": "Supports retrieval and taxonomy for AGENT DECAPOD INTERFACE. It must not become hidden policy.",
       "terms": [
-        "agent-to-decapod",
-        "interaction patterns",
-        "interface tags",
-        "metadata",
-        "retrieval"
+        "task",
+        "pattern",
+        "constraints",
+        "agent",
+        "document",
+        "specific",
+        "skill",
+        "outputs",
+        "inputs",
+        "execution",
+        "instruction",
+        "reusable"
       ],
       "links": {
         "references": [],
@@ -5533,29 +5654,29 @@
       },
       "sections": {
         "match": [
-          "Use when searching for skills that govern how agents use the Decapod binary, RPC, or state stores."
+          "Use when evaluating labels, skills, taxonomy, or auxiliary retrieval hints for AGENT DECAPOD INTERFACE."
         ],
         "concepts": [
-          "Interface Patterns: Standardized ways agents should call CLI commands or parse RPC receipts.",
-          "Interaction Metadata: Tags for skills that optimize agentic use of 'decapod validate', 'decapod session', etc."
+          "Apply domain-specific rules for metadata/skills/AGENT_DECAPOD_INTERFACE."
         ],
         "ambiguity": [
-          "Stop if the interface skill conflicts with the core control plane schema."
+          "Stop inference if metadata conflicts with binding interfaces or specs."
         ],
         "decisions": [
-          "Identify whether a new interaction pattern belongs in core doctrine or a separate skill."
+          "Identify whether this metadata should trigger a query to a deeper authority node."
         ],
         "standards": [
-          "Interface skills must use the canonical terms defined in the GLOSSARY."
+          "Keep metadata precise, stable, and tied directly to actual capabilities."
         ],
         "failure_modes": [
-          "Creating skill metadata that encourages agents to bypass the control plane boundary."
+          "Letting metadata become a second source of truth for behavior.",
+          "Adding broad tags that cause unrelated retrieval hits."
         ],
         "next_queries": [
-          "Query interfaces/CONTROL_PLANE for the underlying contract."
+          "Query specs/skills/SKILL_GOVERNANCE if the metadata involves skill packaging or invocation."
         ],
         "proceed_when": [
-          "Proceed when the interface skill is semantically linked to the correct CLI/RPC surface."
+          "Proceed when metadata successfully resolves a broader discovery query."
         ]
       }
     },
@@ -5565,13 +5686,20 @@
       "title": "metadata/skills/HUMAN_AGENT_UX",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes metadata for human-agent experience skills: clarification, intent capture, and safety.",
+      "summary": "Supports retrieval and taxonomy for HUMAN AGENT UX. It must not become hidden policy.",
       "terms": [
-        "clarification",
-        "intent capture",
-        "feedback loop",
-        "human-agent UX",
-        "safety"
+        "task",
+        "pattern",
+        "constraints",
+        "agent",
+        "document",
+        "specific",
+        "skill",
+        "outputs",
+        "inputs",
+        "execution",
+        "instruction",
+        "reusable"
       ],
       "links": {
         "references": [],
@@ -5579,30 +5707,29 @@
       },
       "sections": {
         "match": [
-          "Use when searching for skills that improve the interaction between the human user and the AI agent."
+          "Use when evaluating labels, skills, taxonomy, or auxiliary retrieval hints for HUMAN AGENT UX."
         ],
         "concepts": [
-          "Clarification Triggers: Metadata for skills that identify when to stop and ask the human a question.",
-          "Intent Capture: Tags for skills that help refine vague user prompts into structured Decapod intent.",
-          "Feedback Loops: Managing the rhythm of communication and confirmation between agent and user."
+          "Apply domain-specific rules for metadata/skills/HUMAN_AGENT_UX."
         ],
         "ambiguity": [
-          "Stop if the UX skill lacks a defined threshold for when to stop and ask."
+          "Stop inference if metadata conflicts with binding interfaces or specs."
         ],
         "decisions": [
-          "Identify if a user request requires a formal clarification loop or simple progress update."
+          "Identify whether this metadata should trigger a query to a deeper authority node."
         ],
         "standards": [
-          "UX skills must prioritize safety and authority over conversational fluidness."
+          "Keep metadata precise, stable, and tied directly to actual capabilities."
         ],
         "failure_modes": [
-          "Using UX metadata to hide technical complexity that the user needs to know."
+          "Letting metadata become a second source of truth for behavior.",
+          "Adding broad tags that cause unrelated retrieval hits."
         ],
         "next_queries": [
-          "Query metadata/skills/INTENT_REFINEMENT for prompt-shaping."
+          "Query specs/skills/SKILL_GOVERNANCE if the metadata involves skill packaging or invocation."
         ],
         "proceed_when": [
-          "Proceed when the UX skill facilitates clear intent capture and safe interaction."
+          "Proceed when metadata successfully resolves a broader discovery query."
         ]
       }
     },
@@ -5612,13 +5739,20 @@
       "title": "metadata/skills/INTENT_REFINEMENT",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Describes metadata for skills that refine raw user intent into outcome, constraints, and next actions.",
+      "summary": "Supports retrieval and taxonomy for INTENT REFINEMENT. It must not become hidden policy.",
       "terms": [
-        "intent refinement",
-        "distillation",
-        "acceptance criteria",
-        "outcome",
-        "constraints"
+        "task",
+        "pattern",
+        "constraints",
+        "agent",
+        "document",
+        "specific",
+        "skill",
+        "outputs",
+        "inputs",
+        "execution",
+        "instruction",
+        "reusable"
       ],
       "links": {
         "references": [],
@@ -5626,30 +5760,29 @@
       },
       "sections": {
         "match": [
-          "Use when classifying skills that specialize in turning vague prompts into Decapod-governed tasks."
+          "Use when evaluating labels, skills, taxonomy, or auxiliary retrieval hints for INTENT REFINEMENT."
         ],
         "concepts": [
-          "Intent Distillation: Extracting the core desired outcome from narrative human input.",
-          "Constraint Identification: Identifying 'must' and 'must-not' boundaries within a prompt.",
-          "Next-Action Selection: Mapping refined intent to the first disciplined Decapod operation."
+          "Apply domain-specific rules for metadata/skills/INTENT_REFINEMENT."
         ],
         "ambiguity": [
-          "Stop if the refined intent remains materially underdetermined."
+          "Stop inference if metadata conflicts with binding interfaces or specs."
         ],
         "decisions": [
-          "Decide which user requirements are 'binding constraints' vs 'optional preferences'."
+          "Identify whether this metadata should trigger a query to a deeper authority node."
         ],
         "standards": [
-          "Intent refinement skills must produce falsifiable acceptance criteria."
+          "Keep metadata precise, stable, and tied directly to actual capabilities."
         ],
         "failure_modes": [
-          "Over-refining intent into a plan before querying the constitution for domain doctrine."
+          "Letting metadata become a second source of truth for behavior.",
+          "Adding broad tags that cause unrelated retrieval hits."
         ],
         "next_queries": [
-          "Query specs/INTENT for the formal storage contract."
+          "Query specs/skills/SKILL_GOVERNANCE if the metadata involves skill packaging or invocation."
         ],
         "proceed_when": [
-          "Proceed when the raw intent is distilled into a structured set of outcomes and constraints."
+          "Proceed when metadata successfully resolves a broader discovery query."
         ]
       }
     },
