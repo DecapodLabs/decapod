@@ -1724,59 +1724,61 @@
       "title": "architecture/DISTRIBUTED_SYSTEMS",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers network partitions, retries, timeouts, idempotency, consensus, consistency, ordering, clocks, replication, quorum, and partial failure.",
+      "summary": "Covers CAP, PACELC, consensus, consistency, ordering, clocks, and distributed transactions.",
       "terms": [
-        "retries",
+        "cap",
+        "pacelc",
         "consensus",
-        "ordering",
-        "isolation",
-        "consistency",
-        "failure",
-        "distributed",
-        "coordination",
+        "raft",
+        "paxos",
+        "crdt",
+        "hlc",
+        "saga",
+        "2pc",
         "idempotency",
-        "eventual",
-        "partitions"
+        "distributed",
+        "consistency"
       ],
       "links": {
         "references": [
-          "core/ENGINEERING_EXCELLENCE"
+          "core/ENGINEERING_EXCELLENCE",
+          "architecture/CONCURRENCY"
         ],
         "referenced_by": [
-          "data/CACHING",
+          "data/DATABASE",
           "core/ENGINEERING_EXCELLENCE"
         ]
       },
       "sections": {
         "match": [
-          "Use when designing systems that span multiple nodes, regions, or networks, requiring coordination and consensus."
+          "Use when designing multi-node systems requiring consensus, distributed transactions, or specific consistency models."
         ],
         "concepts": [
-          "Network partitions are inevitable (CAP theorem). You must choose between consistency and availability during a split.",
-          "Clocks across distributed nodes are not perfectly synchronized. Do not rely on physical timestamps for absolute ordering.",
-          "Partial failures require retries, making idempotency a mandatory property for all distributed endpoints."
+          "CAP Theorem: Partitions are unavoidable; choose between Consistency (CP) or Availability (AP) during split.",
+          "PACELC: If no partition, choose between Latency (L) or Consistency (C).",
+          "CRDTs enable eventual consistency without coordination; consensus (Raft/Paxos) provides strong ordering."
         ],
         "ambiguity": [
-          "Stop inference if the required consistency model (strong vs eventual) or partition behavior is undefined."
+          "Stop if the partition behavior (AP vs CP) or required isolation level for cross-service transactions is unspecified."
         ],
         "decisions": [
-          "Choose between orchestration (centralized coordinator, e.g., 2PC/Sagas) or choreography (event-driven) for distributed transactions.",
-          "Determine the replication factor and quorum size required to survive node failures."
+          "Choose Saga pattern for long-running workflows vs 2PC for short-lived atomic distributed transactions.",
+          "Select clock model: HLC for approximate global order vs Vector Clocks for strict causality tracking."
         ],
         "standards": [
-          "Implement exponential backoff and jitter on all network retries to prevent retry storms.",
-          "Use logical clocks (Lamport, Vector) or hybrid logical clocks for causal ordering of events."
+          "Idempotency is mandatory for all state-mutating distributed operations to enable safe retries.",
+          "Quorum configurations (N/2 + 1) must be explicitly tuned for the required fault tolerance."
         ],
         "failure_modes": [
-          "Assuming network reliability, leading to infinite hangs without timeouts.",
-          "Implementing 'exactly-once' delivery without an idempotent receiver, resulting in duplicate data processing."
+          "Assuming synchronized wall-clocks for ordering, leading to lost updates or incorrect causality.",
+          "Implementing blocking distributed transactions without a recovery coordinator, risking cluster-wide hangs."
         ],
         "next_queries": [
-          "Query architecture/EVENT_DRIVEN for async coordination.",
-          "Query architecture/NETWORKING for routing and load balancing."
+          "Query architecture/EVENT_DRIVEN for async coordination patterns.",
+          "Query data/DATABASE for persistence consistency models."
         ],
         "proceed_when": [
-          "Proceed when failure isolation, retries, timeouts, and idempotency are explicitly handled."
+          "Proceed when the consistency model is explicit and idempotency is implemented at the receiver."
         ]
       }
     },
@@ -1915,21 +1917,24 @@
       "title": "architecture/ENTERPRISE",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers multi-team ownership, procurement, SSO/SAML/OIDC, audit logs, data segregation, and integration contracts.",
+      "summary": "Covers TOGAF, DDD, Bounded Contexts, microservices, and cross-team governance.",
       "terms": [
+        "togaf",
+        "ddd",
+        "bounded context",
+        "ubiquitous language",
+        "microservices",
         "sso",
-        "scim",
-        "saml",
-        "oidc",
-        "audit logs",
-        "data segregation",
-        "procurement",
-        "multi-team",
-        "integration contract"
+        "audit",
+        "compliance",
+        "governance",
+        "enterprise"
       ],
       "links": {
         "references": [
-          "core/ENGINEERING_EXCELLENCE"
+          "core/ENGINEERING_EXCELLENCE",
+          "architecture/API_DESIGN",
+          "architecture/COMPLIANCE"
         ],
         "referenced_by": [
           "core/ENGINEERING_EXCELLENCE"
@@ -1937,30 +1942,34 @@
       },
       "sections": {
         "match": [
-          "Use when designing for organizational scale, compliance boundaries, or multi-team service ownership."
+          "Use when designing large-scale systems, mapping domain boundaries (DDD), or establishing enterprise governance."
         ],
         "concepts": [
-          "Identity and Access: Enforce SSO (SAML/OIDC) and SCIM-based provisioning for all internal and external surfaces.",
-          "Auditability: Maintain immutable activity logs for all state mutations and access attempts across team boundaries.",
-          "Integration: All cross-team dependencies must be governed by versioned, backward-compatible API contracts."
+          "Bounded Context: Define explicit boundaries where a specific domain model is valid to prevent semantic drift.",
+          "Strategic DDD: Use context mapping to visualize relationships (upstream/downstream) between teams.",
+          "Buy vs Build: Favor standardized enterprise solutions for non-core capabilities; build core competitive advantages."
         ],
         "ambiguity": [
-          "Stop if the data steward, procurement constraint, or cross-team support model is undefined."
+          "Stop if the domain owner, ubiquitous language, or cross-team integration contract is undefined."
         ],
         "decisions": [
-          "Decide between shared-infrastructure clusters versus strict tenant-level account segregation."
+          "Identify Aggregate Roots to enforce consistency boundaries within a single domain service.",
+          "Decide between shared database patterns (anti-pattern) vs database-per-service for microservices."
         ],
         "standards": [
-          "Enterprise integrations must pass automated contract tests before promotion to production."
+          "Maintain an Architecture Decision Record (ADR) for all major enterprise-level structural choices.",
+          "Enforce SSO (SAML/OIDC) and immutable audit logging for all cross-boundary state mutations."
         ],
         "failure_modes": [
-          "Allowing ad-hoc database sharing between teams, bypassing explicit API boundaries."
+          "Allowing 'god models' that span multiple bounded contexts, creating tight coupling and deployment bottlenecks.",
+          "Bypassing API boundaries via direct database access or shared memory across team domains."
         ],
         "next_queries": [
-          "Query architecture/COMPLIANCE for data classification rules."
+          "Query architecture/COMPLIANCE for regulated data handling.",
+          "Query architecture/API_DESIGN for contract versioning."
         ],
         "proceed_when": [
-          "Proceed when the integration contract is signed off and the audit trail is instrumented."
+          "Proceed when domain boundaries are clear and the integration contract is signed off by all stakeholders."
         ]
       }
     },
@@ -2226,61 +2235,62 @@
       "title": "architecture/INFRASTRUCTURE",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers compute, networking, IAM, storage, environments, IaC, drift, promotion, secrets, backups, lifecycle ownership, and operational handoff.",
+      "summary": "Covers IaC, networking, compute, IAM, storage, and cloud-native patterns.",
       "terms": [
-        "identity",
+        "iac",
+        "terraform",
+        "vpc",
+        "subnet",
+        "sg",
+        "iam",
         "drift",
-        "drift detection",
         "promotion",
-        "storage",
-        "environments",
-        "ownership",
+        "cloud",
         "infrastructure",
         "compute",
-        "management",
-        "networks",
-        "operational"
+        "networking"
       ],
       "links": {
         "references": [
-          "core/ENGINEERING_EXCELLENCE"
+          "core/ENGINEERING_EXCELLENCE",
+          "architecture/CLOUD",
+          "architecture/NETWORKING"
         ],
         "referenced_by": [
           "architecture/CLOUD",
-          "core/ENGINEERING_EXCELLENCE",
-          "docs/ARCHITECTURE_OVERVIEW"
+          "core/ENGINEERING_EXCELLENCE"
         ]
       },
       "sections": {
         "match": [
-          "Use when provisioning cloud resources, defining environments, managing IaC (Terraform/Pulumi), or planning operational handoff."
+          "Use when provisioning cloud resources, defining VPCs/Subnets, or establishing IaC pipelines."
         ],
         "concepts": [
-          "Infrastructure is code. If it requires manual console clicks, it is a defect.",
-          "Environments (dev, staging, prod) must be structurally identical, differing only in scale and secrets.",
-          "Infrastructure state drift occurs when manual changes circumvent the IaC pipeline."
+          "Infrastructure as Code (IaC): Manual console changes are prohibited. The repository is the source of truth.",
+          "Immutable Infrastructure: Replace rather than patch; use images (AMIs/Containers) for repeatable deployments.",
+          "Logical Isolation: Enforce strict separation (VPCs, separate accounts) between production and non-production environments."
         ],
         "ambiguity": [
-          "Stop inference if the state backend, environment isolation strategy, or lifecycle owner is unspecified."
+          "Stop if the environment-specific CIDR block, state-locking backend, or IAM principal is unknown."
         ],
         "decisions": [
-          "Decide how to segregate state files (e.g., per environment, per service) to minimize blast radius.",
-          "Determine the secret injection mechanism (e.g., Vault, AWS Secrets Manager) for the provisioned compute."
+          "Decide between regional vs multi-regional deployments based on availability requirements and data residency laws.",
+          "Choose between managed platform services vs self-hosted infrastructure based on operational cost and control."
         ],
         "standards": [
-          "All infrastructure changes must be applied via a CI/CD pipeline, never from local developer machines.",
-          "Enforce strict logical isolation (VPCs, separate accounts) between production and non-production environments."
+          "All infrastructure state must be stored in a remote, encrypted backend with mandatory state-locking.",
+          "Security Groups and IAM policies must follow least-privilege principles, denying all traffic by default."
         ],
         "failure_modes": [
-          "Storing IaC state files locally or without state-locking mechanisms, causing corruption on concurrent applies.",
-          "Hardcoding environment-specific configurations instead of using parameters and variables."
+          "Hardcoding ARNs, IDs, or secrets in IaC code instead of using dynamic lookups or external secret stores.",
+          "Neglecting drift detection, allowing production state to diverge from the declared code."
         ],
         "next_queries": [
-          "Query architecture/CLOUD for managed service specifics.",
-          "Query architecture/NETWORKING for VPC and routing topology."
+          "Query architecture/CLOUD for service-specific quotas.",
+          "Query architecture/SECURITY for boundary protection."
         ],
         "proceed_when": [
-          "Proceed when the infrastructure is fully declared in code and promotion across environments is automated."
+          "Proceed when the VPC topology is defined and IAM roles are strictly scoped to the workload."
         ]
       }
     },
@@ -6033,22 +6043,24 @@
       "title": "methodology/OPERATIONS",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers runbooks, on-call, change management, reliability posture, and operational readiness.",
+      "summary": "Covers incident response, chaos engineering, runbooks, and operational readiness.",
       "terms": [
-        "incident",
-        "ownership",
-        "change",
-        "practice",
-        "posture",
-        "management",
+        "incident response",
+        "chaos engineering",
         "runbooks",
-        "methodology",
+        "on-call",
+        "postmortem",
+        "mitigation",
+        "reliability",
+        "recovery",
         "operations",
-        "reliability"
+        "incident"
       ],
       "links": {
         "references": [
-          "core/METHODOLOGY"
+          "core/METHODOLOGY",
+          "methodology/INCIDENT_RESPONSE",
+          "methodology/PLATFORM"
         ],
         "referenced_by": [
           "core/METHODOLOGY"
@@ -6056,34 +6068,34 @@
       },
       "sections": {
         "match": [
-          "Use when establishing on-call procedures, writing runbooks, defining change management, or reviewing operational readiness."
+          "Use when managing outages, planning chaos experiments, or defining operational health standards."
         ],
         "concepts": [
-          "Software is only 'done' when it is observable, supportable, and has a defined failure recovery path.",
-          "Runbooks must be executable, precise, and up-to-date. Outdated runbooks worsen incidents.",
-          "Change management exists to assess risk and ensure rollback capabilities, not merely to add bureaucratic friction."
+          "Mitigation First: During an incident, prioritize service restoration over root cause analysis.",
+          "Chaos Engineering: Proactively inject failure into production-like environments to verify resilience.",
+          "Blameless Postmortems: Focus on systemic guardrail deficiencies rather than individual human error."
         ],
         "ambiguity": [
-          "Stop inference if the on-call owner, recovery procedure, or operational telemetry is missing."
+          "Stop if the incident commander, current customer impact, or recovery path is unknown."
         ],
         "decisions": [
-          "Determine what constitutes an actionable alert versus what should be relegated to a dashboard.",
-          "Assess the operational readiness of a new service before it is permitted to take production traffic."
+          "Decide immediately between a fast rollback vs a speculative forward-fix during an active outage.",
+          "Determine which failure modes (e.g., region outage, database split-brain) are high-priority for chaos testing."
         ],
         "standards": [
-          "All alerts must point to a specific, actionable runbook step.",
-          "Operational telemetry (metrics, logs, traces) must be verified in a staging environment before production release."
+          "Every production alert must link to an actionable, version-controlled runbook.",
+          "Incident timelines and remediations must be documented and shared for organization-wide learning."
         ],
         "failure_modes": [
-          "Deploying services without automated rollback mechanisms or explicit operational owners.",
-          "Alert fatigue: configuring pages for non-critical, self-healing events, causing engineers to ignore real issues."
+          "Accepting 'flaky' infrastructure as normal instead of automating resilience or fixing root causes.",
+          "Deploying services without automated rollback mechanisms or verified health checks."
         ],
         "next_queries": [
-          "Query methodology/INCIDENT_RESPONSE for outage mitigation.",
-          "Query architecture/OBSERVABILITY for telemetry setup."
+          "Query methodology/INCIDENT_RESPONSE for tactical triage.",
+          "Query methodology/PLATFORM for SRE and SLO alignment."
         ],
         "proceed_when": [
-          "Proceed when operational readiness checklists are complete and runbooks are actionable."
+          "Proceed when the system is observable and a recovery path is verified."
         ]
       }
     },
@@ -6093,23 +6105,27 @@
       "title": "methodology/PLATFORM",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers paved roads, developer experience, abstractions, adoption, golden paths, and escape hatches.",
+      "summary": "Covers paved roads, SRE, SLIs/SLOs, error budgets, developer experience, and golden paths.",
       "terms": [
-        "shared",
+        "sre",
+        "sli",
+        "slo",
+        "error budget",
+        "on-call",
+        "toil",
+        "runbooks",
+        "paved road",
+        "golden path",
         "experience",
-        "internal",
-        "governance",
-        "design",
-        "capability",
-        "methodology",
-        "adoption",
         "developer",
-        "platform",
-        "abstractions"
+        "platform"
       ],
       "links": {
         "references": [
-          "core/METHODOLOGY"
+          "core/METHODOLOGY",
+          "methodology/OPERATIONS",
+          "methodology/METRICS",
+          "architecture/OBSERVABILITY"
         ],
         "referenced_by": [
           "core/METHODOLOGY"
@@ -6117,34 +6133,34 @@
       },
       "sections": {
         "match": [
-          "Use when designing internal tooling, CI/CD templates, shared libraries, or establishing developer 'golden paths'."
+          "Use when designing internal tooling, establishing SRE practices, or defining SLIs/SLOs and error budgets."
         ],
         "concepts": [
-          "A platform team's product is the developer experience. The 'paved road' must be the easiest path.",
-          "Abstractions should hide complexity, not mask underlying failures. Provide clear 'escape hatches'.",
-          "Adoption is driven by utility, not mandates. If developers avoid the platform, the platform is failing."
+          "SRE is operations as an engineering problem. Automate toil and manage systems through software.",
+          "SLIs/SLOs: Measure the true customer experience; define acceptable failure thresholds (error budgets).",
+          "The 'paved road' must be the easiest path. Adoption is driven by utility, not mandates."
         ],
         "ambiguity": [
-          "Stop inference if the developer workflow, intended abstraction boundary, or fallback escape hatch is missing."
+          "Stop if the user persona, intended abstraction boundary, or target SLO is undefined."
         ],
         "decisions": [
-          "Choose which operational concerns (e.g., logging, tracing, auth) to abstract away from feature teams.",
-          "Determine the boundary between what the platform mandates and what feature teams can configure."
+          "Determine the boundary between platform-mandated configuration and feature-team flexibility.",
+          "Decide which metrics represent true system health (SLIs) versus internal diagnostic telemetry."
         ],
         "standards": [
-          "Platform tooling must be versioned, backward-compatible, and accompanied by automated migration scripts.",
-          "Treat internal platform APIs with the same rigor and contract stability as external customer APIs."
+          "Platform tooling must be versioned, backward-compatible, and treated with API-level contract rigor.",
+          "Error budgets align incentives: exhaust the budget to freeze deployments until reliability is restored."
         ],
         "failure_modes": [
           "Building heavy, mandatory frameworks that trap developers in brittle, unmaintainable monoliths.",
-          "Failing to provide 'escape hatches', forcing developers to build fragile workarounds when the platform doesn't fit."
+          "Failing to provide 'escape hatches', forcing fragile workarounds when the platform doesn't fit."
         ],
         "next_queries": [
-          "Query architecture/CI_CD_PIPELINES for automation integration.",
-          "Query architecture/ENTERPRISE for cross-team alignment."
+          "Query architecture/OBSERVABILITY for telemetry standards.",
+          "Query methodology/OPERATIONS for incident response procedures."
         ],
         "proceed_when": [
-          "Proceed when the abstraction simplifies developer workflow and clearly documents its operational boundaries."
+          "Proceed when the abstraction simplifies workflow and SLIs are defined for the service."
         ]
       }
     },
@@ -6154,19 +6170,23 @@
       "title": "methodology/PRODUCT",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Maps vague asks to user, workflow, problem, platform, and success signals.",
+      "summary": "Covers OKRs, RICE prioritization, feature flags, beta rollouts, and success signals.",
       "terms": [
-        "user workflow",
-        "first slice",
-        "platform selection",
-        "acceptance criteria",
-        "non-goals",
-        "success signal",
+        "okr",
+        "rice",
+        "moscow",
+        "feature flag",
+        "beta",
+        "experiment",
+        "prioritization",
+        "product",
+        "workflow",
         "adoption"
       ],
       "links": {
         "references": [
-          "core/METHODOLOGY"
+          "core/METHODOLOGY",
+          "methodology/ARCHITECTURE"
         ],
         "referenced_by": [
           "core/METHODOLOGY"
@@ -6174,30 +6194,34 @@
       },
       "sections": {
         "match": [
-          "Use when clarifying feature scope, interpreting user intent, or defining 'why' a change is needed."
+          "Use when defining feature roadmap, prioritizing tasks via RICE, or planning gradual rollouts."
         ],
         "concepts": [
-          "User First: Every technical decision must solve a specific problem for a defined user persona.",
-          "The First Slice: Identify the smallest deployable increment that provides measurable user value.",
-          "Non-Goals: Explicitly list what the feature will *not* do to prevent scope creep."
+          "OKRs: Inspirational Objectives paired with measurable, outcome-based Key Results.",
+          "Decouple Deployment from Release: Use feature flags to ship code safely before enabling it for users.",
+          "The First Slice: Deliver the smallest increment that provides measurable user value (MVP)."
         ],
         "ambiguity": [
-          "Stop if the target platform, workflow, or success criteria remain narrative or vague."
+          "Stop if the target audience, success metric, or prioritization confidence is missing."
         ],
         "decisions": [
-          "Identify which parts of a broad user request belong in the 'first slice' versus a backlog."
+          "Use RICE (Reach, Impact, Confidence, Effort) to objectively rank competing features.",
+          "Decide between private beta, public beta, or GA based on technical risk and feedback needs."
         ],
         "standards": [
-          "Acceptance criteria must be falsifiable and verifiable via automated tests or evals."
+          "Feature flags must be temporary; schedule cleanup after full rollout to prevent technical debt.",
+          "Acceptance criteria must be falsifiable and verifiable via automated tests or product evals."
         ],
         "failure_modes": [
-          "Starting implementation before the product problem and success signals are documented."
+          "Focusing on output (shipping features) instead of outcomes (solving user problems).",
+          "Allowing permanent feature flags to clutter the codebase and create hidden logic paths."
         ],
         "next_queries": [
-          "Query methodology/ARCHITECTURE to map product needs to state and boundaries."
+          "Query methodology/ARCHITECTURE for implementation boundaries.",
+          "Query methodology/TESTING for validation of acceptance criteria."
         ],
         "proceed_when": [
-          "Proceed when the user, problem, and acceptance criteria are explicitly documented."
+          "Proceed when the user problem, RICE score, and success signals are explicitly documented."
         ]
       }
     },
@@ -6265,21 +6289,23 @@
       "title": "methodology/RESEARCH",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Covers source quality, claims, citations, uncertainty, synthesis, and when to stop.",
+      "summary": "Covers source quality, seminal papers, citations, uncertainty, and synthesis.",
       "terms": [
-        "handling",
+        "seminal papers",
+        "whitepapers",
+        "literature review",
+        "citations",
         "hypotheses",
         "evidence",
-        "falsifiable",
-        "research",
         "synthesis",
-        "learning",
         "uncertainty",
+        "research",
         "methodology"
       ],
       "links": {
         "references": [
-          "core/METHODOLOGY"
+          "core/METHODOLOGY",
+          "methodology/RESEARCH_PRODUCTION"
         ],
         "referenced_by": [
           "core/METHODOLOGY"
@@ -6287,34 +6313,34 @@
       },
       "sections": {
         "match": [
-          "Use when investigating unfamiliar technologies, gathering domain context, or performing literature reviews."
+          "Use when performing literature reviews, investigating new domains, or gathering evidence from whitepapers."
         ],
         "concepts": [
-          "Research must distinguish between authoritative claims (documentation/code) and anecdotal claims (blog posts).",
-          "Uncertainty must be preserved. If a definitive answer is not found, state the ambiguity.",
-          "Synthesis extracts actionable constraints from raw data."
+          "Cite Seminal Papers: Ground architectural decisions in peer-reviewed industry research (e.g., CAP, Paxos, Spanner).",
+          "Epistemic Humility: Preserve uncertainty; if research is inconclusive, name the unknowns instead of compressing them.",
+          "Actionable Synthesis: Convert raw research into concrete constraints for the technical design."
         ],
         "ambiguity": [
-          "Stop inference if the source material contradicts itself without an explicit resolution path."
+          "Stop if source material is outdated, non-authoritative (marketing), or lacks reproducible evidence."
         ],
         "decisions": [
-          "Decide when enough information has been gathered to construct a safe prototype or ask the user a clarifying question.",
-          "Evaluate the reliability of a source before injecting its claims into the project context."
+          "Determine when a 'research spike' has yielded enough signal to stop and begin implementation.",
+          "Judge the authority of a source: favor original specifications and benchmarks over secondary blog posts."
         ],
         "standards": [
-          "Always cite the source or reasoning path for major architectural or implementation claims.",
-          "Format research outputs into dense, factual summaries rather than narrative essays."
+          "Citations are mandatory for all research-backed architectural claims.",
+          "Format summaries as dense, factual decision matrices rather than narrative prose."
         ],
         "failure_modes": [
-          "Treating marketing material or outdated tutorials as binding technical specifications.",
-          "Falling into analysis paralysis instead of bounding the research phase with a concrete timebox."
+          "Relying on outdated tutorials as binding specifications for current-version technologies.",
+          "Analysis paralysis: failing to bound research with a concrete decision gate."
         ],
         "next_queries": [
-          "Query methodology/RESEARCH_PRODUCTION to transition findings into implementation.",
-          "Query core/GAPS if the research uncovers missing system capabilities."
+          "Query methodology/RESEARCH_PRODUCTION for implementation path.",
+          "Query core/GAPS for missing doctrine discovered during research."
         ],
         "proceed_when": [
-          "Proceed when the research yields actionable, cited constraints that resolve the initial uncertainty."
+          "Proceed when the research yields actionable, cited constraints that resolve the target uncertainty."
         ]
       }
     },
@@ -6436,19 +6462,19 @@
       "title": "methodology/TESTING",
       "authority": "doctrine",
       "binding": "advisory",
-      "summary": "Maps risk surface to test type and proof level across unit, integration, e2e, and contract tests.",
+      "summary": "Covers testing pyramid, TDD/BDD, regression, performance, and proof-based delivery.",
       "terms": [
-        "contract",
-        "evidence",
+        "tdd",
+        "bdd",
+        "pyramid",
+        "contract tests",
+        "e2e",
+        "performance tests",
+        "fuzzing",
+        "flaky",
         "validation",
-        "proof",
-        "interface",
-        "commands",
-        "surfaces",
-        "expected",
-        "test",
-        "testing",
-        "mapping"
+        "quality",
+        "testing"
       ],
       "links": {
         "references": [
@@ -6466,34 +6492,34 @@
       },
       "sections": {
         "match": [
-          "Use when determining test coverage, verifying behavior, or setting quality gates for a change."
+          "Use when designing test suites, setting quality gates, or performing QA-level validation."
         ],
         "concepts": [
-          "Tests are executable specifications. They must assert observable behavior, not internal implementation.",
-          "The testing pyramid demands many fast unit tests, fewer integration tests, and very few slow E2E tests.",
-          "If a piece of code cannot be tested, its design is flawed (e.g., tight coupling, hidden state)."
+          "Tests are executable specifications. Proving invariants is better than measuring line coverage.",
+          "Shift Left: Catch security, performance, and logic failures as early as possible in the dev cycle.",
+          "Flaky tests are broken tests; quarantine them to maintain trust in the CI signal."
         ],
         "ambiguity": [
-          "Stop inference if the testing strategy for a critical risk boundary is undefined."
+          "Stop if the acceptance criteria are narrative (untestable) or the failure mode of a new feature is unmapped."
         ],
         "decisions": [
-          "Decide whether a mock obscures a critical integration risk; use real dependencies or contract tests where possible.",
-          "Determine the minimum proof required to demonstrate that a specific change is safe to merge."
+          "Determine if a behavior requires a slow integration test or if its logic can be isolated for a fast unit test.",
+          "Choose between state-based testing vs interaction-based testing (mocks) based on risk."
         ],
         "standards": [
-          "Every bug fix must include a regression test that fails without the fix.",
-          "Tests must be deterministic. Flaky tests destroy trust and must be quarantined or fixed immediately."
+          "Every bug fix must include a regression test. Hard-to-test code signals poor architectural design.",
+          "Tests must own their state; never depend on execution order or shared mutable global state."
         ],
         "failure_modes": [
-          "Writing tautological tests that just mock everything and assert that functions were called.",
-          "Testing private methods instead of the public API, leading to brittle tests that break on refactoring."
+          "Mocking everything and asserting calls (tautology), missing real integration and boundary risks.",
+          "Treating testing as a post-hoc activity rather than an integral part of implementation design."
         ],
         "next_queries": [
-          "Query architecture/TESTING_STRATEGY for structural patterns.",
-          "Query interfaces/TESTING for exact proof claim definitions."
+          "Query methodology/QA for high-level strategy.",
+          "Query architecture/TESTING_STRATEGY for platform-specific tools."
         ],
         "proceed_when": [
-          "Proceed when the proposed tests accurately cover the introduced risk surface and are deterministic."
+          "Proceed when the change is covered by deterministic, falsifiable proof."
         ]
       }
     },
@@ -8475,6 +8501,130 @@
         ],
         "avoid": [
           "Do not mutate data schemas without verifying migration and rollback paths."
+        ]
+      }
+    },
+    "data/DATA_ENGINEERING": {
+      "id": "data/DATA_ENGINEERING",
+      "category": "data",
+      "title": "data/DATA_ENGINEERING",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Covers pipelines, lineage, quality, governance, and analytical/operational separation.",
+      "terms": [
+        "etl",
+        "elt",
+        "lineage",
+        "governance",
+        "olap",
+        "oltp",
+        "quality",
+        "retention",
+        "privacy",
+        "pipelines",
+        "data"
+      ],
+      "links": {
+        "references": [
+          "core/ENGINEERING_EXCELLENCE",
+          "data/PIPELINES",
+          "data/DATABASE"
+        ],
+        "referenced_by": [
+          "core/ENGINEERING_EXCELLENCE",
+          "data/PIPELINES"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when building data lakes, warehouses, or processing pipelines (ETL/ELT)."
+        ],
+        "concepts": [
+          "Separation of Concerns: Keep analytical (OLAP) and operational (OLTP) workloads physically isolated.",
+          "Data Lineage: Maintain an auditable trace from source ingestion to final analytical report.",
+          "Quality Gates: Implement automated checks for schema drift, nulls, and business logic at each pipeline stage."
+        ],
+        "ambiguity": [
+          "Stop if the data owner, retention policy, or sensitivity level (PII/PHI) is undefined."
+        ],
+        "decisions": [
+          "Decide between Batch (periodic completeness) vs Streaming (low-latency reaction) for the workload.",
+          "Choose between Schema-on-Write (validation at source) vs Schema-on-Read (flexibility in analysis)."
+        ],
+        "standards": [
+          "All data transformations must be idempotent to allow safe replay and recovery from failure.",
+          "PII data must be masked or tokenized before entering analytical environments."
+        ],
+        "failure_modes": [
+          "Creating cyclic DAGs that prevent pipeline completion or cause infinite loops.",
+          "Neglecting data retention policies, leading to liability and excessive storage costs."
+        ],
+        "next_queries": [
+          "Query data/DATABASE for transactional source details.",
+          "Query architecture/COMPLIANCE for data classification."
+        ],
+        "proceed_when": [
+          "Proceed when the data lineage is tracked and quality checks are instrumented."
+        ]
+      }
+    },
+    "methodology/QA": {
+      "id": "methodology/QA",
+      "category": "methodology",
+      "title": "methodology/QA",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Covers quality strategy, TDD, BDD, automation, and overall delivery confidence.",
+      "terms": [
+        "qa",
+        "quality assurance",
+        "tdd",
+        "bdd",
+        "automation",
+        "acceptance",
+        "criteria",
+        "strategy",
+        "methodology"
+      ],
+      "links": {
+        "references": [
+          "core/METHODOLOGY",
+          "methodology/TESTING"
+        ],
+        "referenced_by": [
+          "core/METHODOLOGY"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when defining overall quality strategy, establishing TDD/BDD workflows, or setting up release gates."
+        ],
+        "concepts": [
+          "Quality is a shared responsibility, not a downstream phase. Build it in from the start.",
+          "Automation-First: Manual testing is for exploration; regressions and invariants must be automated.",
+          "Continuous Verification: Run tests on every commit, every PR, and every deployment."
+        ],
+        "ambiguity": [
+          "Stop if success criteria are vague or if the 'definition of done' excludes automated proof."
+        ],
+        "decisions": [
+          "Determine the right balance of unit vs integration tests for the current project phase.",
+          "Decide which quality gates are blocking (must pass) vs advisory (warn only)."
+        ],
+        "standards": [
+          "Acceptance criteria must be documented *before* implementation and used as the basis for BDD scenarios.",
+          "Maintain a stable, reproducible test environment that mirrors production as closely as possible."
+        ],
+        "failure_modes": [
+          "Relying on manual QA as a safety net for poor automated test coverage.",
+          "Setting vanity metrics (like 100% coverage) over actual behavior verification."
+        ],
+        "next_queries": [
+          "Query methodology/TESTING for tactical execution.",
+          "Query methodology/CI_CD for automated pipeline integration."
+        ],
+        "proceed_when": [
+          "Proceed when the quality strategy is defined and automation is the default path."
         ]
       }
     }
@@ -11576,6 +11726,68 @@
     ],
     "comparative": [
       "specs/evaluations/VARIANCE_EVALS"
+    ],
+    "sre": [
+      "methodology/PLATFORM"
+    ],
+    "sli": [
+      "methodology/PLATFORM"
+    ],
+    "slo": [
+      "methodology/PLATFORM"
+    ],
+    "error budget": [
+      "methodology/PLATFORM"
+    ],
+    "cap": [
+      "architecture/DISTRIBUTED_SYSTEMS"
+    ],
+    "pacelc": [
+      "architecture/DISTRIBUTED_SYSTEMS"
+    ],
+    "raft": [
+      "architecture/DISTRIBUTED_SYSTEMS"
+    ],
+    "paxos": [
+      "architecture/DISTRIBUTED_SYSTEMS"
+    ],
+    "crdt": [
+      "architecture/DISTRIBUTED_SYSTEMS"
+    ],
+    "okr": [
+      "methodology/PRODUCT"
+    ],
+    "rice": [
+      "methodology/PRODUCT"
+    ],
+    "feature flag": [
+      "methodology/PRODUCT"
+    ],
+    "togaf": [
+      "architecture/ENTERPRISE"
+    ],
+    "ddd": [
+      "architecture/ENTERPRISE"
+    ],
+    "bounded context": [
+      "architecture/ENTERPRISE"
+    ],
+    "data engineering": [
+      "data/DATA_ENGINEERING"
+    ],
+    "qa": [
+      "methodology/QA",
+      "methodology/TESTING"
+    ],
+    "quality assurance": [
+      "methodology/QA",
+      "methodology/TESTING"
+    ],
+    "chaos": [
+      "methodology/OPERATIONS"
+    ],
+    "seminal papers": [
+      "methodology/RESEARCH"
     ]
   }
 }
