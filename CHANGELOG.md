@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.55.1](https://github.com/DecapodLabs/decapod/compare/v0.55.0...v0.55.1) - 2026-05-28
+
+### Other
+
+- Enhance description of Decapod's role in software engineering
+- Clarify Decapod's role as a kernel for governance
+- Clarify agent commands for human users
+- Enhance governance requirements section
+- Enhance initialization instructions in quickstart.md
+
 ## [0.55.0](https://github.com/DecapodLabs/decapod/compare/v0.54.0...v0.55.0) - 2026-05-28
 
 ### Added
