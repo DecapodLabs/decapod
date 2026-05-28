@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.56.1](https://github.com/DecapodLabs/decapod/compare/v0.56.0...v0.56.1) - 2026-05-28
+
+### Other
+
+- Convert bash test scripts to Rust ([#627](https://github.com/DecapodLabs/decapod/pull/627))
+
 ## [0.56.0](https://github.com/DecapodLabs/decapod/compare/v0.55.2...v0.56.0) - 2026-05-28
 
 ### Added
