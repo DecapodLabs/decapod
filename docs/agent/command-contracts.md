@@ -18,7 +18,8 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Intent:** Embedded Constitution Graph queries and lookups
 
 ## `decapod docs`
-- **Intent:** Access methodology documentation
+- **Intent:** Access agent-facing methodology documentation (restricted to docs/agent/)
+- **Restriction:** Only handles documents under `docs/agent/`.
 
 ## `decapod todo`
 - **Intent:** Track tasks and work items
@@ -116,6 +117,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 ### Operation: `ConstitutionGet`
 ### Operation: `ConstitutionLinksQuery`
 ### Operation: `ConstitutionLinksNavigate`
+### Operation: `SpecsRefresh`
 ### Operation: `ConstitutionMigrate`
 ### Operation: `AgentRegistryQuery`
 ### Operation: `SchemaGet`

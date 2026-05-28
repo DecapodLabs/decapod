@@ -124,112 +124,57 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
     match cli.command {
         DocsCommand::List => {
             let all_docs = assets::list_docs();
-            let (docs, constitution): (Vec<_>, Vec<_>) =
-                all_docs.into_iter().partition(|d| d.starts_with("docs/"));
+            let docs: Vec<_> = all_docs
+                .into_iter()
+                .filter(|d| d.starts_with("docs/agent/"))
+                .collect();
 
             if !docs.is_empty() {
-                println!("Decapod Documentation:");
+                println!("Decapod Agent Documentation:");
                 for doc in docs {
                     println!("- embedded/{}", doc);
                 }
-                println!();
-            }
-
-            println!("Embedded Decapod Constitution Sections:");
-            for doc in constitution {
-                println!("- embedded/constitution.json#{}", doc);
-            }
-
-            if let Ok(current_dir) = std::env::current_dir()
-                && let Ok(repo_root) = find_repo_root(&current_dir)
-            {
-                let override_sections = assets::list_override_sections(&repo_root);
-                if !override_sections.is_empty() {
-                    println!("\nProject Override Sections:");
-                    for section in override_sections {
-                        println!("- {}", section);
-                    }
-                }
+            } else {
+                println!("No agent documentation found.");
             }
             Ok(DocsRunResult::default())
         }
         DocsCommand::Show { path, source } => {
             let normalized_path = path.strip_prefix("embedded/").unwrap_or(&path).to_string();
 
-            if normalized_path.starts_with("docs/") {
-                // It's a direct document, not a constitution section
-                let content = assets::get_embedded_doc(&normalized_path);
-                match content {
-                    Some(content) => {
-                        println!("{}", content);
-                        Ok(DocsRunResult::default())
-                    }
-                    None => Err(error::DecapodError::NotFound(format!(
-                        "Document not found: {}",
-                        path
-                    ))),
-                }
-            } else {
-                let normalized_path = normalized_path
-                    .strip_prefix("constitution.json#")
-                    .unwrap_or(&normalized_path)
-                    .to_string();
+            if !normalized_path.starts_with("docs/agent/") {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Access denied: 'decapod docs' is restricted to 'docs/agent/' paths. Use 'decapod constitution' for other sections. Invalid path: {}",
+                    path
+                )));
+            }
 
-                // Split path and anchor
-                let (relative_path, anchor) = if let Some(pos) = normalized_path.find('#') {
-                    (&normalized_path[..pos], Some(&normalized_path[pos + 1..]))
-                } else {
-                    (normalized_path.as_str(), None)
-                };
-
-                let relative_path = if relative_path.is_empty() {
-                    "constitution.json"
-                } else {
-                    relative_path
-                };
-
-                if let Some(a) = anchor {
+            // It's a direct document, not a constitution section
+            let content = match source {
+                DocumentSource::Embedded => assets::get_embedded_doc(&normalized_path),
+                DocumentSource::Override => {
                     let current_dir =
                         std::env::current_dir().map_err(error::DecapodError::IoError)?;
                     let repo_root = find_repo_root(&current_dir)?;
-                    if let Some(fragment) = docs::get_fragment(&repo_root, relative_path, Some(a)) {
-                        println!("--- {} ---", fragment.title);
-                        println!("{}", fragment.excerpt);
-                        Ok(DocsRunResult::default())
-                    } else {
-                        Err(error::DecapodError::NotFound(format!(
-                            "Section not found: {} in {}",
-                            a, relative_path
-                        )))
-                    }
-                } else {
-                    let content = match source {
-                        DocumentSource::Embedded => assets::get_embedded_doc(relative_path),
-                        DocumentSource::Override => {
-                            let current_dir =
-                                std::env::current_dir().map_err(error::DecapodError::IoError)?;
-                            let repo_root = find_repo_root(&current_dir)?;
-                            assets::get_override_doc(&repo_root, relative_path)
-                        }
-                        DocumentSource::Merged => {
-                            let current_dir =
-                                std::env::current_dir().map_err(error::DecapodError::IoError)?;
-                            let repo_root = find_repo_root(&current_dir)?;
-                            assets::get_merged_doc(&repo_root, relative_path)
-                        }
-                    };
-
-                    match content {
-                        Some(content) => {
-                            println!("{}", content);
-                            Ok(DocsRunResult::default())
-                        }
-                        None => Err(error::DecapodError::NotFound(format!(
-                            "Document not found: {} (source: {:?})",
-                            path, source
-                        ))),
-                    }
+                    assets::get_override_doc(&repo_root, &normalized_path)
                 }
+                DocumentSource::Merged => {
+                    let current_dir =
+                        std::env::current_dir().map_err(error::DecapodError::IoError)?;
+                    let repo_root = find_repo_root(&current_dir)?;
+                    assets::get_merged_doc(&repo_root, &normalized_path)
+                }
+            };
+
+            match content {
+                Some(content) => {
+                    println!("{}", content);
+                    Ok(DocsRunResult::default())
+                }
+                None => Err(error::DecapodError::NotFound(format!(
+                    "Document not found: {}",
+                    path
+                ))),
             }
         }
         DocsCommand::Build { touched } => {
@@ -245,6 +190,10 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             let mut ingested_core_constitution = false;
 
             for doc_path in docs {
+                if !doc_path.starts_with("docs/agent/") {
+                    continue;
+                }
+
                 // Convert embedded path to relative path for override merging
                 let relative_path = doc_path.strip_prefix("embedded/").unwrap_or(&doc_path);
                 if relative_path.starts_with("core/") {
@@ -271,14 +220,21 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
         } => {
             let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
             let repo_root = find_repo_root(&current_dir)?;
-            let fragments = docs::resolve_scoped_fragments(
+            let all_fragments = docs::resolve_scoped_fragments(
                 &repo_root,
                 Some(&query),
                 op.as_deref(),
                 &path,
                 &tag,
-                limit,
+                limit * 2, // Get more to allow for filtering
             );
+
+            // Filter for only docs/agent/
+            let fragments: Vec<_> = all_fragments
+                .into_iter()
+                .filter(|f| f.r#ref.contains("docs/agent/"))
+                .take(limit)
+                .collect();
 
             if format.eq_ignore_ascii_case("json") {
                 println!(
@@ -293,7 +249,10 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
                     .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
                 );
             } else {
-                println!("Scoped constitution context:");
+                println!("Scoped agent documentation context:");
+                if fragments.is_empty() {
+                    println!("No matching agent documentation found.");
+                }
                 for (idx, fragment) in fragments.iter().enumerate() {
                     println!("\n{}. {} ({})", idx + 1, fragment.title, fragment.r#ref);
                     println!("{}", fragment.excerpt);
@@ -393,6 +352,12 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
 
             // Extract more info if it's a known core command
             match name {
+                "docs" => {
+                    writeln!(
+                        file,
+                        "- **Restriction:** Only handles documents under `docs/agent/`."
+                    )?;
+                }
                 "todo" => {
                     writeln!(
                         file,

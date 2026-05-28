@@ -798,7 +798,7 @@ pub(crate) enum Command {
     #[clap(name = "constitution", visible_alias = "c")]
     Constitution(constitution_cli::ConstitutionCli),
 
-    /// Access methodology documentation
+    /// Access agent-facing methodology documentation (restricted to docs/agent/)
     #[clap(name = "docs", visible_alias = "d")]
     Docs(docs_cli::DocsCli),
 

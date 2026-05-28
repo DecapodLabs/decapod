@@ -39,7 +39,7 @@ struct ConstitutionLinks {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=assets/constitution.json");
-    println!("cargo:rerun-if-changed=docs/");
+    println!("cargo:rerun-if-changed=docs/agent/");
     println!("cargo:rerun-if-changed=build/compress_constitution.rs");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
@@ -56,10 +56,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let json_content = fs::read_to_string(&json_path)?;
     let mut graph: ConstitutionGraph = serde_json::from_str(&json_content)?;
 
-    // Also ingest files from docs/ directory
-    let docs_dir = Path::new(&manifest_dir).join("docs");
-    if docs_dir.exists() {
-        ingest_docs_recursive(&docs_dir, &docs_dir, &mut graph)?;
+    // Also ingest files from docs/agent/ directory
+    let docs_root = Path::new(&manifest_dir).join("docs");
+    let agent_docs_dir = docs_root.join("agent");
+    if agent_docs_dir.exists() {
+        ingest_docs_recursive(&docs_root, &agent_docs_dir, &mut graph)?;
     }
 
     generate_rust_module(&graph, Path::new(&out_dir))?;
