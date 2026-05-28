@@ -120,7 +120,7 @@
           "additionalProperties": {
             "type": "array",
             "minItems": 1,
-            "maxItems": 6,
+            "maxItems": 8,
             "items": {
               "type": "string",
               "minLength": 20,
