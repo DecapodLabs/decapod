@@ -856,9 +856,12 @@
       "summary": "Covers complexity, data structures, deterministic behavior, bounded resource usage, streaming vs batch, approximate vs exact algorithms, profiling, and correctness tests.",
       "terms": [
         "complexity",
-        "schema evolution",
-        "profiles",
+        "big-o",
+        "data structure",
         "determinism",
+        "bounded memory",
+        "streaming algorithm",
+        "profiles",
         "bounded",
         "resource",
         "behavior",
@@ -918,6 +921,8 @@
       "binding": "advisory",
       "summary": "This domain covers resource modeling, compatibility, idempotency, status codes, pagination, auth boundary, error shape, versioning, and contract tests.",
       "terms": [
+        "schema evolution",
+        "p99 latency",
         "graphql",
         "contract",
         "pagination",
@@ -988,6 +993,7 @@
       "binding": "advisory",
       "summary": "This domain covers identity provider, session/token model, storage location, JWT validation, refresh/revocation, MFA, API keys, mTLS, and authorization boundary.",
       "terms": [
+        "trust boundary",
         "authorization",
         "identity",
         "level",
@@ -1063,12 +1069,16 @@
       "binding": "advisory",
       "summary": "This domain covers source of truth, invalidation, TTL, stampede prevention, stale tolerance, cache-aside/write-through/write-behind, observability, and failure behavior.",
       "terms": [
-        "schema evolution",
+        "cache invalidation",
+        "ttl jitter",
+        "stampede",
+        "cache-aside",
+        "write-through",
+        "stale read",
         "tiers",
         "stale",
         "observability",
         "prevention",
-        "stampede",
         "replicated",
         "invalidation",
         "caching",
@@ -1575,7 +1585,6 @@
       "summary": "This domain covers data ownership, lineage, schema evolution, batch vs stream, quality checks, retention, privacy, replay, and analytical vs operational separation.",
       "terms": [
         "modeling",
-        "rollout strategy",
         "schema evolution",
         "privacy",
         "analytical",
@@ -1642,19 +1651,22 @@
       "binding": "advisory",
       "summary": "This domain covers schema ownership, migrations, indexes, transactions, consistency, backup/restore, data loss risk, and migration proof.",
       "terms": [
-        "rollout strategy",
+        "schema evolution",
+        "migration rollback",
+        "index",
+        "transaction",
+        "isolation level",
+        "query plan",
+        "n+1 query",
         "database",
         "consistency",
         "transactions",
         "design",
-        "p99 latency",
         "indexing",
         "backups",
         "replication",
         "schema",
-        "safety",
-        "operational",
-        "migrations"
+        "safety"
       ],
       "links": {
         "references": [
@@ -1721,7 +1733,6 @@
         "consistency",
         "failure",
         "distributed",
-        "systems",
         "coordination",
         "idempotency",
         "eventual",
@@ -1961,9 +1972,9 @@
       "binding": "advisory",
       "summary": "Covers events, commands, queues, topics, partitions, schemas, ordering, replay, idempotent consumers, DLQs, backpressure, and eventual consistency.",
       "terms": [
+        "schema evolution",
         "consumers",
         "backpressure",
-        "rollout strategy",
         "idempotent",
         "events",
         "ordering",
@@ -2025,13 +2036,10 @@
       "binding": "advisory",
       "summary": "This domain covers platform target, rendering model, state ownership, accessibility, API contract, latency, error states, browser constraints, and user workflow.",
       "terms": [
-        "rollout strategy",
         "frontend",
         "boundaries",
         "error",
         "rendering",
-        "p99 latency",
-        "trust boundary",
         "client",
         "user",
         "facing",
@@ -2091,9 +2099,14 @@
       "binding": "advisory",
       "summary": "Contract guidance for GraphQL APIs covering schema design, N+1 prevention, pagination, and error handling.",
       "terms": [
+        "resolver",
+        "dataloader",
+        "n+1 query",
+        "query depth",
+        "cursor pagination",
+        "schema federation",
         "authorization",
         "complexity",
-        "rollout strategy",
         "graphql",
         "federation",
         "shape",
@@ -2101,10 +2114,7 @@
         "design",
         "query",
         "error",
-        "client",
-        "schema",
-        "contracts",
-        "resolvers"
+        "client"
       ],
       "links": {
         "references": [
@@ -2154,7 +2164,12 @@
       "binding": "advisory",
       "summary": "Contract guidance for gRPC APIs covering proto schemas, streaming patterns, status codes, and error handling.",
       "terms": [
-        "rollout strategy",
+        "proto compatibility",
+        "deadline",
+        "unary rpc",
+        "streaming rpc",
+        "status code",
+        "protobuf",
         "rpcs",
         "generated",
         "proto",
@@ -2164,10 +2179,7 @@
         "mtls",
         "compatibility",
         "unary",
-        "codes",
-        "contracts",
-        "status",
-        "grpc"
+        "codes"
       ],
       "links": {
         "references": [
@@ -2281,7 +2293,6 @@
       "summary": "Covers source ingestion, provenance, indexing, retrieval quality, summarization, graph relationships, stale knowledge, authority levels, and agent consumption.",
       "terms": [
         "consumable",
-        "rollout strategy",
         "capture",
         "retrieval",
         "agent",
@@ -2345,6 +2356,7 @@
       "binding": "advisory",
       "summary": "This domain covers workloads, services, ingress, probes, requests/limits, RBAC, secrets, namespaces, rollout strategy, config, cluster boundary, and operational ownership.",
       "terms": [
+        "rollout strategy",
         "services",
         "rollout",
         "workloads",
@@ -2424,7 +2436,6 @@
         "allocation",
         "boundaries",
         "context",
-        "systems",
         "persistence",
         "caching",
         "pressure",
@@ -2483,14 +2494,17 @@
       "binding": "advisory",
       "summary": "Covers brokers, queues, topics, routing keys, partitions, consumer groups, retries, DLQs, delivery semantics, ordering, payload size, and backpressure.",
       "terms": [
+        "dlq",
+        "poison message",
+        "consumer group",
+        "routing key",
+        "partition",
+        "backpressure",
         "retries",
         "ordering",
-        "release gate",
         "dead",
-        "backpressure",
         "brokers",
         "messaging",
-        "systems",
         "topics",
         "semantics",
         "queues"
@@ -2607,8 +2621,6 @@
       "binding": "advisory",
       "summary": "Covers service boundaries, data ownership, deployment independence, API contracts, observability, team ownership, distributed failure, and when a modular monolith is better.",
       "terms": [
-        "rollout strategy",
-        "schema evolution",
         "service",
         "boundaries",
         "isolation",
@@ -2669,18 +2681,22 @@
       "binding": "advisory",
       "summary": "Covers DNS, routing, load balancing, ingress/egress, CIDRs, firewall rules, service discovery, TLS, segmentation, latency, and failure diagnosis.",
       "terms": [
-        "networking",
-        "rollout strategy",
-        "routing",
-        "balancing",
+        "cidr",
+        "dns",
         "ingress",
         "egress",
+        "firewall rule",
+        "load balancer",
+        "service discovery",
+        "mtls",
+        "networking",
+        "routing",
+        "balancing",
         "service",
         "network",
         "connectivity",
         "addressing",
-        "segmentation",
-        "load"
+        "segmentation"
       ],
       "links": {
         "references": [
@@ -2798,7 +2814,6 @@
       "summary": "Covers latency, throughput, profiling, bottlenecks, load testing, resource contention, caching, async work, query plans, and user-visible responsiveness.",
       "terms": [
         "responsiveness",
-        "drift detection",
         "throughput",
         "visible",
         "latency",
@@ -2860,7 +2875,6 @@
       "binding": "advisory",
       "summary": "Covers horizontal vs vertical scaling, bottleneck evidence, traffic shape, read/write ratio, autoscaling signals, partitioning, quotas, load tests, and capacity planning.",
       "terms": [
-        "rollout strategy",
         "scaling",
         "demand",
         "partitioning",
@@ -3116,7 +3130,6 @@
         "unit",
         "strategy",
         "integration",
-        "trust boundary",
         "load",
         "testing"
       ],
@@ -3171,9 +3184,14 @@
       "binding": "advisory",
       "summary": "Covers user workflow, interaction states, navigation, accessibility, error states, loading states, form validation, feedback, information architecture, and trust.",
       "terms": [
+        "loading state",
+        "error state",
+        "form validation",
+        "accessibility",
+        "keyboard navigation",
+        "design token",
         "interaction",
         "handling",
-        "rollout strategy",
         "trust",
         "facing",
         "interface",
@@ -3181,10 +3199,7 @@
         "design",
         "error",
         "user",
-        "feedback",
-        "customer",
-        "accessibility",
-        "state"
+        "feedback"
       ],
       "links": {
         "references": [
@@ -3235,20 +3250,22 @@
       "binding": "advisory",
       "summary": "Covers HTTP, routing, browser constraints, sessions, cookies, CSRF/XSS, caching headers, SSR/CSR, CDN, API contracts, performance, and deployment.",
       "terms": [
+        "p99 latency",
+        "trust boundary",
+        "csrf",
+        "xss",
+        "cors",
+        "cookie",
+        "cache-control",
+        "hsts",
+        "csp",
+        "ssr",
+        "csr",
         "routing",
-        "rollout strategy",
         "constraints",
         "sessions",
         "frontend",
-        "headers",
-        "release gate",
-        "http",
-        "backend",
-        "trust boundary",
-        "browser",
-        "caching",
-        "contracts",
-        "p99 latency"
+        "headers"
       ],
       "links": {
         "references": [
@@ -3470,6 +3487,7 @@
       "binding": "advisory",
       "summary": "Covers capability inventory, proof gaps, authority drift, subsystem maturity, and remediation order.",
       "terms": [
+        "drift detection",
         "kernel",
         "inventory",
         "risks",
@@ -3587,6 +3605,7 @@
       "binding": "advisory",
       "summary": "Covers compatibility, forward/backward migration, rollback, data safety, and proof.",
       "terms": [
+        "schema evolution",
         "evidence",
         "schema",
         "migrations",
@@ -3886,6 +3905,7 @@
       "binding": "advisory",
       "summary": "Covers assets, actors, trust boundaries, abuse cases, mitigations, residual risk, and validation.",
       "terms": [
+        "trust boundary",
         "mitigations",
         "trust",
         "actors",
@@ -4301,6 +4321,7 @@
       "binding": "advisory",
       "summary": "Describes machine-readable documentation rules: canonical vs generated, boundaries, and drift handling.",
       "terms": [
+        "drift detection",
         "canonical docs",
         "generated docs",
         "doc drift",
@@ -4826,6 +4847,7 @@
       "binding": "advisory",
       "summary": "Describes generated project specs: intent, acceptance criteria, boundaries, and spec drift.",
       "terms": [
+        "drift detection",
         "acceptance criteria",
         "proof targets",
         "project specs",
@@ -5652,9 +5674,10 @@
       "binding": "advisory",
       "summary": "Describes immutable artifact promotion, release gates, rollback, and environment flow.",
       "terms": [
+        "rollout strategy",
+        "release gate",
         "immutable artifact",
         "promotion",
-        "release gate",
         "rollback plan",
         "smoke test",
         "release evidence",
@@ -5709,9 +5732,7 @@
       "summary": "Covers prioritization, ownership, review, delivery risk, team health, and decision records.",
       "terms": [
         "health",
-        "release gate",
         "accountability",
-        "drift detection",
         "leadership",
         "review",
         "execution",
@@ -5893,7 +5914,6 @@
         "allocation",
         "boundaries",
         "context",
-        "systems",
         "persistence",
         "caching",
         "pressure",
@@ -6189,6 +6209,8 @@
       "binding": "advisory",
       "summary": "Describes readiness assessment, scope freeze, rollout, and post-release verification.",
       "terms": [
+        "rollout strategy",
+        "release gate",
         "readiness assessment",
         "scope freeze",
         "versioning",
