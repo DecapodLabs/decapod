@@ -10176,7 +10176,7 @@
     "research/SPARK_2012": {
       "id": "research/SPARK_2012",
       "category": "research",
-      "title": "Resilient Distributed Datasets: A Fault-Tolerant Abstraction for In-Memory Cluster Computing (2012)",
+      "title": "Apache Spark: Resilient Distributed Datasets (2012)",
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Introduced a fault-tolerant abstraction for in-memory cluster computing, enabling significantly faster data processing than MapReduce.",
@@ -10385,7 +10385,7 @@
     "research/PERCEPTRONS_1958": {
       "id": "research/PERCEPTRONS_1958",
       "category": "research",
-      "title": "The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain (1958)",
+      "title": "The Perceptron: A Probabilistic Model (1958)",
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Frank Rosenblatt introduced the Perceptron, the simplest form of a neural network used for binary classification.",
@@ -10595,7 +10595,7 @@
     "research/BERT_2018": {
       "id": "research/BERT_2018",
       "category": "research",
-      "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding (2018)",
+      "title": "BERT: Pre-training for Language Understanding (2018)",
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Introduced a bidirectional approach to Transformer pre-training, significantly improving performance on NLP tasks.",
@@ -10637,7 +10637,7 @@
     "research/VIT_2021": {
       "id": "research/VIT_2021",
       "category": "research",
-      "title": "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale (2021)",
+      "title": "Vision Transformer (ViT): Image Recognition at Scale (2021)",
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Showed that the Transformer architecture could be applied directly to images, outperforming CNNs on large datasets.",
@@ -10889,7 +10889,7 @@
     "research/BATCH_NORM_2015": {
       "id": "research/BATCH_NORM_2015",
       "category": "research",
-      "title": "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift (2015)",
+      "title": "Batch Normalization: Accelerating Deep Network Training (2015)",
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Introduced Batch Normalization, allowing for significantly faster training and more stable deep networks.",
@@ -11477,7 +11477,7 @@
     "research/HYPERLOGLOG_2007": {
       "id": "research/HYPERLOGLOG_2007",
       "category": "research",
-      "title": "HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm (2007)",
+      "title": "HyperLogLog: Cardinality Estimation Algorithm (2007)",
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Introduced a probabilistic algorithm for estimating the number of unique elements in a massive dataset with very little memory.",
@@ -11561,7 +11561,7 @@
     "research/MESI_1984": {
       "id": "research/MESI_1984",
       "category": "research",
-      "title": "A Low-Overhead Coherence Solution for Multiprocessors with Hierarchical Cache Store (1984)",
+      "title": "MESI Protocol: Cache Coherence for Multiprocessors (1984)",
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Introduced the MESI protocol, the foundation of cache coherence in modern multi-core CPUs.",
