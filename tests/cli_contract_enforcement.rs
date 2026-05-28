@@ -259,7 +259,7 @@ fn test_agent_docs_are_accessible() {
     assert!(list_output.status.success(), "docs list should succeed");
 
     let docs_list = String::from_utf8_lossy(&list_output.stdout);
-    
+
     let required_docs = [
         "docs/agent/api-index.md",
         "docs/agent/command-contracts.md",
@@ -294,7 +294,10 @@ fn test_constitution_nodes_are_accessible() {
     let (_tmp, dir) = setup_repo();
 
     let list_output = run_decapod(dir, &["constitution", "list"]);
-    assert!(list_output.status.success(), "constitution list should succeed");
+    assert!(
+        list_output.status.success(),
+        "constitution list should succeed"
+    );
 
     let nodes_list = String::from_utf8_lossy(&list_output.stdout);
 
