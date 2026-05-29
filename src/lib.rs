@@ -1617,7 +1617,9 @@ pub fn run() -> Result<(), error::DecapodError> {
     let store_root: PathBuf;
 
     match cli.command {
-        Command::Version => {
+        Command::System(SystemCli {
+            command: SystemCommand::Version,
+        }) => {
             // Version command - simple output for scripts/parsing
             println!("v{}", migration::DECAPOD_VERSION);
             return Ok(());
@@ -1888,7 +1890,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                         &project_store,
                     )?;
                 }
-                Command::Version => show_version_info()?,
                 Command::Constitution(cli) => {
                     crate::core::constitution_cli::run_constitution_cli(cli)?
                 }
@@ -1923,50 +1924,20 @@ pub fn run() -> Result<(), error::DecapodError> {
                 Command::Rpc(rpc_cli) => {
                     run_rpc_command(rpc_cli, &workspace_root)?;
                 }
-                Command::Handshake(handshake_cli) => {
-                    run_handshake_command(handshake_cli, &workspace_root)?;
-                }
-                Command::Release(release_cli) => {
-                    run_release_command(release_cli, &workspace_root)?;
-                }
                 Command::Capabilities(cap_cli) => {
                     run_capabilities_command(cap_cli)?;
-                }
-                Command::Internalize(internalize_cli) => {
-                    internalize::run_internalize_cli(&project_store, &store_root, internalize_cli)?;
-                }
-                Command::Preflight(preflight_cli) => {
-                    run_preflight_command(preflight_cli, &workspace_root)?;
-                }
-                Command::Impact(impact_cli) => {
-                    run_impact_command(impact_cli, &workspace_root)?;
                 }
                 Command::Infer(infer_cli) => {
                     run_infer_command(infer_cli, &workspace_root)?;
                 }
                 Command::Trace(trace_cli) => {
-                    run_trace_command(trace_cli, &workspace_root)?;
+                    run_trace_command(trace_cli, &project_store, &workspace_root)?;
                 }
-                Command::Eval(eval_cli) => {
-                    eval::run_eval_cli(&project_store, eval_cli)?;
+                Command::System(system_cli) => {
+                    run_system_command(system_cli, &project_store, &workspace_root)?;
                 }
-                Command::FlightRecorder(fr_cli) => {
-                    flight_recorder::run_flight_recorder_cli(&project_store, fr_cli)?;
-                }
-                Command::StateCommit(sc_cli) => {
-                    run_state_commit_command(sc_cli, &workspace_root)?;
-                }
-                Command::Doctor(doctor_cli) => {
-                    doctor::run_doctor_cli(&project_store, &workspace_root, doctor_cli)?;
-                }
-                Command::Lcm(lcm_cli) => {
-                    lcm::run_lcm_cli(&project_store, lcm_cli)?;
-                }
-                Command::Map(map_cli) => {
-                    map_ops::run_map_cli(&project_store, map_cli)?;
-                }
-                Command::Demo(demo_cli) => {
-                    run_demo_command(demo_cli, &workspace_root)?;
+                Command::Context(context_cli) => {
+                    run_context_command(context_cli, &project_store, &workspace_root)?;
                 }
                 _ => unreachable!(),
             }
@@ -2051,14 +2022,12 @@ fn federation_argv_is_mutating(argv: &[String]) -> bool {
 fn should_auto_clock_in(command: &Command) -> bool {
     match command {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
-        Command::Version
-        | Command::Activate
+        Command::Activate
         | Command::Init(_)
         | Command::Setup(_)
         | Command::Session(_)
         | Command::Release(_)
-        | Command::StateCommit(_)
-        | Command::Doctor(_) => false,
+        | Command::System(_) => false,
         _ => true,
     }
 }
@@ -2069,20 +2038,16 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Activate
         | Command::Setup(_)
         | Command::Session(_)
-        | Command::Version
         | Command::Validate(_)
         | Command::Workspace(_)
         | Command::Capabilities(_)
         | Command::Trace(_)
-        | Command::FlightRecorder(_)
         | Command::Constitution(_)
         | Command::Docs(_)
-        | Command::Handshake(_)
         | Command::Release(_)
         | Command::Todo(_)
-        | Command::Eval(_)
-        | Command::StateCommit(_)
-        | Command::Doctor(_) => false,
+        | Command::System(_)
+        | Command::Qa(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
         Command::Rpc(_) => false,
         _ => true,
@@ -2114,8 +2079,7 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
             | Command::Release(_)
             | Command::Trace(_)
             | Command::Capabilities(_)
-            | Command::Doctor(_)
-            | Command::StateCommit(_)
+            | Command::System(_)
             | Command::Qa(_)
     )
 }
@@ -2130,8 +2094,7 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
             | Command::Release(_)
             | Command::Trace(_)
             | Command::Capabilities(_)
-            | Command::Doctor(_)
-            | Command::StateCommit(_)
+            | Command::System(_)
             | Command::Qa(_)
     )
 }
@@ -2297,16 +2260,17 @@ fn requires_session_token(command: &Command) -> bool {
         // Bootstrap/session lifecycle + version + capabilities are sessionless.
         Command::Init(_)
         | Command::Session(_)
-        | Command::Version
         | Command::Activate
         | Command::Constitution(_)
         | Command::Docs(_)
         | Command::Capabilities(_)
         | Command::Release(_)
         | Command::Trace(_)
-        | Command::FlightRecorder(_)
-        | Command::StateCommit(_)
-        | Command::Doctor(_) => false,
+        | Command::System(_) => false,
+        Command::Context(ContextGroupCli { command }) => match command {
+            ContextGroupCommand::Preflight(_) | ContextGroupCommand::Impact(_) => false,
+            _ => true,
+        },
         Command::Data(DataCli {
             command: DataCommand::Schema(_),
         }) => false,
@@ -3004,6 +2968,9 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
                 proofs.push("decapod validate".to_string());
             }
             run_session_init(&project_root, &scope, &proofs, force)
+        }
+        SessionCommand::Handshake(handshake_cli) => {
+            run_handshake_command(handshake_cli, &project_root)
         }
     }
 }
@@ -4874,6 +4841,9 @@ fn run_govern_command(
         GovernCommand::Capsule(capsule_cli) => {
             run_capsule_command(capsule_cli, project_store, workspace_root)?
         }
+        GovernCommand::StateCommit(sc_cli) => {
+            run_state_commit_command(sc_cli, workspace_root)?
+        }
     }
 
     Ok(())
@@ -5411,6 +5381,9 @@ fn run_data_command(
         DataCommand::Primitives(primitives_cli) => {
             primitives::run_primitives_cli(project_store, primitives_cli)?;
         }
+        DataCommand::Map(map_cli) => {
+            map_ops::run_map_cli(project_store, map_cli)?;
+        }
     }
 
     Ok(())
@@ -5651,6 +5624,12 @@ fn run_qa_command(
             all,
         } => run_check(crate_description, commands, all)?,
         QaCommand::Gatling(ref gatling_cli) => plugins::gatling::run_gatling_cli(gatling_cli)?,
+        QaCommand::Eval(eval_cli) => {
+            eval::run_eval_cli(project_store, eval_cli)?;
+        }
+        QaCommand::Demo(demo_cli) => {
+            run_demo_command(demo_cli, workspace_root)?;
+        }
     }
 
     Ok(())
@@ -7698,7 +7677,11 @@ fn run_capabilities_command(cli: CapabilitiesCli) -> Result<(), error::DecapodEr
     Ok(())
 }
 
-fn run_trace_command(cli: TraceCli, project_root: &Path) -> Result<(), error::DecapodError> {
+fn run_trace_command(
+    cli: TraceCli,
+    project_store: &Store,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
     match cli.command {
         TraceCommand::Export { last } => {
             let traces = trace::get_last_traces(project_root, last)?;
@@ -7706,8 +7689,43 @@ fn run_trace_command(cli: TraceCli, project_root: &Path) -> Result<(), error::De
                 println!("{}", t);
             }
         }
+        TraceCommand::FlightRecorder(fr_cli) => {
+            flight_recorder::run_flight_recorder_cli(project_store, fr_cli)?;
+        }
     }
     Ok(())
+}
+
+fn run_system_command(
+    cli: SystemCli,
+    project_store: &Store,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
+    match cli.command {
+        SystemCommand::Version => show_version_info(),
+        SystemCommand::Doctor(doctor_cli) => {
+            doctor::run_doctor_cli(project_store, project_root, doctor_cli)
+        }
+        SystemCommand::Capabilities(cap_cli) => run_capabilities_command(cap_cli),
+    }
+}
+
+fn run_context_command(
+    cli: ContextGroupCli,
+    project_store: &Store,
+    project_root: &Path,
+) -> Result<(), error::DecapodError> {
+    match cli.command {
+        ContextGroupCommand::Infer(infer_cli) => run_infer_command(infer_cli, project_root),
+        ContextGroupCommand::Lcm(lcm_cli) => lcm::run_lcm_cli(project_store, lcm_cli),
+        ContextGroupCommand::Internalize(internalize_cli) => {
+            internalize::run_internalize_cli(project_store, &project_store.root, internalize_cli)
+        }
+        ContextGroupCommand::Preflight(preflight_cli) => {
+            run_preflight_command(preflight_cli, project_root)
+        }
+        ContextGroupCommand::Impact(impact_cli) => run_impact_command(impact_cli, project_root),
+    }
 }
 
 fn run_preflight_command(

@@ -63,7 +63,7 @@ fn create_plan(dir: &Path, password: &str, prompt_hash: &str, runs: u32) -> Stri
     let out = run_decapod(
         dir,
         &[
-            "eval",
+            "qa", "eval",
             "plan",
             "--task-set-id",
             "web-e2e-smoke",
@@ -115,7 +115,7 @@ fn ingest_and_judge(
     failure_reason: Option<&str>,
 ) {
     let mut args = vec![
-        "eval",
+        "qa", "eval",
         "ingest-run",
         "--plan-id",
         plan_id,
@@ -150,7 +150,7 @@ fn ingest_and_judge(
     let judge = run_decapod(
         dir,
         &[
-            "eval",
+            "qa", "eval",
             "judge",
             "--plan-id",
             plan_id,
@@ -205,7 +205,7 @@ fn eval_golden_vector_is_deterministic_and_gate_decision_stable() {
     let a1 = run_decapod(
         &dir,
         &[
-            "eval",
+            "qa", "eval",
             "aggregate",
             "--plan-id",
             &plan_id,
@@ -226,7 +226,7 @@ fn eval_golden_vector_is_deterministic_and_gate_decision_stable() {
     let a2 = run_decapod(
         &dir,
         &[
-            "eval",
+            "qa", "eval",
             "aggregate",
             "--plan-id",
             &plan_id,
@@ -250,7 +250,7 @@ fn eval_golden_vector_is_deterministic_and_gate_decision_stable() {
     let gate = run_decapod(
         &dir,
         &[
-            "eval",
+            "qa", "eval",
             "gate",
             "--aggregate-id",
             "A_GOLDEN_1",
@@ -276,7 +276,7 @@ fn eval_judge_contract_rejects_malformed_json() {
     let ingest = run_decapod(
         &dir,
         &[
-            "eval",
+            "qa", "eval",
             "ingest-run",
             "--plan-id",
             &plan_id,
@@ -298,7 +298,7 @@ fn eval_judge_contract_rejects_malformed_json() {
     let judge = run_decapod(
         &dir,
         &[
-            "eval",
+            "qa", "eval",
             "judge",
             "--plan-id",
             &plan_id,
@@ -329,7 +329,7 @@ fn eval_judge_timeout_is_typed_and_gate_blocks_progress() {
     let ingest = run_decapod(
         &dir,
         &[
-            "eval",
+            "qa", "eval",
             "ingest-run",
             "--plan-id",
             &plan_id,
@@ -353,7 +353,7 @@ fn eval_judge_timeout_is_typed_and_gate_blocks_progress() {
     let judge = run_decapod(
         &dir,
         &[
-            "eval",
+            "qa", "eval",
             "judge",
             "--plan-id",
             &plan_id,
@@ -375,7 +375,7 @@ fn eval_judge_timeout_is_typed_and_gate_blocks_progress() {
     let aggregate = run_decapod(
         &dir,
         &[
-            "eval",
+            "qa", "eval",
             "aggregate",
             "--plan-id",
             &plan_id,
@@ -419,7 +419,7 @@ fn eval_plan_hash_changes_on_settings_change_and_cross_plan_compare_requires_ack
     let agg_a = run_decapod(
         &dir,
         &[
-            "eval",
+            "qa", "eval",
             "aggregate",
             "--plan-id",
             &plan_a,
@@ -452,7 +452,7 @@ fn eval_plan_hash_changes_on_settings_change_and_cross_plan_compare_requires_ack
     let mismatch = run_decapod(
         &dir,
         &[
-            "eval",
+            "qa", "eval",
             "aggregate",
             "--plan-id",
             &plan_b,
@@ -481,7 +481,7 @@ fn eval_plan_hash_changes_on_settings_change_and_cross_plan_compare_requires_ack
     let acked = run_decapod(
         &dir,
         &[
-            "eval",
+            "qa", "eval",
             "aggregate",
             "--plan-id",
             &plan_b,

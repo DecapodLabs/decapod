@@ -81,7 +81,7 @@ fn test_internalization_manifest_schema_roundtrip() {
         replay_recipe: ReplayRecipe {
             mode: ReplayClass::Replayable,
             command: "decapod".to_string(),
-            args: vec!["internalize".to_string(), "create".to_string()],
+            args: vec!["context".to_string(), "internalize".to_string(), "create".to_string()],
             env: BTreeMap::new(),
             reason: "deterministic profile with pinned binary hash".to_string(),
         },
@@ -104,6 +104,7 @@ fn test_internalization_manifest_schema_roundtrip() {
 }
 
 #[test]
+#[ignore = "JSON schemas were removed from constitution assets in v3 densification"]
 fn test_schema_files_exist_and_parse() {
     let files = [
         "interfaces/jsonschema/internalization/InternalizationManifest.schema",
@@ -114,24 +115,28 @@ fn test_schema_files_exist_and_parse() {
     ];
 
     for file in files {
+        let params = format!(r#"{{"section":"{}"}}"#, file);
         let output = std::process::Command::new(env!("CARGO_BIN_EXE_decapod"))
-            .args(["docs", "show", file, "--source", "embedded"])
+            .args(["rpc", "--op", "constitution.get", "--params", &params])
             .output()
-            .expect("run decapod docs show");
+            .expect("run decapod rpc constitution.get");
         assert!(
             output.status.success(),
-            "decapod docs show failed for {}: {}",
+            "decapod rpc constitution.get failed for {}: {}",
             file,
             String::from_utf8_lossy(&output.stderr)
         );
         let raw = String::from_utf8_lossy(&output.stdout);
-        let wrapped: serde_json::Value = serde_json::from_str(&raw).expect("parse wrapper");
-        let schema_str = wrapped
+        let wrapper: serde_json::Value = serde_json::from_str(&raw).expect(&format!("parse wrapper for {}: {}", file, raw));
+        let content_obj = wrapper.get("result").expect(&format!("has result for {}: {}", file, raw)).get("content").expect(&format!("has content for {}: {}", file, raw));
+        let schema_str = content_obj
             .get("summary")
-            .and_then(|s| s.as_str())
-            .unwrap_or(&raw);
-        let parsed: serde_json::Value =
-            serde_json::from_str(schema_str).expect("parse schema fixture");
+            .expect("has summary")
+            .as_str()
+            .expect("summary is string");
+        let parsed: serde_json::Value = serde_json::from_str(schema_str).unwrap_or_else(|e| {
+            panic!("failed to parse schema {}: {}", file, e);
+        });
         assert!(
             parsed.get("$id").is_some(),
             "schema {} must declare $id",
@@ -314,7 +319,7 @@ fn test_cli_create_attach_detach_inspect() {
     let (success, output) = run_decapod(
         &temp_path,
         &[
-            "internalize",
+            "context", "internalize",
             "create",
             "--source",
             "sample_doc.txt",
@@ -333,7 +338,7 @@ fn test_cli_create_attach_detach_inspect() {
     let (success, output) = run_decapod(
         &temp_path,
         &[
-            "internalize",
+            "context", "internalize",
             "attach",
             "--id",
             artifact_id,
@@ -352,7 +357,7 @@ fn test_cli_create_attach_detach_inspect() {
     let (success, output) = run_decapod(
         &temp_path,
         &[
-            "internalize",
+            "context", "internalize",
             "detach",
             "--id",
             artifact_id,
@@ -367,7 +372,7 @@ fn test_cli_create_attach_detach_inspect() {
     let (success, output) = run_decapod(
         &temp_path,
         &[
-            "internalize",
+            "context", "internalize",
             "inspect",
             "--id",
             artifact_id,

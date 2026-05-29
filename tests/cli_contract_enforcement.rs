@@ -234,8 +234,8 @@ fn test_capabilities_includes_core_commands() {
 fn test_interlock_drift_detection_capability() {
     let (_tmp, dir) = setup_repo();
 
-    let preflight = run_decapod(dir, &["preflight", "--op", "validate", "--format", "json"]);
-    assert!(preflight.status.success(), "preflight should work");
+    let preflight = run_decapod(dir, &["context", "preflight", "--op", "validate", "--format", "json"]);
+    assert!(preflight.status.success(), "preflight should work: {}", String::from_utf8_lossy(&preflight.stderr));
 
     let json: serde_json::Value =
         serde_json::from_str(&String::from_utf8_lossy(&preflight.stdout)).expect("valid JSON");

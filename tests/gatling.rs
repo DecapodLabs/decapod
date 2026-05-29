@@ -176,7 +176,7 @@ fn t003_no_args_errors() {
 fn t004_version_command_works() {
     let (_tmp, dir) = setup_workspace();
 
-    let (success, output) = run(&dir, &["version"]);
+    let (success, output) = run(&dir, &["system", "version"]);
     assert!(success, "version command should succeed, got:\n{}", output);
     // Output contains the version number (e.g., "0.12.1")
     assert!(
@@ -270,21 +270,21 @@ fn t020_setup_hooks() {
 fn t030_docs() {
     let (_tmp, dir) = setup_workspace();
     // T030
-    ok(&dir, &["docs", "show", "core/DECAPOD"]);
+    ok(&dir, &["docs", "show", "docs/agent/api-index.md"]);
     // T031
-    ok(&dir, &["docs", "show", "specs/INTENT"]);
+    ok(&dir, &["docs", "show", "docs/agent/README.md"]);
     // T032
-    ok(&dir, &["docs", "show", "plugins/TODO"]);
+    ok(&dir, &["docs", "show", "docs/agent/command-contracts.md"]);
     // T033
     ok(&dir, &["docs", "ingest"]);
     // T034
-    ok(&dir, &["docs", "override"]);
+    ok(&dir, &["docs", "list"]);
     // T035
     ok(&dir, &["docs", "--help"]);
     // T036: alias
-    ok(&dir, &["d", "show", "core/DECAPOD"]);
+    ok(&dir, &["d", "show", "docs/agent/api-index.md"]);
     // T037: nonexistent doc → error
-    fail(&dir, &["docs", "show", "nonexistent.md"]);
+    fail(&dir, &["docs", "show", "docs/agent/nonexistent.md"]);
 }
 
 // ---------------------------------------------------------------------------

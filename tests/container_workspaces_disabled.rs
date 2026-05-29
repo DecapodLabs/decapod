@@ -164,14 +164,21 @@ fn test_container_workspaces_true_requires_container() {
 
     set_container_workspaces_in_config(&worktree_dir, true);
 
+    // Make a code change to trigger container requirement
+    std::fs::write(worktree_dir.join("test.rs"), "fn main() { println!(); }\n").unwrap();
+
     let out = run_decapod_validate(&worktree_dir, &[]);
 
     let stderr = String::from_utf8_lossy(&out.stderr);
+    let stdout = String::from_utf8_lossy(&out.stdout);
+
+    println!("STDOUT: {}", stdout);
+    println!("STDERR: {}", stderr);
 
     assert!(
-        stderr.contains("container_workspace_required"),
-        "should require container when container_workspaces = true. Stderr: {}",
-        stderr
+        stderr.contains("container_workspace_required") || stdout.contains("container_workspace_required"),
+        "should require container when container_workspaces = true. Stderr: {}\nStdout: {}",
+        stderr, stdout
     );
 }
 

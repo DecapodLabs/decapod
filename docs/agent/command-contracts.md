@@ -13,6 +13,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 
 ## `decapod session`
 - **Intent:** Session token management (required for agent operation)
+- **Subcommands:** `acquire`, `status`, `release`, `init`, `handshake`.
 
 ## `decapod constitution`
 - **Intent:** Embedded Constitution Graph queries and lookups
@@ -31,23 +32,30 @@ This document defines the normative operational contracts for the Decapod CLI.
 
 ## `decapod validate`
 - **Intent:** Validate methodology compliance
-- **Intent:** Verify methodology compliance.
 - **Outcome:** Exit code 0 on success, 1 on failure.
 
-## `decapod version`
-- **Intent:** Show version information
+## `decapod system`
+- **Intent:** System-level metadata and health
+- **Subcommands:** `version`, `doctor`, `capabilities`.
 
 ## `decapod govern`
 - **Intent:** Governance: policy, health, proofs, audits
+- **Subcommands:** `policy`, `health`, `proof`, `watcher`, `feedback`, `gatekeeper`, `plan`, `workunit`, `capsule`, `state-commit`.
 
 ## `decapod data`
 - **Intent:** Data: archives, knowledge, context, schemas
+- **Subcommands:** `archive`, `knowledge`, `context`, `schema`, `repo`, `broker`, `aptitude`, `federation`, `primitives`, `map`.
 
 ## `decapod auto`
 - **Intent:** Automation: scheduled and event-driven
 
 ## `decapod qa`
 - **Intent:** Quality assurance: verification and checks
+- **Subcommands:** `verify`, `check`, `gatling`, `eval`, `demo`.
+
+## `decapod context`
+- **Intent:** Inference context management and prediction
+- **Subcommands:** `infer`, `lcm`, `internalize`, `preflight`, `impact`.
 
 ## `decapod decide`
 - **Intent:** Architecture decision prompting
@@ -60,50 +68,20 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod rpc`
 - **Intent:** Structured JSON-RPC interface for agents
 
-## `decapod handshake`
-- **Intent:** Deterministic agent handshake artifact (repo-native)
-
 ## `decapod release`
 - **Intent:** Release lifecycle checks and guards
 
 ## `decapod capabilities`
 - **Intent:** Show Decapod capabilities (for agent discovery)
-
-## `decapod internalize`
-- **Intent:** Internalized context artifacts: create, attach, and inspect context adapters
-
-## `decapod preflight`
-- **Intent:** Preflight check: before any operation, predict what will fail
-
-## `decapod impact`
-- **Intent:** Impact analysis: predict validation outcomes for changed files
+- **Note:** Also available via `decapod system capabilities`.
 
 ## `decapod infer`
 - **Intent:** Inference governance: shape context before model, validate after
+- **Note:** Also available via `decapod context infer`.
 
 ## `decapod trace`
 - **Intent:** Local trace management
-
-## `decapod eval`
-- **Intent:** Variance-aware evaluation artifacts and promotion gates
-
-## `decapod flight-recorder`
-- **Intent:** Governance Flight Recorder - render timeline from event logs
-
-## `decapod state-commit`
-- **Intent:** STATE_COMMIT: prove and verify cryptographic state commitments
-
-## `decapod doctor`
-- **Intent:** Preflight health checks for the workspace
-
-## `decapod lcm`
-- **Intent:** Lossless Context Management — immutable originals + deterministic summaries
-
-## `decapod map`
-- **Intent:** Deterministic map operators — structured parallel processing
-
-## `decapod demo`
-- **Intent:** Run demonstrations of Decapod features
+- **Subcommands:** `export`, `flight-recorder`.
 
 # RPC Operations (Auto-generated)
 

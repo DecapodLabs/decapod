@@ -63,7 +63,7 @@ fn decapod_has_no_lingering_background_process() {
     let before = running_decapod_pids(exe_path);
 
     for args in [
-        vec!["version"],
+        vec!["system", "version"],
         vec!["capabilities", "--format", "json"],
         vec!["docs", "show", "docs/agent/api-index.md"],
     ] {
