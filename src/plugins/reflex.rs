@@ -52,7 +52,7 @@ fn scope_from_dir(p: &str) -> String {
             || path
                 .to_string_lossy()
                 .to_lowercase()
-                .contains(&format!("/{}/", component_name))
+                .contains(&format!("/{component_name}/"))
         {
             return component_name.to_string();
         }
@@ -406,13 +406,13 @@ pub fn run_reflex_cli(store: &Store, cli: ReflexCli) {
         } => add_health_trigger_reflex(root, &name, &agent, &watch_states, &priority, &tags, &dir),
     };
     if let Err(e) = result {
-        eprintln!("Error: {}", e);
+        eprintln!("Error: {e}");
     }
 }
 
 fn parse_json_config(raw: &str, field: &str) -> Result<JsonValue, error::DecapodError> {
     serde_json::from_str(raw)
-        .map_err(|e| error::DecapodError::ValidationError(format!("invalid {} JSON: {}", field, e)))
+        .map_err(|e| error::DecapodError::ValidationError(format!("invalid {field} JSON: {e}")))
 }
 
 fn fetch_matching_reflexes(
@@ -631,7 +631,7 @@ fn execute_reflex_action(
 
             let mut triggered_claims = Vec::new();
             for (claim_id, state, reason) in &all_health {
-                let state_str = format!("{:?}", state);
+                let state_str = format!("{state:?}");
                 if watch_states.iter().any(|ws| ws == &state_str) {
                     triggered_claims.push(serde_json::json!({
                         "claim_id": claim_id,
@@ -702,8 +702,7 @@ fn execute_reflex_action(
             }))
         }
         other => Err(error::DecapodError::ValidationError(format!(
-            "unsupported reflex action_type '{}'",
-            other
+            "unsupported reflex action_type '{other}'"
         ))),
     }
 }
@@ -980,7 +979,7 @@ fn get_reflex(root: &Path, id: String) -> Result<(), error::DecapodError> {
         if let Some(reflex_result) = rows.next() {
             match reflex_result {
                 Ok(reflex) => println!("{}", serde_json::to_string_pretty(&reflex).unwrap()),
-                Err(e) => eprintln!("Error reading reflex: {}", e),
+                Err(e) => eprintln!("Error reading reflex: {e}"),
             }
         } else {
             println!(
@@ -1017,11 +1016,11 @@ fn list_reflexes(
         }
         if let Some(t) = tags {
             query.push_str(" AND tags LIKE ?");
-            params.push(Box::new(format!("%{}%", t)));
+            params.push(Box::new(format!("%{t}%")));
         }
         if let Some(n) = name_search {
             query.push_str(" AND name LIKE ?");
-            params.push(Box::new(format!("%{}%", n)));
+            params.push(Box::new(format!("%{n}%")));
         }
         if let Some(d) = dir {
             query.push_str(" AND dir_path = ?");

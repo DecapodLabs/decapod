@@ -50,11 +50,7 @@ fn todo_help_schema_and_docs_stay_in_sync() {
     for command in &expected {
         let re = Regex::new(&format!(r"(?m)^\s+{}\s+", regex::escape(command)))
             .expect("valid help regex");
-        assert!(
-            re.is_match(&help),
-            "todo --help missing command: {}",
-            command
-        );
+        assert!(re.is_match(&help), "todo --help missing command: {command}");
     }
 
     let schema = todo::schema();
@@ -72,8 +68,7 @@ fn todo_help_schema_and_docs_stay_in_sync() {
     for command in &expected {
         assert!(
             schema_cmds.contains(*command),
-            "todo schema missing command: {}",
-            command
+            "todo schema missing command: {command}"
         );
     }
 
@@ -81,9 +76,8 @@ fn todo_help_schema_and_docs_stay_in_sync() {
 
     for command in &expected {
         assert!(
-            docs.contains(&format!("decapod todo {}", command)),
-            "plugins/TODO missing CLI surface entry for command: {}",
-            command
+            docs.contains(&format!("decapod todo {command}")),
+            "plugins/TODO missing CLI surface entry for command: {command}"
         );
     }
 
@@ -115,8 +109,7 @@ fn container_help_schema_and_docs_stay_in_sync() {
     ] {
         assert!(
             help.contains(flag),
-            "container run --help missing flag: {}",
-            flag
+            "container run --help missing flag: {flag}"
         );
     }
 
@@ -141,8 +134,7 @@ fn container_help_schema_and_docs_stay_in_sync() {
     ] {
         assert!(
             schema_out.contains(field),
-            "container schema missing field: {}",
-            field
+            "container schema missing field: {field}"
         );
     }
 
@@ -157,8 +149,7 @@ fn container_help_schema_and_docs_stay_in_sync() {
     ] {
         assert!(
             docs.contains(snippet),
-            "plugins/CONTAINER missing content: {}",
-            snippet
+            "plugins/CONTAINER missing content: {snippet}"
         );
     }
 }

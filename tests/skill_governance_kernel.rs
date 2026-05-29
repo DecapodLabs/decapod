@@ -264,7 +264,6 @@ fn validate_fails_on_skill_card_hash_mismatch_if_present() {
     let stderr = combined_output(&validate);
     assert!(
         stderr.contains("skill card hash mismatch"),
-        "expected skill card hash mismatch error, got:\n{}",
-        stderr
+        "expected skill card hash mismatch error, got:\n{stderr}"
     );
 }

@@ -83,8 +83,7 @@ pub fn validate_task_id(task_id: &str) -> Result<(), error::DecapodError> {
         Ok(())
     } else {
         Err(error::DecapodError::ValidationError(format!(
-            "invalid task_id '{}': allowed characters are [A-Za-z0-9_-]",
-            task_id
+            "invalid task_id '{task_id}': allowed characters are [A-Za-z0-9_-]"
         )))
     }
 }
@@ -102,8 +101,7 @@ pub fn init_workunit(
     let path = workunit_path(project_root, task_id)?;
     if path.exists() {
         return Err(error::DecapodError::ValidationError(format!(
-            "workunit '{}' already exists",
-            task_id
+            "workunit '{task_id}' already exists"
         )));
     }
 
@@ -201,8 +199,7 @@ pub fn record_proof_result(
 ) -> Result<WorkUnitManifest, error::DecapodError> {
     if !matches!(status, "pass" | "fail") {
         return Err(error::DecapodError::ValidationError(format!(
-            "invalid proof status '{}': expected pass|fail",
-            status
+            "invalid proof status '{status}': expected pass|fail"
         )));
     }
 
@@ -226,8 +223,7 @@ pub fn transition_status(
     let from = manifest.status.clone();
     if !can_transition(&from, &to) {
         return Err(error::DecapodError::ValidationError(format!(
-            "invalid workunit transition: {:?} -> {:?}",
-            from, to
+            "invalid workunit transition: {from:?} -> {to:?}"
         )));
     }
 
@@ -273,8 +269,7 @@ fn ensure_verified_ready(manifest: &WorkUnitManifest) -> Result<(), error::Decap
             .any(|r| &r.gate == gate && r.status == "pass");
         if !hit {
             return Err(error::DecapodError::ValidationError(format!(
-                "cannot transition to VERIFIED: missing passing proof result for gate '{}'",
-                gate
+                "cannot transition to VERIFIED: missing passing proof result for gate '{gate}'"
             )));
         }
     }
@@ -302,8 +297,7 @@ pub fn verify_capsule_policy_lineage_for_task(
     });
     if !has_capsule_state_ref {
         return Err(error::DecapodError::ValidationError(format!(
-            "WORKUNIT_CAPSULE_POLICY_LINEAGE_STATE_REF_MISSING: expected state_ref '{}' for task '{}'",
-            expected_rel, task_id
+            "WORKUNIT_CAPSULE_POLICY_LINEAGE_STATE_REF_MISSING: expected state_ref '{expected_rel}' for task '{task_id}'"
         )));
     }
 
@@ -346,8 +340,7 @@ pub fn verify_capsule_policy_lineage_for_task(
         || capsule.workunit_id.as_deref() == Some(task_id);
     if !task_match {
         return Err(error::DecapodError::ValidationError(format!(
-            "WORKUNIT_CAPSULE_POLICY_LINEAGE_INVALID: capsule task/workunit binding mismatch for task '{}'",
-            task_id
+            "WORKUNIT_CAPSULE_POLICY_LINEAGE_INVALID: capsule task/workunit binding mismatch for task '{task_id}'"
         )));
     }
 

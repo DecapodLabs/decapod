@@ -446,7 +446,7 @@ fn reconcile_commit_to_agent_branch(
     }
 
     run_git(repo_root, &["add", "-A"])?;
-    let msg = format!("chore(reconcile): handoff {} to {}", task_id, target_agent);
+    let msg = format!("chore(reconcile): handoff {task_id} to {target_agent}");
     run_git(repo_root, &["commit", "-m", &msg])?;
     let commit = run_git(repo_root, &["rev-parse", "HEAD"])?;
 
@@ -465,7 +465,7 @@ fn reconcile_commit_to_agent_branch(
         &[
             "rev-parse",
             "--verify",
-            &format!("refs/heads/{}", target_branch),
+            &format!("refs/heads/{target_branch}"),
         ],
     )
     .is_ok();
@@ -883,7 +883,7 @@ fn migrate_task_components(conn: &Connection) -> Result<(), error::DecapodError>
 }
 
 pub fn infer_component(title: &str, tags: &str) -> Option<String> {
-    let text = format!("{} {}", title, tags).to_lowercase();
+    let text = format!("{title} {tags}").to_lowercase();
 
     let component_keywords = vec![
         ("main", vec!["main", "binary", "cli", "command"]),
@@ -920,7 +920,7 @@ pub fn infer_component(title: &str, tags: &str) -> Option<String> {
 }
 
 pub fn infer_category(title: &str, tags: &str) -> Option<String> {
-    let text = format!("{} {}", title, tags).to_lowercase();
+    let text = format!("{title} {tags}").to_lowercase();
 
     let category_keywords = vec![
         (
@@ -1063,8 +1063,7 @@ fn register_agent_categories(
 
             if exists.is_none() {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "Unknown category '{}' (run `decapod todo categories`)",
-                    category
+                    "Unknown category '{category}' (run `decapod todo categories`)"
                 )));
             }
 
@@ -1711,8 +1710,7 @@ fn enforce_operation_policy(
     let current_level = get_agent_trust_level(conn, agent_id)?;
     if trust_level_to_int(&current_level) < trust_level_to_int(&required_trust) {
         return Err(error::DecapodError::ValidationError(format!(
-            "Policy gate denied for {}: agent '{}' trust '{}' < required '{}'",
-            zone_name, agent_id, current_level, required_trust
+            "Policy gate denied for {zone_name}: agent '{agent_id}' trust '{current_level}' < required '{required_trust}'"
         )));
     }
 
@@ -1728,8 +1726,7 @@ fn enforce_operation_policy(
         policy::initialize_policy_db(root)?;
         if !policy::check_approval(&store, zone_name, None, "global")? {
             return Err(error::DecapodError::ValidationError(format!(
-                "Policy gate denied for {}: missing approval",
-                zone_name
+                "Policy gate denied for {zone_name}: missing approval"
             )));
         }
     }
@@ -1780,7 +1777,7 @@ fn scope_from_dir(p: &str) -> String {
     for component_name in COMPONENT_NAMES {
         if path.file_name().map(|s| s.to_string_lossy().to_lowercase())
             == Some(component_name.to_string())
-            || p.to_lowercase().contains(&format!("/{}/", component_name))
+            || p.to_lowercase().contains(&format!("/{component_name}/"))
         {
             return component_name.to_string();
         }
@@ -1891,8 +1888,7 @@ fn validate_priority(s: &str) -> Result<String, String> {
     match s {
         "high" | "medium" | "low" => Ok(s.to_string()),
         _ => Err(format!(
-            "Invalid priority: {}. Must be one of: high, medium, low",
-            s
+            "Invalid priority: {s}. Must be one of: high, medium, low"
         )),
     }
 }
@@ -2481,21 +2477,18 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     };
     if let Err(e) = federation::add_node(
         &store,
-        &format!("Task: {}", title),
+        &format!("Task: {title}"),
         "commitment",
         "notable",
         "agent_inferred",
-        &format!(
-            "Task {} created with priority {}. Description: {}",
-            task_id, priority, description
-        ),
-        &format!("event:{}", task_id),
+        &format!("Task {task_id} created with priority {priority}. Description: {description}"),
+        &format!("event:{task_id}"),
         tags,
         "repo",
         None,
         "decapod",
     ) {
-        eprintln!("Warning: failed to create federation node: {}", e);
+        eprintln!("Warning: failed to create federation node: {e}");
     } else {
         // Refresh derived files after adding a node
         let _ = federation::refresh_derived_files(&store);
@@ -2537,8 +2530,7 @@ pub fn update_status(
         policy::human_in_loop_required(store, "global", level, policy::is_high_risk(level));
     if requires_human && !policy::check_approval(store, event_type, None, "global")? {
         return Err(error::DecapodError::ValidationError(format!(
-            "Action '{}' on '{}' is high risk and lacks approval.",
-            event_type, id
+            "Action '{event_type}' on '{id}' is high risk and lacks approval."
         )));
     }
 
@@ -2577,20 +2569,17 @@ pub fn update_status(
 
     // Create a lifecycle-change node for every successful task status transition.
     if changed > 0 {
-        let source = format!("event:{}", id);
+        let source = format!("event:{id}");
         let anchor = federation::find_node_by_source(store, &source)
             .ok()
             .flatten();
         if let Ok(change_node) = federation::add_node(
             store,
-            &format!("Task {} status -> {}", id, new_status),
+            &format!("Task {id} status -> {new_status}"),
             "observation",
             "notable",
             "agent_inferred",
-            &format!(
-                "Status transition recorded via {} with intent_ref={}",
-                event_type, intent_ref
-            ),
+            &format!("Status transition recorded via {event_type} with intent_ref={intent_ref}"),
             &source,
             "task,status,change",
             "repo",
@@ -2607,7 +2596,7 @@ pub fn update_status(
     // Create federation node for proof when task is completed and link to intent
     if new_status == "done" && changed > 0 {
         // Find the original intent node (created at task.add)
-        let intent_source = format!("event:{}", id);
+        let intent_source = format!("event:{id}");
         let intent_node_id = federation::find_node_by_source(store, &intent_source)
             .ok()
             .flatten();
@@ -2615,11 +2604,11 @@ pub fn update_status(
         // Create the proof node
         let proof_result = federation::add_node(
             store,
-            &format!("Proof: Task {} completed", id),
+            &format!("Proof: Task {id} completed"),
             "decision",
             "notable",
             "agent_inferred",
-            &format!("Task {} marked as done. Validation gates passed.", id),
+            &format!("Task {id} marked as done. Validation gates passed."),
             &intent_source,
             "proof,completion",
             "repo",
@@ -2708,8 +2697,7 @@ fn edit_task(
                 .unwrap_or(false);
             if !valid {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "Unknown category '{}'. Run `decapod todo categories` to see valid categories.",
-                    cat
+                    "Unknown category '{cat}'. Run `decapod todo categories` to see valid categories."
                 )));
             }
         }
@@ -3100,7 +3088,7 @@ pub fn claim_task(
             task_id: Some(id.to_string()),
             payload: serde_json::json!({
                 "assigned_to": agent_id,
-                "mode": format!("{:?}", mode).to_lowercase(),
+                "mode": format!("{mode:?}").to_lowercase(),
             }),
             actor: agent_id.to_string(),
         };
@@ -3109,7 +3097,7 @@ pub fn claim_task(
 
         Ok(serde_json::json!({
             "status": "ok",
-            "mode": format!("{:?}", mode).to_lowercase(),
+            "mode": format!("{mode:?}").to_lowercase(),
             "message": format!("Task {} claimed by {}", id, agent_id),
             "claim_id": claim_id
         }))
@@ -3252,9 +3240,9 @@ fn handoff_task(
         .is_some_and(|s| s == "ok")
     {
         let knowledge_id = format!("H_{}", crate::core::ulid::new_ulid());
-        let title = format!("Task handoff {}", id);
-        let content = format!("Handoff from {:?} to {}. Summary: {}", from, to, summary);
-        let provenance = format!("event:{}", event_id);
+        let title = format!("Task handoff {id}");
+        let content = format!("Handoff from {from:?} to {to}. Summary: {summary}");
+        let provenance = format!("event:{event_id}");
         let _ = knowledge::add_knowledge(
             store,
             knowledge::AddKnowledgeParams {
@@ -3270,7 +3258,7 @@ fn handoff_task(
                 expires_ts: None,
             },
         );
-        let obs = format!("Task {} handoff to {}: {}", id, to, summary);
+        let obs = format!("Task {id} handoff to {to}: {summary}");
         let _ = aptitude::record_observation(store, &obs, Some("multi_agent"));
 
         // Attempt cross-branch reconciliation: commit current changes and mirror to target agent branch.
@@ -3719,11 +3707,11 @@ pub fn list_tasks(
         }
         if let Some(t) = tags {
             query.push_str(" AND tags LIKE ?");
-            params.push(Box::new(format!("%{}%", t)));
+            params.push(Box::new(format!("%{t}%")));
         }
         if let Some(ts) = title_search {
             query.push_str(" AND title LIKE ?");
-            params.push(Box::new(format!("%{}%", ts)));
+            params.push(Box::new(format!("%{ts}%")));
         }
         if let Some(d) = dir {
             let abs = Path::new(&d)
@@ -3841,7 +3829,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                 continue;
             }
             let ev: TodoEvent = serde_json::from_str(line).map_err(|e| {
-                error::DecapodError::ValidationError(format!("Invalid JSONL event: {}", e))
+                error::DecapodError::ValidationError(format!("Invalid JSONL event: {e}"))
             })?;
             count += 1;
 
@@ -4329,14 +4317,12 @@ fn resolve_task_id_arg(
 ) -> Result<String, error::DecapodError> {
     match (id_flag.as_deref(), id_positional.as_deref()) {
         (Some(a), Some(b)) if a != b => Err(error::DecapodError::ValidationError(format!(
-            "{} received conflicting IDs (--id={} vs positional={})",
-            command, a, b
+            "{command} received conflicting IDs (--id={a} vs positional={b})"
         ))),
         (Some(id), _) => Ok(id.to_string()),
         (None, Some(id)) => Ok(id.to_string()),
         (None, None) => Err(error::DecapodError::ValidationError(format!(
-            "{} requires a task ID (use --id <ID> or positional <ID>)",
-            command
+            "{command} requires a task ID (use --id <ID> or positional <ID>)"
         ))),
     }
 }
@@ -4672,7 +4658,7 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                         let prio = v.get("priority").and_then(|x| x.as_str()).unwrap_or("?");
                         let title = v.get("title").and_then(|x| x.as_str()).unwrap_or("");
                         let scope = v.get("scope").and_then(|x| x.as_str()).unwrap_or("root");
-                        println!("- {} [{}|{}|{}] {}", id, status, prio, scope, title);
+                        println!("- {id} [{status}|{prio}|{scope}] {title}");
                     }
                 } else {
                     println!("No tasks found.");
@@ -4692,7 +4678,7 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                                 .unwrap_or("");
                             let keywords =
                                 cat.get("keywords").and_then(|x| x.as_str()).unwrap_or("");
-                            println!("  {} - {} (keywords: {})", name, desc, keywords);
+                            println!("  {name} - {desc} (keywords: {keywords})");
                         }
                     }
                 }
@@ -4716,7 +4702,7 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                                 .get("claimed_at")
                                 .and_then(|x| x.as_str())
                                 .unwrap_or("?");
-                            println!("  {} -> {} (claimed_at: {})", category, agent, claimed_at);
+                            println!("  {category} -> {agent} (claimed_at: {claimed_at})");
                         }
                     }
                 }
@@ -4743,8 +4729,7 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                                 .map(|v| now.saturating_sub(v).to_string())
                                 .unwrap_or_else(|| "?".to_string());
                             println!(
-                                "  {} (status: {}, last_seen: {}, age_s: {})",
-                                id, status, last_seen, age_secs
+                                "  {id} (status: {status}, last_seen: {last_seen}, age_s: {age_secs})"
                             );
                         }
                     }
@@ -4769,7 +4754,7 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                                 .get("claimed_at")
                                 .and_then(|x| x.as_str())
                                 .unwrap_or("?");
-                            println!("  {} [{}] (since: {})", agent_id, claim_type, claimed_at);
+                            println!("  {agent_id} [{claim_type}] (since: {claimed_at})");
                         }
                     }
                 }
@@ -4788,7 +4773,7 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                                 .get("expertise_level")
                                 .and_then(|x| x.as_str())
                                 .unwrap_or("?");
-                            println!("  {} -> {} [{}]", agent, category, level);
+                            println!("  {agent} -> {category} [{level}]");
                         }
                     }
                 }

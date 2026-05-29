@@ -542,7 +542,7 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
             "actor": "migration",
         });
 
-        writeln!(file, "{}", event).map_err(error::DecapodError::IoError)?;
+        writeln!(file, "{event}").map_err(error::DecapodError::IoError)?;
 
         // If task is done, add task.done event
         if status == "done" {
@@ -555,7 +555,7 @@ fn migrate_reconstruct_todo_events(decapod_root: &Path) -> Result<(), error::Dec
                 "actor": "migration",
             });
 
-            writeln!(file, "{}", complete_event).map_err(error::DecapodError::IoError)?;
+            writeln!(file, "{complete_event}").map_err(error::DecapodError::IoError)?;
         }
     }
 
@@ -662,7 +662,7 @@ fn migrate_consolidate_databases(decapod_root: &Path) -> Result<(), error::Decap
         if p.exists() {
             let _ = fs::remove_file(&p);
         }
-        let bak = data_root.join(format!("{}.bak", f));
+        let bak = data_root.join(format!("{f}.bak"));
         if bak.exists() {
             let _ = fs::remove_file(&bak);
         }
@@ -727,7 +727,7 @@ fn typed_todo_suffix(seed: &str) -> String {
     let digest = hasher.finalize();
     let mut out = String::with_capacity(16);
     for b in digest {
-        out.push_str(&format!("{:02x}", b));
+        out.push_str(&format!("{b:02x}"));
         if out.len() >= 16 {
             out.truncate(16);
             break;
@@ -786,7 +786,7 @@ fn table_has_column(
     table: &str,
     column: &str,
 ) -> Result<bool, error::DecapodError> {
-    let pragma = format!("PRAGMA table_info({})", table);
+    let pragma = format!("PRAGMA table_info({table})");
     let mut stmt = conn
         .prepare(&pragma)
         .map_err(error::DecapodError::RusqliteError)?;
@@ -1203,10 +1203,7 @@ fn migrate_table(
         .map_err(error::DecapodError::RusqliteError)?;
 
     let res = target_conn.execute(
-        &format!(
-            "INSERT OR IGNORE INTO main.{} SELECT * FROM source.{}",
-            table, table
-        ),
+        &format!("INSERT OR IGNORE INTO main.{table} SELECT * FROM source.{table}"),
         [],
     );
 

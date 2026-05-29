@@ -101,8 +101,7 @@ pub fn parse_conflict_policy(value: &str) -> Result<KnowledgeConflictPolicy, err
         "supersede" => Ok(KnowledgeConflictPolicy::Supersede),
         "reject" => Ok(KnowledgeConflictPolicy::Reject),
         other => Err(error::DecapodError::ValidationError(format!(
-            "Invalid conflict policy '{}'. Expected merge|supersede|reject",
-            other
+            "Invalid conflict policy '{other}'. Expected merge|supersede|reject"
         ))),
     }
 }
@@ -158,8 +157,7 @@ pub fn add_knowledge(
         })?;
         let event = lookup_promotion_event(store, event_id)?.ok_or_else(|| {
             error::DecapodError::ValidationError(format!(
-                "missing promotion firewall event '{}' in knowledge.promotions.jsonl",
-                event_id
+                "missing promotion firewall event '{event_id}' in knowledge.promotions.jsonl"
             ))
         })?;
         if event.target_class != "procedural" {
@@ -170,14 +168,12 @@ pub fn add_knowledge(
         }
         if event.evidence_refs.is_empty() {
             return Err(error::DecapodError::ValidationError(format!(
-                "promotion event '{}' is missing evidence_refs",
-                event_id
+                "promotion event '{event_id}' is missing evidence_refs"
             )));
         }
         if event.approved_by.trim().is_empty() {
             return Err(error::DecapodError::ValidationError(format!(
-                "promotion event '{}' is missing approved_by",
-                event_id
+                "promotion event '{event_id}' is missing approved_by"
             )));
         }
     }
@@ -324,7 +320,7 @@ pub fn search_knowledge(
              WHERE (title LIKE ?1 OR content LIKE ?1 OR provenance LIKE ?1)
                AND status = 'active'",
         )?;
-        let q = format!("%{}%", query);
+        let q = format!("%{query}%");
         let rows = stmt.query_map(params![q], |row| {
             Ok(KnowledgeEntry {
                 id: row.get(0)?,
@@ -425,14 +421,12 @@ pub fn log_retrieval_feedback(
 ) -> Result<RetrievalFeedbackResult, error::DecapodError> {
     if !matches!(outcome, "helped" | "neutral" | "hurt" | "unknown") {
         return Err(error::DecapodError::ValidationError(format!(
-            "Invalid retrieval outcome '{}'. Expected helped|neutral|hurt|unknown",
-            outcome
+            "Invalid retrieval outcome '{outcome}'. Expected helped|neutral|hurt|unknown"
         )));
     }
     if !matches!(source, "invocation" | "manual_feedback") {
         return Err(error::DecapodError::ValidationError(format!(
-            "Invalid retrieval source '{}'. Expected invocation|manual_feedback",
-            source
+            "Invalid retrieval source '{source}'. Expected invocation|manual_feedback"
         )));
     }
 
@@ -454,8 +448,8 @@ pub fn log_retrieval_feedback(
         .open(&events_path)
         .map_err(error::DecapodError::IoError)?;
     let line = serde_json::to_string(&event)
-        .map_err(|e| error::DecapodError::ValidationError(format!("JSON error: {}", e)))?;
-    writeln!(file, "{}", line).map_err(error::DecapodError::IoError)?;
+        .map_err(|e| error::DecapodError::ValidationError(format!("JSON error: {e}")))?;
+    writeln!(file, "{line}").map_err(error::DecapodError::IoError)?;
 
     Ok(RetrievalFeedbackResult {
         event_id,
@@ -528,8 +522,8 @@ pub fn decay_knowledge(
         .open(&events_path)
         .map_err(error::DecapodError::IoError)?;
     let line = serde_json::to_string(&event)
-        .map_err(|e| error::DecapodError::ValidationError(format!("JSON error: {}", e)))?;
-    writeln!(file, "{}", line).map_err(error::DecapodError::IoError)?;
+        .map_err(|e| error::DecapodError::ValidationError(format!("JSON error: {e}")))?;
+    writeln!(file, "{line}").map_err(error::DecapodError::IoError)?;
 
     Ok(DecayResult {
         as_of: as_of.to_string(),
@@ -602,8 +596,8 @@ pub fn record_promotion_event(
         .open(&ledger_path)
         .map_err(error::DecapodError::IoError)?;
     let line = serde_json::to_string(&event)
-        .map_err(|e| error::DecapodError::ValidationError(format!("JSON error: {}", e)))?;
-    writeln!(file, "{}", line).map_err(error::DecapodError::IoError)?;
+        .map_err(|e| error::DecapodError::ValidationError(format!("JSON error: {e}")))?;
+    writeln!(file, "{line}").map_err(error::DecapodError::IoError)?;
 
     Ok(event)
 }
@@ -641,9 +635,9 @@ fn lookup_promotion_event(
 }
 
 fn parse_epoch_z(ts: &str) -> Result<u64, error::DecapodError> {
-    ts.trim_end_matches('Z').parse::<u64>().map_err(|_| {
-        error::DecapodError::ValidationError(format!("Invalid epoch timestamp: {}", ts))
-    })
+    ts.trim_end_matches('Z')
+        .parse::<u64>()
+        .map_err(|_| error::DecapodError::ValidationError(format!("Invalid epoch timestamp: {ts}")))
 }
 
 fn now_iso() -> String {

@@ -270,7 +270,7 @@ pub fn read_specs_manifest(
     }
     let raw = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
     let manifest: ProjectSpecsManifest = serde_json::from_str(&raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!("Invalid project specs manifest: {}", e))
+        error::DecapodError::ValidationError(format!("Invalid project specs manifest: {e}"))
     })?;
     Ok(Some(manifest))
 }
@@ -317,7 +317,7 @@ pub fn refresh_specs_manifest(
 
     let manifest_path = project_root.join(LOCAL_PROJECT_SPECS_MANIFEST);
     let manifest_body = serde_json::to_string_pretty(&manifest).map_err(|e| {
-        error::DecapodError::ValidationError(format!("Failed to serialize specs manifest: {}", e))
+        error::DecapodError::ValidationError(format!("Failed to serialize specs manifest: {e}"))
     })?;
     fs::write(manifest_path, manifest_body).map_err(error::DecapodError::IoError)?;
 

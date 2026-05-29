@@ -41,7 +41,7 @@ fn run_decapod(dir: &Path, args: &[&str]) -> (bool, String) {
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-    (output.status.success(), format!("{}\n{}", stdout, stderr))
+    (output.status.success(), format!("{stdout}\n{stderr}"))
 }
 
 fn parse_json_from_output(output: &str) -> serde_json::Value {
@@ -134,8 +134,7 @@ fn test_schema_files_exist_and_parse() {
             serde_json::from_str(schema_str).expect("parse schema fixture");
         assert!(
             parsed.get("$id").is_some(),
-            "schema {} must declare $id",
-            file
+            "schema {file} must declare $id"
         );
     }
 }
@@ -202,7 +201,7 @@ fn test_source_hash_binding_is_enforced_on_attach() {
         1800,
     )
     .unwrap_err();
-    assert!(format!("{}", err).contains("Source integrity check failed"));
+    assert!(format!("{err}").contains("Source integrity check failed"));
 }
 
 #[test]
@@ -326,7 +325,7 @@ fn test_cli_create_attach_detach_inspect() {
             "json",
         ],
     );
-    assert!(success, "create should succeed:\n{}", output);
+    assert!(success, "create should succeed:\n{output}");
     let created = parse_json_from_output(&output);
     let artifact_id = created["artifact_id"].as_str().unwrap();
 
@@ -347,7 +346,7 @@ fn test_cli_create_attach_detach_inspect() {
             "json",
         ],
     );
-    assert!(success, "attach should succeed:\n{}", output);
+    assert!(success, "attach should succeed:\n{output}");
 
     let (success, output) = run_decapod(
         &temp_path,
@@ -362,7 +361,7 @@ fn test_cli_create_attach_detach_inspect() {
             "json",
         ],
     );
-    assert!(success, "detach should succeed:\n{}", output);
+    assert!(success, "detach should succeed:\n{output}");
 
     let (success, output) = run_decapod(
         &temp_path,
@@ -375,5 +374,5 @@ fn test_cli_create_attach_detach_inspect() {
             "json",
         ],
     );
-    assert!(success, "inspect should succeed:\n{}", output);
+    assert!(success, "inspect should succeed:\n{output}");
 }

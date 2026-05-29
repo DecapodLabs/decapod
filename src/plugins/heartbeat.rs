@@ -41,7 +41,7 @@ pub fn get_status(store: &Store) -> Result<HeartbeatStatus, error::DecapodError>
     let mut health_summary = std::collections::HashMap::new();
     let all_health = health::get_all_health(store)?;
     for (_, state, _) in all_health {
-        let count = health_summary.entry(format!("{:?}", state)).or_insert(0);
+        let count = health_summary.entry(format!("{state:?}")).or_insert(0);
         *count += 1;
     }
 
@@ -96,8 +96,7 @@ pub fn get_status(store: &Store) -> Result<HeartbeatStatus, error::DecapodError>
     }
     if pending_approvals > 0 {
         alerts.push(format!(
-            "{} pending approvals require review",
-            pending_approvals
+            "{pending_approvals} pending approvals require review"
         ));
     }
 
@@ -117,7 +116,7 @@ fn now_iso() -> String {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
-    format!("{}Z", secs)
+    format!("{secs}Z")
 }
 
 pub fn schema() -> serde_json::Value {

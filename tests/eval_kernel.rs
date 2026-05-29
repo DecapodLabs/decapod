@@ -316,8 +316,7 @@ fn eval_judge_contract_rejects_malformed_json() {
     let stderr = String::from_utf8_lossy(&judge.stderr);
     assert!(
         stderr.contains("EVAL_JUDGE_JSON_CONTRACT_ERROR"),
-        "expected contract marker, got: {}",
-        stderr
+        "expected contract marker, got: {stderr}"
     );
 }
 
@@ -370,7 +369,7 @@ fn eval_judge_timeout_is_typed_and_gate_blocks_progress() {
     );
     assert!(!judge.status.success(), "judge should timeout");
     let stderr = String::from_utf8_lossy(&judge.stderr);
-    assert!(stderr.contains("EVAL_JUDGE_TIMEOUT"), "stderr: {}", stderr);
+    assert!(stderr.contains("EVAL_JUDGE_TIMEOUT"), "stderr: {stderr}");
 
     let aggregate = run_decapod(
         &dir,

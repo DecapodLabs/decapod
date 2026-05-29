@@ -194,10 +194,7 @@ fn run_decapod_json(
         )));
     }
     serde_json::from_slice::<serde_json::Value>(&output.stdout).map_err(|err| {
-        error::DecapodError::ValidationError(format!(
-            "workflow command did not return JSON: {}",
-            err
-        ))
+        error::DecapodError::ValidationError(format!("workflow command did not return JSON: {err}"))
     })
 }
 

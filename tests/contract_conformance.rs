@@ -87,8 +87,7 @@ fn test_no_orphan_readme_guarantees() {
 
     assert!(
         enforced_count >= 10,
-        "At least 10 claims should be enforced. Found: {}",
-        enforced_count
+        "At least 10 claims should be enforced. Found: {enforced_count}"
     );
 }
 

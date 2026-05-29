@@ -380,8 +380,7 @@ fn workunit_transition_to_verified_requires_passing_proofs() {
     );
     assert!(
         combined.contains("missing passing proof result"),
-        "expected missing proof guard, got:\n{}",
-        combined
+        "expected missing proof guard, got:\n{combined}"
     );
 }
 

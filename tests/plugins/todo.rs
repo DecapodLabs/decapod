@@ -89,7 +89,7 @@ fn test_todo_rebuild() {
     // Add some tasks
     for i in 0..3 {
         let add_args = TodoCommand::Add {
-            title: format!("Task {}", i),
+            title: format!("Task {i}"),
             description: "".to_string(),
             tags: "".to_string(),
             owner: "".to_string(),
@@ -470,8 +470,7 @@ fn test_claim_includes_container_result_when_autorun_enabled() {
     let container_status = claimed["container"]["status"].as_str().unwrap_or("");
     assert!(
         container_status == "ok" || container_status == "error" || container_status == "warning",
-        "container status should be ok/error/warning, got '{}'",
-        container_status
+        "container status should be ok/error/warning, got '{container_status}'"
     );
 }
 

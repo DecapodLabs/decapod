@@ -80,7 +80,7 @@ pub fn run_health_cli(store: &Store, cli: HealthCli) -> Result<(), error::Decapo
             provenance,
         } => {
             add_claim(store, &id, &subject, &kind, &provenance)?;
-            println!("Claim added: {}", id);
+            println!("Claim added: {id}");
         }
         HealthCommand::Proof {
             claim_id,
@@ -89,11 +89,11 @@ pub fn run_health_cli(store: &Store, cli: HealthCli) -> Result<(), error::Decapo
             sla,
         } => {
             record_proof(store, &claim_id, &surface, &result, sla)?;
-            println!("Proof recorded for: {}", claim_id);
+            println!("Proof recorded for: {claim_id}");
         }
         HealthCommand::Get { id } => {
             let (state, reason) = get_health(store, &id)?;
-            println!("Claim: {}\nHealth: {:?}\nReason: {}", id, state, reason);
+            println!("Claim: {id}\nHealth: {state:?}\nReason: {reason}");
         }
         HealthCommand::Summary => {
             let summary = get_summary(store)?;
@@ -289,7 +289,7 @@ pub fn get_health(
                 provenance: row.get(3)?,
                 created_at: row.get(4)?,
             }),
-        ).map_err(|_| error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=HEALTH_CLAIM_NOT_FOUND severity=transient auto_remediable=true audience=agent agent_action=\"verify the claim ID exists, or create a new claim\" user_note=\"Health claim not found; the agent should locate or create the claim.\"\nClaim not found: {}", claim_id)))?;
+        ).map_err(|_| error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=HEALTH_CLAIM_NOT_FOUND severity=transient auto_remediable=true audience=agent agent_action=\"verify the claim ID exists, or create a new claim\" user_note=\"Health claim not found; the agent should locate or create the claim.\"\nClaim not found: {claim_id}")))?;
 
         let mut stmt = conn.prepare("SELECT event_id, claim_id, ts, surface, result, sla_seconds FROM proof_events WHERE claim_id = ?1")?;
         let event_iter = stmt.query_map(params![claim.id], |row| {
@@ -371,7 +371,7 @@ pub fn get_summary(store: &Store) -> Result<SummaryStatus, error::DecapodError> 
     let mut health_summary = std::collections::HashMap::new();
     let all_health = get_all_health(store)?;
     for (_, state, _) in all_health {
-        let count = health_summary.entry(format!("{:?}", state)).or_insert(0);
+        let count = health_summary.entry(format!("{state:?}")).or_insert(0);
         *count += 1;
     }
 
@@ -424,8 +424,7 @@ pub fn get_summary(store: &Store) -> Result<SummaryStatus, error::DecapodError> 
     }
     if pending_approvals > 0 {
         alerts.push(format!(
-            "{} pending approvals require review",
-            pending_approvals
+            "{pending_approvals} pending approvals require review"
         ));
     }
 
@@ -459,8 +458,7 @@ pub fn get_autonomy(store: &Store, actor_id: &str) -> Result<AutonomyStatus, err
 
     if !known_actors.contains(actor_id) {
         return Err(error::DecapodError::ValidationError(format!(
-            "AUTOREMEDIABLE_VALIDATION_ERROR code=HEALTH_ACTOR_NO_AUDIT severity=transient auto_remediable=true audience=agent agent_action=\"ensure the actor has recorded audit history or initialize it\" user_note=\"Actor audit history missing; the agent should verify the actor's presence or create audit entries.\"\nActor '{}' has no recorded audit history; autonomy cannot be computed.",
-            actor_id
+            "AUTOREMEDIABLE_VALIDATION_ERROR code=HEALTH_ACTOR_NO_AUDIT severity=transient auto_remediable=true audience=agent agent_action=\"ensure the actor has recorded audit history or initialize it\" user_note=\"Actor audit history missing; the agent should verify the actor's presence or create audit entries.\"\nActor '{actor_id}' has no recorded audit history; autonomy cannot be computed."
         )));
     }
 
@@ -483,8 +481,7 @@ pub fn get_autonomy(store: &Store, actor_id: &str) -> Result<AutonomyStatus, err
         AutonomyTier::Basic
     } else if success_count >= 5 {
         reasons.push(format!(
-            "Verified success count ({}) exceeds threshold",
-            success_count
+            "Verified success count ({success_count}) exceeds threshold"
         ));
         AutonomyTier::Verified
     } else {

@@ -101,11 +101,11 @@ fn render_timeline(store: &Store, format: &str, limit: usize) -> Result<(), Deca
                     }
                 }
                 Err(e) => {
-                    gaps.push(format!("{}: read error - {}", name, e));
+                    gaps.push(format!("{name}: read error - {e}"));
                 }
             }
         } else {
-            gaps.push(format!("{}: file not found", name));
+            gaps.push(format!("{name}: file not found"));
         }
     }
 
@@ -133,7 +133,7 @@ fn render_timeline(store: &Store, format: &str, limit: usize) -> Result<(), Deca
         if !gaps.is_empty() {
             println!("  GAPS / MISSING DATA:");
             for gap in &gaps {
-                println!("  - {}", gap);
+                println!("  - {gap}");
             }
             println!();
         }
@@ -278,7 +278,7 @@ fn render_transcript(
     ));
     md.push_str(&format!("Total Events: {}\n", all_events.len()));
     if let Some(f) = actor_filter {
-        md.push_str(&format!("Actor Filter: {}\n", f));
+        md.push_str(&format!("Actor Filter: {f}\n"));
     }
     md.push_str("\n---\n\n");
     md.push_str("## Timeline\n\n");
@@ -288,16 +288,16 @@ fn render_transcript(
         md.push_str(&format!("- **Source:** {}\n", ev.source));
         md.push_str(&format!("- **Event ID:** {}\n", ev.event_id));
         if let Some(actor) = &ev.actor {
-            md.push_str(&format!("- **Actor:** {}\n", actor));
+            md.push_str(&format!("- **Actor:** {actor}\n"));
         }
         if let Some(session) = &ev.session_id {
-            md.push_str(&format!("- **Session:** {}\n", session));
+            md.push_str(&format!("- **Session:** {session}\n"));
         }
         if let Some(corr) = &ev.correlation_id {
-            md.push_str(&format!("- **Correlation:** {}\n", corr));
+            md.push_str(&format!("- **Correlation:** {corr}\n"));
         }
         if let Some(status) = &ev.status {
-            md.push_str(&format!("- **Status:** {}\n", status));
+            md.push_str(&format!("- **Status:** {status}\n"));
         }
         md.push('\n');
     }
@@ -308,9 +308,9 @@ fn render_transcript(
 
     if let Some(path) = output_path {
         std::fs::write(path, &md).map_err(DecapodError::IoError)?;
-        println!("Transcript written to: {}", path);
+        println!("Transcript written to: {path}");
     } else {
-        println!("{}", md);
+        println!("{md}");
     }
 
     Ok(())

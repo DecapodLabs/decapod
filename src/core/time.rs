@@ -9,7 +9,7 @@ pub fn now_epoch_z() -> String {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
-    format!("{}Z", secs)
+    format!("{secs}Z")
 }
 
 pub fn new_event_id() -> String {

@@ -50,8 +50,7 @@ fn test_capabilities_schema_stability() {
     for field in required_fields {
         assert!(
             json.get(field).is_some(),
-            "capabilities must have '{}' field",
-            field
+            "capabilities must have '{field}' field"
         );
     }
 
@@ -110,8 +109,7 @@ fn test_interlock_codes_present() {
     for code in &required_codes {
         assert!(
             codes.iter().any(|c| c == code),
-            "required interlock code '{}' must be present",
-            code
+            "required interlock code '{code}' must be present"
         );
     }
 }
@@ -129,8 +127,7 @@ fn test_validate_command_works() {
 
     assert!(
         out.status.success() || combined.contains("gate") || combined.contains("validate"),
-        "validate should execute and report gates. Got: {}",
-        combined
+        "validate should execute and report gates. Got: {combined}"
     );
 }
 
@@ -226,7 +223,7 @@ fn test_capabilities_includes_core_commands() {
                 .map(|n| n.contains(cmd))
                 .unwrap_or(false)
         });
-        assert!(has_cmd, "capabilities must include '{}' command", cmd);
+        assert!(has_cmd, "capabilities must include '{cmd}' command");
     }
 }
 
@@ -269,22 +266,19 @@ fn test_agent_docs_are_accessible() {
     for required in &required_docs {
         assert!(
             docs_list.contains(required),
-            "docs list should include {}",
-            required
+            "docs list should include {required}"
         );
 
         let show_output = run_decapod(dir, &["docs", "show", required]);
         assert!(
             show_output.status.success(),
-            "docs show {} should succeed",
-            required
+            "docs show {required} should succeed"
         );
 
         let content = String::from_utf8_lossy(&show_output.stdout);
         assert!(
             !content.is_empty() && content.len() > 50,
-            "docs show {} should return content",
-            required
+            "docs show {required} should return content"
         );
     }
 }
@@ -313,22 +307,19 @@ fn test_constitution_nodes_are_accessible() {
     for required in &required_nodes {
         assert!(
             nodes_list.contains(required),
-            "constitution list should include {}",
-            required
+            "constitution list should include {required}"
         );
 
         let get_output = run_decapod(dir, &["constitution", "get", required]);
         assert!(
             get_output.status.success(),
-            "constitution get {} should succeed",
-            required
+            "constitution get {required} should succeed"
         );
 
         let content = String::from_utf8_lossy(&get_output.stdout);
         assert!(
             !content.is_empty() && content.len() > 50,
-            "constitution get {} should return content",
-            required
+            "constitution get {required} should return content"
         );
     }
 }
@@ -355,8 +346,7 @@ fn test_agent_docs_ingest_works() {
     for doc_path in &required_docs {
         assert!(
             output.contains(doc_path),
-            "docs ingest should include {}",
-            doc_path
+            "docs ingest should include {doc_path}"
         );
     }
 }

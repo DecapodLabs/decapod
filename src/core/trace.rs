@@ -139,7 +139,7 @@ pub fn append_trace(project_root: &Path, event: TraceEvent) -> Result<(), Decapo
 
     let json = serde_json::to_string(&redacted_event)
         .map_err(|e| DecapodError::ValidationError(e.to_string()))?;
-    writeln!(file, "{}", json).map_err(DecapodError::IoError)?;
+    writeln!(file, "{json}").map_err(DecapodError::IoError)?;
 
     Ok(())
 }

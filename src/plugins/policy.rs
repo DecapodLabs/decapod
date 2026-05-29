@@ -62,14 +62,14 @@ pub fn run_policy_cli(store: &Store, cli: PolicyCli) -> Result<(), error::Decapo
             let (level, requirements) = eval_risk(&command, path.as_deref(), &risk_map);
             let fingerprint = derive_fingerprint(&command, path.as_deref(), "global");
             let hitl_required = human_in_loop_required(store, "global", level, is_high_risk(level));
-            println!("Risk Level: {:?}", level);
-            println!("Fingerprint: {}", fingerprint);
-            println!("Requirements: {:?}", requirements);
-            println!("Human-in-the-loop Required: {}", hitl_required);
+            println!("Risk Level: {level:?}");
+            println!("Fingerprint: {fingerprint}");
+            println!("Requirements: {requirements:?}");
+            println!("Human-in-the-loop Required: {hitl_required}");
         }
         PolicyCommand::Approve { id, actor, scope } => {
             let approval_id = approve_action(store, &id, None, &actor, &scope)?;
-            println!("Action Approved (ID: {})", approval_id);
+            println!("Action Approved (ID: {approval_id})");
         }
         PolicyCommand::Riskmap { command } => {
             let risk_map_path = store.root.join("RISKMAP.json");
@@ -232,7 +232,7 @@ pub fn eval_risk(
                     level = zone.level;
                 }
                 for rule in &zone.rules {
-                    requirements.push(format!("Zone Rule: {}", rule));
+                    requirements.push(format!("Zone Rule: {rule}"));
                 }
             }
         }
@@ -592,8 +592,7 @@ pub fn enforce_broker_mutation_policy(
     let actor_trust = actor_trust_level_raw(root, actor)?;
     if trust_level_to_int(&actor_trust) < trust_level_to_int(required_trust) {
         return Err(error::DecapodError::ValidationError(format!(
-            "Policy gate denied for '{}': actor '{}' trust '{}' < required '{}'",
-            op_name, actor, actor_trust, required_trust
+            "Policy gate denied for '{op_name}': actor '{actor}' trust '{actor_trust}' < required '{required_trust}'"
         )));
     }
 
@@ -602,8 +601,7 @@ pub fn enforce_broker_mutation_policy(
     if let Some((zone_trust, zone_requires_approval)) = zone_policy_from_todo(root, zone_name)? {
         if trust_level_to_int(&actor_trust) < trust_level_to_int(&zone_trust) {
             return Err(error::DecapodError::ValidationError(format!(
-                "Policy gate denied for '{}': zone '{}' requires trust '{}' (actor '{}')",
-                op_name, zone_name, zone_trust, actor_trust
+                "Policy gate denied for '{op_name}': zone '{zone_name}' requires trust '{zone_trust}' (actor '{actor_trust}')"
             )));
         }
         if zone_requires_approval {
@@ -616,8 +614,7 @@ pub fn enforce_broker_mutation_policy(
                 && !check_approval(&store, zone_name, None, "global")?
             {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "Policy gate denied for '{}': zone '{}' requires approval",
-                    op_name, zone_name
+                    "Policy gate denied for '{op_name}': zone '{zone_name}' requires approval"
                 )));
             }
         }

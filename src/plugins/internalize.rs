@@ -249,7 +249,7 @@ impl InternalizerProfile {
             .join("generated")
             .join("profiles")
             .join("internalizers")
-            .join(format!("{}.json", name));
+            .join(format!("{name}.json"));
         if !profile_path.exists() {
             return Err(InternalizeError::ProfileNotFound(name.to_string()));
         }
@@ -362,43 +362,38 @@ pub enum InternalizeError {
 impl std::fmt::Display for InternalizeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Io(e) => write!(f, "IO error: {}", e),
-            Self::Json(e) => write!(f, "JSON error: {}", e),
-            Self::ProfileNotFound(n) => write!(f, "Internalizer profile '{}' not found", n),
-            Self::ProfileExecution(s) => write!(f, "Profile execution error: {}", s),
-            Self::ArtifactNotFound(id) => write!(f, "Artifact '{}' not found", id),
+            Self::Io(e) => write!(f, "IO error: {e}"),
+            Self::Json(e) => write!(f, "JSON error: {e}"),
+            Self::ProfileNotFound(n) => write!(f, "Internalizer profile '{n}' not found"),
+            Self::ProfileExecution(s) => write!(f, "Profile execution error: {s}"),
+            Self::ArtifactNotFound(id) => write!(f, "Artifact '{id}' not found"),
             Self::MountNotFound {
                 artifact_id,
                 session_id,
             } => write!(
                 f,
-                "No active mount for artifact '{}' in session '{}'",
-                artifact_id, session_id
+                "No active mount for artifact '{artifact_id}' in session '{session_id}'"
             ),
             Self::SourceIntegrityFailed { expected, actual } => write!(
                 f,
-                "Source integrity check failed: expected {}, got {}",
-                expected, actual
+                "Source integrity check failed: expected {expected}, got {actual}"
             ),
             Self::AdapterIntegrityFailed { expected, actual } => write!(
                 f,
-                "Adapter integrity check failed: expected {}, got {}",
-                expected, actual
+                "Adapter integrity check failed: expected {expected}, got {actual}"
             ),
             Self::Expired {
                 artifact_id,
                 expired_at,
             } => write!(
                 f,
-                "Artifact '{}' expired at {}; renew with a new create",
-                artifact_id, expired_at
+                "Artifact '{artifact_id}' expired at {expired_at}; renew with a new create"
             ),
             Self::ToolNotPermitted { tool, artifact_id } => write!(
                 f,
-                "Tool '{}' is not permitted to mount artifact '{}'",
-                tool, artifact_id
+                "Tool '{tool}' is not permitted to mount artifact '{artifact_id}'"
             ),
-            Self::ValidationError(s) => write!(f, "Validation error: {}", s),
+            Self::ValidationError(s) => write!(f, "Validation error: {s}"),
         }
     }
 }
@@ -531,7 +526,7 @@ fn mount_dir(store_root: &Path, session_id: &str) -> PathBuf {
 }
 
 fn mount_id(artifact_id: &str) -> String {
-    format!("mount_{}", artifact_id)
+    format!("mount_{artifact_id}")
 }
 
 fn mount_path(store_root: &Path, session_id: &str, artifact_id: &str) -> PathBuf {
@@ -692,7 +687,7 @@ pub fn create_internalization(
     if !source_path.exists() {
         return Err(InternalizeError::Io(std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            format!("Source document not found: {}", source),
+            format!("Source document not found: {source}"),
         )));
     }
     let canonical_source = fs::canonicalize(source_path).map_err(InternalizeError::Io)?;
@@ -910,7 +905,7 @@ pub fn attach_internalization(
     let provenance_entry = ProvenanceEntry {
         op: "internalize.attach".to_string(),
         timestamp: attached_at.clone(),
-        actor: format!("session:{}", session_id),
+        actor: format!("session:{session_id}"),
         inputs_hash: inspection.manifest.adapter_hash.clone(),
     };
 
@@ -938,7 +933,7 @@ pub fn attach_internalization(
 
     let session_prov_dir = session_dir(store_root, session_id);
     fs::create_dir_all(&session_prov_dir).map_err(InternalizeError::Io)?;
-    let attach_log = session_prov_dir.join(format!("internalize_attach_{}.json", id));
+    let attach_log = session_prov_dir.join(format!("internalize_attach_{id}.json"));
     let attach_entry = serde_json::json!({
         "op": "internalize.attach",
         "artifact_id": id,
@@ -1002,7 +997,7 @@ pub fn detach_internalization(
     let detached_at = now_iso8601();
     let session_prov_dir = session_dir(store_root, session_id);
     fs::create_dir_all(&session_prov_dir).map_err(InternalizeError::Io)?;
-    let detach_log = session_prov_dir.join(format!("internalize_detach_{}.json", id));
+    let detach_log = session_prov_dir.join(format!("internalize_detach_{id}.json"));
     let detach_entry = serde_json::json!({
         "op": "internalize.detach",
         "artifact_id": id,

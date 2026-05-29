@@ -77,8 +77,7 @@ fn is_container_workspaces_disabled(repo_root: &Path) -> bool {
 
 fn auto_remediable_validation_message(code: &str, message: &str, agent_action: &str) -> String {
     format!(
-        "AUTOREMEDIABLE_VALIDATION_ERROR code={} severity=transient auto_remediable=true audience=agent agent_action=\"{}\" user_note=\"Recoverable validation issue; the agent should take this action or report the concrete blocker.\"\n{}",
-        code, agent_action, message
+        "AUTOREMEDIABLE_VALIDATION_ERROR code={code} severity=transient auto_remediable=true audience=agent agent_action=\"{agent_action}\" user_note=\"Recoverable validation issue; the agent should take this action or report the concrete blocker.\"\n{message}"
     )
 }
 
@@ -325,7 +324,7 @@ fn validate_embedded_self_contained(
         let mut msg =
             String::from("Embedded constitution files contain invalid .decapod/ references:");
         for id in offenders.iter().take(8) {
-            msg.push_str(&format!(" {}", id));
+            msg.push_str(&format!(" {id}"));
         }
         if offenders.len() > 8 {
             msg.push_str(&format!(" ... ({} total)", offenders.len()));
@@ -405,10 +404,7 @@ fn validate_user_store_blank_slate(ctx: &ValidationContext) -> Result<(), error:
         pass("User store starts empty (no automatic seeding)", ctx);
     } else {
         fail(
-            &format!(
-                "User store is not empty on fresh init ({} task(s) found)",
-                n
-            ),
+            &format!("User store is not empty on fresh init ({n} task(s) found)"),
             ctx,
         );
     }
@@ -435,10 +431,7 @@ fn validate_repo_store_dogfood(
 
     // Fresh setup has 0 events but is valid.
     pass(
-        &format!(
-            "Repo backlog event log present ({} task.add events)",
-            add_count
-        ),
+        &format!("Repo backlog event log present ({add_count} task.add events)"),
         ctx,
     );
 
@@ -505,16 +498,16 @@ fn validate_repo_map(
     let required_methodology = ["methodology/ARCHITECTURE"];
     for r in required_specs {
         if crate::core::assets::get_doc(r).is_some() {
-            pass(&format!("Constitution doc {} present (embedded)", r), ctx);
+            pass(&format!("Constitution doc {r} present (embedded)"), ctx);
         } else {
-            fail(&format!("Constitution doc {} missing (embedded)", r), ctx);
+            fail(&format!("Constitution doc {r} missing (embedded)"), ctx);
         }
     }
     for r in required_methodology {
         if crate::core::assets::get_doc(r).is_some() {
-            pass(&format!("Constitution doc {} present (embedded)", r), ctx);
+            pass(&format!("Constitution doc {r} present (embedded)"), ctx);
         } else {
-            fail(&format!("Constitution doc {} missing (embedded)", r), ctx);
+            fail(&format!("Constitution doc {r} missing (embedded)"), ctx);
         }
     }
     Ok(())
@@ -531,10 +524,10 @@ fn validate_docs_templates_bucket(
     for a in required {
         let p = working_root.join(a);
         if p.is_file() {
-            pass(&format!("Root entrypoint {} present", a), ctx);
+            pass(&format!("Root entrypoint {a} present"), ctx);
         } else {
             fail(
-                &format!("Root entrypoint {} missing from project root", a),
+                &format!("Root entrypoint {a} missing from project root"),
                 ctx,
             );
         }
@@ -634,9 +627,9 @@ fn validate_entrypoint_invariants(
             normalized.contains(marker)
         };
         if present {
-            pass(&format!("Invariant present: {}", description), ctx);
+            pass(&format!("Invariant present: {description}"), ctx);
         } else {
-            fail(&format!("Invariant missing: {}", description), ctx);
+            fail(&format!("Invariant missing: {description}"), ctx);
             all_present = false;
         }
     }
@@ -646,7 +639,7 @@ fn validate_entrypoint_invariants(
     for legacy in legacy_routers {
         if content.contains(legacy) {
             fail(
-                &format!("AGENTS.md contains legacy router reference: {}", legacy),
+                &format!("AGENTS.md contains legacy router reference: {legacy}"),
                 ctx,
             );
             all_present = false;
@@ -658,18 +651,12 @@ fn validate_entrypoint_invariants(
     const MAX_AGENTS_LINES: usize = 120;
     if line_count <= MAX_AGENTS_LINES {
         pass(
-            &format!(
-                "AGENTS.md is thin ({} lines ≤ {})",
-                line_count, MAX_AGENTS_LINES
-            ),
+            &format!("AGENTS.md is thin ({line_count} lines ≤ {MAX_AGENTS_LINES})"),
             ctx,
         );
     } else {
         fail(
-            &format!(
-                "AGENTS.md exceeds line limit ({} lines > {})",
-                line_count, MAX_AGENTS_LINES
-            ),
+            &format!("AGENTS.md exceeds line limit ({line_count} lines > {MAX_AGENTS_LINES})"),
             ctx,
         );
         all_present = false;
@@ -680,7 +667,7 @@ fn validate_entrypoint_invariants(
     for agent_file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let agent_path = working_root.join(agent_file);
         if !agent_path.is_file() {
-            fail(&format!("{} missing from project root", agent_file), ctx);
+            fail(&format!("{agent_file} missing from project root"), ctx);
             all_present = false;
             continue;
         }
@@ -690,17 +677,17 @@ fn validate_entrypoint_invariants(
 
         // Must defer to AGENTS.md
         if agent_content.contains("See `AGENTS.md`") || agent_content.contains("AGENTS.md") {
-            pass(&format!("{} defers to AGENTS.md", agent_file), ctx);
+            pass(&format!("{agent_file} defers to AGENTS.md"), ctx);
         } else {
-            fail(&format!("{} does not reference AGENTS.md", agent_file), ctx);
+            fail(&format!("{agent_file} does not reference AGENTS.md"), ctx);
             all_present = false;
         }
 
         if agent_content.contains("core/DECAPOD") {
-            pass(&format!("{} references core/DECAPOD", agent_file), ctx);
+            pass(&format!("{agent_file} references core/DECAPOD"), ctx);
         } else {
             fail(
-                &format!("{} missing canonical router reference (.json)", agent_file),
+                &format!("{agent_file} missing canonical router reference (.json)"),
                 ctx,
             );
             all_present = false;
@@ -713,20 +700,19 @@ fn validate_entrypoint_invariants(
         {
             fail(
                 &format!(
-                    "{} references docs CLI or direct constitution paths; use constitution.get RPC",
-                    agent_file
+                    "{agent_file} references docs CLI or direct constitution paths; use constitution.get RPC"
                 ),
                 ctx,
             );
             all_present = false;
         } else if agent_content.contains("constitution get") {
             pass(
-                &format!("{} references constitution.get RPC", agent_file),
+                &format!("{agent_file} references constitution.get RPC"),
                 ctx,
             );
         } else {
             fail(
-                &format!("{} missing constitution.get RPC reference", agent_file),
+                &format!("{agent_file} missing constitution.get RPC reference"),
                 ctx,
             );
             all_present = false;
@@ -735,12 +721,12 @@ fn validate_entrypoint_invariants(
         // Must include explicit jail rule for .decapod access
         if agent_content.contains(".decapod files are accessed only via decapod CLI") {
             pass(
-                &format!("{} includes .decapod CLI-only jail rule", agent_file),
+                &format!("{agent_file} includes .decapod CLI-only jail rule"),
                 ctx,
             );
         } else {
             fail(
-                &format!("{} missing .decapod CLI-only jail rule marker", agent_file),
+                &format!("{agent_file} missing .decapod CLI-only jail rule marker"),
                 ctx,
             );
             all_present = false;
@@ -749,12 +735,12 @@ fn validate_entrypoint_invariants(
         // Must include Docker git workspace mandate
         if agent_content.contains("Docker git workspaces") {
             pass(
-                &format!("{} includes Docker workspace mandate", agent_file),
+                &format!("{agent_file} includes Docker workspace mandate"),
                 ctx,
             );
         } else {
             fail(
-                &format!("{} missing Docker workspace mandate marker", agent_file),
+                &format!("{agent_file} missing Docker workspace mandate marker"),
                 ctx,
             );
             all_present = false;
@@ -765,12 +751,12 @@ fn validate_entrypoint_invariants(
             .contains("request elevated permissions before Docker/container workspace commands")
         {
             pass(
-                &format!("{} includes elevated-permissions mandate", agent_file),
+                &format!("{agent_file} includes elevated-permissions mandate"),
                 ctx,
             );
         } else {
             fail(
-                &format!("{} missing elevated-permissions mandate marker", agent_file),
+                &format!("{agent_file} missing elevated-permissions mandate marker"),
                 ctx,
             );
             all_present = false;
@@ -779,15 +765,12 @@ fn validate_entrypoint_invariants(
         // Must include per-agent session password mandate
         if agent_content.contains("DECAPOD_SESSION_PASSWORD") {
             pass(
-                &format!("{} includes per-agent session password mandate", agent_file),
+                &format!("{agent_file} includes per-agent session password mandate"),
                 ctx,
             );
         } else {
             fail(
-                &format!(
-                    "{} missing per-agent session password mandate marker",
-                    agent_file
-                ),
+                &format!("{agent_file} missing per-agent session password mandate marker"),
                 ctx,
             );
             all_present = false;
@@ -796,12 +779,12 @@ fn validate_entrypoint_invariants(
         // Must include claim-before-work mandate
         if agent_content.contains("decapod todo claim --id <task-id>") {
             pass(
-                &format!("{} includes claim-before-work mandate", agent_file),
+                &format!("{agent_file} includes claim-before-work mandate"),
                 ctx,
             );
         } else {
             fail(
-                &format!("{} missing claim-before-work mandate marker", agent_file),
+                &format!("{agent_file} missing claim-before-work mandate marker"),
                 ctx,
             );
             all_present = false;
@@ -809,13 +792,10 @@ fn validate_entrypoint_invariants(
 
         // Must include task creation before claim mandate
         if agent_content.contains("decapod todo add \"<task>\"") {
-            pass(
-                &format!("{} includes task creation mandate", agent_file),
-                ctx,
-            );
+            pass(&format!("{agent_file} includes task creation mandate"), ctx);
         } else {
             fail(
-                &format!("{} missing task creation mandate marker", agent_file),
+                &format!("{agent_file} missing task creation mandate marker"),
                 ctx,
             );
             all_present = false;
@@ -824,14 +804,13 @@ fn validate_entrypoint_invariants(
         // Must include canonical Decapod workspace path mandate
         if agent_content.contains(".decapod/workspaces") {
             pass(
-                &format!("{} includes canonical workspace path mandate", agent_file),
+                &format!("{agent_file} includes canonical workspace path mandate"),
                 ctx,
             );
         } else {
             fail(
                 &format!(
-                    "{} missing canonical workspace path marker (`.decapod/workspaces`)",
-                    agent_file
+                    "{agent_file} missing canonical workspace path marker (`.decapod/workspaces`)"
                 ),
                 ctx,
             );
@@ -858,8 +837,7 @@ fn validate_entrypoint_invariants(
             if has_forbidden_positive_reference {
                 fail(
                     &format!(
-                        "{} references forbidden non-canonical worktree path `.claude/worktrees`",
-                        agent_file
+                        "{agent_file} references forbidden non-canonical worktree path `.claude/worktrees`"
                     ),
                     ctx,
                 );
@@ -867,8 +845,7 @@ fn validate_entrypoint_invariants(
             } else {
                 pass(
                     &format!(
-                        "{} explicitly forbids `.claude/worktrees` non-canonical path",
-                        agent_file
+                        "{agent_file} explicitly forbids `.claude/worktrees` non-canonical path"
                     ),
                     ctx,
                 );
@@ -881,18 +858,12 @@ fn validate_entrypoint_invariants(
             .contains(r#"decapod constitution get core/decapod"#)
         {
             pass(
-                &format!(
-                    "{} includes core constitution ingestion mandate",
-                    agent_file
-                ),
+                &format!("{agent_file} includes core constitution ingestion mandate"),
                 ctx,
             );
         } else {
             fail(
-                &format!(
-                    "{} missing core constitution ingestion mandate marker",
-                    agent_file
-                ),
+                &format!("{agent_file} missing core constitution ingestion mandate marker"),
                 ctx,
             );
             all_present = false;
@@ -900,13 +871,10 @@ fn validate_entrypoint_invariants(
 
         // Must include explicit update command in startup sequence
         if agent_content.contains("cargo install decapod") {
-            pass(&format!("{} includes version update step", agent_file), ctx);
+            pass(&format!("{agent_file} includes version update step"), ctx);
         } else {
             fail(
-                &format!(
-                    "{} missing version update step (`cargo install decapod`)",
-                    agent_file
-                ),
+                &format!("{agent_file} missing version update step (`cargo install decapod`)"),
                 ctx,
             );
             all_present = false;
@@ -916,17 +884,13 @@ fn validate_entrypoint_invariants(
         let agent_lines = agent_content.lines().count();
         if agent_lines <= MAX_AGENT_SPECIFIC_LINES {
             pass(
-                &format!(
-                    "{} is thin ({} lines ≤ {})",
-                    agent_file, agent_lines, MAX_AGENT_SPECIFIC_LINES
-                ),
+                &format!("{agent_file} is thin ({agent_lines} lines ≤ {MAX_AGENT_SPECIFIC_LINES})"),
                 ctx,
             );
         } else {
             fail(
                 &format!(
-                    "{} exceeds line limit ({} lines > {})",
-                    agent_file, agent_lines, MAX_AGENT_SPECIFIC_LINES
+                    "{agent_file} exceeds line limit ({agent_lines} lines > {MAX_AGENT_SPECIFIC_LINES})"
                 ),
                 ctx,
             );
@@ -943,10 +907,7 @@ fn validate_entrypoint_invariants(
         for marker in duplication_markers {
             if agent_content.contains(marker) {
                 fail(
-                    &format!(
-                        "{} contains duplicated contract details ({})",
-                        agent_file, marker
-                    ),
+                    &format!("{agent_file} contains duplicated contract details ({marker})"),
                     ctx,
                 );
                 all_present = false;
@@ -984,15 +945,9 @@ fn validate_interface_contract_bootstrap(
         (context_pack_id, "AGENT_CONTEXT_PACK interface"),
     ] {
         if assets::get_embedded_doc(id).is_some() {
-            pass(
-                &format!("{} present in embedded assets: {}", label, id),
-                ctx,
-            );
+            pass(&format!("{label} present in embedded assets: {id}"), ctx);
         } else {
-            fail(
-                &format!("{} missing from embedded assets: {}", label, id),
-                ctx,
-            );
+            fail(&format!("{label} missing from embedded assets: {id}"), ctx);
         }
     }
 
@@ -1007,12 +962,9 @@ fn validate_interface_contract_bootstrap(
             "failure_modes",
         ] {
             if content.contains(marker) {
-                pass(
-                    &format!("RISK_POLICY_GATE includes marker: {}", marker),
-                    ctx,
-                );
+                pass(&format!("RISK_POLICY_GATE includes marker: {marker}"), ctx);
             } else {
-                fail(&format!("RISK_POLICY_GATE missing marker: {}", marker), ctx);
+                fail(&format!("RISK_POLICY_GATE missing marker: {marker}"), ctx);
             }
         }
     }
@@ -1029,14 +981,11 @@ fn validate_interface_contract_bootstrap(
         ] {
             if content.contains(marker) {
                 pass(
-                    &format!("AGENT_CONTEXT_PACK includes marker: {}", marker),
+                    &format!("AGENT_CONTEXT_PACK includes marker: {marker}"),
                     ctx,
                 );
             } else {
-                fail(
-                    &format!("AGENT_CONTEXT_PACK missing marker: {}", marker),
-                    ctx,
-                );
+                fail(&format!("AGENT_CONTEXT_PACK missing marker: {marker}"), ctx);
             }
         }
     }
@@ -1093,10 +1042,7 @@ fn validate_health_purity(
         );
     } else {
         fail(
-            &format!(
-                "Manual health values found in non-generated files: {:?}",
-                offenders
-            ),
+            &format!("Manual health values found in non-generated files: {offenders:?}"),
             ctx,
         );
     }
@@ -1131,10 +1077,7 @@ fn validate_project_scoped_state(
         pass("All state is correctly scoped within .decapod/", ctx);
     } else {
         fail(
-            &format!(
-                "Found Decapod state files outside .decapod/: {:?}",
-                offenders
-            ),
+            &format!("Found Decapod state files outside .decapod/: {offenders:?}"),
             ctx,
         );
     }
@@ -1160,12 +1103,11 @@ fn validate_generated_artifact_whitelist(
     let gitignore = fs::read_to_string(&gitignore_path).map_err(error::DecapodError::IoError)?;
     for rule in DECAPOD_GITIGNORE_RULES {
         if gitignore.lines().any(|line| line.trim() == *rule) {
-            pass(&format!("Gitignore contains required rule '{}'", rule), ctx);
+            pass(&format!("Gitignore contains required rule '{rule}'"), ctx);
         } else {
             fail(
                 &format!(
-                    "Missing .gitignore rule '{}' for generated/data whitelist enforcement",
-                    rule
+                    "Missing .gitignore rule '{rule}' for generated/data whitelist enforcement"
                 ),
                 ctx,
             );
@@ -1235,8 +1177,7 @@ fn validate_generated_artifact_whitelist(
     } else {
         fail(
             &format!(
-                "Tracked non-whitelisted generated artifacts found: {:?}. Keep generated files ignored unless explicitly allowlisted.",
-                offenders
+                "Tracked non-whitelisted generated artifacts found: {offenders:?}. Keep generated files ignored unless explicitly allowlisted."
             ),
             ctx,
         );
@@ -1260,7 +1201,7 @@ fn validate_project_config_toml(
     }
     let raw = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
     let value: toml::Value = toml::from_str(&raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!("Invalid .decapod/config.toml syntax: {}", e))
+        error::DecapodError::ValidationError(format!("Invalid .decapod/config.toml syntax: {e}"))
     })?;
     let schema_version = value
         .get("schema_version")
@@ -1355,7 +1296,7 @@ fn validate_project_specs_docs(
         let path = repo_root.join(spec.path);
         let file = spec.path;
         if path.exists() {
-            pass(&format!("Project specs file present: {}", file), ctx);
+            pass(&format!("Project specs file present: {file}"), ctx);
         } else if matches!(
             file,
             LOCAL_PROJECT_SPECS_SEMANTICS
@@ -1364,16 +1305,12 @@ fn validate_project_specs_docs(
         ) {
             warn(
                 &format!(
-                    "Recommended project spec missing (scaffold-v2+): {}. Run `decapod init --force` to add the expanded spec surface.",
-                    file
+                    "Recommended project spec missing (scaffold-v2+): {file}. Run `decapod init --force` to add the expanded spec surface."
                 ),
                 ctx,
             );
         } else {
-            fail(
-                &format!("Missing required project specs file: {}", file),
-                ctx,
-            );
+            fail(&format!("Missing required project specs file: {file}"), ctx);
         }
     }
 
@@ -1423,8 +1360,7 @@ fn validate_project_specs_docs(
         } else {
             fail(
                 &format!(
-                    "OUT_OF_SYNC_SPECS: Spec content changed on disk but manifest is not updated for {:?}. Review changes and call `decapod rpc --op specs.refresh` to acknowledge.",
-                    out_of_sync_specs
+                    "OUT_OF_SYNC_SPECS: Spec content changed on disk but manifest is not updated for {out_of_sync_specs:?}. Review changes and call `decapod rpc --op specs.refresh` to acknowledge."
                 ),
                 ctx,
             );
@@ -1438,8 +1374,7 @@ fn validate_project_specs_docs(
         } else {
             warn(
                 &format!(
-                    "TASK: Generated specs still match scaffold template for {:?}. Hydrate these docs with repo-specific details before implementation promotion.",
-                    untouched_templates
+                    "TASK: Generated specs still match scaffold template for {untouched_templates:?}. Hydrate these docs with repo-specific details before implementation promotion."
                 ),
                 ctx,
             );
@@ -1554,7 +1489,7 @@ fn validate_project_specs_docs(
             pass("Intent spec contains required planning sections", ctx);
         } else {
             fail(
-                &format!("Intent spec missing required sections: {:?}", missing),
+                &format!("Intent spec missing required sections: {missing:?}"),
                 ctx,
             );
         }
@@ -1586,7 +1521,7 @@ fn validate_project_specs_docs(
         ] {
             if !interfaces.contains(section) {
                 fail(
-                    &format!("Interfaces spec missing required section: {}", section),
+                    &format!("Interfaces spec missing required section: {section}"),
                     ctx,
                 );
             }
@@ -1607,7 +1542,7 @@ fn validate_project_specs_docs(
         ] {
             if !validation.contains(section) {
                 fail(
-                    &format!("Validation spec missing required section: {}", section),
+                    &format!("Validation spec missing required section: {section}"),
                     ctx,
                 );
             }
@@ -1628,7 +1563,7 @@ fn validate_project_specs_docs(
         for section in ["# Semantics", "## State Machines", "## Invariants"] {
             if !semantics.contains(section) {
                 fail(
-                    &format!("Semantics spec missing required section: {}", section),
+                    &format!("Semantics spec missing required section: {section}"),
                     ctx,
                 );
             }
@@ -1648,7 +1583,7 @@ fn validate_project_specs_docs(
         ] {
             if !operations.contains(section) {
                 fail(
-                    &format!("Operations spec missing required section: {}", section),
+                    &format!("Operations spec missing required section: {section}"),
                     ctx,
                 );
             }
@@ -1668,7 +1603,7 @@ fn validate_project_specs_docs(
         ] {
             if !security.contains(section) {
                 fail(
-                    &format!("Security spec missing required section: {}", section),
+                    &format!("Security spec missing required section: {section}"),
                     ctx,
                 );
             }
@@ -1692,7 +1627,7 @@ fn validate_machine_contract(
         .args(["capabilities", "--format", "json"])
         .output()
         .map_err(|e| {
-            error::DecapodError::ValidationError(format!("Failed to run capabilities: {}", e))
+            error::DecapodError::ValidationError(format!("Failed to run capabilities: {e}"))
         })?;
 
     if !capabilities_output.status.success() {
@@ -1703,10 +1638,10 @@ fn validate_machine_contract(
         return Ok(());
     }
 
-    let capabilities_json: serde_json::Value =
-        serde_json::from_str(&String::from_utf8_lossy(&capabilities_output.stdout)).map_err(
-            |e| error::DecapodError::ValidationError(format!("Invalid capabilities JSON: {}", e)),
-        )?;
+    let capabilities_json: serde_json::Value = serde_json::from_str(&String::from_utf8_lossy(
+        &capabilities_output.stdout,
+    ))
+    .map_err(|e| error::DecapodError::ValidationError(format!("Invalid capabilities JSON: {e}")))?;
 
     let interlock_codes = capabilities_json["interlock_codes"]
         .as_array()
@@ -1731,8 +1666,7 @@ fn validate_machine_contract(
     } else {
         fail(
             &format!(
-                "Binary capabilities missing interlock codes: {:?}. Binary and specs are out of sync.",
-                missing_interlock
+                "Binary capabilities missing interlock codes: {missing_interlock:?}. Binary and specs are out of sync."
             ),
             ctx,
         );
@@ -1767,10 +1701,7 @@ fn validate_machine_contract(
         pass("Machine contract capabilities match binary", ctx);
     } else {
         warn(
-            &format!(
-                "Binary capabilities missing expected capabilities: {:?}",
-                missing_caps
-            ),
+            &format!("Binary capabilities missing expected capabilities: {missing_caps:?}"),
             ctx,
         );
     }
@@ -1810,7 +1741,7 @@ fn validate_spec_drift(
         pass("INTERFACES.md has structural sections", ctx);
     } else {
         warn(
-            &format!("INTERFACES.md missing sections: {:?}", missing_sections),
+            &format!("INTERFACES.md missing sections: {missing_sections:?}"),
             ctx,
         );
     }
@@ -1847,8 +1778,7 @@ fn validate_spec_drift(
         if !path.exists() {
             warn(
                 &format!(
-                    "{} missing (hygiene check only). Run `decapod init --force` to scaffold it.",
-                    name
+                    "{name} missing (hygiene check only). Run `decapod init --force` to scaffold it."
                 ),
                 ctx,
             );
@@ -1861,9 +1791,9 @@ fn validate_spec_drift(
             .copied()
             .collect::<Vec<_>>();
         if missing.is_empty() {
-            pass(&format!("{} has structural sections", name), ctx);
+            pass(&format!("{name} has structural sections"), ctx);
         } else {
-            warn(&format!("{} missing sections: {:?}", name, missing), ctx);
+            warn(&format!("{name} missing sections: {missing:?}"), ctx);
         }
     }
 
@@ -1927,10 +1857,7 @@ fn validate_workunit_manifests_if_present(
     }
 
     pass(
-        &format!(
-            "Workunit manifest schema check passed for {} file(s)",
-            files
-        ),
+        &format!("Workunit manifest schema check passed for {files} file(s)"),
         ctx,
     );
     Ok(())
@@ -1988,7 +1915,7 @@ fn validate_context_capsules_if_present(
     }
 
     pass(
-        &format!("Context capsule integrity checked for {} file(s)", files),
+        &format!("Context capsule integrity checked for {files} file(s)"),
         ctx,
     );
     Ok(())
@@ -2036,18 +1963,14 @@ fn validate_context_capsule_policy_contract(
         if rule.allowed_scopes.is_empty() {
             fail(
                 &format!(
-                    "Context capsule policy tier '{}' has no allowed_scopes (fail closed)",
-                    tier
+                    "Context capsule policy tier '{tier}' has no allowed_scopes (fail closed)"
                 ),
                 ctx,
             );
         }
         if rule.max_limit == 0 {
             fail(
-                &format!(
-                    "Context capsule policy tier '{}' has max_limit=0 (invalid)",
-                    tier
-                ),
+                &format!("Context capsule policy tier '{tier}' has max_limit=0 (invalid)"),
                 ctx,
             );
         }
@@ -2241,7 +2164,7 @@ fn validate_skill_cards_if_present(
     }
 
     pass(
-        &format!("Skill card integrity checked for {} file(s)", files),
+        &format!("Skill card integrity checked for {files} file(s)"),
         ctx,
     );
     Ok(())
@@ -2319,7 +2242,7 @@ fn validate_skill_resolutions_if_present(
     }
 
     pass(
-        &format!("Skill resolution integrity checked for {} file(s)", files),
+        &format!("Skill resolution integrity checked for {files} file(s)"),
         ctx,
     );
     Ok(())
@@ -2517,10 +2440,7 @@ fn validate_internalization_artifacts_if_present(
     }
 
     pass(
-        &format!(
-            "Internalization artifact contract checked for {} artifact(s)",
-            files
-        ),
+        &format!("Internalization artifact contract checked for {files} artifact(s)"),
         ctx,
     );
     Ok(())
@@ -2535,8 +2455,7 @@ fn validate_schema_determinism(
         let snapshot = crate::deterministic_schema_envelope();
         serde_json::to_string(&snapshot).map_err(|e| {
             error::DecapodError::ValidationError(format!(
-                "schema determinism serialization failed: {}",
-                e
+                "schema determinism serialization failed: {e}"
             ))
         })
     };
@@ -2651,8 +2570,7 @@ fn validate_health_cache_integrity(
     } else {
         warn(
             &format!(
-                "Found {} health cache entries without proof events (might be manual writes)",
-                orphaned
+                "Found {orphaned} health cache entries without proof events (might be manual writes)"
             ),
             ctx,
         );
@@ -2700,7 +2618,7 @@ fn validate_risk_map_violations(
             pass("No risk zone violations detected in audit log", ctx);
         } else {
             fail(
-                &format!("Detected operations in protected zones: {:?}", offenders),
+                &format!("Detected operations in protected zones: {offenders:?}"),
                 ctx,
             );
         }
@@ -2751,10 +2669,7 @@ fn validate_policy_integrity(
             );
         } else {
             fail(
-                &format!(
-                    "Policy approval directly mutated health state: {:?}",
-                    offenders
-                ),
+                &format!("Policy approval directly mutated health state: {offenders:?}"),
                 ctx,
             );
         }
@@ -2907,8 +2822,7 @@ fn validate_recursive_pass(pass: &RecursiveImprovementPass) -> Result<(), String
     if let Some((path, rule)) = forbidden_path_touched(&pass.forbidden_changes, &pass.touched_paths)
     {
         return Err(format!(
-            "recursive pass touched forbidden path '{}' matching '{}'",
-            path, rule
+            "recursive pass touched forbidden path '{path}' matching '{rule}'"
         ));
     }
     Ok(())
@@ -2958,10 +2872,7 @@ fn validate_recursive_improvement_passes_if_present(
     }
 
     pass(
-        &format!(
-            "Recursive improvement pass schema check passed for {} file(s)",
-            files
-        ),
+        &format!("Recursive improvement pass schema check passed for {files} file(s)"),
         ctx,
     );
     Ok(())
@@ -3011,10 +2922,7 @@ fn validate_knowledge_integrity(
         );
     } else {
         fail(
-            &format!(
-                "Found {} knowledge entries missing mandatory provenance",
-                missing_provenance
-            ),
+            &format!("Found {missing_provenance} knowledge entries missing mandatory provenance"),
             ctx,
         );
     }
@@ -3036,8 +2944,7 @@ fn validate_knowledge_integrity(
     } else {
         fail(
             &format!(
-                "Found {} procedural knowledge entries without event-backed provenance",
-                procedural_missing_event_provenance
+                "Found {procedural_missing_event_provenance} procedural knowledge entries without event-backed provenance"
             ),
             ctx,
         );
@@ -3066,8 +2973,7 @@ fn validate_knowledge_integrity(
     } else {
         fail(
             &format!(
-                "Found {} procedural knowledge entries referencing missing promotion events",
-                missing_event_refs
+                "Found {missing_event_refs} procedural knowledge entries referencing missing promotion events"
             ),
             ctx,
         );
@@ -3098,10 +3004,7 @@ fn validate_knowledge_integrity(
             pass("No direct health promotion from knowledge detected", ctx);
         } else {
             fail(
-                &format!(
-                    "Knowledge system directly mutated health state: {:?}",
-                    offenders
-                ),
+                &format!("Knowledge system directly mutated health state: {offenders:?}"),
                 ctx,
             );
         }
@@ -3224,7 +3127,7 @@ fn validate_lineage_hard_gate(
         if exists == 0 {
             continue;
         }
-        let source = format!("event:{}", task_id);
+        let source = format!("event:{task_id}");
         let commitment_count: i64 = conn
             .query_row(
                 "SELECT COUNT(*) FROM nodes n JOIN sources s ON s.node_id = n.id WHERE s.source = ?1 AND n.node_type = 'commitment'",
@@ -3234,8 +3137,7 @@ fn validate_lineage_hard_gate(
             .map_err(error::DecapodError::RusqliteError)?;
         if commitment_count == 0 {
             violations.push(format!(
-                "task.add {} missing commitment lineage node",
-                task_id
+                "task.add {task_id} missing commitment lineage node"
             ));
         }
     }
@@ -3251,7 +3153,7 @@ fn validate_lineage_hard_gate(
         if exists == 0 {
             continue;
         }
-        let source = format!("event:{}", task_id);
+        let source = format!("event:{task_id}");
         let commitment_count: i64 = conn
             .query_row(
                 "SELECT COUNT(*) FROM nodes n JOIN sources s ON s.node_id = n.id WHERE s.source = ?1 AND n.node_type = 'commitment'",
@@ -3268,8 +3170,7 @@ fn validate_lineage_hard_gate(
             .map_err(error::DecapodError::RusqliteError)?;
         if commitment_count == 0 || decision_count == 0 {
             violations.push(format!(
-                "task.done {} missing commitment/decision lineage nodes",
-                task_id
+                "task.done {task_id} missing commitment/decision lineage nodes"
             ));
         }
     }
@@ -3280,7 +3181,7 @@ fn validate_lineage_hard_gate(
             ctx,
         );
     } else {
-        fail(&format!("Lineage gate violations: {:?}", violations), ctx);
+        fail(&format!("Lineage gate violations: {violations:?}"), ctx);
     }
     Ok(())
 }
@@ -3360,10 +3261,7 @@ fn validate_watcher_purity(
             pass("Watcher purity verified (read-only checks only)", ctx);
         } else {
             fail(
-                &format!(
-                    "Watcher subsystem attempted brokered mutations: {:?}",
-                    offenders
-                ),
+                &format!("Watcher subsystem attempted brokered mutations: {offenders:?}"),
                 ctx,
             );
         }
@@ -3391,7 +3289,7 @@ fn validate_archive_integrity(
         );
     } else {
         fail(
-            &format!("Archive integrity failures detected: {:?}", failures),
+            &format!("Archive integrity failures detected: {failures:?}"),
             ctx,
         );
     }
@@ -3448,7 +3346,7 @@ fn validate_control_plane_contract(
             let stdout = String::from_utf8_lossy(&output.stdout);
             for line in stdout.lines() {
                 if line.contains("sqlite") && !line.contains("decapod") {
-                    violations.push(format!("External SQLite process accessing store: {}", line));
+                    violations.push(format!("External SQLite process accessing store: {line}"));
                 }
             }
         }
@@ -3461,10 +3359,7 @@ fn validate_control_plane_contract(
         );
     } else {
         fail(
-            &format!(
-                "Control plane contract violations detected: {:?}",
-                violations
-            ),
+            &format!("Control plane contract violations detected: {violations:?}"),
             ctx,
         );
     }
@@ -3506,10 +3401,7 @@ fn validate_canon_mutation(
             pass("No unauthorized canon mutations detected", ctx);
         } else {
             warn(
-                &format!(
-                    "Detected direct mutations to canonical documents: {:?}",
-                    offenders
-                ),
+                &format!("Detected direct mutations to canonical documents: {offenders:?}"),
                 ctx,
             );
         }
@@ -3609,12 +3501,12 @@ fn validate_federation_gates(
 
     for (gate_name, passed, message) in results {
         if passed {
-            pass(&format!("[{}] {}", gate_name, message), ctx);
+            pass(&format!("[{gate_name}] {message}"), ctx);
         } else {
             // Federation gates are advisory (warn) rather than hard-fail because the
             // two-phase DB+JSONL write design can produce transient drift that does
             // not indicate data loss.
-            warn(&format!("[{}] {}", gate_name, message), ctx);
+            warn(&format!("[{gate_name}] {message}"), ctx);
         }
     }
 
@@ -3634,10 +3526,7 @@ fn validate_markdown_primitives_roundtrip_gate(
             );
         }
         Err(err) => {
-            fail(
-                &format!("Markdown primitive round-trip failed: {}", err),
-                ctx,
-            );
+            fail(&format!("Markdown primitive round-trip failed: {err}"), ctx);
         }
     }
     Ok(())
@@ -3845,16 +3734,14 @@ fn validate_commit_often_gate(
     if dirty_count > max_dirty_files {
         fail(
             &format!(
-                "Commit-often mandate violation: {} dirty file(s) exceed limit {}. Commit incremental changes before continuing.",
-                dirty_count, max_dirty_files
+                "Commit-often mandate violation: {dirty_count} dirty file(s) exceed limit {max_dirty_files}. Commit incremental changes before continuing."
             ),
             ctx,
         );
     } else {
         pass(
             &format!(
-                "Commit-often gate: {} dirty file(s) within limit {}",
-                dirty_count, max_dirty_files
+                "Commit-often gate: {dirty_count} dirty file(s) within limit {max_dirty_files}"
             ),
             ctx,
         );
@@ -3913,8 +3800,7 @@ fn validate_plan_governed_execution_gate(
         if done_count > 0 {
             fail(
                 &format!(
-                    "NEEDS_PLAN_APPROVAL: {} done TODO(s) exist but governed PLAN artifact is missing",
-                    done_count
+                    "NEEDS_PLAN_APPROVAL: {done_count} done TODO(s) exist but governed PLAN artifact is missing"
                 ),
                 ctx,
             );
@@ -3988,14 +3874,13 @@ fn validate_git_protected_branch(
     if is_protected {
         fail(
             &format!(
-                "Currently on protected branch '{}' - implementation work must happen in working branch, not directly on protected refs (claim.git.no_direct_main_push)",
-                current_branch
+                "Currently on protected branch '{current_branch}' - implementation work must happen in working branch, not directly on protected refs (claim.git.no_direct_main_push)"
             ),
             ctx,
         );
     } else {
         pass(
-            &format!("On working branch '{}' (not protected)", current_branch),
+            &format!("On working branch '{current_branch}' (not protected)"),
             ctx,
         );
     }
@@ -4029,8 +3914,7 @@ fn validate_git_protected_branch(
 
                     fail(
                         &format!(
-                            "Protected branch has {} unpushed commit(s) - direct push to protected branch detected (commit: {})",
-                            ahead, commit_msg
+                            "Protected branch has {ahead} unpushed commit(s) - direct push to protected branch detected (commit: {commit_msg})"
                         ),
                         ctx,
                     );
@@ -4044,7 +3928,7 @@ fn validate_git_protected_branch(
             Some(upstream) => {
                 let output = std::process::Command::new("git")
                     .args(["rev-list", "--left-right", "--count"])
-                    .arg(format!("HEAD...{}", upstream))
+                    .arg(format!("HEAD...{upstream}"))
                     .current_dir(repo_root)
                     .output();
                 if let Ok(out) = output
@@ -4054,8 +3938,7 @@ fn validate_git_protected_branch(
                     if let Some((ahead, behind)) = parse_ahead_behind_counts(&counts) {
                         pass(
                             &format!(
-                                "Working branch divergence from upstream '{}': ahead {}, behind {}; protected branch direct-push check not applicable",
-                                upstream, ahead, behind
+                                "Working branch divergence from upstream '{upstream}': ahead {ahead}, behind {behind}; protected branch direct-push check not applicable"
                             ),
                             ctx,
                         );
@@ -4213,7 +4096,7 @@ fn validate_tooling_gate(
                     fail(
                         &auto_remediable_validation_message(
                             "cargo_fmt_execution_failed",
-                            &format!("Failed to run cargo fmt: {}", e),
+                            &format!("Failed to run cargo fmt: {e}"),
                             "Agent: switch to a complete Rust toolchain, then retry validation.",
                         ),
                         ctx,
@@ -4247,7 +4130,7 @@ fn validate_tooling_gate(
                     fail(
                         &auto_remediable_validation_message(
                             "cargo_clippy_execution_failed",
-                            &format!("Failed to run cargo clippy: {}", e),
+                            &format!("Failed to run cargo clippy: {e}"),
                             "Agent: switch to a complete Rust toolchain, then retry validation.",
                         ),
                         ctx,
@@ -4287,7 +4170,7 @@ fn validate_tooling_gate(
                     }
                 }
                 Err(e) => {
-                    warn(&format!("ruff not available: {}", e), ctx);
+                    warn(&format!("ruff not available: {e}"), ctx);
                 }
             }
         } else {
@@ -4338,7 +4221,7 @@ fn validate_tooling_gate(
                     }
                 }
                 Err(e) => {
-                    warn(&format!("shellcheck failed: {}", e), ctx);
+                    warn(&format!("shellcheck failed: {e}"), ctx);
                 }
             }
         } else {
@@ -4386,7 +4269,7 @@ fn validate_tooling_gate(
                     }
                 }
                 Err(e) => {
-                    warn(&format!("yamllint failed: {}", e), ctx);
+                    warn(&format!("yamllint failed: {e}"), ctx);
                 }
             }
         } else {
@@ -4433,7 +4316,7 @@ fn validate_tooling_gate(
                     }
                 }
                 Err(e) => {
-                    warn(&format!("hadolint failed: {}", e), ctx);
+                    warn(&format!("hadolint failed: {e}"), ctx);
                 }
             }
         } else {
@@ -4476,8 +4359,7 @@ fn validate_state_commit_gate(
         .unwrap_or_else(|_| "state_commit_golden_vectors".to_string());
 
     info(&format!(
-        "STATE_COMMIT: required_ci_job = {}",
-        required_ci_job
+        "STATE_COMMIT: required_ci_job = {required_ci_job}"
     ));
 
     // Check for v1 golden directory (versioned)
@@ -4500,7 +4382,7 @@ fn validate_state_commit_gate(
     for file in &required_files {
         if !golden_v1_dir.join(file).exists() {
             fail(
-                &format!("Missing golden file: tests/golden/state_commit/v1/{}", file),
+                &format!("Missing golden file: tests/golden/state_commit/v1/{file}"),
                 ctx,
             );
             has_golden = false;
@@ -4570,10 +4452,7 @@ fn validate_obligations(store: &Store, ctx: &ValidationContext) -> Result<(), er
         }
     }
     pass(
-        &format!(
-            "Obligation Graph Validation Gate ({} met nodes verified)",
-            met_count
-        ),
+        &format!("Obligation Graph Validation Gate ({met_count} met nodes verified)"),
         ctx,
     );
     Ok(())
@@ -4595,7 +4474,7 @@ fn validate_lcm_immutability(
         pass("LCM ledger integrity verified", ctx);
     } else {
         for f in &failures {
-            fail(&format!("LCM immutability: {}", f), ctx);
+            fail(&format!("LCM immutability: {f}"), ctx);
         }
     }
     Ok(())
@@ -4626,7 +4505,7 @@ fn validate_lcm_rebuild_gate(
                     .join(", ")
             })
             .unwrap_or_default();
-        fail(&format!("LCM rebuild failed: {}", errors), ctx);
+        fail(&format!("LCM rebuild failed: {errors}"), ctx);
     }
     Ok(())
 }
@@ -4693,13 +4572,13 @@ fn validate_gatekeeper_gate(
 
         let mut parts = Vec::new();
         if secret_count > 0 {
-            parts.push(format!("{} secret(s)", secret_count));
+            parts.push(format!("{secret_count} secret(s)"));
         }
         if blocked_count > 0 {
-            parts.push(format!("{} blocked path(s)", blocked_count));
+            parts.push(format!("{blocked_count} blocked path(s)"));
         }
         if dangerous_count > 0 {
-            parts.push(format!("{} dangerous pattern(s)", dangerous_count));
+            parts.push(format!("{dangerous_count} dangerous pattern(s)"));
         }
         fail(&format!("Gatekeeper violations: {}", parts.join(", ")), ctx);
     }
@@ -4824,7 +4703,7 @@ fn validate_coplayer_policy_tightening(
 
     for (risk, reliability, total) in &profiles {
         let snap = CoPlayerSnapshot {
-            agent_id: format!("gate-test-{}", risk),
+            agent_id: format!("gate-test-{risk}"),
             reliability_score: *reliability,
             total_ops: *total,
             successful_ops: (*total as f64 * reliability) as usize,
@@ -4840,8 +4719,7 @@ fn validate_coplayer_policy_tightening(
         if !policy.require_validation {
             fail(
                 &format!(
-                    "Co-player policy for '{}' does not require validation (MUST always be true)",
-                    risk
+                    "Co-player policy for '{risk}' does not require validation (MUST always be true)"
                 ),
                 ctx,
             );

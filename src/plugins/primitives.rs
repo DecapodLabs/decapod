@@ -189,14 +189,12 @@ pub fn validate_round_trip(store: &Store, base: &Path) -> Result<(), error::Deca
                 let found = todo::get_task(&store.root, &parsed_id)?;
                 if found.is_none() {
                     return Err(error::DecapodError::ValidationError(format!(
-                        "task primitive not found in todo db: {}",
-                        parsed_id
+                        "task primitive not found in todo db: {parsed_id}"
                     )));
                 }
             } else if !memory_node_exists(&store.root, &parsed_id, expected_type)? {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "{} primitive not found in federation db: {}",
-                    expected_type, parsed_id
+                    "{expected_type} primitive not found in federation db: {parsed_id}"
                 )));
             }
         }
@@ -355,7 +353,7 @@ fn render_by_project_view(tasks: &[todo::Task]) -> String {
     }
     let mut out = String::from("# By Project\n\n");
     for (project, items) in groups {
-        out.push_str(&format!("## {}\n", project));
+        out.push_str(&format!("## {project}\n"));
         for t in items {
             out.push_str(&format!("- [{}] {} ({})\n", t.id, t.title, t.status));
         }
@@ -378,7 +376,7 @@ fn render_by_owner_view(tasks: &[todo::Task]) -> String {
     }
     let mut out = String::from("# By Owner\n\n");
     for (owner, items) in groups {
-        out.push_str(&format!("## {}\n", owner));
+        out.push_str(&format!("## {owner}\n"));
         for t in items {
             out.push_str(&format!("- [{}] {} ({})\n", t.id, t.title, t.status));
         }
@@ -418,8 +416,7 @@ fn list_memory_nodes_by_types(
                 .join(", ");
             let sql = format!(
                 "SELECT id, node_type, title, status, priority, body, tags, created_at, updated_at
-                 FROM nodes WHERE node_type IN ({}) ORDER BY updated_at DESC",
-                placeholders
+                 FROM nodes WHERE node_type IN ({placeholders}) ORDER BY updated_at DESC"
             );
             let mut stmt = conn.prepare(&sql)?;
             let params: Vec<&dyn rusqlite::ToSql> =
@@ -470,7 +467,7 @@ fn memory_node_exists(root: &Path, id: &str, node_type: &str) -> Result<bool, er
 }
 
 fn extract_kv(raw: &str, key: &str) -> Option<String> {
-    let prefix = format!("- {}:", key);
+    let prefix = format!("- {key}:");
     raw.lines().find_map(|line| {
         line.trim()
             .strip_prefix(&prefix)

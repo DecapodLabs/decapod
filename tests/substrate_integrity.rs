@@ -128,8 +128,7 @@ fn test_decapod_init_regenerates_from_templates() {
     assert!(
         content.contains("External task managers are allowed")
             && content.contains("Decapod todos are still mandatory"),
-        "Regenerated AGENTS.md should use updated template. Content was:\n{}",
-        content
+        "Regenerated AGENTS.md should use updated template. Content was:\n{content}"
     );
 }
 
@@ -165,8 +164,7 @@ fn test_config_toml_changes_flow_to_specs() {
     let intent_content = fs::read_to_string(&intent_path).unwrap();
     assert!(
         intent_content.contains("New Summary"),
-        "INTENT.md should be updated with new summary from config.toml. Content was:\n{}",
-        intent_content
+        "INTENT.md should be updated with new summary from config.toml. Content was:\n{intent_content}"
     );
 }
 
@@ -203,8 +201,7 @@ fn test_override_md_changes_flow_to_specs() {
     let intent_content = fs::read_to_string(&intent_path).unwrap();
     assert!(
         intent_content.contains("This intent comes from OVERRIDE.md"),
-        "INTENT.md should be updated with intent from OVERRIDE.md. Content was:\n{}",
-        intent_content
+        "INTENT.md should be updated with intent from OVERRIDE.md. Content was:\n{intent_content}"
     );
 }
 

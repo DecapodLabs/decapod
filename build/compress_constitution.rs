@@ -46,12 +46,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_dir = env::var("OUT_DIR")?;
     let json_path = Path::new(&manifest_dir).join("assets/constitution.json");
 
-    if !json_path.exists() {
-        panic!(
-            "assets/constitution.json not found at {}",
-            json_path.display()
-        );
-    }
+    assert!(
+        json_path.exists(),
+        "assets/constitution.json not found at {}",
+        json_path.display()
+    );
 
     let json_content = fs::read_to_string(&json_path)?;
     let mut graph: ConstitutionGraph = serde_json::from_str(&json_content)?;
@@ -91,7 +90,7 @@ fn ingest_docs_recursive(
                     authority: "doctrine".to_string(),
                     binding: "advisory".to_string(),
                     links: ConstitutionLinks::default(),
-                    summary: "".to_string(),
+                    summary: String::new(),
                     terms: vec![],
                     sections: {
                         let mut map = std::collections::HashMap::new();
@@ -147,12 +146,8 @@ fn generate_rust_module(
         let content = serde_json::to_string(&node)?;
         let compressed = gzip_compress(content.as_bytes());
 
-        writeln!(file, "/// Compressed content for: {}", id)?;
-        writeln!(
-            file,
-            "pub const {}_GZ: &[u8] = &{:?};",
-            struct_name, compressed
-        )?;
+        writeln!(file, "/// Compressed content for: {id}")?;
+        writeln!(file, "pub const {struct_name}_GZ: &[u8] = &{compressed:?};")?;
     }
 
     writeln!(file)?;
@@ -165,11 +160,10 @@ fn generate_rust_module(
 
     for id in &ids {
         let struct_name = id_to_const_name(id);
-        writeln!(file, "        \"{}\" => {{", id)?;
+        writeln!(file, "        \"{id}\" => {{")?;
         writeln!(
             file,
-            "            let mut decoder = GzDecoder::new({}_GZ);",
-            struct_name
+            "            let mut decoder = GzDecoder::new({struct_name}_GZ);"
         )?;
         writeln!(file, "            let mut s = String::new();")?;
         writeln!(file, "            decoder.read_to_string(&mut s).ok()?;")?;
@@ -187,7 +181,7 @@ fn generate_rust_module(
     writeln!(file, "pub fn list_ids() -> Vec<&'static str> {{")?;
     writeln!(file, "    vec![")?;
     for id in &ids {
-        writeln!(file, "        \"{}\",", id)?;
+        writeln!(file, "        \"{id}\",")?;
     }
     writeln!(file, "    ]")?;
     writeln!(file, "}}")?;
@@ -209,12 +203,11 @@ fn generate_rust_module(
             .links
             .references
             .iter()
-            .map(|s| format!("\"{}\"", s))
+            .map(|s| format!("\"{s}\""))
             .collect();
         writeln!(
             file,
-            "        \"{}\" => Some((\"{}\", \"{}\", vec![{}])),",
-            id,
+            "        \"{id}\" => Some((\"{}\", \"{}\", vec![{}])),",
             node.category,
             node.title,
             deps.join(", ")

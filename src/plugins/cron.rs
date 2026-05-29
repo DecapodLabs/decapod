@@ -51,7 +51,7 @@ fn scope_from_dir(p: &str) -> String {
             || path
                 .to_string_lossy()
                 .to_lowercase()
-                .contains(&format!("/{}/", component_name))
+                .contains(&format!("/{component_name}/"))
         {
             return component_name.to_string();
         }
@@ -245,11 +245,11 @@ fn list_cron_jobs(
         }
         if let Some(t) = tags {
             query.push_str(" AND tags LIKE ?");
-            params.push(Box::new(format!("%{}%", t)));
+            params.push(Box::new(format!("%{t}%")));
         }
         if let Some(n) = name_search {
             query.push_str(" AND name LIKE ?");
-            params.push(Box::new(format!("%{}%", n)));
+            params.push(Box::new(format!("%{n}%")));
         }
         if let Some(d) = dir {
             query.push_str(" AND dir_path = ?");
@@ -294,10 +294,10 @@ fn list_cron_jobs(
                         println!("Command: {}", job.command);
                         println!("Status: {}", job.status);
                         if let Some(last_run) = job.last_run {
-                            println!("Last Run: {}", last_run);
+                            println!("Last Run: {last_run}");
                         }
                         if let Some(next_run) = job.next_run {
-                            println!("Next Run: {}", next_run);
+                            println!("Next Run: {next_run}");
                         }
                         if !job.tags.is_empty() {
                             println!("Tags: {}", job.tags);
@@ -305,7 +305,7 @@ fn list_cron_jobs(
                         println!("Scope: {} (Path: {})", job.scope, job.dir_path);
                         println!("Last Updated: {}", job.updated_at);
                     }
-                    Err(e) => eprintln!("Error reading job: {}", e),
+                    Err(e) => eprintln!("Error reading job: {e}"),
                 }
             }
             println!("----------------------------------------------------");
@@ -343,7 +343,7 @@ fn get_cron_job(root: &Path, id: String) -> Result<(), error::DecapodError> {
                 Ok(job) => {
                     println!("{}", serde_json::to_string_pretty(&job).unwrap());
                 }
-                Err(e) => eprintln!("Error reading job: {}", e),
+                Err(e) => eprintln!("Error reading job: {e}"),
             }
         } else {
             println!(
@@ -557,7 +557,7 @@ pub fn run_cron_cli(store: &Store, cli: CronCli) -> Result<(), error::DecapodErr
     };
 
     if let Err(e) = result {
-        eprintln!("Error: {}", e);
+        eprintln!("Error: {e}");
     }
     Ok(())
 }

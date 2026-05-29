@@ -90,14 +90,12 @@ fn test_external_tracker_env_var_relaxation() {
         let json: serde_json::Value = serde_json::from_str(&stdout).expect("valid json");
         assert_ne!(
             json["branch"], branch,
-            "should NOT have stayed on branch without tracker signal. JSON: {}",
-            stdout
+            "should NOT have stayed on branch without tracker signal. JSON: {stdout}"
         );
     } else {
         assert!(
             stderr.contains("WORKSPACE_BRANCH_NOT_TODO_SCOPED"),
-            "missing error code in: {}",
-            stderr
+            "missing error code in: {stderr}"
         );
     }
 
@@ -119,8 +117,7 @@ fn test_external_tracker_env_var_relaxation() {
     let json: serde_json::Value = serde_json::from_str(&stdout).expect("valid json");
     assert_eq!(
         json["branch"], branch,
-        "should have stayed on branch with BEADS_TASK_ID. JSON: {}",
-        stdout
+        "should have stayed on branch with BEADS_TASK_ID. JSON: {stdout}"
     );
     assert_eq!(json["status"], "ok");
 }
@@ -169,8 +166,7 @@ fn test_external_tracker_config_toml_relaxation() {
     let json: serde_json::Value = serde_json::from_str(&stdout).expect("valid json");
     assert_eq!(
         json["branch"], branch,
-        "should have stayed on branch with config.toml toggle. JSON: {}",
-        stdout
+        "should have stayed on branch with config.toml toggle. JSON: {stdout}"
     );
     assert_eq!(json["status"], "ok");
 }
@@ -196,13 +192,11 @@ fn test_workspace_ensure_json_orchestration_data() {
     // But importantly, it should contain blockers and required_actions
     assert!(
         json.get("blockers").is_some(),
-        "missing blockers in JSON: {}",
-        stdout
+        "missing blockers in JSON: {stdout}"
     );
     assert!(
         json.get("required_actions").is_some(),
-        "missing required_actions in JSON: {}",
-        stdout
+        "missing required_actions in JSON: {stdout}"
     );
 
     let blockers = json["blockers"].as_array().expect("blockers is array");
@@ -223,8 +217,7 @@ fn test_workspace_ensure_json_orchestration_data() {
         // It should start with either docker or podman
         assert!(
             hint.starts_with("docker ") || hint.starts_with("podman "),
-            "hint should use detected runtime: {}",
-            hint
+            "hint should use detected runtime: {hint}"
         );
     }
 }

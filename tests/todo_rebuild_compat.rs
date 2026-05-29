@@ -34,8 +34,7 @@ fn todo_rebuild_accepts_task_proof_claimed_events() {
         "actor": "test"
     });
 
-    std::fs::write(&events_path, format!("{}\n{}\n", add_event, proof_claimed))
-        .expect("write events");
+    std::fs::write(&events_path, format!("{add_event}\n{proof_claimed}\n")).expect("write events");
 
     let out_db = root.join("todo.db");
     let count =

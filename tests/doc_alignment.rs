@@ -32,8 +32,7 @@ fn test_agent_docs_command_contracts_alignment() {
         // Verify root command exists in top-level help
         assert!(
             help_text.contains(root_cmd),
-            "Documented root command '{}' not found in decapod --help",
-            root_cmd
+            "Documented root command '{root_cmd}' not found in decapod --help"
         );
 
         // If it's a sub-command (e.g. todo claim), verify it exists in sub-help
@@ -48,10 +47,7 @@ fn test_agent_docs_command_contracts_alignment() {
             let sub_help_text = String::from_utf8_lossy(&sub_help.stdout);
             assert!(
                 sub_help_text.contains(sub_cmd),
-                "Documented sub-command '{} {}' not found in decapod {} --help",
-                root_cmd,
-                sub_cmd,
-                root_cmd
+                "Documented sub-command '{root_cmd} {sub_cmd}' not found in decapod {root_cmd} --help"
             );
         }
     }
@@ -85,9 +81,7 @@ fn test_config_schema_alignment() {
         let section_val = &config[section];
         assert!(
             !section_val[key].is_null(),
-            "Documented config key '{}.{}' not found in decapod capabilities config",
-            section,
-            key
+            "Documented config key '{section}.{key}' not found in decapod capabilities config"
         );
     }
 }

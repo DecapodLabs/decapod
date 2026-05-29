@@ -14,7 +14,7 @@ pub fn compact_line(input: &str, max_chars: usize) -> String {
     let mut chars = collapsed.chars();
     let preview: String = chars.by_ref().take(max_chars).collect();
     if chars.next().is_some() {
-        format!("{}...", preview)
+        format!("{preview}...")
     } else {
         preview
     }

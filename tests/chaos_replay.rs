@@ -68,7 +68,7 @@ fn setup_workspace() -> (TempDir, PathBuf) {
         }
         thread::sleep(Duration::from_millis(40 * (attempt + 1)));
     }
-    assert!(warm_ok, "todo list warmup failed:\n{}", warm_out);
+    assert!(warm_ok, "todo list warmup failed:\n{warm_out}");
 
     (tmp, dir)
 }
@@ -111,7 +111,7 @@ fn run_with_retries(dir: &PathBuf, args: &[&str], max_retries: u32) -> (bool, St
 
 fn list_chaos_projection(dir: &PathBuf) -> BTreeMap<String, (String, String, String)> {
     let (success, out) = run(dir, &["todo", "--format", "json", "list"]);
-    assert!(success, "todo list failed:\n{}", out);
+    assert!(success, "todo list failed:\n{out}");
     let value: serde_json::Value = serde_json::from_str(&out).expect("valid list json");
     let items = value["items"].as_array().expect("items array");
 
@@ -140,9 +140,9 @@ fn chaos_multi_agent_replay_is_deterministic() {
     for worker in 0..workers {
         let dir_clone = dir.clone();
         handles.push(thread::spawn(move || {
-            let agent = format!("agent-{}", worker);
+            let agent = format!("agent-{worker}");
             for n in 0..tasks_per_worker {
-                let title = format!("CHAOS: {} task {}", agent, n);
+                let title = format!("CHAOS: {agent} task {n}");
                 let (ok, out) = run_with_retries(
                     &dir_clone,
                     &[
@@ -158,7 +158,7 @@ fn chaos_multi_agent_replay_is_deterministic() {
                     ],
                     6,
                 );
-                assert!(ok, "todo add failed for {}:\n{}", title, out);
+                assert!(ok, "todo add failed for {title}:\n{out}");
 
                 // Inject controlled failures while concurrent writes happen.
                 if n % 3 == 0 {
@@ -177,7 +177,7 @@ fn chaos_multi_agent_replay_is_deterministic() {
     assert_eq!(before.len(), workers * tasks_per_worker);
 
     let (ok_rebuild_1, rebuild_1) = run(&dir, &["todo", "--format", "json", "rebuild"]);
-    assert!(ok_rebuild_1, "rebuild #1 failed:\n{}", rebuild_1);
+    assert!(ok_rebuild_1, "rebuild #1 failed:\n{rebuild_1}");
     let rebuild_json_1: serde_json::Value =
         serde_json::from_str(&rebuild_1).expect("valid rebuild #1 json");
     assert_eq!(rebuild_json_1["status"], "ok");
@@ -186,7 +186,7 @@ fn chaos_multi_agent_replay_is_deterministic() {
     assert_eq!(before, after_first_rebuild);
 
     let (ok_rebuild_2, rebuild_2) = run(&dir, &["todo", "--format", "json", "rebuild"]);
-    assert!(ok_rebuild_2, "rebuild #2 failed:\n{}", rebuild_2);
+    assert!(ok_rebuild_2, "rebuild #2 failed:\n{rebuild_2}");
     let rebuild_json_2: serde_json::Value =
         serde_json::from_str(&rebuild_2).expect("valid rebuild #2 json");
     assert_eq!(rebuild_json_2["status"], "ok");

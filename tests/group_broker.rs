@@ -163,7 +163,7 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
 
     let creds: Vec<(String, String)> = (0..20)
         .map(|i| {
-            let agent_id = format!("agent-{:02}", i);
+            let agent_id = format!("agent-{i:02}");
             let agent_pw = acquire_session_password(&dir, &agent_id);
             (agent_id, agent_pw)
         })
@@ -173,8 +173,8 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
     for (i, (agent_id, agent_pw)) in creds.into_iter().enumerate() {
         let dir_cl = dir.clone();
         workers.push(std::thread::spawn(move || {
-            let task = format!("concurrent-task-{}", i);
-            let req_id = format!("BROKER_BUSY_REQ_{:02}", i);
+            let task = format!("concurrent-task-{i}");
+            let req_id = format!("BROKER_BUSY_REQ_{i:02}");
             let envs = [
                 ("DECAPOD_AGENT_ID".to_string(), agent_id),
                 ("DECAPOD_SESSION_PASSWORD".to_string(), agent_pw),
@@ -218,8 +218,7 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
             !stderr.contains("database is locked")
                 && !stderr.contains("sqlite_busy")
                 && !stderr.contains("databaselocked"),
-            "sqlite busy leaked to caller: {}",
-            stderr
+            "sqlite busy leaked to caller: {stderr}"
         );
     }
 
@@ -314,7 +313,7 @@ fn broker_election_uniqueness_no_residual_lock_after_burst() {
         .map(|i| {
             run_decapod(
                 &dir,
-                &["todo", "add", &format!("election-task-{}", i)],
+                &["todo", "add", &format!("election-task-{i}")],
                 &[
                     ("DECAPOD_AGENT_ID", "unknown"),
                     ("DECAPOD_SESSION_PASSWORD", &password),
@@ -411,11 +410,11 @@ fn broker_crash_injection_phases_retry_to_exactly_once() {
             wait_for_no_broker_artifacts(&dir, Duration::from_secs(6)),
             "prior broker lease/socket still active before phase {phase}"
         );
-        let req_id = format!("CRASH_PHASE_{}", phase);
-        let hook = dir.join(format!("broker-hook-{}.log", phase));
+        let req_id = format!("CRASH_PHASE_{phase}");
+        let hook = dir.join(format!("broker-hook-{phase}.log"));
         let mut child = spawn_decapod(
             &dir,
-            &["todo", "add", &format!("crash-phase-{}", phase)],
+            &["todo", "add", &format!("crash-phase-{phase}")],
             &[
                 ("DECAPOD_AGENT_ID", "unknown"),
                 ("DECAPOD_SESSION_PASSWORD", &password),
@@ -439,7 +438,7 @@ fn broker_crash_injection_phases_retry_to_exactly_once() {
 
         let retry = run_decapod(
             &dir,
-            &["todo", "add", &format!("crash-phase-{}", phase)],
+            &["todo", "add", &format!("crash-phase-{phase}")],
             &[
                 ("DECAPOD_AGENT_ID", "unknown"),
                 ("DECAPOD_SESSION_PASSWORD", &password),
@@ -457,7 +456,7 @@ fn broker_crash_injection_phases_retry_to_exactly_once() {
     let dedupe = dir.join(".decapod").join("data").join("broker_dedupe.db");
     let conn = rusqlite::Connection::open(dedupe).expect("open dedupe db");
     for phase in ["queued", "pre_exec", "post_exec_pre_ack"] {
-        let req_id = format!("CRASH_PHASE_{}", phase);
+        let req_id = format!("CRASH_PHASE_{phase}");
         let count: i64 = conn
             .query_row(
                 "SELECT COUNT(*) FROM request_dedupe WHERE request_id = ?1",

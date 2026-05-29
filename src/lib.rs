@@ -106,7 +106,7 @@ fn load_project_config_if_present(
     }
     let raw = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
     let cfg: DecapodProjectConfig = toml::from_str(&raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=INVALID_CONFIG_SCHEMA severity=transient auto_remediable=true audience=agent agent_action=\"fix the .decapod/config.toml schema to be valid TOML\" user_note=\"Configuration file schema is invalid; the agent should correct the file or report the issue.\"\nInvalid .decapod/config.toml schema: {}", e))
+        error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=INVALID_CONFIG_SCHEMA severity=transient auto_remediable=true audience=agent agent_action=\"fix the .decapod/config.toml schema to be valid TOML\" user_note=\"Configuration file schema is invalid; the agent should correct the file or report the issue.\"\nInvalid .decapod/config.toml schema: {e}"))
     })?;
     Ok(Some(cfg))
 }
@@ -124,7 +124,7 @@ fn write_project_config(
         fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
     }
     let serialized = toml::to_string_pretty(config).map_err(|e| {
-        error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=CONFIG_SERIALIZE_FAILED severity=transient auto_remediable=true audience=agent agent_action=\"ensure the .decapod/config.toml data can be serialized (e.g., fix data types)\" user_note=\"Failed to serialize configuration; the agent should adjust the config content or report the issue.\"\nFailed to serialize config.toml: {}", e))
+        error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=CONFIG_SERIALIZE_FAILED severity=transient auto_remediable=true audience=agent agent_action=\"ensure the .decapod/config.toml data can be serialized (e.g., fix data types)\" user_note=\"Failed to serialize configuration; the agent should adjust the config content or report the issue.\"\nFailed to serialize config.toml: {e}"))
     })?;
     fs::write(config_path, serialized).map_err(error::DecapodError::IoError)?;
     Ok(())
@@ -227,7 +227,7 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
 
     if ctx.product_summary.is_none() {
         ctx.product_summary = Some(match ctx.product_name.as_deref() {
-            Some(name) => format!("Deliver {} against explicit user intent with proof-backed completion.", name),
+            Some(name) => format!("Deliver {name} against explicit user intent with proof-backed completion."),
             None => "Deliver the repository outcome against explicit user intent with proof-backed completion.".to_string(),
         });
     }
@@ -488,7 +488,7 @@ fn apply_repo_context_cli_overrides(ctx: &mut RepoContext, init_with: &InitWithC
 }
 
 fn prompt_line(prompt: &str) -> Result<String, error::DecapodError> {
-    print!("{}", prompt);
+    print!("{prompt}");
     io::stdout().flush().map_err(error::DecapodError::IoError)?;
     let mut buf = String::new();
     io::stdin()
@@ -1010,9 +1010,9 @@ fn prompt_language_choice(
 
     println!();
     println!("{}", "  Primary language(s)".bright_white().bold());
-    println!("    inferred from files: {}", inferred);
-    println!("    recommended for architecture: {}", recommendation_label);
-    println!("    current selection/default: {}", default_label);
+    println!("    inferred from files: {inferred}");
+    println!("    recommended for architecture: {recommendation_label}");
+    println!("    current selection/default: {default_label}");
     if supports_arrows {
         println!("    options: up/down, type name or number, comma-separated for multiple");
     } else {
@@ -1095,8 +1095,8 @@ fn prompt_architecture_choice(
 
     println!();
     println!("{}", "  Architecture".bright_white().bold());
-    println!("    inferred: {}", inferred);
-    println!("    current selection/default: {}", inferred);
+    println!("    inferred: {inferred}");
+    println!("    current selection/default: {inferred}");
     println!("    common approaches:");
     if supports_arrows {
         println!("    options: up/down, type name or number, or type your architecture");
@@ -1138,8 +1138,8 @@ fn prompt_architecture_choice(
 fn print_init_block(title: &str, subtitle: &str) {
     use crate::core::ansi::AnsiExt;
     println!();
-    println!("{}", format!("◢ {}", title).bright_cyan().bold());
-    println!("{}", format!("  {}", subtitle).bright_black());
+    println!("{}", format!("◢ {title}").bright_cyan().bold());
+    println!("{}", format!("  {subtitle}").bright_black());
 }
 
 fn prompt_text_field(
@@ -1149,11 +1149,11 @@ fn prompt_text_field(
 ) -> Result<String, error::DecapodError> {
     use crate::core::ansi::AnsiExt;
     println!();
-    println!("{}", format!("  {}", label).bright_white().bold());
-    println!("{}", format!("    {}", helper).bright_black());
+    println!("{}", format!("  {label}").bright_white().bold());
+    println!("{}", format!("    {helper}").bright_black());
     println!(
         "{}",
-        format!("    inferred: {}", default_value).bright_black()
+        format!("    inferred: {default_value}").bright_black()
     );
     let line = prompt_line(&format!("{}", "    input: ".bright_cyan().bold()))?;
     if line.trim().is_empty() {
@@ -1175,7 +1175,7 @@ fn prompt_yes_no(prompt: &str, default_yes: bool) -> Result<bool, error::Decapod
     use crate::core::ansi::AnsiExt;
     let suffix = if default_yes { "[Y/n]" } else { "[y/N]" };
     println!();
-    println!("{}", format!("  {}", prompt).bright_white().bold());
+    println!("{}", format!("  {prompt}").bright_white().bold());
     let line = prompt_line(&format!(
         "{} {} ",
         "    choice:".bright_cyan().bold(),
@@ -1469,7 +1469,7 @@ fn run_init_apply(
                 created_backups = true;
                 backup_count += 1;
                 preserved_agent_content.push((file.to_string(), existing_content));
-                let backup_path = target_dir.join(format!("{}.bak", file));
+                let backup_path = target_dir.join(format!("{file}.bak"));
                 fs::rename(&path, &backup_path).map_err(error::DecapodError::IoError)?;
             }
         }
@@ -2407,7 +2407,7 @@ fn hash_password(password: &str, token: &str) -> String {
     let digest = hasher.finalize();
     let mut out = String::with_capacity(digest.len() * 2);
     for b in digest {
-        out.push_str(&format!("{:02x}", b));
+        out.push_str(&format!("{b:02x}"));
     }
     out
 }
@@ -2420,7 +2420,7 @@ fn generate_ephemeral_password() -> Result<String, error::DecapodError> {
         .map_err(error::DecapodError::IoError)?;
     let mut out = String::with_capacity(buf.len() * 2);
     for b in buf {
-        out.push_str(&format!("{:02x}", b));
+        out.push_str(&format!("{b:02x}"));
     }
     Ok(out)
 }
@@ -2435,7 +2435,7 @@ fn read_agent_session(
     }
     let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
     let rec: AgentSessionRecord = serde_json::from_str(&raw)
-        .map_err(|e| error::DecapodError::SessionError(format!("invalid session file: {}", e)))?;
+        .map_err(|e| error::DecapodError::SessionError(format!("invalid session file: {e}")))?;
     Ok(Some(rec))
 }
 
@@ -2484,7 +2484,7 @@ fn write_agent_session(
     fs::create_dir_all(&dir).map_err(error::DecapodError::IoError)?;
     let path = session_file_for_agent(project_root, &rec.agent_id);
     let body = serde_json::to_string_pretty(rec)
-        .map_err(|e| error::DecapodError::SessionError(format!("session encode error: {}", e)))?;
+        .map_err(|e| error::DecapodError::SessionError(format!("session encode error: {e}")))?;
     atomic_write_file(&path, &body)?;
     Ok(())
 }
@@ -2508,8 +2508,7 @@ fn read_awareness_record(
     let raw = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
     let rec: ConstitutionalAwarenessRecord = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!(
-            "invalid constitutional awareness record: {}",
-            e
+            "invalid constitutional awareness record: {e}"
         ))
     })?;
     Ok(Some(rec))
@@ -2523,7 +2522,7 @@ fn write_awareness_record(
     fs::create_dir_all(&dir).map_err(error::DecapodError::IoError)?;
     let path = awareness_file_for_agent(project_root, &rec.agent_id);
     let body = serde_json::to_string_pretty(rec).map_err(|e| {
-        error::DecapodError::ValidationError(format!("awareness encode error: {}", e))
+        error::DecapodError::ValidationError(format!("awareness encode error: {e}"))
     })?;
     atomic_write_file(&path, &body)?;
     Ok(())
@@ -2734,7 +2733,7 @@ fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error
     // Eliminates unsafe env::set_var and multi-threading UB
     SESSION_P_VAL.get_or_init(|| temp_p.clone());
 
-    eprintln!("session: auto-acquired for agent '{}'.", agent_id);
+    eprintln!("session: auto-acquired for agent '{agent_id}'.");
 
     Ok(())
 }
@@ -2813,7 +2812,7 @@ fn fetch_latest_crates_version() -> Result<String, error::DecapodError> {
         .args(["-s", "https://crates.io/api/v1/crates/decapod"])
         .output()
         .map_err(|e| {
-            error::DecapodError::ValidationError(format!("Failed to check version: {}", e))
+            error::DecapodError::ValidationError(format!("Failed to check version: {e}"))
         })?;
 
     if !output.status.success() {
@@ -2823,7 +2822,7 @@ fn fetch_latest_crates_version() -> Result<String, error::DecapodError> {
     }
 
     let json: serde_json::Value = serde_json::from_slice(&output.stdout)
-        .map_err(|e| error::DecapodError::ValidationError(format!("Invalid response: {}", e)))?;
+        .map_err(|e| error::DecapodError::ValidationError(format!("Invalid response: {e}")))?;
 
     json.get("version")
         .and_then(|v| v.get("num"))
@@ -2865,7 +2864,7 @@ fn backup_decapod_state() -> Result<(), error::DecapodError> {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    let backup_name = format!("backup_{}_{}", DECAPOD_VERSION, timestamp);
+    let backup_name = format!("backup_{DECAPOD_VERSION}_{timestamp}");
     let backup_path = backup_dir.join(&backup_name);
 
     let mut backup_file = fs::File::create(&backup_path).map_err(error::DecapodError::IoError)?;
@@ -2881,10 +2880,7 @@ fn backup_decapod_state() -> Result<(), error::DecapodError> {
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    let content = format!(
-        "# Backup at {} v{}\n# OVERRIDE.md\n{}\n",
-        now, DECAPOD_VERSION, overrides
-    );
+    let content = format!("# Backup at {now} v{DECAPOD_VERSION}\n# OVERRIDE.md\n{overrides}\n");
 
     backup_file.write_all(content.as_bytes())?;
 
@@ -2895,13 +2891,12 @@ fn install_decapod() -> Result<(), error::DecapodError> {
     let output = std::process::Command::new("cargo")
         .args(["install", "decapod"])
         .output()
-        .map_err(|e| error::DecapodError::ValidationError(format!("Failed to install: {}", e)))?;
+        .map_err(|e| error::DecapodError::ValidationError(format!("Failed to install: {e}")))?;
 
     if !output.status.success() {
         let err = String::from_utf8_lossy(&output.stderr);
         return Err(error::DecapodError::ValidationError(format!(
-            "Install failed: {}",
-            err
+            "Install failed: {err}"
         )));
     }
 
@@ -2932,8 +2927,7 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
                 && existing.expires_at_epoch_secs > now_epoch_secs()
             {
                 println!(
-                    "Session already active for agent '{}'. Use 'decapod session status' for details.",
-                    agent_id
+                    "Session already active for agent '{agent_id}'. Use 'decapod session status' for details."
                 );
                 return Ok(());
             }
@@ -2953,10 +2947,10 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
             clear_agent_awareness(&project_root, &agent_id)?;
 
             println!("Session acquired successfully.");
-            println!("Agent: {}", agent_id);
-            println!("Token: {}", token);
-            println!("Password: {}", temp_p);
-            println!("ExpiresAtEpoch: {}", expires);
+            println!("Agent: {agent_id}");
+            println!("Token: {token}");
+            println!("Password: {temp_p}");
+            println!("ExpiresAtEpoch: {expires}");
             println!(
                 "Export before running other commands: DECAPOD_AGENT_ID='{}' and DECAPOD_SESSION_PASSWORD='<token>'",
                 rec.agent_id
@@ -3049,8 +3043,7 @@ fn build_handshake_artifact(
             let abs = project_root.join(rel);
             if !abs.exists() {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "Handshake requires `{}` to exist.",
-                    rel
+                    "Handshake requires `{rel}` to exist."
                 )));
             }
             let bytes = fs::read(&abs).map_err(error::DecapodError::IoError)?;
@@ -3061,8 +3054,7 @@ fn build_handshake_artifact(
                 Some(c) => hash_bytes_hex(c.as_bytes()),
                 None => {
                     return Err(error::DecapodError::ValidationError(format!(
-                        "Handshake requires constitution doc `{}` (embedded) to be accessible.",
-                        rel
+                        "Handshake requires constitution doc `{rel}` (embedded) to be accessible."
                     )));
                 }
             }
@@ -3314,19 +3306,19 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
             ],
         ) {
             Ok(lineage) => lineage_records.push(("lineage stamp baseline".to_string(), lineage)),
-            Err(e) => failures.push(format!("provenance lineage stamping failed: {}", e)),
+            Err(e) => failures.push(format!("provenance lineage stamping failed: {e}")),
         }
     }
     if artifact_manifest.exists() {
         match validate_artifact_manifest(project_root, &artifact_manifest) {
             Ok(lineage) => lineage_records.push(("artifact manifest".to_string(), lineage)),
-            Err(e) => failures.push(format!("artifact manifest invalid: {}", e)),
+            Err(e) => failures.push(format!("artifact manifest invalid: {e}")),
         }
     }
     if proof_manifest.exists() {
         match validate_proof_manifest(project_root, &proof_manifest) {
             Ok(lineage) => lineage_records.push(("proof manifest".to_string(), lineage)),
-            Err(e) => failures.push(format!("proof manifest invalid: {}", e)),
+            Err(e) => failures.push(format!("proof manifest invalid: {e}")),
         }
     }
     if intent_convergence_manifest.exists() {
@@ -3334,7 +3326,7 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
             Ok(lineage) => {
                 lineage_records.push(("intent convergence manifest".to_string(), lineage))
             }
-            Err(e) => failures.push(format!("intent convergence manifest invalid: {}", e)),
+            Err(e) => failures.push(format!("intent convergence manifest invalid: {e}")),
         }
     }
 
@@ -3342,8 +3334,7 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
         for (name, lineage) in lineage_records.iter().skip(1) {
             if lineage != baseline {
                 failures.push(format!(
-                    "policy lineage mismatch: '{}' differs from '{}' ({:?} != {:?})",
-                    name, baseline_name, lineage, baseline
+                    "policy lineage mismatch: '{name}' differs from '{baseline_name}' ({lineage:?} != {baseline:?})"
                 ));
             }
         }
@@ -3501,8 +3492,7 @@ fn resolve_release_risk_tier() -> Result<String, error::DecapodError> {
     let normalized = tier.trim().to_ascii_lowercase();
     if !matches!(normalized.as_str(), "low" | "medium" | "high" | "critical") {
         return Err(error::DecapodError::ValidationError(format!(
-            "invalid DECAPOD_RELEASE_RISK_TIER '{}': expected low|medium|high|critical",
-            tier
+            "invalid DECAPOD_RELEASE_RISK_TIER '{tier}': expected low|medium|high|critical"
         )));
     }
     Ok(normalized)
@@ -3566,10 +3556,7 @@ fn stamp_release_policy_lineage<const N: usize>(
     let policy_revision = "policy.release@v1".to_string();
     let risk_tier = resolve_release_risk_tier()?;
     let (capsule_path, capsule_hash) = resolve_release_capsule(project_root)?;
-    let policy_hash = sha256_text(&format!(
-        "{}|{}|{}",
-        policy_revision, risk_tier, capsule_hash
-    ));
+    let policy_hash = sha256_text(&format!("{policy_revision}|{risk_tier}|{capsule_hash}"));
     let lineage_json = serde_json::json!({
         "policy_hash": policy_hash,
         "policy_revision": policy_revision,
@@ -3692,8 +3679,7 @@ fn validate_policy_lineage(
     let abs = project_root.join(capsule_path);
     if !abs.exists() {
         return Err(error::DecapodError::ValidationError(format!(
-            "{manifest_label} policy_lineage.capsule_path '{}' does not exist",
-            capsule_path
+            "{manifest_label} policy_lineage.capsule_path '{capsule_path}' does not exist"
         )));
     }
 
@@ -3705,27 +3691,23 @@ fn validate_policy_lineage(
         let parsed: core::context_capsule::DeterministicContextCapsule =
             serde_json::from_str(&raw_capsule).map_err(|e| {
                 error::DecapodError::ValidationError(format!(
-                    "{manifest_label} policy_lineage capsule at '{}' is not valid deterministic capsule JSON: {}",
-                    capsule_path, e
+                    "{manifest_label} policy_lineage capsule at '{capsule_path}' is not valid deterministic capsule JSON: {e}"
                 ))
             })?;
         let normalized = parsed.with_recomputed_hash().map_err(|e| {
             error::DecapodError::ValidationError(format!(
-                "{manifest_label} policy_lineage capsule hash computation failed for '{}': {}",
-                capsule_path, e
+                "{manifest_label} policy_lineage capsule hash computation failed for '{capsule_path}': {e}"
             ))
         })?;
 
         if parsed.capsule_hash != normalized.capsule_hash {
             return Err(error::DecapodError::ValidationError(format!(
-                "{manifest_label} policy_lineage capsule file '{}' has internal hash mismatch",
-                capsule_path
+                "{manifest_label} policy_lineage capsule file '{capsule_path}' has internal hash mismatch"
             )));
         }
         if capsule_hash != normalized.capsule_hash {
             return Err(error::DecapodError::ValidationError(format!(
-                "{manifest_label} policy_lineage capsule_hash mismatch for '{}'",
-                capsule_path
+                "{manifest_label} policy_lineage capsule_hash mismatch for '{capsule_path}'"
             )));
         }
     }
@@ -3789,22 +3771,19 @@ fn validate_artifact_manifest(
             })?;
         if sha.is_empty() || sha.contains("TO_BE_FILLED") {
             return Err(error::DecapodError::ValidationError(format!(
-                "artifact entry '{}' has placeholder sha256",
-                path
+                "artifact entry '{path}' has placeholder sha256"
             )));
         }
         let abs = project_root.join(path);
         if !abs.exists() {
             return Err(error::DecapodError::ValidationError(format!(
-                "artifact entry '{}' does not exist",
-                path
+                "artifact entry '{path}' does not exist"
             )));
         }
         let actual = sha256_file(&abs)?;
         if actual != sha {
             return Err(error::DecapodError::ValidationError(format!(
-                "artifact entry '{}' sha256 mismatch",
-                path
+                "artifact entry '{path}' sha256 mismatch"
             )));
         }
     }
@@ -3862,8 +3841,7 @@ fn validate_proof_manifest(
         let value = env.get(key).and_then(|x| x.as_str()).unwrap_or("");
         if value.is_empty() || value.contains("TO_BE_FILLED") {
             return Err(error::DecapodError::ValidationError(format!(
-                "proof manifest environment.{} must be non-empty and non-placeholder",
-                key
+                "proof manifest environment.{key} must be non-empty and non-placeholder"
             )));
         }
     }
@@ -3895,8 +3873,7 @@ fn validate_intent_convergence_manifest(
     for key in ["pr", "intent", "scope", "checklist"] {
         if v.get(key).is_none() {
             return Err(error::DecapodError::ValidationError(format!(
-                "intent convergence manifest missing '{}' field",
-                key
+                "intent convergence manifest missing '{key}' field"
             )));
         }
     }
@@ -3926,8 +3903,7 @@ fn validate_intent_convergence_manifest(
         }
         if matches!(status, "pending" | "unknown") {
             return Err(error::DecapodError::ValidationError(format!(
-                "intent convergence checklist item '{}' must be resolved (status={})",
-                name, status
+                "intent convergence checklist item '{name}' must be resolved (status={status})"
             )));
         }
     }
@@ -4235,7 +4211,7 @@ fn attempt_validation_failure_heal(
         actions.push(ValidationHealAction {
             action: "todo.rebuild".to_string(),
             outcome: "repaired".to_string(),
-            detail: format!("Rebuilt todo.db from event log: {}", rebuild),
+            detail: format!("Rebuilt todo.db from event log: {rebuild}"),
         });
     }
 
@@ -4548,8 +4524,7 @@ fn attach_validate_diagnostic_if_enabled(
             relative_path.display()
         )),
         Err(diag_err) => error::DecapodError::ValidationError(format!(
-            "{} DiagnosticsWriteError: {}",
-            message, diag_err
+            "{message} DiagnosticsWriteError: {diag_err}"
         )),
     }
 }
@@ -4677,8 +4652,7 @@ fn run_validation_bounded(
     let result = match rx.recv_timeout(std::time::Duration::from_secs(timeout_secs)) {
         Ok(result) => result.map_err(normalize_validate_error),
         Err(mpsc::RecvTimeoutError::Timeout) => Err(error::DecapodError::ValidationError(format!(
-            "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({}s). Terminated to preserve proof-gate liveness.",
-            timeout_secs
+            "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({timeout_secs}s). Terminated to preserve proof-gate liveness."
         ))),
         Err(mpsc::RecvTimeoutError::Disconnected) => Err(error::DecapodError::ValidationError(
             "VALIDATE_TIMEOUT_OR_LOCK: validate worker disconnected unexpectedly.".to_string(),
@@ -4792,11 +4766,11 @@ fn run_govern_command(
                 } => {
                     let id =
                         feedback::add_feedback(project_store, &source, &text, links.as_deref())?;
-                    println!("Feedback recorded: {}", id);
+                    println!("Feedback recorded: {id}");
                 }
                 FeedbackCommand::Propose => {
                     let proposal = feedback::propose_prefs(project_store)?;
-                    println!("{}", proposal);
+                    println!("{proposal}");
                 }
             }
         }
@@ -4857,7 +4831,7 @@ fn run_govern_command(
                         result.violations.len()
                     );
                     for v in &result.violations {
-                        let loc = v.line.map(|l| format!(":{}", l)).unwrap_or_default();
+                        let loc = v.line.map(|l| format!(":{l}")).unwrap_or_default();
                         println!("  [{}] {}{}: {}", v.kind, v.path.display(), loc, v.message);
                     }
                     return Err(error::DecapodError::ValidationError(format!(
@@ -4972,8 +4946,7 @@ fn run_workunit_command(
             let path = core::workunit::workunit_path(project_root, &task_id)?;
             let hash = manifest.canonical_hash_hex().map_err(|e| {
                 error::DecapodError::ValidationError(format!(
-                    "failed to compute workunit hash: {}",
-                    e
+                    "failed to compute workunit hash: {e}"
                 ))
             })?;
             println!(
@@ -5222,7 +5195,7 @@ fn run_data_command(
                     } else {
                         println!("Archive verification failed:");
                         for f in failures {
-                            println!("- {}", f);
+                            println!("- {f}");
                         }
                     }
                 }
@@ -5307,7 +5280,7 @@ fn run_data_command(
                             }
                         }
                         None => {
-                            println!("Total tokens: {} (Profile '{}' not found)", total, profile);
+                            println!("Total tokens: {total} (Profile '{profile}' not found)");
                         }
                     }
                 }
@@ -5317,8 +5290,7 @@ fn run_data_command(
                         .map_err(|err| match err {
                             error::DecapodError::ContextPackError(msg) => {
                                 error::DecapodError::ContextPackError(format!(
-                                    "Context pack failed: {}",
-                                    msg
+                                    "Context pack failed: {msg}"
                                 ))
                             }
                             other => other,
@@ -5332,8 +5304,7 @@ fn run_data_command(
                 } => {
                     let content = manager.restore_archive(&id, &profile, &current_files)?;
                     println!(
-                        "--- RESTORED CONTENT (Archive: {}) ---\n{}\n--- END RESTORED ---",
-                        id, content
+                        "--- RESTORED CONTENT (Archive: {id}) ---\n{content}\n--- END RESTORED ---"
                     );
                 }
             }
@@ -5364,8 +5335,7 @@ fn run_data_command(
                 }
                 other => {
                     return Err(error::DecapodError::ValidationError(format!(
-                        "Unsupported schema format '{}'. Use 'json' or 'md'.",
-                        other
+                        "Unsupported schema format '{other}'. Use 'json' or 'md'."
                     )));
                 }
             }
@@ -5385,7 +5355,7 @@ fn run_data_command(
                 let audit_log = store_root.join("broker.events.jsonl");
                 if audit_log.exists() {
                     let content = std::fs::read_to_string(audit_log)?;
-                    println!("{}", content);
+                    println!("{content}");
                 } else {
                     println!("No audit log found.");
                 }
@@ -5427,12 +5397,12 @@ fn schema_to_markdown(schema: &serde_json::Value) -> String {
                     let value = &map[&key];
                     match value {
                         serde_json::Value::Object(_) | serde_json::Value::Array(_) => {
-                            out.push_str(&format!("- **{}**:\n", key));
+                            out.push_str(&format!("- **{key}**:\n"));
                             for line in render_value(value).lines() {
-                                out.push_str(&format!("  {}\n", line));
+                                out.push_str(&format!("  {line}\n"));
                             }
                         }
-                        _ => out.push_str(&format!("- **{}**: `{}`\n", key, value)),
+                        _ => out.push_str(&format!("- **{key}**: `{value}`\n")),
                     }
                 }
                 out
@@ -5444,15 +5414,15 @@ fn schema_to_markdown(schema: &serde_json::Value) -> String {
                         serde_json::Value::Object(_) | serde_json::Value::Array(_) => {
                             out.push_str("- item:\n");
                             for line in render_value(item).lines() {
-                                out.push_str(&format!("  {}\n", line));
+                                out.push_str(&format!("  {line}\n"));
                             }
                         }
-                        _ => out.push_str(&format!("- `{}`\n", item)),
+                        _ => out.push_str(&format!("- `{item}`\n")),
                     }
                 }
                 out
             }
-            _ => format!("- `{}`\n", v),
+            _ => format!("- `{v}`\n"),
         }
     }
 
@@ -5574,10 +5544,10 @@ fn command_to_registry(command: &clap::Command) -> serde_json::Value {
         .map(|arg| {
             let mut flags = Vec::new();
             if let Some(long) = arg.get_long() {
-                flags.push(format!("--{}", long));
+                flags.push(format!("--{long}"));
             }
             if let Some(short) = arg.get_short() {
-                flags.push(format!("-{}", short));
+                flags.push(format!("-{short}"));
             }
             if flags.is_empty() {
                 flags.push(arg.get_id().to_string());
@@ -5782,7 +5752,7 @@ fn run_check(
             println!("✓ Crate description matches");
         } else {
             println!("✗ Crate description mismatch!");
-            println!("  Expected: {}", expected);
+            println!("  Expected: {expected}");
             return Err(error::DecapodError::ValidationError(
                 "Crate description check failed".into(),
             ));
@@ -5980,8 +5950,8 @@ fn run_state_commit_command(
             });
 
             println!("Computing STATE_COMMIT:");
-            println!("  base: {}", base);
-            println!("  head: {}", head);
+            println!("  base: {base}");
+            println!("  head: {head}");
 
             // Use library function
             let input = state_commit::StateCommitInput {
@@ -6019,7 +5989,7 @@ fn run_state_commit_command(
                     Err(e) => {
                         println!("STATE_COMMIT verification:");
                         println!("  scope_record: {}", scope_record.display());
-                        println!("  ❌ MISMATCH: {}", e);
+                        println!("  ❌ MISMATCH: {e}");
                         return Err(error::DecapodError::ValidationError(e));
                     }
                 }
@@ -6032,7 +6002,7 @@ fn run_state_commit_command(
 
             println!("STATE_COMMIT verification:");
             println!("  scope_record: {}", scope_record.display());
-            println!("  scope_record_hash: {}", record_hash);
+            println!("  scope_record_hash: {record_hash}");
             println!("  ✅ VERIFIED");
 
             Ok(())
@@ -6053,7 +6023,7 @@ fn run_state_commit_command(
             println!("STATE_COMMIT Explanation:");
             println!("  File: {}", scope_record.display());
             println!("  Size: {} bytes", cbor_bytes.len());
-            println!("  scope_record_hash: {}", scope_record_hash);
+            println!("  scope_record_hash: {scope_record_hash}");
             println!();
 
             // Try to extract version and SHAs from the CBOR structure
@@ -6068,7 +6038,7 @@ fn run_state_commit_command(
 
             // Count entries (looking for patterns in the binary data)
             let entry_count = content.matches("kind=").count();
-            println!("  Estimated entries: {}", entry_count);
+            println!("  Estimated entries: {entry_count}");
             println!();
 
             println!("Note: scope_record_hash is sha256(scope_record_bytes)");
@@ -6101,7 +6071,7 @@ mod rpc_handlers {
 
     pub(crate) fn handle_agent_init(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let _params: AgentInitParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let workspace_status = workspace::get_workspace_status(ctx.project_root)?;
         let mut allowed_ops = workspace::get_allowed_ops(&workspace_status);
@@ -6196,7 +6166,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let _params: WorkspaceStatusParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let status = workspace::get_workspace_status(ctx.project_root)?;
         let blocked_by = status.blockers.clone();
@@ -6227,7 +6197,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let params: WorkspaceEnsureParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
         let config = params.branch.map(|b| workspace::WorkspaceConfig {
@@ -6266,7 +6236,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let params: WorkspacePublishParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let store_root = ctx.project_root.join(".decapod").join("data");
         plan_governance::ensure_execute_ready(plan_governance::ExecuteCheckInput {
@@ -6303,7 +6273,7 @@ mod rpc_handlers {
 
     pub(crate) fn handle_context_resolve(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let params: ContextResolveParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let limit = params.limit.unwrap_or(5);
 
@@ -6439,7 +6409,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let params: ContextCapsuleQueryParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let limit = params.limit.unwrap_or(6);
         let write = params.write.unwrap_or(false);
@@ -6496,7 +6466,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let _params: ContextBindingsParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let bindings = docs::get_bindings(ctx.project_root);
         Ok(success_response(
@@ -6515,7 +6485,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let params: ConstitutionGetParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let Some(raw_content) = core::assets::get_embedded_doc(&params.section) else {
             return Ok(error_response(
@@ -6589,7 +6559,7 @@ mod rpc_handlers {
 
     pub(crate) fn handle_schema_get(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let params: SchemaGetParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         match params.entity.as_deref() {
             Some("todo") => Ok(success_response(
@@ -6672,7 +6642,7 @@ mod rpc_handlers {
 
     pub(crate) fn handle_store_upsert(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let params: StoreUpsertParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let payload = params.payload.as_ref();
 
@@ -6808,7 +6778,7 @@ mod rpc_handlers {
                     .unwrap_or("")
                     .to_string();
 
-                let content = format!("Decision: {}\nRationale: {}", chosen, rationale);
+                let content = format!("Decision: {chosen}\nRationale: {rationale}");
                 let node = federation::add_node(
                     ctx.store,
                     &title,
@@ -6853,7 +6823,7 @@ mod rpc_handlers {
 
     pub(crate) fn handle_store_query(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let params: StoreQueryParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         match params.entity.as_deref() {
             Some("todo") => {
@@ -6957,7 +6927,7 @@ mod rpc_handlers {
 
     pub(crate) fn handle_validate_run(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let _params: ValidateRunParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let workspace_root = &ctx.project_root;
         let governance_root = super::find_governance_root(workspace_root);
@@ -7010,7 +6980,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let params: ScaffoldNextQuestionParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let project_name = params
             .project_name
@@ -7049,7 +7019,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let params: ScaffoldApplyAnswerParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let mut interview_state = interview::init_interview("project".to_string());
         interview::apply_answer(&mut interview_state, &params.question_id, params.value)?;
@@ -7093,7 +7063,7 @@ mod rpc_handlers {
     ) -> Result<RpcResponse, error::DecapodError> {
         let _params: ScaffoldGenerateArtifactsParams =
             serde_json::from_value(ctx.request.params.clone()).map_err(|e| {
-                error::DecapodError::ValidationError(format!("Invalid params: {}", e))
+                error::DecapodError::ValidationError(format!("Invalid params: {e}"))
             })?;
 
         let interview_state = interview::init_interview("project".to_string());
@@ -7125,7 +7095,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let _params: StandardsResolveParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let resolved = standards::resolve_standards(ctx.project_root)?;
 
@@ -7164,7 +7134,7 @@ mod rpc_handlers {
         use crate::core::mentor::{MentorEngine, ObligationsContext};
 
         let params: MentorObligationsParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let engine = MentorEngine::new(ctx.project_root);
         let obligations_ctx = ObligationsContext {
@@ -7218,7 +7188,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let params: AssuranceEvaluateParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let input = AssuranceEvaluateInput {
             op: params.op.unwrap_or_else(|| "unknown".to_string()),
@@ -7290,7 +7260,7 @@ mod rpc_handlers {
     ) -> Result<RpcResponse, error::DecapodError> {
         let params: ConstitutionLinksQueryParams =
             serde_json::from_value(ctx.request.params.clone()).map_err(|e| {
-                error::DecapodError::ValidationError(format!("Invalid params: {}", e))
+                error::DecapodError::ValidationError(format!("Invalid params: {e}"))
             })?;
 
         let Some(raw_content) = core::assets::get_embedded_doc(&params.section) else {
@@ -7359,7 +7329,7 @@ mod rpc_handlers {
     ) -> Result<RpcResponse, error::DecapodError> {
         let params: ConstitutionLinksNavigateParams =
             serde_json::from_value(ctx.request.params.clone()).map_err(|e| {
-                error::DecapodError::ValidationError(format!("Invalid params: {}", e))
+                error::DecapodError::ValidationError(format!("Invalid params: {e}"))
             })?;
 
         let mut recommended = Vec::new();
@@ -7393,7 +7363,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let params: ConstitutionMigrateParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         Ok(success_response(
             ctx.request.id.clone(),
@@ -7418,7 +7388,7 @@ mod rpc_handlers {
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
         let _params: AgentRegistryQueryParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let mut agents = Vec::new();
         if let Ok(agent_id) = std::env::var("DECAPOD_AGENT_ID") {
@@ -7447,7 +7417,7 @@ mod rpc_handlers {
 
     pub(crate) fn handle_specs_refresh(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let _params: SpecsRefreshParams = serde_json::from_value(ctx.request.params.clone())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {}", e)))?;
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let manifest = crate::core::project_specs::refresh_specs_manifest(ctx.project_root)?;
 
@@ -7482,7 +7452,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
             .read_to_string(&mut buffer)
             .map_err(error::DecapodError::IoError)?;
         serde_json::from_str(&buffer)
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid JSON: {}", e)))?
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid JSON: {e}")))?
     } else {
         let op = cli.op.ok_or_else(|| {
             error::DecapodError::ValidationError("Operation required".to_string())
@@ -7703,7 +7673,7 @@ fn run_trace_command(cli: TraceCli, project_root: &Path) -> Result<(), error::De
         TraceCommand::Export { last } => {
             let traces = trace::get_last_traces(project_root, last)?;
             for t in traces {
-                println!("{}", t);
+                println!("{t}");
             }
         }
     }
@@ -7795,17 +7765,17 @@ fn run_preflight_command(
     if cli.format == "json" {
         println!("{}", serde_json::to_string_pretty(&response).unwrap());
     } else {
-        println!("Preflight Check for: {}", op);
+        println!("Preflight Check for: {op}");
         if risk_flags.is_empty() {
             println!("✓ No risks detected");
         } else {
-            println!("⚠ Risks: {:?}", risk_flags);
+            println!("⚠ Risks: {risk_flags:?}");
             println!("Likely failures:");
             for failure in &likely_failures {
                 println!("  - {}: {}", failure["code"], failure["message"]);
             }
         }
-        println!("Required capsules: {:?}", required_capsules);
+        println!("Required capsules: {required_capsules:?}");
     }
 
     Ok(())
@@ -7899,7 +7869,7 @@ fn run_impact_command(cli: ImpactCli, project_root: &Path) -> Result<(), error::
             println!("✓ Validate should pass");
         }
         if !changed_files.is_empty() {
-            println!("Changed files: {:?}", changed_files);
+            println!("Changed files: {changed_files:?}");
         }
     }
 
@@ -7972,7 +7942,7 @@ fn run_infer_init(cli: InferInitCli, project_root: &Path) -> Result<(), error::D
                     && name.ends_with(".rs")
                     && !name.contains("_test")
                 {
-                    selected_context.push(format!("src/{}", name));
+                    selected_context.push(format!("src/{name}"));
                 }
             }
         }
@@ -8007,7 +7977,7 @@ fn run_infer_init(cli: InferInitCli, project_root: &Path) -> Result<(), error::D
     } else {
         println!("=== Inference Context ===");
         println!("Intent: {}", cli.intent);
-        println!("Type: {}", intent_type);
+        println!("Type: {intent_type}");
         if clarification_required {
             println!("⚠ Clarification needed");
         }
@@ -8018,7 +7988,7 @@ fn run_infer_init(cli: InferInitCli, project_root: &Path) -> Result<(), error::D
                 .map(|a| a.len())
                 .unwrap_or(0)
         );
-        println!("Token budget: ~{}", token_budget);
+        println!("Token budget: ~{token_budget}");
     }
 
     Ok(())
@@ -8117,7 +8087,7 @@ fn run_infer_orientation(
         println!("=== ORIENTATION PACKET ===");
         println!("Goal:    {}", packet.user_goal);
         if let Some(ref id) = packet.task_id {
-            println!("Task:    {}", id);
+            println!("Task:    {id}");
         }
         println!("Next:    {}", packet.next_action);
         println!(
@@ -8211,7 +8181,7 @@ fn run_infer_budget(cli: InferBudgetCli, project_root: &Path) -> Result<(), erro
         println!("{}", serde_json::to_string_pretty(&response).unwrap());
     } else {
         println!("=== Token Budget ===");
-        println!("Context: ~{} tokens", total_tokens);
+        println!("Context: ~{total_tokens} tokens");
         println!("Total: ~{} tokens", total_tokens + base_tokens);
         println!(
             "Within 100k: {}",

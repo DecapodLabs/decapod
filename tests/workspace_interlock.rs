@@ -57,7 +57,6 @@ fn workspace_ensure_blocks_on_protected_branch_with_local_mods() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
         stderr.contains("WORKSPACE_INTERLOCK_DIRTY_PROTECTED"),
-        "unexpected stderr: {}",
-        stderr
+        "unexpected stderr: {stderr}"
     );
 }

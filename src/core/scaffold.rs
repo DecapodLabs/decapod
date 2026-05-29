@@ -482,7 +482,7 @@ fn specs_intent_template(seed: Option<&SpecsSeed>) -> String {
     );
     let language_criteria = language_specific_test_criteria(seed)
         .into_iter()
-        .map(|s| format!("- [ ] {}", s))
+        .map(|s| format!("- [ ] {s}"))
         .collect::<Vec<_>>()
         .join("\n");
 
@@ -757,7 +757,7 @@ fn specs_validation_template(seed: Option<&SpecsSeed>) -> String {
     } else {
         commands
             .into_iter()
-            .map(|c| format!("- `{}`", c))
+            .map(|c| format!("- `{c}`"))
             .collect::<Vec<_>>()
             .join("\n")
     };
@@ -989,7 +989,7 @@ fn specs_operations_template(seed: Option<&SpecsSeed>) -> String {
 fn specs_security_template(seed: Option<&SpecsSeed>) -> String {
     let scanners = language_specific_supply_chain_tools(seed)
         .into_iter()
-        .map(|tool| format!("`{}`", tool))
+        .map(|tool| format!("`{tool}`"))
         .collect::<Vec<_>>()
         .join(", ");
     format!(
@@ -1203,7 +1203,7 @@ pub fn get_legacy_entrypoint_contents(
     let mut contents = LegacyEntrypointContent::default();
 
     for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
-        let bak_path = target_dir.join(format!("{}.bak", file));
+        let bak_path = target_dir.join(format!("{file}.bak"));
         if bak_path.exists()
             && let Ok(bak_content) = fs::read_to_string(&bak_path)
         {
@@ -1226,7 +1226,7 @@ pub fn get_legacy_entrypoint_contents(
 /// Delete legacy agent entrypoint backup files after agent has processed them.
 pub fn cleanup_legacy_entrypoint_backups(target_dir: &Path) -> Result<(), error::DecapodError> {
     for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
-        let bak_path = target_dir.join(format!("{}.bak", file));
+        let bak_path = target_dir.join(format!("{file}.bak"));
         if bak_path.exists() {
             let _ = fs::remove_file(&bak_path);
         }
@@ -1266,7 +1266,7 @@ pub fn blend_overrides(target_dir: &Path) -> Result<FileAction, error::DecapodEr
                 if !cat_emitted.contains(&current_cat) && !current_cat.is_empty() {
                     // Check if category already exists in file
                     if !existing_content.contains(&current_cat) {
-                        missing_lines.push(format!("\n{}", current_cat));
+                        missing_lines.push(format!("\n{current_cat}"));
                     }
                     cat_emitted.insert(current_cat.clone());
                 }
@@ -1329,7 +1329,7 @@ pub fn scaffold_project_entrypoints(
     let mut ep_preserved = 0usize;
     for file in files_to_generate {
         let content =
-            assets::get_template(file).unwrap_or_else(|| panic!("Missing template: {}", file));
+            assets::get_template(file).unwrap_or_else(|| panic!("Missing template: {file}"));
         match write_file(opts, file, &content)? {
             FileAction::Created => ep_created += 1,
             FileAction::Unchanged => ep_unchanged += 1,
@@ -1437,8 +1437,7 @@ Agents operating in this repo MUST maintain these artifacts to ensure long-horiz
         });
         let body = serde_json::to_string_pretty(&version_counter).map_err(|e| {
             error::DecapodError::ValidationError(format!(
-                "Failed to serialize version counter: {}",
-                e
+                "Failed to serialize version counter: {e}"
             ))
         })?;
         fs::write(version_counter_path, body).map_err(error::DecapodError::IoError)?;
@@ -1537,8 +1536,7 @@ Agents operating in this repo MUST maintain these artifacts to ensure long-horiz
             ensure_parent(&manifest_path)?;
             let manifest_body = serde_json::to_string_pretty(&manifest).map_err(|e| {
                 error::DecapodError::ValidationError(format!(
-                    "Failed to serialize specs manifest: {}",
-                    e
+                    "Failed to serialize specs manifest: {e}"
                 ))
             })?;
             fs::write(manifest_path, manifest_body).map_err(error::DecapodError::IoError)?;

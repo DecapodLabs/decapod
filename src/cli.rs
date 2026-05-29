@@ -317,7 +317,7 @@ impl DecapodProjectConfig {
         }
         let content = std::fs::read_to_string(config_path)?;
         let config: Self = toml::from_str(&content).map_err(|e| {
-            crate::error::DecapodError::Config(format!("Failed to parse config.toml: {}", e))
+            crate::error::DecapodError::Config(format!("Failed to parse config.toml: {e}"))
         })?;
         Ok(config)
     }

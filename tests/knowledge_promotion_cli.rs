@@ -136,8 +136,7 @@ fn knowledge_promote_rejects_missing_evidence_refs() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
         stderr.contains("at least one --evidence-ref is required"),
-        "unexpected error: {}",
-        stderr
+        "unexpected error: {stderr}"
     );
 }
 
@@ -173,8 +172,7 @@ fn procedural_knowledge_add_requires_promotion_event_provenance() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
         stderr.contains("procedural knowledge entries require provenance"),
-        "unexpected error: {}",
-        stderr
+        "unexpected error: {stderr}"
     );
 }
 
@@ -212,7 +210,7 @@ fn procedural_knowledge_add_accepts_valid_promotion_event_provenance() {
     let event_id = promote_payload["event_id"]
         .as_str()
         .expect("event_id from promotion output");
-    let provenance = format!("event:{}", event_id);
+    let provenance = format!("event:{event_id}");
 
     let add = run_decapod(
         &dir,

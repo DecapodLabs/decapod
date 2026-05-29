@@ -257,15 +257,13 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
     let init_res = run_rpc_once(&serde_json::json!({ "op": "agent.init", "params": {} }));
     assert!(
         init_res["success"].as_bool().unwrap(),
-        "agent.init failed: {}",
-        init_res
+        "agent.init failed: {init_res}"
     );
 
     let ctx_res = run_rpc_once(&serde_json::json!({ "op": "context.resolve", "params": {} }));
     assert!(
         ctx_res["success"].as_bool().unwrap(),
-        "context.resolve failed: {}",
-        ctx_res
+        "context.resolve failed: {ctx_res}"
     );
 
     let response = run_rpc_once(&request);

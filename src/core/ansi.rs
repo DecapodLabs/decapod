@@ -75,5 +75,5 @@ impl<'a> std::fmt::Display for Stylized<'a> {
 }
 
 pub fn bold(s: &str) -> String {
-    format!("\x1b[1m{}\x1b[0m", s)
+    format!("\x1b[1m{s}\x1b[0m")
 }

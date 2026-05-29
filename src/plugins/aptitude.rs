@@ -1159,11 +1159,10 @@ pub fn analyze_similarity(store: &Store) -> Result<Vec<SimilarityGroup>, error::
         if prefs.len() > 1 {
             similarity_groups.push(SimilarityGroup {
                 category: category.clone(),
-                key: format!("{}*", key_prefix),
+                key: format!("{key_prefix}*"),
                 preferences: prefs,
                 similarity_reason: format!(
-                    "Multiple preferences with similar keys in category '{}'",
-                    category
+                    "Multiple preferences with similar keys in category '{category}'"
                 ),
             });
         }
@@ -1578,13 +1577,13 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
                 confidence,
             };
             let id = add_preference(store, input)?;
-            println!("✓ Preference recorded: {}={} (id: {})", key, value, id);
+            println!("✓ Preference recorded: {key}={value} (id: {id})");
         }
         AptitudeCommand::Get { category, key } => match get_preference(store, &category, &key)? {
             Some(pref) => {
                 println!("{}: {}", pref.key, pref.value);
                 if let Some(ctx) = pref.context {
-                    println!("  Context: {}", ctx);
+                    println!("  Context: {ctx}");
                 }
                 println!(
                     "  Source: {} | Confidence: {}%",
@@ -1595,11 +1594,11 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
                     pref.created_at, pref.access_count
                 );
                 if let Some(last) = pref.last_accessed_at {
-                    println!("  Last accessed: {}", last);
+                    println!("  Last accessed: {last}");
                 }
             }
             None => {
-                println!("No preference found for {}.{}", category, key);
+                println!("No preference found for {category}.{key}");
             }
         },
         AptitudeCommand::List { category, format } => {
@@ -1612,7 +1611,7 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
             } else {
                 let grouped = get_preferences_by_category(store)?;
                 for (cat, items) in grouped {
-                    println!("\n[{}]", cat);
+                    println!("\n[{cat}]");
                     for item in items {
                         println!(
                             "  {} = {} (confidence: {}%, accessed: {}x)",
@@ -1624,9 +1623,9 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
         }
         AptitudeCommand::Delete { category, key } => {
             if delete_preference(store, &category, &key)? {
-                println!("✓ Deleted preference {}.{}", category, key);
+                println!("✓ Deleted preference {category}.{key}");
             } else {
-                println!("✗ Preference {}.{} not found", category, key);
+                println!("✗ Preference {category}.{key} not found");
             }
         }
         AptitudeCommand::Skill(skill_cmd) => match skill_cmd {
@@ -1643,25 +1642,25 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
                     context,
                 };
                 let id = add_skill(store, input)?;
-                println!("✓ Skill recorded: {} (id: {})", name, id);
+                println!("✓ Skill recorded: {name} (id: {id})");
             }
             SkillCommand::Get { name } => match get_skill(store, &name)? {
                 Some(skill) => {
                     println!("Skill: {}", skill.name);
                     if let Some(desc) = skill.description {
-                        println!("  Description: {}", desc);
+                        println!("  Description: {desc}");
                     }
                     println!("  Workflow: {}", skill.workflow);
                     if let Some(ctx) = skill.context {
-                        println!("  Context: {}", ctx);
+                        println!("  Context: {ctx}");
                     }
                     println!("  Used: {} times", skill.usage_count);
                     if let Some(last) = skill.last_used_at {
-                        println!("  Last used: {}", last);
+                        println!("  Last used: {last}");
                     }
                 }
                 None => {
-                    println!("No skill found: {}", name);
+                    println!("No skill found: {name}");
                 }
             },
             SkillCommand::List { format } => {
@@ -1684,9 +1683,9 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
             }
             SkillCommand::Delete { name } => {
                 if delete_skill(store, &name)? {
-                    println!("✓ Deleted skill {}", name);
+                    println!("✓ Deleted skill {name}");
                 } else {
-                    println!("✗ Skill {} not found", name);
+                    println!("✗ Skill {name} not found");
                 }
             }
             SkillCommand::Import { path, write_card } => {
@@ -1725,18 +1724,18 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
             // Check for pattern matches
             let matches = match_patterns(store, &content)?;
             if !matches.is_empty() {
-                println!("✓ Observation recorded (id: {})", id);
+                println!("✓ Observation recorded (id: {id})");
                 println!("  Pattern matches found:");
                 for (pattern, captures) in matches {
                     println!("    - {}: {:?}", pattern.name, captures);
                     if let (Some(pref_cat), Some(pref_key)) =
                         (&pattern.preference_category, &pattern.preference_key)
                     {
-                        println!("      → Suggested preference: {}.{}", pref_cat, pref_key);
+                        println!("      → Suggested preference: {pref_cat}.{pref_key}");
                     }
                 }
             } else {
-                println!("✓ Observation recorded (id: {})", id);
+                println!("✓ Observation recorded (id: {id})");
             }
         }
         AptitudeCommand::Pending { limit } => {
@@ -1748,7 +1747,7 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
                 for obs in observations {
                     println!("  [{}] {}", &obs.id[..8], obs.content);
                     if let Some(cat) = obs.category {
-                        println!("      Category: {}", cat);
+                        println!("      Category: {cat}");
                     }
                     if let Some(pattern_id) = obs.matched_pattern_id {
                         println!("      Matched pattern: {}", &pattern_id[..8]);
@@ -1803,7 +1802,7 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
             if format == "json" {
                 println!("{}", serde_json::to_string_pretty(&prompts).unwrap());
             } else {
-                println!("Prompts for context '{}':", ctx);
+                println!("Prompts for context '{ctx}':");
                 for prompt in prompts {
                     println!(
                         "\n  [{}] (priority: {}, used: {}x)",
@@ -1817,9 +1816,9 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
             let reminders = generate_contextual_reminders(store, &context)?;
 
             if reminders.is_empty() {
-                println!("No reminders for context '{}'.", context);
+                println!("No reminders for context '{context}'.");
             } else {
-                println!("Contextual reminders for '{}':", context);
+                println!("Contextual reminders for '{context}':");
                 for (i, reminder) in reminders.iter().enumerate() {
                     println!("\n  {}. {}", i + 1, reminder);
                 }

@@ -34,7 +34,7 @@ fn load_constitution_claims() -> Vec<ConstitutionTable> {
                 for (idx, text) in texts.iter().enumerate() {
                     if let Some(t) = text.as_str() {
                         claims.push(ConstitutionTable {
-                            claim_id: format!("claim.{}.{}", sec_name, idx),
+                            claim_id: format!("claim.{sec_name}.{idx}"),
                             claim: t.to_string(),
                             owner_doc: "interfaces/CLAIMS".to_string(),
                             enforcement: "enforced".to_string(),
@@ -214,9 +214,9 @@ fn test_constitution_claims_summary() {
 
     println!("\n=== CONSTITUTION CLAIMS SUMMARY ===");
     println!("Total constitution claims: {}", claims.len());
-    println!("Enforced: {}", enforced);
-    println!("Partially enforced: {}", partially);
-    println!("Not enforced: {}", not_enforced);
+    println!("Enforced: {enforced}");
+    println!("Partially enforced: {partially}");
+    println!("Not enforced: {not_enforced}");
     println!("=== END SUMMARY ===\n");
 
     assert!(

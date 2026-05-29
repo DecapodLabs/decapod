@@ -235,7 +235,7 @@ fn test_mandatory_todo_enforcement() {
         );
     }
 
-    println!("Task ID: {}", task_id);
+    println!("Task ID: {task_id}");
     // DEBUG: Check task state
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["todo", "get", "--id", &task_id, "--format", "json"])
@@ -341,8 +341,7 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
         auto_branch.contains(generated_task_id)
             || auto_branch.contains(generated_task_hash)
             || auto_branch.contains(&generated_task_sanitized),
-        "auto-created workspace branch '{}' must contain generated Decapod todo id/hash",
-        auto_branch
+        "auto-created workspace branch '{auto_branch}' must contain generated Decapod todo id/hash"
     );
 
     Command::new("git")
@@ -393,8 +392,7 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
             || branch.contains(generated_task_hash)
             || branch.contains(generated_task_id)
             || branch.contains(&sanitized_generated),
-        "branch '{}' must contain an assigned todo hash/id",
-        branch
+        "branch '{branch}' must contain an assigned todo hash/id"
     );
     assert!(
         worktree_path.contains(&task_hash)
@@ -403,8 +401,7 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
             || worktree_path.contains(generated_task_hash)
             || worktree_path.contains(generated_task_id)
             || worktree_path.contains(&sanitized_generated),
-        "worktree path '{}' must contain an assigned todo hash/id",
-        worktree_path
+        "worktree path '{worktree_path}' must contain an assigned todo hash/id"
     );
 }
 
@@ -442,8 +439,7 @@ fn test_workspace_ensure_reuses_external_todo_ref_for_exclusive_claims() {
     let second_stderr = String::from_utf8_lossy(&second.stderr);
     assert!(
         second_stderr.contains("WORKSPACE_TODO_CLAIM_CONFLICT"),
-        "expected claim conflict for reused external task ref, got: {}",
-        second_stderr
+        "expected claim conflict for reused external task ref, got: {second_stderr}"
     );
 }
 
@@ -485,8 +481,7 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
         !stderr.contains("WORKSPACE_NO_CLAIMED_TODO"),
-        "container remediation must not be blocked by todo claim gate: {}",
-        stderr
+        "container remediation must not be blocked by todo claim gate: {stderr}"
     );
 
     let json: serde_json::Value =
@@ -533,14 +528,12 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
         branch.contains(generated_task_id)
             || branch.contains(generated_task_hash)
             || branch.contains(&generated_task_sanitized),
-        "container branch should use generated todo scope, got: {}",
-        branch
+        "container branch should use generated todo scope, got: {branch}"
     );
     assert!(
         worktree_path.contains(generated_task_id)
             || worktree_path.contains(generated_task_hash)
             || worktree_path.contains(&generated_task_sanitized),
-        "container worktree should use generated todo scope, got: {}",
-        worktree_path
+        "container worktree should use generated todo scope, got: {worktree_path}"
     );
 }

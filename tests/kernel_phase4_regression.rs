@@ -206,7 +206,7 @@ fn phase4_kernel_surfaces_work_together() {
             "--text",
             "always prove before publish",
             "--provenance",
-            &format!("event:{}", event_id),
+            &format!("event:{event_id}"),
         ],
         &auth,
     );

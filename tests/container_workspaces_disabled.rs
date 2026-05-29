@@ -116,7 +116,7 @@ fn set_container_workspaces_in_config(worktree_dir: &std::path::Path, enabled: b
             .lines()
             .map(|line| {
                 if line.trim().starts_with("container_workspaces") {
-                    format!("container_workspaces = {}", enabled)
+                    format!("container_workspaces = {enabled}")
                 } else {
                     line.to_string()
                 }
@@ -145,14 +145,12 @@ fn test_container_workspaces_false_skips_container_requirement() {
 
     assert!(
         !stderr.contains("container_workspace_required"),
-        "should NOT fail container_workspace_required when disabled. Stderr: {}",
-        stderr
+        "should NOT fail container_workspace_required when disabled. Stderr: {stderr}"
     );
 
     assert!(
         stdout.contains("skip") || stdout.contains("disabled") || out.status.success(),
-        "should skip container check when container_workspaces disabled. stdout: {}",
-        stdout
+        "should skip container check when container_workspaces disabled. stdout: {stdout}"
     );
 }
 
@@ -170,8 +168,7 @@ fn test_container_workspaces_true_requires_container() {
 
     assert!(
         stderr.contains("container_workspace_required"),
-        "should require container when container_workspaces = true. Stderr: {}",
-        stderr
+        "should require container when container_workspaces = true. Stderr: {stderr}"
     );
 }
 
@@ -224,8 +221,7 @@ fn test_init_with_no_container_workspaces_flag() {
     let config_content = fs::read_to_string(&config_path).expect("read config");
     assert!(
         config_content.contains("container_workspaces = false"),
-        "config should have container_workspaces = false. Content: {}",
-        config_content
+        "config should have container_workspaces = false. Content: {config_content}"
     );
 }
 
@@ -309,14 +305,12 @@ fn test_e2e_validate_passes_with_no_container_workspaces() {
 
     assert!(
         out.status.success(),
-        "validate should pass with container_workspaces disabled. stdout: {}",
-        stdout
+        "validate should pass with container_workspaces disabled. stdout: {stdout}"
     );
 
     assert!(
         !stdout.contains("container_workspace_required"),
-        "should not have container_workspace_required failure. stdout: {}",
-        stdout
+        "should not have container_workspace_required failure. stdout: {stdout}"
     );
 }
 
@@ -335,30 +329,22 @@ fn test_e2e_validate_container_sequences_never_fire_when_disabled() {
 
     assert!(
         !stderr.contains("container") && !stdout.contains("container"),
-        "container sequences should never fire when container_workspaces disabled. stderr: {}, stdout: {}",
-        stderr,
-        stdout
+        "container sequences should never fire when container_workspaces disabled. stderr: {stderr}, stdout: {stdout}"
     );
 
     assert!(
         !stderr.contains("docker run") && !stdout.contains("docker run"),
-        "docker run should never execute when container_workspaces disabled. stderr: {}, stdout: {}",
-        stderr,
-        stdout
+        "docker run should never execute when container_workspaces disabled. stderr: {stderr}, stdout: {stdout}"
     );
 
     assert!(
         !stderr.contains("podman run") && !stdout.contains("podman run"),
-        "podman run should never execute when container_workspaces disabled. stderr: {}, stdout: {}",
-        stderr,
-        stdout
+        "podman run should never execute when container_workspaces disabled. stderr: {stderr}, stdout: {stdout}"
     );
 
     assert!(
         !stderr.contains("ensure --container") && !stdout.contains("ensure --container"),
-        "workspace ensure --container should never be triggered when container_workspaces disabled. stderr: {}, stdout: {}",
-        stderr,
-        stdout
+        "workspace ensure --container should never be triggered when container_workspaces disabled. stderr: {stderr}, stdout: {stdout}"
     );
 }
 
@@ -440,14 +426,11 @@ fn test_e2e_init_then_validate_flow_with_workspaces_disabled() {
 
     assert!(
         validate_out.status.success(),
-        "validate should pass after init --no-container-workspaces in worktree. stdout: {}, stderr: {}",
-        stdout,
-        stderr
+        "validate should pass after init --no-container-workspaces in worktree. stdout: {stdout}, stderr: {stderr}"
     );
 
     assert!(
         !stderr.contains("container_workspace_required"),
-        "container_workspace_required should never appear. stderr: {}",
-        stderr
+        "container_workspace_required should never appear. stderr: {stderr}"
     );
 }

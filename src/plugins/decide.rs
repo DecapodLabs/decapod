@@ -840,7 +840,7 @@ fn now_ts() -> String {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
-    format!("{}Z", secs)
+    format!("{secs}Z")
 }
 
 fn decide_db_path(root: &Path) -> PathBuf {
@@ -994,16 +994,13 @@ fn create_session_federation_node(
     federation::initialize_federation_db(&store.root)?;
     let node = federation::add_node(
         store,
-        &format!("Decision Session: {}", title),
+        &format!("Decision Session: {title}"),
         "decision",
         "notable",
         "agent_inferred",
-        &format!(
-            "Architecture decision session for tree '{}'. Session ID: {}",
-            tree_id, session_id
-        ),
-        &format!("cmd:decide.session.start.{}", session_id),
-        &format!("decide,session,{}", tree_id),
+        &format!("Architecture decision session for tree '{tree_id}'. Session ID: {session_id}"),
+        &format!("cmd:decide.session.start.{session_id}"),
+        &format!("decide,session,{tree_id}"),
         "repo",
         None,
         actor,
@@ -1023,16 +1020,13 @@ fn create_decision_federation_node(
     federation::initialize_federation_db(&store.root)?;
     let node = federation::add_node(
         store,
-        &format!("{} -> {}", question_text, chosen_label),
+        &format!("{question_text} -> {chosen_label}"),
         "decision",
         "background",
         "agent_inferred",
-        &format!(
-            "Chose '{}' for '{}'. Decision ID: {}",
-            chosen_label, question_text, decision_id
-        ),
-        &format!("cmd:decide.record.{}", decision_id),
-        &format!("decide,answer,{}", tree_id),
+        &format!("Chose '{chosen_label}' for '{question_text}'. Decision ID: {decision_id}"),
+        &format!("cmd:decide.record.{decision_id}"),
+        &format!("decide,answer,{tree_id}"),
         "repo",
         None,
         actor,
@@ -1125,7 +1119,7 @@ pub fn record_decision(
                     ))
                 })
                 .map_err(|_| {
-                    error::DecapodError::NotFound(format!("Session '{}' not found", session_id))
+                    error::DecapodError::NotFound(format!("Session '{session_id}' not found"))
                 })?;
 
             if row.2 != "active" {
@@ -1173,8 +1167,7 @@ pub fn record_decision(
 
         if exists {
             return Err(error::DecapodError::ValidationError(format!(
-                "Question '{}' already answered in session '{}'",
-                question_id, session_id
+                "Question '{question_id}' already answered in session '{session_id}'"
             )));
         }
 
@@ -1234,8 +1227,7 @@ pub fn complete_session(store: &Store, session_id: &str) -> Result<(), error::De
 
         if updated == 0 {
             return Err(error::DecapodError::NotFound(format!(
-                "Active session '{}' not found",
-                session_id
+                "Active session '{session_id}' not found"
             )));
         }
 
@@ -1274,7 +1266,7 @@ pub fn get_session(
                 })
             })
             .map_err(|_| {
-                error::DecapodError::NotFound(format!("Session '{}' not found", session_id))
+                error::DecapodError::NotFound(format!("Session '{session_id}' not found"))
             })?;
 
         // Load decisions
@@ -1385,8 +1377,7 @@ pub fn list_decisions(
 
         let sql = format!(
             "SELECT id, session_id, question_id, tree_id, question_text, chosen_value, chosen_label, rationale, user_note, federation_node_id, created_at, actor
-             FROM decisions{} ORDER BY created_at",
-            where_clause
+             FROM decisions{where_clause} ORDER BY created_at"
         );
 
         let mut stmt = conn.prepare(&sql)?;
@@ -1441,7 +1432,7 @@ pub fn get_decision(store: &Store, decision_id: &str) -> Result<Decision, error:
             })
         })
         .map_err(|_| {
-            error::DecapodError::NotFound(format!("Decision '{}' not found", decision_id))
+            error::DecapodError::NotFound(format!("Decision '{decision_id}' not found"))
         })
     })
 }
@@ -1464,8 +1455,7 @@ pub fn next_question(
                 )
                 .map_err(|_| {
                     error::DecapodError::NotFound(format!(
-                        "Active session '{}' not found",
-                        session_id
+                        "Active session '{session_id}' not found"
                     ))
                 })?;
 

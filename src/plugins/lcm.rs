@@ -229,14 +229,14 @@ pub fn list_originals(
             Some(k) => {
                 let mut sql = "SELECT content_hash, event_id, ts, actor, kind, byte_size, session_id FROM originals_index WHERE kind = ?1 ORDER BY ts DESC".to_string();
                 if let Some(n) = last_n {
-                    sql.push_str(&format!(" LIMIT {}", n));
+                    sql.push_str(&format!(" LIMIT {n}"));
                 }
                 (sql, vec![Box::new(k.to_string())])
             }
             None => {
                 let mut sql = "SELECT content_hash, event_id, ts, actor, kind, byte_size, session_id FROM originals_index ORDER BY ts DESC".to_string();
                 if let Some(n) = last_n {
-                    sql.push_str(&format!(" LIMIT {}", n));
+                    sql.push_str(&format!(" LIMIT {n}"));
                 }
                 (sql, vec![])
             }
@@ -393,7 +393,7 @@ pub fn rebuild_index(
         }
 
         let event: LcmEvent = serde_json::from_str(&line).map_err(|e| {
-            error::DecapodError::ValidationError(format!("Failed to parse event: {}", e))
+            error::DecapodError::ValidationError(format!("Failed to parse event: {e}"))
         })?;
 
         if validate {

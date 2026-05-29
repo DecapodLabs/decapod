@@ -23,7 +23,7 @@ mod tests {
 
         for file in trigger_files {
             let result = requires_state_commit_vectors(file);
-            assert!(result, "File {} should require STATE_COMMIT vectors", file);
+            assert!(result, "File {file} should require STATE_COMMIT vectors");
         }
     }
 
@@ -40,8 +40,7 @@ mod tests {
             let result = requires_state_commit_vectors(file);
             assert!(
                 !result,
-                "File {} should NOT require STATE_COMMIT vectors",
-                file
+                "File {file} should NOT require STATE_COMMIT vectors"
             );
         }
     }

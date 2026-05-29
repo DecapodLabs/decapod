@@ -317,9 +317,7 @@ pub fn apply_answer(
     let question = all_questions
         .iter()
         .find(|q| q.id == question_id)
-        .ok_or_else(|| {
-            DecapodError::ValidationError(format!("Unknown question: {}", question_id))
-        })?;
+        .ok_or_else(|| DecapodError::ValidationError(format!("Unknown question: {question_id}")))?;
 
     // Add answer
     state.answers.insert(

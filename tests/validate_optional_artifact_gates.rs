@@ -157,8 +157,7 @@ fn validate_rejects_recursive_pass_without_authority() {
     let output = combined_output(&validate);
     assert!(
         output.contains("constitutional authority is required"),
-        "expected authority failure, got:\n{}",
-        output
+        "expected authority failure, got:\n{output}"
     );
 }
 
@@ -178,8 +177,7 @@ fn validate_rejects_recursive_pass_without_parent_task_or_spec() {
     let output = combined_output(&validate);
     assert!(
         output.contains("parent task/spec reference is required"),
-        "expected parent lineage failure, got:\n{}",
-        output
+        "expected parent lineage failure, got:\n{output}"
     );
 }
 
@@ -198,8 +196,7 @@ fn validate_rejects_recursive_pass_without_stop_condition() {
     let output = combined_output(&validate);
     assert!(
         output.contains("stop_condition is required"),
-        "expected stop condition failure, got:\n{}",
-        output
+        "expected stop condition failure, got:\n{output}"
     );
 }
 
@@ -218,8 +215,7 @@ fn validate_rejects_recursive_pass_with_vague_proof() {
     let output = combined_output(&validate);
     assert!(
         output.contains("proof_required must contain concrete proof gates"),
-        "expected proof failure, got:\n{}",
-        output
+        "expected proof failure, got:\n{output}"
     );
 }
 
@@ -238,8 +234,7 @@ fn validate_rejects_recursive_pass_that_expands_scope() {
     let output = combined_output(&validate);
     assert!(
         output.contains("must not expand scope"),
-        "expected scope failure, got:\n{}",
-        output
+        "expected scope failure, got:\n{output}"
     );
 }
 
@@ -258,8 +253,7 @@ fn validate_rejects_recursive_pass_that_rewrites_parent_intent() {
     let output = combined_output(&validate);
     assert!(
         output.contains("must not mutate parent intent"),
-        "expected parent intent failure, got:\n{}",
-        output
+        "expected parent intent failure, got:\n{output}"
     );
 }
 
@@ -278,8 +272,7 @@ fn validate_rejects_recursive_pass_that_weakens_governance() {
     let output = combined_output(&validate);
     assert!(
         output.contains("must not weaken constitution"),
-        "expected governance weakening failure, got:\n{}",
-        output
+        "expected governance weakening failure, got:\n{output}"
     );
 }
 
@@ -298,8 +291,7 @@ fn validate_rejects_recursive_pass_touching_forbidden_paths() {
     let output = combined_output(&validate);
     assert!(
         output.contains("touched forbidden path"),
-        "expected forbidden path failure, got:\n{}",
-        output
+        "expected forbidden path failure, got:\n{output}"
     );
 }
 
@@ -326,8 +318,7 @@ fn validate_fails_on_invalid_workunit_manifest_if_present() {
     let stderr = combined_output(&validate);
     assert!(
         stderr.contains("invalid workunit manifest"),
-        "expected workunit parse failure in stderr, got:\n{}",
-        stderr
+        "expected workunit parse failure in stderr, got:\n{stderr}"
     );
 }
 
@@ -366,8 +357,7 @@ fn validate_fails_on_verified_workunit_missing_passing_proofs() {
     let stderr = combined_output(&validate);
     assert!(
         stderr.contains("invalid VERIFIED workunit manifest"),
-        "expected VERIFIED workunit gate failure in stderr, got:\n{}",
-        stderr
+        "expected VERIFIED workunit gate failure in stderr, got:\n{stderr}"
     );
 }
 
@@ -408,8 +398,7 @@ fn validate_fails_on_verified_workunit_missing_capsule_policy_lineage() {
     let stderr = combined_output(&validate);
     assert!(
         stderr.contains("WORKUNIT_CAPSULE_POLICY_LI"),
-        "expected missing capsule lineage marker in stderr, got:\n{}",
-        stderr
+        "expected missing capsule lineage marker in stderr, got:\n{stderr}"
     );
 }
 
@@ -479,8 +468,7 @@ fn validate_fails_on_verified_workunit_capsule_without_state_ref_binding() {
     let stderr = combined_output(&validate);
     assert!(
         stderr.contains("WORKUNIT_CAPSULE_POLICY_LI"),
-        "expected missing capsule state_ref marker in stderr, got:\n{}",
-        stderr
+        "expected missing capsule state_ref marker in stderr, got:\n{stderr}"
     );
 }
 
@@ -530,8 +518,7 @@ fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
     let stderr = combined_output(&validate);
     assert!(
         stderr.contains("Context capsule hash mismatch"),
-        "expected context capsule hash mismatch failure in stderr, got:\n{}",
-        stderr
+        "expected context capsule hash mismatch failure in stderr, got:\n{stderr}"
     );
 }
 
@@ -562,8 +549,7 @@ fn validate_fails_on_invalid_knowledge_promotion_ledger_if_present() {
     let stderr = combined_output(&validate);
     assert!(
         stderr.contains("Knowledge promotion ledger missing"),
-        "expected promotion ledger schema failure in stderr, got:\n{}",
-        stderr
+        "expected promotion ledger schema failure in stderr, got:\n{stderr}"
     );
 }
 
@@ -595,8 +581,7 @@ fn validate_fails_on_non_procedural_target_class_in_promotion_ledger() {
     let stderr = combined_output(&validate);
     assert!(
         stderr.contains("target_class='procedural'"),
-        "expected target_class guard failure in stderr, got:\n{}",
-        stderr
+        "expected target_class guard failure in stderr, got:\n{stderr}"
     );
 }
 
@@ -610,7 +595,7 @@ fn validate_fails_when_gitignore_missing_generated_whitelist_rules() {
         .filter(|line| line.trim() != "!.decapod/generated/context/*.json")
         .collect::<Vec<_>>()
         .join("\n");
-    fs::write(&gitignore_path, format!("{}\n", content)).expect("rewrite .gitignore");
+    fs::write(&gitignore_path, format!("{content}\n")).expect("rewrite .gitignore");
 
     let validate = run_decapod(
         &dir,
@@ -628,8 +613,7 @@ fn validate_fails_when_gitignore_missing_generated_whitelist_rules() {
     let stderr = combined_output(&validate);
     assert!(
         stderr.contains("Missing .gitignore rule '!.decapod/generated/context/*.json'"),
-        "expected generated whitelist .gitignore failure, got:\n{}",
-        stderr
+        "expected generated whitelist .gitignore failure, got:\n{stderr}"
     );
 }
 
@@ -667,8 +651,7 @@ fn validate_fails_when_non_whitelisted_generated_file_is_tracked() {
     let stderr = combined_output(&validate);
     assert!(
         stderr.contains("Tracked non-whitelisted generated artifacts found"),
-        "expected generated whitelist tracked-file failure, got:\n{}",
-        stderr
+        "expected generated whitelist tracked-file failure, got:\n{stderr}"
     );
 }
 
@@ -715,8 +698,7 @@ fn validate_fails_on_invalid_context_capsule_policy_contract_if_present() {
     let stderr = combined_output(&validate);
     assert!(
         stderr.contains("has no allowed_scopes"),
-        "expected context capsule policy gate failure, got:\n{}",
-        stderr
+        "expected context capsule policy gate failure, got:\n{stderr}"
     );
 }
 

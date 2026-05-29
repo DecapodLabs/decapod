@@ -334,8 +334,7 @@ fn create_and_claim_coordination_todo(
                 todo::claim_task(&store_root, &task.id, agent_id, todo::ClaimMode::Exclusive)?;
             if claim.get("status").and_then(|value| value.as_str()) != Some("ok") {
                 return Err(DecapodError::ValidationError(format!(
-                    "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"inspect `decapod todo list`; Decapod already captured external task {} as a coordination todo, so coordinate with the current claimant or wait for release before launching another workspace\" user_note=\"Decapod is protecting this external task with an exclusive todo claim; no work is lost, but another agent already owns the isolated workspace slot.\"\n{}",
-                    external_ref, claim
+                    "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"inspect `decapod todo list`; Decapod already captured external task {external_ref} as a coordination todo, so coordinate with the current claimant or wait for release before launching another workspace\" user_note=\"Decapod is protecting this external task with an exclusive todo claim; no work is lost, but another agent already owns the isolated workspace slot.\"\n{claim}"
                 )));
             }
             return Ok(AssignedTodoRef {
@@ -345,16 +344,15 @@ fn create_and_claim_coordination_todo(
         }
     }
     let title = if external_ref.is_empty() {
-        format!("Decapod workspace coordination for {}", agent_id)
+        format!("Decapod workspace coordination for {agent_id}")
     } else {
-        format!("Decapod workspace coordination for {}", external_ref)
+        format!("Decapod workspace coordination for {external_ref}")
     };
     let description = if external_ref.is_empty() {
         "Auto-created by decapod workspace ensure so Decapod can enforce exclusive agent ownership while an external todo system may also be in use.".to_string()
     } else {
         format!(
-            "Auto-created by decapod workspace ensure to coordinate exclusive Decapod ownership for external task {}.",
-            external_ref
+            "Auto-created by decapod workspace ensure to coordinate exclusive Decapod ownership for external task {external_ref}."
         )
     };
     let command = todo::TodoCommand::Add {
@@ -388,8 +386,7 @@ fn create_and_claim_coordination_todo(
     let claim = todo::claim_task(&store_root, &id, agent_id, todo::ClaimMode::Exclusive)?;
     if claim.get("status").and_then(|value| value.as_str()) != Some("ok") {
         return Err(DecapodError::ValidationError(format!(
-            "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"inspect `decapod todo list`; Decapod created a workspace coordination todo and is waiting for an exclusive claim before container launch continues\" user_note=\"Decapod has captured the workspace intent as a todo; resolve the claim conflict and rerun the command.\"\n{}",
-            claim
+            "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"inspect `decapod todo list`; Decapod created a workspace coordination todo and is waiting for an exclusive claim before container launch continues\" user_note=\"Decapod has captured the workspace intent as a todo; resolve the claim conflict and rerun the command.\"\n{claim}"
         )));
     }
     Ok(AssignedTodoRef { id, hash })
@@ -466,8 +463,7 @@ pub fn ensure_workspace(
     let store_root = main_repo.join(".decapod").join("data");
     db::storage_health_preflight(&store_root).map_err(|e| {
         DecapodError::ValidationError(format!(
-            "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_STORAGE_PREFLIGHT_FAILED severity=transient auto_remediable=true audience=agent agent_action=\"verify .decapod/data directory is accessible and has correct permissions; if storage is full, free up space or use a different store root\" user_note=\"Workspace storage preflight failed; the agent should verify storage health or report the concrete blocker.\"\n{}",
-            e
+            "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_STORAGE_PREFLIGHT_FAILED severity=transient auto_remediable=true audience=agent agent_action=\"verify .decapod/data directory is accessible and has correct permissions; if storage is full, free up space or use a different store root\" user_note=\"Workspace storage preflight failed; the agent should verify storage health or report the concrete blocker.\"\n{e}"
         ))
     })?;
 
@@ -650,8 +646,7 @@ fn create_worktree(
         if !output2.status.success() {
             let stderr = String::from_utf8_lossy(&output2.stderr);
             return Err(DecapodError::ValidationError(format!(
-                "Failed to create worktree: {}",
-                stderr
+                "Failed to create worktree: {stderr}"
             )));
         }
     }
@@ -760,8 +755,7 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         return Err(DecapodError::ValidationError(format!(
-            "Failed to build container image: {}",
-            stderr
+            "Failed to build container image: {stderr}"
         )));
     }
 
@@ -963,7 +957,7 @@ fn build_todo_scope_component(todo_refs: &[AssignedTodoRef]) -> String {
     }
     let head = sanitize_todo_component(&todo_refs[0].hash);
     if todo_refs.len() == 1 {
-        return format!("todo-{}", head);
+        return format!("todo-{head}");
     }
     format!("todo-{}-plus-{}", head, todo_refs.len() - 1)
 }
@@ -1090,8 +1084,7 @@ pub fn publish_workspace(
             // Allow "nothing to commit" as non-fatal
             if !stderr.contains("nothing to commit") {
                 return Err(DecapodError::ValidationError(format!(
-                    "Failed to commit: {}",
-                    stderr
+                    "Failed to commit: {stderr}"
                 )));
             }
         }

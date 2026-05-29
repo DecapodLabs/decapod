@@ -240,7 +240,7 @@ fn test_supersede_lifecycle() {
     build_derived(&store);
     let results = validate_federation(&store.root).unwrap();
     for (gate, passed, _msg) in &results {
-        assert!(passed, "Gate {} failed", gate);
+        assert!(passed, "Gate {gate} failed");
     }
 }
 
@@ -408,7 +408,7 @@ fn test_rebuild_determinism() {
     build_derived(&store);
     let results = validate_federation(&store.root).unwrap();
     for (gate, passed, msg) in &results {
-        assert!(passed, "Gate {} failed: {}", gate, msg);
+        assert!(passed, "Gate {gate} failed: {msg}");
     }
 }
 
@@ -483,7 +483,7 @@ fn test_add_source_survives_rebuild() {
     build_derived(&store);
     let results = validate_federation(&store.root).unwrap();
     for (gate, passed, msg) in &results {
-        assert!(passed, "Gate {} failed: {}", gate, msg);
+        assert!(passed, "Gate {gate} failed: {msg}");
     }
 }
 
@@ -570,7 +570,7 @@ fn test_rebuild_determinism_gate_passes() {
         "rebuild_determinism gate should exist"
     );
     let (_, passed, msg) = determinism_gate.unwrap();
-    assert!(passed, "rebuild_determinism gate failed: {}", msg);
+    assert!(passed, "rebuild_determinism gate failed: {msg}");
 }
 
 #[test]
@@ -690,7 +690,7 @@ fn test_validate_clean_store() {
     // Empty store should pass all gates
     let results = validate_federation(&store.root).unwrap();
     for (gate, passed, _msg) in &results {
-        assert!(passed, "Gate {} failed on empty store", gate);
+        assert!(passed, "Gate {gate} failed on empty store");
     }
 }
 

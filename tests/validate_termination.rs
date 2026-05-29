@@ -104,14 +104,12 @@ fn validate_terminates_with_typed_error_under_db_contention() {
     let stderr = String::from_utf8_lossy(&validate.stderr);
     assert!(
         stderr.contains("VALIDATE_TIMEOUT_OR_LOCK"),
-        "validate stderr should contain typed bounded-time failure marker; got: {}",
-        stderr
+        "validate stderr should contain typed bounded-time failure marker; got: {stderr}"
     );
 
     assert!(
         elapsed.as_secs() < 10,
-        "validate must terminate quickly under contention; elapsed={:?}",
-        elapsed
+        "validate must terminate quickly under contention; elapsed={elapsed:?}"
     );
 
     conn.execute_batch("ROLLBACK;").expect("release lock");
@@ -147,13 +145,11 @@ fn validate_terminates_with_typed_error_under_immediate_lock_contention() {
     let stderr = String::from_utf8_lossy(&validate.stderr);
     assert!(
         stderr.contains("VALIDATE_TIMEOUT_OR_LOCK"),
-        "validate stderr should contain typed bounded-time failure marker; got: {}",
-        stderr
+        "validate stderr should contain typed bounded-time failure marker; got: {stderr}"
     );
     assert!(
         elapsed.as_secs() < 10,
-        "validate must terminate quickly under contention; elapsed={:?}",
-        elapsed
+        "validate must terminate quickly under contention; elapsed={elapsed:?}"
     );
 
     conn.execute_batch("ROLLBACK;").expect("release lock");
@@ -187,8 +183,7 @@ fn validate_timeout_does_not_strand_db_for_followup_commands() {
     let stderr = String::from_utf8_lossy(&validate.stderr);
     assert!(
         stderr.contains("VALIDATE_TIMEOUT_OR_LOCK"),
-        "validate stderr should contain typed bounded-time failure marker; got: {}",
-        stderr
+        "validate stderr should contain typed bounded-time failure marker; got: {stderr}"
     );
 
     conn.execute_batch("ROLLBACK;").expect("release lock");
@@ -570,15 +565,13 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
         );
         assert!(
             elapsed < 10_000,
-            "validate runtime exceeded bounded smoke threshold: {}ms",
-            elapsed
+            "validate runtime exceeded bounded smoke threshold: {elapsed}ms"
         );
     }
 
     let total: u64 = durations_ms.iter().sum();
     assert!(
         total < 20_000,
-        "three sequential validates should stay within bounded aggregate runtime; got {}ms",
-        total
+        "three sequential validates should stay within bounded aggregate runtime; got {total}ms"
     );
 }

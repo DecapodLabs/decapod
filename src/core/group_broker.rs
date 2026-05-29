@@ -229,7 +229,7 @@ fn handle_client(
         .read_line(&mut line)
         .map_err(error::DecapodError::IoError)?;
     let req: BrokerRequest = serde_json::from_str(line.trim()).map_err(|e| {
-        error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_INVALID_REQUEST: {}", e))
+        error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_INVALID_REQUEST: {e}"))
     })?;
     let server_version = server_protocol_version();
     if req.protocol_version != server_version {
@@ -271,7 +271,7 @@ fn send_request(
         .map_err(error::DecapodError::IoError)?;
 
     let payload = serde_json::to_string(request).map_err(|e| {
-        error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_ENCODE_ERROR: {}", e))
+        error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_ENCODE_ERROR: {e}"))
     })?;
     stream
         .write_all(payload.as_bytes())
@@ -287,7 +287,7 @@ fn send_request(
         .read_line(&mut line)
         .map_err(error::DecapodError::IoError)?;
     let resp: BrokerResponse = serde_json::from_str(line.trim()).map_err(|e| {
-        error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_INVALID_RESPONSE: {}", e))
+        error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_INVALID_RESPONSE: {e}"))
     })?;
     if resp.protocol_version != client_protocol_version() {
         return Err(error::DecapodError::ValidationError(format!(
@@ -404,10 +404,10 @@ fn apply_response(resp: BrokerResponse) -> Result<(), error::DecapodError> {
         .and_then(|v| v.as_str())
         .unwrap_or("");
     if !stdout.is_empty() {
-        print!("{}", stdout);
+        print!("{stdout}");
     }
     if !stderr.is_empty() {
-        eprint!("{}", stderr);
+        eprint!("{stderr}");
     }
 
     match resp.status.as_str() {
@@ -506,7 +506,7 @@ fn dedupe_store(
     let conn = db::db_connect(&db_path.to_string_lossy())?;
     ensure_dedupe_schema(&conn)?;
     let result_json = serde_json::to_string(&response.result_envelope).map_err(|e| {
-        error::DecapodError::ValidationError(format!("BROKER_DEDUPE_ENCODE_FAILED: {}", e))
+        error::DecapodError::ValidationError(format!("BROKER_DEDUPE_ENCODE_FAILED: {e}"))
     })?;
 
     conn.execute(
@@ -546,7 +546,7 @@ fn write_response(
     response: &BrokerResponse,
 ) -> Result<(), error::DecapodError> {
     let body = serde_json::to_string(response).map_err(|e| {
-        error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_ENCODE_ERROR: {}", e))
+        error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_ENCODE_ERROR: {e}"))
     })?;
     stream
         .write_all(body.as_bytes())
@@ -578,7 +578,7 @@ fn emit_phase_hook(phase: &str, request_id: &str) {
     if let Ok(path) = std::env::var(BROKER_PHASE_HOOK_FILE_ENV)
         && let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path)
     {
-        let _ = writeln!(file, "{}|{}", phase, request_id);
+        let _ = writeln!(file, "{phase}|{request_id}");
     }
     if std::env::var(BROKER_HALT_PHASE_ENV).ok().as_deref() == Some(phase) {
         loop {
@@ -607,7 +607,7 @@ fn try_acquire_lock(lock_path: &Path) -> Result<Option<BrokerLease>, error::Deca
     };
     let pid = std::process::id();
     let _ = file.set_len(0);
-    let _ = (&file).write_all(format!("{}\n", pid).as_bytes());
+    let _ = (&file).write_all(format!("{pid}\n").as_bytes());
     let _ = (&file).flush();
 
     Ok(Some(BrokerLease {

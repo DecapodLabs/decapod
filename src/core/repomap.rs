@@ -175,12 +175,12 @@ pub fn generate_doc_graph(root: &Path) -> DocGraph {
     let mut mermaid = String::from("graph TD\n");
     for n in &sorted_nodes {
         let nid = n.replace(|c: char| !c.is_alphanumeric(), "_");
-        mermaid.push_str(&format!("  {}[\"{}\"]\n", nid, n));
+        mermaid.push_str(&format!("  {nid}[\"{n}\"]\n"));
     }
     for (src, dst) in &edges {
         let aid = src.replace(|c: char| !c.is_alphanumeric(), "_");
         let bid = dst.replace(|c: char| !c.is_alphanumeric(), "_");
-        mermaid.push_str(&format!("  {} --> {}\n", aid, bid));
+        mermaid.push_str(&format!("  {aid} --> {bid}\n"));
     }
 
     DocGraph {

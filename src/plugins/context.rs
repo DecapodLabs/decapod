@@ -30,7 +30,7 @@ impl ContextManager {
         let config = if config_path.exists() {
             let content = fs::read_to_string(config_path).map_err(error::DecapodError::IoError)?;
             serde_json::from_str(&content)
-                .map_err(|e| error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=CONTEXT_CONFIG_PARSE severity=transient auto_remediable=true audience=agent agent_action=\"verify the CONTEXT.json syntax and schema\" user_note=\"Context configuration parse error; the agent should correct the JSON format.\"\n{}", e)))?
+                .map_err(|e| error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=CONTEXT_CONFIG_PARSE severity=transient auto_remediable=true audience=agent agent_action=\"verify the CONTEXT.json syntax and schema\" user_note=\"Context configuration parse error; the agent should correct the JSON format.\"\n{e}")))?
         } else {
             Self::default_config()
         };
@@ -134,8 +134,8 @@ impl ContextManager {
             )));
         }
 
-        let archive_id = format!("arc_{}", now);
-        let archive_path = archive_dir.join(format!("{}.md", now));
+        let archive_id = format!("arc_{now}");
+        let archive_path = archive_dir.join(format!("{now}.md"));
 
         // Read session content with context
         let content = match fs::read_to_string(session_path) {
@@ -195,8 +195,7 @@ Archive ID: {}
     ) -> Result<String, error::DecapodError> {
         let profile = self.get_profile(profile_name).ok_or_else(|| {
             error::DecapodError::ValidationError(format!(
-                "AUTOREMEDIABLE_VALIDATION_ERROR code=CONTEXT_PROFILE_NOT_FOUND severity=transient auto_remediable=true audience=agent agent_action=\"verify the profile name '{}' exists in the context capsule configuration\" user_note=\"The requested profile was not found; the agent should check available profiles or create one.\"\nProfile '{}' not found",
-                profile_name, profile_name
+                "AUTOREMEDIABLE_VALIDATION_ERROR code=CONTEXT_PROFILE_NOT_FOUND severity=transient auto_remediable=true audience=agent agent_action=\"verify the profile name '{profile_name}' exists in the context capsule configuration\" user_note=\"The requested profile was not found; the agent should check available profiles or create one.\"\nProfile '{profile_name}' not found"
             ))
         })?;
 
@@ -209,8 +208,7 @@ Archive ID: {}
             .find(|a| a.id == archive_id)
             .ok_or_else(|| {
                 error::DecapodError::ValidationError(format!(
-                    "AUTOREMEDIABLE_VALIDATION_ERROR code=CONTEXT_ARCHIVE_NOT_FOUND severity=transient auto_remediable=true audience=agent agent_action=\"verify the archive ID '{}' exists using `decapod context archive list`\" user_note=\"The requested archive was not found; the agent should check available archives.\"\nArchive '{}' not found",
-                    archive_id, archive_id
+                    "AUTOREMEDIABLE_VALIDATION_ERROR code=CONTEXT_ARCHIVE_NOT_FOUND severity=transient auto_remediable=true audience=agent agent_action=\"verify the archive ID '{archive_id}' exists using `decapod context archive list`\" user_note=\"The requested archive was not found; the agent should check available archives.\"\nArchive '{archive_id}' not found"
                 ))
             })?;
 
@@ -233,10 +231,7 @@ Archive ID: {}
             )));
         }
 
-        println!(
-            "✓ Restore approved within '{}' budget ({} tokens added)",
-            profile_name, added_tokens
-        );
+        println!("✓ Restore approved within '{profile_name}' budget ({added_tokens} tokens added)");
         Ok(archived_content)
     }
 

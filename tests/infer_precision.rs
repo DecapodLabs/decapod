@@ -11,7 +11,7 @@ fn run_cmd(repo_root: &Path, args: &[&str]) -> Output {
         .args(args)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
-        .unwrap_or_else(|e| panic!("failed to run decapod {:?}: {}", args, e));
+        .unwrap_or_else(|e| panic!("failed to run decapod {args:?}: {e}"));
     println!("STDERR: {}", String::from_utf8_lossy(&output.stderr));
     if !output.status.success() {
         println!("STDOUT: {}", String::from_utf8_lossy(&output.stdout));
@@ -134,7 +134,7 @@ fn test_infer_orientation_with_task_id() {
     let list_output = run_cmd(root, &["todo", "list", "--format", "json"]);
     assert!(list_output.status.success());
     let list_json = extract_json(&list_output);
-    println!("LIST JSON: {}", list_json);
+    println!("LIST JSON: {list_json}");
     let task_id = list_json["items"]
         .as_array()
         .expect("items should be an array")[0]["id"]

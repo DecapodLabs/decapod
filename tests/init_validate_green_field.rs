@@ -102,9 +102,7 @@ fn fresh_init_validate_comes_back_green() {
 
     assert!(
         validate.status.success(),
-        "validate should succeed for fresh init project.\nstdout: {}\nstderr: {}",
-        stdout,
-        stderr
+        "validate should succeed for fresh init project.\nstdout: {stdout}\nstderr: {stderr}"
     );
 
     assert!(
@@ -114,8 +112,7 @@ fn fresh_init_validate_comes_back_green() {
 
     assert!(
         !stderr.contains("fail=") || stderr.contains("fail=0"),
-        "expected no failures in validation output: {}",
-        stderr
+        "expected no failures in validation output: {stderr}"
     );
 }
 
@@ -137,9 +134,7 @@ fn fresh_init_validate_with_real_git_workspace() {
 
     assert!(
         validate.status.success(),
-        "validate should succeed for fresh init project with git workspace.\nstdout: {}\nstderr: {}",
-        stdout,
-        stderr
+        "validate should succeed for fresh init project with git workspace.\nstdout: {stdout}\nstderr: {stderr}"
     );
 }
 
@@ -178,8 +173,7 @@ fn re_init_preserves_validation_green() {
 
     assert!(
         validate2.status.success(),
-        "validate after re-init should succeed.\nstderr: {}",
-        stderr
+        "validate after re-init should succeed.\nstderr: {stderr}"
     );
 }
 
@@ -258,9 +252,7 @@ fn upgrade_from_older_config_version_reports_clear_error() {
 
     assert!(
         stdout.contains("fail=") && stdout.contains("schema_version must be 1.0.0"),
-        "error message should clearly indicate schema_version issue.\nstdout: {}\nstderr: {}",
-        stdout,
-        stderr
+        "error message should clearly indicate schema_version issue.\nstdout: {stdout}\nstderr: {stderr}"
     );
 }
 
@@ -337,7 +329,6 @@ fn init_validate_with_various_config_options() {
 
     assert!(
         validate.status.success(),
-        "validate should succeed with complex init options.\nstderr: {}",
-        stderr
+        "validate should succeed with complex init options.\nstderr: {stderr}"
     );
 }

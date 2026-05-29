@@ -132,7 +132,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             if !docs.is_empty() {
                 println!("Decapod Agent Documentation:");
                 for doc in docs {
-                    println!("- embedded/{}", doc);
+                    println!("- embedded/{doc}");
                 }
             } else {
                 println!("No agent documentation found.");
@@ -144,8 +144,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
 
             if !normalized_path.starts_with("docs/agent/") {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "Access denied: 'decapod docs' is restricted to 'docs/agent/' paths. Use 'decapod constitution' for other sections. Invalid path: {}",
-                    path
+                    "Access denied: 'decapod docs' is restricted to 'docs/agent/' paths. Use 'decapod constitution' for other sections. Invalid path: {path}"
                 )));
             }
 
@@ -168,12 +167,11 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
 
             match content {
                 Some(content) => {
-                    println!("{}", content);
+                    println!("{content}");
                     Ok(DocsRunResult::default())
                 }
                 None => Err(error::DecapodError::NotFound(format!(
-                    "Document not found: {}",
-                    path
+                    "Document not found: {path}"
                 ))),
             }
         }
@@ -201,9 +199,9 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
                 }
 
                 if let Some(content) = assets::get_merged_doc(&repo_root, relative_path) {
-                    println!("--- BEGIN embedded/constitution.json#{} ---", doc_path);
-                    println!("{}", content);
-                    println!("--- END embedded/constitution.json#{} ---", doc_path);
+                    println!("--- BEGIN embedded/constitution.json#{doc_path} ---");
+                    println!("{content}");
+                    println!("--- END embedded/constitution.json#{doc_path} ---");
                 }
             }
             Ok(DocsRunResult {
@@ -347,8 +345,8 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
             let name = sub.get_name();
             let about = sub.get_about().map(|a| a.to_string()).unwrap_or_default();
 
-            writeln!(file, "## `decapod {}`", name)?;
-            writeln!(file, "- **Intent:** {}", about)?;
+            writeln!(file, "## `decapod {name}`")?;
+            writeln!(file, "- **Intent:** {about}")?;
 
             // Extract more info if it's a known core command
             match name {
@@ -395,7 +393,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                     .next()
                     .unwrap_or("");
                 if !rpc_name.is_empty() {
-                    writeln!(file, "### Operation: `{}`", rpc_name)?;
+                    writeln!(file, "### Operation: `{rpc_name}`")?;
                 }
             }
         }
@@ -411,7 +409,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
         if let Some(start) = config_src.find("pub struct DecapodProjectConfig {") {
             let end = config_src[start..].find('}').unwrap_or(0);
             let fields = &config_src[start..start + end + 1];
-            writeln!(file, "```rust\n{}\n```", fields)?;
+            writeln!(file, "```rust\n{fields}\n```")?;
         }
     }
 
@@ -421,7 +419,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
 fn calculate_sha256(path: &Path) -> Result<String, error::DecapodError> {
     let content = std::fs::read(path).map_err(error::DecapodError::IoError)?;
     let hash = Sha256::digest(&content);
-    Ok(format!("{:x}", hash))
+    Ok(format!("{hash:x}"))
 }
 
 /// Get cached checksum for OVERRIDE.md

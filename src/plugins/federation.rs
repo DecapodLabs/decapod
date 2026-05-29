@@ -257,7 +257,7 @@ fn now_ts() -> String {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
-    format!("{}Z", secs)
+    format!("{secs}Z")
 }
 
 pub fn federation_db_path(root: &Path) -> PathBuf {
@@ -347,8 +347,7 @@ fn validate_provenance(source: &str) -> Result<(), error::DecapodError> {
 
     if !prov_re.is_match(source).unwrap_or(false) {
         return Err(error::DecapodError::ValidationError(format!(
-            "Invalid provenance source: '{}'. Must match scheme (file:|url:|cmd:|commit:|event:)",
-            source
+            "Invalid provenance source: '{source}'. Must match scheme (file:|url:|cmd:|commit:|event:)"
         )));
     }
     Ok(())
@@ -415,7 +414,7 @@ fn get_node_type_and_priority(
         params![id],
         |row| Ok((row.get(0)?, row.get(1)?)),
     )
-    .map_err(|_| error::DecapodError::NotFound(format!("Node '{}' not found", id)))
+    .map_err(|_| error::DecapodError::NotFound(format!("Node '{id}' not found")))
 }
 
 fn get_node_status(conn: &Connection, id: &str) -> Result<String, error::DecapodError> {
@@ -424,7 +423,7 @@ fn get_node_status(conn: &Connection, id: &str) -> Result<String, error::Decapod
         params![id],
         |row| row.get(0),
     )
-    .map_err(|_| error::DecapodError::NotFound(format!("Node '{}' not found", id)))
+    .map_err(|_| error::DecapodError::NotFound(format!("Node '{id}' not found")))
 }
 
 fn read_node_full(conn: &Connection, id: &str) -> Result<FederationNode, error::DecapodError> {
@@ -455,7 +454,7 @@ fn read_node_full(conn: &Connection, id: &str) -> Result<FederationNode, error::
                 })
             },
         )
-        .map_err(|_| error::DecapodError::NotFound(format!("Node '{}' not found", id)))?;
+        .map_err(|_| error::DecapodError::NotFound(format!("Node '{id}' not found")))?;
 
     // Fetch sources
     let mut stmt = conn.prepare("SELECT source FROM sources WHERE node_id = ?1")?;
@@ -569,8 +568,7 @@ pub fn add_node(
     // Enforce provenance for critical types
     if is_critical(node_type, priority) && sources.is_empty() {
         return Err(error::DecapodError::ValidationError(format!(
-            "Provenance required: node_type='{}' with priority='{}' requires at least one source (file:|url:|cmd:|commit:|event:)",
-            node_type, priority
+            "Provenance required: node_type='{node_type}' with priority='{priority}' requires at least one source (file:|url:|cmd:|commit:|event:)"
         )));
     }
 
@@ -687,16 +685,14 @@ pub fn edit_node(
         let (nt, pri) = get_node_type_and_priority(conn, id)?;
         if is_critical(&nt, &pri) {
             return Err(error::DecapodError::ValidationError(format!(
-                "Cannot edit critical node '{}' (type={}, priority={}). Use 'supersede' instead.",
-                id, nt, pri
+                "Cannot edit critical node '{id}' (type={nt}, priority={pri}). Use 'supersede' instead."
             )));
         }
 
         let status = get_node_status(conn, id)?;
         if status != "active" {
             return Err(error::DecapodError::ValidationError(format!(
-                "Cannot edit node '{}' with status '{}'. Only active nodes can be edited.",
-                id, status
+                "Cannot edit node '{id}' with status '{status}'. Only active nodes can be edited."
             )));
         }
 
@@ -706,17 +702,17 @@ pub fn edit_node(
         let mut param_values: Vec<Box<dyn rusqlite::types::ToSql>> = vec![Box::new(now.clone())];
 
         if let Some(t) = title {
-            sets.push(format!("title = ?{}", param_idx));
+            sets.push(format!("title = ?{param_idx}"));
             param_values.push(Box::new(t.to_string()));
             param_idx += 1;
         }
         if let Some(b) = body {
-            sets.push(format!("body = ?{}", param_idx));
+            sets.push(format!("body = ?{param_idx}"));
             param_values.push(Box::new(b.to_string()));
             param_idx += 1;
         }
         if let Some(tg) = tags {
-            sets.push(format!("tags = ?{}", param_idx));
+            sets.push(format!("tags = ?{param_idx}"));
             param_values.push(Box::new(tg.to_string()));
             param_idx += 1;
         }
@@ -727,7 +723,7 @@ pub fn edit_node(
                     "Cannot escalate to 'critical' priority via edit. Create a new critical node instead.".to_string(),
                 ));
             }
-            sets.push(format!("priority = ?{}", param_idx));
+            sets.push(format!("priority = ?{param_idx}"));
             param_values.push(Box::new(p.to_string()));
             param_idx += 1;
         }
@@ -794,14 +790,12 @@ pub fn supersede_node(
         // Verify both nodes exist
         if !node_exists(conn, old_id)? {
             return Err(error::DecapodError::NotFound(format!(
-                "Node '{}' not found",
-                old_id
+                "Node '{old_id}' not found"
             )));
         }
         if !node_exists(conn, new_id)? {
             return Err(error::DecapodError::NotFound(format!(
-                "Node '{}' not found",
-                new_id
+                "Node '{new_id}' not found"
             )));
         }
 
@@ -809,8 +803,7 @@ pub fn supersede_node(
         let old_status = get_node_status(conn, old_id)?;
         if old_status != "active" {
             return Err(error::DecapodError::ValidationError(format!(
-                "Cannot supersede node '{}' with status '{}'. Only active nodes can be superseded.",
-                old_id, old_status
+                "Cannot supersede node '{old_id}' with status '{old_status}'. Only active nodes can be superseded."
             )));
         }
 
@@ -882,12 +875,11 @@ pub fn transition_node_status(
     let events_path = federation_events_path(&store.root);
     let now = now_ts();
 
-    broker.with_conn(&db_path, "decapod", None, &format!("federation.{}", event_type), |conn| {
+    broker.with_conn(&db_path, "decapod", None, &format!("federation.{event_type}"), |conn| {
         let old_status = get_node_status(conn, id)?;
         if old_status != "active" {
             return Err(error::DecapodError::ValidationError(format!(
-                "Cannot transition node '{}' from '{}' to '{}'. Only active nodes can be transitioned.",
-                id, old_status, new_status
+                "Cannot transition node '{id}' from '{old_status}' to '{new_status}'. Only active nodes can be transitioned."
             )));
         }
 
@@ -950,14 +942,12 @@ pub fn add_edge(
     broker.with_conn(&db_path, "decapod", None, "federation.link", |conn| {
         if !node_exists(conn, source_id)? {
             return Err(error::DecapodError::NotFound(format!(
-                "Source node '{}' not found",
-                source_id
+                "Source node '{source_id}' not found"
             )));
         }
         if !node_exists(conn, target_id)? {
             return Err(error::DecapodError::NotFound(format!(
-                "Target node '{}' not found",
-                target_id
+                "Target node '{target_id}' not found"
             )));
         }
 
@@ -1017,8 +1007,7 @@ fn remove_edge(store: &Store, edge_id: &str) -> Result<(), error::DecapodError> 
 
         if changes == 0 {
             return Err(error::DecapodError::NotFound(format!(
-                "Edge '{}' not found",
-                edge_id
+                "Edge '{edge_id}' not found"
             )));
         }
 
@@ -1076,8 +1065,7 @@ pub fn add_source_to_node(
         |conn| {
             if !node_exists(conn, node_id)? {
                 return Err(error::DecapodError::NotFound(format!(
-                    "Node '{}' not found",
-                    node_id
+                    "Node '{node_id}' not found"
                 )));
             }
 
@@ -1137,8 +1125,7 @@ fn graph_neighbors(store: &Store, id: &str, depth: u32) -> Result<JsonValue, err
     broker.with_conn(&db_path, "decapod", None, "federation.graph", |conn| {
         if !node_exists(conn, id)? {
             return Err(error::DecapodError::NotFound(format!(
-                "Node '{}' not found",
-                id
+                "Node '{id}' not found"
             )));
         }
 
@@ -1239,9 +1226,9 @@ fn build_index_markdown(conn: &Connection) -> Result<String, error::DecapodError
         let title: String = row.get(2)?;
         let status: String = row.get(3)?;
         let priority: String = row.get(4)?;
-        let note = format!("vault/{}/{}.md", node_type, id);
+        let note = format!("vault/{node_type}/{id}.md");
         let desc = format!("{} [{}|{}]", title.replace('|', "\\|"), status, priority);
-        out.push_str(&format!("| {} | {} |\n", note, desc));
+        out.push_str(&format!("| {note} | {desc} |\n"));
     }
 
     Ok(out)
@@ -1370,7 +1357,7 @@ fn export_vault_notes(store: &Store) -> Result<usize, error::DecapodError> {
             md.push_str(&format!("confidence: \"{}\"\n", yaml_escape(&node.confidence)));
             md.push_str(&format!("title: \"{}\"\n", yaml_escape(&node.title)));
             md.push_str(&format!("scope: \"{}\"\n", yaml_escape(&node.scope)));
-            md.push_str(&format!("tags: {}\n", tags_yaml));
+            md.push_str(&format!("tags: {tags_yaml}\n"));
             md.push_str(&format!("created_at: \"{}\"\n", yaml_escape(&node.created_at)));
             md.push_str(&format!("updated_at: \"{}\"\n", yaml_escape(&node.updated_at)));
             match node.effective_from.as_ref() {
@@ -1526,7 +1513,7 @@ pub fn rebuild_from_events(root: &Path) -> Result<usize, error::DecapodError> {
         }
 
         let event: FederationEvent = serde_json::from_str(line).map_err(|e| {
-            error::DecapodError::ValidationError(format!("Invalid event JSON: {}", e))
+            error::DecapodError::ValidationError(format!("Invalid event JSON: {e}"))
         })?;
 
         // Skip incomplete pending events (crash recovery)
@@ -1826,7 +1813,7 @@ pub fn validate_federation(
             .query_map([], |row| {
                 let id: String = row.get(0)?;
                 let title: String = row.get(1)?;
-                Ok(format!("{} ({})", id, title))
+                Ok(format!("{id} ({title})"))
             })?
             .filter_map(|r| r.ok())
             .collect();
@@ -2052,8 +2039,7 @@ pub fn validate_federation(
                     "federation.rebuild_determinism".to_string(),
                     false,
                     format!(
-                        "DB diverged from event replay. Current: {} nodes/{} sources/{} edges. Rebuilt: {} nodes/{} sources/{} edges. Run: decapod data federation rebuild",
-                        cur_nodes, cur_sources, cur_edges, reb_nodes, reb_sources, reb_edges
+                        "DB diverged from event replay. Current: {cur_nodes} nodes/{cur_sources} sources/{cur_edges} edges. Rebuilt: {reb_nodes} nodes/{reb_sources} sources/{reb_edges} edges. Run: decapod data federation rebuild"
                     ),
                 ));
             }
@@ -2269,10 +2255,10 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                     println!("Created:    {}", node.created_at);
                     println!("Updated:    {}", node.updated_at);
                     if let Some(ref ef) = node.effective_from {
-                        println!("Effective:  {}", ef);
+                        println!("Effective:  {ef}");
                     }
                     if let Some(ref et) = node.effective_to {
-                        println!("Expired:    {}", et);
+                        println!("Expired:    {et}");
                     }
                     println!("Actor:      {}", node.actor);
                     if let Some(ref sources) = node.sources
@@ -2280,7 +2266,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                     {
                         println!("Sources:");
                         for s in sources {
-                            println!("  - {}", s);
+                            println!("  - {s}");
                         }
                     }
                     if let Some(ref edges) = node.edges
@@ -2313,22 +2299,22 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                 let mut idx = 1u32;
 
                 if let Some(ref nt) = node_type {
-                    conditions.push(format!("node_type = ?{}", idx));
+                    conditions.push(format!("node_type = ?{idx}"));
                     param_values.push(Box::new(nt.clone()));
                     idx += 1;
                 }
                 if let Some(ref s) = status {
-                    conditions.push(format!("status = ?{}", idx));
+                    conditions.push(format!("status = ?{idx}"));
                     param_values.push(Box::new(s.clone()));
                     idx += 1;
                 }
                 if let Some(ref p) = priority {
-                    conditions.push(format!("priority = ?{}", idx));
+                    conditions.push(format!("priority = ?{idx}"));
                     param_values.push(Box::new(p.clone()));
                     idx += 1;
                 }
                 if let Some(ref sc) = scope {
-                    conditions.push(format!("scope = ?{}", idx));
+                    conditions.push(format!("scope = ?{idx}"));
                     param_values.push(Box::new(sc.clone()));
                     idx += 1;
                 }
@@ -2399,7 +2385,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
 
             let nodes =
                 broker.with_conn(&db_path, "decapod", None, "federation.search", |conn| {
-                    let q = format!("%{}%", query);
+                    let q = format!("%{query}%");
                     let (sql, param_values): (String, Vec<Box<dyn rusqlite::types::ToSql>>) =
                         if let Some(ref sc) = scope {
                             (
@@ -2459,7 +2445,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                 }
                 OutputFormat::Text => {
                     if nodes.is_empty() {
-                        println!("No results for '{}'.", query);
+                        println!("No results for '{query}'.");
                     } else {
                         for n in &nodes {
                             println!(
@@ -2497,7 +2483,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                     );
                 }
                 OutputFormat::Text => {
-                    println!("Node '{}' updated.", id);
+                    println!("Node '{id}' updated.");
                 }
             }
         }
@@ -2518,7 +2504,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                     );
                 }
                 OutputFormat::Text => {
-                    println!("Node '{}' superseded by '{}'.", id, by);
+                    println!("Node '{id}' superseded by '{by}'.");
                 }
             }
         }
@@ -2534,7 +2520,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                     );
                 }
                 OutputFormat::Text => {
-                    println!("Node '{}' deprecated.", id);
+                    println!("Node '{id}' deprecated.");
                 }
             }
         }
@@ -2550,7 +2536,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                     );
                 }
                 OutputFormat::Text => {
-                    println!("Node '{}' disputed.", id);
+                    println!("Node '{id}' disputed.");
                 }
             }
         }
@@ -2576,10 +2562,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                     );
                 }
                 OutputFormat::Text => {
-                    println!(
-                        "Edge created: {} --[{}]--> {} ({})",
-                        source, edge_type, target, edge_id
-                    );
+                    println!("Edge created: {source} --[{edge_type}]--> {target} ({edge_id})");
                 }
             }
         }
@@ -2595,7 +2578,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                     );
                 }
                 OutputFormat::Text => {
-                    println!("Edge '{}' removed.", id);
+                    println!("Edge '{id}' removed.");
                 }
             }
         }
@@ -2618,10 +2601,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                         .and_then(|v| v.as_array())
                         .map(|a| a.len())
                         .unwrap_or(0);
-                    println!(
-                        "Graph from '{}' (depth {}): {} nodes, {} edges",
-                        id, depth, nodes, edges
-                    );
+                    println!("Graph from '{id}' (depth {depth}): {nodes} nodes, {edges} edges");
                     println!("{}", serde_json::to_string_pretty(&result).unwrap());
                 }
             }
@@ -2638,10 +2618,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                     );
                 }
                 OutputFormat::Text => {
-                    println!(
-                        "Federation DB rebuilt from events ({} events replayed).",
-                        count
-                    );
+                    println!("Federation DB rebuilt from events ({count} events replayed).");
                 }
             }
         }
@@ -2663,7 +2640,7 @@ pub fn run_federation_cli(store: &Store, cli: FederationCli) -> Result<(), error
                     );
                 }
                 OutputFormat::Text => {
-                    println!("Source added to node '{}': {} ({})", id, source, src_id);
+                    println!("Source added to node '{id}': {source} ({src_id})");
                 }
             }
         }

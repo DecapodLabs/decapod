@@ -203,7 +203,7 @@ fn test_is_non_code_change_only_markdown() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     // Should show a single untracked .md file
-    assert!(stdout.contains(".md"), "expected .md in status: {}", stdout);
+    assert!(stdout.contains(".md"), "expected .md in status: {stdout}");
 }
 
 #[test]
@@ -233,8 +233,7 @@ fn test_is_non_code_change_with_source_file() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         stdout.contains("main.rs"),
-        "expected main.rs in status: {}",
-        stdout
+        "expected main.rs in status: {stdout}"
     );
 }
 
@@ -317,7 +316,6 @@ fn test_worktree_prune_after_add() {
     // Should succeed (prune stale entries)
     assert!(
         prune_result.is_ok(),
-        "prune should succeed: {:?}",
-        prune_result
+        "prune should succeed: {prune_result:?}"
     );
 }

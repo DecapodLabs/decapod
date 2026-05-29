@@ -156,7 +156,7 @@ fn test_map_llm_rejects_empty_items() {
     let result = map_llm(&store, "[]", "prompt", "{}", "agent");
     assert!(result.is_err());
     let err = result.unwrap_err().to_string();
-    assert!(err.contains("must not be empty"), "Error was: {}", err);
+    assert!(err.contains("must not be empty"), "Error was: {err}");
 }
 
 #[test]
@@ -165,7 +165,7 @@ fn test_map_agentic_rejects_empty_retain() {
     let result = map_agentic(&store, "[\"item\"]", "do it", "", "agent");
     assert!(result.is_err());
     let err = result.unwrap_err().to_string();
-    assert!(err.contains("scope-reduction"), "Error was: {}", err);
+    assert!(err.contains("scope-reduction"), "Error was: {err}");
 
     // Also reject whitespace-only retain
     let result2 = map_agentic(&store, "[\"item\"]", "do it", "   ", "agent");
@@ -253,8 +253,7 @@ fn test_lcm_immutability_gate_passes_valid() {
     let failures = validate_ledger_integrity(&store.root).unwrap();
     assert!(
         failures.is_empty(),
-        "Valid ledger should pass: {:?}",
-        failures
+        "Valid ledger should pass: {failures:?}"
     );
 }
 

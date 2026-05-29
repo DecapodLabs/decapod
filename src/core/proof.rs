@@ -104,7 +104,7 @@ fn run_single_proof(
         exit_code,
         duration_ms: duration_ms.try_into().unwrap(),
         passed,
-        output: format!("{}\n{}", output_truncated, stderr),
+        output: format!("{output_truncated}\n{stderr}"),
         required: proof_def.required,
     })
 }
@@ -242,7 +242,7 @@ fn append_proof_event(store: &Store, event: &ProofEvent) -> Result<(), DecapodEr
     let event_json = serde_json::to_string(event).map_err(|e| {
         DecapodError::IoError(std::io::Error::new(std::io::ErrorKind::InvalidData, e))
     })?;
-    let event_line = format!("{}\n", event_json);
+    let event_line = format!("{event_json}\n");
 
     // Append to file instead of overwriting
     let mut file = std::fs::OpenOptions::new()
@@ -295,7 +295,7 @@ pub fn execute_proof_cli(cli: &ProofCommandCli, store_root: &Path) -> Result<(),
             Ok(())
         }
         crate::ProofSubCommand::Test { name } => {
-            println!("Running specific proof: {}", name);
+            println!("Running specific proof: {name}");
             // TODO: Implement single proof test
             Err(DecapodError::NotImplemented(
                 "Individual proof testing not yet implemented".to_string(),

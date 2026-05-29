@@ -33,8 +33,8 @@ fn doc_id_candidates(id: &str) -> Vec<String> {
             push_candidate(&mut candidates, stripped.to_string());
         } else {
             // If it doesn't have a suffix, add them as candidates
-            push_candidate(&mut candidates, format!("{}.md", candidate));
-            push_candidate(&mut candidates, format!("{}.json", candidate));
+            push_candidate(&mut candidates, format!("{candidate}.md"));
+            push_candidate(&mut candidates, format!("{candidate}.json"));
         }
     }
     candidates
@@ -122,7 +122,7 @@ fn extract_component_override(override_content: &str, id: &str) -> Option<String
     let mut i = 0;
     while i < lines.len() {
         let line = lines[i].trim();
-        let is_target = candidates.iter().any(|c| line == format!("### {}", c));
+        let is_target = candidates.iter().any(|c| line == format!("### {c}"));
 
         if is_target {
             let mut extracted_lines = Vec::new();
@@ -183,13 +183,13 @@ fn render_embedded_doc_text(id: &str, raw_content: &str) -> String {
     rendered.push('\n');
 
     if let Some(authority) = value.get("authority").and_then(|v| v.as_str()) {
-        rendered.push_str(&format!("**Authority:** {}\n", authority));
+        rendered.push_str(&format!("**Authority:** {authority}\n"));
     }
     if let Some(category) = value.get("category").and_then(|v| v.as_str()) {
-        rendered.push_str(&format!("**Layer:** {}\n", category));
+        rendered.push_str(&format!("**Layer:** {category}\n"));
     }
     if let Some(binding) = value.get("binding").and_then(|v| v.as_str()) {
-        rendered.push_str(&format!("**Binding:** {}\n", binding));
+        rendered.push_str(&format!("**Binding:** {binding}\n"));
     }
 
     if let Some(summary) = value.get("summary").and_then(|summary| summary.as_str())
@@ -630,7 +630,7 @@ over the embedded JSON constitution.
         if let Some(nodes) = categories.get(cat) {
             s.push_str(&format!("\n## {} Overrides\n", cat.to_uppercase()));
             for id in nodes {
-                s.push_str(&format!("\n### {}\n", id));
+                s.push_str(&format!("\n### {id}\n"));
             }
             s.push_str("\n---\n");
         }

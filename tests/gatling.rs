@@ -127,10 +127,7 @@ fn extract_task_id(dir: &PathBuf) -> String {
         return m.as_str().to_string();
     }
     let stderr = String::from_utf8_lossy(&out.stderr);
-    panic!(
-        "could not extract task ID.\nstdout:\n{}\nstderr:\n{}",
-        stdout, stderr
-    );
+    panic!("could not extract task ID.\nstdout:\n{stdout}\nstderr:\n{stderr}");
 }
 
 // ---------------------------------------------------------------------------
@@ -150,8 +147,7 @@ fn t001_version() {
     let s = String::from_utf8_lossy(&out.stderr);
     assert!(
         s.contains("unexpected argument '--version'") || s.contains("Usage: decapod <COMMAND>"),
-        "expected clap argument rejection for --version, got:\n{}",
-        s
+        "expected clap argument rejection for --version, got:\n{s}"
     );
 }
 
@@ -177,12 +173,11 @@ fn t004_version_command_works() {
     let (_tmp, dir) = setup_workspace();
 
     let (success, output) = run(&dir, &["version"]);
-    assert!(success, "version command should succeed, got:\n{}", output);
+    assert!(success, "version command should succeed, got:\n{output}");
     // Output contains the version number (e.g., "0.12.1")
     assert!(
         output.contains(env!("CARGO_PKG_VERSION")),
-        "expected version string in output:\n{}",
-        output
+        "expected version string in output:\n{output}"
     );
 }
 
@@ -1188,7 +1183,7 @@ fn t288_health_claim_missing_fields() {
 fn t290_decide_trees() {
     let (_tmp, dir) = setup_workspace();
     let (success, output) = run(&dir, &["decide", "trees"]);
-    assert!(success, "decide trees failed:\n{}", output);
+    assert!(success, "decide trees failed:\n{output}");
     assert!(output.contains("web-app"));
     assert!(output.contains("microservice"));
     assert!(output.contains("cli-tool"));
@@ -1202,7 +1197,7 @@ fn t291_decide_suggest() {
         &dir,
         &["decide", "suggest", "--prompt", "build a web application"],
     );
-    assert!(success, "decide suggest failed:\n{}", output);
+    assert!(success, "decide suggest failed:\n{output}");
     assert!(output.contains("web-app"));
 }
 
@@ -1222,7 +1217,7 @@ fn t292_decide_session_lifecycle() {
             "Gatling CLI Test",
         ],
     );
-    assert!(success, "decide start failed:\n{}", output);
+    assert!(success, "decide start failed:\n{output}");
     assert!(output.contains("DS_"));
 
     // Extract session ID
@@ -1234,7 +1229,7 @@ fn t292_decide_session_lifecycle() {
 
     // Next question
     let (success, output) = run(&dir, &["decide", "next", "--session", &session_id]);
-    assert!(success, "decide next failed:\n{}", output);
+    assert!(success, "decide next failed:\n{output}");
     assert!(output.contains("language"));
 
     // Record a decision
@@ -1251,28 +1246,28 @@ fn t292_decide_session_lifecycle() {
             "rust",
         ],
     );
-    assert!(success, "decide record failed:\n{}", output);
+    assert!(success, "decide record failed:\n{output}");
     assert!(output.contains("DD_"));
     assert!(output.contains("Rust"));
 
     // List decisions
     let (success, output) = run(&dir, &["decide", "list", "--session", &session_id]);
-    assert!(success, "decide list failed:\n{}", output);
+    assert!(success, "decide list failed:\n{output}");
     assert!(output.contains("rust"));
 
     // Session list
     let (success, output) = run(&dir, &["decide", "session", "list"]);
-    assert!(success, "decide session list failed:\n{}", output);
+    assert!(success, "decide session list failed:\n{output}");
     assert!(output.contains(&session_id));
 
     // Session get
     let (success, output) = run(&dir, &["decide", "session", "get", "--id", &session_id]);
-    assert!(success, "decide session get failed:\n{}", output);
+    assert!(success, "decide session get failed:\n{output}");
     assert!(output.contains("Gatling CLI Test"));
 
     // Complete
     let (success, output) = run(&dir, &["decide", "complete", "--session", &session_id]);
-    assert!(success, "decide complete failed:\n{}", output);
+    assert!(success, "decide complete failed:\n{output}");
     assert!(output.contains("completed"));
 }
 
@@ -1325,7 +1320,7 @@ fn t294_decide_invalid_option() {
 fn t295_decide_schema() {
     let (_tmp, dir) = setup_workspace();
     let (success, output) = run(&dir, &["decide", "schema"]);
-    assert!(success, "decide schema failed:\n{}", output);
+    assert!(success, "decide schema failed:\n{output}");
     assert!(output.contains("decide"));
     assert!(output.contains("decisions.db"));
 }
@@ -1334,7 +1329,7 @@ fn t295_decide_schema() {
 fn t296_decide_init() {
     let (_tmp, dir) = setup_workspace();
     let (success, output) = run(&dir, &["decide", "init"]);
-    assert!(success, "decide init failed:\n{}", output);
+    assert!(success, "decide init failed:\n{output}");
     assert!(output.contains("initialized"));
 }
 
@@ -1346,5 +1341,5 @@ fn extract_ulid_from(text: &str) -> String {
     let re = regex::Regex::new(r"[0-9A-Z]{26}").unwrap();
     re.find(text)
         .map(|m| m.as_str().to_string())
-        .unwrap_or_else(|| panic!("no ULID found in output:\n{}", text))
+        .unwrap_or_else(|| panic!("no ULID found in output:\n{text}"))
 }

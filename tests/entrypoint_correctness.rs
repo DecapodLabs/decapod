@@ -28,7 +28,7 @@ fn run_decapod_with_env(
 
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-    let combined = format!("{}\n{}", stdout, stderr);
+    let combined = format!("{stdout}\n{stderr}");
 
     (output.status.success(), combined)
 }
@@ -46,8 +46,7 @@ fn acquire_session(temp_path: &PathBuf) {
     let (success, output) = run_decapod(temp_path, &["session", "acquire"]);
     assert!(
         success,
-        "decapod session acquire should succeed. Output:\n{}",
-        output
+        "decapod session acquire should succeed. Output:\n{output}"
     );
 }
 
@@ -76,14 +75,13 @@ fn test_init_creates_all_entrypoints() {
         let file_path = temp_path.join(file);
         assert!(
             file_path.exists(),
-            "Entrypoint file {} should exist after init",
-            file
+            "Entrypoint file {file} should exist after init"
         );
 
         // Check that file is non-empty
         let content =
-            fs::read_to_string(&file_path).unwrap_or_else(|_| panic!("Failed to read {}", file));
-        assert!(!content.is_empty(), "{} should not be empty", file);
+            fs::read_to_string(&file_path).unwrap_or_else(|_| panic!("Failed to read {file}"));
+        assert!(!content.is_empty(), "{file} should not be empty");
     }
 }
 
@@ -101,8 +99,7 @@ fn test_validate_passes_after_init() {
     let (success, output) = run_decapod(&temp_path, &["validate"]);
     assert!(
         success,
-        "decapod validate should pass after init. Output:\n{}",
-        output
+        "decapod validate should pass after init. Output:\n{output}"
     );
 
     // Check that Four Invariants Gate is mentioned
@@ -133,38 +130,31 @@ fn test_validate_passes_after_init_without_git_repo() {
     );
     assert!(
         validate.status.success(),
-        "decapod validate should pass immediately after init in a non-git directory. Output:\n{}",
-        output
+        "decapod validate should pass immediately after init in a non-git directory. Output:\n{output}"
     );
     assert!(
         output.contains("validation passed"),
-        "validate should emit a clean success marker. Output:\n{}",
-        output
+        "validate should emit a clean success marker. Output:\n{output}"
     );
     assert!(
         !output.contains("Error:"),
-        "validate should not emit an error while succeeding. Output:\n{}",
-        output
+        "validate should not emit an error while succeeding. Output:\n{output}"
     );
     assert!(
         !output.contains("warn:"),
-        "validate should not emit warnings after fresh init. Output:\n{}",
-        output
+        "validate should not emit warnings after fresh init. Output:\n{output}"
     );
     assert!(
         !output.contains("repair"),
-        "validate should not require self-heal/repair after fresh init. Output:\n{}",
-        output
+        "validate should not require self-heal/repair after fresh init. Output:\n{output}"
     );
     assert!(
         !output.contains("self-heal"),
-        "validate should not report self-heal after fresh init. Output:\n{}",
-        output
+        "validate should not report self-heal after fresh init. Output:\n{output}"
     );
     assert!(
         !output.contains("requires isolated git worktree"),
-        "fresh non-git validation should not be rejected by workspace preflight. Output:\n{}",
-        output
+        "fresh non-git validation should not be rejected by workspace preflight. Output:\n{output}"
     );
 }
 
@@ -181,7 +171,7 @@ fn test_agent_session_requires_password() {
         &["session", "acquire"],
         &[("DECAPOD_AGENT_ID", "agent-secure")],
     );
-    assert!(success, "session acquire should succeed: {}", acquire_out);
+    assert!(success, "session acquire should succeed: {acquire_out}");
     let password = extract_password(&acquire_out).expect("acquire output should include password");
 
     let (ok_missing, out_missing) = run_decapod_with_env(
@@ -193,8 +183,7 @@ fn test_agent_session_requires_password() {
     // but workspace requirement still applies first
     assert!(
         !ok_missing || out_missing.contains("worktree") || out_missing.contains("session"),
-        "validate should either fail on workspace or auto-acquire session: {}",
-        out_missing
+        "validate should either fail on workspace or auto-acquire session: {out_missing}"
     );
 
     let (ok_wrong, out_wrong) = run_decapod_with_env(
@@ -209,8 +198,7 @@ fn test_agent_session_requires_password() {
     // but workspace requirement still applies first
     assert!(
         !ok_wrong || out_wrong.contains("worktree") || out_wrong.contains("session"),
-        "validate should either fail on workspace or auto-acquire session: {}",
-        out_wrong
+        "validate should either fail on workspace or auto-acquire session: {out_wrong}"
     );
 
     let (ok_good, out_good) = run_decapod_with_env(
@@ -224,8 +212,7 @@ fn test_agent_session_requires_password() {
     );
     assert!(
         ok_good,
-        "validate should pass with correct agent+password: {}",
-        out_good
+        "validate should pass with correct agent+password: {out_good}"
     );
 }
 
@@ -242,7 +229,7 @@ fn test_expired_session_releases_assigned_tasks() {
         &["session", "acquire"],
         &[("DECAPOD_AGENT_ID", "agent-expire")],
     );
-    assert!(success, "session acquire should succeed: {}", acquire_out);
+    assert!(success, "session acquire should succeed: {acquire_out}");
     let password = extract_password(&acquire_out).expect("acquire output should include password");
     let auth_env = [
         ("DECAPOD_AGENT_ID", "agent-expire"),
@@ -308,8 +295,7 @@ fn test_expired_session_releases_assigned_tasks() {
         run_decapod(&temp_path, &["session", "acquire"]);
     assert!(
         ok_unknown_acquire,
-        "unknown session acquire should succeed: {}",
-        out_unknown_acquire
+        "unknown session acquire should succeed: {out_unknown_acquire}"
     );
 
     let todo_db = temp_path.join(".decapod").join("data").join("todo.db");
@@ -342,20 +328,17 @@ fn test_entrypoints_are_thin() {
     let agents_lines = agents_content.lines().count();
     assert!(
         agents_lines <= 100,
-        "AGENTS.md should be ≤ 100 lines (got {})",
-        agents_lines
+        "AGENTS.md should be ≤ 100 lines (got {agents_lines})"
     );
 
     // Check agent-specific files (should be ≤ 70)
     for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let content = fs::read_to_string(temp_path.join(file))
-            .unwrap_or_else(|_| panic!("Failed to read {}", file));
+            .unwrap_or_else(|_| panic!("Failed to read {file}"));
         let line_count = content.lines().count();
         assert!(
             line_count <= 70,
-            "{} should be ≤ 70 lines (got {})",
-            file,
-            line_count
+            "{file} should be ≤ 70 lines (got {line_count})"
         );
     }
 }
@@ -374,11 +357,10 @@ fn test_entrypoints_contain_canonical_router() {
 
     for file in files {
         let content = fs::read_to_string(temp_path.join(file))
-            .unwrap_or_else(|_| panic!("Failed to read {}", file));
+            .unwrap_or_else(|_| panic!("Failed to read {file}"));
         assert!(
             content.contains("core/DECAPOD"),
-            "{} should reference canonical router (core/DECAPOD)",
-            file
+            "{file} should reference canonical router (core/DECAPOD)"
         );
     }
 }
@@ -401,8 +383,7 @@ fn test_entrypoints_contain_four_invariants() {
     for marker in invariant_markers {
         assert!(
             agents_content.contains(marker),
-            "AGENTS.md should contain invariant marker: {}",
-            marker
+            "AGENTS.md should contain invariant marker: {marker}"
         );
     }
 }
@@ -427,8 +408,7 @@ fn test_validate_fails_on_missing_invariant() {
     let (success, output) = run_decapod(&temp_path, &["validate"]);
     assert!(
         !success,
-        "decapod validate should fail after tampering. Output:\n{}",
-        output
+        "decapod validate should fail after tampering. Output:\n{output}"
     );
 
     // Check that it detected the missing invariant
@@ -458,8 +438,7 @@ fn test_validate_fails_on_bloated_entrypoint() {
     let (success, output) = run_decapod(&temp_path, &["validate"]);
     assert!(
         !success,
-        "decapod validate should fail on bloated entrypoint. Output:\n{}",
-        output
+        "decapod validate should fail on bloated entrypoint. Output:\n{output}"
     );
 
     // Check that it detected the line limit violation
@@ -481,11 +460,10 @@ fn test_agent_specific_files_defer_to_agents() {
     // Check that agent-specific files reference AGENTS.md
     for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let content = fs::read_to_string(temp_path.join(file))
-            .unwrap_or_else(|_| panic!("Failed to read {}", file));
+            .unwrap_or_else(|_| panic!("Failed to read {file}"));
         assert!(
             content.contains("AGENTS.md"),
-            "{} should defer to AGENTS.md",
-            file
+            "{file} should defer to AGENTS.md"
         );
     }
 }
@@ -510,8 +488,7 @@ fn test_agents_entrypoint_scopes_decapod_invocation() {
     ] {
         assert!(
             agents_content.contains(marker),
-            "AGENTS.md should teach scoped Decapod invocation: {}",
-            marker
+            "AGENTS.md should teach scoped Decapod invocation: {marker}"
         );
     }
 }
@@ -522,14 +499,13 @@ fn test_root_entrypoints_match_scaffold_generators() {
     for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let root_path = repo_root.join(file);
         let root_content =
-            fs::read_to_string(&root_path).unwrap_or_else(|_| panic!("Failed to read {}", file));
+            fs::read_to_string(&root_path).unwrap_or_else(|_| panic!("Failed to read {file}"));
         let template_content =
-            assets::get_template(file).unwrap_or_else(|| panic!("Missing generated {}", file));
+            assets::get_template(file).unwrap_or_else(|| panic!("Missing generated {file}"));
 
         assert_eq!(
             root_content, template_content,
-            "Entrypoint drift detected: {} differs from Rust scaffold generator output.",
-            file
+            "Entrypoint drift detected: {file} differs from Rust scaffold generator output."
         );
     }
 }
@@ -581,38 +557,32 @@ fn test_entrypoints_use_embedded_docs_paths_only() {
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let content =
-            fs::read_to_string(repo_root.join(file)).unwrap_or_else(|_| panic!("read {}", file));
+            fs::read_to_string(repo_root.join(file)).unwrap_or_else(|_| panic!("read {file}"));
         assert!(
             !content.contains("(constitution/"),
-            "{} must not reference direct constitution/* filesystem paths",
-            file
+            "{file} must not reference direct constitution/* filesystem paths"
         );
         assert!(
             !content.contains("decapod docs show"),
-            "{} must use constitution.get RPC instead of docs show",
-            file
+            "{file} must use constitution.get RPC instead of docs show"
         );
         assert!(
             content.contains(
                 r#"decapod rpc --op constitution.get --params '{"section":"docs/PLAYBOOK"}'"#,
             ),
-            "{} must reference embedded docs path for operator playbook",
-            file
+            "{file} must reference embedded docs path for operator playbook"
         );
         assert!(
             content.contains(".decapod/workspaces"),
-            "{} must mandate canonical Decapod worktree root",
-            file
+            "{file} must mandate canonical Decapod worktree root"
         );
         assert!(
             content.contains("decapod todo add \"<task>\""),
-            "{} must require task creation before claim",
-            file
+            "{file} must require task creation before claim"
         );
         assert!(
             !content.contains(".claude/worktrees"),
-            "{} must never reference non-canonical .claude/worktrees path",
-            file
+            "{file} must never reference non-canonical .claude/worktrees path"
         );
     }
 }
@@ -690,8 +660,7 @@ fn test_core_decapod_routes_without_competing_with_agents() {
     ] {
         assert!(
             core_decapod.contains(marker),
-            "core/DECAPOD should route scoped purposes: {}",
-            marker
+            "core/DECAPOD should route scoped purposes: {marker}"
         );
     }
 }

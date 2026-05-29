@@ -246,7 +246,7 @@ fn format_db_open_diagnostics(db_path: &Path, stage: &str, err: &rusqlite::Error
             code.extended_code,
             msg.clone().unwrap_or_else(|| "<none>".to_string())
         ),
-        _ => format!("sqlite_error={}", err),
+        _ => format!("sqlite_error={err}"),
     };
 
     let mut hints = Vec::new();
@@ -311,7 +311,7 @@ fn injected_fault(stage: &str, db_path: &Path) -> Option<error::DecapodError> {
             code: rusqlite::ErrorCode::SystemIoFailure,
             extended_code: 522,
         },
-        Some(format!("fault injected at stage '{}'", stage)),
+        Some(format!("fault injected at stage '{stage}'")),
     );
     Some(error::DecapodError::ValidationError(format!(
         "SQLITE_FAULT_INJECTED: {}",
@@ -472,8 +472,7 @@ fn ensure_knowledge_columns(conn: &rusqlite::Connection) -> Result<(), rusqlite:
         if !cols.contains(name) {
             conn.execute(
                 &format!(
-                    "ALTER TABLE knowledge ADD COLUMN {} {} DEFAULT {}",
-                    name, sql_type, default_expr
+                    "ALTER TABLE knowledge ADD COLUMN {name} {sql_type} DEFAULT {default_expr}"
                 ),
                 [],
             )?;

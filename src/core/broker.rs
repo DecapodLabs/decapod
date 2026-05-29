@@ -310,7 +310,7 @@ impl DbBroker {
         for line in reader.lines() {
             let line = line.map_err(error::DecapodError::IoError)?;
             let ev: BrokerEvent = serde_json::from_str(&line).map_err(|e| {
-                error::DecapodError::ValidationError(format!("Invalid audit log entry: {}", e))
+                error::DecapodError::ValidationError(format!("Invalid audit log entry: {e}"))
             })?;
             total_events += 1;
 
@@ -376,7 +376,7 @@ fn log_write_event(audit_path: &Path, op: &str, db_path: &Path) -> Result<(), er
         .append(true)
         .open(audit_path)
     {
-        let _ = writeln!(file, "{}", event);
+        let _ = writeln!(file, "{event}");
     }
 
     Ok(())

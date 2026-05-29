@@ -96,8 +96,7 @@ fn enforced_claims_must_have_gate_mapping_and_kcr_trend_must_match() {
                 && !proof_lc.contains("planned ");
             assert!(
                 has_mapping,
-                "ENFORCED claim lacks gate/test mapping in interfaces/CLAIMS: {}",
-                line
+                "ENFORCED claim lacks gate/test mapping in interfaces/CLAIMS: {line}"
             );
             enforced_with_gate += 1;
         }

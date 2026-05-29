@@ -447,7 +447,7 @@ pub fn run_eval_cli(store: &Store, cli: EvalCli) -> Result<(), error::DecapodErr
                     }
                 }
 
-                let resolved_trace_id = trace_id.unwrap_or_else(|| format!("T_{}", run_id));
+                let resolved_trace_id = trace_id.unwrap_or_else(|| format!("T_{run_id}"));
                 let mut trace = TraceBundle {
                     schema_version: "1.0.0".to_string(),
                     kind: "TRACE_BUNDLE".to_string(),
@@ -517,8 +517,7 @@ pub fn run_eval_cli(store: &Store, cli: EvalCli) -> Result<(), error::DecapodErr
             if let Some(delay_ms) = simulate_delay_ms {
                 if delay_ms > timeout_ms {
                     return Err(error::DecapodError::ValidationError(format!(
-                        "EVAL_JUDGE_TIMEOUT: judge execution exceeded timeout ({}ms > {}ms)",
-                        delay_ms, timeout_ms
+                        "EVAL_JUDGE_TIMEOUT: judge execution exceeded timeout ({delay_ms}ms > {timeout_ms}ms)"
                     )));
                 }
                 std::thread::sleep(std::time::Duration::from_millis(delay_ms));
@@ -544,8 +543,7 @@ pub fn run_eval_cli(store: &Store, cli: EvalCli) -> Result<(), error::DecapodErr
             let input_digest = hash_bytes(payload_text.as_bytes());
             let input: JudgeInput = serde_json::from_str(&payload_text).map_err(|e| {
                 error::DecapodError::ValidationError(format!(
-                    "EVAL_JUDGE_JSON_CONTRACT_ERROR: malformed judge JSON: {}",
-                    e
+                    "EVAL_JUDGE_JSON_CONTRACT_ERROR: malformed judge JSON: {e}"
                 ))
             })?;
             if input.explanation.trim().is_empty() {
@@ -558,7 +556,7 @@ pub fn run_eval_cli(store: &Store, cli: EvalCli) -> Result<(), error::DecapodErr
             let mut verdict = EvalVerdict {
                 schema_version: "1.0.0".to_string(),
                 kind: "EVAL_VERDICT".to_string(),
-                verdict_id: format!("V_{}", run_id),
+                verdict_id: format!("V_{run_id}"),
                 plan_id: plan.plan_id,
                 run_id: run_id.clone(),
                 success: input.success,
@@ -1055,8 +1053,7 @@ fn normalize_status(status: &str) -> Result<String, error::DecapodError> {
     match status {
         "pass" | "fail" => Ok(status.to_string()),
         _ => Err(error::DecapodError::ValidationError(format!(
-            "invalid status '{}': expected pass|fail",
-            status
+            "invalid status '{status}': expected pass|fail"
         ))),
     }
 }
@@ -1072,8 +1069,7 @@ fn parse_kv_pairs(
         let val = parts.next().unwrap_or_default().trim();
         if key.is_empty() || val.is_empty() {
             return Err(error::DecapodError::ValidationError(format!(
-                "invalid {} entry '{}': expected key=value",
-                flag, entry
+                "invalid {flag} entry '{entry}': expected key=value"
             )));
         }
         out.insert(key.to_string(), val.to_string());
@@ -1086,7 +1082,7 @@ fn write_json<T: Serialize>(path: PathBuf, value: &T) -> Result<String, error::D
         fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
     }
     let bytes = serde_json::to_vec_pretty(value).map_err(|e| {
-        error::DecapodError::ValidationError(format!("failed to serialize eval artifact: {}", e))
+        error::DecapodError::ValidationError(format!("failed to serialize eval artifact: {e}"))
     })?;
     fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
     Ok(path.to_string_lossy().to_string())
@@ -1094,7 +1090,7 @@ fn write_json<T: Serialize>(path: PathBuf, value: &T) -> Result<String, error::D
 
 fn hash_json(value: &serde_json::Value) -> Result<String, error::DecapodError> {
     let bytes = serde_json::to_vec(value).map_err(|e| {
-        error::DecapodError::ValidationError(format!("failed to canonicalize eval JSON: {}", e))
+        error::DecapodError::ValidationError(format!("failed to canonicalize eval JSON: {e}"))
     })?;
     Ok(hash_bytes(&bytes))
 }
@@ -1195,7 +1191,7 @@ fn eval_root_from_store_root(store_root: &Path) -> PathBuf {
 fn eval_plan_path(store: &Store, plan_id: &str) -> PathBuf {
     eval_root(store)
         .join("plans")
-        .join(format!("{}.json", plan_id))
+        .join(format!("{plan_id}.json"))
 }
 
 fn eval_runs_dir(store: &Store) -> PathBuf {
@@ -1203,13 +1199,13 @@ fn eval_runs_dir(store: &Store) -> PathBuf {
 }
 
 fn eval_run_path(store: &Store, run_id: &str) -> PathBuf {
-    eval_runs_dir(store).join(format!("{}.json", run_id))
+    eval_runs_dir(store).join(format!("{run_id}.json"))
 }
 
 fn eval_trace_path(store: &Store, trace_id: &str) -> PathBuf {
     eval_root(store)
         .join("traces")
-        .join(format!("{}.json", trace_id))
+        .join(format!("{trace_id}.json"))
 }
 
 fn eval_verdicts_dir(store: &Store) -> PathBuf {
@@ -1217,25 +1213,25 @@ fn eval_verdicts_dir(store: &Store) -> PathBuf {
 }
 
 fn eval_verdict_path(store: &Store, run_id: &str) -> PathBuf {
-    eval_verdicts_dir(store).join(format!("{}.json", run_id))
+    eval_verdicts_dir(store).join(format!("{run_id}.json"))
 }
 
 fn eval_aggregate_path(store: &Store, aggregate_id: &str) -> PathBuf {
     eval_root(store)
         .join("aggregates")
-        .join(format!("{}.json", aggregate_id))
+        .join(format!("{aggregate_id}.json"))
 }
 
 fn eval_aggregate_path_from_store_root(store_root: &Path, aggregate_id: &str) -> PathBuf {
     eval_root_from_store_root(store_root)
         .join("aggregates")
-        .join(format!("{}.json", aggregate_id))
+        .join(format!("{aggregate_id}.json"))
 }
 
 fn eval_bucket_path(store: &Store, plan_id: &str, variant: &str) -> PathBuf {
     eval_root(store)
         .join("failure_buckets")
-        .join(format!("{}_{}.json", plan_id, variant))
+        .join(format!("{plan_id}_{variant}.json"))
 }
 
 fn eval_gate_requirement_path(store: &Store) -> PathBuf {

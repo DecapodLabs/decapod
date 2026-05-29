@@ -95,7 +95,7 @@ pub fn default_capsule_policy_contract() -> CapsulePolicyContract {
 
 pub fn default_policy_json_pretty() -> Result<String, error::DecapodError> {
     serde_json::to_string_pretty(&default_capsule_policy_contract()).map_err(|e| {
-        error::DecapodError::ValidationError(format!("CAPSULE_POLICY_ENCODE_FAILED: {}", e))
+        error::DecapodError::ValidationError(format!("CAPSULE_POLICY_ENCODE_FAILED: {e}"))
     })
 }
 
@@ -130,13 +130,12 @@ pub fn load_policy_contract(
 ) -> Result<(CapsulePolicyContract, PathBuf), error::DecapodError> {
     let path = resolve_policy_path(project_root).ok_or_else(|| {
         error::DecapodError::ValidationError(format!(
-            "CAPSULE_POLICY_MISSING: expected {} or {}",
-            OVERRIDE_POLICY_REL_PATH, GENERATED_POLICY_REL_PATH
+            "CAPSULE_POLICY_MISSING: expected {OVERRIDE_POLICY_REL_PATH} or {GENERATED_POLICY_REL_PATH}"
         ))
     })?;
     let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
     let parsed: CapsulePolicyContract = serde_json::from_str(&raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!("CAPSULE_POLICY_INVALID: {}", e))
+        error::DecapodError::ValidationError(format!("CAPSULE_POLICY_INVALID: {e}"))
     })?;
     if parsed.schema_version != POLICY_SCHEMA_VERSION {
         return Err(error::DecapodError::ValidationError(format!(
@@ -159,8 +158,7 @@ fn resolve_repo_revision(
 ) -> Result<String, error::DecapodError> {
     if !binding.eq_ignore_ascii_case("HEAD") {
         return Err(error::DecapodError::ValidationError(format!(
-            "CAPSULE_POLICY_UNSUPPORTED_BINDING: {}",
-            binding
+            "CAPSULE_POLICY_UNSUPPORTED_BINDING: {binding}"
         )));
     }
     let output = Command::new("git")
@@ -179,7 +177,7 @@ fn resolve_repo_revision(
                 .trim()
                 .to_string();
             if !branch.is_empty() {
-                return Ok(format!("UNBORN:{}", branch));
+                return Ok(format!("UNBORN:{branch}"));
             }
         }
         return Err(error::DecapodError::ValidationError(
@@ -204,8 +202,7 @@ pub fn resolve_capsule_policy(
 ) -> Result<ResolvedCapsulePolicy, error::DecapodError> {
     if !matches!(requested_scope, "core" | "interfaces" | "plugins") {
         return Err(error::DecapodError::ValidationError(format!(
-            "invalid scope '{}': expected one of core|interfaces|plugins",
-            requested_scope
+            "invalid scope '{requested_scope}': expected one of core|interfaces|plugins"
         )));
     }
     let (contract, policy_path) = load_policy_contract(project_root)?;
@@ -214,18 +211,16 @@ pub fn resolve_capsule_policy(
         .trim()
         .to_lowercase();
     let rule = contract.tiers.get(&risk_tier).ok_or_else(|| {
-        error::DecapodError::ValidationError(format!("CAPSULE_RISK_TIER_UNKNOWN: {}", risk_tier))
+        error::DecapodError::ValidationError(format!("CAPSULE_RISK_TIER_UNKNOWN: {risk_tier}"))
     })?;
     if !rule.allowed_scopes.iter().any(|s| s == requested_scope) {
         return Err(error::DecapodError::ValidationError(format!(
-            "CAPSULE_SCOPE_DENIED: scope={} risk_tier={}",
-            requested_scope, risk_tier
+            "CAPSULE_SCOPE_DENIED: scope={requested_scope} risk_tier={risk_tier}"
         )));
     }
     if write && !rule.allow_write {
         return Err(error::DecapodError::ValidationError(format!(
-            "CAPSULE_WRITE_DENIED: risk_tier={}",
-            risk_tier
+            "CAPSULE_WRITE_DENIED: risk_tier={risk_tier}"
         )));
     }
 

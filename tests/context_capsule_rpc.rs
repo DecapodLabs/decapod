@@ -209,13 +209,11 @@ fn rpc_context_capsule_query_write_tracks_touched_path() {
     let touched_path = touched[0].as_str().expect("touched path as str");
     assert!(
         touched_path.ends_with(".decapod/generated/context/test_88.json"),
-        "unexpected touched path: {}",
-        touched_path
+        "unexpected touched path: {touched_path}"
     );
     assert!(
         std::path::Path::new(touched_path).exists(),
-        "expected persisted capsule at {}",
-        touched_path
+        "expected persisted capsule at {touched_path}"
     );
 }
 
@@ -234,8 +232,7 @@ fn rpc_context_capsule_query_rejects_unknown_risk_tier() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
         stderr.contains("CAPSULE_RISK_TIER_UNKNOWN"),
-        "expected typed risk-tier error, got: {}",
-        stderr
+        "expected typed risk-tier error, got: {stderr}"
     );
 }
 

@@ -231,7 +231,7 @@ fn mirror_verification_to_federation(
     body: &str,
     tags: &str,
 ) {
-    let source = format!("event:{}", todo_id);
+    let source = format!("event:{todo_id}");
     let anchor = federation::find_node_by_source(store, &source)
         .ok()
         .flatten();
@@ -370,8 +370,8 @@ fn persist_result(
     mirror_verification_to_federation(
         store,
         todo_id,
-        &format!("Verification Result: {}", todo_id),
-        &format!("Verification status={} notes={}", status, notes),
+        &format!("Verification Result: {todo_id}"),
+        &format!("Verification status={status} notes={notes}"),
         "proof,verification,result",
     );
     Ok(())
@@ -621,7 +621,7 @@ fn verify_target(
                                 status: "fail".to_string(),
                                 expected_output_hash: Some(expected.clone()),
                                 actual_output_hash: Some(root.clone()),
-                                reason: Some(format!("STATE_COMMIT head_sha mismatch. Current HEAD: {} not in scope_record. Run `decapod state-commit prove` to regenerate.", current_head)),
+                                reason: Some(format!("STATE_COMMIT head_sha mismatch. Current HEAD: {current_head} not in scope_record. Run `decapod state-commit prove` to regenerate.")),
                             });
                         } else {
                             result.proofs.push(ProofCheckResult {
@@ -640,7 +640,7 @@ fn verify_target(
                             status: "fail".to_string(),
                             expected_output_hash: Some(expected.clone()),
                             actual_output_hash: Some(root.clone()),
-                            reason: Some(format!("STATE_COMMIT root mismatch. Expected: {}, Recomputed: {}. Files changed since scope recorded. Run `decapod state-commit prove` to regenerate.", expected, root)),
+                            reason: Some(format!("STATE_COMMIT root mismatch. Expected: {expected}, Recomputed: {root}. Files changed since scope recorded. Run `decapod state-commit prove` to regenerate.")),
                         });
                     }
                     None => {
@@ -729,8 +729,7 @@ pub fn capture_baseline_for_todo(
 
     let Some(task_status) = status else {
         return Err(error::DecapodError::NotFound(format!(
-            "TODO not found: {}",
-            todo_id
+            "TODO not found: {todo_id}"
         )));
     };
 
@@ -962,7 +961,7 @@ pub fn run_verify_cli(
                 }
             }
             for n in &r.notes {
-                println!("  note: {}", n);
+                println!("  note: {n}");
             }
         }
         println!(

@@ -161,8 +161,7 @@ fn release_check_blocks_schema_changes_without_changelog_note() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
         stderr.contains("schema/interface files changed"),
-        "release check should explain schema/interface changelog policy; stderr:\n{}",
-        stderr
+        "release check should explain schema/interface changelog policy; stderr:\n{stderr}"
     );
 }
 
@@ -286,8 +285,7 @@ fn release_check_fails_closed_for_invalid_release_risk_tier_env() {
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
         stderr.contains("invalid DECAPOD_RELEASE_RISK_TIER"),
-        "release check should fail closed with typed error for invalid risk tier env; stderr:\n{}",
-        stderr
+        "release check should fail closed with typed error for invalid risk tier env; stderr:\n{stderr}"
     );
 }
 

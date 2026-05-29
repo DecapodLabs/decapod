@@ -28,7 +28,7 @@ pub fn run_git(repo_root: &Path, args: &[&str]) -> Result<String, String> {
         .args(args)
         .current_dir(repo_root)
         .output()
-        .map_err(|e| format!("git failed: {}", e))?;
+        .map_err(|e| format!("git failed: {e}"))?;
 
     if !output.status.success() {
         return Err(format!(
@@ -41,7 +41,7 @@ pub fn run_git(repo_root: &Path, args: &[&str]) -> Result<String, String> {
 }
 
 pub fn git_show(repo_root: &Path, sha: &str, path: &str) -> Result<String, String> {
-    run_git(repo_root, &["show", &format!("{}:{}", sha, path)])
+    run_git(repo_root, &["show", &format!("{sha}:{path}")])
 }
 
 pub fn git_ls_tree(repo_root: &Path, sha: &str, path: &str) -> Result<String, String> {
@@ -286,8 +286,7 @@ pub fn verify(scope_record_bytes: &[u8], expected_root: &str) -> Result<String, 
 
     if actual_hash != expected_root {
         Err(format!(
-            "STATE_COMMIT verification failed: expected {}, got {}",
-            expected_root, actual_hash
+            "STATE_COMMIT verification failed: expected {expected_root}, got {actual_hash}"
         ))
     } else {
         Ok(actual_hash)

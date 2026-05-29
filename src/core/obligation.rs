@@ -156,7 +156,7 @@ pub fn run_obligation_cli(store: &Store, cli: ObligationCli) -> Result<(), error
             proofs,
         } => {
             let id = add_obligation(store, &intent, &risk, &depends_on, &proofs)?;
-            println!("Obligation added: {}", id);
+            println!("Obligation added: {id}");
         }
         ObligationCommand::List => {
             let obligations = list_obligations(store)?;
@@ -177,8 +177,8 @@ pub fn run_obligation_cli(store: &Store, cli: ObligationCli) -> Result<(), error
         ObligationCommand::Complete { id, commit } => {
             complete_obligation(store, &id, &commit)?;
             let (status, reason) = verify_obligation(store, &id)?;
-            println!("Obligation {} updated with commit {}.", id, commit);
-            println!("Status: {:?}\nReason: {}", status, reason);
+            println!("Obligation {id} updated with commit {commit}.");
+            println!("Status: {status:?}\nReason: {reason}");
         }
     }
     Ok(())
@@ -215,8 +215,7 @@ pub fn add_obligation(
         for dep_id in &depends_on_ids {
             if detect_cycle(conn, dep_id, &id)? {
                 return Err(error::DecapodError::ValidationError(format!(
-                    "Circular dependency detected: {} -> {}",
-                    id, dep_id
+                    "Circular dependency detected: {id} -> {dep_id}"
                 )));
             }
         }
@@ -367,14 +366,14 @@ pub fn derive_obligation_status(
             .filter(|d| d.status != ObligationStatus::Met)
             .map(|d| d.id.clone())
             .collect();
-        validation_errors.push(format!("Dependencies not met: {:?}", unsatisfied));
+        validation_errors.push(format!("Dependencies not met: {unsatisfied:?}"));
     }
 
     let mut proofs_satisfied = true;
     for proof_label in &obligation.required_proofs {
         if !check_proof_satisfied(store, proof_label)? {
             proofs_satisfied = false;
-            validation_errors.push(format!("Proof not satisfied: {}", proof_label));
+            validation_errors.push(format!("Proof not satisfied: {proof_label}"));
         }
     }
 

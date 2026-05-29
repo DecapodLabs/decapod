@@ -19,22 +19,22 @@ pub fn list_nodes(
 
         if let Some(ref nt) = node_type {
             let idx = param_values.len() + 1;
-            conditions.push(format!("node_type = ?{}", idx));
+            conditions.push(format!("node_type = ?{idx}"));
             param_values.push(Box::new(nt.clone()));
         }
         if let Some(ref s) = status {
             let idx = param_values.len() + 1;
-            conditions.push(format!("status = ?{}", idx));
+            conditions.push(format!("status = ?{idx}"));
             param_values.push(Box::new(s.clone()));
         }
         if let Some(ref p) = priority {
             let idx = param_values.len() + 1;
-            conditions.push(format!("priority = ?{}", idx));
+            conditions.push(format!("priority = ?{idx}"));
             param_values.push(Box::new(p.clone()));
         }
         if let Some(ref sc) = scope {
             let idx = param_values.len() + 1;
-            conditions.push(format!("scope = ?{}", idx));
+            conditions.push(format!("scope = ?{idx}"));
             param_values.push(Box::new(sc.clone()));
         }
 

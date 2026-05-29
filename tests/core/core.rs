@@ -153,8 +153,7 @@ fn broker_allows_parallel_ops_on_different_databases() {
 
     assert!(
         elapsed < Duration::from_millis(260),
-        "expected per-db concurrency (<260ms), got {:?}",
-        elapsed
+        "expected per-db concurrency (<260ms), got {elapsed:?}"
     );
 }
 
@@ -1024,7 +1023,7 @@ fn override_md_checksum_caching() {
     // Calculate checksum manually
     use sha2::{Digest, Sha256};
     let hash_v1 = Sha256::digest(override_content_v1.as_bytes());
-    let checksum_v1 = format!("{:x}", hash_v1);
+    let checksum_v1 = format!("{hash_v1:x}");
 
     // Cache the checksum
     fs::write(
@@ -1045,7 +1044,7 @@ fn override_md_checksum_caching() {
 
     // Calculate new checksum
     let hash_v2 = Sha256::digest(override_content_v2.as_bytes());
-    let checksum_v2 = format!("{:x}", hash_v2);
+    let checksum_v2 = format!("{hash_v2:x}");
 
     // Verify checksums are different
     assert_ne!(checksum_v1, checksum_v2);

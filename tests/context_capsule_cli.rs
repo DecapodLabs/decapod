@@ -139,8 +139,7 @@ fn context_capsule_query_is_deterministic() {
         let path = source["path"].as_str().unwrap_or_default();
         assert!(
             path.starts_with("interfaces/"),
-            "scope filter violated, got source path: {}",
-            path
+            "scope filter violated, got source path: {path}"
         );
     }
 }
@@ -171,8 +170,7 @@ fn context_capsule_query_rejects_invalid_scope() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
         stderr.contains("invalid scope"),
-        "expected invalid scope error in stderr, got: {}",
-        stderr
+        "expected invalid scope error in stderr, got: {stderr}"
     );
 }
 
@@ -207,8 +205,7 @@ fn context_capsule_query_fails_closed_on_policy_scope_violation() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
         stderr.contains("CAPSULE_SCOPE_DENIED"),
-        "expected typed policy denial error, got: {}",
-        stderr
+        "expected typed policy denial error, got: {stderr}"
     );
 }
 
@@ -251,13 +248,11 @@ fn context_capsule_query_write_persists_deterministic_artifact_path() {
         .expect("path string in first payload");
     assert!(
         first_path.ends_with(".decapod/generated/context/test_123.json"),
-        "unexpected capsule path: {}",
-        first_path
+        "unexpected capsule path: {first_path}"
     );
     assert!(
         std::path::Path::new(first_path).exists(),
-        "expected persisted capsule at {}",
-        first_path
+        "expected persisted capsule at {first_path}"
     );
 
     let second = run("test_123");

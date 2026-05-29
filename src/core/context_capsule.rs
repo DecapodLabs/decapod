@@ -123,7 +123,7 @@ pub fn query_embedded_capsule_governed(
         ));
     }
     let max = limit.max(1);
-    let scope_prefix = format!("{}/", scope);
+    let scope_prefix = format!("{scope}/");
 
     let mut fragments = docs::resolve_scoped_fragments(
         repo_root,
@@ -184,10 +184,7 @@ pub fn query_embedded_capsule_governed(
     };
 
     capsule.with_recomputed_hash().map_err(|e| {
-        error::DecapodError::ValidationError(format!(
-            "failed to canonicalize context capsule: {}",
-            e
-        ))
+        error::DecapodError::ValidationError(format!("failed to canonicalize context capsule: {e}"))
     })
 }
 
@@ -195,8 +192,7 @@ fn validate_scope(scope: &str) -> Result<(), error::DecapodError> {
     match scope {
         "core" | "interfaces" | "plugins" => Ok(()),
         _ => Err(error::DecapodError::ValidationError(format!(
-            "invalid scope '{}': expected one of core|interfaces|plugins",
-            scope
+            "invalid scope '{scope}': expected one of core|interfaces|plugins"
         ))),
     }
 }
@@ -228,10 +224,7 @@ pub fn write_context_capsule(
     capsule: &DeterministicContextCapsule,
 ) -> Result<PathBuf, error::DecapodError> {
     let normalized = capsule.with_recomputed_hash().map_err(|e| {
-        error::DecapodError::ValidationError(format!(
-            "failed to canonicalize context capsule: {}",
-            e
-        ))
+        error::DecapodError::ValidationError(format!("failed to canonicalize context capsule: {e}"))
     })?;
     let path = context_capsule_path(project_root, &normalized);
     let parent = path.parent().ok_or_else(|| {
@@ -239,7 +232,7 @@ pub fn write_context_capsule(
     })?;
     fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
     let bytes = serde_json::to_vec_pretty(&normalized).map_err(|e| {
-        error::DecapodError::ValidationError(format!("failed to serialize context capsule: {}", e))
+        error::DecapodError::ValidationError(format!("failed to serialize context capsule: {e}"))
     })?;
     fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
     Ok(path)

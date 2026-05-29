@@ -86,7 +86,7 @@ fn load_items(items_str: &str) -> Result<Vec<serde_json::Value>, error::DecapodE
     if path.exists() {
         let content = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
         let arr: Vec<serde_json::Value> = serde_json::from_str(&content).map_err(|e| {
-            error::DecapodError::ValidationError(format!("Failed to parse items file: {}", e))
+            error::DecapodError::ValidationError(format!("Failed to parse items file: {e}"))
         })?;
         return Ok(arr);
     }
@@ -119,7 +119,7 @@ pub fn map_llm(
 
     // Validate schema is parseable JSON
     let _schema: serde_json::Value = serde_json::from_str(schema_str)
-        .map_err(|e| error::DecapodError::ValidationError(format!("Invalid schema JSON: {}", e)))?;
+        .map_err(|e| error::DecapodError::ValidationError(format!("Invalid schema JSON: {e}")))?;
 
     // Process each item structurally (contract definition, not execution)
     let mut results: Vec<MapItemResult> = Vec::new();

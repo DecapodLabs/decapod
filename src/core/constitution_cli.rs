@@ -42,7 +42,7 @@ pub fn run_constitution_cli(cli: ConstitutionCli) -> Result<(), error::DecapodEr
             }
             println!("Decapod Constitution Nodes:");
             for node in constitution_nodes {
-                println!("- {}", node);
+                println!("- {node}");
             }
             Ok(())
         }
@@ -56,13 +56,12 @@ pub fn run_constitution_cli(cli: ConstitutionCli) -> Result<(), error::DecapodEr
                         serde_json::to_string_pretty(&parsed).unwrap_or(content)
                     );
                 } else {
-                    println!("{}", content);
+                    println!("{content}");
                 }
                 Ok(())
             } else {
                 Err(error::DecapodError::NotFound(format!(
-                    "Node not found: {}",
-                    node
+                    "Node not found: {node}"
                 )))
             }
         }

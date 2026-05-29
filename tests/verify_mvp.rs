@@ -13,7 +13,7 @@ fn run_cmd(repo_root: &Path, args: &[&str]) -> Output {
         .args(args)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
-        .unwrap_or_else(|e| panic!("failed to run decapod {:?}: {}", args, e))
+        .unwrap_or_else(|e| panic!("failed to run decapod {args:?}: {e}"))
 }
 
 #[allow(dead_code)]
@@ -49,7 +49,7 @@ fn extract_json(output: &Output) -> Value {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let json_start = stdout
         .find('{')
-        .unwrap_or_else(|| panic!("expected JSON output, got: {}", stdout));
+        .unwrap_or_else(|| panic!("expected JSON output, got: {stdout}"));
     serde_json::from_str(&stdout[json_start..]).unwrap_or_else(|e| {
         panic!(
             "failed to parse JSON output: {}\nstdout:\n{}\nstderr:\n{}",
@@ -186,13 +186,11 @@ fn verify_mvp_pass_fail_unknown_flow() {
         .unwrap();
     assert!(
         status == "pass" || status == "fail",
-        "expected baseline status pass|fail, got {}",
-        status
+        "expected baseline status pass|fail, got {status}"
     );
     assert!(
         notes.contains("baseline captured"),
-        "expected baseline capture note, got: {}",
-        notes
+        "expected baseline capture note, got: {notes}"
     );
     let artifacts: Value = serde_json::from_str(&artifacts_json).unwrap();
     assert_eq!(
@@ -204,8 +202,7 @@ fn verify_mvp_pass_fail_unknown_flow() {
         .unwrap_or_default();
     assert!(
         proof_status == "pass" || proof_status == "fail",
-        "expected proof status pass|fail, got {}",
-        proof_status
+        "expected proof status pass|fail, got {proof_status}"
     );
 
     db.execute(

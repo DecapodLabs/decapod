@@ -160,7 +160,7 @@ fn check_git_status(project_root: &Path) -> CheckResult {
                 CheckResult {
                     name: "Git Status".to_string(),
                     status: CheckStatus::Warn,
-                    message: format!("{} uncommitted change(s)", changed_files),
+                    message: format!("{changed_files} uncommitted change(s)"),
                 }
             }
         }
@@ -175,7 +175,7 @@ fn check_git_status(project_root: &Path) -> CheckResult {
         Err(e) => CheckResult {
             name: "Git Status".to_string(),
             status: CheckStatus::Fail,
-            message: format!("git not available: {}", e),
+            message: format!("git not available: {e}"),
         },
     }
 }
@@ -193,19 +193,19 @@ fn check_required_files(project_root: &Path) -> Vec<CheckResult> {
             let path = project_root.join(file);
             if path.is_file() {
                 CheckResult {
-                    name: format!("File: {}", file),
+                    name: format!("File: {file}"),
                     status: CheckStatus::Pass,
                     message: "Present".to_string(),
                 }
             } else if *is_required {
                 CheckResult {
-                    name: format!("File: {}", file),
+                    name: format!("File: {file}"),
                     status: CheckStatus::Fail,
                     message: "Missing (required)".to_string(),
                 }
             } else {
                 CheckResult {
-                    name: format!("File: {}", file),
+                    name: format!("File: {file}"),
                     status: CheckStatus::Warn,
                     message: "Missing (optional)".to_string(),
                 }
@@ -256,25 +256,25 @@ fn check_databases(data_root: &Path) -> Vec<CheckResult> {
                 // Try opening the DB to verify it's accessible
                 match crate::db::db_connect_for_validate(&db_path.to_string_lossy()) {
                     Ok(_) => CheckResult {
-                        name: format!("DB: {}", db_name),
+                        name: format!("DB: {db_name}"),
                         status: CheckStatus::Pass,
                         message: "Present and accessible".to_string(),
                     },
                     Err(e) => CheckResult {
-                        name: format!("DB: {}", db_name),
+                        name: format!("DB: {db_name}"),
                         status: CheckStatus::Fail,
-                        message: format!("Present but not accessible: {}", e),
+                        message: format!("Present but not accessible: {e}"),
                     },
                 }
             } else if *is_required {
                 CheckResult {
-                    name: format!("DB: {}", db_name),
+                    name: format!("DB: {db_name}"),
                     status: CheckStatus::Warn,
                     message: "Not found (will be created on first use)".to_string(),
                 }
             } else {
                 CheckResult {
-                    name: format!("DB: {}", db_name),
+                    name: format!("DB: {db_name}"),
                     status: CheckStatus::Pass,
                     message: "Not found (optional)".to_string(),
                 }
@@ -334,13 +334,13 @@ fn check_config(project_root: &Path) -> CheckResult {
                 Err(e) => CheckResult {
                     name: "Config".to_string(),
                     status: CheckStatus::Fail,
-                    message: format!("Invalid TOML: {}", e),
+                    message: format!("Invalid TOML: {e}"),
                 },
             },
             Err(e) => CheckResult {
                 name: "Config".to_string(),
                 status: CheckStatus::Fail,
-                message: format!("Cannot read config: {}", e),
+                message: format!("Cannot read config: {e}"),
             },
         }
     } else {

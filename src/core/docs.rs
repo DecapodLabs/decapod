@@ -290,7 +290,7 @@ pub fn get_fragment(repo_root: &Path, path: &str, anchor: Option<&str>) -> Optio
     Some(DocFragment {
         kind: "constitution".to_string(),
         r#ref: if let Some(a) = anchor {
-            format!("{}#{}", path, a)
+            format!("{path}#{a}")
         } else {
             path.to_string()
         },
@@ -425,7 +425,7 @@ fn get_best_fragment_for_terms(path: &str, content: &str, terms: &[String]) -> O
 
     Some(DocFragment {
         kind: "constitution".to_string(),
-        r#ref: format!("{}#{}", path, title),
+        r#ref: format!("{path}#{title}"),
         title,
         excerpt,
         hash,

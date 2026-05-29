@@ -330,7 +330,7 @@ impl AssuranceEngine {
         {
             return Ok(Some(LoopSignal {
                 code: "file_edit_loop".to_string(),
-                message: format!("Detected repeated edits on '{}'", path),
+                message: format!("Detected repeated edits on '{path}'"),
                 suggested_redirect_ops: vec![
                     "assurance.evaluate".to_string(),
                     "scaffold.next_question".to_string(),
@@ -343,7 +343,7 @@ impl AssuranceEngine {
         {
             return Ok(Some(LoopSignal {
                 code: "failing_gate_loop".to_string(),
-                message: format!("Detected repeated interlock '{}'", code),
+                message: format!("Detected repeated interlock '{code}'"),
                 suggested_redirect_ops: vec![
                     "mentor.obligations".to_string(),
                     "assurance.evaluate".to_string(),

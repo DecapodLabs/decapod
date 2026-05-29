@@ -81,7 +81,7 @@ pub fn run_watcher(store: &Store) -> Result<WatcherReport, error::DecapodError> 
                     branch: current_branch.clone(),
                     violation_type: "current_on_protected".to_string(),
                     commit_hash: None,
-                    message: format!("Watcher detected work on protected branch '{}' - implementation must use working branch", current_branch),
+                    message: format!("Watcher detected work on protected branch '{current_branch}' - implementation must use working branch"),
                 });
             }
         }
@@ -119,8 +119,7 @@ pub fn run_watcher(store: &Store) -> Result<WatcherReport, error::DecapodError> 
                             violation_type: "unpushed_to_protected".to_string(),
                             commit_hash,
                             message: format!(
-                                "Watcher detected {} unpushed commit(s) to protected branch",
-                                ahead
+                                "Watcher detected {ahead} unpushed commit(s) to protected branch"
                             ),
                         });
                 }

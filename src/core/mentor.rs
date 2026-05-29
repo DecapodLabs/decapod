@@ -791,7 +791,7 @@ impl MentorEngine {
                 }
 
                 // Check content relevance
-                let combined = format!("{} {} {}", name, description, workflow).to_lowercase();
+                let combined = format!("{name} {description} {workflow}").to_lowercase();
                 for path in &context.touched_paths {
                     if combined.contains(&path.to_lowercase()) {
                         score += 0.2;
@@ -852,7 +852,7 @@ impl MentorEngine {
                 }
 
                 // Check content
-                let content_lower = format!("{} {}", title, body).to_lowercase();
+                let content_lower = format!("{title} {body}").to_lowercase();
                 for path in &context.touched_paths {
                     if content_lower.contains(&path.to_lowercase()) {
                         score += 0.15;
@@ -885,9 +885,9 @@ impl MentorEngine {
 
                 for touched in &context.touched_paths {
                     let touched_lower = touched.to_lowercase();
-                    if content_lower.contains(&format!("must use {}", touched_lower))
-                        || content_lower.contains(&format!("shall use {}", touched_lower))
-                        || content_lower.contains(&format!("decided: {}", touched_lower))
+                    if content_lower.contains(&format!("must use {touched_lower}"))
+                        || content_lower.contains(&format!("shall use {touched_lower}"))
+                        || content_lower.contains(&format!("decided: {touched_lower}"))
                     {
                         // Potential contradiction if operation changes this
                         if context.op.contains("change")
@@ -896,8 +896,7 @@ impl MentorEngine {
                         {
                             contradictions.push(Contradiction {
                                 description: format!(
-                                    "Operation may contradict ADR decision regarding {}",
-                                    touched
+                                    "Operation may contradict ADR decision regarding {touched}"
                                 ),
                                 current: format!("Operation: {}", context.op),
                                 prior: format!(
@@ -1012,7 +1011,7 @@ impl MentorEngine {
 
                 Obligation {
                     kind: ObligationKind::KgNode,
-                    ref_path: format!(".decapod/data/federation# {}", id),
+                    ref_path: format!(".decapod/data/federation# {id}"),
                     title: title.clone(),
                     why_short: why.to_string(),
                     evidence: Evidence {
@@ -1038,7 +1037,7 @@ impl MentorEngine {
 
                 Obligation {
                     kind: ObligationKind::Todo,
-                    ref_path: format!(".decapod/data/todo# {}", id),
+                    ref_path: format!(".decapod/data/todo# {id}"),
                     title: title.clone(),
                     why_short: why.to_string(),
                     evidence: Evidence {
@@ -1058,8 +1057,8 @@ impl MentorEngine {
                 usage_count: _,
             } => Obligation {
                 kind: ObligationKind::DocAnchor, // Reusing DocAnchor as it fits the "read this" model
-                ref_path: format!("aptitude.db/skills/{}", name),
-                title: format!("Skill: {}", name),
+                ref_path: format!("aptitude.db/skills/{name}"),
+                title: format!("Skill: {name}"),
                 why_short: description.clone(),
                 evidence: Evidence {
                     source: "aptitude.db".to_string(),
@@ -1077,12 +1076,12 @@ impl MentorEngine {
                 confidence,
             } => Obligation {
                 kind: ObligationKind::DocAnchor,
-                ref_path: format!("aptitude.db/preferences/{}.{}", category, key),
-                title: format!("Preference: {}.{}", category, key),
-                why_short: format!("User preference (confidence {}%): {}", confidence, value),
+                ref_path: format!("aptitude.db/preferences/{category}.{key}"),
+                title: format!("Preference: {category}.{key}"),
+                why_short: format!("User preference (confidence {confidence}%): {value}"),
                 evidence: Evidence {
                     source: "aptitude.db".to_string(),
-                    id: format!("{}.{}", category, key),
+                    id: format!("{category}.{key}"),
                     hash: None,
                     timestamp: None,
                 },
@@ -1095,8 +1094,8 @@ impl MentorEngine {
                 tags: _,
             } => Obligation {
                 kind: ObligationKind::KgNode,
-                ref_path: format!(".decapod/data/federation# {}", id),
-                title: format!("Learned Lesson: {}", title),
+                ref_path: format!(".decapod/data/federation# {id}"),
+                title: format!("Learned Lesson: {title}"),
                 why_short: "Applying past learnings to current context".to_string(),
                 evidence: Evidence {
                     source: ".decapod/data".to_string(),

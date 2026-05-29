@@ -118,7 +118,7 @@ fn add_tests_for_file(file: &str, tests_to_run: &mut HashMap<String, bool>) {
         s if s.starts_with("src/plugins/") => {
             if let Some(rest) = s.strip_prefix("src/plugins/") {
                 let plugin_name = rest.strip_suffix(".rs").unwrap_or(rest);
-                let test_name = format!("plugins_{}_tests", plugin_name);
+                let test_name = format!("plugins_{plugin_name}_tests");
                 tests_to_run.insert(test_name, true);
             }
         }
@@ -189,7 +189,7 @@ fn add_tests_for_file(file: &str, tests_to_run: &mut HashMap<String, bool>) {
 }
 
 fn run_cargo_test(test: &str, threads: &str) -> bool {
-    println!(">>> Running: {}", test);
+    println!(">>> Running: {test}");
     let status = Command::new("cargo")
         .args([
             "test",
@@ -206,11 +206,11 @@ fn run_cargo_test(test: &str, threads: &str) -> bool {
 
     match status {
         Ok(s) if s.success() => {
-            println!("✓ {} passed", test);
+            println!("✓ {test} passed");
             true
         }
         _ => {
-            println!("✗ {} FAILED", test);
+            println!("✗ {test} FAILED");
             false
         }
     }
@@ -239,8 +239,8 @@ fn run_reflex_mode(changed_files: &[String]) -> bool {
             s if s.starts_with("src/plugins/") => {
                 if let Some(rest) = s.strip_prefix("src/plugins/") {
                     let plugin_name = rest.strip_suffix(".rs").unwrap_or(rest);
-                    println!("Testing: plugin {}", plugin_name);
-                    let test_name = format!("plugins_{}_tests", plugin_name);
+                    println!("Testing: plugin {plugin_name}");
+                    let test_name = format!("plugins_{plugin_name}_tests");
                     if !run_cargo_test(&test_name, "2") {
                         failed = true;
                     }
@@ -293,7 +293,7 @@ fn main() {
     } else if args.all {
         println!("Mode: all tests");
         for test in all_tests() {
-            print!("{} ", test);
+            print!("{test} ");
         }
         println!();
         vec!["--all".to_string()]
@@ -309,7 +309,7 @@ fn main() {
         println!("No changed files detected. Use --all to run all tests.");
     }
 
-    println!("Changed files: {:?}", changed_files);
+    println!("Changed files: {changed_files:?}");
 
     if args.reflex {
         let failed = run_reflex_mode(&changed_files);

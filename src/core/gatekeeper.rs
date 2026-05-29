@@ -110,7 +110,7 @@ pub fn run_gatekeeper(
                     kind: ViolationKind::PathBlocked,
                     path: path.clone(),
                     line: None,
-                    message: format!("Path matches blocked pattern: {}", pattern),
+                    message: format!("Path matches blocked pattern: {pattern}"),
                 });
             }
         }
@@ -156,7 +156,7 @@ fn scan_for_secrets(
                         kind: ViolationKind::SecretDetected,
                         path: path.clone(),
                         line: Some(line_num + 1),
-                        message: format!("Potential secret detected: {}", pattern),
+                        message: format!("Potential secret detected: {pattern}"),
                     });
                 }
             }
@@ -200,7 +200,7 @@ fn scan_for_dangerous_patterns(
                         kind: ViolationKind::DangerousPattern,
                         path: path.clone(),
                         line: Some(line_num + 1),
-                        message: format!("Dangerous pattern detected: {}", pattern),
+                        message: format!("Dangerous pattern detected: {pattern}"),
                     });
                 }
             }
