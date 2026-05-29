@@ -13,7 +13,6 @@ This document defines the normative operational contracts for the Decapod CLI.
 
 ## `decapod session`
 - **Intent:** Session token management (required for agent operation)
-- **Subcommands:** `acquire`, `status`, `release`, `init`, `handshake`.
 
 ## `decapod constitution`
 - **Intent:** Embedded Constitution Graph queries and lookups
@@ -32,30 +31,20 @@ This document defines the normative operational contracts for the Decapod CLI.
 
 ## `decapod validate`
 - **Intent:** Validate methodology compliance
+- **Intent:** Verify methodology compliance.
 - **Outcome:** Exit code 0 on success, 1 on failure.
-
-## `decapod system`
-- **Intent:** System-level metadata and health
-- **Subcommands:** `version`, `doctor`, `capabilities`.
 
 ## `decapod govern`
 - **Intent:** Governance: policy, health, proofs, audits
-- **Subcommands:** `policy`, `health`, `proof`, `watcher`, `feedback`, `gatekeeper`, `plan`, `workunit`, `capsule`, `state-commit`.
 
 ## `decapod data`
 - **Intent:** Data: archives, knowledge, context, schemas
-- **Subcommands:** `archive`, `knowledge`, `context`, `schema`, `repo`, `broker`, `aptitude`, `federation`, `primitives`, `map`.
 
 ## `decapod auto`
 - **Intent:** Automation: scheduled and event-driven
 
 ## `decapod qa`
 - **Intent:** Quality assurance: verification and checks
-- **Subcommands:** `verify`, `check`, `gatling`, `eval`, `demo`.
-
-## `decapod context`
-- **Intent:** Inference context management and prediction
-- **Subcommands:** `infer`, `lcm`, `internalize`, `preflight`, `impact`.
 
 ## `decapod decide`
 - **Intent:** Architecture decision prompting
@@ -73,15 +62,18 @@ This document defines the normative operational contracts for the Decapod CLI.
 
 ## `decapod capabilities`
 - **Intent:** Show Decapod capabilities (for agent discovery)
-- **Note:** Also available via `decapod system capabilities`.
 
 ## `decapod infer`
 - **Intent:** Inference governance: shape context before model, validate after
-- **Note:** Also available via `decapod context infer`.
 
 ## `decapod trace`
 - **Intent:** Local trace management
-- **Subcommands:** `export`, `flight-recorder`.
+
+## `decapod system`
+- **Intent:** System: capabilities, version, doctor
+
+## `decapod context`
+- **Intent:** Context: infer, lcm, internalize, preflight, impact
 
 # RPC Operations (Auto-generated)
 
