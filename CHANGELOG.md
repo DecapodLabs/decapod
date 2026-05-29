@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.4](https://github.com/DecapodLabs/decapod/compare/v0.57.3...v0.57.4) - 2026-05-29
+
+### Added
+
+- *(cli)* consolidate subcommands and align test suite ([#660](https://github.com/DecapodLabs/decapod/pull/660)) ([#662](https://github.com/DecapodLabs/decapod/pull/662))
+
 ## [0.57.3](https://github.com/DecapodLabs/decapod/compare/v0.57.2...v0.57.3) - 2026-05-28
 
 ### Added
