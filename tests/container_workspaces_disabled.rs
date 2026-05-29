@@ -174,7 +174,8 @@ fn test_container_workspaces_true_requires_container() {
     println!("STDERR: {}", stderr);
 
     assert!(
-        stderr.contains("container_workspace_required") || stdout.contains("container_workspace_required"),
+        stderr.contains("container_workspace_required")
+            || stdout.contains("container_workspace_required"),
         "should require container when container_workspaces = true. Stderr: {stderr}\nStdout: {stdout}"
     );
 }

@@ -740,7 +740,7 @@ pub(crate) enum QaCommand {
     Gatling(crate::plugins::gatling::GatlingCli),
 
     /// Variance-aware evaluation artifacts and promotion gates
-    Eval(eval::EvalCli),
+    Eval(Box<eval::EvalCli>),
 
     /// Run demonstrations of Decapod features
     Demo(DemoCli),

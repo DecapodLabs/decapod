@@ -81,7 +81,11 @@ fn test_internalization_manifest_schema_roundtrip() {
         replay_recipe: ReplayRecipe {
             mode: ReplayClass::Replayable,
             command: "decapod".to_string(),
-            args: vec!["context".to_string(), "internalize".to_string(), "create".to_string()],
+            args: vec![
+                "context".to_string(),
+                "internalize".to_string(),
+                "create".to_string(),
+            ],
             env: BTreeMap::new(),
             reason: "deterministic profile with pinned binary hash".to_string(),
         },
@@ -127,8 +131,13 @@ fn test_schema_files_exist_and_parse() {
             String::from_utf8_lossy(&output.stderr)
         );
         let raw = String::from_utf8_lossy(&output.stdout);
-        let wrapper: serde_json::Value = serde_json::from_str(&raw).expect(&format!("parse wrapper for {}: {}", file, raw));
-        let content_obj = wrapper.get("result").expect(&format!("has result for {}: {}", file, raw)).get("content").expect(&format!("has content for {}: {}", file, raw));
+        let wrapper: serde_json::Value = serde_json::from_str(&raw)
+            .unwrap_or_else(|_| panic!("parse wrapper for {file}: {raw}"));
+        let content_obj = wrapper
+            .get("result")
+            .unwrap_or_else(|| panic!("has result for {file}: {raw}"))
+            .get("content")
+            .unwrap_or_else(|| panic!("has content for {file}: {raw}"));
         let schema_str = content_obj
             .get("summary")
             .expect("has summary")
@@ -318,7 +327,8 @@ fn test_cli_create_attach_detach_inspect() {
     let (success, output) = run_decapod(
         &temp_path,
         &[
-            "context", "internalize",
+            "context",
+            "internalize",
             "create",
             "--source",
             "sample_doc.txt",
@@ -337,7 +347,8 @@ fn test_cli_create_attach_detach_inspect() {
     let (success, output) = run_decapod(
         &temp_path,
         &[
-            "context", "internalize",
+            "context",
+            "internalize",
             "attach",
             "--id",
             artifact_id,
@@ -356,7 +367,8 @@ fn test_cli_create_attach_detach_inspect() {
     let (success, output) = run_decapod(
         &temp_path,
         &[
-            "context", "internalize",
+            "context",
+            "internalize",
             "detach",
             "--id",
             artifact_id,
@@ -371,7 +383,8 @@ fn test_cli_create_attach_detach_inspect() {
     let (success, output) = run_decapod(
         &temp_path,
         &[
-            "context", "internalize",
+            "context",
+            "internalize",
             "inspect",
             "--id",
             artifact_id,

@@ -251,7 +251,17 @@ fn test_workspace_protected_patterns() {
 fn test_preflight_schema_stability() {
     let (_tmp, dir) = setup_repo();
 
-    let out = run_decapod(dir, &["context", "preflight", "--op", "validate", "--format", "json"]);
+    let out = run_decapod(
+        dir,
+        &[
+            "context",
+            "preflight",
+            "--op",
+            "validate",
+            "--format",
+            "json",
+        ],
+    );
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
 
@@ -285,7 +295,14 @@ fn test_impact_schema_stability() {
 
     let out = run_decapod(
         dir,
-        &["context", "impact", "--changed-files", "src/a.rs", "--format", "json"],
+        &[
+            "context",
+            "impact",
+            "--changed-files",
+            "src/a.rs",
+            "--format",
+            "json",
+        ],
     );
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
@@ -321,7 +338,17 @@ fn test_impact_schema_stability() {
 fn test_preflight_predicts_workspace_required() {
     let (_tmp, dir) = setup_repo();
 
-    let out = run_decapod(dir, &["context", "preflight", "--op", "validate", "--format", "json"]);
+    let out = run_decapod(
+        dir,
+        &[
+            "context",
+            "preflight",
+            "--op",
+            "validate",
+            "--format",
+            "json",
+        ],
+    );
     let stdout = String::from_utf8_lossy(&out.stdout);
 
     let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
@@ -363,7 +390,14 @@ fn test_impact_predicts_failure_on_protected_branch() {
 
     let out = run_decapod(
         dir,
-        &["context", "impact", "--changed-files", "src/a.rs", "--format", "json"],
+        &[
+            "context",
+            "impact",
+            "--changed-files",
+            "src/a.rs",
+            "--format",
+            "json",
+        ],
     );
     let stdout = String::from_utf8_lossy(&out.stdout);
 
@@ -413,7 +447,17 @@ fn test_capabilities_includes_interlock() {
 fn test_demo_interlock_prediction() {
     let (_tmp, dir) = setup_repo();
 
-    let preflight_out = run_decapod(dir, &["context", "preflight", "--op", "validate", "--format", "json"]);
+    let preflight_out = run_decapod(
+        dir,
+        &[
+            "context",
+            "preflight",
+            "--op",
+            "validate",
+            "--format",
+            "json",
+        ],
+    );
     let preflight_stdout = String::from_utf8_lossy(&preflight_out.stdout);
 
     let preflight: serde_json::Value = serde_json::from_str(&preflight_stdout).unwrap();
@@ -426,7 +470,14 @@ fn test_demo_interlock_prediction() {
 
     let impact_out = run_decapod(
         dir,
-        &["context", "impact", "--changed-files", "src/a.rs", "--format", "json"],
+        &[
+            "context",
+            "impact",
+            "--changed-files",
+            "src/a.rs",
+            "--format",
+            "json",
+        ],
     );
     let impact_stdout = String::from_utf8_lossy(&impact_out.stdout);
 

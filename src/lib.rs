@@ -2267,10 +2267,10 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Release(_)
         | Command::Trace(_)
         | Command::System(_) => false,
-        Command::Context(ContextGroupCli { command }) => match command {
-            ContextGroupCommand::Preflight(_) | ContextGroupCommand::Impact(_) => false,
-            _ => true,
-        },
+        Command::Context(ContextGroupCli {
+            command: ContextGroupCommand::Preflight(_) | ContextGroupCommand::Impact(_),
+        }) => false,
+        Command::Context(_) => true,
         Command::Data(DataCli {
             command: DataCommand::Schema(_),
         }) => false,
@@ -4815,9 +4815,7 @@ fn run_govern_command(
         GovernCommand::Capsule(capsule_cli) => {
             run_capsule_command(capsule_cli, project_store, workspace_root)?
         }
-        GovernCommand::StateCommit(sc_cli) => {
-            run_state_commit_command(sc_cli, workspace_root)?
-        }
+        GovernCommand::StateCommit(sc_cli) => run_state_commit_command(sc_cli, workspace_root)?,
     }
 
     Ok(())
@@ -5595,7 +5593,7 @@ fn run_qa_command(
         } => run_check(crate_description, commands, all)?,
         QaCommand::Gatling(ref gatling_cli) => plugins::gatling::run_gatling_cli(gatling_cli)?,
         QaCommand::Eval(eval_cli) => {
-            eval::run_eval_cli(project_store, eval_cli)?;
+            eval::run_eval_cli(project_store, *eval_cli)?;
         }
         QaCommand::Demo(demo_cli) => {
             run_demo_command(demo_cli, workspace_root)?;
