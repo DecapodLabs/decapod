@@ -34,9 +34,6 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Intent:** Verify methodology compliance.
 - **Outcome:** Exit code 0 on success, 1 on failure.
 
-## `decapod version`
-- **Intent:** Show version information
-
 ## `decapod govern`
 - **Intent:** Governance: policy, health, proofs, audits
 
@@ -60,23 +57,11 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod rpc`
 - **Intent:** Structured JSON-RPC interface for agents
 
-## `decapod handshake`
-- **Intent:** Deterministic agent handshake artifact (repo-native)
-
 ## `decapod release`
 - **Intent:** Release lifecycle checks and guards
 
 ## `decapod capabilities`
 - **Intent:** Show Decapod capabilities (for agent discovery)
-
-## `decapod internalize`
-- **Intent:** Internalized context artifacts: create, attach, and inspect context adapters
-
-## `decapod preflight`
-- **Intent:** Preflight check: before any operation, predict what will fail
-
-## `decapod impact`
-- **Intent:** Impact analysis: predict validation outcomes for changed files
 
 ## `decapod infer`
 - **Intent:** Inference governance: shape context before model, validate after
@@ -84,26 +69,11 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod trace`
 - **Intent:** Local trace management
 
-## `decapod eval`
-- **Intent:** Variance-aware evaluation artifacts and promotion gates
+## `decapod system`
+- **Intent:** System: capabilities, version, doctor
 
-## `decapod flight-recorder`
-- **Intent:** Governance Flight Recorder - render timeline from event logs
-
-## `decapod state-commit`
-- **Intent:** STATE_COMMIT: prove and verify cryptographic state commitments
-
-## `decapod doctor`
-- **Intent:** Preflight health checks for the workspace
-
-## `decapod lcm`
-- **Intent:** Lossless Context Management — immutable originals + deterministic summaries
-
-## `decapod map`
-- **Intent:** Deterministic map operators — structured parallel processing
-
-## `decapod demo`
-- **Intent:** Run demonstrations of Decapod features
+## `decapod context`
+- **Intent:** Context: infer, lcm, internalize, preflight, impact
 
 # RPC Operations (Auto-generated)
 

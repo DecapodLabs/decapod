@@ -369,6 +369,8 @@ pub(crate) enum SessionCommand {
         #[clap(long)]
         force: bool,
     },
+    /// Deterministic agent handshake artifact (repo-native)
+    Handshake(HandshakeCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -427,6 +429,9 @@ pub(crate) enum GovernCommand {
 
     /// Deterministic context capsule query over embedded constitution docs
     Capsule(CapsuleCli),
+
+    /// STATE_COMMIT: prove and verify cryptographic state commitments
+    StateCommit(StateCommitCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -681,6 +686,9 @@ pub(crate) enum DataCommand {
 
     /// Markdown-native primitive layer
     Primitives(primitives::PrimitivesCli),
+
+    /// Deterministic map operators — structured parallel processing
+    Map(map_ops::MapCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -730,6 +738,12 @@ pub(crate) enum QaCommand {
 
     /// Run gatling regression test across all CLI code paths
     Gatling(crate::plugins::gatling::GatlingCli),
+
+    /// Variance-aware evaluation artifacts and promotion gates
+    Eval(eval::EvalCli),
+
+    /// Run demonstrations of Decapod features
+    Demo(DemoCli),
 }
 
 #[derive(clap::Args, Debug)]
@@ -774,6 +788,44 @@ pub(crate) enum TraceCommand {
         #[clap(long, default_value = "10")]
         last: usize,
     },
+    /// Governance Flight Recorder - render timeline from event logs
+    FlightRecorder(flight_recorder::FlightRecorderCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct SystemCli {
+    #[clap(subcommand)]
+    pub command: SystemCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum SystemCommand {
+    /// Show version information
+    Version,
+    /// Preflight health checks for the workspace
+    Doctor(doctor::DoctorCli),
+    /// Show Decapod capabilities (for agent discovery)
+    Capabilities(CapabilitiesCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct ContextGroupCli {
+    #[clap(subcommand)]
+    pub command: ContextGroupCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum ContextGroupCommand {
+    /// Inference governance: shape context before model, validate after
+    Infer(InferCli),
+    /// Lossless Context Management — immutable originals + deterministic summaries
+    Lcm(lcm::LcmCli),
+    /// Internalized context artifacts: create, attach, and inspect context adapters
+    Internalize(internalize::InternalizeCli),
+    /// Preflight check: before any operation, predict what will fail
+    Preflight(PreflightCli),
+    /// Impact analysis: predict validation outcomes for changed files
+    Impact(ImpactCli),
 }
 
 #[derive(Subcommand, Debug)]
@@ -814,10 +866,6 @@ pub(crate) enum Command {
     #[clap(name = "validate", visible_alias = "v")]
     Validate(ValidateCli),
 
-    /// Show version information
-    #[clap(name = "version")]
-    Version,
-
     /// Governance: policy, health, proofs, audits
     #[clap(name = "govern", visible_alias = "g")]
     Govern(GovernCli),
@@ -846,10 +894,6 @@ pub(crate) enum Command {
     #[clap(name = "rpc")]
     Rpc(RpcCli),
 
-    /// Deterministic agent handshake artifact (repo-native)
-    #[clap(name = "handshake")]
-    Handshake(HandshakeCli),
-
     /// Release lifecycle checks and guards
     #[clap(name = "release")]
     Release(ReleaseCli),
@@ -857,18 +901,6 @@ pub(crate) enum Command {
     /// Show Decapod capabilities (for agent discovery)
     #[clap(name = "capabilities")]
     Capabilities(CapabilitiesCli),
-
-    /// Internalized context artifacts: create, attach, and inspect context adapters
-    #[clap(name = "internalize")]
-    Internalize(internalize::InternalizeCli),
-
-    /// Preflight check: before any operation, predict what will fail
-    #[clap(name = "preflight")]
-    Preflight(PreflightCli),
-
-    /// Impact analysis: predict validation outcomes for changed files
-    #[clap(name = "impact")]
-    Impact(ImpactCli),
 
     /// Inference governance: shape context before model, validate after
     #[clap(name = "infer")]
@@ -878,33 +910,13 @@ pub(crate) enum Command {
     #[clap(name = "trace")]
     Trace(TraceCli),
 
-    /// Variance-aware evaluation artifacts and promotion gates
-    #[clap(name = "eval")]
-    Eval(eval::EvalCli),
+    /// System: capabilities, version, doctor
+    #[clap(name = "system")]
+    System(SystemCli),
 
-    /// Governance Flight Recorder - render timeline from event logs
-    #[clap(name = "flight-recorder")]
-    FlightRecorder(flight_recorder::FlightRecorderCli),
-
-    /// STATE_COMMIT: prove and verify cryptographic state commitments
-    #[clap(name = "state-commit")]
-    StateCommit(StateCommitCli),
-
-    /// Preflight health checks for the workspace
-    #[clap(name = "doctor")]
-    Doctor(doctor::DoctorCli),
-
-    /// Lossless Context Management — immutable originals + deterministic summaries
-    #[clap(name = "lcm")]
-    Lcm(lcm::LcmCli),
-
-    /// Deterministic map operators — structured parallel processing
-    #[clap(name = "map")]
-    Map(map_ops::MapCli),
-
-    /// Run demonstrations of Decapod features
-    #[clap(name = "demo")]
-    Demo(DemoCli),
+    /// Context: infer, lcm, internalize, preflight, impact
+    #[clap(name = "context")]
+    Context(ContextGroupCli),
 }
 
 #[derive(clap::Args, Debug)]

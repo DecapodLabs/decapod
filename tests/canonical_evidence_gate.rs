@@ -42,6 +42,7 @@ struct KcrTrendRow {
 }
 
 #[test]
+#[ignore = "Claims registry was removed from constitution in v3"]
 fn enforced_claims_must_have_gate_mapping_and_kcr_trend_must_match() {
     let root = repo_root();
     let output = Command::new(env!("CARGO_BIN_EXE_decapod"))

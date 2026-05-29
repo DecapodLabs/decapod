@@ -711,7 +711,7 @@ fn validate_fails_on_internalization_source_hash_drift_if_present() {
     let create = run_decapod(
         &dir,
         &[
-            "internalize",
+            "context", "internalize",
             "create",
             "--source",
             "doc.txt",
@@ -755,7 +755,7 @@ fn validate_fails_on_best_effort_internalization_claiming_replayable() {
     let create = run_decapod(
         &dir,
         &[
-            "internalize",
+            "context", "internalize",
             "create",
             "--source",
             "doc.txt",
