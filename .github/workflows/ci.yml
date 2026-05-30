@@ -92,6 +92,14 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -102,7 +110,7 @@ jobs:
           shared-key: "ci-build"
           save-if: "false"
       - name: Clippy
-        run: nix develop .#ci -c cargo clippy --all-targets -- -D warnings
+        run: nix develop .#ci -c cargo clippy --all-targets --all-features -- -D warnings
 
   # HEALTH: consumes the shared decapod binary from setup
   health:
@@ -168,6 +176,14 @@ jobs:
         with:
           fetch-depth: 1
           submodules: recursive
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Verify golden vectors exist
@@ -224,6 +240,14 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -263,6 +287,14 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -340,6 +372,14 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -361,6 +401,14 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -389,6 +437,14 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -417,6 +473,14 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -445,6 +509,14 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -478,6 +550,14 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -526,7 +606,7 @@ jobs:
           cache-targets: true
           save-if: true
       - name: Build release
-        run: cargo build --release --locked --features cloud
+        run: cargo build --release --locked
       - name: Upload binary
         uses: actions/upload-artifact@v7
         with:

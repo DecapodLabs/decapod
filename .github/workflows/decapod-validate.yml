@@ -11,8 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Cache Decapod
