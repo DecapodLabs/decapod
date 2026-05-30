@@ -4310,6 +4310,22 @@ fn run_validate_command(
         }
     }
 
+    // Ensure cloud authentication if using cloud backend
+    if let Ok(config) = crate::cli::DecapodProjectConfig::load(governance_root) {
+        if config.repo.mode == crate::cli::BackendType::Cloud
+            && !crate::core::auth::is_token_valid(governance_root)
+        {
+            if validate_cli.format != "json" {
+                println!(
+                    "{} {}",
+                    "◢".bright_cyan().bold(),
+                    "Cloud authentication required".bright_white().bold()
+                );
+            }
+            crate::core::auth::perform_cloud_auth(governance_root)?;
+        }
+    }
+
     let store = match validate_cli.store.as_str() {
         "user" => {
             // User store uses a temp directory for blank-slate validation

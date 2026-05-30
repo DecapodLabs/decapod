@@ -56,6 +56,26 @@ pub fn perform_cloud_auth(target_dir: &Path) -> Result<(), DecapodError> {
     Ok(())
 }
 
+pub fn is_token_valid(target_dir: &Path) -> bool {
+    let token_path = target_dir.join(".decapod").join("session_token");
+    if !token_path.exists() {
+        return false;
+    }
+
+    let token = match fs::read_to_string(&token_path) {
+        Ok(v) => v,
+        Err(_) => return false,
+    };
+
+    if token.trim().is_empty() {
+        return false;
+    }
+
+    // For now, we consider any non-empty token valid.
+    // In the future, we could add a jwt decode/check here or a simple ping to an Auth0 endpoint.
+    true
+}
+
 fn initiate_device_flow() -> Result<DeviceCodeResponse, DecapodError> {
     let url = format!("https://{AUTH0_DOMAIN}/oauth/device/code");
     let body = format!(
