@@ -164,7 +164,7 @@ pub(crate) struct InitGroupCli {
     /// in this repository.
     #[clap(long = "no-container-workspaces", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub container_workspaces: bool,
-    /// Backend mode: 'local' (default) or 'cloud'.
+    /// Backend mode: 'local' (default) or 'cloud' (experimental).
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub mode: BackendType,
     /// Supabase URL for cloud mode.
@@ -259,7 +259,7 @@ pub(crate) struct InitWithCli {
     /// in this repository.
     #[clap(long = "no-container-workspaces", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub container_workspaces: bool,
-    /// Backend mode: 'local' (default) or 'cloud'.
+    /// Backend mode: 'local' (default) or 'cloud' (experimental).
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub mode: BackendType,
     /// Supabase URL for cloud mode.

@@ -1408,7 +1408,7 @@ fn enrich_repo_context_interactive(
     repo.container_workspaces = enable_container_workspaces;
 
     let backend_choice = prompt_yes_no(
-        "Use cloud backend? (Requires Auth0 authentication and grants access to Supabase.)",
+        "Use cloud backend? (EXPERIMENTAL: Requires Auth0 authentication and grants access to Supabase.)",
         matches!(repo.mode, crate::cli::BackendType::Cloud),
     )?;
     repo.mode = if backend_choice {
