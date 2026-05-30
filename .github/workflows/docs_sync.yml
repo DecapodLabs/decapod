@@ -28,18 +28,19 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
 
-      - name: Configure Git for Private Dependencies
+      - name: Clone Propodus
         run: |
-          git config --global credential.https://github.com/DecapodLabs/propodus.git.username x-access-token
-          git config --global credential.https://github.com/DecapodLabs/propodus.git.helper '!f() { echo password=${{ steps.generate-token.outputs.token }}; }; f'
+          git clone https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/propodus.git ../propodus
+
+      - name: Patch Cargo.toml
+        run: |
+          echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+          echo "propodus = { path = '../propodus' }" >> Cargo.toml
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build Decapod
-        env:
-          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-          GIT_TERMINAL_PROMPT: "0"
         run: cargo build --all-features
 
       - name: Get changed files
