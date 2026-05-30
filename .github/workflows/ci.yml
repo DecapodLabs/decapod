@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Check commit messages
@@ -53,7 +53,7 @@ jobs:
     outputs:
       changed: ${{ steps.diff.outputs.changed }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Detect changed migration scripts
@@ -87,7 +87,7 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -112,7 +112,7 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -143,7 +143,7 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
         with:
@@ -208,7 +208,7 @@ jobs:
           submodules: recursive
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Verify golden vectors exist
@@ -273,7 +273,7 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -322,7 +322,7 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -409,7 +409,7 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -440,7 +440,7 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -478,7 +478,7 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -516,7 +516,7 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -554,7 +554,7 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -597,7 +597,7 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -637,7 +637,7 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - uses: dtolnay/rust-toolchain@stable

@@ -13,120 +13,38 @@ on:
         type: choice
         options:
           - full
-          - release-pr-only
+          - changelog-only
+          - publish-only
 
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 jobs:
-  # Create release PR with version bumps and changelog
-  release-pr:
-    name: Release PR
+  release-publish:
+    name: Release (Publish)
     runs-on: ubuntu-latest
-    if: github.repository == 'DecapodLabs/decapod'
-    environment: release
-    concurrency:
-      group: release-plz-${{ github.ref }}
-      cancel-in-progress: false
+    if: github.ref == 'refs/heads/master'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Generate GitHub App token
         uses: actions/create-github-app-token@v2
         id: generate-token
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: DecapodLabs
 
-      - name: Run release-plz
-        uses: release-plz/action@v0.5
-        with:
-          command: release-pr
-          config: .github/release.toml
-        env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-
-      - name: Update version file in release PR
-        run: |
-          # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Poll for release-plz branch (it may take time for the PR to be created)
-          echo "Waiting for release-plz to create PR branch..."
-          PR_BRANCH=""
-          for i in {1..30}; do
-            git fetch origin
-            PR_BRANCH=$(git branch -r | grep "release-plz" | head -n1 | sed 's/origin\///' | xargs)
-            if [ -n "$PR_BRANCH" ]; then
-              echo "✓ Found release branch: $PR_BRANCH"
-              break
-            fi
-            echo "  Attempt $i/30: No release-plz branch yet, waiting..."
-            sleep 2
-          done
-          
-          if [ -z "$PR_BRANCH" ]; then
-            echo "⚠️ No release-plz branch found after 60 seconds"
-            echo "This may indicate release-plz didn't create a PR (no version bump needed)"
-            exit 0
-          fi
-          
-          # Checkout the PR branch
-          git checkout "$PR_BRANCH"
-          
-          # Get new version from Cargo.toml
-          NEW_VERSION=$(grep '^version = ' Cargo.toml | head -n1 | cut -d'"' -f2)
-          echo "Cargo.toml version: $NEW_VERSION"
-          
-          # Update version file
-          mkdir -p .decapod/generated
-          echo "$NEW_VERSION" > .decapod/generated/decapod.version
-          
-          # Check if there are changes
-          if git diff --quiet .decapod/generated/decapod.version 2>/dev/null; then
-            echo "Version file already up to date"
-            exit 0
-          fi
-          
-          # Commit and push
-          git add .decapod/generated/decapod.version
-          git commit -m "chore: update version file to $NEW_VERSION"
-          git push origin "$PR_BRANCH"
-          echo "✅ Updated version file to $NEW_VERSION in $PR_BRANCH"
-        continue-on-error: true
-
-  # Tag and publish to crates.io when release PR is merged
-  release-publish:
-    name: Release & Publish
-    runs-on: ubuntu-latest
-    if: github.repository == 'DecapodLabs/decapod' && (github.event_name != 'workflow_dispatch' || github.event.inputs.mode != 'release-pr-only')
-    environment: release
-    concurrency:
-      group: release-publish
-      cancel-in-progress: false
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
 
       - name: Run release-plz
         uses: release-plz/action@v0.5
@@ -136,3 +54,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
