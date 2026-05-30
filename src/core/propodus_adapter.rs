@@ -1,6 +1,6 @@
-use async_trait::async_trait;
 use crate::core::storage as ds; // decapod storage
 use anyhow::Result;
+use async_trait::async_trait;
 use std::path::Path;
 
 pub struct PropodusStorage {
@@ -25,7 +25,10 @@ impl ds::TodoStore for PropodusStorage {
     }
 
     async fn add_task(&self, task: ds::Task, actor: String, intent: String) -> Result<()> {
-        self.inner.todo_store().add_task(map_task_from_ds(task), actor, intent).await
+        self.inner
+            .todo_store()
+            .add_task(map_task_from_ds(task), actor, intent)
+            .await
     }
 
     async fn claim_task(&self, id: &str, actor: String) -> Result<()> {
@@ -33,7 +36,10 @@ impl ds::TodoStore for PropodusStorage {
     }
 
     async fn complete_task(&self, id: &str, actor: String, resolution: String) -> Result<()> {
-        self.inner.todo_store().complete_task(id, actor, resolution).await
+        self.inner
+            .todo_store()
+            .complete_task(id, actor, resolution)
+            .await
     }
 }
 
@@ -49,8 +55,16 @@ impl ds::KnowledgeStore for PropodusStorage {
         Ok(entries.into_iter().map(map_knowledge_to_ds).collect())
     }
 
-    async fn upsert_knowledge(&self, item: ds::KnowledgeEntry, actor: String, intent: String) -> Result<()> {
-        self.inner.knowledge_store().upsert_knowledge(map_knowledge_from_ds(item), actor, intent).await
+    async fn upsert_knowledge(
+        &self,
+        item: ds::KnowledgeEntry,
+        actor: String,
+        intent: String,
+    ) -> Result<()> {
+        self.inner
+            .knowledge_store()
+            .upsert_knowledge(map_knowledge_from_ds(item), actor, intent)
+            .await
     }
 }
 
@@ -61,15 +75,29 @@ impl ds::DecisionStore for PropodusStorage {
         Ok(decisions.into_iter().map(map_decision_to_ds).collect())
     }
 
-    async fn add_decision(&self, decision: ds::Decision, actor: String, intent: String) -> Result<()> {
-        self.inner.decision_store().add_decision(map_decision_from_ds(decision), actor, intent).await
+    async fn add_decision(
+        &self,
+        decision: ds::Decision,
+        actor: String,
+        intent: String,
+    ) -> Result<()> {
+        self.inner
+            .decision_store()
+            .add_decision(map_decision_from_ds(decision), actor, intent)
+            .await
     }
 }
 
 impl ds::StorageProvider for PropodusStorage {
-    fn todo_store(&self) -> &dyn ds::TodoStore { self }
-    fn knowledge_store(&self) -> &dyn ds::KnowledgeStore { self }
-    fn decision_store(&self) -> &dyn ds::DecisionStore { self }
+    fn todo_store(&self) -> &dyn ds::TodoStore {
+        self
+    }
+    fn knowledge_store(&self) -> &dyn ds::KnowledgeStore {
+        self
+    }
+    fn decision_store(&self) -> &dyn ds::DecisionStore {
+        self
+    }
 }
 
 fn map_task_to_ds(t: propodus::types::Task) -> ds::Task {
@@ -78,7 +106,7 @@ fn map_task_to_ds(t: propodus::types::Task) -> ds::Task {
         repo_id: t.repo_id,
         hash: t.hash,
         title: t.title,
-        description: t.description,
+        description: Some(t.description),
         status: t.status,
         assignee: t.assignee,
         scope: t.scope,

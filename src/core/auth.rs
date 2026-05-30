@@ -121,13 +121,10 @@ impl CloudAuthGate for InteractiveAuthGate {
 }
 
 pub fn get_cloud_auth_gate() -> Box<dyn CloudAuthGate> {
-    #[cfg(feature = "cloud")]
-    {
-        use std::io::IsTerminal;
-        // Trigger auth only if in a terminal and not in GITHUB_ACTIONS CI
-        if std::io::stdin().is_terminal() && std::env::var("GITHUB_ACTIONS").is_err() {
-            return Box::new(InteractiveAuthGate);
-        }
+    use std::io::IsTerminal;
+    // Trigger auth only if in a terminal and not in GITHUB_ACTIONS CI
+    if std::io::stdin().is_terminal() && std::env::var("GITHUB_ACTIONS").is_err() {
+        return Box::new(InteractiveAuthGate);
     }
     Box::new(NoOpAuthGate)
 }
