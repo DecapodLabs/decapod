@@ -19,7 +19,6 @@ pub mod docs;
 pub mod docs_cli;
 pub mod error;
 pub mod external_action;
-pub mod fake_cloud;
 pub mod flight_recorder;
 pub mod gatekeeper;
 pub mod group_broker;
