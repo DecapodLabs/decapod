@@ -88,7 +88,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -113,7 +115,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -144,7 +148,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
         with:
@@ -209,7 +215,9 @@ jobs:
           submodules: recursive
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Verify golden vectors exist
@@ -274,7 +282,9 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -323,7 +333,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -410,7 +422,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -441,7 +455,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -479,7 +495,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -517,7 +535,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -532,8 +552,10 @@ jobs:
         with:
           name: decapod-debug-linux-${{ github.sha }}
           path: target/debug
-      - name: Make shared decapod binary executable
-        run: chmod +x target/debug/decapod
+      - name: Install shared decapod binary
+        run: |
+          chmod +x target/debug/decapod
+          echo "$PWD/target/debug" >> "$GITHUB_PATH"
       - name: Run daemonless lifecycle test
         run: cargo test --test daemonless_lifecycle -- --test-threads=1
 
@@ -555,7 +577,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -598,7 +622,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -638,7 +664,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - uses: dtolnay/rust-toolchain@stable

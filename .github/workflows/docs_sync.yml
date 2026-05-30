@@ -29,7 +29,9 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "git@github.com:"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
