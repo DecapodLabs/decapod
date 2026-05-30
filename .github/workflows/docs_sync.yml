@@ -19,11 +19,14 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build Decapod
-        run: cargo build
+        run: cargo build --all-features
 
       - name: Get changed files
         id: changed-files

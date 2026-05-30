@@ -125,6 +125,9 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+
       - name: Run release-plz
         uses: release-plz/action@v0.5
         with:

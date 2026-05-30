@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Cache Decapod
@@ -21,7 +23,7 @@ jobs:
       - name: Install Decapod
         run: |
           if ! command -v decapod &> /dev/null; then
-            cargo install decapod
+            cargo install --path . --all-features
           fi
       - name: Decapod Validate
         env:
