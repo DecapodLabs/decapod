@@ -76,19 +76,9 @@ jobs:
     name: Lint (fmt)
     runs-on: ubuntu-latest
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
-      - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -111,9 +101,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/propodus.git".insteadOf "https://github.com/DecapodLabs/propodus.git"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -132,24 +121,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
-      - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
-      - name: Restore cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "ci-build"
-          save-if: "false"
       - name: Download shared decapod binary
         uses: actions/download-artifact@v8
         with:
@@ -196,20 +170,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           submodules: recursive
-          token: ${{ steps.generate-token.outputs.token }}
-      - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Verify golden vectors exist
@@ -272,9 +236,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/propodus.git".insteadOf "https://github.com/DecapodLabs/propodus.git"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -311,19 +274,9 @@ jobs:
       matrix:
         target: [core, plugins, cli, integration]
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
-      - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -398,19 +351,9 @@ jobs:
     needs: setup
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
-      - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -429,19 +372,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
-      - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -467,19 +400,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
-      - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -505,19 +428,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
-      - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -543,19 +456,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
-      - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -586,19 +489,9 @@ jobs:
     needs: [setup, detect-migration-script-changes]
     if: github.event_name == 'pull_request' && needs.detect-migration-script-changes.outputs.changed == 'true'
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
-      - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -636,9 +529,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/propodus.git".insteadOf "https://github.com/DecapodLabs/propodus.git"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - uses: dtolnay/rust-toolchain@stable
