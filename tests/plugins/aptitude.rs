@@ -1,11 +1,12 @@
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::plugins::aptitude::{
-    PreferenceInput, SkillInput, add_preference, add_skill, aptitude_db_path, delete_preference,
+    PreferenceInput, add_preference, aptitude_db_path, delete_preference,
     generate_contextual_reminders, get_preference, get_preferences_by_category,
-    get_prompts_for_context, get_skill, initialize_aptitude_db, list_preferences, list_skills,
-    match_patterns, record_observation,
+    get_prompts_for_context, initialize_aptitude_db, list_preferences, match_patterns,
+    record_observation,
 };
+use std::process::Command;
 use tempfile::tempdir;
 
 #[test]
@@ -97,39 +98,6 @@ fn test_preference_update_on_conflict() {
 }
 
 #[test]
-fn test_skill_lifecycle() {
-    let tmp = tempdir().unwrap();
-    let root = tmp.path().to_path_buf();
-    initialize_aptitude_db(&root).unwrap();
-
-    let store = Store {
-        kind: StoreKind::Repo,
-        root: root.clone(),
-    };
-
-    // 1. Add skill
-    let input = SkillInput {
-        name: "deploy".to_string(),
-        description: Some("Deploy to production".to_string()),
-        workflow: "git push && kubectl apply".to_string(),
-        context: Some("production".to_string()),
-    };
-    let id = add_skill(&store, input).unwrap();
-    assert!(!id.is_empty());
-
-    // 2. Get skill
-    let skill = get_skill(&store, "deploy")
-        .unwrap()
-        .expect("Skill not found");
-    assert_eq!(skill.name, "deploy");
-    assert_eq!(skill.usage_count, 1);
-
-    // 3. List skills
-    let skills = list_skills(&store).unwrap();
-    assert_eq!(skills.len(), 1);
-}
-
-#[test]
 fn test_pattern_matching() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
@@ -217,4 +185,63 @@ fn test_db_path() {
     let root = tmp.path().to_path_buf();
     let db_path = aptitude_db_path(&root);
     assert!(db_path.to_string_lossy().ends_with("memory.db"));
+}
+
+#[test]
+fn test_cli_has_no_skill_subcommand() {
+    let tmp = tempdir().unwrap();
+    let dir = tmp.path();
+    let init = Command::new("git")
+        .current_dir(dir)
+        .args(["init", "-b", "master"])
+        .output()
+        .expect("git init");
+    assert!(init.status.success(), "git init failed");
+
+    let decapod_init = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .current_dir(dir)
+        .args(["init", "--force"])
+        .output()
+        .expect("decapod init");
+    assert!(
+        decapod_init.status.success(),
+        "decapod init failed: {}\n{}",
+        String::from_utf8_lossy(&decapod_init.stdout),
+        String::from_utf8_lossy(&decapod_init.stderr)
+    );
+
+    let help = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .current_dir(dir)
+        .args(["data", "aptitude", "--help"])
+        .output()
+        .expect("aptitude help");
+    assert!(help.status.success(), "aptitude help failed");
+    let help_text = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&help.stdout),
+        String::from_utf8_lossy(&help.stderr)
+    );
+    assert!(
+        !help_text.contains("skill"),
+        "aptitude help should not expose skill commands:\n{help_text}"
+    );
+
+    let removed = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .current_dir(dir)
+        .args(["data", "aptitude", "skill"])
+        .output()
+        .expect("removed subcommand");
+    assert!(
+        !removed.status.success(),
+        "removed skill subcommand should be rejected"
+    );
+    let removed_text = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&removed.stdout),
+        String::from_utf8_lossy(&removed.stderr)
+    );
+    assert!(
+        removed_text.contains("unrecognized subcommand"),
+        "removed skill subcommand should fail as an unknown command:\n{removed_text}"
+    );
 }

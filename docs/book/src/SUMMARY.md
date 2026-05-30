@@ -18,7 +18,6 @@
   - [Proof](concepts/proof.md)
   - [Constitution](concepts/constitution.md)
   - [Overrides](concepts/overrides.md)
-  - [Skills](concepts/skills.md)
   - [Model Context Protocol (MCP)](concepts/mcp.md)
 
 - [Reference]()

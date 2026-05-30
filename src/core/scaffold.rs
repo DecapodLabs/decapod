@@ -1181,8 +1181,8 @@ fn write_file(
 /// LegacyEntrypointContent holds the contents of backed-up agent entrypoint files.
 ///
 /// These contents should be returned to the agent so it can manually consolidate
-/// them into the appropriate sections of OVERRIDE.md (skill stuff into skill sections,
-/// memory stuff into memory sections, plugin stuff into plugin sections, etc.).
+/// them into the appropriate sections of OVERRIDE.md (memory content into memory
+/// sections, plugin content into plugin sections, etc.).
 /// This is NOT auto-blended - the agent handles the consolidation.
 #[derive(Debug, Default, serde::Serialize)]
 pub struct LegacyEntrypointContent {

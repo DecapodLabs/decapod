@@ -296,7 +296,6 @@ decapod data schema --deterministic
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides when present.
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`.
-- Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
 - Operator reference: `decapod constitution get docs/PLAYBOOK`.
 - Capability authority: `decapod capabilities --format json`.
 -- Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod constitution search --query "<problem>"`.
@@ -343,7 +342,6 @@ decapod rpc --op context.resolve
 ```
 
 ## Control-Plane First Loop
-
 ```bash
 decapod capabilities --format json
 decapod data schema --deterministic
@@ -352,9 +350,7 @@ decapod govern capsule query --topic "<topic>" --scope interfaces --task-id <tas
 decapod constitution search --query "<problem>"
 ```
 
-
 ## Pre-Inference Governance
-
 **Decapod is pre-inference faculty, not post-hoc validation.**
 - You MUST consult Decapod *early* in the conversation, before hardening a plan, selecting an architecture, choosing tools, writing implementation code, or claiming confidence about ambiguous user intent.
 - Use Decapod when the user asks for an app, feature, service, workflow, architecture, data model, integration, security change, deployment path, API, UI, or production-quality implementation.
@@ -363,7 +359,6 @@ decapod constitution search --query "<problem>"
 - Do not wait until after code is written to discover that the work violated intent, boundaries, proof, or institutional standards.
 
 ## Golden Rules (Non-Negotiable)
-
 1. **MUST** refine intent with the user before inference-heavy work.
 2. **MUST** use `decapod infer orientation` before non-trivial implementation.
 3. **MUST** stop and ask the human when Decapod emits a **Decision Gate**.
@@ -378,15 +373,12 @@ decapod constitution search --query "<problem>"
 12. **MUST** use the command contracts in `docs/agent/command-contracts.md` instead of guessing arguments.
 
 ## Decapod Invocation Contract
-
 Agents act. Decapod orients. Call Decapod at decision boundaries: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, context loss, or multi-agent collision risk.
 
 ## Living Specs & Governance
-
 The files under `.decapod/generated/specs/` are living contracts. Review and update [INTENT.md](.decapod/generated/specs/INTENT.md), [ARCHITECTURE.md](.decapod/generated/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/generated/specs/INTERFACES.md) to align with evolving intent and reality.
 
 ## Epistemic Custody
-
 Preserve the chain between intent, context, assumptions, action, and proof.
 1. **Preserve Uncertainty**: Summaries must preserve risk instead of compressing it.
 2. **Recursive Continuity**: Prior assumptions MUST carry forward until resolved.
@@ -456,69 +448,13 @@ It keeps Decapod-owned state, generated artifacts, and isolated workspaces separ
 
 ## Migrating Custom Agent Files
 
-If you have existing files like `SKILLS.md`, `SOUL.md`, or `MEMORY.md` that were used for agent instructions, you can easily migrate them into the Decapod governance layer. 
+If you have existing files like `SOUL.md` or `MEMORY.md` that were used for agent instructions, you can migrate them into the Decapod governance layer.
 
 After running `decapod init`, simply ask your agent to **"consolidate my [FILE.md] content into the .decapod/OVERRIDE.md substrate"**. This ensures your project-specific intent is merged into the correct constitutional sections while allowing Decapod to manage the primary entrypoints.
 
-## Skills - Your Personal Optimization Layer
+## Aptitude Memory
 
-**Skills are how you shape agent behavior.** Import skills to train agents how to interact with your codebase, your conventions, and your preferences.
-
-### Why Skills Matter
-
-- **Controls**: Add security reviews, code quality checks, or custom validation
-- **Optimization**: Encode your team's conventions, patterns, and best practices
-- **Context**: Give agents project-specific knowledge that persists across sessions
-
-### Quick Skills Workflow
-
-```bash
-# Import a skill from a SKILL.md file
-decapod data aptitude skill import --path path/to/your/SKILL.md
-
-# List available skills
-decapod data aptitude skill list
-
-# Resolve skills for a specific task
-decapod data aptitude skill resolve --query "how to write tests"
-
-# Query aptitude memory for learned preferences
-decapod data aptitude prompt --query "git"
-```
-
-### Creating Your Own Skills
-
-Skills are just Markdown files with YAML frontmatter:
-
-```yaml
----
-name: my-security-review
-description: Custom security checks for our codebase
-allowed-tools: Bash
----
-
-# Security Review Skill
-
-## Triggers
-- "check security"
-- "review for vulnerabilities"
-
-## Workflow
-1. Run `semgrep --config=auto .`
-2. Check for hardcoded secrets
-3. Validate dependency vulnerabilities
-4. Report findings
-```
-
-Place SKILL.md files in `metadata/skills/` and import them:
-
-```bash
-decapod data aptitude skill import --path metadata.skills.my-security-review.SKILL.md
-```
-
-### Aptitude Memory
-
-Decapod learns from interactions. Use aptitude to record preferences:
+Decapod aptitude remains for preferences and behavior recall:
 
 ```bash
 # Record a preference
@@ -536,7 +472,6 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 - `README.md`: operator onboarding and control-plane map.
 - `OVERRIDE.md`: project-local override layer for embedded constitution directives.
 - `data/`: canonical control-plane state (SQLite + ledgers).
-- `skills/`: imported skill cards (auto-generated, tracked for reproducibility).
 - `generated/specs/`: living project specs scaffolded by `decapod init`.
 - `generated/context/`: deterministic context capsule artifacts.
 - `generated/artifacts/provenance/`: promotion manifests and convergence checklist.

@@ -54,7 +54,6 @@ decapod data schema --deterministic
 - Read `.decapod/OVERRIDE.md` for repo-local constitution overrides when present.
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`.
-- Use shared aptitude memory for human-taught preferences across sessions/providers: `decapod data memory add|get` (aliases: `decapod data aptitude`).
 - Operator reference: `decapod constitution get docs/PLAYBOOK`.
 - Capability authority: `decapod capabilities --format json`.
 -- Scoped context feature: `decapod rpc --op context.scope --params '{"query":"<problem>","op":"<op>"}'` or `decapod constitution search --query "<problem>"`.

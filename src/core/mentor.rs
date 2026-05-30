@@ -135,13 +135,6 @@ enum CandidateSource {
         status: String,
         category: Option<String>,
     },
-    AptitudeSkill {
-        name: String,
-        description: String,
-        workflow: String,
-        context: Option<String>,
-        usage_count: i64,
-    },
     AptitudePreference {
         category: String,
         key: String,
@@ -280,9 +273,6 @@ impl MentorEngine {
 
         // Get todo candidates
         candidates.extend(self.get_todo_candidates()?);
-
-        // Get aptitude skills
-        candidates.extend(self.get_aptitude_skill_candidates()?);
 
         // Get aptitude preferences
         candidates.extend(self.get_aptitude_preference_candidates()?);
@@ -515,41 +505,6 @@ impl MentorEngine {
         Ok(candidates)
     }
 
-    /// Get aptitude skill candidates
-    fn get_aptitude_skill_candidates(&self) -> Result<Vec<CandidateSource>, DecapodError> {
-        let mut candidates = vec![];
-        let db_path = self
-            .repo_root
-            .join(".decapod")
-            .join("data")
-            .join("aptitude.db");
-
-        if !db_path.exists() {
-            return Ok(candidates);
-        }
-
-        let conn = rusqlite::Connection::open(&db_path)?;
-        let mut stmt = conn.prepare(
-            "SELECT name, description, workflow, context, usage_count FROM skills ORDER BY usage_count DESC LIMIT 20",
-        )?;
-
-        let rows = stmt.query_map([], |row| {
-            Ok(CandidateSource::AptitudeSkill {
-                name: row.get(0)?,
-                description: row.get::<_, Option<String>>(1)?.unwrap_or_default(),
-                workflow: row.get(2)?,
-                context: row.get(3)?,
-                usage_count: row.get(4)?,
-            })
-        })?;
-
-        for row in rows {
-            candidates.push(row?);
-        }
-
-        Ok(candidates)
-    }
-
     /// Get aptitude preference candidates
     fn get_aptitude_preference_candidates(&self) -> Result<Vec<CandidateSource>, DecapodError> {
         let mut candidates = vec![];
@@ -765,36 +720,6 @@ impl MentorEngine {
                 for path in &context.touched_paths {
                     if title_lower.contains(&path.to_lowercase()) {
                         score += 0.1;
-                    }
-                }
-            }
-            CandidateSource::AptitudeSkill {
-                name,
-                description,
-                workflow,
-                context: skill_context,
-                usage_count,
-            } => {
-                // Base score for skills
-                score += 0.5;
-
-                // Boost for high usage
-                if *usage_count > 5 {
-                    score += 0.1;
-                }
-
-                // Check context match (e.g. "git", "style")
-                if let Some(ctx) = skill_context
-                    && context.op.contains(ctx)
-                {
-                    score += 0.3;
-                }
-
-                // Check content relevance
-                let combined = format!("{name} {description} {workflow}").to_lowercase();
-                for path in &context.touched_paths {
-                    if combined.contains(&path.to_lowercase()) {
-                        score += 0.2;
                     }
                 }
             }
@@ -1049,25 +974,6 @@ impl MentorEngine {
                     relevance_score: score,
                 }
             }
-            CandidateSource::AptitudeSkill {
-                name,
-                description,
-                workflow,
-                context: _,
-                usage_count: _,
-            } => Obligation {
-                kind: ObligationKind::DocAnchor, // Reusing DocAnchor as it fits the "read this" model
-                ref_path: format!("aptitude.db/skills/{name}"),
-                title: format!("Skill: {name}"),
-                why_short: description.clone(),
-                evidence: Evidence {
-                    source: "aptitude.db".to_string(),
-                    id: name.clone(),
-                    hash: Some(self.compute_hash(workflow)),
-                    timestamp: None,
-                },
-                relevance_score: score,
-            },
             CandidateSource::AptitudePreference {
                 category,
                 key,

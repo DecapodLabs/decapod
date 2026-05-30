@@ -894,7 +894,7 @@ pub fn infer_component(title: &str, tags: &str) -> Option<String> {
         ),
         (
             "aptitude",
-            vec!["aptitude", "preference", "skill", "pattern", "observation"],
+            vec!["aptitude", "preference", "pattern", "observation"],
         ),
         ("todo", vec!["todo", "task", "work tracking"]),
         ("security", vec!["security", "credential", "key", "auth"]),

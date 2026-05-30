@@ -34,7 +34,6 @@ Call Decapod at **Inference Pressure Points**:
 | [Error Recovery](error-recovery.md) | How to respond to Decapod exit codes and messages. |
 | [State Model](state-model.md) | Understanding the lifecycle of Tasks and Workspaces. |
 | [Config Schema](config-schema.md) | Policy keys that govern your behavior. |
-| [Agent Skills](skills.md) | Procedural instructions for specific tasks. |
 | [MCP Integration](mcp.md) | Using Decapod via Model Context Protocol. |
 
 Do not attempt to bypass Decapod boundaries. If you encounter a block, resolve it through the governed policy path or ask the human operator.

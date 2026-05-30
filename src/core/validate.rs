@@ -21,7 +21,6 @@ use crate::core::project_specs::{
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
-use crate::plugins::aptitude::{SkillCard, SkillResolution};
 use crate::plugins::internalize::{self, DeterminismClass, InternalizationManifest, ReplayClass};
 use crate::{db, primitives, todo};
 use fancy_regex::Regex;
@@ -2092,159 +2091,6 @@ fn validate_knowledge_promotions_if_present(
     }
 
     pass("Knowledge promotion ledger schema check passed", ctx);
-    Ok(())
-}
-
-fn validate_skill_cards_if_present(
-    ctx: &ValidationContext,
-    repo_root: &Path,
-) -> Result<(), error::DecapodError> {
-    info("Skill Card Artifact Gate");
-
-    let dir = repo_root.join(".decapod").join("skills");
-    if !dir.exists() {
-        skip("No skill cards found; skipping skill card gate", ctx);
-        return Ok(());
-    }
-
-    let mut files = 0usize;
-    for entry in fs::read_dir(&dir).map_err(error::DecapodError::IoError)? {
-        let entry = entry.map_err(error::DecapodError::IoError)?;
-        let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("json") {
-            continue;
-        }
-        files += 1;
-        let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
-        let parsed: SkillCard = serde_json::from_str(&raw).map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "invalid skill card {}: {}",
-                path.display(),
-                e
-            ))
-        })?;
-        if parsed.kind != "skill_card" || parsed.schema_version != "1.0.0" {
-            fail(
-                &format!(
-                    "skill card {} has invalid kind/schema_version",
-                    path.display()
-                ),
-                ctx,
-            );
-            continue;
-        }
-        let mut normalized = parsed.clone();
-        let expected = parsed.card_hash.clone();
-        normalized.card_hash.clear();
-        normalized.generated_at.clear();
-        let canonical = serde_json::to_vec(&normalized).map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "skill card canonicalization failed for {}: {}",
-                path.display(),
-                e
-            ))
-        })?;
-        let actual = {
-            use sha2::{Digest, Sha256};
-            let mut hasher = Sha256::new();
-            hasher.update(&canonical);
-            format!("{:x}", hasher.finalize())
-        };
-        if actual != expected {
-            fail(
-                &format!(
-                    "skill card hash mismatch in {} (expected {}, got {})",
-                    path.display(),
-                    expected,
-                    actual
-                ),
-                ctx,
-            );
-        }
-    }
-
-    pass(
-        &format!("Skill card integrity checked for {files} file(s)"),
-        ctx,
-    );
-    Ok(())
-}
-
-fn validate_skill_resolutions_if_present(
-    ctx: &ValidationContext,
-    repo_root: &Path,
-) -> Result<(), error::DecapodError> {
-    info("Skill Resolution Artifact Gate");
-
-    let dir = repo_root.join(".decapod").join("generated").join("skills");
-    if !dir.exists() {
-        skip(
-            "No skill resolution artifacts found; skipping skill resolution gate",
-            ctx,
-        );
-        return Ok(());
-    }
-
-    let mut files = 0usize;
-    for entry in fs::read_dir(&dir).map_err(error::DecapodError::IoError)? {
-        let entry = entry.map_err(error::DecapodError::IoError)?;
-        let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("json") {
-            continue;
-        }
-        files += 1;
-        let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
-        let parsed: SkillResolution = serde_json::from_str(&raw).map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "invalid skill resolution {}: {}",
-                path.display(),
-                e
-            ))
-        })?;
-        if parsed.kind != "skill_resolution" || parsed.schema_version != "1.0.0" {
-            fail(
-                &format!(
-                    "skill resolution {} has invalid kind/schema_version",
-                    path.display()
-                ),
-                ctx,
-            );
-            continue;
-        }
-        let mut normalized = parsed.clone();
-        let expected = parsed.resolution_hash.clone();
-        normalized.resolution_hash.clear();
-        normalized.generated_at.clear();
-        let canonical = serde_json::to_vec(&normalized).map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "skill resolution canonicalization failed for {}: {}",
-                path.display(),
-                e
-            ))
-        })?;
-        let actual = {
-            use sha2::{Digest, Sha256};
-            let mut hasher = Sha256::new();
-            hasher.update(&canonical);
-            format!("{:x}", hasher.finalize())
-        };
-        if actual != expected {
-            fail(
-                &format!(
-                    "skill resolution hash mismatch in {} (expected {}, got {})",
-                    path.display(),
-                    expected,
-                    actual
-                ),
-                ctx,
-            );
-        }
-    }
-
-    pass(
-        &format!("Skill resolution integrity checked for {files} file(s)"),
-        ctx,
-    );
     Ok(())
 }
 
@@ -4912,20 +4758,6 @@ pub fn run_validation(
             ctx,
             "validate_knowledge_promotions_if_present",
             validate_knowledge_promotions_if_present(ctx, main_root)
-        );
-        gate!(
-            s,
-            timings,
-            ctx,
-            "validate_skill_cards_if_present",
-            validate_skill_cards_if_present(ctx, main_root)
-        );
-        gate!(
-            s,
-            timings,
-            ctx,
-            "validate_skill_resolutions_if_present",
-            validate_skill_resolutions_if_present(ctx, main_root)
         );
         gate!(
             s,

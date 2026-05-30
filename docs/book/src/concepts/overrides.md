@@ -22,18 +22,6 @@ For this repository, we target a minimum of 80% line coverage. Critical paths in
 - **Tighter Security:** Block agents from touching specific directories or files.
 - **Workflow Adjustments:** Add mandatory manual review steps for specific subsystems.
 - **Platform Specifics:** Define how Decapod should interact with your specific CI/CD pipeline.
-- **Skill Customization:** Tailor the workflows and steps of specific agent [Skills](skills.md) to your project's needs.
-
-## Skill Overrides
-
-Skills are identified by their `metadata/skills/` path. You can override a global or default skill by adding a section for it in `OVERRIDE.md`:
-
-```markdown
-### metadata/skills/rust-security-audit
-
-For this project, additionally check for usage of `std::sync::Mutex` and recommend `tokio::sync::Mutex` where appropriate.
-```
-
 ## Policy as Code
 
 Because overrides are committed to the repository, they serve as "Policy as Code". They are versioned, auditable, and provide a clear, shared understanding of the rules for both humans and agents.

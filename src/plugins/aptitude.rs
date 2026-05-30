@@ -1,4 +1,4 @@
-//! Aptitude plugin: remembers user preferences, skills, and behaviors.
+//! Aptitude plugin: remembers user preferences and behaviors.
 //!
 //! This plugin catalogs distinct user expectations like:
 //! - SSH key preferences for Git operations
@@ -6,7 +6,6 @@
 //! - Code style preferences
 //! - Commit message formats
 //! - Workflow conventions
-//! - Learned skills and workflows
 //! - Pattern recognition for auto-detection
 
 use crate::core::broker::DbBroker;
@@ -16,9 +15,7 @@ use crate::core::store::Store;
 use fancy_regex::Regex;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::collections::HashMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 // ============================================================================
@@ -130,61 +127,6 @@ pub struct PreferenceInput {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Skill {
-    pub id: String,
-    pub name: String,
-    pub description: Option<String>,
-    pub workflow: String,
-    pub context: Option<String>,
-    pub usage_count: i64,
-    pub last_used_at: Option<String>,
-    pub created_at: String,
-    pub updated_at: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SkillInput {
-    pub name: String,
-    pub description: Option<String>,
-    pub workflow: String,
-    pub context: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SkillCard {
-    pub schema_version: String,
-    pub kind: String,
-    pub skill_name: String,
-    pub description: Option<String>,
-    pub source_path: String,
-    pub source_sha256: String,
-    pub dependencies: Vec<String>,
-    pub workflow_outline: Vec<String>,
-    pub tags: Vec<String>,
-    pub generated_at: String,
-    pub card_hash: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ResolvedSkill {
-    pub name: String,
-    pub score: i64,
-    pub reason: String,
-    pub workflow_preview: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct SkillResolution {
-    pub schema_version: String,
-    pub kind: String,
-    pub query: String,
-    pub limit: usize,
-    pub resolved: Vec<ResolvedSkill>,
-    pub generated_at: String,
-    pub resolution_hash: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Pattern {
     pub id: String,
     pub name: String,
@@ -271,7 +213,6 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
     broker.with_conn(&db_path, "decapod", None, "aptitude.init", |conn| {
         // Create tables (if not exists)
         conn.execute(schemas::APTITUDE_DB_SCHEMA_PREFERENCES, [])?;
-        conn.execute(schemas::APTITUDE_DB_SCHEMA_SKILLS, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_PATTERNS, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_OBSERVATIONS, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_CONSOLIDATIONS, [])?;
@@ -287,7 +228,6 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_KEY, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS, [])?;
-        conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_SKILL_NAME, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PATTERN_CATEGORY, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_OBS_PROCESSED, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT, [])?;
@@ -532,395 +472,6 @@ pub fn get_preferences_by_category(
     }
 
     Ok(grouped)
-}
-
-// ============================================================================
-// SKILL CRUD
-// ============================================================================
-
-pub fn add_skill(store: &Store, input: SkillInput) -> Result<String, error::DecapodError> {
-    let broker = DbBroker::new(&store.root);
-    let db_path = aptitude_db_path(&store.root);
-    let id = crate::core::ulid::new_ulid();
-    let now = now_iso();
-
-    broker.with_conn(&db_path, "decapod", None, "aptitude.skill.add", |conn| {
-        conn.execute(
-            "INSERT INTO skills(id, name, description, workflow, context, usage_count, last_used_at, created_at, updated_at)
-             VALUES(?1, ?2, ?3, ?4, ?5, 0, NULL, ?6, NULL)
-             ON CONFLICT(name) DO UPDATE SET
-                description = excluded.description,
-                workflow = excluded.workflow,
-                context = excluded.context,
-                updated_at = ?6",
-            params![id, input.name, input.description, input.workflow, input.context, now],
-        )?;
-        Ok(())
-    })?;
-
-    Ok(id)
-}
-
-pub fn get_skill(store: &Store, name: &str) -> Result<Option<Skill>, error::DecapodError> {
-    let broker = DbBroker::new(&store.root);
-    let db_path = aptitude_db_path(&store.root);
-    let now = now_iso();
-
-    let skill = broker.with_conn(&db_path, "decapod", None, "aptitude.skill.get", |conn| {
-        // Update usage metrics
-        conn.execute(
-            "UPDATE skills SET usage_count = usage_count + 1, last_used_at = ?1 WHERE name = ?2",
-            params![now, name],
-        )?;
-
-        let mut stmt = conn.prepare(
-            "SELECT id, name, description, workflow, context, usage_count, last_used_at, created_at, updated_at
-             FROM skills WHERE name = ?1",
-        )?;
-        let result = stmt.query_row(params![name], |row| {
-            Ok(Skill {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                description: row.get(2)?,
-                workflow: row.get(3)?,
-                context: row.get(4)?,
-                usage_count: row.get(5)?,
-                last_used_at: row.get(6)?,
-                created_at: row.get(7)?,
-                updated_at: row.get(8)?,
-            })
-        });
-
-        match result {
-            Ok(s) => Ok(Some(s)),
-            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(error::DecapodError::RusqliteError(e)),
-        }
-    })?;
-
-    Ok(skill)
-}
-
-pub fn list_skills(store: &Store) -> Result<Vec<Skill>, error::DecapodError> {
-    let broker = DbBroker::new(&store.root);
-    let db_path = aptitude_db_path(&store.root);
-
-    let skills = broker.with_conn(&db_path, "decapod", None, "aptitude.skill.list", |conn| {
-        let mut stmt = conn.prepare(
-            "SELECT id, name, description, workflow, context, usage_count, last_used_at, created_at, updated_at
-             FROM skills ORDER BY name",
-        )?;
-        let rows = stmt.query_map([], |row| {
-            Ok(Skill {
-                id: row.get(0)?,
-                name: row.get(1)?,
-                description: row.get(2)?,
-                workflow: row.get(3)?,
-                context: row.get(4)?,
-                usage_count: row.get(5)?,
-                last_used_at: row.get(6)?,
-                created_at: row.get(7)?,
-                updated_at: row.get(8)?,
-            })
-        })?;
-
-        let mut out = Vec::new();
-        for r in rows {
-            out.push(r?);
-        }
-        Ok(out)
-    })?;
-
-    Ok(skills)
-}
-
-pub fn delete_skill(store: &Store, name: &str) -> Result<bool, error::DecapodError> {
-    let broker = DbBroker::new(&store.root);
-    let db_path = aptitude_db_path(&store.root);
-
-    let deleted = broker.with_conn(&db_path, "decapod", None, "aptitude.skill.delete", |conn| {
-        let rows = conn.execute("DELETE FROM skills WHERE name = ?1", params![name])?;
-        Ok(rows > 0)
-    })?;
-
-    Ok(deleted)
-}
-
-fn sha256_hex(bytes: &[u8]) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(bytes);
-    format!("{:x}", hasher.finalize())
-}
-
-fn repo_root_from_store(store: &Store) -> Result<PathBuf, error::DecapodError> {
-    store
-        .root
-        .parent()
-        .and_then(|p| p.parent())
-        .map(Path::to_path_buf)
-        .ok_or_else(|| {
-            error::DecapodError::ValidationError(
-                "AUTOREMEDIABLE_VALIDATION_ERROR code=UNABLE_RESOLVE_REPO_ROOT severity=transient auto_remediable=true audience=agent agent_action=\"ensure the store root contains a valid repository and adjust path if needed\" user_note=\"Cannot resolve repository root from store root; the agent should verify the directory layout.\"\nUnable to resolve repo root from store root".to_string(),
-            )
-        })
-}
-
-fn skills_governance_dir(repo_root: &Path) -> PathBuf {
-    repo_root.join(".decapod").join("skills")
-}
-
-fn skills_generated_dir(repo_root: &Path) -> PathBuf {
-    repo_root.join(".decapod").join("generated").join("skills")
-}
-
-fn parse_skill_md_frontmatter(raw: &str) -> Result<(String, Option<String>), error::DecapodError> {
-    let mut lines = raw.lines();
-    if lines.next().map(str::trim) != Some("---") {
-        return Err(error::DecapodError::ValidationError(
-            "AUTOREMEDIABLE_VALIDATION_ERROR code=SKILL_MISSING_FRONTMATTER severity=transient auto_remediable=true audience=agent agent_action=\"ensure SKILL.md starts with YAML frontmatter delimiter '---'\" user_note=\"SKILL.md missing frontmatter start delimiter; the agent should add the required '---' line at the beginning of the file.\"\nSKILL.md missing YAML frontmatter start '---'".to_string(),
-        ));
-    }
-    let mut name: Option<String> = None;
-    let mut description: Option<String> = None;
-    for line in lines.by_ref() {
-        let trimmed = line.trim();
-        if trimmed == "---" {
-            break;
-        }
-        if let Some(v) = trimmed.strip_prefix("name:") {
-            name = Some(v.trim().to_string());
-        } else if let Some(v) = trimmed.strip_prefix("description:") {
-            description = Some(v.trim().to_string());
-        }
-    }
-    let name = name.ok_or_else(|| {
-        error::DecapodError::ValidationError("AUTOREMEDIABLE_VALIDATION_ERROR code=SKILL_MISSING_NAME severity=transient auto_remediable=true audience=agent agent_action=\"add a 'name' field to SKILL.md frontmatter\" user_note=\"SKILL.md frontmatter missing required 'name' field; the agent should include a name entry.\"\nSKILL.md frontmatter missing 'name'".to_string())
-    })?;
-    Ok((name, description))
-}
-
-fn extract_dependencies(raw: &str) -> Vec<String> {
-    let mut deps = Vec::new();
-    let mut in_dependencies = false;
-    for line in raw.lines() {
-        let trimmed = line.trim();
-        if trimmed.starts_with("# Dependencies") || trimmed.starts_with("## Dependencies") {
-            in_dependencies = true;
-            continue;
-        }
-        if in_dependencies && trimmed.starts_with('#') {
-            break;
-        }
-        if in_dependencies && let Some(dep) = trimmed.strip_prefix("- ") {
-            let dep = dep.trim();
-            if !dep.is_empty() {
-                deps.push(dep.to_string());
-            }
-        }
-    }
-    deps.sort();
-    deps.dedup();
-    deps
-}
-
-fn extract_workflow_outline(raw: &str) -> Vec<String> {
-    let mut outline: Vec<String> = raw
-        .lines()
-        .filter_map(|line| {
-            let trimmed = line.trim();
-            if trimmed.starts_with("## ") {
-                Some(trimmed.trim_start_matches("## ").to_string())
-            } else {
-                None
-            }
-        })
-        .collect();
-    if outline.len() > 12 {
-        outline.truncate(12);
-    }
-    outline
-}
-
-fn skill_tags_from_name(name: &str) -> Vec<String> {
-    let mut tags: Vec<String> = name
-        .split(['-', '_'])
-        .filter(|s| !s.is_empty())
-        .map(|s| s.to_ascii_lowercase())
-        .collect();
-    tags.sort();
-    tags.dedup();
-    tags
-}
-
-fn sanitize_skill_name(name: &str) -> String {
-    let mut out = String::new();
-    for ch in name.chars() {
-        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
-            out.push(ch.to_ascii_lowercase());
-        } else {
-            out.push('-');
-        }
-    }
-    while out.contains("--") {
-        out = out.replace("--", "-");
-    }
-    out.trim_matches('-').to_string()
-}
-
-impl SkillCard {
-    fn with_recomputed_hash(mut self) -> Result<Self, error::DecapodError> {
-        let generated_at = self.generated_at.clone();
-        self.card_hash.clear();
-        self.generated_at.clear();
-        let canonical = serde_json::to_vec(&self)
-            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-        self.card_hash = sha256_hex(&canonical);
-        self.generated_at = generated_at;
-        Ok(self)
-    }
-}
-
-impl SkillResolution {
-    fn with_recomputed_hash(mut self) -> Result<Self, error::DecapodError> {
-        let generated_at = self.generated_at.clone();
-        self.resolution_hash.clear();
-        self.generated_at.clear();
-        let canonical = serde_json::to_vec(&self)
-            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-        self.resolution_hash = sha256_hex(&canonical);
-        self.generated_at = generated_at;
-        Ok(self)
-    }
-}
-
-pub fn import_skill_md(
-    store: &Store,
-    skill_md_path: &Path,
-    write_card: bool,
-) -> Result<(Skill, Option<PathBuf>, Option<SkillCard>), error::DecapodError> {
-    let raw = fs::read_to_string(skill_md_path).map_err(error::DecapodError::IoError)?;
-    let source_sha256 = sha256_hex(raw.as_bytes());
-    let (name, description) = parse_skill_md_frontmatter(&raw)?;
-    let workflow_outline = extract_workflow_outline(&raw);
-    let dependencies = extract_dependencies(&raw);
-    let workflow = if workflow_outline.is_empty() {
-        "No explicit workflow outline found in SKILL.md".to_string()
-    } else {
-        workflow_outline.join(" -> ")
-    };
-    let input = SkillInput {
-        name: name.clone(),
-        description: description.clone(),
-        workflow,
-        context: Some(format!("imported_from:{}", skill_md_path.display())),
-    };
-    add_skill(store, input)?;
-    let skill = get_skill(store, &name)?.ok_or_else(|| {
-        error::DecapodError::ValidationError("AUTOREMEDIABLE_VALIDATION_ERROR code=SKILL_IMPORT_FAIL severity=transient auto_remediable=true audience=agent agent_action=\"ensure skill import persists correctly, verify file writes\" user_note=\"Skill import failed to persist; the agent should retry or investigate file system issues.\"\nskill import did not persist".to_string())
-    })?;
-
-    if !write_card {
-        return Ok((skill, None, None));
-    }
-    let repo_root = repo_root_from_store(store)?;
-    let rel_source = skill_md_path
-        .strip_prefix(&repo_root)
-        .unwrap_or(skill_md_path)
-        .display()
-        .to_string();
-    let card = SkillCard {
-        schema_version: "1.0.0".to_string(),
-        kind: "skill_card".to_string(),
-        skill_name: name.clone(),
-        description,
-        source_path: rel_source,
-        source_sha256,
-        dependencies,
-        workflow_outline,
-        tags: skill_tags_from_name(&name),
-        generated_at: now_iso(),
-        card_hash: String::new(),
-    }
-    .with_recomputed_hash()?;
-
-    let out_dir = skills_governance_dir(&repo_root);
-    fs::create_dir_all(&out_dir).map_err(error::DecapodError::IoError)?;
-    let out_path = out_dir.join(format!("{}.json", sanitize_skill_name(&name)));
-    let payload = serde_json::to_string_pretty(&card)
-        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-    fs::write(&out_path, payload).map_err(error::DecapodError::IoError)?;
-    Ok((skill, Some(out_path), Some(card)))
-}
-
-pub fn resolve_skills(
-    store: &Store,
-    query: &str,
-    limit: usize,
-    write: bool,
-) -> Result<(SkillResolution, Option<PathBuf>), error::DecapodError> {
-    let mut matches: Vec<ResolvedSkill> = list_skills(store)?
-        .into_iter()
-        .map(|skill| {
-            let q = query.to_ascii_lowercase();
-            let mut score = 0i64;
-            let mut reasons = Vec::new();
-            if skill.name.to_ascii_lowercase().contains(&q) {
-                score += 5;
-                reasons.push("name_match");
-            }
-            if skill
-                .description
-                .as_deref()
-                .unwrap_or("")
-                .to_ascii_lowercase()
-                .contains(&q)
-            {
-                score += 3;
-                reasons.push("description_match");
-            }
-            if skill.workflow.to_ascii_lowercase().contains(&q) {
-                score += 2;
-                reasons.push("workflow_match");
-            }
-            score += skill.usage_count.min(10);
-            ResolvedSkill {
-                name: skill.name,
-                score,
-                reason: if reasons.is_empty() {
-                    "usage_bias".to_string()
-                } else {
-                    reasons.join("+")
-                },
-                workflow_preview: skill.workflow.chars().take(120).collect(),
-            }
-        })
-        .collect();
-    matches.sort_by(|a, b| b.score.cmp(&a.score).then_with(|| a.name.cmp(&b.name)));
-    let max = limit.max(1);
-    matches.truncate(max);
-    let resolution = SkillResolution {
-        schema_version: "1.0.0".to_string(),
-        kind: "skill_resolution".to_string(),
-        query: query.to_string(),
-        limit: max,
-        resolved: matches,
-        generated_at: now_iso(),
-        resolution_hash: String::new(),
-    }
-    .with_recomputed_hash()?;
-
-    if !write {
-        return Ok((resolution, None));
-    }
-    let repo_root = repo_root_from_store(store)?;
-    let out_dir = skills_generated_dir(&repo_root);
-    fs::create_dir_all(&out_dir).map_err(error::DecapodError::IoError)?;
-    let query_hash = sha256_hex(query.as_bytes());
-    let out_path = out_dir.join(format!("{}.json", &query_hash[..16]));
-    let payload = serde_json::to_string_pretty(&resolution)
-        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-    fs::write(&out_path, payload).map_err(error::DecapodError::IoError)?;
-    Ok((resolution, Some(out_path)))
 }
 
 // ============================================================================
@@ -1338,17 +889,6 @@ pub fn generate_contextual_reminders(
         ));
     }
 
-    // Get relevant skills
-    let skills = list_skills(store)?;
-    for skill in skills.iter().take(2) {
-        reminders.push(format!(
-            "Skill [{}]: {} (used {} times)",
-            skill.name,
-            skill.description.as_deref().unwrap_or("No description"),
-            skill.usage_count
-        ));
-    }
-
     Ok(reminders)
 }
 
@@ -1361,18 +901,12 @@ pub fn schema() -> serde_json::Value {
         "name": "aptitude",
         "aliases": ["memory"],
         "version": "0.2.0",
-        "description": "User preference, skill, and behavior recall memory with pattern recognition",
+        "description": "User preference and behavior recall memory with pattern recognition",
         "commands": [
             { "name": "add", "description": "Add or update a preference", "parameters": ["category", "key", "value", "context", "source", "confidence"] },
             { "name": "get", "description": "Get a specific preference", "parameters": ["category", "key"] },
             { "name": "list", "description": "List all preferences", "parameters": ["category?"] },
             { "name": "delete", "description": "Delete a preference", "parameters": ["category", "key"] },
-            { "name": "skill add", "description": "Add or update a skill", "parameters": ["name", "description", "workflow", "context"] },
-            { "name": "skill get", "description": "Get a skill by name", "parameters": ["name"] },
-            { "name": "skill list", "description": "List all skills", "parameters": [] },
-            { "name": "skill delete", "description": "Delete a skill", "parameters": ["name"] },
-            { "name": "skill import", "description": "Import SKILL.md into aptitude skill memory and optional deterministic skill card", "parameters": ["path", "write-card?"] },
-            { "name": "skill resolve", "description": "Resolve best-matching skills for a query with deterministic ranking", "parameters": ["query", "limit?", "write?"] },
             { "name": "observe", "description": "Record an observation for pattern matching", "parameters": ["content", "category?"] },
             { "name": "pending", "description": "List pending observations", "parameters": ["limit?"] },
             { "name": "consolidate", "description": "Analyze and consolidate similar entries", "parameters": ["--dry-run", "--execute"] },
@@ -1454,9 +988,6 @@ pub enum AptitudeCommand {
         #[clap(long)]
         key: String,
     },
-    /// Skill management commands
-    #[clap(subcommand)]
-    Skill(SkillCommand),
     /// Record an observation
     Observe {
         /// Observation content
@@ -1495,64 +1026,6 @@ pub enum AptitudeCommand {
         /// Context for reminders
         #[clap(long)]
         context: String,
-    },
-}
-
-#[derive(clap::Subcommand, Debug)]
-pub enum SkillCommand {
-    /// Add or update a skill
-    Add {
-        /// Skill name
-        #[clap(long)]
-        name: String,
-        /// Skill description
-        #[clap(long)]
-        description: Option<String>,
-        /// Workflow/steps for the skill
-        #[clap(long)]
-        workflow: String,
-        /// Optional context
-        #[clap(long)]
-        context: Option<String>,
-    },
-    /// Get a skill by name
-    Get {
-        /// Skill name
-        #[clap(long)]
-        name: String,
-    },
-    /// List all skills
-    List {
-        /// Output format
-        #[clap(long, default_value = "text")]
-        format: String,
-    },
-    /// Delete a skill
-    Delete {
-        /// Skill name
-        #[clap(long)]
-        name: String,
-    },
-    /// Import a SKILL.md file into aptitude skills and optional governed skill card
-    Import {
-        /// Path to SKILL.md
-        #[clap(long)]
-        path: PathBuf,
-        /// Persist deterministic skill card under .decapod/skills
-        #[clap(long, default_value_t = true)]
-        write_card: bool,
-    },
-    /// Resolve best-matching skills for a query
-    Resolve {
-        /// Query string (task/topic)
-        #[clap(long)]
-        query: String,
-        /// Max number of skills to return
-        #[clap(long, default_value_t = 5)]
-        limit: usize,
-        /// Persist deterministic resolution artifact under .decapod/generated/skills
-        #[clap(long)]
-        write: bool,
     },
 }
 
@@ -1628,96 +1101,6 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
                 println!("✗ Preference {category}.{key} not found");
             }
         }
-        AptitudeCommand::Skill(skill_cmd) => match skill_cmd {
-            SkillCommand::Add {
-                name,
-                description,
-                workflow,
-                context,
-            } => {
-                let input = SkillInput {
-                    name: name.clone(),
-                    description,
-                    workflow,
-                    context,
-                };
-                let id = add_skill(store, input)?;
-                println!("✓ Skill recorded: {name} (id: {id})");
-            }
-            SkillCommand::Get { name } => match get_skill(store, &name)? {
-                Some(skill) => {
-                    println!("Skill: {}", skill.name);
-                    if let Some(desc) = skill.description {
-                        println!("  Description: {desc}");
-                    }
-                    println!("  Workflow: {}", skill.workflow);
-                    if let Some(ctx) = skill.context {
-                        println!("  Context: {ctx}");
-                    }
-                    println!("  Used: {} times", skill.usage_count);
-                    if let Some(last) = skill.last_used_at {
-                        println!("  Last used: {last}");
-                    }
-                }
-                None => {
-                    println!("No skill found: {name}");
-                }
-            },
-            SkillCommand::List { format } => {
-                let skills = list_skills(store)?;
-                if format == "json" {
-                    println!("{}", serde_json::to_string_pretty(&skills).unwrap());
-                } else if skills.is_empty() {
-                    println!("No skills recorded yet.");
-                } else {
-                    println!("Skills:");
-                    for skill in skills {
-                        println!(
-                            "  {} - {} (used {}x)",
-                            skill.name,
-                            skill.description.as_deref().unwrap_or("No description"),
-                            skill.usage_count
-                        );
-                    }
-                }
-            }
-            SkillCommand::Delete { name } => {
-                if delete_skill(store, &name)? {
-                    println!("✓ Deleted skill {name}");
-                } else {
-                    println!("✗ Skill {name} not found");
-                }
-            }
-            SkillCommand::Import { path, write_card } => {
-                let (skill, card_path, card) = import_skill_md(store, &path, write_card)?;
-                let mut out = serde_json::json!({
-                    "skill": skill,
-                    "write_card": write_card,
-                });
-                if let Some(p) = card_path {
-                    out["card_path"] = serde_json::Value::String(p.display().to_string());
-                }
-                if let Some(c) = card {
-                    out["card"] = serde_json::to_value(c).unwrap_or(serde_json::Value::Null);
-                }
-                println!("{}", serde_json::to_string_pretty(&out).unwrap());
-            }
-            SkillCommand::Resolve {
-                query,
-                limit,
-                write,
-            } => {
-                let (resolution, path) = resolve_skills(store, &query, limit, write)?;
-                let mut out = serde_json::json!({
-                    "resolution": resolution,
-                    "write": write,
-                });
-                if let Some(p) = path {
-                    out["path"] = serde_json::Value::String(p.display().to_string());
-                }
-                println!("{}", serde_json::to_string_pretty(&out).unwrap());
-            }
-        },
         AptitudeCommand::Observe { content, category } => {
             let id = record_observation(store, &content, category.as_deref())?;
 

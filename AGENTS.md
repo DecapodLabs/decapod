@@ -29,7 +29,6 @@ decapod rpc --op context.resolve
 ```
 
 ## Control-Plane First Loop
-
 ```bash
 decapod capabilities --format json
 decapod data schema --deterministic
@@ -38,9 +37,7 @@ decapod govern capsule query --topic "<topic>" --scope interfaces --task-id <tas
 decapod constitution search --query "<problem>"
 ```
 
-
 ## Pre-Inference Governance
-
 **Decapod is pre-inference faculty, not post-hoc validation.**
 - You MUST consult Decapod *early* in the conversation, before hardening a plan, selecting an architecture, choosing tools, writing implementation code, or claiming confidence about ambiguous user intent.
 - Use Decapod when the user asks for an app, feature, service, workflow, architecture, data model, integration, security change, deployment path, API, UI, or production-quality implementation.
@@ -49,7 +46,6 @@ decapod constitution search --query "<problem>"
 - Do not wait until after code is written to discover that the work violated intent, boundaries, proof, or institutional standards.
 
 ## Golden Rules (Non-Negotiable)
-
 1. **MUST** refine intent with the user before inference-heavy work.
 2. **MUST** use `decapod infer orientation` before non-trivial implementation.
 3. **MUST** stop and ask the human when Decapod emits a **Decision Gate**.
@@ -64,15 +60,12 @@ decapod constitution search --query "<problem>"
 12. **MUST** use the command contracts in `docs/agent/command-contracts.md` instead of guessing arguments.
 
 ## Decapod Invocation Contract
-
 Agents act. Decapod orients. Call Decapod at decision boundaries: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, context loss, or multi-agent collision risk.
 
 ## Living Specs & Governance
-
 The files under `.decapod/generated/specs/` are living contracts. Review and update [INTENT.md](.decapod/generated/specs/INTENT.md), [ARCHITECTURE.md](.decapod/generated/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/generated/specs/INTERFACES.md) to align with evolving intent and reality.
 
 ## Epistemic Custody
-
 Preserve the chain between intent, context, assumptions, action, and proof.
 1. **Preserve Uncertainty**: Summaries must preserve risk instead of compressing it.
 2. **Recursive Continuity**: Prior assumptions MUST carry forward until resolved.

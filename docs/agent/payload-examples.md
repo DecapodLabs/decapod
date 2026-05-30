@@ -67,17 +67,7 @@ decapod data schema --subsystem "todo" --format "json" --deterministic
 decapod data knowledge search --query "crypto primitives"
 ```
 
-## Aptitude and Skills (`decapod data aptitude`)
-
-### Import a Skill
-```bash
-decapod data aptitude skill import --path metadata/skills/my-feature.SKILL.md --write-card
-```
-
-### Resolve Skills for Context
-```bash
-decapod data aptitude skill resolve --query "implementing a new rpc operation" --limit 3
-```
+## Aptitude (`decapod data aptitude`)
 
 ### Add a Preference
 ```bash

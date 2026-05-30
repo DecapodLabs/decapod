@@ -19,7 +19,6 @@ Decapod exposes its core CLI capabilities as MCP Tools, allowing agents to:
 - `todo_add` / `todo_claim`
 - `workspace_ensure`
 - `constitution_search`
-- `aptitude_resolve_skills`
 - `validate`
 
 ## Benefits of MCP Integration

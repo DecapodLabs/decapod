@@ -32,4 +32,3 @@ By supporting the **Model Context Protocol (MCP)**, Decapod allows agents to tre
 - **Pressure Points:** Call Decapod at decision boundaries (e.g., before choosing a library).
 - **Epistemic Custody:** Preserve the "Why" behind a change in the `INTENT.md` spec.
 - **Fail Fast:** Use `decapod validate` early and often to catch alignment drift.
-- **Skill Discovery:** Instead of hardcoding steps, use `skill resolve` to find the project's established best practices.

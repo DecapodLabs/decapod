@@ -543,20 +543,6 @@ pub const APTITUDE_DB_SCHEMA_PREFERENCES: &str = "
     )
 ";
 
-pub const APTITUDE_DB_SCHEMA_SKILLS: &str = "
-    CREATE TABLE IF NOT EXISTS skills (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL UNIQUE,
-        description TEXT,
-        workflow TEXT NOT NULL,
-        context TEXT,
-        usage_count INTEGER DEFAULT 0,
-        last_used_at TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT
-    )
-";
-
 pub const APTITUDE_DB_SCHEMA_PATTERNS: &str = "
     CREATE TABLE IF NOT EXISTS patterns (
         id TEXT PRIMARY KEY,
@@ -614,8 +600,6 @@ pub const APTITUDE_DB_SCHEMA_INDEX_PREF_KEY: &str =
     "CREATE INDEX IF NOT EXISTS idx_preferences_key ON preferences(key)";
 pub const APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS: &str =
     "CREATE INDEX IF NOT EXISTS idx_preferences_access ON preferences(last_accessed_at)";
-pub const APTITUDE_DB_SCHEMA_INDEX_SKILL_NAME: &str =
-    "CREATE INDEX IF NOT EXISTS idx_skills_name ON skills(name)";
 pub const APTITUDE_DB_SCHEMA_INDEX_PATTERN_CATEGORY: &str =
     "CREATE INDEX IF NOT EXISTS idx_patterns_category ON patterns(category)";
 pub const APTITUDE_DB_SCHEMA_INDEX_OBS_PROCESSED: &str =
