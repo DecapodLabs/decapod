@@ -4311,8 +4311,9 @@ fn run_validate_command(
     }
 
     // Ensure cloud authentication if using cloud backend
-    if let Ok(config) = crate::cli::DecapodProjectConfig::load(governance_root)
-        && config.repo.mode == crate::cli::BackendType::Cloud
+    if crate::cli::DecapodProjectConfig::load(governance_root)
+        .map(|config| config.repo.mode == crate::cli::BackendType::Cloud)
+        .unwrap_or(false)
     {
         let auth_gate = crate::core::auth::get_cloud_auth_gate();
         auth_gate.check_and_trigger(governance_root)?;

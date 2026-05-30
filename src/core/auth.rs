@@ -208,10 +208,11 @@ fn poll_for_token(device_code_res: &DeviceCodeResponse) -> Result<String, Decapo
                 return Ok(token);
             }
 
-            if let Some(err) = res.error
-                && err != "authorization_pending"
-            {
-                return Err(DecapodError::ValidationError(format!("Auth0 error: {err}")));
+            if matches!(res.error.as_deref(), Some(err) if err != "authorization_pending") {
+                return Err(DecapodError::ValidationError(format!(
+                    "Auth0 error: {:?}",
+                    res.error
+                )));
             }
         }
     }
