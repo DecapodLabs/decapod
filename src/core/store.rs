@@ -3,7 +3,9 @@
 //! This module provides the fundamental data model for Decapod's dual-store architecture.
 //! Two store types are supported: User (local mutable) and Repo (project-scoped deterministic).
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use crate::core::error;
+use crate::core::workspace;
 
 /// Store type discriminator for dual-store architecture.
 ///
@@ -29,4 +31,24 @@ pub struct Store {
     pub kind: StoreKind,
     /// Absolute path to the store root directory
     pub root: PathBuf,
+}
+
+pub fn find_decapod_project_root(start_dir: &Path) -> Result<PathBuf, error::DecapodError> {
+    let mut current_dir = PathBuf::from(start_dir);
+    loop {
+        if current_dir.join(".decapod").exists() {
+            return Ok(current_dir);
+        }
+        if !current_dir.pop() {
+            return Err(error::DecapodError::NotFound(
+                "'.decapod' directory not found in current or parent directories. Run `decapod init` first.".to_string(),
+            ));
+        }
+    }
+}
+
+pub fn find_governance_root(workspace_root: &Path) -> PathBuf {
+    // If we are in a worktree, the governance root is the main repo.
+    // Otherwise, it's just the workspace root.
+    workspace::get_main_repo_root(workspace_root).unwrap_or_else(|_| workspace_root.to_path_buf())
 }

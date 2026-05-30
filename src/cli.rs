@@ -164,9 +164,15 @@ pub(crate) struct InitGroupCli {
     /// in this repository.
     #[clap(long = "no-container-workspaces", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub container_workspaces: bool,
-    /// Backend type: 'local' (default) or 'cloud'.
+    /// Backend mode: 'local' (default) or 'cloud'.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
-    pub backend: BackendType,
+    pub mode: BackendType,
+    /// Supabase URL for cloud mode.
+    #[clap(long)]
+    pub supabase_url: Option<String>,
+    /// Supabase API key (service role) for cloud mode.
+    #[clap(long)]
+    pub supabase_key: Option<String>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -253,9 +259,15 @@ pub(crate) struct InitWithCli {
     /// in this repository.
     #[clap(long = "no-container-workspaces", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub container_workspaces: bool,
-    /// Backend type: 'local' (default) or 'cloud'.
+    /// Backend mode: 'local' (default) or 'cloud'.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
-    pub backend: BackendType,
+    pub mode: BackendType,
+    /// Supabase URL for cloud mode.
+    #[clap(long)]
+    pub supabase_url: Option<String>,
+    /// Supabase API key (service role) for cloud mode.
+    #[clap(long)]
+    pub supabase_key: Option<String>,
 }
 
 #[derive(clap::ValueEnum, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -316,7 +328,11 @@ pub struct RepoContext {
     #[serde(default = "default_container_workspaces_true")]
     pub container_workspaces: bool,
     #[serde(default)]
-    pub backend: BackendType,
+    pub mode: BackendType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub supabase_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub supabase_key: Option<String>,
 }
 
 fn default_container_workspaces_true() -> bool {

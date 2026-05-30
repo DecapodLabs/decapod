@@ -18,7 +18,7 @@ fn init_with_backend_cloud_saves_to_config() {
     
     // Actually, let's just test that the CLI accepts the flag.
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(&["init", "with", "--backend", "cloud", "--force", "--dry-run"])
+        .args(&["init", "with", "--mode", "cloud", "--force", "--dry-run"])
         .current_dir(tmp.path())
         .output()
         .expect("run decapod");
@@ -33,7 +33,7 @@ fn init_with_backend_local_is_default() {
     
     let config_path = tmp.path().join(".decapod/config.toml");
     let config = fs::read_to_string(config_path).expect("read config.toml");
-    assert!(config.contains("backend = \"local\""));
+    assert!(config.contains("mode = \"local\""));
 }
 
 #[test]

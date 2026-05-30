@@ -6,8 +6,10 @@
 
 use crate::core::error;
 use crate::core::pool;
+use crate::core::store::find_decapod_project_root;
 use crate::core::time;
 use crate::plugins::policy;
+use propodus::traits::StorageProvider;
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -23,6 +25,7 @@ use std::time::{Duration, Instant};
 /// It provides read/write access with proper locking and full audit trail.
 pub struct DbBroker {
     audit_log_path: PathBuf,
+    root: PathBuf,
 }
 
 #[derive(Clone)]
@@ -78,7 +81,41 @@ impl DbBroker {
     pub fn new(root: &Path) -> Self {
         Self {
             audit_log_path: root.join("broker.events.jsonl"),
+            root: root.to_path_buf(),
         }
+    }
+
+    pub fn is_cloud(&self) -> bool {
+        let project_root =
+            find_decapod_project_root(&self.root).unwrap_or_else(|_| self.root.clone());
+        if let Ok(config) = crate::cli::DecapodProjectConfig::load(&project_root) {
+            return config.repo.mode == crate::cli::BackendType::Cloud;
+        }
+        false
+    }
+
+    pub fn storage(&self) -> Box<dyn StorageProvider> {
+        let project_root =
+            find_decapod_project_root(&self.root).unwrap_or_else(|_| self.root.clone());
+
+        // Load session token from .decapod/session_token and set ENV for propodus
+        let token_path = project_root.join(".decapod").join("session_token");
+        if let Ok(token) = std::fs::read_to_string(&token_path) {
+            unsafe {
+                std::env::set_var("DECAPOD_CLOUD_TOKEN", token.trim());
+            }
+        }
+
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+
+        rt.block_on(async {
+            propodus::load_storage(&project_root)
+                .await
+                .expect("Failed to load propodus storage")
+        })
     }
 
     /// Execute a write through the queue (synchronous for now).
