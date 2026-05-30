@@ -3,9 +3,9 @@
 //! This module provides the fundamental data model for Decapod's dual-store architecture.
 //! Two store types are supported: User (local mutable) and Repo (project-scoped deterministic).
 
-use std::path::{Path, PathBuf};
 use crate::core::error;
 use crate::core::workspace;
+use std::path::{Path, PathBuf};
 
 /// Store type discriminator for dual-store architecture.
 ///

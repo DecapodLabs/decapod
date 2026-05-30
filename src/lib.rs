@@ -412,7 +412,7 @@ fn apply_repo_context_env_overrides(ctx: &mut RepoContext) {
         ctx.detected_surfaces = read_seed_list_env("DECAPOD_INIT_SURFACES");
     }
     if let Ok(v) = std::env::var("DECAPOD_INIT_BACKEND") {
-        if v.to_ascii_lowercase() == "cloud" {
+        if v.eq_ignore_ascii_case("cloud") {
             ctx.mode = crate::cli::BackendType::Cloud;
         } else {
             ctx.mode = crate::cli::BackendType::Local;
@@ -4311,11 +4311,11 @@ fn run_validate_command(
     }
 
     // Ensure cloud authentication if using cloud backend
-    if let Ok(config) = crate::cli::DecapodProjectConfig::load(governance_root) {
-        if config.repo.mode == crate::cli::BackendType::Cloud {
-            let auth_gate = crate::core::auth::get_cloud_auth_gate();
-            auth_gate.check_and_trigger(governance_root)?;
-        }
+    if let Ok(config) = crate::cli::DecapodProjectConfig::load(governance_root)
+        && config.repo.mode == crate::cli::BackendType::Cloud
+    {
+        let auth_gate = crate::core::auth::get_cloud_auth_gate();
+        auth_gate.check_and_trigger(governance_root)?;
     }
 
     let store = match validate_cli.store.as_str() {

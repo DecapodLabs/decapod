@@ -1,10 +1,10 @@
+use crate::core::ansi::AnsiExt;
 use crate::core::error::DecapodError;
+use serde::Deserialize;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
 use std::time::{Duration, Instant};
-use serde::Deserialize;
-use crate::core::ansi::AnsiExt;
 
 const AUTH0_DOMAIN: &str = "decapod.auth0.com";
 const AUTH0_CLIENT_ID: &str = "decapod-cli-client-id";
@@ -28,18 +28,32 @@ struct TokenResponse {
 pub fn perform_cloud_auth(target_dir: &Path) -> Result<(), DecapodError> {
     // Check if curl is available
     if Command::new("curl").arg("--version").output().is_err() {
-        return Err(DecapodError::ValidationError("curl is required for cloud authentication. Please install curl and try again.".to_string()));
+        return Err(DecapodError::ValidationError(
+            "curl is required for cloud authentication. Please install curl and try again."
+                .to_string(),
+        ));
     }
 
     println!();
     println!("◢ {}", "Cloud Authentication".bright_cyan().bold());
-    println!("  {}", "Authenticating with Auth0 to access Supabase backend...".bright_black());
+    println!(
+        "  {}",
+        "Authenticating with Auth0 to access Supabase backend...".bright_black()
+    );
 
     let device_code_res = initiate_device_flow()?;
 
     println!();
-    println!("  {}", "1. Open the following URL in your browser:".bright_white().bold());
-    println!("     {}", device_code_res.verification_uri_complete.bright_blue());
+    println!(
+        "  {}",
+        "1. Open the following URL in your browser:"
+            .bright_white()
+            .bold()
+    );
+    println!(
+        "     {}",
+        device_code_res.verification_uri_complete.bright_blue()
+    );
     println!();
     println!("  {}", "2. Ensure the code matches:".bright_white().bold());
     println!("     {}", device_code_res.user_code.bright_green().bold());
@@ -51,7 +65,11 @@ pub fn perform_cloud_auth(target_dir: &Path) -> Result<(), DecapodError> {
     let token_path = target_dir.join(".decapod").join("session_token");
     fs::write(&token_path, token).map_err(DecapodError::IoError)?;
 
-    println!("{} {}", "✓".bright_green().bold(), "Cloud authentication successful. Session token saved.".bright_green());
+    println!(
+        "{} {}",
+        "✓".bright_green().bold(),
+        "Cloud authentication successful. Session token saved.".bright_green()
+    );
 
     Ok(())
 }
@@ -123,21 +141,29 @@ fn initiate_device_flow() -> Result<DeviceCodeResponse, DecapodError> {
     let output = Command::new("curl")
         .args([
             "-s",
-            "-X", "POST",
+            "-X",
+            "POST",
             &url,
-            "-H", "content-type: application/x-www-form-urlencoded",
-            "-d", &body,
+            "-H",
+            "content-type: application/x-www-form-urlencoded",
+            "-d",
+            &body,
         ])
         .output()
         .map_err(|e| DecapodError::ValidationError(format!("Failed to execute curl: {e}")))?;
 
     if !output.status.success() {
         let err = String::from_utf8_lossy(&output.stderr);
-        return Err(DecapodError::ValidationError(format!("Auth0 device code request failed: {err}")));
+        return Err(DecapodError::ValidationError(format!(
+            "Auth0 device code request failed: {err}"
+        )));
     }
 
     serde_json::from_slice(&output.stdout).map_err(|e| {
-        DecapodError::ValidationError(format!("Failed to parse Auth0 response: {e}. Raw: {}", String::from_utf8_lossy(&output.stdout)))
+        DecapodError::ValidationError(format!(
+            "Failed to parse Auth0 response: {e}. Raw: {}",
+            String::from_utf8_lossy(&output.stdout)
+        ))
     })
 }
 
@@ -150,7 +176,11 @@ fn poll_for_token(device_code_res: &DeviceCodeResponse) -> Result<String, Decapo
 
     let start = Instant::now();
     let expires_in = Duration::from_secs(device_code_res.expires_in);
-    let interval = Duration::from_secs(if device_code_res.interval == 0 { 5 } else { device_code_res.interval });
+    let interval = Duration::from_secs(if device_code_res.interval == 0 {
+        5
+    } else {
+        device_code_res.interval
+    });
 
     while start.elapsed() < expires_in {
         std::thread::sleep(interval);
@@ -158,10 +188,13 @@ fn poll_for_token(device_code_res: &DeviceCodeResponse) -> Result<String, Decapo
         let output = Command::new("curl")
             .args([
                 "-s",
-                "-X", "POST",
+                "-X",
+                "POST",
                 &url,
-                "-H", "content-type: application/x-www-form-urlencoded",
-                "-d", &body,
+                "-H",
+                "content-type: application/x-www-form-urlencoded",
+                "-d",
+                &body,
             ])
             .output()
             .map_err(|e| DecapodError::ValidationError(format!("Failed to execute curl: {e}")))?;
@@ -175,13 +208,15 @@ fn poll_for_token(device_code_res: &DeviceCodeResponse) -> Result<String, Decapo
                 return Ok(token);
             }
 
-            if let Some(err) = res.error {
-                if err != "authorization_pending" {
-                    return Err(DecapodError::ValidationError(format!("Auth0 error: {err}")));
-                }
+            if let Some(err) = res.error
+                && err != "authorization_pending"
+            {
+                return Err(DecapodError::ValidationError(format!("Auth0 error: {err}")));
             }
         }
     }
 
-    Err(DecapodError::ValidationError("Authentication timed out.".to_string()))
+    Err(DecapodError::ValidationError(
+        "Authentication timed out.".to_string(),
+    ))
 }

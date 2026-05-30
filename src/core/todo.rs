@@ -2356,10 +2356,10 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         let storage = broker.storage();
         let todo_store = storage.todo_store();
 
-        let task_type = infer_task_type(&scope, &"general".to_string(), title, tags);
+        let task_type = infer_task_type(&scope, "general", title, tags);
         let task_id = make_task_id(&task_type);
         let task_hash = task_hash_from_id(&task_id);
-        
+
         let repo_id = env::var("DECAPOD_REPO_ID").unwrap_or_else(|_| "default".to_string());
 
         let task = crate::core::storage::Task {
@@ -2394,7 +2394,9 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             .unwrap();
 
         rt.block_on(todo_store.add_task(task, "decapod".to_string(), intent_ref.clone()))
-            .map_err(|e| error::DecapodError::ValidationError(format!("Cloud storage error: {e}")))?;
+            .map_err(|e| {
+                error::DecapodError::ValidationError(format!("Cloud storage error: {e}"))
+            })?;
 
         return Ok(serde_json::json!({
             "id": task_id,
@@ -3702,8 +3704,9 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
             .build()
             .unwrap();
 
-        let cloud_tasks = rt.block_on(todo_store.list_tasks())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Cloud storage error: {e}")))?;
+        let cloud_tasks = rt.block_on(todo_store.list_tasks()).map_err(|e| {
+            error::DecapodError::ValidationError(format!("Cloud storage error: {e}"))
+        })?;
 
         return Ok(cloud_tasks.into_iter().find(|t| t.id == id).map(|t| Task {
             id: t.id,
@@ -3795,36 +3798,40 @@ pub fn list_tasks(
             .build()
             .unwrap();
 
-        let cloud_tasks = rt.block_on(todo_store.list_tasks())
-            .map_err(|e| error::DecapodError::ValidationError(format!("Cloud storage error: {e}")))?;
+        let cloud_tasks = rt.block_on(todo_store.list_tasks()).map_err(|e| {
+            error::DecapodError::ValidationError(format!("Cloud storage error: {e}"))
+        })?;
 
-        return Ok(cloud_tasks.into_iter().map(|t| Task {
-            id: t.id,
-            hash: t.hash,
-            title: t.title,
-            description: t.description.unwrap_or_default(),
-            tags: t.tags.join(","),
-            owner: t.assignee.unwrap_or_default(),
-            due: None,
-            r#ref: String::new(),
-            status: t.status,
-            created_at: t.created_at.to_rfc3339(),
-            updated_at: t.updated_at.to_rfc3339(),
-            completed_at: None,
-            closed_at: None,
-            dir_path: t.dir_path,
-            scope: t.scope,
-            parent_task_id: None,
-            priority: t.priority,
-            depends_on: String::new(),
-            blocks: String::new(),
-            category: t.category,
-            component: String::new(),
-            assigned_to: String::new(),
-            assigned_at: None,
-            owners: Vec::new(),
-            one_shot: 0,
-        }).collect());
+        return Ok(cloud_tasks
+            .into_iter()
+            .map(|t| Task {
+                id: t.id,
+                hash: t.hash,
+                title: t.title,
+                description: t.description.unwrap_or_default(),
+                tags: t.tags.join(","),
+                owner: t.assignee.unwrap_or_default(),
+                due: None,
+                r#ref: String::new(),
+                status: t.status,
+                created_at: t.created_at.to_rfc3339(),
+                updated_at: t.updated_at.to_rfc3339(),
+                completed_at: None,
+                closed_at: None,
+                dir_path: t.dir_path,
+                scope: t.scope,
+                parent_task_id: None,
+                priority: t.priority,
+                depends_on: String::new(),
+                blocks: String::new(),
+                category: t.category,
+                component: String::new(),
+                assigned_to: String::new(),
+                assigned_at: None,
+                owners: Vec::new(),
+                one_shot: 0,
+            })
+            .collect());
     }
 
     let db_path = todo_db_path(root);

@@ -1,7 +1,7 @@
-use async_trait::async_trait;
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
+use async_trait::async_trait;
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Task {
@@ -62,7 +62,12 @@ pub trait TodoStore: Send + Sync {
 pub trait KnowledgeStore: Send + Sync {
     async fn get_knowledge(&self, id: &str) -> Result<Option<KnowledgeEntry>>;
     async fn list_knowledge(&self) -> Result<Vec<KnowledgeEntry>>;
-    async fn upsert_knowledge(&self, item: KnowledgeEntry, actor: String, intent: String) -> Result<()>;
+    async fn upsert_knowledge(
+        &self,
+        item: KnowledgeEntry,
+        actor: String,
+        intent: String,
+    ) -> Result<()>;
 }
 
 #[async_trait]

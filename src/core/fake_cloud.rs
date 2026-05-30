@@ -1,6 +1,8 @@
-use async_trait::async_trait;
-use crate::core::storage::{Decision, DecisionStore, KnowledgeEntry, KnowledgeStore, StorageProvider, Task, TodoStore};
+use crate::core::storage::{
+    Decision, DecisionStore, KnowledgeEntry, KnowledgeStore, StorageProvider, Task, TodoStore,
+};
 use anyhow::Result;
+use async_trait::async_trait;
 use std::sync::Mutex;
 
 pub struct FakeCloudStorage {
@@ -9,6 +11,12 @@ pub struct FakeCloudStorage {
 
 impl FakeCloudStorage {
     pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for FakeCloudStorage {
+    fn default() -> Self {
         Self {
             tasks: Mutex::new(Vec::new()),
         }
@@ -48,21 +56,47 @@ impl TodoStore for FakeCloudStorage {
 
 #[async_trait]
 impl KnowledgeStore for FakeCloudStorage {
-    async fn get_knowledge(&self, _id: &str) -> Result<Option<KnowledgeEntry>> { Ok(None) }
-    async fn list_knowledge(&self) -> Result<Vec<KnowledgeEntry>> { Ok(Vec::new()) }
-    async fn upsert_knowledge(&self, _item: KnowledgeEntry, _actor: String, _intent: String) -> Result<()> { Ok(()) }
+    async fn get_knowledge(&self, _id: &str) -> Result<Option<KnowledgeEntry>> {
+        Ok(None)
+    }
+    async fn list_knowledge(&self) -> Result<Vec<KnowledgeEntry>> {
+        Ok(Vec::new())
+    }
+    async fn upsert_knowledge(
+        &self,
+        _item: KnowledgeEntry,
+        _actor: String,
+        _intent: String,
+    ) -> Result<()> {
+        Ok(())
+    }
 }
 
 #[async_trait]
 impl DecisionStore for FakeCloudStorage {
-    async fn list_decisions(&self) -> Result<Vec<Decision>> { Ok(Vec::new()) }
-    async fn add_decision(&self, _decision: Decision, _actor: String, _intent: String) -> Result<()> { Ok(()) }
+    async fn list_decisions(&self) -> Result<Vec<Decision>> {
+        Ok(Vec::new())
+    }
+    async fn add_decision(
+        &self,
+        _decision: Decision,
+        _actor: String,
+        _intent: String,
+    ) -> Result<()> {
+        Ok(())
+    }
 }
 
 impl StorageProvider for FakeCloudStorage {
-    fn todo_store(&self) -> &dyn TodoStore { self }
-    fn knowledge_store(&self) -> &dyn KnowledgeStore { self }
-    fn decision_store(&self) -> &dyn DecisionStore { self }
+    fn todo_store(&self) -> &dyn TodoStore {
+        self
+    }
+    fn knowledge_store(&self) -> &dyn KnowledgeStore {
+        self
+    }
+    fn decision_store(&self) -> &dyn DecisionStore {
+        self
+    }
 }
 
 pub fn load_storage() -> Box<dyn StorageProvider> {
