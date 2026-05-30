@@ -2362,12 +2362,12 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         
         let repo_id = env::var("DECAPOD_REPO_ID").unwrap_or_else(|_| "default".to_string());
 
-        let task = propodus::types::Task {
+        let task = crate::core::storage::Task {
             id: task_id.clone(),
             repo_id,
             hash: task_hash.clone(),
             title: title.clone(),
-            description: description.clone(),
+            description: Some(description.clone()),
             status: "open".to_string(),
             assignee: if primary_owner.is_empty() {
                 None
@@ -3709,7 +3709,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
             id: t.id,
             hash: t.hash,
             title: t.title,
-            description: t.description,
+            description: t.description.unwrap_or_default(),
             tags: t.tags.join(","),
             owner: t.assignee.unwrap_or_default(),
             due: None,
@@ -3802,7 +3802,7 @@ pub fn list_tasks(
             id: t.id,
             hash: t.hash,
             title: t.title,
-            description: t.description,
+            description: t.description.unwrap_or_default(),
             tags: t.tags.join(","),
             owner: t.assignee.unwrap_or_default(),
             due: None,
