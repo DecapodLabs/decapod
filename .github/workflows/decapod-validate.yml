@@ -16,6 +16,7 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: DecapodLabs
           
       - uses: actions/checkout@v4
         with:
@@ -35,9 +36,7 @@ jobs:
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
         run: |
-          if ! command -v decapod &> /dev/null; then
-            cargo install --path . --all-features
-          fi
+          cargo install --path . --all-features --force
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
