@@ -24,9 +24,8 @@ jobs:
           
       - name: Configure Git for Private Dependencies
         run: |
-          TOKEN="${{ steps.generate-token.outputs.token }}"
-          AUTH=$(echo -n "x-access-token:$TOKEN" | base64)
-          git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $AUTH"
+          git config --global credential.https://github.com/DecapodLabs/propodus.git.username x-access-token
+          git config --global credential.https://github.com/DecapodLabs/propodus.git.helper '!f() { echo password=${{ steps.generate-token.outputs.token }}; }; f'
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
