@@ -21,48 +21,32 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           owner: DecapodLabs
+          repositories: decapod,propodus
           
-      - name: Checkout Decapod
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
-          path: decapod
 
-      - name: Checkout Propodus
-        uses: actions/checkout@v4
-        with:
-          repository: DecapodLabs/propodus
-          token: ${{ steps.generate-token.outputs.token }}
-          path: propodus
-          ref: main
-
-      - name: Patch Cargo.toml
-        run: |
-          cd decapod
-          echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
-          echo "propodus = { path = '../propodus' }" >> Cargo.toml
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build Decapod
-        run: |
-          cd decapod
-          cargo build --all-features
+        run: cargo build --all-features
 
       - name: Get changed files
         id: changed-files
         run: |
-          cd decapod
           git fetch origin master
           FILES=$(git diff --name-only origin/master HEAD | xargs)
           echo "files=$FILES" >> $GITHUB_OUTPUT
 
       - name: Run Docs Build
         run: |
-          cd decapod
           FILES="${{ steps.changed-files.outputs.files }}"
           if [ -n "$FILES" ]; then
             ./target/debug/decapod docs build --touched $FILES
@@ -72,7 +56,6 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          cd decapod
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/agent/command-contracts.md docs/agent/config-schema.md

@@ -17,26 +17,14 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           owner: DecapodLabs
+          repositories: decapod,propodus
           
-      - name: Checkout Decapod
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           token: ${{ steps.generate-token.outputs.token }}
-          path: decapod
           
-      - name: Checkout Propodus
-        uses: actions/checkout@v4
-        with:
-          repository: DecapodLabs/propodus
-          token: ${{ steps.generate-token.outputs.token }}
-          path: propodus
-          ref: main
-
-      - name: Patch Cargo.toml
-        run: |
-          cd decapod
-          echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
-          echo "propodus = { path = '../propodus' }" >> Cargo.toml
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -47,12 +35,10 @@ jobs:
           key: ${{ runner.os }}-decapod
       - name: Install Decapod
         run: |
-          cd decapod
           cargo install --path . --all-features --force
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
-          cd decapod
           decapod init --proof
           decapod validate
