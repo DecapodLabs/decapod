@@ -29,9 +29,7 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Configure Git for Private Dependencies
-        run: |
-          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
-          chmod 600 ~/.netrc
+        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -39,6 +37,7 @@ jobs:
       - name: Build Decapod
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+          GIT_TERMINAL_PROMPT: "0"
         run: cargo build --all-features
 
       - name: Get changed files
