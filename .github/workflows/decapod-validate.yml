@@ -23,7 +23,9 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
           
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable

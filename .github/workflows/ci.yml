@@ -87,7 +87,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -112,7 +114,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -143,7 +147,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
         with:
@@ -208,7 +214,9 @@ jobs:
           submodules: recursive
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Verify golden vectors exist
@@ -273,7 +281,9 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -322,7 +332,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -409,7 +421,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -440,7 +454,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -478,7 +494,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -516,7 +534,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -554,7 +574,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -597,7 +619,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -637,7 +661,9 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.generate-token.outputs.token }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          echo "machine github.com login x-access-token password ${{ steps.generate-token.outputs.token }}" > ~/.netrc
+          chmod 600 ~/.netrc
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - uses: dtolnay/rust-toolchain@stable
