@@ -20,8 +20,6 @@ env:
   CARGO_INCREMENTAL: 0                              # Better caching
   CARGO_NET_RETRY: 10                               # Reliability
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse       # 3x faster registry fetching
-  CARGO_NET_GIT_FETCH_WITH_CLI: "true"              # Use git CLI for fetching
-  GIT_TERMINAL_PROMPT: "0"                          # Disable interactive prompts
   RUST_BACKTRACE: 1
   RUSTFLAGS: "-C link-arg=-fuse-ld=lld -D warnings" # LLD linker for 2-3x faster linking
   NIX_CONFIG: "experimental-features = nix-command flakes"
@@ -91,20 +89,25 @@ jobs:
     name: Lint (clippy)
     runs-on: ubuntu-latest
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: propodus
+          ref: main
+        continue-on-error: true
+      - name: Patch Cargo.toml
+        run: |
+          if [ -d "propodus" ]; then
+            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+            echo "propodus = { path = './propodus' }" >> Cargo.toml
+          else
+            echo "::warning::Could not checkout propodus using GITHUB_TOKEN. Build might fail."
+          fi
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -123,20 +126,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
         with:
@@ -188,21 +180,24 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
           submodules: recursive
-          token: ${{ steps.generate-token.outputs.token }}
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: propodus
+          ref: main
+        continue-on-error: true
+      - name: Patch Cargo.toml
+        run: |
+          if [ -d "propodus" ]; then
+            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+            echo "propodus = { path = './propodus' }" >> Cargo.toml
+          fi
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Verify golden vectors exist
@@ -255,20 +250,23 @@ jobs:
     name: Setup & Build Shared Binary
     runs-on: ubuntu-latest
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ steps.generate-token.outputs.token }}
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: propodus
+          ref: main
+        continue-on-error: true
+      - name: Patch Cargo.toml
+        run: |
+          if [ -d "propodus" ]; then
+            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+            echo "propodus = { path = './propodus' }" >> Cargo.toml
+          fi
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -305,20 +303,23 @@ jobs:
       matrix:
         target: [core, plugins, cli, integration]
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: propodus
+          ref: main
+        continue-on-error: true
+      - name: Patch Cargo.toml
+        run: |
+          if [ -d "propodus" ]; then
+            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+            echo "propodus = { path = './propodus' }" >> Cargo.toml
+          fi
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -393,20 +394,23 @@ jobs:
     needs: setup
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: propodus
+          ref: main
+        continue-on-error: true
+      - name: Patch Cargo.toml
+        run: |
+          if [ -d "propodus" ]; then
+            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+            echo "propodus = { path = './propodus' }" >> Cargo.toml
+          fi
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -425,20 +429,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: propodus
+          ref: main
+        continue-on-error: true
+      - name: Patch Cargo.toml
+        run: |
+          if [ -d "propodus" ]; then
+            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+            echo "propodus = { path = './propodus' }" >> Cargo.toml
+          fi
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -464,20 +471,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: propodus
+          ref: main
+        continue-on-error: true
+      - name: Patch Cargo.toml
+        run: |
+          if [ -d "propodus" ]; then
+            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+            echo "propodus = { path = './propodus' }" >> Cargo.toml
+          fi
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -503,20 +513,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: propodus
+          ref: main
+        continue-on-error: true
+      - name: Patch Cargo.toml
+        run: |
+          if [ -d "propodus" ]; then
+            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+            echo "propodus = { path = './propodus' }" >> Cargo.toml
+          fi
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -542,20 +555,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: propodus
+          ref: main
+        continue-on-error: true
+      - name: Patch Cargo.toml
+        run: |
+          if [ -d "propodus" ]; then
+            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+            echo "propodus = { path = './propodus' }" >> Cargo.toml
+          fi
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -586,20 +602,23 @@ jobs:
     needs: [setup, detect-migration-script-changes]
     if: github.event_name == 'pull_request' && needs.detect-migration-script-changes.outputs.changed == 'true'
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: propodus
+          ref: main
+        continue-on-error: true
+      - name: Patch Cargo.toml
+        run: |
+          if [ -d "propodus" ]; then
+            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+            echo "propodus = { path = './propodus' }" >> Cargo.toml
+          fi
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -627,20 +646,23 @@ jobs:
     if: github.ref == 'refs/heads/master'
     needs: [fmt, clippy, test, test-rpc-suite, chaos-replay, daemonless-lifecycle, contracts, health]
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          repositories: decapod,propodus
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          token: ${{ steps.generate-token.outputs.token }}
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: propodus
+          ref: main
+        continue-on-error: true
+      - name: Patch Cargo.toml
+        run: |
+          if [ -d "propodus" ]; then
+            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
+            echo "propodus = { path = './propodus' }" >> Cargo.toml
+          fi
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - uses: dtolnay/rust-toolchain@stable
