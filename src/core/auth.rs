@@ -76,6 +76,44 @@ pub fn is_token_valid(target_dir: &Path) -> bool {
     true
 }
 
+pub trait CloudAuthGate: Send + Sync {
+    fn check_and_trigger(&self, root: &Path) -> Result<(), DecapodError>;
+}
+
+pub struct NoOpAuthGate;
+impl CloudAuthGate for NoOpAuthGate {
+    fn check_and_trigger(&self, _root: &Path) -> Result<(), DecapodError> {
+        Ok(())
+    }
+}
+
+pub struct InteractiveAuthGate;
+impl CloudAuthGate for InteractiveAuthGate {
+    fn check_and_trigger(&self, root: &Path) -> Result<(), DecapodError> {
+        if !is_token_valid(root) {
+            println!(
+                "{} {}",
+                "◢".bright_cyan().bold(),
+                "Cloud authentication required".bright_white().bold()
+            );
+            perform_cloud_auth(root)?;
+        }
+        Ok(())
+    }
+}
+
+pub fn get_cloud_auth_gate() -> Box<dyn CloudAuthGate> {
+    #[cfg(feature = "cloud")]
+    {
+        use std::io::IsTerminal;
+        // Trigger auth only if in a terminal and not in GITHUB_ACTIONS CI
+        if std::io::stdin().is_terminal() && std::env::var("GITHUB_ACTIONS").is_err() {
+            return Box::new(InteractiveAuthGate);
+        }
+    }
+    Box::new(NoOpAuthGate)
+}
+
 fn initiate_device_flow() -> Result<DeviceCodeResponse, DecapodError> {
     let url = format!("https://{AUTH0_DOMAIN}/oauth/device/code");
     let body = format!(

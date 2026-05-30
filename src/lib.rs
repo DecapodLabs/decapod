@@ -4312,17 +4312,9 @@ fn run_validate_command(
 
     // Ensure cloud authentication if using cloud backend
     if let Ok(config) = crate::cli::DecapodProjectConfig::load(governance_root) {
-        if config.repo.mode == crate::cli::BackendType::Cloud
-            && !crate::core::auth::is_token_valid(governance_root)
-        {
-            if validate_cli.format != "json" {
-                println!(
-                    "{} {}",
-                    "◢".bright_cyan().bold(),
-                    "Cloud authentication required".bright_white().bold()
-                );
-            }
-            crate::core::auth::perform_cloud_auth(governance_root)?;
+        if config.repo.mode == crate::cli::BackendType::Cloud {
+            let auth_gate = crate::core::auth::get_cloud_auth_gate();
+            auth_gate.check_and_trigger(governance_root)?;
         }
     }
 
