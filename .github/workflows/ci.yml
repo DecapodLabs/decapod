@@ -92,8 +92,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -104,7 +102,7 @@ jobs:
           shared-key: "ci-build"
           save-if: "false"
       - name: Clippy
-        run: nix develop .#ci -c cargo clippy --all-targets --all-features -- -D warnings
+        run: nix develop .#ci -c cargo clippy --all-targets -- -D warnings
 
   # HEALTH: consumes the shared decapod binary from setup
   health:
@@ -170,8 +168,6 @@ jobs:
         with:
           fetch-depth: 1
           submodules: recursive
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Verify golden vectors exist
@@ -228,8 +224,6 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -246,7 +240,7 @@ jobs:
       - name: Check Cargo.lock is up to date
         run: cargo generate-lockfile && git diff --quiet Cargo.lock || echo "⚠️ Cargo.lock outdated - run cargo update locally"
       - name: Compile shared decapod binary
-        run: cargo build --all-features --bin decapod
+        run: cargo build --bin decapod
       - name: Upload shared decapod binary
         uses: actions/upload-artifact@v7
         with:
@@ -269,8 +263,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -299,40 +291,40 @@ jobs:
           case "${{ matrix.target }}" in
             core)
               if echo "$CHANGED" | grep -qE 'src/core/(todo|validate|workspace|workunit|obligation|docs|capsule|rpc|migration|gateway)'; then
-                cargo test --all-features --test todo_enforcement -- --test-threads=4
-                cargo test --all-features --test validate_termination -- --test-threads=4
-                cargo test --all-features --test workspace_interlock -- --test-threads=4
-                cargo test --all-features --test workunit_cli -- --test-threads=4
-                cargo test --all-features --test context_capsule_cli -- --test-threads=4
+                cargo test --test todo_enforcement -- --test-threads=4
+                cargo test --test validate_termination -- --test-threads=4
+                cargo test --test workspace_interlock -- --test-threads=4
+                cargo test --test workunit_cli -- --test-threads=4
+                cargo test --test context_capsule_cli -- --test-threads=4
               elif echo "$CHANGED" | grep -qE 'src/core/'; then
-                cargo test --all-features --test entrypoint_correctness -- --test-threads=4
+                cargo test --test entrypoint_correctness -- --test-threads=4
               fi
               ;;
             plugins)
               if echo "$CHANGED" | grep -qE 'src/plugins/'; then
-                cargo test --all-features --test plugins_todo_tests -- --test-threads=4
-                cargo test --all-features --test plugins_policy_tests -- --test-threads=4
-                cargo test --all-features --test plugins_health_tests -- --test-threads=4
-                cargo test --all-features --test plugins_aptitude_tests -- --test-threads=4
-                cargo test --all-features --test plugins_internalize_tests -- --test-threads=4
-                cargo test --all-features --test plugins_federation_tests -- --test-threads=4
-                cargo test --all-features --test plugins_decide_tests -- --test-threads=4
-                cargo test --all-features --test plugins_obligation_tests -- --test-threads=4
+                cargo test --test plugins_todo_tests -- --test-threads=4
+                cargo test --test plugins_policy_tests -- --test-threads=4
+                cargo test --test plugins_health_tests -- --test-threads=4
+                cargo test --test plugins_aptitude_tests -- --test-threads=4
+                cargo test --test plugins_internalize_tests -- --test-threads=4
+                cargo test --test plugins_federation_tests -- --test-threads=4
+                cargo test --test plugins_decide_tests -- --test-threads=4
+                cargo test --test plugins_obligation_tests -- --test-threads=4
               fi
               ;;
             cli)
               if echo "$CHANGED" | grep -qE 'src/(cli|lib|main)'; then
-                cargo test --all-features --test cli_contract_enforcement -- --test-threads=4
-                cargo test --all-features --test entrypoint_correctness -- --test-threads=4
-                cargo test --all-features --test cli_contracts -- --test-threads=4
+                cargo test --test cli_contract_enforcement -- --test-threads=4
+                cargo test --test entrypoint_correctness -- --test-threads=4
+                cargo test --test cli_contracts -- --test-threads=4
               fi
               ;;
             integration)
               if echo "$CHANGED" | grep -qE 'src/'; then
-                cargo test --all-features --test contract_conformance -- --test-threads=4
-                cargo test --all-features --test constitution_claims -- --test-threads=4
-                cargo test --all-features --test spec_conformance -- --test-threads=4
-                cargo test --all-features --test substrate_integrity -- --test-threads=4
+                cargo test --test contract_conformance -- --test-threads=4
+                cargo test --test constitution_claims -- --test-threads=4
+                cargo test --test spec_conformance -- --test-threads=4
+                cargo test --test substrate_integrity -- --test-threads=4
               fi
               ;;
           esac
@@ -348,8 +340,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -360,7 +350,7 @@ jobs:
           shared-key: "ci-build"
           save-if: "false"
       - name: Run all tests
-        run: cargo test --all-features --test gatling -- --test-threads=4
+        run: cargo test --test gatling -- --test-threads=4
 
   # RPC SUITE: isolated to avoid contention
   test-rpc-suite:
@@ -371,8 +361,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -390,7 +378,7 @@ jobs:
       - name: Make shared decapod binary executable
         run: chmod +x target/debug/decapod
       - name: Run RPC suite
-        run: nix develop .#ci -c cargo test --all-features --test agent_rpc_suite -- --test-threads=1
+        run: nix develop .#ci -c cargo test --test agent_rpc_suite -- --test-threads=1
 
   # CHAOS: Multi-agent contention + deterministic replay gate
   chaos-replay:
@@ -401,8 +389,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -431,8 +417,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -450,7 +434,7 @@ jobs:
       - name: Make shared decapod binary executable
         run: chmod +x target/debug/decapod
       - name: Run daemonless lifecycle test
-        run: cargo test --all-features --test daemonless_lifecycle -- --test-threads=1
+        run: cargo test --test daemonless_lifecycle -- --test-threads=1
 
   # CONTRACTS: README/Constitution drift detection
   contracts:
@@ -461,8 +445,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -481,10 +463,10 @@ jobs:
         run: chmod +x target/debug/decapod
       - name: Run contract conformance tests
         run: |
-          cargo test --all-features --test contract_conformance -- --test-threads=1
-          cargo test --all-features --test constitution_claims -- --test-threads=1
+          cargo test --test contract_conformance -- --test-threads=1
+          cargo test --test constitution_claims -- --test-threads=1
       - name: Run CLI contract enforcement tests
-        run: cargo test --all-features --test cli_contract_enforcement -- --test-threads=1
+        run: cargo test --test cli_contract_enforcement -- --test-threads=1
 
   # MIGRATION TESTS: Only when SQL migration scripts change
   migration-script-tests:
@@ -496,8 +478,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
-      - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -515,7 +495,7 @@ jobs:
       - name: Make shared decapod binary executable
         run: chmod +x target/debug/decapod
       - name: Run migration tests
-        run: cargo test --all-features --test core_tests migration_ -- --ignored --test-threads=1
+        run: cargo test --test core_tests migration_ -- --ignored --test-threads=1
 
 
   # RELEASE BUILD: Only on master, after all checks pass
@@ -528,8 +508,14 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - uses: dtolnay/rust-toolchain@stable
@@ -540,7 +526,7 @@ jobs:
           cache-targets: true
           save-if: true
       - name: Build release
-        run: cargo build --release --locked --all-features
+        run: cargo build --release --locked --features cloud
       - name: Upload binary
         uses: actions/upload-artifact@v7
         with:
