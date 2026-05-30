@@ -431,6 +431,13 @@ fn apply_repo_context_env_overrides(ctx: &mut RepoContext) {
     if std::env::var("DECAPOD_INIT_SURFACES").is_ok() {
         ctx.detected_surfaces = read_seed_list_env("DECAPOD_INIT_SURFACES");
     }
+    if let Ok(v) = std::env::var("DECAPOD_INIT_BACKEND") {
+        if v.to_ascii_lowercase() == "cloud" {
+            ctx.backend = crate::cli::BackendType::Cloud;
+        } else {
+            ctx.backend = crate::cli::BackendType::Local;
+        }
+    }
     dedupe_sorted(&mut ctx.primary_languages);
     dedupe_sorted(&mut ctx.detected_surfaces);
 }
@@ -483,6 +490,7 @@ fn apply_repo_context_cli_overrides(ctx: &mut RepoContext, init_with: &InitWithC
             .collect();
     }
     ctx.container_workspaces = init_with.container_workspaces;
+    ctx.backend = init_with.backend.clone();
     dedupe_sorted(&mut ctx.primary_languages);
     dedupe_sorted(&mut ctx.detected_surfaces);
 }
@@ -1324,6 +1332,7 @@ fn init_with_from_config(
         primary_languages: config.repo.primary_languages.clone(),
         detected_surfaces: config.repo.detected_surfaces.clone(),
         container_workspaces: config.repo.container_workspaces,
+        backend: config.repo.backend.clone(),
     }
 }
 
@@ -1403,6 +1412,16 @@ fn enrich_repo_context_interactive(
         true,
     )?;
     repo.container_workspaces = enable_container_workspaces;
+
+    let backend_choice = prompt_yes_no(
+        "Use cloud backend? (Requires Auth0 authentication and grants access to Supabase.)",
+        matches!(repo.backend, crate::cli::BackendType::Cloud),
+    )?;
+    repo.backend = if backend_choice {
+        crate::cli::BackendType::Cloud
+    } else {
+        crate::cli::BackendType::Local
+    };
 
     let enable_ci = prompt_yes_no("Scaffold GitHub Action for decapod validate?", init.ci)?;
     init.ci = enable_ci;
@@ -1739,6 +1758,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             primary_languages: init_group.primary_languages.clone(),
                             detected_surfaces: init_group.detected_surfaces.clone(),
                             container_workspaces: init_group.container_workspaces,
+                            backend: init_group.backend.clone(),
                         }
                     }
                 }
@@ -1772,6 +1792,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                 enrich_repo_context_interactive(&mut repo_ctx, &mut init_with)?;
             }
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
+            if repo_ctx.backend == crate::cli::BackendType::Cloud && !init_with.dry_run {
+                crate::core::auth::perform_cloud_auth(&target_dir)?;
+            }
             let config = config_from_init_with(&init_with, repo_ctx);
             write_project_config(&target_dir, &config, init_with.dry_run)?;
             seed_init_generated_state(&target_dir, init_with.dry_run)?;

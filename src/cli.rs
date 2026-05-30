@@ -164,6 +164,9 @@ pub(crate) struct InitGroupCli {
     /// in this repository.
     #[clap(long = "no-container-workspaces", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub container_workspaces: bool,
+    /// Backend type: 'local' (default) or 'cloud'.
+    #[clap(long, value_enum, default_value_t = BackendType::Local)]
+    pub backend: BackendType,
 }
 
 #[derive(Subcommand, Debug)]
@@ -250,6 +253,9 @@ pub(crate) struct InitWithCli {
     /// in this repository.
     #[clap(long = "no-container-workspaces", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub container_workspaces: bool,
+    /// Backend type: 'local' (default) or 'cloud'.
+    #[clap(long, value_enum, default_value_t = BackendType::Local)]
+    pub backend: BackendType,
 }
 
 #[derive(clap::ValueEnum, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -280,6 +286,14 @@ fn default_true() -> bool {
     true
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, clap::ValueEnum)]
+#[serde(rename_all = "lowercase")]
+pub enum BackendType {
+    #[default]
+    Local,
+    Cloud,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RepoContext {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -301,6 +315,8 @@ pub struct RepoContext {
     pub external_tracker: bool,
     #[serde(default = "default_container_workspaces_true")]
     pub container_workspaces: bool,
+    #[serde(default)]
+    pub backend: BackendType,
 }
 
 fn default_container_workspaces_true() -> bool {

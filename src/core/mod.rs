@@ -6,6 +6,7 @@
 pub mod ansi;
 pub mod assets;
 pub mod assurance;
+pub mod auth;
 pub mod broker;
 pub mod capsule_policy;
 pub mod constitution_cli;
