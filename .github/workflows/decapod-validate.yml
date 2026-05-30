@@ -30,6 +30,7 @@ jobs:
           repository: DecapodLabs/propodus
           token: ${{ steps.generate-token.outputs.token }}
           path: propodus
+          ref: main
 
       - name: Patch Cargo.toml
         run: |
