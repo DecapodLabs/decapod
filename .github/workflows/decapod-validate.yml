@@ -15,8 +15,13 @@ jobs:
           
       - name: Configure Git for Private Dependencies
         run: |
+          TOKEN="${{ secrets.PROPODUS_READONLY_PAT }}"
+          if [ -z "$TOKEN" ]; then
+            echo "::error::PROPODUS_READONLY_PAT is empty or missing"
+            exit 1
+          fi
           git config --global --unset-all http.https://github.com/.extraheader || true
-          git config --global url."https://x-access-token:${{ secrets.PROPODUS_READONLY_PAT }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - name: Debug Git Access
         run: |
