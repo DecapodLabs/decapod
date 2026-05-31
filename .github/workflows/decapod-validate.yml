@@ -13,16 +13,6 @@ jobs:
         with:
           persist-credentials: false
           
-      - name: Configure Git for Private Dependencies
-        env:
-          PROPODUS_TOKEN: ${{ secrets.PROPODUS_READONLY_PAT }}
-        run: |
-          git config --global url."https://x-access-token:${PROPODUS_TOKEN}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
-
-      - name: Debug Git Access
-        run: |
-          git ls-remote https://github.com/DecapodLabs/propodus.git
-          
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Cache Decapod
