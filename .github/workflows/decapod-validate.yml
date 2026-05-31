@@ -18,29 +18,20 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           owner: DecapodLabs
           
-      - name: Checkout Decapod
-        uses: actions/checkout@v4
-        with:
-          token: ${{ steps.generate-token.outputs.token }}
-          path: decapod
-          
-      - name: Checkout Propodus
-        uses: actions/checkout@v4
-        with:
-          repository: DecapodLabs/propodus
-          token: ${{ steps.generate-token.outputs.token }}
-          path: propodus
-        continue-on-error: true
-
-      - name: Check files
+      - name: Verify Token Scope
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
-          ls -R
-          if [ -d "propodus" ]; then
-            echo "Propodus found"
-          else
-            echo "Propodus NOT found"
-            exit 1
-          fi
+          gh api installation/repositories --paginate -q '.repositories[].full_name' | grep propodus || echo "Propodus NOT in token scope"
+          
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          persist-credentials: false
+          
+      - name: Configure Git
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -50,15 +41,14 @@ jobs:
           path: ~/.cargo/bin/decapod
           key: ${{ runner.os }}-decapod
       - name: Install Decapod
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+          GIT_TERMINAL_PROMPT: "0"
         run: |
-          cd decapod
-          # Patch Cargo.toml to use local path for propodus since we checked it out
-          sed -i 's|git = "https://github.com/DecapodLabs/propodus.git", rev = "6ec9a3250328a66e648cf370db0cbdd600afa7cf"|path = "../propodus"|' Cargo.toml
           cargo install --path . --all-features --force
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
-          cd decapod
           decapod init --proof
           decapod validate
