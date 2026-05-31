@@ -16,12 +16,12 @@ jobs:
           
       - name: Debug Clone with PAT
         run: |
-          git clone https://x-access-token:${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git test-propodus-pat
+          git clone https://token:${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git test-propodus-pat
           ls -R test-propodus-pat
           
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://x-access-token:${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git".insteadOf "https://github.com/DecapodLabs/propodus.git"
+          git config --global url."https://token:${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git".insteadOf "https://github.com/DecapodLabs/propodus.git"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
