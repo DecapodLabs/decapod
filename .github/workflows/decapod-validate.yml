@@ -3,7 +3,8 @@ name: Decapod Validate
 on:
   push:
     branches: [ main, master ]
-  pull_request: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   validate:
@@ -11,18 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PROPODUS_READONLY_PAT }}
-          persist-credentials: true
+          persist-credentials: false
           
-      - name: Debug Token Access
-        env:
-          GH_TOKEN: ${{ secrets.PROPODUS_READONLY_PAT }}
+      - name: Configure Git for Private Dependencies
         run: |
-          echo "Checking GH CLI access to propodus..."
-          gh api repos/DecapodLabs/propodus -q ".full_name" || echo "GH API access failed"
-          
-          echo "Checking git ls-remote..."
-          git ls-remote https://github.com/DecapodLabs/propodus.git || echo "ls-remote failed"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
