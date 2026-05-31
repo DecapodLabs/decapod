@@ -16,8 +16,7 @@ jobs:
           
       - name: Configure Git for Private Dependencies
         run: |
-          echo "machine github.com login ${{ secrets.PROPODUS_PAT }} password x-oauth-basic" > ~/.netrc
-          chmod 600 ~/.netrc
+          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git".insteadOf "https://github.com/DecapodLabs/propodus.git"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
