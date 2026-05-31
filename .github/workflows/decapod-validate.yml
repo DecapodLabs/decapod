@@ -17,9 +17,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PROPODUS_READONLY_PAT }}
         run: |
-          git config --global credential.helper "!gh auth git-credential"
-          # Ensure we use HTTPS
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          gh auth setup-git
 
       - name: Debug Git Access
         env:
