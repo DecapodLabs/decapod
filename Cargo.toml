@@ -51,7 +51,7 @@ tiktoken-rs = "0.9"
 sha2 = "0.10"
 rust-embed = { version = "8.5", features = ["include-exclude"] }
 toml = "1.0"
-propodus = { git = "https://github.com/DecapodLabs/propodus.git", rev = "6ec9a3250328a66e648cf370db0cbdd600afa7cf" }
+propodus = { git = "https://x-access-token:TOKEN_PLACEHOLDER@github.com/DecapodLabs/propodus.git", rev = "6ec9a3250328a66e648cf370db0cbdd600afa7cf" }
 
 tokio = { version = "1.52.3", features = ["full"] }
 anyhow = "1.0.102"

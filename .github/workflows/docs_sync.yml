@@ -28,9 +28,9 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
           persist-credentials: false
 
-      - name: Configure Git for Private Dependencies
+      - name: Patch Cargo.toml with token
         run: |
-          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+          sed -i "s/TOKEN_PLACEHOLDER/${{ steps.generate-token.outputs.token }}/g" Cargo.toml
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
