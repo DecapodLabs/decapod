@@ -10,29 +10,11 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate GitHub App token
-        uses: actions/create-github-app-token@v2
-        id: generate-token
-        with:
-          app-id: ${{ secrets.GH_APP_ID }}
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
-          
-      - name: Verify Token Scope
-        env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-        run: |
-          echo "Repositories accessible to this token:"
-          gh api installation/repositories --paginate -q '.repositories[].full_name'
-          
       - uses: actions/checkout@v4
-        with:
-          token: ${{ steps.generate-token.outputs.token }}
-          persist-credentials: false
           
-      - name: Configure Git
+      - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."https://x-access-token:${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable

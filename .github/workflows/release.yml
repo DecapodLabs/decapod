@@ -33,15 +33,16 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: DecapodLabs
 
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
+          persist-credentials: false
 
       - name: Configure Git for Private Dependencies
-        run: git config --global url."https://${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/".insteadOf "https://github.com/DecapodLabs/"
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
