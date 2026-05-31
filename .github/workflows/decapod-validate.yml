@@ -16,15 +16,21 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: DecapodLabs
           
       - uses: actions/checkout@v4
         with:
           token: ${{ steps.generate-token.outputs.token }}
           persist-credentials: false
-          
-      - name: Patch Cargo.toml with token
+
+      - name: Test access to Propodus
         run: |
-          sed -i "s/TOKEN_PLACEHOLDER/${{ steps.generate-token.outputs.token }}/g" Cargo.toml
+          git clone https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/propodus.git test-propodus
+          ls -R test-propodus
+          
+      - name: Configure Git for Private Dependencies
+        run: |
+          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
