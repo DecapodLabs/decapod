@@ -30,6 +30,7 @@ jobs:
 
       - name: Configure Git for Private Dependencies
         run: |
+          git config --local --unset http.https://github.com/.extraheader || true
           git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
 
       - name: Install Rust
