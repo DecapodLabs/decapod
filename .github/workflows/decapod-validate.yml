@@ -15,8 +15,11 @@ jobs:
           
       - name: Configure Git for Private Dependencies
         run: |
-          git config --local --unset http.https://github.com/.extraheader || true
-          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/".insteadOf "https://github.com/"
+          git config --global credential.helper store
+          echo "https://x-access-token:${{ secrets.PROPODUS_READONLY_PAT }}@github.com" > ~/.git-credentials
+          # Ensure we don't have any conflicting insteadOf
+          git config --global --remove-section url."https://github.com/" || true
+          git config --global --remove-section url."https://x-access-token:${{ secrets.PROPODUS_READONLY_PAT }}@github.com/" || true
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable

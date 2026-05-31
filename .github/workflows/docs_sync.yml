@@ -20,6 +20,7 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: DecapodLabs
           
       - uses: actions/checkout@v4
         with:
@@ -30,8 +31,8 @@ jobs:
 
       - name: Configure Git for Private Dependencies
         run: |
-          git config --local --unset http.https://github.com/.extraheader || true
-          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/".insteadOf "https://github.com/"
+          git config --global credential.helper store
+          echo "https://x-access-token:${{ secrets.PROPODUS_READONLY_PAT }}@github.com" > ~/.git-credentials
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
