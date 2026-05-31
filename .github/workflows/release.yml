@@ -42,7 +42,7 @@ jobs:
 
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git".insteadOf "https://github.com/DecapodLabs/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable

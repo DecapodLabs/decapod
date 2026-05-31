@@ -15,10 +15,7 @@ jobs:
           
       - name: Configure Git for Private Dependencies
         run: |
-          TOKEN="${{ secrets.PROPODUS_PAT }}"
-          # Try with empty username
-          AUTH=$(echo -n ":$TOKEN" | base64)
-          git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $AUTH"
+          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -30,6 +27,7 @@ jobs:
       - name: Install Decapod
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+          GIT_TERMINAL_PROMPT: "0"
         run: |
           cargo install --path . --all-features --force
       - name: Decapod Validate
