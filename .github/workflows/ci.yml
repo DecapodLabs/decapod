@@ -96,7 +96,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -121,7 +121,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
         with:
@@ -180,7 +180,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Verify golden vectors exist
@@ -239,7 +239,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -282,7 +282,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -363,7 +363,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -388,7 +388,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - name: Enable Nix cache
@@ -420,7 +420,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -452,7 +452,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -486,7 +486,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -523,7 +523,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - name: Install Rust toolchain
@@ -557,7 +557,7 @@ jobs:
           persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/alexhraber/propodus.git".insteadOf "https://github.com/alexhraber/propodus.git"
+          git config --global url."https://${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
       - name: Install LLD
         uses: ./.github/actions/install-lld
       - uses: dtolnay/rust-toolchain@stable
