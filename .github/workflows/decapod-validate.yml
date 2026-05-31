@@ -3,7 +3,8 @@ name: Decapod Validate
 on:
   push:
     branches: [ main, master ]
-  pull_request: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   validate:
@@ -13,6 +14,12 @@ jobs:
         with:
           persist-credentials: false
           
+      - name: Configure Git for Private Dependencies
+        env:
+          PROPODUS_TOKEN: ${{ secrets.PROPODUS_READONLY_PAT }}
+        run: |
+          git config --global url."https://x-access-token:${PROPODUS_TOKEN}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
       - name: Cache Decapod
