@@ -18,19 +18,29 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           owner: DecapodLabs
           
-      - uses: actions/checkout@v4
+      - name: Checkout Decapod
+        uses: actions/checkout@v4
         with:
           token: ${{ steps.generate-token.outputs.token }}
-          persist-credentials: false
-
-      - name: Test access to Propodus
-        run: |
-          git clone https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/propodus.git test-propodus
-          ls -R test-propodus
+          path: decapod
           
-      - name: Configure Git for Private Dependencies
+      - name: Checkout Propodus
+        uses: actions/checkout@v4
+        with:
+          repository: DecapodLabs/propodus
+          token: ${{ steps.generate-token.outputs.token }}
+          path: propodus
+        continue-on-error: true
+
+      - name: Check files
         run: |
-          git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
+          ls -R
+          if [ -d "propodus" ]; then
+            echo "Propodus found"
+          else
+            echo "Propodus NOT found"
+            exit 1
+          fi
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -40,14 +50,15 @@ jobs:
           path: ~/.cargo/bin/decapod
           key: ${{ runner.os }}-decapod
       - name: Install Decapod
-        env:
-          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-          GIT_TERMINAL_PROMPT: "0"
         run: |
+          cd decapod
+          # Patch Cargo.toml to use local path for propodus since we checked it out
+          sed -i 's|git = "https://github.com/DecapodLabs/propodus.git", rev = "6ec9a3250328a66e648cf370db0cbdd600afa7cf"|path = "../propodus"|' Cargo.toml
           cargo install --path . --all-features --force
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
+          cd decapod
           decapod init --proof
           decapod validate
