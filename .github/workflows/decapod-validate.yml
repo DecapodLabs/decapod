@@ -14,14 +14,11 @@ jobs:
           persist-credentials: false
           
       - name: Configure Git for Private Dependencies
-        env:
-          GH_TOKEN: ${{ secrets.PROPODUS_READONLY_PAT }}
         run: |
-          gh auth setup-git
+          git config --global --unset-all http.https://github.com/.extraheader || true
+          git config --global url."https://x-access-token:${{ secrets.PROPODUS_READONLY_PAT }}@github.com/".insteadOf "https://github.com/"
 
       - name: Debug Git Access
-        env:
-          GH_TOKEN: ${{ secrets.PROPODUS_READONLY_PAT }}
         run: |
           git ls-remote https://github.com/DecapodLabs/propodus.git
           
@@ -36,13 +33,11 @@ jobs:
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
           GIT_TERMINAL_PROMPT: "0"
-          GH_TOKEN: ${{ secrets.PROPODUS_READONLY_PAT }}
         run: |
           cargo install --path . --all-features --force
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
-          GH_TOKEN: ${{ secrets.PROPODUS_READONLY_PAT }}
         run: |
           decapod init --proof
           decapod validate
