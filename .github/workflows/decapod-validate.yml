@@ -14,6 +14,11 @@ jobs:
         with:
           persist-credentials: false
           
+      - name: Debug Clone with PAT
+        run: |
+          git clone https://${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git test-propodus-pat
+          ls -R test-propodus-pat
+          
       - name: Configure Git for Private Dependencies
         run: |
           git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git".insteadOf "https://github.com/DecapodLabs/propodus.git"
