@@ -3,8 +3,7 @@ name: Decapod Validate
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+  pull_request: [ main, master ]
 
 jobs:
   validate:
@@ -16,12 +15,9 @@ jobs:
           
       - name: Configure Git for Private Dependencies
         run: |
-          # Remove any potential interference
           git config --global --unset-all http.https://github.com/.extraheader || true
-          git config --local --unset http.https://github.com/.extraheader || true
-          
-          # Use surgical insteadOf with x-access-token
-          git config --global url."https://x-access-token:${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
+          # Try using alexhraber as username for the legacy PAT
+          git config --global url."https://alexhraber:${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
 
       - name: Debug Git Access
         run: |
