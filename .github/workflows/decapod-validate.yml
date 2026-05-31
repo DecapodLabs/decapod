@@ -16,8 +16,14 @@ jobs:
           
       - name: Debug Clone with PAT
         run: |
-          git clone https://token:${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git test-propodus-pat
-          ls -R test-propodus-pat
+          # Try basic auth with token as username
+          git -c http.extraheader="AUTHORIZATION: basic $(echo -n "${{ secrets.PROPODUS_PAT }}:" | base64)" clone https://github.com/DecapodLabs/propodus.git test-propodus-pat || \
+          # Try basic auth with x-access-token
+          git -c http.extraheader="AUTHORIZATION: basic $(echo -n "x-access-token:${{ secrets.PROPODUS_PAT }}" | base64)" clone https://github.com/DecapodLabs/propodus.git test-propodus-pat-2 || \
+          # Try bearer auth
+          git -c http.extraheader="AUTHORIZATION: bearer ${{ secrets.PROPODUS_PAT }}" clone https://github.com/DecapodLabs/propodus.git test-propodus-pat-3
+          
+          ls -d test-propodus-pat* || echo "All clones failed"
           
       - name: Configure Git for Private Dependencies
         run: |
