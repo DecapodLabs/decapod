@@ -13,20 +13,11 @@ jobs:
         with:
           persist-credentials: false
           
-      - name: Debug Clone with PAT
-        run: |
-          echo "Trying classic PAT format..."
-          git clone https://${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git test-classic || echo "Classic failed"
-          
-          echo "Trying x-access-token format..."
-          git clone https://x-access-token:${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git test-x-access || echo "X-access-token failed"
-          
-          echo "Trying token:password format..."
-          git clone https://token:${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git test-token-pass || echo "Token:password failed"
-
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global url."https://${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus.git".insteadOf "https://github.com/DecapodLabs/propodus.git"
+          git config --global credential.helper '!f() { echo username=x-access-token; echo "password=${{ secrets.PROPODUS_PAT }}"; }; f'
+          # Force git to use the credential helper even for non-interactive
+          git config --global core.askPass /bin/true
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -38,7 +29,6 @@ jobs:
       - name: Install Decapod
         env:
           CARGO_NET_GIT_FETCH_WITH_CLI: "true"
-          GIT_TERMINAL_PROMPT: "0"
         run: |
           cargo install --path . --all-features --force
       - name: Decapod Validate
