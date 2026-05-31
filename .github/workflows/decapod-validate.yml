@@ -16,9 +16,11 @@ jobs:
       - name: Configure Git for Private Dependencies
         run: |
           git config --global url."https://x-access-token:${{ secrets.PROPODUS_READONLY_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
+          git config --list --global
 
       - name: Debug Git Access
         run: |
+          # Try with full .git suffix to be sure
           git ls-remote https://github.com/DecapodLabs/propodus.git
           
       - name: Install Rust
