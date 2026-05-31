@@ -99,6 +99,68 @@ fn test_cloud_backend_can_add_and_list_tasks() {
         get_stdout.contains(&title),
         "Task get did not return expected title"
     );
+
+    // 5. Add a decision to the cloud backend
+    let decide_start_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["decide", "start", "architecture", "--format", "json"])
+        .current_dir(&dir)
+        .output()
+        .expect("decide start");
+
+    assert!(
+        decide_start_out.status.success(),
+        "decide start failed: {}",
+        String::from_utf8_lossy(&decide_start_out.stderr)
+    );
+
+    let start_json: serde_json::Value =
+        serde_json::from_slice(&decide_start_out.stdout).expect("parse decide start json");
+    let session_id = start_json["id"].as_str().expect("session id").to_string();
+
+    let decide_record_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args([
+            "decide",
+            "record",
+            "--session",
+            &session_id,
+            "--question",
+            "Is this cloud?",
+            "--answer",
+            "Yes, it is Supabase",
+            "--rationale",
+            "Testing cloud backend",
+            "--format",
+            "json",
+        ])
+        .current_dir(&dir)
+        .output()
+        .expect("decide record");
+
+    assert!(
+        decide_record_out.status.success(),
+        "decide record failed: {}",
+        String::from_utf8_lossy(&decide_record_out.stderr)
+    );
+
+    // 6. List decisions and verify
+    let decide_list_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["decide", "list", "--format", "json"])
+        .current_dir(&dir)
+        .output()
+        .expect("decide list");
+
+    assert!(
+        decide_list_out.status.success(),
+        "decide list failed: {}",
+        String::from_utf8_lossy(&decide_list_out.stderr)
+    );
+
+    let list_decisions_stdout = String::from_utf8_lossy(&decide_list_out.stdout);
+    assert!(
+        list_decisions_stdout.contains("Yes, it is Supabase"),
+        "Cloud decision not found in list output: {}",
+        list_decisions_stdout
+    );
 }
 
 #[test]
