@@ -15,9 +15,10 @@ jobs:
           
       - name: Configure Git for Private Dependencies
         run: |
-          git config --global credential.helper '!f() { echo username=x-access-token; echo "password=${{ secrets.PROPODUS_PAT }}"; }; f'
-          # Force git to use the credential helper even for non-interactive
-          git config --global core.askPass /bin/true
+          TOKEN="${{ secrets.PROPODUS_PAT }}"
+          # Try with empty username
+          AUTH=$(echo -n ":$TOKEN" | base64)
+          git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $AUTH"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
