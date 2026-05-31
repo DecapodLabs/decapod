@@ -471,9 +471,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     steps:
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: DecapodLabs
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          token: ${{ steps.generate-token.outputs.token }}
+          persist-credentials: false
       - name: Configure Git for Private Dependencies
         run: |
           git config --global url."https://x-access-token:${{ secrets.PROPODUS_PAT }}@github.com/DecapodLabs/propodus".insteadOf "https://github.com/DecapodLabs/propodus"
