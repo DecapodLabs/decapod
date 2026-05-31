@@ -10,30 +10,21 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Decapod
-        uses: actions/checkout@v4
+      - name: Generate GitHub App token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
         with:
-          path: decapod
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: DecapodLabs
           
-      - name: Checkout Propodus
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          repository: DecapodLabs/propodus
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: propodus
-          ref: main
-        continue-on-error: true
-
-      - name: Patch Cargo.toml
-        run: |
-          cd decapod
-          if [ -d "../propodus" ]; then
-            echo "[patch.'https://github.com/DecapodLabs/propodus.git']" >> Cargo.toml
-            echo "propodus = { path = '../propodus' }" >> Cargo.toml
-          else
-            echo "::error::Could not checkout propodus using GITHUB_TOKEN. Build will likely fail."
-            exit 1
-          fi
+          token: ${{ steps.generate-token.outputs.token }}
+          persist-credentials: false
+          
+      - name: Configure Git for Private Dependencies
+        run: git config --global url."https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -43,13 +34,14 @@ jobs:
           path: ~/.cargo/bin/decapod
           key: ${{ runner.os }}-decapod
       - name: Install Decapod
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+          GIT_TERMINAL_PROMPT: "0"
         run: |
-          cd decapod
           cargo install --path . --all-features --force
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
-          cd decapod
           decapod init --proof
           decapod validate
