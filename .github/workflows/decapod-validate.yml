@@ -22,7 +22,8 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: |
-          gh api installation/repositories --paginate -q '.repositories[].full_name' | grep propodus || echo "Propodus NOT in token scope"
+          echo "Repositories accessible to this token:"
+          gh api installation/repositories --paginate -q '.repositories[].full_name'
           
       - uses: actions/checkout@v4
         with:
