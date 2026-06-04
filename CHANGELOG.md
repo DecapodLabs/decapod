@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.58.2](https://github.com/DecapodLabs/decapod/compare/v0.58.1...v0.58.2) - 2026-06-04
+
+### Added
+
+- *(init)* implement cloud backend choice and auth0 authentication flow ([#669](https://github.com/DecapodLabs/decapod/pull/669))
+
+### Other
+
+- Fix release-plz version PR flow ([#675](https://github.com/DecapodLabs/decapod/pull/675))
+- Update README.md
+- Update README.md
+- Update README.md
+- Update README.md
+
 ## [0.58.1](https://github.com/DecapodLabs/decapod/compare/v0.58.0...v0.58.1) - 2026-05-30
 
 ### Added

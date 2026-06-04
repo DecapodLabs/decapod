@@ -479,7 +479,7 @@ dependencies = [
 
 [[package]]
 name = "decapod"
-version = "0.58.1"
+version = "0.58.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1523,7 +1523,7 @@ dependencies = [
 [[package]]
 name = "propodus"
 version = "0.1.0"
-source = "git+ssh://git@github.com/DecapodLabs/propodus.git?rev=6ec9a3250328a66e648cf370db0cbdd600afa7cf#6ec9a3250328a66e648cf370db0cbdd600afa7cf"
+source = "git+https://github.com/DecapodLabs/propodus.git?rev=6ec9a3250328a66e648cf370db0cbdd600afa7cf#6ec9a3250328a66e648cf370db0cbdd600afa7cf"
 dependencies = [
  "anyhow",
  "async-trait",
