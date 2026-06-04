@@ -5,16 +5,6 @@ on:
     branches:
       - master
   workflow_dispatch:
-    inputs:
-      mode:
-        description: "Release workflow mode"
-        required: false
-        default: "full"
-        type: choice
-        options:
-          - full
-          - changelog-only
-          - publish-only
 
 permissions:
   contents: write
@@ -52,7 +42,6 @@ jobs:
       - name: Run release-plz
         uses: release-plz/action@v0.5
         with:
-          command: release
           config: .github/release.toml
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
