@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.59.3](https://github.com/DecapodLabs/decapod/compare/v0.59.2...v0.59.3) - 2026-06-18
+
+### Other
+
+- enhance index.md with GitHub-specific styling to match custom.css light theme ([#713](https://github.com/DecapodLabs/decapod/pull/713))
+
 ## [0.59.2](https://github.com/DecapodLabs/decapod/compare/v0.59.1...v0.59.2) - 2026-06-18
 
 ### Fixed
