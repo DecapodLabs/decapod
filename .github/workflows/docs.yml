@@ -3,7 +3,7 @@ name: Deploy Docs
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'docs/book/**'
   pull_request:
@@ -31,13 +31,13 @@ jobs:
         run: mdbook build docs/book
 
       - name: Upload artifact
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/book/book
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     needs: build
     runs-on: ubuntu-latest
     environment:
