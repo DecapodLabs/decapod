@@ -45,6 +45,11 @@ decapod workspace ensure --container --branch "feat/rate-limiting"
 decapod workspace publish --title "Feat: Rate Limiting" --description "Implemented token bucket rate limiting for the API surface."
 ```
 
+### Prune Stale Workspaces
+```bash
+decapod workspace prune --force
+```
+
 ## Smart Bootstrap
 
 Efficiently install and initialize Decapod only when updates are available.

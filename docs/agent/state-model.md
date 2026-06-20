@@ -13,6 +13,7 @@ Isolated execution environments.
 - **Types:** Git Worktree | Docker Container.
 - **Relationship:** Each active workspace is mapped to exactly one `task_id` and one `agent_id`.
 - **Artifacts:** Changes made in a workspace are transient until `workspace publish` is called.
+- **Cleanup:** Stale/unused workspaces (associated with done/archived tasks, deleted branches, or matching no active claim) can be cleaned up using the `workspace prune` command.
 
 ## 3. Sessions
 Authentication and identity verification tokens.
