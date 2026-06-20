@@ -77,6 +77,12 @@ pub(crate) enum WorkspaceCommand {
         #[clap(long)]
         description: Option<String>,
     },
+    /// Prune stale/unused agent workspaces
+    Prune {
+        /// Force removal of worktrees with local changes
+        #[clap(long)]
+        force: bool,
+    },
 }
 
 #[derive(clap::Args, Debug)]

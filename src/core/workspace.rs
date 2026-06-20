@@ -1244,3 +1244,238 @@ pub fn get_allowed_ops(status: &WorkspaceStatus) -> Vec<AllowedOp> {
 
     ops
 }
+
+/// Workspace pruned record
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct PrunedWorkspace {
+    /// Absolute path of the pruned workspace
+    pub path: String,
+    /// Reason for pruning: not_registered, branch_deleted, no_matching_task, task_completed, no_active_claim
+    pub reason: String,
+}
+
+/// Prune stale/unused agent workspaces
+pub fn prune_workspaces(repo_root: &Path, force: bool) -> Result<Vec<PrunedWorkspace>, DecapodError> {
+    let main_repo = get_main_repo_root(repo_root)?;
+    let workspaces_dir = main_repo.join(".decapod").join("workspaces");
+    if !workspaces_dir.is_dir() {
+        return Ok(vec![]);
+    }
+
+    // 1) Parse all current git worktrees
+    let worktrees_output = Command::new("git")
+        .args([
+            "-C",
+            main_repo.to_str().unwrap_or("."),
+            "worktree",
+            "list",
+            "--porcelain",
+        ])
+        .output()
+        .map_err(DecapodError::IoError)?;
+
+    if !worktrees_output.status.success() {
+        return Err(DecapodError::ValidationError(format!(
+            "Failed to list git worktrees: {}",
+            String::from_utf8_lossy(&worktrees_output.stderr)
+        )));
+    }
+
+    struct WorktreeInfo {
+        path: PathBuf,
+        branch: Option<String>,
+        _head: Option<String>,
+    }
+
+    let mut worktrees = Vec::new();
+    let mut current_path = None;
+    let mut current_branch = None;
+    let mut current_head = None;
+
+    for line in String::from_utf8_lossy(&worktrees_output.stdout).lines() {
+        if let Some(p) = line.strip_prefix("worktree ") {
+            if let Some(path) = current_path.take() {
+                worktrees.push(WorktreeInfo {
+                    path,
+                    branch: current_branch.take(),
+                    _head: current_head.take(),
+                });
+            }
+            current_path = Some(PathBuf::from(p.trim()));
+        } else if let Some(b) = line.strip_prefix("branch ") {
+            current_branch = Some(b.trim().to_string());
+        } else if let Some(h) = line.strip_prefix("HEAD ") {
+            current_head = Some(h.trim().to_string());
+        }
+    }
+    if let Some(path) = current_path {
+        worktrees.push(WorktreeInfo {
+            path,
+            branch: current_branch,
+            _head: current_head,
+        });
+    }
+
+    // 2) Get all tasks from todo database
+    let store_root = main_repo.join(".decapod").join("data");
+    let tasks = if store_root.exists() {
+        todo::list_tasks(&store_root, None, None, None, None, None).unwrap_or_default()
+    } else {
+        vec![]
+    };
+
+    let mut pruned = Vec::new();
+
+    // 3) Iterate over the directory entries under .decapod/workspaces/
+    for entry in std::fs::read_dir(&workspaces_dir).map_err(DecapodError::IoError)? {
+        let entry = entry.map_err(DecapodError::IoError)?;
+        let dir_path = entry.path();
+        if !dir_path.is_dir() {
+            continue;
+        }
+
+        // Safety Safeguard: Do not prune if repo_root is inside or equal to dir_path.
+        let normalized_dir = normalize_path_for_compare(&dir_path);
+        let normalized_repo = normalize_path_for_compare(repo_root);
+        if normalized_repo == normalized_dir || repo_root.starts_with(&dir_path) {
+            continue;
+        }
+
+        let dir_name = dir_path.file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("")
+            .to_string();
+
+        // Check if registered as a worktree in git
+        let matching_wt = worktrees.iter().find(|wt| {
+            normalize_path_for_compare(&wt.path) == normalized_dir
+        });
+
+        let mut is_stale = false;
+        let mut prune_reason = String::new();
+
+        if let Some(wt) = matching_wt {
+            // Check branch existence
+            if let Some(ref_name) = &wt.branch {
+                let show_ref_out = Command::new("git")
+                    .args([
+                        "-C",
+                        main_repo.to_str().unwrap_or("."),
+                        "show-ref",
+                        "--verify",
+                        ref_name,
+                    ])
+                    .output();
+
+                let branch_exists = match show_ref_out {
+                    Ok(out) => out.status.success(),
+                    Err(_) => false,
+                };
+
+                if !branch_exists {
+                    is_stale = true;
+                    prune_reason = "branch_deleted".to_string();
+                } else {
+                    // Branch exists, check matching tasks
+                    let mut matched_tasks = Vec::new();
+                    for t in &tasks {
+                        if !t.hash.is_empty() {
+                            let hash_lower = t.hash.to_lowercase();
+                            let dir_lower = dir_name.to_lowercase();
+                            let branch_lower = ref_name.to_lowercase();
+                            if dir_lower.contains(&hash_lower) || branch_lower.contains(&hash_lower) {
+                                matched_tasks.push(t);
+                            }
+                        }
+                    }
+
+                    if matched_tasks.is_empty() {
+                        is_stale = true;
+                        prune_reason = "no_matching_task".to_string();
+                    } else {
+                        // Check status of matched tasks
+                        let all_completed = matched_tasks.iter().all(|t| {
+                            t.status == "done" || t.status == "archived"
+                        });
+                        let no_active_claim = matched_tasks.iter().all(|t| {
+                            t.assigned_to.is_empty()
+                        });
+
+                        if all_completed {
+                            is_stale = true;
+                            prune_reason = "task_completed".to_string();
+                        } else if no_active_claim {
+                            is_stale = true;
+                            prune_reason = "no_active_claim".to_string();
+                        }
+                    }
+                }
+            } else {
+                // No branch associated (detached HEAD) -> if no task matches it, prune it
+                let mut matched_tasks = Vec::new();
+                for t in &tasks {
+                    if !t.hash.is_empty() {
+                        let hash_lower = t.hash.to_lowercase();
+                        let dir_lower = dir_name.to_lowercase();
+                        if dir_lower.contains(&hash_lower) {
+                            matched_tasks.push(t);
+                        }
+                    }
+                }
+                if matched_tasks.is_empty() {
+                    is_stale = true;
+                    prune_reason = "no_matching_task".to_string();
+                } else {
+                    let all_completed = matched_tasks.iter().all(|t| {
+                        t.status == "done" || t.status == "archived"
+                    });
+                    let no_active_claim = matched_tasks.iter().all(|t| {
+                        t.assigned_to.is_empty()
+                    });
+                    if all_completed {
+                        is_stale = true;
+                        prune_reason = "task_completed".to_string();
+                    } else if no_active_claim {
+                        is_stale = true;
+                        prune_reason = "no_active_claim".to_string();
+                    }
+                }
+            }
+        } else {
+            // Case A: Not registered in git worktrees
+            is_stale = true;
+            prune_reason = "not_registered".to_string();
+        }
+
+        if is_stale {
+            // Attempt to remove git worktree if registered
+            if matching_wt.is_some() {
+                let mut args = vec!["worktree", "remove"];
+                if force {
+                    args.push("--force");
+                }
+                args.push(dir_path.to_str().unwrap_or("."));
+
+                let _ = Command::new("git")
+                    .args(["-C", main_repo.to_str().unwrap_or(".")])
+                    .args(&args)
+                    .output();
+            }
+
+            // Fallback: forcefully remove from disk if it still exists
+            if dir_path.exists() {
+                let _ = std::fs::remove_dir_all(&dir_path);
+            }
+
+            pruned.push(PrunedWorkspace {
+                path: dir_path.to_string_lossy().to_string(),
+                reason: prune_reason,
+            });
+        }
+    }
+
+    // Call prune_stale_worktree_config to scrub .git/config entries
+    let _ = prune_stale_worktree_config(repo_root);
+
+    Ok(pruned)
+}

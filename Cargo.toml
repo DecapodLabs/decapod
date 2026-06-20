@@ -108,6 +108,10 @@ path = "tests/gatling.rs"
 name = "core_tests"
 path = "tests/core/core.rs"
 
+[[test]]
+name = "workspace_prune_regression"
+path = "tests/workspace_prune_regression.rs"
+
 [[bench]]
 name = "perf_1_1"
 path = "project/benches/perf_1_1.rs"
