@@ -1317,6 +1317,8 @@ fn init_with_from_config(
         } else {
             crate::cli::BackendType::Local
         },
+        git: false,
+        no_git: false,
     }
 }
 
@@ -1356,6 +1358,54 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             ..crate::cli::CloudConfigSection::default()
         },
     }
+}
+
+fn is_git_repository(path: &Path) -> bool {
+    if !path.exists() {
+        return false;
+    }
+    let output = std::process::Command::new("git")
+        .args(["rev-parse", "--is-inside-work-tree"])
+        .current_dir(path)
+        .output();
+    match output {
+        Ok(out) => out.status.success(),
+        Err(_) => false,
+    }
+}
+
+fn run_git_init(target_dir: &Path) -> Result<(), error::DecapodError> {
+    let output = std::process::Command::new("git")
+        .arg("init")
+        .current_dir(target_dir)
+        .output()
+        .map_err(|e| error::DecapodError::ValidationError(format!("Failed to run git init: {e}")))?;
+
+    if !output.status.success() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "git init failed: {}\nRemediation: Ensure Git is installed and you have write permissions to '{}'.",
+            String::from_utf8_lossy(&output.stderr).trim(),
+            target_dir.display()
+        )));
+    }
+    Ok(())
+}
+
+fn verify_git_status(target_dir: &Path) -> Result<(), error::DecapodError> {
+    let output = std::process::Command::new("git")
+        .args(["status", "--short", "--branch"])
+        .current_dir(target_dir)
+        .output()
+        .map_err(|e| error::DecapodError::ValidationError(format!("Failed to verify Git repository status: {e}")))?;
+
+    if !output.status.success() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "Git repository verification failed: git status --short --branch did not succeed after git init.\nstderr: {}\nRemediation: Git repository may be corrupt or misconfigured in '{}'.",
+            String::from_utf8_lossy(&output.stderr).trim(),
+            target_dir.display()
+        )));
+    }
+    Ok(())
 }
 
 fn enrich_repo_context_interactive(
@@ -1717,6 +1767,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                         if !init_group.ci {
                             with.ci = false;
                         }
+                        if init_group.git {
+                            with.git = true;
+                        }
+                        if init_group.no_git {
+                            with.no_git = true;
+                        }
                         if init_group.product_name.is_some() {
                             with.product_name = init_group.product_name.clone();
                         }
@@ -1768,6 +1824,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                             detected_surfaces: init_group.detected_surfaces.clone(),
                             container_workspaces: init_group.container_workspaces,
                             mode: init_group.mode.clone(),
+                            git: init_group.git,
+                            no_git: init_group.no_git,
                         }
                     }
                 }
@@ -1799,8 +1857,41 @@ pub fn run() -> Result<(), error::DecapodError> {
             apply_substrate_adoption(&mut repo_ctx, &init_target);
             apply_architecture_language_recommendation(&mut repo_ctx);
 
-            // Only do full TUI experience if not refreshing an existing project
+            let is_git = is_git_repository(&init_target);
             let is_refresh = init_target.join(".decapod").exists();
+            let is_interactive = base_init_invocation && io::stdin().is_terminal() && !is_refresh && !init_with.proof;
+ 
+            if !is_git {
+                let opt_in = if init_with.no_git {
+                    false
+                } else if init_with.git {
+                    true
+                } else if is_interactive {
+                    print_init_block(
+                        "Git Repository",
+                        "Decapod worktree workflows require a Git repository to isolate agent changes.",
+                    );
+                    prompt_yes_no("Initialize Git repository for this project?", true)?
+                } else {
+                    // Non-interactive: do not automatically initialize git unless explicitly requested via --git
+                    false
+                };
+
+                if opt_in {
+                    if !init_with.dry_run {
+                        run_git_init(&init_target)?;
+                        verify_git_status(&init_target)?;
+                    }
+                } else {
+                    use crate::core::ansi::AnsiExt;
+                    println!(
+                        "{} Git repository was not initialized. Decapod workspace/worktree workflows will not function until a Git repository is created.",
+                        "warning:".bright_yellow()
+                    );
+                }
+            }
+
+            // Only do full TUI experience if not refreshing an existing project
             if base_init_invocation && io::stdin().is_terminal() && !is_refresh && !init_with.proof
             {
                 enrich_repo_context_interactive(&mut repo_ctx, &mut init_with)?;
