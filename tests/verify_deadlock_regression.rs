@@ -62,7 +62,10 @@ fn test_verify_deadlock_prevention() {
     // Disable container workspaces in config.toml for the test to avoid container_workspace_required blockers
     let config_path = main_repo.join(".decapod").join("config.toml");
     let mut config_content = std::fs::read_to_string(&config_path).unwrap();
-    config_content = config_content.replace("container_workspaces = true", "container_workspaces = false");
+    config_content = config_content.replace(
+        "container_workspaces = true",
+        "container_workspaces = false",
+    );
     std::fs::write(&config_path, config_content).unwrap();
 
     // Commit the initialized files (including .decapod, AGENTS.md, etc.) so that they exist in worktrees
