@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.59.6](https://github.com/DecapodLabs/decapod/compare/v0.59.5...v0.59.6) - 2026-06-20
+
+### Fixed
+
+- *(issue-721)* validation deadlock on stale task verification
+
+### Other
+
+- format regression test with cargo fmt
+
 ## [0.59.5](https://github.com/DecapodLabs/decapod/compare/v0.59.4...v0.59.5) - 2026-06-20
 
 ### Other
