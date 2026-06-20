@@ -50,12 +50,9 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Intent:** Architecture decision prompting
 
 ## `decapod workspace`
-- **Intent:** Agent workspace management (ensure, status, publish, prune)
-- **Subcommands:**
-  - `ensure`: Creates or reuses a Git worktree or Docker container workspace for a claimed task.
-  - `status`: Displays current workspace metadata and validation report status.
-  - `publish`: Publishes workspace changes as a patch/PR bundle.
-  - `prune`: Deletes stale workspace directories under `.decapod/workspaces/` (associated with done/archived tasks, deleted branches, or matching no active claim) and cleans up Git config metadata. Accepts optional `--force` flag.
+- **Intent:** Agent workspace management
+- **Preconditions:** Task must be claimed.
+- **State Transition:** Creates git worktrees/containers.
 
 ## `decapod rpc`
 - **Intent:** Structured JSON-RPC interface for agents
