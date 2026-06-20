@@ -40,6 +40,9 @@ pub(crate) struct ValidateCli {
     /// Automatically refresh specs when staleness is detected
     #[clap(long)]
     pub refresh_specs: bool,
+    /// Skip checking if done tasks are verified (helps break verification deadlocks)
+    #[clap(long)]
+    pub skip_todo_verification: bool,
 }
 
 #[derive(clap::Args, Debug)]

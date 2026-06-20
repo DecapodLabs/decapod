@@ -112,6 +112,10 @@ path = "tests/core/core.rs"
 name = "workspace_prune_regression"
 path = "tests/workspace_prune_regression.rs"
 
+[[test]]
+name = "verify_deadlock_regression"
+path = "tests/verify_deadlock_regression.rs"
+
 [[bench]]
 name = "perf_1_1"
 path = "project/benches/perf_1_1.rs"

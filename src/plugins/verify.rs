@@ -234,6 +234,9 @@ fn run_validate_and_hash(
             std::env::set_var("DECAPOD_VERIFYING_TODO", id);
         }
     }
+    unsafe {
+        std::env::set_var("DECAPOD_IGNORE_TODO_VERIFICATION", "1");
+    }
     let exe = std::env::current_exe()?;
     let exe_str = exe.to_string_lossy().to_string();
     let output = external_action::execute(
@@ -252,6 +255,9 @@ fn run_validate_and_hash(
         unsafe {
             std::env::remove_var("DECAPOD_VERIFYING_TODO");
         }
+    }
+    unsafe {
+        std::env::remove_var("DECAPOD_IGNORE_TODO_VERIFICATION");
     }
     let output = output?;
 
