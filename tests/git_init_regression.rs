@@ -83,19 +83,33 @@ fn test_init_in_existing_git_repository_preserves_state() {
     assert!(git_init.status.success());
 
     // Configure dummy user for git
-    let _ = Command::new("git").args(["config", "user.name", "Test User"]).current_dir(dir).output();
-    let _ = Command::new("git").args(["config", "user.email", "test@example.com"]).current_dir(dir).output();
+    let _ = Command::new("git")
+        .args(["config", "user.name", "Test User"])
+        .current_dir(dir)
+        .output();
+    let _ = Command::new("git")
+        .args(["config", "user.email", "test@example.com"])
+        .current_dir(dir)
+        .output();
 
     fs::write(dir.join("dummy.txt"), "hello").expect("write dummy");
-    let _ = Command::new("git").args(["add", "."]).current_dir(dir).output();
-    let _ = Command::new("git").args(["commit", "-m", "first commit"]).current_dir(dir).output();
+    let _ = Command::new("git")
+        .args(["add", "."])
+        .current_dir(dir)
+        .output();
+    let _ = Command::new("git")
+        .args(["commit", "-m", "first commit"])
+        .current_dir(dir)
+        .output();
 
     let git_head_before = Command::new("git")
         .args(["rev-parse", "HEAD"])
         .current_dir(dir)
         .output()
         .expect("git rev-parse");
-    let head_before = String::from_utf8_lossy(&git_head_before.stdout).trim().to_string();
+    let head_before = String::from_utf8_lossy(&git_head_before.stdout)
+        .trim()
+        .to_string();
 
     // Run decapod init (it should skip git init and preserve the repo state)
     let out = run_decapod(
@@ -114,7 +128,10 @@ fn test_init_in_existing_git_repository_preserves_state() {
         ],
         &[],
     );
-    assert!(out.status.success(), "decapod init on existing git repo failed");
+    assert!(
+        out.status.success(),
+        "decapod init on existing git repo failed"
+    );
 
     // Check HEAD is still the same (state preserved)
     let git_head_after = Command::new("git")
@@ -122,7 +139,9 @@ fn test_init_in_existing_git_repository_preserves_state() {
         .current_dir(dir)
         .output()
         .expect("git rev-parse");
-    let head_after = String::from_utf8_lossy(&git_head_after.stdout).trim().to_string();
+    let head_after = String::from_utf8_lossy(&git_head_after.stdout)
+        .trim()
+        .to_string();
 
     assert_eq!(head_before, head_after, "Git HEAD changed after init");
 }
@@ -157,12 +176,16 @@ fn test_init_with_no_git_declined() {
     );
 
     // Verify .git does NOT exist
-    assert!(!dir.join(".git").exists(), "Expected .git to not be created when declined");
+    assert!(
+        !dir.join(".git").exists(),
+        "Expected .git to not be created when declined"
+    );
 
     // Verify stdout/stderr contains warning
     let stdout = String::from_utf8_lossy(&out.stdout);
     assert!(
-        stdout.contains("Git repository was not initialized") || String::from_utf8_lossy(&out.stderr).contains("Git repository was not initialized"),
+        stdout.contains("Git repository was not initialized")
+            || String::from_utf8_lossy(&out.stderr).contains("Git repository was not initialized"),
         "Warning message should be printed"
     );
 }
@@ -192,12 +215,24 @@ fn test_workspace_creation_immediately_after_init() {
     assert!(out.status.success());
 
     // Configure dummy user for git
-    let _ = Command::new("git").args(["config", "user.name", "Test User"]).current_dir(dir).output();
-    let _ = Command::new("git").args(["config", "user.email", "test@example.com"]).current_dir(dir).output();
+    let _ = Command::new("git")
+        .args(["config", "user.name", "Test User"])
+        .current_dir(dir)
+        .output();
+    let _ = Command::new("git")
+        .args(["config", "user.email", "test@example.com"])
+        .current_dir(dir)
+        .output();
 
     // Make an initial commit
-    let _ = Command::new("git").args(["add", "."]).current_dir(dir).output();
-    let _ = Command::new("git").args(["commit", "-m", "first commit"]).current_dir(dir).output();
+    let _ = Command::new("git")
+        .args(["add", "."])
+        .current_dir(dir)
+        .output();
+    let _ = Command::new("git")
+        .args(["commit", "-m", "first commit"])
+        .current_dir(dir)
+        .output();
 
     // Acquire session
     let acquire = run_decapod(
@@ -223,7 +258,11 @@ fn test_workspace_creation_immediately_after_init() {
         &password,
         &[],
     );
-    assert!(todo_add.status.success(), "todo add failed: {}", String::from_utf8_lossy(&todo_add.stderr));
+    assert!(
+        todo_add.status.success(),
+        "todo add failed: {}",
+        String::from_utf8_lossy(&todo_add.stderr)
+    );
 
     // Get todo ID from stdout
     let todo_stdout = String::from_utf8_lossy(&todo_add.stdout);
@@ -242,20 +281,15 @@ fn test_workspace_creation_immediately_after_init() {
         .expect("todo ID in output");
 
     // Claim todo
-    let todo_claim = run_decapod_with_password(
-        dir,
-        &["todo", "claim", "--id", &todo_id],
-        &password,
-        &[],
-    );
+    let todo_claim =
+        run_decapod_with_password(dir, &["todo", "claim", "--id", &todo_id], &password, &[]);
     assert!(todo_claim.status.success(), "todo claim failed");
 
     // Ensure workspace
-    let workspace_ensure = run_decapod_with_password(
-        dir,
-        &["workspace", "ensure"],
-        &password,
-        &[],
+    let workspace_ensure = run_decapod_with_password(dir, &["workspace", "ensure"], &password, &[]);
+    assert!(
+        workspace_ensure.status.success(),
+        "workspace ensure failed: {}",
+        String::from_utf8_lossy(&workspace_ensure.stderr)
     );
-    assert!(workspace_ensure.status.success(), "workspace ensure failed: {}", String::from_utf8_lossy(&workspace_ensure.stderr));
 }

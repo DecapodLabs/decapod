@@ -1379,7 +1379,9 @@ fn run_git_init(target_dir: &Path) -> Result<(), error::DecapodError> {
         .arg("init")
         .current_dir(target_dir)
         .output()
-        .map_err(|e| error::DecapodError::ValidationError(format!("Failed to run git init: {e}")))?;
+        .map_err(|e| {
+            error::DecapodError::ValidationError(format!("Failed to run git init: {e}"))
+        })?;
 
     if !output.status.success() {
         return Err(error::DecapodError::ValidationError(format!(
@@ -1396,7 +1398,11 @@ fn verify_git_status(target_dir: &Path) -> Result<(), error::DecapodError> {
         .args(["status", "--short", "--branch"])
         .current_dir(target_dir)
         .output()
-        .map_err(|e| error::DecapodError::ValidationError(format!("Failed to verify Git repository status: {e}")))?;
+        .map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "Failed to verify Git repository status: {e}"
+            ))
+        })?;
 
     if !output.status.success() {
         return Err(error::DecapodError::ValidationError(format!(
@@ -1859,8 +1865,11 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             let is_git = is_git_repository(&init_target);
             let is_refresh = init_target.join(".decapod").exists();
-            let is_interactive = base_init_invocation && io::stdin().is_terminal() && !is_refresh && !init_with.proof;
- 
+            let is_interactive = base_init_invocation
+                && io::stdin().is_terminal()
+                && !is_refresh
+                && !init_with.proof;
+
             if !is_git {
                 let opt_in = if init_with.no_git {
                     false
