@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.59.4](https://github.com/DecapodLabs/decapod/compare/v0.59.3...v0.59.4) - 2026-06-20
+
+### Other
+
+- code formatting issues for git init changes
+- Fix git init detection and provisioning
+
 ## [0.59.3](https://github.com/DecapodLabs/decapod/compare/v0.59.2...v0.59.3) - 2026-06-18
 
 ### Other
