@@ -1255,7 +1255,10 @@ pub struct PrunedWorkspace {
 }
 
 /// Prune stale/unused agent workspaces
-pub fn prune_workspaces(repo_root: &Path, force: bool) -> Result<Vec<PrunedWorkspace>, DecapodError> {
+pub fn prune_workspaces(
+    repo_root: &Path,
+    force: bool,
+) -> Result<Vec<PrunedWorkspace>, DecapodError> {
     let main_repo = get_main_repo_root(repo_root)?;
     let workspaces_dir = main_repo.join(".decapod").join("workspaces");
     if !workspaces_dir.is_dir() {
@@ -1341,15 +1344,16 @@ pub fn prune_workspaces(repo_root: &Path, force: bool) -> Result<Vec<PrunedWorks
             continue;
         }
 
-        let dir_name = dir_path.file_name()
+        let dir_name = dir_path
+            .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or("")
             .to_string();
 
         // Check if registered as a worktree in git
-        let matching_wt = worktrees.iter().find(|wt| {
-            normalize_path_for_compare(&wt.path) == normalized_dir
-        });
+        let matching_wt = worktrees
+            .iter()
+            .find(|wt| normalize_path_for_compare(&wt.path) == normalized_dir);
 
         let mut is_stale = false;
         let mut prune_reason = String::new();
@@ -1383,7 +1387,8 @@ pub fn prune_workspaces(repo_root: &Path, force: bool) -> Result<Vec<PrunedWorks
                             let hash_lower = t.hash.to_lowercase();
                             let dir_lower = dir_name.to_lowercase();
                             let branch_lower = ref_name.to_lowercase();
-                            if dir_lower.contains(&hash_lower) || branch_lower.contains(&hash_lower) {
+                            if dir_lower.contains(&hash_lower) || branch_lower.contains(&hash_lower)
+                            {
                                 matched_tasks.push(t);
                             }
                         }
@@ -1394,12 +1399,11 @@ pub fn prune_workspaces(repo_root: &Path, force: bool) -> Result<Vec<PrunedWorks
                         prune_reason = "no_matching_task".to_string();
                     } else {
                         // Check status of matched tasks
-                        let all_completed = matched_tasks.iter().all(|t| {
-                            t.status == "done" || t.status == "archived"
-                        });
-                        let no_active_claim = matched_tasks.iter().all(|t| {
-                            t.assigned_to.is_empty()
-                        });
+                        let all_completed = matched_tasks
+                            .iter()
+                            .all(|t| t.status == "done" || t.status == "archived");
+                        let no_active_claim =
+                            matched_tasks.iter().all(|t| t.assigned_to.is_empty());
 
                         if all_completed {
                             is_stale = true;
@@ -1426,12 +1430,10 @@ pub fn prune_workspaces(repo_root: &Path, force: bool) -> Result<Vec<PrunedWorks
                     is_stale = true;
                     prune_reason = "no_matching_task".to_string();
                 } else {
-                    let all_completed = matched_tasks.iter().all(|t| {
-                        t.status == "done" || t.status == "archived"
-                    });
-                    let no_active_claim = matched_tasks.iter().all(|t| {
-                        t.assigned_to.is_empty()
-                    });
+                    let all_completed = matched_tasks
+                        .iter()
+                        .all(|t| t.status == "done" || t.status == "archived");
+                    let no_active_claim = matched_tasks.iter().all(|t| t.assigned_to.is_empty());
                     if all_completed {
                         is_stale = true;
                         prune_reason = "task_completed".to_string();

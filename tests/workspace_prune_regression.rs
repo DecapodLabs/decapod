@@ -1,6 +1,6 @@
 use decapod::core::store::{Store, StoreKind};
 use decapod::core::todo::{
-    add_task, claim_task, initialize_todo_db, update_status, ClaimMode, TodoCommand,
+    ClaimMode, TodoCommand, add_task, claim_task, initialize_todo_db, update_status,
 };
 use decapod::core::workspace;
 use std::fs;
@@ -123,9 +123,12 @@ fn test_workspace_prune() {
     // Manually set distinct hashes in the SQLite db so they don't overlap within the 4.3 minute ULID millisecond threshold
     let db_path = decapod::core::todo::todo_db_path(&store_root);
     let conn = rusqlite::Connection::open(&db_path).expect("open db");
-    conn.execute("UPDATE tasks SET hash = 'hashaa' WHERE id = ?", [id_a]).expect("update a");
-    conn.execute("UPDATE tasks SET hash = 'hashbb' WHERE id = ?", [id_b]).expect("update b");
-    conn.execute("UPDATE tasks SET hash = 'hashcc' WHERE id = ?", [id_c]).expect("update c");
+    conn.execute("UPDATE tasks SET hash = 'hashaa' WHERE id = ?", [id_a])
+        .expect("update a");
+    conn.execute("UPDATE tasks SET hash = 'hashbb' WHERE id = ?", [id_b])
+        .expect("update b");
+    conn.execute("UPDATE tasks SET hash = 'hashcc' WHERE id = ?", [id_c])
+        .expect("update c");
 
     let hash_a = "hashaa";
     let hash_b = "hashbb";
@@ -143,22 +146,58 @@ fn test_workspace_prune() {
     // Worktree A (Active branch/task)
     let wt_a_path = workspaces_dir.join(format!("test-agent-todo-{}-todo-a", hash_a));
     let wt_a_branch = format!("agent/test-agent/todo-{}", hash_a);
-    run_git_cmd(&main_root, &["worktree", "add", "-b", &wt_a_branch, wt_a_path.to_str().unwrap()]);
+    run_git_cmd(
+        &main_root,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            &wt_a_branch,
+            wt_a_path.to_str().unwrap(),
+        ],
+    );
 
     // Worktree B (Task is done)
     let wt_b_path = workspaces_dir.join(format!("test-agent-todo-{}-todo-b", hash_b));
     let wt_b_branch = format!("agent/test-agent/todo-{}", hash_b);
-    run_git_cmd(&main_root, &["worktree", "add", "-b", &wt_b_branch, wt_b_path.to_str().unwrap()]);
+    run_git_cmd(
+        &main_root,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            &wt_b_branch,
+            wt_b_path.to_str().unwrap(),
+        ],
+    );
 
     // Worktree C (Task has no claim)
     let wt_c_path = workspaces_dir.join(format!("test-agent-todo-{}-todo-c", hash_c));
     let wt_c_branch = format!("agent/test-agent/todo-{}", hash_c);
-    run_git_cmd(&main_root, &["worktree", "add", "-b", &wt_c_branch, wt_c_path.to_str().unwrap()]);
+    run_git_cmd(
+        &main_root,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            &wt_c_branch,
+            wt_c_path.to_str().unwrap(),
+        ],
+    );
 
     // Worktree D (Branch does not exist - mock this by adding worktree, then deleting its branch)
     let wt_d_path = workspaces_dir.join("test-agent-todo-111111-todo-d");
     let wt_d_branch = "agent/test-agent/todo-111111";
-    run_git_cmd(&main_root, &["worktree", "add", "-b", wt_d_branch, wt_d_path.to_str().unwrap()]);
+    run_git_cmd(
+        &main_root,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            wt_d_branch,
+            wt_d_path.to_str().unwrap(),
+        ],
+    );
 
     // Delete branch wt_d_branch using `git branch -D`
     run_git_cmd(&wt_d_path, &["checkout", "--detach"]);
@@ -184,14 +223,39 @@ fn test_workspace_prune() {
     assert!(wt_a_path.exists(), "Worktree A (active) must not be pruned");
 
     // wt_b, wt_c, wt_d, wt_e should be pruned (no longer exist on disk)
-    assert!(!wt_b_path.exists(), "Worktree B (completed task) should be pruned");
-    assert!(!wt_c_path.exists(), "Worktree C (no active claim) should be pruned");
-    assert!(!wt_d_path.exists(), "Worktree D (deleted branch) should be pruned");
-    assert!(!wt_e_path.exists(), "Worktree E (unregistered directory) should be pruned");
+    assert!(
+        !wt_b_path.exists(),
+        "Worktree B (completed task) should be pruned"
+    );
+    assert!(
+        !wt_c_path.exists(),
+        "Worktree C (no active claim) should be pruned"
+    );
+    assert!(
+        !wt_d_path.exists(),
+        "Worktree D (deleted branch) should be pruned"
+    );
+    assert!(
+        !wt_e_path.exists(),
+        "Worktree E (unregistered directory) should be pruned"
+    );
 
     // Verify pruned records
-    assert!(pruned.iter().any(|p| p.path == wt_b_path.to_string_lossy() && p.reason == "task_completed"));
-    assert!(pruned.iter().any(|p| p.path == wt_c_path.to_string_lossy() && p.reason == "no_active_claim"));
-    assert!(pruned.iter().any(|p| p.path == wt_d_path.to_string_lossy() && (p.reason == "branch_deleted" || p.reason == "no_matching_task")));
-    assert!(pruned.iter().any(|p| p.path == wt_e_path.to_string_lossy() && p.reason == "not_registered"));
+    assert!(
+        pruned
+            .iter()
+            .any(|p| p.path == wt_b_path.to_string_lossy() && p.reason == "task_completed")
+    );
+    assert!(
+        pruned
+            .iter()
+            .any(|p| p.path == wt_c_path.to_string_lossy() && p.reason == "no_active_claim")
+    );
+    assert!(pruned.iter().any(|p| p.path == wt_d_path.to_string_lossy()
+        && (p.reason == "branch_deleted" || p.reason == "no_matching_task")));
+    assert!(
+        pruned
+            .iter()
+            .any(|p| p.path == wt_e_path.to_string_lossy() && p.reason == "not_registered")
+    );
 }
