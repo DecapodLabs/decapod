@@ -1,6 +1,6 @@
 [package]
 name = "decapod"
-version = "0.60.4"
+version = "0.60.5"
 edition = "2024"
 rust-version = "1.91.1"
 build = "build/compress_constitution.rs"
