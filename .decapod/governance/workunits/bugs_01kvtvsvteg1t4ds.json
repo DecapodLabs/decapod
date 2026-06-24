@@ -2,7 +2,9 @@
   "task_id": "bugs_01kvtvsvteg1t4ds",
   "intent_ref": "bugs_01kvtvsvteg1t4ds",
   "spec_refs": [],
-  "state_refs": [],
+  "state_refs": [
+    ".decapod/generated/context/bugs_01kvtvsvteg1t4ds.json"
+  ],
   "proof_plan": [
     "validate_passes"
   ],
