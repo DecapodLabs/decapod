@@ -84,14 +84,14 @@ fn publish_gate_fails_when_branch_task_not_verified() {
     let dir = tempdir().expect("tempdir");
     write_manifest(
         dir.path(),
-        "test_01",
+        "test_000001",
         workunit::WorkUnitStatus::Claimed,
         vec![],
         vec!["validate_passes"],
         vec![("validate_passes", "pass")],
     );
 
-    let err = workspace::verify_workunit_gate_for_publish(dir.path(), "agent/codex/test_01")
+    let err = workspace::verify_workunit_gate_for_publish(dir.path(), "agent/codex/test_000001")
         .expect_err("expected status gate failure");
     let msg = err.to_string();
     assert!(
@@ -103,12 +103,12 @@ fn publish_gate_fails_when_branch_task_not_verified() {
 #[test]
 fn publish_gate_passes_when_branch_task_verified() {
     let dir = tempdir().expect("tempdir");
-    write_capsule(dir.path(), "test_02");
+    write_capsule(dir.path(), "test_000002");
     write_manifest(
         dir.path(),
-        "test_02",
+        "test_000002",
         workunit::WorkUnitStatus::Verified,
-        vec![".decapod/generated/context/test_02.json"],
+        vec![".decapod/generated/context/test_000002.json"],
         vec!["validate_passes", "test:cargo test --all"],
         vec![
             ("validate_passes", "pass"),
@@ -116,7 +116,7 @@ fn publish_gate_passes_when_branch_task_verified() {
         ],
     );
 
-    let result = workspace::verify_workunit_gate_for_publish(dir.path(), "agent/codex/test_02");
+    let result = workspace::verify_workunit_gate_for_publish(dir.path(), "agent/codex/test_000002");
     assert!(result.is_ok(), "expected verified branch task to pass");
 }
 
@@ -125,14 +125,14 @@ fn publish_gate_fails_when_verified_task_missing_capsule_lineage() {
     let dir = tempdir().expect("tempdir");
     write_manifest(
         dir.path(),
-        "test_03",
+        "test_000003",
         workunit::WorkUnitStatus::Verified,
-        vec![".decapod/generated/context/test_03.json"],
+        vec![".decapod/generated/context/test_000003.json"],
         vec!["validate_passes"],
         vec![("validate_passes", "pass")],
     );
 
-    let err = workspace::verify_workunit_gate_for_publish(dir.path(), "agent/codex/test_03")
+    let err = workspace::verify_workunit_gate_for_publish(dir.path(), "agent/codex/test_000003")
         .expect_err("expected missing capsule lineage failure");
     let msg = err.to_string();
     assert!(
@@ -144,17 +144,17 @@ fn publish_gate_fails_when_verified_task_missing_capsule_lineage() {
 #[test]
 fn publish_gate_fails_when_verified_task_capsule_state_ref_missing() {
     let dir = tempdir().expect("tempdir");
-    write_capsule(dir.path(), "test_04");
+    write_capsule(dir.path(), "test_000004");
     write_manifest(
         dir.path(),
-        "test_04",
+        "test_000004",
         workunit::WorkUnitStatus::Verified,
         vec![],
         vec!["validate_passes"],
         vec![("validate_passes", "pass")],
     );
 
-    let err = workspace::verify_workunit_gate_for_publish(dir.path(), "agent/codex/test_04")
+    let err = workspace::verify_workunit_gate_for_publish(dir.path(), "agent/codex/test_000004")
         .expect_err("expected missing capsule state_ref failure");
     let msg = err.to_string();
     assert!(

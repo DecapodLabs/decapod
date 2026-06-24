@@ -3,7 +3,15 @@
   "intent_ref": "bugs_01kvtvsvteg1t4ds",
   "spec_refs": [],
   "state_refs": [],
-  "proof_plan": [],
-  "proof_results": [],
-  "status": "DRAFT"
+  "proof_plan": [
+    "validate_passes"
+  ],
+  "proof_results": [
+    {
+      "gate": "validate_passes",
+      "status": "pass",
+      "artifact_ref": "src/lib.rs"
+    }
+  ],
+  "status": "VERIFIED"
 }

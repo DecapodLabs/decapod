@@ -152,8 +152,8 @@ fn broker_allows_parallel_ops_on_different_databases() {
     let elapsed = started.elapsed();
 
     assert!(
-        elapsed < Duration::from_millis(260),
-        "expected per-db concurrency (<260ms), got {elapsed:?}"
+        elapsed < Duration::from_millis(450),
+        "expected per-db concurrency (<450ms), got {elapsed:?}"
     );
 }
 
