@@ -3,5 +3,12 @@
 # Regenerate via: decapod auto container run --image-profile alpine
 FROM rust:1.91.1-alpine
 ENV PATH="/usr/local/cargo/bin:${PATH}"
-RUN apk add --no-cache bash ca-certificates coreutils curl git openssh-client sqlite-dev sqlite-static
+ARG DECAPOD_VERSION=0.60.14
+RUN apk add --no-cache bash build-base ca-certificates coreutils curl git openssh-client sqlite-dev sqlite-static
 RUN update-ca-certificates
+COPY .decapod/generated/decapod /usr/local/bin/decapod
+RUN chmod 0755 /usr/local/bin/decapod && \
+(/usr/local/bin/decapod --help >/dev/null || \
+(cargo install decapod --version "$DECAPOD_VERSION" --locked --force && \
+cp /usr/local/cargo/bin/decapod /usr/local/bin/decapod)) && \
+/usr/local/bin/decapod --help >/dev/null

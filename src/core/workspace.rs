@@ -560,7 +560,7 @@ pub fn ensure_workspace(
 
     // 2. Ensure container (if requested)
     if config.use_container {
-        ensure_dockerfile(&worktree_path)?;
+        crate::plugins::container::prepare_generated_container_profile(&worktree_path)?;
         let image_tag = format!(
             "localhost/decapod-workspace:{}-{}",
             sanitize_agent_id(agent_id),
@@ -696,20 +696,6 @@ fn normalize_path_for_compare(path: &Path) -> String {
         .unwrap_or_else(|_| path.to_path_buf())
         .to_string_lossy()
         .to_string()
-}
-
-/// Ensure Dockerfile exists in workspace
-fn ensure_dockerfile(workspace_path: &Path) -> Result<(), DecapodError> {
-    let generated_dir = workspace_path.join(".decapod").join("generated");
-    std::fs::create_dir_all(&generated_dir).map_err(DecapodError::IoError)?;
-    let dockerfile_path = generated_dir.join("Dockerfile");
-
-    // Dynamically generate and maintain the Dockerfile over time
-    let dockerfile_content =
-        crate::plugins::container::generated_dockerfile_for_repo(workspace_path);
-    std::fs::write(&dockerfile_path, dockerfile_content).map_err(DecapodError::IoError)?;
-
-    Ok(())
 }
 
 /// Build workspace container image
