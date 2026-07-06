@@ -11,7 +11,7 @@
 
 <p align="center">
   Decapod is a daemonless, local-first kernel that agents call when coding work needs intent, context, boundaries, coordination, or proof. 
-  You keep working in Cursor, Claude Code, Codex, Antigravity, Gemini CLI, or any other agent tool; Decapod gives those agents a shared control plane inside the repo.
+  You keep working in Cursor, Claude Code, Codex, Antigravity, or any other agent tool; Decapod gives those agents a shared control plane inside the repo.
 </p>
 
 <p align="center">
