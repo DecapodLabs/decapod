@@ -4,15 +4,14 @@
   <code>cargo install decapod && decapod init</code>
 </p>
 
-<p align="center">
+<p<p align="center">
   <strong>Decapod</strong><br />
-  The agent remains your interface; natural language becomes the control surface; fleets of looping agents use Decapod to keep concurrent AI coding work governed, coordinated, and provable.
+  Repo-native governance for AI coding agents.
 </p>
 
 <p align="center">
-  Decapod is a daemonless, local-first governance kernel for looping agentic coding fleets. Users stay inside Cursor, Claude Code, Codex, Antigravity, and other agent tools while agents 
-  call Decapod on demand to enrich context, turn natural-language intent into explicit specs, enforce workspace and policy boundaries, coordinate mutable state, and require 
-  proof-backed completion concurrently.
+  Decapod is a daemonless, local-first kernel that agents call when coding work needs intent, context, boundaries, coordination, or proof. 
+  You keep working in Cursor, Claude Code, Codex, Antigravity, Gemini CLI, or any other agent tool; Decapod gives those agents a shared control plane inside the repo.
 </p>
 
 <p align="center">
