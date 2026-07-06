@@ -4,7 +4,7 @@
   <code>cargo install decapod && decapod init</code>
 </p>
 
-<p<p align="center">
+<p align="center">
   <strong>Decapod</strong><br />
   Repo-native governance for AI coding agents.
 </p>
