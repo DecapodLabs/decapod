@@ -224,7 +224,8 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
 
     let run_rpc_once = |req: &serde_json::Value| -> serde_json::Value {
         for attempt in 1..=2 {
-            let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+            let exe = resolve_decapod_bin();
+            let mut cmd = Command::new(exe);
             cmd.current_dir(test_repo_root())
                 .args(["rpc", "--stdin"])
                 .env("DECAPOD_AGENT_ID", "unknown")
