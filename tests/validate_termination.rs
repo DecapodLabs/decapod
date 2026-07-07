@@ -230,6 +230,23 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     assert_eq!(payload["report"]["status"], "ok");
     assert!(payload["report"]["fail_count"].as_u64().unwrap_or(1) == 0);
     assert!(payload["report"]["gate_timings"].is_array());
+    let epoch = &payload["report"]["validation_epoch"];
+    assert_eq!(epoch["schema_version"], "1.0.0");
+    let epoch_id = epoch["epoch_id"].as_str().expect("epoch_id");
+    assert!(epoch_id.starts_with("ve_"));
+    assert_eq!(epoch["validation_profile"], "default");
+    assert_eq!(
+        epoch["evaluator_identity"],
+        format!("decapod-validate@{}", env!("CARGO_PKG_VERSION"))
+    );
+
+    let receipt_path = dir.join(".decapod/generated/validation-epoch.json");
+    let receipt: Value = serde_json::from_str(
+        &fs::read_to_string(&receipt_path).expect("validation epoch receipt should exist"),
+    )
+    .expect("validation epoch receipt should parse");
+    assert_eq!(receipt["kind"], "decapod.validation_epoch");
+    assert_eq!(receipt["active_epoch"]["epoch_id"], epoch_id);
     assert!(payload["self_heal"].is_array());
     assert!(
         !payload["self_heal"]
@@ -238,6 +255,58 @@ fn validate_json_reports_self_heal_and_structured_summary() {
             .iter()
             .any(|action| action["action"] == "heal_container_runtime_override"),
         "validate should not write container-runtime override markers automatically"
+    );
+}
+
+#[test]
+fn validation_profile_changes_validation_epoch() {
+    let (_tmp, dir, password) = setup_repo();
+
+    let default_validate = run_decapod(
+        &dir,
+        &["validate", "--format", "json"],
+        &[
+            ("DECAPOD_CONTAINER", "1"),
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        default_validate.status.success(),
+        "default validate failed: {}",
+        String::from_utf8_lossy(&default_validate.stderr)
+    );
+
+    let alternate_validate = run_decapod(
+        &dir,
+        &["validate", "--format", "json"],
+        &[
+            ("DECAPOD_CONTAINER", "1"),
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+            ("DECAPOD_VALIDATION_PROFILE", "alternate-proof-profile"),
+        ],
+    );
+    assert!(
+        alternate_validate.status.success(),
+        "alternate-profile validate failed: {}",
+        String::from_utf8_lossy(&alternate_validate.stderr)
+    );
+
+    let default_payload: Value =
+        serde_json::from_slice(&default_validate.stdout).expect("default validate json");
+    let alternate_payload: Value =
+        serde_json::from_slice(&alternate_validate.stdout).expect("alternate validate json");
+    assert_ne!(
+        default_payload["report"]["validation_epoch"]["epoch_id"],
+        alternate_payload["report"]["validation_epoch"]["epoch_id"],
+        "changing validation profile must create a distinct validation epoch"
+    );
+    assert_eq!(
+        alternate_payload["report"]["validation_epoch"]["validation_profile"],
+        "alternate-proof-profile"
     );
 }
 

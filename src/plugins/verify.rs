@@ -4,6 +4,7 @@ use crate::core::external_action::{self, ExternalCapability};
 use crate::core::state_commit;
 use crate::core::store::Store;
 use crate::core::todo;
+use crate::core::validation_epoch::{ValidationEpochMetadata, active_validation_epoch};
 use crate::plugins::federation;
 use clap::{Parser, Subcommand};
 use fancy_regex::Regex;
@@ -62,6 +63,10 @@ struct VerifyTarget {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct VerificationArtifacts {
     completed_at: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    evaluator_epoch: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    validation_epoch: Option<ValidationEpochMetadata>,
     proof_plan_results: Vec<ProofPlanResult>,
     file_artifacts: Vec<FileArtifact>,
 }
@@ -72,6 +77,10 @@ struct ProofPlanResult {
     status: String,
     command: String,
     output_hash: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    evaluator_epoch: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    validation_epoch: Option<ValidationEpochMetadata>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -567,6 +576,31 @@ fn verify_target(
 
     // Only check validate_passes if it's in the proof plan
     if validate_check_needed {
+        let active_epoch = active_validation_epoch(repo_root)?;
+        match artifacts.validation_epoch.as_ref() {
+            Some(captured_epoch) if captured_epoch.epoch_id == active_epoch.epoch_id => {}
+            Some(captured_epoch) => {
+                result.status = "fail".to_string();
+                result.proofs.push(ProofCheckResult {
+                    gate: "validate_passes".to_string(),
+                    status: "fail".to_string(),
+                    expected_output_hash: expected_hash.clone(),
+                    actual_output_hash: None,
+                    reason: Some(format!(
+                        "validation epoch changed: captured {} but active {}. Re-run `decapod todo done --validated` or `decapod qa verify capture --id {}` to recapture current proof evidence.",
+                        captured_epoch.epoch_id, active_epoch.epoch_id, target.todo_id
+                    )),
+                });
+                return Ok(result);
+            }
+            None => {
+                result.status = "unknown".to_string();
+                result.notes.push(
+                    "Missing validation_epoch provenance. Remediation: recapture verification artifacts so proof evidence is tied to the active validation epoch.".to_string(),
+                );
+                return Ok(result);
+            }
+        }
         let (validate_ok, actual_hash) =
             run_validate_and_hash(store_root, repo_root, Some(&target.todo_id))?;
         let expected = expected_hash.unwrap_or_default();
@@ -844,10 +878,13 @@ pub fn capture_baseline_for_todo(
     }
 
     let (validate_ok, output_hash) = run_validate_and_hash(&store.root, repo_root, Some(todo_id))?;
+    let validation_epoch = active_validation_epoch(repo_root)?;
 
     let ts = now_iso();
     let artifacts = VerificationArtifacts {
         completed_at: ts.clone(),
+        evaluator_epoch: Some(validation_epoch.epoch_id.clone()),
+        validation_epoch: Some(validation_epoch.clone()),
         proof_plan_results: vec![ProofPlanResult {
             proof_gate: "validate_passes".to_string(),
             status: if validate_ok {
@@ -857,6 +894,8 @@ pub fn capture_baseline_for_todo(
             },
             command: "decapod validate".to_string(),
             output_hash,
+            evaluator_epoch: Some(validation_epoch.epoch_id.clone()),
+            validation_epoch: Some(validation_epoch.clone()),
         }],
         file_artifacts,
     };

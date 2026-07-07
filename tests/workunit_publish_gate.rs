@@ -25,8 +25,11 @@ fn write_manifest(
                 gate: gate.to_string(),
                 status: status.to_string(),
                 artifact_ref: None,
+                evaluator_epoch: None,
+                validation_epoch: None,
             })
             .collect(),
+        validation_epoch: None,
         status,
     };
 

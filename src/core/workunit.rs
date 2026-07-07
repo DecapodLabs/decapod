@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 
 use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
+use crate::core::validation_epoch::ValidationEpochMetadata;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -20,6 +21,10 @@ pub struct WorkUnitProofResult {
     pub gate: String,
     pub status: String,
     pub artifact_ref: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub evaluator_epoch: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub validation_epoch: Option<ValidationEpochMetadata>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -30,6 +35,8 @@ pub struct WorkUnitManifest {
     pub state_refs: Vec<String>,
     pub proof_plan: Vec<String>,
     pub proof_results: Vec<WorkUnitProofResult>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub validation_epoch: Option<ValidationEpochMetadata>,
     pub status: WorkUnitStatus,
 }
 
@@ -112,6 +119,7 @@ pub fn init_workunit(
         state_refs: Vec::new(),
         proof_plan: Vec::new(),
         proof_results: Vec::new(),
+        validation_epoch: None,
         status: WorkUnitStatus::Draft,
     };
     write_workunit(project_root, &manifest)?;
@@ -209,6 +217,8 @@ pub fn record_proof_result(
         gate: gate.to_string(),
         status: status.to_string(),
         artifact_ref,
+        evaluator_epoch: None,
+        validation_epoch: None,
     });
     write_workunit(project_root, &manifest)?;
     load_workunit(project_root, task_id)

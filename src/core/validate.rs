@@ -20,6 +20,10 @@ use crate::core::project_specs::{
 };
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
+use crate::core::validation_epoch::{
+    VALIDATION_EPOCH_RECEIPT, ValidationEpochMetadata, active_validation_epoch,
+    write_active_validation_epoch_receipt,
+};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::plugins::internalize::{self, DeterminismClass, InternalizationManifest, ReplayClass};
 use crate::{db, primitives, todo};
@@ -141,6 +145,7 @@ pub struct ValidationGateTiming {
 #[derive(Debug, Clone, Serialize)]
 pub struct ValidationReport {
     pub status: String,
+    pub validation_epoch: ValidationEpochMetadata,
     pub elapsed_ms: u64,
     pub pass_count: u32,
     pub fail_count: u32,
@@ -1165,6 +1170,7 @@ fn validate_generated_artifact_whitelist(
         ".decapod/data/knowledge.promotions.jsonl",
         ".decapod/generated/specs/.manifest",
         ".decapod/generated/specs/.manifest.json",
+        VALIDATION_EPOCH_RECEIPT,
         ".decapod/generated/policy/context_capsule_policy.json",
         ".decapod/generated/artifacts/provenance/kcr_trend.jsonl",
     ];
@@ -5271,6 +5277,8 @@ pub fn run_validation(
     }
 
     let elapsed = total_start.elapsed();
+    let validation_epoch = active_validation_epoch(working_root)?;
+    write_active_validation_epoch_receipt(working_root, &validation_epoch)?;
     let pass_count = ctx.pass_count.load(Ordering::Relaxed);
     let fail_count = ctx.fail_count.load(Ordering::Relaxed);
     let warn_count = ctx.warn_count.load(Ordering::Relaxed);
@@ -5283,6 +5291,7 @@ pub fn run_validation(
 
     Ok(ValidationReport {
         status: if fail_total > 0 { "fail" } else { "ok" }.to_string(),
+        validation_epoch,
         elapsed_ms: elapsed.as_millis() as u64,
         pass_count,
         fail_count: fail_total,
@@ -5315,6 +5324,11 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
         "  {} intent_version={}",
         "spec".bright_cyan(),
         intent_version.bright_white()
+    );
+    println!(
+        "  {} {}",
+        "epoch".bright_cyan(),
+        report.validation_epoch.epoch_id.bright_white()
     );
     println!(
         "  {} {}",
