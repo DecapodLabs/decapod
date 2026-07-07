@@ -1,8 +1,8 @@
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::core::todo::{
-    TodoCommand, add_task, check_trust_level, get_task, initialize_todo_db, list_tasks,
-    rebuild_from_events, todo_db_path, update_status,
+    ClaimMode, TodoCommand, add_task, check_trust_level, claim_task, get_task, initialize_todo_db,
+    list_tasks, rebuild_from_events, todo_db_path, update_status,
 };
 use decapod::plugins::policy;
 use rusqlite::Connection;
@@ -78,6 +78,120 @@ fn test_todo_lifecycle() {
     let tasks = list_tasks(&root, Some("done".to_string()), None, None, None, None).unwrap();
     assert_eq!(tasks.len(), 1);
     assert_eq!(tasks[0].id, task_id);
+}
+
+#[test]
+fn test_similar_active_task_consolidates_with_comment() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+
+    let active_args = TodoCommand::Add {
+        title: "Fix duplicate todo label handoff routing".to_string(),
+        description: "Make the active owner see comments from related requests".to_string(),
+        tags: "todo,labels,agent-handoff".to_string(),
+        owner: "".to_string(),
+        due: None,
+        r#ref: "".to_string(),
+        scope: "".to_string(),
+        dir: Some(tmp.path().to_string_lossy().to_string()),
+        priority: "high".to_string(),
+        depends_on: "".to_string(),
+        blocks: "".to_string(),
+        parent: None,
+        one_shot: 0,
+    };
+    let active = add_task(&root, &active_args).unwrap();
+    let active_id = active["id"].as_str().unwrap();
+    claim_task(&root, active_id, "agent-a", ClaimMode::Exclusive).unwrap();
+
+    let similar_args = TodoCommand::Add {
+        title: "Repair similar task tag transfer for owners".to_string(),
+        description: "New conversation asks for annotations on claimed work".to_string(),
+        tags: "tasks,tags,comments,agent-routing".to_string(),
+        owner: "agent-b".to_string(),
+        due: None,
+        r#ref: "".to_string(),
+        scope: "".to_string(),
+        dir: Some(tmp.path().to_string_lossy().to_string()),
+        priority: "medium".to_string(),
+        depends_on: "".to_string(),
+        blocks: "".to_string(),
+        parent: None,
+        one_shot: 0,
+    };
+    let consolidated = add_task(&root, &similar_args).unwrap();
+    assert_eq!(consolidated["id"], active_id);
+    assert_eq!(consolidated["new_task_created"], false);
+    assert_eq!(consolidated["consolidated"], true);
+    assert_eq!(consolidated["consolidation"]["assigned_to"], "agent-a");
+
+    let open = list_tasks(&root, Some("open".to_string()), None, None, None, None).unwrap();
+    assert_eq!(
+        open.len(),
+        1,
+        "similar request should not create another open task"
+    );
+    let task = get_task(&root, active_id).unwrap().unwrap();
+    assert_eq!(task.comments.len(), 1);
+    assert_eq!(task.comments[0].kind, "fuzzy-consolidation");
+    assert!(
+        task.comments[0]
+            .comment
+            .contains("Repair similar task tag transfer")
+    );
+}
+
+#[test]
+fn test_similar_active_task_does_not_consolidate_same_owner() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+
+    let active_args = TodoCommand::Add {
+        title: "Fix duplicate todo label handoff routing".to_string(),
+        description: "Make active owner see comments".to_string(),
+        tags: "todo,labels,agent-handoff".to_string(),
+        owner: "agent-a".to_string(),
+        due: None,
+        r#ref: "".to_string(),
+        scope: "".to_string(),
+        dir: Some(tmp.path().to_string_lossy().to_string()),
+        priority: "high".to_string(),
+        depends_on: "".to_string(),
+        blocks: "".to_string(),
+        parent: None,
+        one_shot: 0,
+    };
+    let active = add_task(&root, &active_args).unwrap();
+    let active_id = active["id"].as_str().unwrap();
+    claim_task(&root, active_id, "agent-a", ClaimMode::Exclusive).unwrap();
+
+    let similar_args = TodoCommand::Add {
+        title: "Repair similar task tag transfer for owners".to_string(),
+        description: "New conversation asks for annotations on claimed work".to_string(),
+        tags: "tasks,tags,comments,agent-routing".to_string(),
+        owner: "agent-a".to_string(),
+        due: None,
+        r#ref: "".to_string(),
+        scope: "".to_string(),
+        dir: Some(tmp.path().to_string_lossy().to_string()),
+        priority: "medium".to_string(),
+        depends_on: "".to_string(),
+        blocks: "".to_string(),
+        parent: None,
+        one_shot: 0,
+    };
+    let created = add_task(&root, &similar_args).unwrap();
+    assert_ne!(created["id"], active_id);
+    assert!(created.get("consolidated").is_none());
+
+    let open = list_tasks(&root, Some("open".to_string()), None, None, None, None).unwrap();
+    assert_eq!(
+        open.len(),
+        2,
+        "same-owner similar work should remain independently visible"
+    );
 }
 
 #[test]
