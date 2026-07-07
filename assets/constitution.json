@@ -22,7 +22,10 @@
         "scaffold",
         "constitution",
         "pre-inference",
-        "ambiguous"
+        "ambiguous",
+        "init",
+        "workspace",
+        "scaffolding"
       ],
       "links": {
         "references": [
@@ -39,7 +42,8 @@
           "core/DEPRECATION",
           "core/EMERGENCY_PROTOCOL",
           "core/DATA",
-          "core/RESEARCH"
+          "core/RESEARCH",
+          "core/SCAFFOLDING"
         ],
         "referenced_by": []
       },
@@ -73,6 +77,228 @@
         ]
       }
     },
+    "core/SCAFFOLDING": {
+      "id": "core/SCAFFOLDING",
+      "category": "core",
+      "title": "Project Scaffolding Constitution",
+      "authority": "namespace-router",
+      "binding": "binding",
+      "summary": "Route project initialization and generated workspace decisions into technology-specific doctrine before Decapod writes scaffolding or specs.",
+      "terms": [
+        "scaffolding",
+        "init",
+        "workspace",
+        "template",
+        "project",
+        "language",
+        "runtime",
+        "package",
+        "container",
+        "specs",
+        "proof",
+        "agent"
+      ],
+      "links": {
+        "references": [
+          "core/ARCHITECTURE",
+          "core/DATA",
+          "interfaces/PROJECT_SPECS",
+          "architecture/CONTAINERS",
+          "architecture/RUST",
+          "architecture/GO",
+          "architecture/JAVA",
+          "architecture/PYTHON",
+          "architecture/RUBY",
+          "architecture/JAVASCRIPT",
+          "architecture/REACT",
+          "architecture/TERRAFORM",
+          "data/POSTGRESQL"
+        ],
+        "referenced_by": [
+          "core/DECAPOD"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when decapod init, project refresh, or an agent-managed workspace must decide what files, commands, Dockerfile layers, or specs to generate.",
+          "Use when the user names a language, framework, database, infrastructure tool, or deployment target and expects a project skeleton."
+        ],
+        "decide": [
+          "Classify the primary environment language separately from Decapod itself; Decapod is the agent control layer, not the application base image.",
+          "Capture the smallest runnable path before optional structure: package manager, entrypoint, test command, build command, and container command.",
+          "Distinguish source scaffolding from managed workspace scaffolding. Project files belong to the user; .decapod/generated files are Decapod-managed contracts."
+        ],
+        "route": [
+          "rust -> architecture/RUST; go -> architecture/GO; java or jvm -> architecture/JAVA; python -> architecture/PYTHON; ruby -> architecture/RUBY.",
+          "javascript, typescript, node -> architecture/JAVASCRIPT; react or frontend app -> architecture/REACT plus architecture/FRONTEND.",
+          "postgres, relational persistence, migrations -> data/POSTGRESQL plus data/DATABASE; terraform or infrastructure as code -> architecture/TERRAFORM.",
+          "workspace container, Dockerfile, podman, docker, sandbox -> architecture/CONTAINERS before runtime-specific image choices."
+        ],
+        "apply": [
+          "Generate only files that support the first proof loop and the facts the user supplied; leave richer conventions as follow-up mutations in the workspace.",
+          "Emit spec references that explain why each generated subsystem exists so later agents can mutate rather than replace the scaffold blindly.",
+          "When a repo already exists, infer from lockfiles and commands before asking; when facts conflict, ask one focused question before writing."
+        ],
+        "avoid": [
+          "Do not make Rust, Node, Python, or any other ecosystem the default merely because Decapod is written in Rust.",
+          "Do not generate production deployment machinery before local correctness, secrets posture, and persistence ownership are understood.",
+          "Do not treat the initial template as final architecture; the managed workspace Dockerfile and specs are expected to evolve with the project."
+        ],
+        "proceed_when": [
+          "Proceed when the generated project has a named runtime, a first command, a first proof, and specs that preserve unanswered architectural questions.",
+          "Proceed when the Decapod layer and the user project layer are visibly separate in the workspace container contract."
+        ]
+      },
+      "architect_notes": [
+        "Scaffolding is an architectural act because it sets path names, command names, dependency managers, and proof expectations that future agents will copy.",
+        "The best first scaffold is intentionally boring: it makes the first correct change easy and leaves high-cost commitments visible instead of hidden.",
+        "Generated work should optimize for reversible motion. Pin decisions that affect compatibility, security, state, or release behavior."
+      ],
+      "init_questions": [
+        {
+          "id": "primary_language",
+          "prompt": "What is the primary project language or runtime?",
+          "why": "The answer drives package manager, base image, test command, and generated file layout.",
+          "answers": [
+            "rust",
+            "go",
+            "java",
+            "python",
+            "ruby",
+            "javascript",
+            "other"
+          ]
+        },
+        {
+          "id": "project_shape",
+          "prompt": "What is the first runnable project shape?",
+          "why": "A CLI, service, library, web app, worker, or script needs different files and proof.",
+          "answers": [
+            "cli",
+            "service",
+            "library",
+            "web app",
+            "worker",
+            "script"
+          ]
+        },
+        {
+          "id": "state_boundary",
+          "prompt": "Where will persistent state live, if anywhere?",
+          "why": "Persistence changes migrations, backup posture, test fixtures, and container services.",
+          "answers": [
+            "none",
+            "filesystem",
+            "postgres",
+            "sqlite",
+            "external service"
+          ]
+        },
+        {
+          "id": "deployment_hint",
+          "prompt": "Is the target local-only, containerized, serverless, VM, Kubernetes, or unknown?",
+          "why": "Deployment hints affect health checks, ports, config, and generated operational notes.",
+          "answers": [
+            "local",
+            "container",
+            "serverless",
+            "vm",
+            "kubernetes",
+            "unknown"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Generate from explicit user language",
+          "use_when": "The user selected a language or config already declares one.",
+          "avoid_when": "Signals conflict between lockfiles, source files, and user intent.",
+          "implications": "Use the selected ecosystem as the project layer and install Decapod as the agent layer inside the workspace image."
+        },
+        {
+          "choice": "Infer from repository evidence",
+          "use_when": "Existing lockfiles, manifests, tests, and source ratios point to one ecosystem.",
+          "avoid_when": "The repo is polyglot or the user asked to migrate ecosystems.",
+          "implications": "Record inference evidence in specs and keep generated mutations minimal until proof confirms the command path."
+        },
+        {
+          "choice": "Ask one sharper question",
+          "use_when": "The initial language, state, or deployment facts are material and cannot be inferred.",
+          "avoid_when": "A conservative local-only scaffold can proceed without harming future choices.",
+          "implications": "Stop before writing files that would encode a false ecosystem or persistence decision."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "template completeness",
+          "option_a": "Barebones runnable skeleton.",
+          "option_b": "Full framework opinion with many files.",
+          "guidance": "Default barebones. Add framework structure after the user names it or the repo proves it."
+        },
+        {
+          "axis": "managed workspace mutability",
+          "option_a": "Regenerate the Dockerfile from template each time.",
+          "option_b": "Treat it as a living managed file that agents can mutate.",
+          "guidance": "Use a minimal template once, then preserve agent changes while validating Decapod layer expectations."
+        },
+        {
+          "axis": "Decapod version source",
+          "option_a": "Use the installed or released Decapod image tag.",
+          "option_b": "Bind a local Decapod binary for special cases.",
+          "guidance": "Prefer released tags for reproducibility and allow local binding only when the workspace explicitly opts into that fallback."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Primary language, package manager, first runnable target, test/build commands, container runtime, persistence hint, and deployment hint.",
+          "Whether the workspace Dockerfile should use a released Decapod layer or a local binary bind for unreleased development."
+        ],
+        "generate": [
+          "A minimal project skeleton for the selected ecosystem, not for Decapod itself.",
+          "A .decapod/generated Dockerfile that separates the project runtime layer from the Decapod tool layer.",
+          "Living specs that record choices, assumptions, unanswered questions, and proof commands."
+        ],
+        "defer": [
+          "Framework-specific directory trees until the user names the framework or existing files prove it.",
+          "Production infrastructure, cloud IAM, managed databases, and queues until operating boundaries are explicit."
+        ],
+        "proof": [
+          "The fresh scaffold must complete its documented build or test command in a clean checkout.",
+          "The workspace container must include only the runtime and tools needed for the selected project language plus the Decapod layer."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "State the selected ecosystem and why it was selected.",
+          "Preserve unknowns about deployment, state, security, and user workflow."
+        ],
+        "architecture": [
+          "Describe the runtime layer, Decapod layer, managed Dockerfile behavior, and first proof loop.",
+          "Record the scaffold as a starting point, not a final architecture."
+        ],
+        "interfaces": [
+          "List generated commands, files, ports, public modules, and external services as contracts.",
+          "Mark .decapod/generated Dockerfile as managed but intentionally mutable by agents inside workspaces."
+        ],
+        "proof": [
+          "The fresh scaffold must complete its documented build or test command in a clean checkout.",
+          "The workspace container must include only the runtime and tools needed for the selected project language plus the Decapod layer."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Generated JSON, TOML, YAML, and package manifests must parse.",
+          "Repeated init or validation must not erase intentional workspace Dockerfile mutations."
+        ],
+        "runtime": [
+          "The fresh scaffold must complete its documented build or test command in a clean checkout.",
+          "The workspace container must include only the runtime and tools needed for the selected project language plus the Decapod layer."
+        ],
+        "release": [
+          "Released Decapod images must be taggable by version and short release commit SHA when used as the Decapod layer."
+        ]
+      }
+    },
     "core/ARCHITECTURE": {
       "id": "core/ARCHITECTURE",
       "category": "core",
@@ -96,7 +322,15 @@
         "performance",
         "wasm",
         "react",
-        "mobile"
+        "mobile",
+        "rust",
+        "go",
+        "java",
+        "python",
+        "ruby",
+        "javascript",
+        "terraform",
+        "postgres"
       ],
       "links": {
         "references": [
@@ -137,7 +371,17 @@
           "architecture/SYSTEMS_DESIGN",
           "architecture/TESTING_STRATEGY",
           "architecture/UI",
-          "architecture/WEB"
+          "architecture/WEB",
+          "core/SCAFFOLDING",
+          "architecture/RUST",
+          "architecture/GO",
+          "architecture/JAVA",
+          "architecture/PYTHON",
+          "architecture/RUBY",
+          "architecture/JAVASCRIPT",
+          "architecture/REACT",
+          "architecture/TERRAFORM",
+          "data/POSTGRESQL"
         ],
         "referenced_by": [
           "core/DECAPOD"
@@ -158,7 +402,10 @@
           "frontend -> architecture/FRONTEND, architecture/UI, architecture/WEB, architecture/PERFORMANCE, architecture/TESTING_STRATEGY.",
           "backend -> architecture/API_DESIGN, data/DATABASE, architecture/MESSAGING, architecture/OBSERVABILITY, architecture/SECURITY.",
           "secure -> architecture/SECURITY, architecture/AUTH, architecture/SECRETS, architecture/ENCRYPTION, architecture/COMPLIANCE.",
-          "kubernetes -> architecture/KUBERNETES, architecture/CONTAINERS, architecture/NETWORKING, architecture/OBSERVABILITY, architecture/CI_CD_PIPELINES."
+          "kubernetes -> architecture/KUBERNETES, architecture/CONTAINERS, architecture/NETWORKING, architecture/OBSERVABILITY, architecture/CI_CD_PIPELINES.",
+          "language scaffold -> core/SCAFFOLDING, then route to architecture/RUST, architecture/GO, architecture/JAVA, architecture/PYTHON, architecture/RUBY, or architecture/JAVASCRIPT.",
+          "react app -> architecture/REACT plus architecture/FRONTEND, architecture/UI, architecture/WEB, and architecture/TESTING_STRATEGY.",
+          "postgres -> data/POSTGRESQL plus data/DATABASE; terraform or IaC -> architecture/TERRAFORM plus architecture/CLOUD and architecture/SECURITY."
         ],
         "ask": [
           "Ask platform choice when app could mean iOS, Android, web, desktop, CLI, WASM, or cross-platform.",
@@ -1485,7 +1732,14 @@
         "referenced_by": [
           "architecture/CI_CD_PIPELINES",
           "architecture/KUBERNETES",
-          "core/ENGINEERING_EXCELLENCE"
+          "core/ENGINEERING_EXCELLENCE",
+          "core/SCAFFOLDING",
+          "architecture/RUST",
+          "architecture/GO",
+          "architecture/JAVA",
+          "architecture/PYTHON",
+          "architecture/RUBY",
+          "architecture/JAVASCRIPT"
         ]
       },
       "sections": {
@@ -1520,6 +1774,1462 @@
         ],
         "proceed_when": [
           "Proceed when the image builds reproducibly and passes static vulnerability scans."
+        ]
+      }
+    },
+    "architecture/RUST": {
+      "id": "architecture/RUST",
+      "category": "architecture",
+      "title": "Rust Architecture Doctrine",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Rust scaffolding should emphasize ownership boundaries, explicit error handling, reproducible toolchains, and fast proof loops before framework selection.",
+      "terms": [
+        "rust",
+        "cargo",
+        "crate",
+        "ownership",
+        "borrow",
+        "trait",
+        "async",
+        "tokio",
+        "clippy",
+        "toolchain",
+        "binary",
+        "library"
+      ],
+      "links": {
+        "references": [
+          "architecture/CONCURRENCY",
+          "architecture/PERFORMANCE",
+          "architecture/SECURITY",
+          "architecture/CONTAINERS"
+        ],
+        "referenced_by": [
+          "core/SCAFFOLDING",
+          "core/ARCHITECTURE"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when the selected project runtime, source files, lockfiles, or user prompt indicate Rust."
+        ],
+        "concepts": [
+          "Rust scaffolding should expose the first runnable command and the first test before optional framework structure.",
+          "Generated layout should mirror ecosystem conventions only where those conventions reduce future agent ambiguity.",
+          "Dependency and toolchain choices are architectural contracts when they affect builds, containers, release, or compatibility."
+        ],
+        "ambiguity": [
+          "Stop before generating framework-specific files if the language is known but the framework, artifact shape, or package manager is unknown.",
+          "Ask or infer from existing manifests when multiple package managers or runtime versions are plausible."
+        ],
+        "standards": [
+          "Pin or record the toolchain line used by the workspace and generated commands.",
+          "Generate tests next to the smallest stable unit of behavior; do not rely on manual smoke tests as the only proof.",
+          "Keep secrets, generated build artifacts, and dependency caches out of source control unless the ecosystem explicitly requires a lockfile."
+        ],
+        "failure_modes": [
+          "Generating a heavy framework from a language hint alone and making the user unwind hidden assumptions.",
+          "Documenting commands that were not generated or cannot run in the workspace container.",
+          "Letting local machine state substitute for declared package manager, lockfile, or toolchain policy."
+        ],
+        "proceed_when": [
+          "cargo fmt --check, cargo clippy, and cargo test should be available or explicitly waived.",
+          "The pinned Rust toolchain should match project policy and container workspace expectations."
+        ]
+      },
+      "architect_notes": [
+        "Rust scaffolding should encode the first irreversible decisions and leave reversible preferences as explicit TODOs instead of premature framework ceremony.",
+        "The constitution should bias agents toward small, inspectable defaults with named escape hatches for scale, compliance, or legacy integration pressure.",
+        "A project skeleton is not complete until its proof path, dependency update path, and failure recovery path are visible to a new maintainer."
+      ],
+      "init_questions": [
+        {
+          "id": "delivery_shape",
+          "prompt": "What artifact will users or operators actually run first?",
+          "why": "The runnable artifact determines package layout, local commands, container shape, and the first proof gate.",
+          "answers": [
+            "library",
+            "service",
+            "cli",
+            "web app",
+            "worker",
+            "script"
+          ]
+        },
+        {
+          "id": "operational_risk",
+          "prompt": "What failure would be most expensive in the first production month?",
+          "why": "Early scaffolding should surface the dominant risk in tests, logging, rollback notes, and generated specs.",
+          "answers": [
+            "data loss",
+            "security",
+            "latency",
+            "cost",
+            "availability",
+            "maintainability"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Binary crate",
+          "use_when": "The first artifact is a CLI, daemon, worker, or service executable.",
+          "avoid_when": "The primary value is reusable API surface for other crates.",
+          "implications": "Generate src/main.rs, cargo commands, a runtime config story, and integration proof around process behavior."
+        },
+        {
+          "choice": "Library crate",
+          "use_when": "The project exposes reusable domain logic or bindings.",
+          "avoid_when": "No external Rust consumer exists and delivery is process-based.",
+          "implications": "Generate src/lib.rs, public API tests, documentation examples, and keep binaries as thin adapters."
+        },
+        {
+          "choice": "Workspace",
+          "use_when": "Multiple crates have distinct ownership, release, or dependency boundaries.",
+          "avoid_when": "One crate can still explain the architecture clearly.",
+          "implications": "Generate a workspace only when crate boundaries reduce coupling rather than mirror imagined future teams."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "convention versus explicitness",
+          "option_a": "Lean on ecosystem defaults and fewer files.",
+          "option_b": "Generate explicit config, commands, and policy documents.",
+          "guidance": "Prefer convention until Decapod must preserve an agent-visible contract, then make the contract explicit and tested."
+        },
+        {
+          "axis": "local speed versus production parity",
+          "option_a": "Use lightweight local tooling for fast agent loops.",
+          "option_b": "Mirror production runtime details in the workspace container.",
+          "guidance": "Default to fast feedback, but pin the divergence in specs and add a parity proof before release-critical work."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Record the selected runtime, package manager, test command, build command, lint command, and container runtime assumptions.",
+          "Record the deployment target only as far as it affects local structure, secret handling, ports, or persistent state."
+        ],
+        "generate": [
+          "Generate the smallest Rust skeleton that can build, run, and fail clearly under the selected package manager.",
+          "Generate README commands only after the command has a matching proof hook or an explicit unchecked status.",
+          "Generate support for the Binary crate path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Library crate path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Workspace path only when its use_when condition is satisfied and its implications are recorded in specs."
+        ],
+        "defer": [
+          "Do not generate cloud resources, databases, queues, or identity providers until the user chooses the operating environment.",
+          "Do not add framework plugins, observability vendors, or policy engines unless the requirement is explicit or the repo already uses them."
+        ],
+        "proof": [
+          "cargo fmt --check, cargo clippy, and cargo test should be available or explicitly waived.",
+          "The pinned Rust toolchain should match project policy and container workspace expectations."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Capture the project category, primary users, first runnable artifact, and known non-goals from init answers.",
+          "Keep uncertainty as uncertainty; do not convert unanswered init prompts into fabricated requirements."
+        ],
+        "architecture": [
+          "Record runtime boundaries, state ownership, dependency manager, generated commands, and container workspace expectations.",
+          "Link each scaffolded subsystem to the constitution node that justified it so later agents can revise with context."
+        ],
+        "interfaces": [
+          "Record public CLIs, HTTP contracts, module exports, database schemas, or generated files that other agents must treat as contracts.",
+          "Prefer machine-checkable contracts when the ecosystem supports them; otherwise write examples and compatibility notes."
+        ],
+        "proof": [
+          "cargo fmt --check, cargo clippy, and cargo test should be available or explicitly waived.",
+          "The pinned Rust toolchain should match project policy and container workspace expectations."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The generated project must parse with the ecosystem package manager and expose deterministic format or lint commands when available.",
+          "Generated files must be idempotent under repeated Decapod init or refresh operations unless the user intentionally edits them."
+        ],
+        "runtime": [
+          "cargo fmt --check, cargo clippy, and cargo test should be available or explicitly waived.",
+          "The pinned Rust toolchain should match project policy and container workspace expectations."
+        ],
+        "release": [
+          "Before release, dependency pinning, license posture, vulnerability scanning, and rollback notes must be visible in project specs.",
+          "Generated workspace containers must document where project-specific mutations are expected and where Decapod-managed content begins."
+        ]
+      }
+    },
+    "architecture/GO": {
+      "id": "architecture/GO",
+      "category": "architecture",
+      "title": "Go Architecture Doctrine",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Go scaffolding should favor simple module boundaries, explicit context propagation, table tests, and operationally plain binaries.",
+      "terms": [
+        "go",
+        "golang",
+        "module",
+        "goroutine",
+        "channel",
+        "context",
+        "interface",
+        "cmd",
+        "internal",
+        "testing",
+        "binary",
+        "service"
+      ],
+      "links": {
+        "references": [
+          "architecture/CONCURRENCY",
+          "architecture/API_DESIGN",
+          "architecture/CONTAINERS",
+          "architecture/OBSERVABILITY"
+        ],
+        "referenced_by": [
+          "core/SCAFFOLDING",
+          "core/ARCHITECTURE"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when the selected project runtime, source files, lockfiles, or user prompt indicate Go."
+        ],
+        "concepts": [
+          "Go scaffolding should expose the first runnable command and the first test before optional framework structure.",
+          "Generated layout should mirror ecosystem conventions only where those conventions reduce future agent ambiguity.",
+          "Dependency and toolchain choices are architectural contracts when they affect builds, containers, release, or compatibility."
+        ],
+        "ambiguity": [
+          "Stop before generating framework-specific files if the language is known but the framework, artifact shape, or package manager is unknown.",
+          "Ask or infer from existing manifests when multiple package managers or runtime versions are plausible."
+        ],
+        "standards": [
+          "Pin or record the toolchain line used by the workspace and generated commands.",
+          "Generate tests next to the smallest stable unit of behavior; do not rely on manual smoke tests as the only proof.",
+          "Keep secrets, generated build artifacts, and dependency caches out of source control unless the ecosystem explicitly requires a lockfile."
+        ],
+        "failure_modes": [
+          "Generating a heavy framework from a language hint alone and making the user unwind hidden assumptions.",
+          "Documenting commands that were not generated or cannot run in the workspace container.",
+          "Letting local machine state substitute for declared package manager, lockfile, or toolchain policy."
+        ],
+        "proceed_when": [
+          "go test ./... must pass in the workspace container or the specs must record why it is not yet available.",
+          "Race-sensitive services should add go test -race as a release proof when concurrency is introduced."
+        ]
+      },
+      "architect_notes": [
+        "Go scaffolding should encode the first irreversible decisions and leave reversible preferences as explicit TODOs instead of premature framework ceremony.",
+        "The constitution should bias agents toward small, inspectable defaults with named escape hatches for scale, compliance, or legacy integration pressure.",
+        "A project skeleton is not complete until its proof path, dependency update path, and failure recovery path are visible to a new maintainer."
+      ],
+      "init_questions": [
+        {
+          "id": "delivery_shape",
+          "prompt": "What artifact will users or operators actually run first?",
+          "why": "The runnable artifact determines package layout, local commands, container shape, and the first proof gate.",
+          "answers": [
+            "library",
+            "service",
+            "cli",
+            "web app",
+            "worker",
+            "script"
+          ]
+        },
+        {
+          "id": "operational_risk",
+          "prompt": "What failure would be most expensive in the first production month?",
+          "why": "Early scaffolding should surface the dominant risk in tests, logging, rollback notes, and generated specs.",
+          "answers": [
+            "data loss",
+            "security",
+            "latency",
+            "cost",
+            "availability",
+            "maintainability"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Single module with cmd/internal",
+          "use_when": "The project ships one or more related binaries from one repository.",
+          "avoid_when": "There are independently versioned libraries or multiple deployment lifecycles.",
+          "implications": "Generate go.mod, cmd/<name>, internal packages, table tests, and a simple build command."
+        },
+        {
+          "choice": "Library-first module",
+          "use_when": "External Go consumers are the main interface.",
+          "avoid_when": "The project is only a deployable service.",
+          "implications": "Keep exported APIs small, document examples, and avoid framework types in public signatures."
+        },
+        {
+          "choice": "Service skeleton",
+          "use_when": "The first artifact is an HTTP, RPC, or worker process.",
+          "avoid_when": "Transport is not selected or business logic is still unknown.",
+          "implications": "Generate health, config, logging, and graceful shutdown only as far as the user has selected them."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "convention versus explicitness",
+          "option_a": "Lean on ecosystem defaults and fewer files.",
+          "option_b": "Generate explicit config, commands, and policy documents.",
+          "guidance": "Prefer convention until Decapod must preserve an agent-visible contract, then make the contract explicit and tested."
+        },
+        {
+          "axis": "local speed versus production parity",
+          "option_a": "Use lightweight local tooling for fast agent loops.",
+          "option_b": "Mirror production runtime details in the workspace container.",
+          "guidance": "Default to fast feedback, but pin the divergence in specs and add a parity proof before release-critical work."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Record the selected runtime, package manager, test command, build command, lint command, and container runtime assumptions.",
+          "Record the deployment target only as far as it affects local structure, secret handling, ports, or persistent state."
+        ],
+        "generate": [
+          "Generate the smallest Go skeleton that can build, run, and fail clearly under the selected package manager.",
+          "Generate README commands only after the command has a matching proof hook or an explicit unchecked status.",
+          "Generate support for the Single module with cmd/internal path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Library-first module path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Service skeleton path only when its use_when condition is satisfied and its implications are recorded in specs."
+        ],
+        "defer": [
+          "Do not generate cloud resources, databases, queues, or identity providers until the user chooses the operating environment.",
+          "Do not add framework plugins, observability vendors, or policy engines unless the requirement is explicit or the repo already uses them."
+        ],
+        "proof": [
+          "go test ./... must pass in the workspace container or the specs must record why it is not yet available.",
+          "Race-sensitive services should add go test -race as a release proof when concurrency is introduced."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Capture the project category, primary users, first runnable artifact, and known non-goals from init answers.",
+          "Keep uncertainty as uncertainty; do not convert unanswered init prompts into fabricated requirements."
+        ],
+        "architecture": [
+          "Record runtime boundaries, state ownership, dependency manager, generated commands, and container workspace expectations.",
+          "Link each scaffolded subsystem to the constitution node that justified it so later agents can revise with context."
+        ],
+        "interfaces": [
+          "Record public CLIs, HTTP contracts, module exports, database schemas, or generated files that other agents must treat as contracts.",
+          "Prefer machine-checkable contracts when the ecosystem supports them; otherwise write examples and compatibility notes."
+        ],
+        "proof": [
+          "go test ./... must pass in the workspace container or the specs must record why it is not yet available.",
+          "Race-sensitive services should add go test -race as a release proof when concurrency is introduced."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The generated project must parse with the ecosystem package manager and expose deterministic format or lint commands when available.",
+          "Generated files must be idempotent under repeated Decapod init or refresh operations unless the user intentionally edits them."
+        ],
+        "runtime": [
+          "go test ./... must pass in the workspace container or the specs must record why it is not yet available.",
+          "Race-sensitive services should add go test -race as a release proof when concurrency is introduced."
+        ],
+        "release": [
+          "Before release, dependency pinning, license posture, vulnerability scanning, and rollback notes must be visible in project specs.",
+          "Generated workspace containers must document where project-specific mutations are expected and where Decapod-managed content begins."
+        ]
+      }
+    },
+    "architecture/JAVA": {
+      "id": "architecture/JAVA",
+      "category": "architecture",
+      "title": "Java Architecture Doctrine",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Java scaffolding should make build tool, JVM version, packaging, and dependency boundaries explicit before selecting enterprise framework weight.",
+      "terms": [
+        "java",
+        "jvm",
+        "maven",
+        "gradle",
+        "jar",
+        "spring",
+        "junit",
+        "package",
+        "module",
+        "classpath",
+        "records",
+        "service"
+      ],
+      "links": {
+        "references": [
+          "architecture/API_DESIGN",
+          "architecture/CONTAINERS",
+          "architecture/TESTING_STRATEGY",
+          "architecture/OBSERVABILITY"
+        ],
+        "referenced_by": [
+          "core/SCAFFOLDING",
+          "core/ARCHITECTURE"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when the selected project runtime, source files, lockfiles, or user prompt indicate Java."
+        ],
+        "concepts": [
+          "Java scaffolding should expose the first runnable command and the first test before optional framework structure.",
+          "Generated layout should mirror ecosystem conventions only where those conventions reduce future agent ambiguity.",
+          "Dependency and toolchain choices are architectural contracts when they affect builds, containers, release, or compatibility."
+        ],
+        "ambiguity": [
+          "Stop before generating framework-specific files if the language is known but the framework, artifact shape, or package manager is unknown.",
+          "Ask or infer from existing manifests when multiple package managers or runtime versions are plausible."
+        ],
+        "standards": [
+          "Pin or record the toolchain line used by the workspace and generated commands.",
+          "Generate tests next to the smallest stable unit of behavior; do not rely on manual smoke tests as the only proof.",
+          "Keep secrets, generated build artifacts, and dependency caches out of source control unless the ecosystem explicitly requires a lockfile."
+        ],
+        "failure_modes": [
+          "Generating a heavy framework from a language hint alone and making the user unwind hidden assumptions.",
+          "Documenting commands that were not generated or cannot run in the workspace container.",
+          "Letting local machine state substitute for declared package manager, lockfile, or toolchain policy."
+        ],
+        "proceed_when": [
+          "./mvnw test or ./gradlew test should be the first proof when wrappers exist.",
+          "The container should pin a JDK line and avoid downloading dependencies at runtime."
+        ]
+      },
+      "architect_notes": [
+        "Java scaffolding should encode the first irreversible decisions and leave reversible preferences as explicit TODOs instead of premature framework ceremony.",
+        "The constitution should bias agents toward small, inspectable defaults with named escape hatches for scale, compliance, or legacy integration pressure.",
+        "A project skeleton is not complete until its proof path, dependency update path, and failure recovery path are visible to a new maintainer."
+      ],
+      "init_questions": [
+        {
+          "id": "delivery_shape",
+          "prompt": "What artifact will users or operators actually run first?",
+          "why": "The runnable artifact determines package layout, local commands, container shape, and the first proof gate.",
+          "answers": [
+            "library",
+            "service",
+            "cli",
+            "web app",
+            "worker",
+            "script"
+          ]
+        },
+        {
+          "id": "operational_risk",
+          "prompt": "What failure would be most expensive in the first production month?",
+          "why": "Early scaffolding should surface the dominant risk in tests, logging, rollback notes, and generated specs.",
+          "answers": [
+            "data loss",
+            "security",
+            "latency",
+            "cost",
+            "availability",
+            "maintainability"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Maven project",
+          "use_when": "The team values conventional lifecycle phases and broad plugin compatibility.",
+          "avoid_when": "The repo already standardizes on Gradle or needs custom build graph behavior.",
+          "implications": "Generate pom.xml, src/main/java, src/test/java, JUnit, and reproducible wrapper guidance."
+        },
+        {
+          "choice": "Gradle project",
+          "use_when": "The project needs flexible builds, multi-project composition, or existing Gradle conventions.",
+          "avoid_when": "A simple library or service is better served by Maven conventions.",
+          "implications": "Generate wrapper-based commands and keep custom build logic minimal and tested."
+        },
+        {
+          "choice": "Framework service",
+          "use_when": "Spring, Quarkus, Micronaut, or similar is explicitly chosen.",
+          "avoid_when": "The user only said Java and has not selected a framework.",
+          "implications": "Do not infer an enterprise framework from language alone; capture the framework as a separate decision."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "convention versus explicitness",
+          "option_a": "Lean on ecosystem defaults and fewer files.",
+          "option_b": "Generate explicit config, commands, and policy documents.",
+          "guidance": "Prefer convention until Decapod must preserve an agent-visible contract, then make the contract explicit and tested."
+        },
+        {
+          "axis": "local speed versus production parity",
+          "option_a": "Use lightweight local tooling for fast agent loops.",
+          "option_b": "Mirror production runtime details in the workspace container.",
+          "guidance": "Default to fast feedback, but pin the divergence in specs and add a parity proof before release-critical work."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Record the selected runtime, package manager, test command, build command, lint command, and container runtime assumptions.",
+          "Record the deployment target only as far as it affects local structure, secret handling, ports, or persistent state."
+        ],
+        "generate": [
+          "Generate the smallest Java skeleton that can build, run, and fail clearly under the selected package manager.",
+          "Generate README commands only after the command has a matching proof hook or an explicit unchecked status.",
+          "Generate support for the Maven project path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Gradle project path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Framework service path only when its use_when condition is satisfied and its implications are recorded in specs."
+        ],
+        "defer": [
+          "Do not generate cloud resources, databases, queues, or identity providers until the user chooses the operating environment.",
+          "Do not add framework plugins, observability vendors, or policy engines unless the requirement is explicit or the repo already uses them."
+        ],
+        "proof": [
+          "./mvnw test or ./gradlew test should be the first proof when wrappers exist.",
+          "The container should pin a JDK line and avoid downloading dependencies at runtime."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Capture the project category, primary users, first runnable artifact, and known non-goals from init answers.",
+          "Keep uncertainty as uncertainty; do not convert unanswered init prompts into fabricated requirements."
+        ],
+        "architecture": [
+          "Record runtime boundaries, state ownership, dependency manager, generated commands, and container workspace expectations.",
+          "Link each scaffolded subsystem to the constitution node that justified it so later agents can revise with context."
+        ],
+        "interfaces": [
+          "Record public CLIs, HTTP contracts, module exports, database schemas, or generated files that other agents must treat as contracts.",
+          "Prefer machine-checkable contracts when the ecosystem supports them; otherwise write examples and compatibility notes."
+        ],
+        "proof": [
+          "./mvnw test or ./gradlew test should be the first proof when wrappers exist.",
+          "The container should pin a JDK line and avoid downloading dependencies at runtime."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The generated project must parse with the ecosystem package manager and expose deterministic format or lint commands when available.",
+          "Generated files must be idempotent under repeated Decapod init or refresh operations unless the user intentionally edits them."
+        ],
+        "runtime": [
+          "./mvnw test or ./gradlew test should be the first proof when wrappers exist.",
+          "The container should pin a JDK line and avoid downloading dependencies at runtime."
+        ],
+        "release": [
+          "Before release, dependency pinning, license posture, vulnerability scanning, and rollback notes must be visible in project specs.",
+          "Generated workspace containers must document where project-specific mutations are expected and where Decapod-managed content begins."
+        ]
+      }
+    },
+    "architecture/PYTHON": {
+      "id": "architecture/PYTHON",
+      "category": "architecture",
+      "title": "Python Architecture Doctrine",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Python scaffolding should settle packaging, virtual environment, typing, and test isolation before adding framework-specific layout.",
+      "terms": [
+        "python",
+        "pyproject",
+        "venv",
+        "pytest",
+        "ruff",
+        "mypy",
+        "typing",
+        "package",
+        "script",
+        "wheel",
+        "asyncio",
+        "poetry"
+      ],
+      "links": {
+        "references": [
+          "architecture/API_DESIGN",
+          "architecture/TESTING_STRATEGY",
+          "architecture/CONTAINERS",
+          "architecture/SECURITY"
+        ],
+        "referenced_by": [
+          "core/SCAFFOLDING",
+          "core/ARCHITECTURE"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when the selected project runtime, source files, lockfiles, or user prompt indicate Python."
+        ],
+        "concepts": [
+          "Python scaffolding should expose the first runnable command and the first test before optional framework structure.",
+          "Generated layout should mirror ecosystem conventions only where those conventions reduce future agent ambiguity.",
+          "Dependency and toolchain choices are architectural contracts when they affect builds, containers, release, or compatibility."
+        ],
+        "ambiguity": [
+          "Stop before generating framework-specific files if the language is known but the framework, artifact shape, or package manager is unknown.",
+          "Ask or infer from existing manifests when multiple package managers or runtime versions are plausible."
+        ],
+        "standards": [
+          "Pin or record the toolchain line used by the workspace and generated commands.",
+          "Generate tests next to the smallest stable unit of behavior; do not rely on manual smoke tests as the only proof.",
+          "Keep secrets, generated build artifacts, and dependency caches out of source control unless the ecosystem explicitly requires a lockfile."
+        ],
+        "failure_modes": [
+          "Generating a heavy framework from a language hint alone and making the user unwind hidden assumptions.",
+          "Documenting commands that were not generated or cannot run in the workspace container.",
+          "Letting local machine state substitute for declared package manager, lockfile, or toolchain policy."
+        ],
+        "proceed_when": [
+          "python -m pytest or the selected package manager test command should pass.",
+          "ruff or an equivalent formatter/linter should be generated only when dependency management is settled."
+        ]
+      },
+      "architect_notes": [
+        "Python scaffolding should encode the first irreversible decisions and leave reversible preferences as explicit TODOs instead of premature framework ceremony.",
+        "The constitution should bias agents toward small, inspectable defaults with named escape hatches for scale, compliance, or legacy integration pressure.",
+        "A project skeleton is not complete until its proof path, dependency update path, and failure recovery path are visible to a new maintainer."
+      ],
+      "init_questions": [
+        {
+          "id": "delivery_shape",
+          "prompt": "What artifact will users or operators actually run first?",
+          "why": "The runnable artifact determines package layout, local commands, container shape, and the first proof gate.",
+          "answers": [
+            "library",
+            "service",
+            "cli",
+            "web app",
+            "worker",
+            "script"
+          ]
+        },
+        {
+          "id": "operational_risk",
+          "prompt": "What failure would be most expensive in the first production month?",
+          "why": "Early scaffolding should surface the dominant risk in tests, logging, rollback notes, and generated specs.",
+          "answers": [
+            "data loss",
+            "security",
+            "latency",
+            "cost",
+            "availability",
+            "maintainability"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "src-layout package",
+          "use_when": "The project has importable application or library code.",
+          "avoid_when": "The project is a single script with no package boundary yet.",
+          "implications": "Generate pyproject.toml, src/<package>, tests, and editable install proof."
+        },
+        {
+          "choice": "Script-first scaffold",
+          "use_when": "The first value is a local automation script or data task.",
+          "avoid_when": "Other modules need stable imports or distribution.",
+          "implications": "Keep structure small but still define dependency and test commands."
+        },
+        {
+          "choice": "Async service",
+          "use_when": "The selected framework or workload is I/O-bound and concurrency is explicit.",
+          "avoid_when": "The project can stay synchronous and simpler.",
+          "implications": "Document event loop ownership, cancellation behavior, and test strategy for async code."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "convention versus explicitness",
+          "option_a": "Lean on ecosystem defaults and fewer files.",
+          "option_b": "Generate explicit config, commands, and policy documents.",
+          "guidance": "Prefer convention until Decapod must preserve an agent-visible contract, then make the contract explicit and tested."
+        },
+        {
+          "axis": "local speed versus production parity",
+          "option_a": "Use lightweight local tooling for fast agent loops.",
+          "option_b": "Mirror production runtime details in the workspace container.",
+          "guidance": "Default to fast feedback, but pin the divergence in specs and add a parity proof before release-critical work."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Record the selected runtime, package manager, test command, build command, lint command, and container runtime assumptions.",
+          "Record the deployment target only as far as it affects local structure, secret handling, ports, or persistent state."
+        ],
+        "generate": [
+          "Generate the smallest Python skeleton that can build, run, and fail clearly under the selected package manager.",
+          "Generate README commands only after the command has a matching proof hook or an explicit unchecked status.",
+          "Generate support for the src-layout package path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Script-first scaffold path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Async service path only when its use_when condition is satisfied and its implications are recorded in specs."
+        ],
+        "defer": [
+          "Do not generate cloud resources, databases, queues, or identity providers until the user chooses the operating environment.",
+          "Do not add framework plugins, observability vendors, or policy engines unless the requirement is explicit or the repo already uses them."
+        ],
+        "proof": [
+          "python -m pytest or the selected package manager test command should pass.",
+          "ruff or an equivalent formatter/linter should be generated only when dependency management is settled."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Capture the project category, primary users, first runnable artifact, and known non-goals from init answers.",
+          "Keep uncertainty as uncertainty; do not convert unanswered init prompts into fabricated requirements."
+        ],
+        "architecture": [
+          "Record runtime boundaries, state ownership, dependency manager, generated commands, and container workspace expectations.",
+          "Link each scaffolded subsystem to the constitution node that justified it so later agents can revise with context."
+        ],
+        "interfaces": [
+          "Record public CLIs, HTTP contracts, module exports, database schemas, or generated files that other agents must treat as contracts.",
+          "Prefer machine-checkable contracts when the ecosystem supports them; otherwise write examples and compatibility notes."
+        ],
+        "proof": [
+          "python -m pytest or the selected package manager test command should pass.",
+          "ruff or an equivalent formatter/linter should be generated only when dependency management is settled."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The generated project must parse with the ecosystem package manager and expose deterministic format or lint commands when available.",
+          "Generated files must be idempotent under repeated Decapod init or refresh operations unless the user intentionally edits them."
+        ],
+        "runtime": [
+          "python -m pytest or the selected package manager test command should pass.",
+          "ruff or an equivalent formatter/linter should be generated only when dependency management is settled."
+        ],
+        "release": [
+          "Before release, dependency pinning, license posture, vulnerability scanning, and rollback notes must be visible in project specs.",
+          "Generated workspace containers must document where project-specific mutations are expected and where Decapod-managed content begins."
+        ]
+      }
+    },
+    "architecture/RUBY": {
+      "id": "architecture/RUBY",
+      "category": "architecture",
+      "title": "Ruby Architecture Doctrine",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Ruby scaffolding should make gem, app, test, and dependency boundaries clear before assuming Rails or another large framework.",
+      "terms": [
+        "ruby",
+        "bundler",
+        "gem",
+        "rake",
+        "rspec",
+        "minitest",
+        "rails",
+        "rack",
+        "bundle",
+        "gemspec",
+        "script",
+        "service"
+      ],
+      "links": {
+        "references": [
+          "architecture/WEB",
+          "architecture/API_DESIGN",
+          "architecture/CONTAINERS",
+          "architecture/TESTING_STRATEGY"
+        ],
+        "referenced_by": [
+          "core/SCAFFOLDING",
+          "core/ARCHITECTURE"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when the selected project runtime, source files, lockfiles, or user prompt indicate Ruby."
+        ],
+        "concepts": [
+          "Ruby scaffolding should expose the first runnable command and the first test before optional framework structure.",
+          "Generated layout should mirror ecosystem conventions only where those conventions reduce future agent ambiguity.",
+          "Dependency and toolchain choices are architectural contracts when they affect builds, containers, release, or compatibility."
+        ],
+        "ambiguity": [
+          "Stop before generating framework-specific files if the language is known but the framework, artifact shape, or package manager is unknown.",
+          "Ask or infer from existing manifests when multiple package managers or runtime versions are plausible."
+        ],
+        "standards": [
+          "Pin or record the toolchain line used by the workspace and generated commands.",
+          "Generate tests next to the smallest stable unit of behavior; do not rely on manual smoke tests as the only proof.",
+          "Keep secrets, generated build artifacts, and dependency caches out of source control unless the ecosystem explicitly requires a lockfile."
+        ],
+        "failure_modes": [
+          "Generating a heavy framework from a language hint alone and making the user unwind hidden assumptions.",
+          "Documenting commands that were not generated or cannot run in the workspace container.",
+          "Letting local machine state substitute for declared package manager, lockfile, or toolchain policy."
+        ],
+        "proceed_when": [
+          "bundle exec rake test, rspec, or the selected test command should be the first proof.",
+          "Gemfile.lock should be present for applications and containerized workspaces."
+        ]
+      },
+      "architect_notes": [
+        "Ruby scaffolding should encode the first irreversible decisions and leave reversible preferences as explicit TODOs instead of premature framework ceremony.",
+        "The constitution should bias agents toward small, inspectable defaults with named escape hatches for scale, compliance, or legacy integration pressure.",
+        "A project skeleton is not complete until its proof path, dependency update path, and failure recovery path are visible to a new maintainer."
+      ],
+      "init_questions": [
+        {
+          "id": "delivery_shape",
+          "prompt": "What artifact will users or operators actually run first?",
+          "why": "The runnable artifact determines package layout, local commands, container shape, and the first proof gate.",
+          "answers": [
+            "library",
+            "service",
+            "cli",
+            "web app",
+            "worker",
+            "script"
+          ]
+        },
+        {
+          "id": "operational_risk",
+          "prompt": "What failure would be most expensive in the first production month?",
+          "why": "Early scaffolding should surface the dominant risk in tests, logging, rollback notes, and generated specs.",
+          "answers": [
+            "data loss",
+            "security",
+            "latency",
+            "cost",
+            "availability",
+            "maintainability"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Gem skeleton",
+          "use_when": "The artifact is reusable Ruby code or a CLI packaged as a gem.",
+          "avoid_when": "The project is an application with persistent runtime state.",
+          "implications": "Generate gemspec, lib namespace, tests, and executable wiring only when a CLI is selected."
+        },
+        {
+          "choice": "Rack or service skeleton",
+          "use_when": "The first artifact is a web endpoint without a full Rails requirement.",
+          "avoid_when": "The user explicitly chose Rails or existing files require it.",
+          "implications": "Keep middleware, config, and boot code visible rather than hidden behind framework magic."
+        },
+        {
+          "choice": "Rails application",
+          "use_when": "The user explicitly wants Rails or the repo already is Rails.",
+          "avoid_when": "Ruby alone is the only signal.",
+          "implications": "Generate Rails only as a named framework decision with database and environment assumptions captured."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "convention versus explicitness",
+          "option_a": "Lean on ecosystem defaults and fewer files.",
+          "option_b": "Generate explicit config, commands, and policy documents.",
+          "guidance": "Prefer convention until Decapod must preserve an agent-visible contract, then make the contract explicit and tested."
+        },
+        {
+          "axis": "local speed versus production parity",
+          "option_a": "Use lightweight local tooling for fast agent loops.",
+          "option_b": "Mirror production runtime details in the workspace container.",
+          "guidance": "Default to fast feedback, but pin the divergence in specs and add a parity proof before release-critical work."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Record the selected runtime, package manager, test command, build command, lint command, and container runtime assumptions.",
+          "Record the deployment target only as far as it affects local structure, secret handling, ports, or persistent state."
+        ],
+        "generate": [
+          "Generate the smallest Ruby skeleton that can build, run, and fail clearly under the selected package manager.",
+          "Generate README commands only after the command has a matching proof hook or an explicit unchecked status.",
+          "Generate support for the Gem skeleton path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Rack or service skeleton path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Rails application path only when its use_when condition is satisfied and its implications are recorded in specs."
+        ],
+        "defer": [
+          "Do not generate cloud resources, databases, queues, or identity providers until the user chooses the operating environment.",
+          "Do not add framework plugins, observability vendors, or policy engines unless the requirement is explicit or the repo already uses them."
+        ],
+        "proof": [
+          "bundle exec rake test, rspec, or the selected test command should be the first proof.",
+          "Gemfile.lock should be present for applications and containerized workspaces."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Capture the project category, primary users, first runnable artifact, and known non-goals from init answers.",
+          "Keep uncertainty as uncertainty; do not convert unanswered init prompts into fabricated requirements."
+        ],
+        "architecture": [
+          "Record runtime boundaries, state ownership, dependency manager, generated commands, and container workspace expectations.",
+          "Link each scaffolded subsystem to the constitution node that justified it so later agents can revise with context."
+        ],
+        "interfaces": [
+          "Record public CLIs, HTTP contracts, module exports, database schemas, or generated files that other agents must treat as contracts.",
+          "Prefer machine-checkable contracts when the ecosystem supports them; otherwise write examples and compatibility notes."
+        ],
+        "proof": [
+          "bundle exec rake test, rspec, or the selected test command should be the first proof.",
+          "Gemfile.lock should be present for applications and containerized workspaces."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The generated project must parse with the ecosystem package manager and expose deterministic format or lint commands when available.",
+          "Generated files must be idempotent under repeated Decapod init or refresh operations unless the user intentionally edits them."
+        ],
+        "runtime": [
+          "bundle exec rake test, rspec, or the selected test command should be the first proof.",
+          "Gemfile.lock should be present for applications and containerized workspaces."
+        ],
+        "release": [
+          "Before release, dependency pinning, license posture, vulnerability scanning, and rollback notes must be visible in project specs.",
+          "Generated workspace containers must document where project-specific mutations are expected and where Decapod-managed content begins."
+        ]
+      }
+    },
+    "architecture/JAVASCRIPT": {
+      "id": "architecture/JAVASCRIPT",
+      "category": "architecture",
+      "title": "JavaScript and TypeScript Doctrine",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "JavaScript scaffolding should choose runtime, module format, package manager, and type strategy before adding framework layers.",
+      "terms": [
+        "javascript",
+        "typescript",
+        "node",
+        "npm",
+        "pnpm",
+        "yarn",
+        "bun",
+        "esm",
+        "commonjs",
+        "vite",
+        "package",
+        "tsconfig"
+      ],
+      "links": {
+        "references": [
+          "architecture/FRONTEND",
+          "architecture/WEB",
+          "architecture/API_DESIGN",
+          "architecture/CONTAINERS"
+        ],
+        "referenced_by": [
+          "core/SCAFFOLDING",
+          "core/ARCHITECTURE"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when the selected project runtime, source files, lockfiles, or user prompt indicate JavaScript."
+        ],
+        "concepts": [
+          "JavaScript scaffolding should expose the first runnable command and the first test before optional framework structure.",
+          "Generated layout should mirror ecosystem conventions only where those conventions reduce future agent ambiguity.",
+          "Dependency and toolchain choices are architectural contracts when they affect builds, containers, release, or compatibility."
+        ],
+        "ambiguity": [
+          "Stop before generating framework-specific files if the language is known but the framework, artifact shape, or package manager is unknown.",
+          "Ask or infer from existing manifests when multiple package managers or runtime versions are plausible."
+        ],
+        "standards": [
+          "Pin or record the toolchain line used by the workspace and generated commands.",
+          "Generate tests next to the smallest stable unit of behavior; do not rely on manual smoke tests as the only proof.",
+          "Keep secrets, generated build artifacts, and dependency caches out of source control unless the ecosystem explicitly requires a lockfile."
+        ],
+        "failure_modes": [
+          "Generating a heavy framework from a language hint alone and making the user unwind hidden assumptions.",
+          "Documenting commands that were not generated or cannot run in the workspace container.",
+          "Letting local machine state substitute for declared package manager, lockfile, or toolchain policy."
+        ],
+        "proceed_when": [
+          "npm test, pnpm test, yarn test, or bun test should exist or be explicitly deferred.",
+          "A typecheck command is required when TypeScript is generated."
+        ]
+      },
+      "architect_notes": [
+        "JavaScript scaffolding should encode the first irreversible decisions and leave reversible preferences as explicit TODOs instead of premature framework ceremony.",
+        "The constitution should bias agents toward small, inspectable defaults with named escape hatches for scale, compliance, or legacy integration pressure.",
+        "A project skeleton is not complete until its proof path, dependency update path, and failure recovery path are visible to a new maintainer."
+      ],
+      "init_questions": [
+        {
+          "id": "delivery_shape",
+          "prompt": "What artifact will users or operators actually run first?",
+          "why": "The runnable artifact determines package layout, local commands, container shape, and the first proof gate.",
+          "answers": [
+            "library",
+            "service",
+            "cli",
+            "web app",
+            "worker",
+            "script"
+          ]
+        },
+        {
+          "id": "operational_risk",
+          "prompt": "What failure would be most expensive in the first production month?",
+          "why": "Early scaffolding should surface the dominant risk in tests, logging, rollback notes, and generated specs.",
+          "answers": [
+            "data loss",
+            "security",
+            "latency",
+            "cost",
+            "availability",
+            "maintainability"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "TypeScript-first",
+          "use_when": "The project has multi-file application logic or public interfaces.",
+          "avoid_when": "The user needs a tiny throwaway script and accepts dynamic checks.",
+          "implications": "Generate tsconfig, typecheck command, tests, and keep build output separate from source."
+        },
+        {
+          "choice": "Runtime-specific Node service",
+          "use_when": "The artifact is an API, worker, or CLI on Node-compatible runtime.",
+          "avoid_when": "The first artifact is browser-only UI.",
+          "implications": "Capture runtime version, module format, package manager, and process lifecycle assumptions."
+        },
+        {
+          "choice": "Browser app scaffold",
+          "use_when": "The first artifact is a frontend application.",
+          "avoid_when": "No UI framework has been selected.",
+          "implications": "Route to architecture/REACT or another framework node only after selection or repo evidence."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "convention versus explicitness",
+          "option_a": "Lean on ecosystem defaults and fewer files.",
+          "option_b": "Generate explicit config, commands, and policy documents.",
+          "guidance": "Prefer convention until Decapod must preserve an agent-visible contract, then make the contract explicit and tested."
+        },
+        {
+          "axis": "local speed versus production parity",
+          "option_a": "Use lightweight local tooling for fast agent loops.",
+          "option_b": "Mirror production runtime details in the workspace container.",
+          "guidance": "Default to fast feedback, but pin the divergence in specs and add a parity proof before release-critical work."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Record the selected runtime, package manager, test command, build command, lint command, and container runtime assumptions.",
+          "Record the deployment target only as far as it affects local structure, secret handling, ports, or persistent state."
+        ],
+        "generate": [
+          "Generate the smallest JavaScript skeleton that can build, run, and fail clearly under the selected package manager.",
+          "Generate README commands only after the command has a matching proof hook or an explicit unchecked status.",
+          "Generate support for the TypeScript-first path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Runtime-specific Node service path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Browser app scaffold path only when its use_when condition is satisfied and its implications are recorded in specs."
+        ],
+        "defer": [
+          "Do not generate cloud resources, databases, queues, or identity providers until the user chooses the operating environment.",
+          "Do not add framework plugins, observability vendors, or policy engines unless the requirement is explicit or the repo already uses them."
+        ],
+        "proof": [
+          "npm test, pnpm test, yarn test, or bun test should exist or be explicitly deferred.",
+          "A typecheck command is required when TypeScript is generated."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Capture the project category, primary users, first runnable artifact, and known non-goals from init answers.",
+          "Keep uncertainty as uncertainty; do not convert unanswered init prompts into fabricated requirements."
+        ],
+        "architecture": [
+          "Record runtime boundaries, state ownership, dependency manager, generated commands, and container workspace expectations.",
+          "Link each scaffolded subsystem to the constitution node that justified it so later agents can revise with context."
+        ],
+        "interfaces": [
+          "Record public CLIs, HTTP contracts, module exports, database schemas, or generated files that other agents must treat as contracts.",
+          "Prefer machine-checkable contracts when the ecosystem supports them; otherwise write examples and compatibility notes."
+        ],
+        "proof": [
+          "npm test, pnpm test, yarn test, or bun test should exist or be explicitly deferred.",
+          "A typecheck command is required when TypeScript is generated."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The generated project must parse with the ecosystem package manager and expose deterministic format or lint commands when available.",
+          "Generated files must be idempotent under repeated Decapod init or refresh operations unless the user intentionally edits them."
+        ],
+        "runtime": [
+          "npm test, pnpm test, yarn test, or bun test should exist or be explicitly deferred.",
+          "A typecheck command is required when TypeScript is generated."
+        ],
+        "release": [
+          "Before release, dependency pinning, license posture, vulnerability scanning, and rollback notes must be visible in project specs.",
+          "Generated workspace containers must document where project-specific mutations are expected and where Decapod-managed content begins."
+        ]
+      }
+    },
+    "architecture/REACT": {
+      "id": "architecture/REACT",
+      "category": "architecture",
+      "title": "React Architecture Doctrine",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "React scaffolding should make rendering mode, routing, state, data fetching, accessibility, and test boundaries explicit before visual polish.",
+      "terms": [
+        "react",
+        "jsx",
+        "tsx",
+        "component",
+        "state",
+        "routing",
+        "accessibility",
+        "hydration",
+        "vite",
+        "nextjs",
+        "storybook",
+        "frontend"
+      ],
+      "links": {
+        "references": [
+          "architecture/FRONTEND",
+          "architecture/UI",
+          "architecture/WEB",
+          "architecture/PERFORMANCE"
+        ],
+        "referenced_by": [
+          "core/SCAFFOLDING",
+          "core/ARCHITECTURE"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when the selected project runtime, source files, lockfiles, or user prompt indicate React."
+        ],
+        "concepts": [
+          "React scaffolding should expose the first runnable command and the first test before optional framework structure.",
+          "Generated layout should mirror ecosystem conventions only where those conventions reduce future agent ambiguity.",
+          "Dependency and toolchain choices are architectural contracts when they affect builds, containers, release, or compatibility."
+        ],
+        "ambiguity": [
+          "Stop before generating framework-specific files if the language is known but the framework, artifact shape, or package manager is unknown.",
+          "Ask or infer from existing manifests when multiple package managers or runtime versions are plausible."
+        ],
+        "standards": [
+          "Pin or record the toolchain line used by the workspace and generated commands.",
+          "Generate tests next to the smallest stable unit of behavior; do not rely on manual smoke tests as the only proof.",
+          "Keep secrets, generated build artifacts, and dependency caches out of source control unless the ecosystem explicitly requires a lockfile."
+        ],
+        "failure_modes": [
+          "Generating a heavy framework from a language hint alone and making the user unwind hidden assumptions.",
+          "Documenting commands that were not generated or cannot run in the workspace container.",
+          "Letting local machine state substitute for declared package manager, lockfile, or toolchain policy."
+        ],
+        "proceed_when": [
+          "Unit or component tests should cover generated interaction boundaries.",
+          "Accessibility checks should be part of proof when controls, forms, or navigation are generated."
+        ]
+      },
+      "architect_notes": [
+        "React scaffolding should encode the first irreversible decisions and leave reversible preferences as explicit TODOs instead of premature framework ceremony.",
+        "The constitution should bias agents toward small, inspectable defaults with named escape hatches for scale, compliance, or legacy integration pressure.",
+        "A project skeleton is not complete until its proof path, dependency update path, and failure recovery path are visible to a new maintainer."
+      ],
+      "init_questions": [
+        {
+          "id": "delivery_shape",
+          "prompt": "What artifact will users or operators actually run first?",
+          "why": "The runnable artifact determines package layout, local commands, container shape, and the first proof gate.",
+          "answers": [
+            "library",
+            "service",
+            "cli",
+            "web app",
+            "worker",
+            "script"
+          ]
+        },
+        {
+          "id": "operational_risk",
+          "prompt": "What failure would be most expensive in the first production month?",
+          "why": "Early scaffolding should surface the dominant risk in tests, logging, rollback notes, and generated specs.",
+          "answers": [
+            "data loss",
+            "security",
+            "latency",
+            "cost",
+            "availability",
+            "maintainability"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Client-rendered app",
+          "use_when": "SEO is not critical and the product is interaction-heavy.",
+          "avoid_when": "Initial load, indexing, or server data boundaries dominate.",
+          "implications": "Generate Vite-style structure, route/data boundaries, and browser test hooks."
+        },
+        {
+          "choice": "Server-rendered framework",
+          "use_when": "SEO, initial response, or server actions are explicit requirements.",
+          "avoid_when": "A static SPA is enough and deployment is unknown.",
+          "implications": "Choose Next or similar only as a framework decision, and record routing plus data ownership."
+        },
+        {
+          "choice": "Component library",
+          "use_when": "The product exports reusable UI primitives.",
+          "avoid_when": "The app has no reuse boundary yet.",
+          "implications": "Generate isolated component tests and documentation examples before broad app scaffolding."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "convention versus explicitness",
+          "option_a": "Lean on ecosystem defaults and fewer files.",
+          "option_b": "Generate explicit config, commands, and policy documents.",
+          "guidance": "Prefer convention until Decapod must preserve an agent-visible contract, then make the contract explicit and tested."
+        },
+        {
+          "axis": "local speed versus production parity",
+          "option_a": "Use lightweight local tooling for fast agent loops.",
+          "option_b": "Mirror production runtime details in the workspace container.",
+          "guidance": "Default to fast feedback, but pin the divergence in specs and add a parity proof before release-critical work."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Record the selected runtime, package manager, test command, build command, lint command, and container runtime assumptions.",
+          "Record the deployment target only as far as it affects local structure, secret handling, ports, or persistent state."
+        ],
+        "generate": [
+          "Generate the smallest React skeleton that can build, run, and fail clearly under the selected package manager.",
+          "Generate README commands only after the command has a matching proof hook or an explicit unchecked status.",
+          "Generate support for the Client-rendered app path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Server-rendered framework path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Component library path only when its use_when condition is satisfied and its implications are recorded in specs."
+        ],
+        "defer": [
+          "Do not generate cloud resources, databases, queues, or identity providers until the user chooses the operating environment.",
+          "Do not add framework plugins, observability vendors, or policy engines unless the requirement is explicit or the repo already uses them."
+        ],
+        "proof": [
+          "Unit or component tests should cover generated interaction boundaries.",
+          "Accessibility checks should be part of proof when controls, forms, or navigation are generated."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Capture the project category, primary users, first runnable artifact, and known non-goals from init answers.",
+          "Keep uncertainty as uncertainty; do not convert unanswered init prompts into fabricated requirements."
+        ],
+        "architecture": [
+          "Record runtime boundaries, state ownership, dependency manager, generated commands, and container workspace expectations.",
+          "Link each scaffolded subsystem to the constitution node that justified it so later agents can revise with context."
+        ],
+        "interfaces": [
+          "Record public CLIs, HTTP contracts, module exports, database schemas, or generated files that other agents must treat as contracts.",
+          "Prefer machine-checkable contracts when the ecosystem supports them; otherwise write examples and compatibility notes."
+        ],
+        "proof": [
+          "Unit or component tests should cover generated interaction boundaries.",
+          "Accessibility checks should be part of proof when controls, forms, or navigation are generated."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The generated project must parse with the ecosystem package manager and expose deterministic format or lint commands when available.",
+          "Generated files must be idempotent under repeated Decapod init or refresh operations unless the user intentionally edits them."
+        ],
+        "runtime": [
+          "Unit or component tests should cover generated interaction boundaries.",
+          "Accessibility checks should be part of proof when controls, forms, or navigation are generated."
+        ],
+        "release": [
+          "Before release, dependency pinning, license posture, vulnerability scanning, and rollback notes must be visible in project specs.",
+          "Generated workspace containers must document where project-specific mutations are expected and where Decapod-managed content begins."
+        ]
+      }
+    },
+    "architecture/TERRAFORM": {
+      "id": "architecture/TERRAFORM",
+      "category": "architecture",
+      "title": "Terraform Architecture Doctrine",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Terraform scaffolding should protect state, module boundaries, provider versions, and plan review before generating infrastructure breadth.",
+      "terms": [
+        "terraform",
+        "iac",
+        "provider",
+        "state",
+        "module",
+        "workspace",
+        "plan",
+        "apply",
+        "backend",
+        "variable",
+        "output",
+        "drift"
+      ],
+      "links": {
+        "references": [
+          "architecture/CLOUD",
+          "architecture/SECURITY",
+          "architecture/SECRETS",
+          "architecture/DR"
+        ],
+        "referenced_by": [
+          "core/SCAFFOLDING",
+          "core/ARCHITECTURE"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when the selected project runtime, source files, lockfiles, or user prompt indicate Terraform."
+        ],
+        "concepts": [
+          "Terraform scaffolding should expose the first runnable command and the first test before optional framework structure.",
+          "Generated layout should mirror ecosystem conventions only where those conventions reduce future agent ambiguity.",
+          "Dependency and toolchain choices are architectural contracts when they affect builds, containers, release, or compatibility."
+        ],
+        "ambiguity": [
+          "Stop before generating framework-specific files if the language is known but the framework, artifact shape, or package manager is unknown.",
+          "Ask or infer from existing manifests when multiple package managers or runtime versions are plausible."
+        ],
+        "standards": [
+          "Pin or record the toolchain line used by the workspace and generated commands.",
+          "Generate tests next to the smallest stable unit of behavior; do not rely on manual smoke tests as the only proof.",
+          "Keep secrets, generated build artifacts, and dependency caches out of source control unless the ecosystem explicitly requires a lockfile."
+        ],
+        "failure_modes": [
+          "Generating a heavy framework from a language hint alone and making the user unwind hidden assumptions.",
+          "Documenting commands that were not generated or cannot run in the workspace container.",
+          "Letting local machine state substitute for declared package manager, lockfile, or toolchain policy."
+        ],
+        "proceed_when": [
+          "terraform fmt -check and terraform validate should pass when Terraform files are generated.",
+          "terraform plan must be reviewed before apply and secrets must not be stored in variables or outputs."
+        ]
+      },
+      "architect_notes": [
+        "Terraform scaffolding should encode the first irreversible decisions and leave reversible preferences as explicit TODOs instead of premature framework ceremony.",
+        "The constitution should bias agents toward small, inspectable defaults with named escape hatches for scale, compliance, or legacy integration pressure.",
+        "A project skeleton is not complete until its proof path, dependency update path, and failure recovery path are visible to a new maintainer."
+      ],
+      "init_questions": [
+        {
+          "id": "delivery_shape",
+          "prompt": "What artifact will users or operators actually run first?",
+          "why": "The runnable artifact determines package layout, local commands, container shape, and the first proof gate.",
+          "answers": [
+            "library",
+            "service",
+            "cli",
+            "web app",
+            "worker",
+            "script"
+          ]
+        },
+        {
+          "id": "operational_risk",
+          "prompt": "What failure would be most expensive in the first production month?",
+          "why": "Early scaffolding should surface the dominant risk in tests, logging, rollback notes, and generated specs.",
+          "answers": [
+            "data loss",
+            "security",
+            "latency",
+            "cost",
+            "availability",
+            "maintainability"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Root module only",
+          "use_when": "The infrastructure surface is small and one environment is being explored.",
+          "avoid_when": "Multiple environments or reusable resource groups are already required.",
+          "implications": "Generate providers, variables, outputs, and state backend notes without premature module abstraction."
+        },
+        {
+          "choice": "Reusable modules",
+          "use_when": "Several environments or services share the same resource pattern.",
+          "avoid_when": "The resource shape is still volatile.",
+          "implications": "Generate modules only after inputs, outputs, ownership, and upgrade policy are clear."
+        },
+        {
+          "choice": "Remote state backend",
+          "use_when": "More than one operator or agent will apply infrastructure.",
+          "avoid_when": "The user is still prototyping locally with no shared environment.",
+          "implications": "Treat state storage, locking, encryption, and access review as first-class scaffolding facts."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "convention versus explicitness",
+          "option_a": "Lean on ecosystem defaults and fewer files.",
+          "option_b": "Generate explicit config, commands, and policy documents.",
+          "guidance": "Prefer convention until Decapod must preserve an agent-visible contract, then make the contract explicit and tested."
+        },
+        {
+          "axis": "local speed versus production parity",
+          "option_a": "Use lightweight local tooling for fast agent loops.",
+          "option_b": "Mirror production runtime details in the workspace container.",
+          "guidance": "Default to fast feedback, but pin the divergence in specs and add a parity proof before release-critical work."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Record the selected runtime, package manager, test command, build command, lint command, and container runtime assumptions.",
+          "Record the deployment target only as far as it affects local structure, secret handling, ports, or persistent state."
+        ],
+        "generate": [
+          "Generate the smallest Terraform skeleton that can build, run, and fail clearly under the selected package manager.",
+          "Generate README commands only after the command has a matching proof hook or an explicit unchecked status.",
+          "Generate support for the Root module only path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Reusable modules path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the Remote state backend path only when its use_when condition is satisfied and its implications are recorded in specs."
+        ],
+        "defer": [
+          "Do not generate cloud resources, databases, queues, or identity providers until the user chooses the operating environment.",
+          "Do not add framework plugins, observability vendors, or policy engines unless the requirement is explicit or the repo already uses them."
+        ],
+        "proof": [
+          "terraform fmt -check and terraform validate should pass when Terraform files are generated.",
+          "terraform plan must be reviewed before apply and secrets must not be stored in variables or outputs."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Capture the project category, primary users, first runnable artifact, and known non-goals from init answers.",
+          "Keep uncertainty as uncertainty; do not convert unanswered init prompts into fabricated requirements."
+        ],
+        "architecture": [
+          "Record runtime boundaries, state ownership, dependency manager, generated commands, and container workspace expectations.",
+          "Link each scaffolded subsystem to the constitution node that justified it so later agents can revise with context."
+        ],
+        "interfaces": [
+          "Record public CLIs, HTTP contracts, module exports, database schemas, or generated files that other agents must treat as contracts.",
+          "Prefer machine-checkable contracts when the ecosystem supports them; otherwise write examples and compatibility notes."
+        ],
+        "proof": [
+          "terraform fmt -check and terraform validate should pass when Terraform files are generated.",
+          "terraform plan must be reviewed before apply and secrets must not be stored in variables or outputs."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The generated project must parse with the ecosystem package manager and expose deterministic format or lint commands when available.",
+          "Generated files must be idempotent under repeated Decapod init or refresh operations unless the user intentionally edits them."
+        ],
+        "runtime": [
+          "terraform fmt -check and terraform validate should pass when Terraform files are generated.",
+          "terraform plan must be reviewed before apply and secrets must not be stored in variables or outputs."
+        ],
+        "release": [
+          "Before release, dependency pinning, license posture, vulnerability scanning, and rollback notes must be visible in project specs.",
+          "Generated workspace containers must document where project-specific mutations are expected and where Decapod-managed content begins."
         ]
       }
     },
@@ -1678,11 +3388,14 @@
           "core/ENGINEERING_EXCELLENCE",
           "docs/MIGRATIONS",
           "plugins/DB_BROKER",
-          "specs/DB_BROKER_QUEUE"
+          "specs/DB_BROKER_QUEUE",
+          "data/POSTGRESQL"
         ],
         "referenced_by": [
           "core/ENGINEERING_EXCELLENCE",
-          "docs/MIGRATIONS"
+          "docs/MIGRATIONS",
+          "core/SCAFFOLDING",
+          "data/POSTGRESQL"
         ]
       },
       "sections": {
@@ -1717,6 +3430,188 @@
         ],
         "proceed_when": [
           "Proceed when the migration is reversible and query performance impact is analyzed."
+        ]
+      }
+    },
+    "data/POSTGRESQL": {
+      "id": "data/POSTGRESQL",
+      "category": "data",
+      "title": "PostgreSQL Architecture Doctrine",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "PostgreSQL scaffolding should treat schema ownership, migrations, indexes, transactions, connection pooling, and backup posture as early architecture decisions.",
+      "terms": [
+        "postgresql",
+        "postgres",
+        "sql",
+        "migration",
+        "index",
+        "transaction",
+        "schema",
+        "pool",
+        "backup",
+        "extension",
+        "constraint",
+        "query"
+      ],
+      "links": {
+        "references": [
+          "data/DATABASE",
+          "architecture/DR",
+          "architecture/SECURITY",
+          "architecture/PERFORMANCE"
+        ],
+        "referenced_by": [
+          "core/SCAFFOLDING",
+          "core/ARCHITECTURE",
+          "data/DATABASE"
+        ]
+      },
+      "sections": {
+        "match": [
+          "Use when the user names PostgreSQL, relational persistence, SQL migrations, or a repo contains Postgres-specific config or migrations."
+        ],
+        "concepts": [
+          "Schema is part of the application interface and must be versioned with migrations.",
+          "Indexes are workload-specific design decisions, not decoration.",
+          "Transactions and constraints should enforce invariants as close to the data as practical."
+        ],
+        "ambiguity": [
+          "Stop if ownership of migrations, seed data, connection configuration, backup expectations, or local test database strategy is unknown."
+        ],
+        "standards": [
+          "Generate reversible migrations when the migration tool supports them.",
+          "Record connection pooling, timeout, and transaction isolation assumptions before load-sensitive work.",
+          "Use constraints and foreign keys for durable invariants rather than application-only checks."
+        ],
+        "failure_modes": [
+          "Generating an ORM model without a migration path.",
+          "Adding indexes without query evidence or write-cost awareness.",
+          "Treating local seed data as a backup or recovery strategy."
+        ],
+        "proceed_when": [
+          "A local or containerized Postgres proof path exists or the specs explicitly defer database execution.",
+          "Migrations can be created, inspected, and rolled forward under version control."
+        ]
+      },
+      "architect_notes": [
+        "PostgreSQL scaffolding should encode the first irreversible decisions and leave reversible preferences as explicit TODOs instead of premature framework ceremony.",
+        "The constitution should bias agents toward small, inspectable defaults with named escape hatches for scale, compliance, or legacy integration pressure.",
+        "A project skeleton is not complete until its proof path, dependency update path, and failure recovery path are visible to a new maintainer."
+      ],
+      "init_questions": [
+        {
+          "id": "delivery_shape",
+          "prompt": "What artifact will users or operators actually run first?",
+          "why": "The runnable artifact determines package layout, local commands, container shape, and the first proof gate.",
+          "answers": [
+            "library",
+            "service",
+            "cli",
+            "web app",
+            "worker",
+            "script"
+          ]
+        },
+        {
+          "id": "operational_risk",
+          "prompt": "What failure would be most expensive in the first production month?",
+          "why": "Early scaffolding should surface the dominant risk in tests, logging, rollback notes, and generated specs.",
+          "answers": [
+            "data loss",
+            "security",
+            "latency",
+            "cost",
+            "availability",
+            "maintainability"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Migration-first scaffold",
+          "use_when": "The application will own schema changes.",
+          "avoid_when": "The database is externally managed and schema edits are prohibited.",
+          "implications": "Generate migration directories, a migration command, and proof that migrations can run locally."
+        },
+        {
+          "choice": "ORM-assisted model",
+          "use_when": "The ecosystem ORM is selected and improves productivity.",
+          "avoid_when": "The data model requires SQL features the ORM hides poorly.",
+          "implications": "Keep migrations and generated SQL inspectable; do not let ORM metadata become the only schema contract."
+        },
+        {
+          "choice": "SQL-first access layer",
+          "use_when": "Queries, performance, and database-specific features matter.",
+          "avoid_when": "The project benefits more from simple CRUD productivity.",
+          "implications": "Generate query files or repository boundaries and test them against a real Postgres instance."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "convention versus explicitness",
+          "option_a": "Lean on ecosystem defaults and fewer files.",
+          "option_b": "Generate explicit config, commands, and policy documents.",
+          "guidance": "Prefer convention until Decapod must preserve an agent-visible contract, then make the contract explicit and tested."
+        },
+        {
+          "axis": "local speed versus production parity",
+          "option_a": "Use lightweight local tooling for fast agent loops.",
+          "option_b": "Mirror production runtime details in the workspace container.",
+          "guidance": "Default to fast feedback, but pin the divergence in specs and add a parity proof before release-critical work."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Record the selected runtime, package manager, test command, build command, lint command, and container runtime assumptions.",
+          "Record the deployment target only as far as it affects local structure, secret handling, ports, or persistent state."
+        ],
+        "generate": [
+          "Generate the smallest PostgreSQL skeleton that can build, run, and fail clearly under the selected package manager.",
+          "Generate README commands only after the command has a matching proof hook or an explicit unchecked status.",
+          "Generate support for the Migration-first scaffold path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the ORM-assisted model path only when its use_when condition is satisfied and its implications are recorded in specs.",
+          "Generate support for the SQL-first access layer path only when its use_when condition is satisfied and its implications are recorded in specs."
+        ],
+        "defer": [
+          "Do not generate cloud resources, databases, queues, or identity providers until the user chooses the operating environment.",
+          "Do not add framework plugins, observability vendors, or policy engines unless the requirement is explicit or the repo already uses them."
+        ],
+        "proof": [
+          "Migration creation and application commands must be documented.",
+          "A local Postgres container or equivalent test database should back persistence tests when behavior depends on SQL semantics."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Capture the project category, primary users, first runnable artifact, and known non-goals from init answers.",
+          "Keep uncertainty as uncertainty; do not convert unanswered init prompts into fabricated requirements."
+        ],
+        "architecture": [
+          "Record runtime boundaries, state ownership, dependency manager, generated commands, and container workspace expectations.",
+          "Link each scaffolded subsystem to the constitution node that justified it so later agents can revise with context."
+        ],
+        "interfaces": [
+          "Record public CLIs, HTTP contracts, module exports, database schemas, or generated files that other agents must treat as contracts.",
+          "Prefer machine-checkable contracts when the ecosystem supports them; otherwise write examples and compatibility notes."
+        ],
+        "proof": [
+          "Migration creation and application commands must be documented.",
+          "A local Postgres container or equivalent test database should back persistence tests when behavior depends on SQL semantics."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The generated project must parse with the ecosystem package manager and expose deterministic format or lint commands when available.",
+          "Generated files must be idempotent under repeated Decapod init or refresh operations unless the user intentionally edits them."
+        ],
+        "runtime": [
+          "Migration creation and application commands must be documented.",
+          "A local Postgres container or equivalent test database should back persistence tests when behavior depends on SQL semantics."
+        ],
+        "release": [
+          "Before release, dependency pinning, license posture, vulnerability scanning, and rollback notes must be visible in project specs.",
+          "Generated workspace containers must document where project-specific mutations are expected and where Decapod-managed content begins."
         ]
       }
     },
@@ -12178,7 +14073,8 @@
       "architecture/NETWORKING"
     ],
     "scaffold": [
-      "core/DECAPOD"
+      "core/DECAPOD",
+      "core/SCAFFOLDING"
     ],
     "constitution": [
       "core/DECAPOD",
@@ -12269,7 +14165,8 @@
       "core/ARCHITECTURE"
     ],
     "react": [
-      "core/ARCHITECTURE"
+      "core/ARCHITECTURE",
+      "architecture/REACT"
     ],
     "mobile": [
       "core/ARCHITECTURE"
@@ -13302,7 +15199,8 @@
     ],
     "runtime": [
       "architecture/CONTAINERS",
-      "docs/ARCHITECTURE_OVERVIEW"
+      "docs/ARCHITECTURE_OVERVIEW",
+      "core/SCAFFOLDING"
     ],
     "reproducibility": [
       "architecture/CONTAINERS",
@@ -15968,7 +17866,9 @@
       "research/ALPHAGO_2016"
     ],
     "go": [
-      "research/ALPHAGO_2016"
+      "research/ALPHAGO_2016",
+      "architecture/GO",
+      "core/SCAFFOLDING"
     ],
     "game theory": [
       "research/ALPHAGO_2016"
@@ -16709,6 +18609,75 @@
     ],
     "high performance": [
       "research/RDMA_2003"
+    ],
+    "scaffolding": [
+      "core/SCAFFOLDING"
+    ],
+    "init": [
+      "core/SCAFFOLDING"
+    ],
+    "workspace": [
+      "core/SCAFFOLDING",
+      "architecture/CONTAINERS"
+    ],
+    "template": [
+      "core/SCAFFOLDING"
+    ],
+    "language": [
+      "core/SCAFFOLDING"
+    ],
+    "rust": [
+      "architecture/RUST",
+      "core/SCAFFOLDING"
+    ],
+    "cargo": [
+      "architecture/RUST"
+    ],
+    "golang": [
+      "architecture/GO"
+    ],
+    "java": [
+      "architecture/JAVA",
+      "core/SCAFFOLDING"
+    ],
+    "jvm": [
+      "architecture/JAVA"
+    ],
+    "python": [
+      "architecture/PYTHON",
+      "core/SCAFFOLDING"
+    ],
+    "ruby": [
+      "architecture/RUBY",
+      "core/SCAFFOLDING"
+    ],
+    "javascript": [
+      "architecture/JAVASCRIPT",
+      "core/SCAFFOLDING"
+    ],
+    "typescript": [
+      "architecture/JAVASCRIPT"
+    ],
+    "node": [
+      "architecture/JAVASCRIPT"
+    ],
+    "postgres": [
+      "data/POSTGRESQL",
+      "data/DATABASE"
+    ],
+    "postgresql": [
+      "data/POSTGRESQL",
+      "data/DATABASE"
+    ],
+    "terraform": [
+      "architecture/TERRAFORM"
+    ],
+    "iac": [
+      "architecture/TERRAFORM"
+    ],
+    "dockerfile": [
+      "architecture/CONTAINERS",
+      "core/SCAFFOLDING"
     ]
   }
 }
