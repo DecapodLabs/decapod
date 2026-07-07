@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.62.4](https://github.com/DecapodLabs/decapod/compare/v0.62.3...v0.62.4) - 2026-07-07
+
+### Other
+
+- Expand constitution scaffolding doctrine ([#799](https://github.com/DecapodLabs/decapod/pull/799))
+
 ## [0.62.3](https://github.com/DecapodLabs/decapod/compare/v0.62.2...v0.62.3) - 2026-07-07
 
 ### Added
