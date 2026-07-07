@@ -6,7 +6,7 @@ This is the primary orientation surface for AI agents. Before performing impleme
 
 ## When to Call Decapod
 
-Call Decapod at **Inference Pressure Points**. Each call should move transient agent activity into governed repo state under `.decapod/`: intent, context, custody, boundaries, validation, or completion.
+Call Decapod at **Inference Pressure Points**. Each call should move transient agent activity into governed project state: intent, context, custody, boundaries, validation, or completion.
 
 1.  **Before Implementation:** Claim the task and ensure the workspace.
     - `decapod todo claim --id <id>`
