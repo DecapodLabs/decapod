@@ -15,6 +15,10 @@ fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process
 }
 
 fn setup_repo() -> (TempDir, PathBuf, String) {
+    setup_repo_with_branch("agent/test/git-push-pr")
+}
+
+fn setup_repo_with_branch(branch: &str) -> (TempDir, PathBuf, String) {
     let tmp = TempDir::new().expect("tmpdir");
     let repo_dir = tmp.path().to_path_buf();
 
@@ -75,7 +79,7 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
             "worktree",
             "add",
             "-b",
-            "agent/test/git-push-pr",
+            branch,
             worktree_dir
                 .to_str()
                 .expect("tempdir path should be valid unicode"),
@@ -106,6 +110,30 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
     (tmp, worktree_dir, password)
 }
 
+fn prepend_fake_gh_to_path(tmp: &TempDir, body: &str) -> String {
+    let bin_dir = tmp.path().join("bin");
+    fs::create_dir_all(&bin_dir).expect("create fake bin dir");
+    let gh_path = bin_dir.join("gh");
+    fs::write(
+        &gh_path,
+        format!(
+            "#!/usr/bin/env sh\nprintf '%s\\n' '{}'\n",
+            body.replace('\'', "'\\''")
+        ),
+    )
+    .expect("write fake gh");
+    let chmod = Command::new("chmod")
+        .args(["+x", gh_path.to_str().unwrap()])
+        .output()
+        .expect("chmod fake gh");
+    assert!(chmod.status.success(), "chmod fake gh failed");
+    format!(
+        "{}:{}",
+        bin_dir.display(),
+        std::env::var("PATH").unwrap_or_default()
+    )
+}
+
 #[test]
 fn git_push_pr_gate_warns_when_unpushed() {
     let (_tmp, dir, password) = setup_repo();
@@ -128,5 +156,59 @@ fn git_push_pr_gate_warns_when_unpushed() {
     assert!(
         combined.contains("has unpushed commits or does not exist on origin"),
         "expected git-push-pr gate warning marker, got: {combined}"
+    );
+}
+
+#[test]
+fn git_push_pr_gate_fails_when_open_pr_lacks_workunit_trajectory() {
+    let (tmp, dir, password) = setup_repo_with_branch("agent/test/test_123456");
+    let repo_dir = dir
+        .parent()
+        .and_then(|p| p.parent())
+        .and_then(|p| p.parent())
+        .expect("resolve repo root");
+    let bare = tmp.path().join("origin.git");
+    let init_bare = Command::new("git")
+        .args(["init", "--bare", bare.to_str().unwrap()])
+        .output()
+        .expect("git init bare");
+    assert!(init_bare.status.success(), "git init bare failed");
+    let add_remote = Command::new("git")
+        .current_dir(repo_dir)
+        .args(["remote", "add", "origin", bare.to_str().unwrap()])
+        .output()
+        .expect("git remote add");
+    assert!(add_remote.status.success(), "git remote add failed");
+    let push = Command::new("git")
+        .current_dir(&dir)
+        .args(["push", "-u", "origin", "agent/test/test_123456"])
+        .output()
+        .expect("git push");
+    assert!(
+        push.status.success(),
+        "git push failed: {}",
+        String::from_utf8_lossy(&push.stderr)
+    );
+
+    let fake_path = prepend_fake_gh_to_path(&tmp, r#"[{"number":1}]"#);
+    let validate = run_decapod(
+        &dir,
+        &["validate", "-v"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_CONTAINER", "1"),
+            ("PATH", &fake_path),
+        ],
+    );
+
+    let combined = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&validate.stdout),
+        String::from_utf8_lossy(&validate.stderr)
+    );
+    assert!(
+        combined.contains("PR_TRAJECTORY_MISSING"),
+        "expected PR trajectory failure marker, got: {combined}"
     );
 }
