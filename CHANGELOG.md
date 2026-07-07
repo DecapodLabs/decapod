@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.62.1](https://github.com/DecapodLabs/decapod/compare/v0.62.0...v0.62.1) - 2026-07-07
+
+### Other
+
+- bump all deps to latest, relax version pins, add rust-toolchain.toml ([#791](https://github.com/DecapodLabs/decapod/pull/791))
+
 ## [0.62.0](https://github.com/DecapodLabs/decapod/compare/v0.61.1...v0.62.0) - 2026-07-07
 
 ### Other
