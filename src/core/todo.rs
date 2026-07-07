@@ -305,6 +305,8 @@ pub struct Task {
     pub assigned_at: Option<String>,
     #[serde(default)]
     pub owners: Vec<TaskOwner>,
+    #[serde(default)]
+    pub comments: Vec<TaskComment>,
     pub one_shot: i32,
 }
 
@@ -313,6 +315,15 @@ pub struct TaskOwner {
     pub agent_id: String,
     pub claim_type: String,
     pub claimed_at: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TaskComment {
+    pub ts: String,
+    pub actor: String,
+    pub comment: String,
+    #[serde(default)]
+    pub kind: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -917,6 +928,154 @@ pub fn infer_component(title: &str, tags: &str) -> Option<String> {
         }
     }
     None
+}
+
+#[derive(Debug, Clone)]
+struct SimilarActiveTask {
+    task_id: String,
+    task_hash: String,
+    title: String,
+    assigned_to: String,
+    score: f64,
+}
+
+fn canonical_similarity_term(term: &str) -> &str {
+    match term {
+        "bug" | "bugfix" | "broken" | "error" | "errors" | "failure" | "failures" | "fix"
+        | "fixes" | "repair" | "regression" => "fix",
+        "agent" | "agents" | "owner" | "owned" | "ownership" | "assignee" | "assigned"
+        | "claim" | "claimed" | "handoff" | "handoffs" | "transfer" | "route" | "routing" => {
+            "ownership"
+        }
+        "comment" | "comments" | "note" | "notes" | "annotation" | "annotations" => "comment",
+        "duplicate" | "duplicates" | "similar" | "same" | "overlap" | "overlapping" => "similar",
+        "find" | "fuzzy" | "match" | "matching" | "search" => "search",
+        "label" | "labels" | "tag" | "tags" => "label",
+        "task" | "tasks" | "todo" | "todos" | "work" | "workitem" | "workitems" => "todo",
+        _ => term,
+    }
+}
+
+fn task_similarity_terms(title: &str, tags: &str) -> HashSet<String> {
+    const STOP_WORDS: &[&str] = &[
+        "about", "active", "also", "and", "another", "for", "from", "into", "new", "other", "that",
+        "the", "this", "with",
+    ];
+
+    format!("{title} {tags}")
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .map(str::trim)
+        .filter(|term| term.len() >= 3)
+        .map(str::to_ascii_lowercase)
+        .filter(|term| !STOP_WORDS.contains(&term.as_str()))
+        .map(|term| canonical_similarity_term(&term).to_string())
+        .collect()
+}
+
+fn fuzzy_task_similarity(title_a: &str, tags_a: &str, title_b: &str, tags_b: &str) -> f64 {
+    let terms_a = task_similarity_terms(title_a, tags_a);
+    let terms_b = task_similarity_terms(title_b, tags_b);
+    if terms_a.is_empty() || terms_b.is_empty() {
+        return 0.0;
+    }
+
+    let shared = terms_a.intersection(&terms_b).count();
+    if shared < 3 {
+        return 0.0;
+    }
+
+    let total = terms_a.union(&terms_b).count();
+    shared as f64 / total as f64
+}
+
+fn append_unique_tag(tags: &mut String, tag: &str) {
+    let exists = tags
+        .split(',')
+        .map(str::trim)
+        .any(|existing| existing == tag);
+    if exists {
+        return;
+    }
+
+    if !tags.trim().is_empty() {
+        tags.push(',');
+    }
+    tags.push_str(tag);
+}
+
+fn append_fuzzy_assignment_labels(tags: &mut String, similar: &SimilarActiveTask) {
+    append_unique_tag(tags, "fuzzy-similar");
+    append_unique_tag(tags, &format!("similar-task:{}", similar.task_id));
+    append_unique_tag(tags, &format!("similar-hash:{}", similar.task_hash));
+    append_unique_tag(tags, &format!("handoff-to:{}", similar.assigned_to));
+}
+
+fn find_similar_active_task(
+    conn: &Connection,
+    title: &str,
+    description: &str,
+    tags: &str,
+    creating_owner: &str,
+) -> Result<Option<SimilarActiveTask>, error::DecapodError> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, hash, title, description, tags, assigned_to
+             FROM tasks
+             WHERE status NOT IN ('done', 'archived')
+               AND assigned_to != ''
+             ORDER BY created_at ASC",
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    let rows = stmt
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, String>(5)?,
+            ))
+        })
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    let mut best: Option<SimilarActiveTask> = None;
+    for row in rows {
+        let (
+            task_id,
+            task_hash,
+            candidate_title,
+            candidate_description,
+            candidate_tags,
+            assigned_to,
+        ) = row.map_err(error::DecapodError::RusqliteError)?;
+        if !creating_owner.is_empty() && assigned_to == creating_owner {
+            continue;
+        }
+
+        let source_text = format!("{title} {description}");
+        let candidate_text = format!("{candidate_title} {candidate_description}");
+        let score = fuzzy_task_similarity(&source_text, tags, &candidate_text, &candidate_tags);
+        if score < 0.42 {
+            continue;
+        }
+
+        let candidate = SimilarActiveTask {
+            task_id,
+            task_hash,
+            title: candidate_title,
+            assigned_to,
+            score,
+        };
+        if best.as_ref().is_none_or(|current| {
+            candidate.score > current.score
+                || (candidate.score == current.score && candidate.task_id < current.task_id)
+        }) {
+            best = Some(candidate);
+        }
+    }
+
+    Ok(best)
 }
 
 pub fn infer_category(title: &str, tags: &str) -> Option<String> {
@@ -2255,6 +2414,77 @@ fn sync_legacy_owner_column(conn: &Connection, task_id: &str) -> Result<(), erro
     Ok(())
 }
 
+fn fetch_task_comments(
+    conn: &Connection,
+    task_id: &str,
+) -> Result<Vec<TaskComment>, error::DecapodError> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT ts, actor, payload
+             FROM task_events
+             WHERE task_id = ?1 AND event_type = 'task.comment'
+             ORDER BY ts ASC, event_id ASC",
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    let rows = stmt
+        .query_map([task_id], |row| {
+            let payload: String = row.get(2)?;
+            let payload: JsonValue = serde_json::from_str(&payload).unwrap_or(JsonValue::Null);
+            Ok(TaskComment {
+                ts: row.get(0)?,
+                actor: row.get(1)?,
+                comment: payload
+                    .get("comment")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                kind: payload
+                    .get("kind")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+            })
+        })
+        .map_err(error::DecapodError::RusqliteError)?;
+    let mut out = Vec::new();
+    for row in rows {
+        out.push(row.map_err(error::DecapodError::RusqliteError)?);
+    }
+    Ok(out)
+}
+
+fn write_task_comment_event(
+    root: &Path,
+    conn: &Connection,
+    task_id: &str,
+    actor: &str,
+    comment: &str,
+    payload_extra: JsonValue,
+    ts: &str,
+) -> Result<(), error::DecapodError> {
+    let mut payload = serde_json::json!({ "comment": comment });
+    if let (Some(payload_obj), Some(extra_obj)) =
+        (payload.as_object_mut(), payload_extra.as_object())
+    {
+        for (key, value) in extra_obj {
+            payload_obj.insert(key.clone(), value.clone());
+        }
+    }
+
+    let ev = TodoEvent {
+        ts: ts.to_string(),
+        event_id: crate::core::ulid::new_ulid(),
+        event_type: "task.comment".to_string(),
+        status: "success".to_string(),
+        task_id: Some(task_id.to_string()),
+        payload,
+        actor: actor.to_string(),
+    };
+    append_event(root, &ev)?;
+    insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
+    Ok(())
+}
+
 fn set_task_owners(
     root: &Path,
     conn: &Connection,
@@ -2348,6 +2578,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     let intent_ref = format!("intent:todo.add:{}", crate::core::ulid::new_ulid());
     let owner_list = parse_owners_input(owner);
     let primary_owner = owner_list.first().cloned().unwrap_or_default();
+    let mut effective_tags = tags.clone();
 
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -2356,30 +2587,91 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         return Err(crate::core::cloud_backend::unavailable_error());
     }
 
-    let (task_id, task_hash) =
-        broker.with_conn(&db_path, "decapod", Some(&intent_ref), "todo.add", |conn| {
-        ensure_schema(conn)?;
+    let (task_id, task_hash, effective_tags, consolidation) = broker.with_conn(
+        &db_path,
+        "decapod",
+        Some(&intent_ref),
+        "todo.add",
+        |conn| {
+            ensure_schema(conn)?;
 
-        // Infer category from tags or title for auto-assignment
-        let inferred_category = infer_category_from_task(conn, title, tags)?;
+        let similar_active_task =
+            find_similar_active_task(conn, title, description, &effective_tags, &primary_owner)?;
+        if let Some(similar) = similar_active_task.as_ref() {
+            append_fuzzy_assignment_labels(&mut effective_tags, similar);
+            let comment = format!(
+                "Similar todo request consolidated here: title=\"{}\" priority={} tags=\"{}\" description=\"{}\"",
+                title, priority, effective_tags, description
+            );
+            write_task_comment_event(
+                root,
+                conn,
+                &similar.task_id,
+                "decapod",
+                &comment,
+                serde_json::json!({
+                    "kind": "fuzzy-consolidation",
+                    "source_title": title,
+                    "source_description": description,
+                    "source_priority": priority,
+                    "source_tags": effective_tags,
+                    "similarity_score": similar.score,
+                    "matched_task_id": similar.task_id,
+                    "matched_task_hash": similar.task_hash,
+                    "matched_task_title": similar.title,
+                    "assigned_to": similar.assigned_to,
+                    "intent_ref": intent_ref,
+                    "fuzzy_labels": [
+                        "fuzzy-similar",
+                        format!("similar-task:{}", similar.task_id),
+                        format!("similar-hash:{}", similar.task_hash),
+                        format!("handoff-to:{}", similar.assigned_to),
+                    ],
+                }),
+                &ts,
+            )?;
+
+            return Ok((
+                similar.task_id.clone(),
+                similar.task_hash.clone(),
+                effective_tags.clone(),
+                Some(serde_json::json!({
+                    "matched_task_id": similar.task_id,
+                    "matched_task_hash": similar.task_hash,
+                    "matched_task_title": similar.title,
+                    "assigned_to": similar.assigned_to,
+                    "similarity_score": similar.score,
+                    "comment_added": true,
+                    "labels": [
+                        "fuzzy-similar",
+                        format!("similar-task:{}", similar.task_id),
+                        format!("similar-hash:{}", similar.task_hash),
+                        format!("handoff-to:{}", similar.assigned_to),
+                    ],
+                })),
+            ));
+        }
+
+        // Infer category from tags or title for auto-assignment.
+        let inferred_category = infer_category_from_task(conn, title, &effective_tags)?;
         let category = inferred_category.clone().unwrap_or_default();
-        let task_type = infer_task_type(&scope, &category, title, tags);
+        let task_type = infer_task_type(&scope, &category, title, &effective_tags);
         let task_id = make_task_id(&task_type);
         let task_hash = task_hash_from_id(&task_id);
 
-        // Check if there's an agent already working on tasks in this category
-        let auto_assigned_agent = if let Some(cat) = &inferred_category {
+        let category_agent = if let Some(cat) = &inferred_category {
             find_agent_for_category(conn, cat, &ts)?
         } else {
             None
         };
 
         // Determine assigned_to and assigned_at
-        let (assigned_to, assigned_at) = if let Some(agent) = auto_assigned_agent {
-            (agent, Some(ts.clone()))
+        let (assigned_to, assigned_at, auto_assignment_reason) = if let Some(agent) = category_agent
+        {
+                (agent, Some(ts.clone()), Some("category-owner"))
         } else {
-            (String::new(), None)
-        };
+                (String::new(), None, None)
+            };
 
 
         if let Some(cat) = inferred_category.as_deref()
@@ -2395,7 +2687,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 task_hash,
                 title,
                 description,
-                tags,
+                effective_tags,
                 primary_owner,
                 due,
                 r#ref,
@@ -2419,7 +2711,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             "intent_ref": intent_ref,
             "title": title,
             "description": description,
-            "tags": tags,
+            "tags": effective_tags,
             "owner": primary_owner,
             "owners": owner_list.clone(),
             "due": due,
@@ -2440,6 +2732,9 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             && let Some(obj) = payload.as_object_mut() {
                 obj.insert("assigned_to".to_string(), serde_json::json!(assigned_to));
                 obj.insert("auto_assigned".to_string(), serde_json::json!(true));
+                if let Some(reason) = auto_assignment_reason {
+                    obj.insert("auto_assignment_reason".to_string(), serde_json::json!(reason));
+                }
             }
 
         let ev = TodoEvent {
@@ -2471,8 +2766,23 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             )?;
         }
         sync_legacy_owner_column(conn, &task_id)?;
-        Ok((task_id, task_hash))
-    })?;
+            Ok((task_id, task_hash, effective_tags.clone(), None))
+        },
+    )?;
+
+    if let Some(consolidation) = consolidation {
+        return Ok(serde_json::json!({
+            "ts": ts,
+            "cmd": "todo.add",
+            "status": "ok",
+            "root": root.to_string_lossy(),
+            "id": task_id,
+            "hash": task_hash,
+            "new_task_created": false,
+            "consolidated": true,
+            "consolidation": consolidation,
+        }));
+    }
 
     // Create federation node for intent→change→proof chain
     let store = Store {
@@ -2487,7 +2797,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         "agent_inferred",
         &format!("Task {task_id} created with priority {priority}. Description: {description}"),
         &format!("event:{task_id}"),
-        tags,
+        &effective_tags,
         "repo",
         None,
         "decapod",
@@ -2649,19 +2959,15 @@ fn comment_task(
 
     broker.with_conn(&db_path, "decapod", None, "todo.comment", |conn| {
         ensure_schema(conn)?;
-        // Event-only; does not mutate task row.
-        let ev = TodoEvent {
-            ts: ts.clone(),
-            event_id: crate::core::ulid::new_ulid(),
-            event_type: "task.comment".to_string(),
-            status: "success".to_string(),
-            task_id: Some(id.to_string()),
-            payload: serde_json::json!({ "comment": comment }),
-            actor: "decapod".to_string(),
-        };
-        append_event(root, &ev)?;
-        insert_event(conn, &ev).map_err(error::DecapodError::RusqliteError)?;
-        Ok(())
+        write_task_comment_event(
+            root,
+            conn,
+            id,
+            "decapod",
+            comment,
+            serde_json::json!({}),
+            &ts,
+        )
     })?;
 
     Ok(serde_json::json!({
@@ -3656,6 +3962,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
         if let Some(row) = rows.next()? {
             let task_id: String = row.get(0)?;
             let owners = fetch_task_owners(conn, &task_id)?;
+            let comments = fetch_task_comments(conn, &task_id)?;
             Ok(Some(Task {
                 id: task_id,
                 hash: row.get(1)?,
@@ -3681,6 +3988,7 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
                 assigned_to: row.get(21).unwrap_or_default(),
                 assigned_at: row.get(22)?,
                 owners,
+                comments,
                 one_shot: row.get(23).unwrap_or(0),
             }))
         } else {
@@ -3748,6 +4056,7 @@ pub fn list_tasks(
         while let Some(row) = rows.next().map_err(error::DecapodError::RusqliteError)? {
             let task_id: String = row.get(0).map_err(error::DecapodError::RusqliteError)?;
             let owners = fetch_task_owners(conn, &task_id)?;
+            let comments = fetch_task_comments(conn, &task_id)?;
             out.push(Task {
                 id: task_id,
                 hash: row.get(1).map_err(error::DecapodError::RusqliteError)?,
@@ -3776,6 +4085,7 @@ pub fn list_tasks(
                     .unwrap_or_default(),
                 assigned_at: row.get(22).map_err(error::DecapodError::RusqliteError)?,
                 owners,
+                comments,
                 one_shot: row.get(23).map_err(error::DecapodError::RusqliteError).unwrap_or(0),
             });
         }

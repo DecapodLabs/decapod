@@ -3843,7 +3843,72 @@ fn validate_plan_governed_execution_gate(
         pass("Done TODOs are proof-verified", ctx);
     }
 
+    let handoff_comments = collect_active_todo_handoff_comments(&store.root)?;
+    if !handoff_comments.is_empty() {
+        warn(
+            &format!(
+                "TODO_HANDOFF_COMMENTS: {} active claimed TODO(s) have fuzzy-consolidation comments: {}",
+                handoff_comments.len(),
+                output::preview_messages(&handoff_comments, 4, 120)
+            ),
+            ctx,
+        );
+    } else {
+        pass(
+            "No fuzzy-consolidation comments on active claimed TODOs",
+            ctx,
+        );
+    }
+
     Ok(())
+}
+
+fn collect_active_todo_handoff_comments(
+    store_root: &Path,
+) -> Result<Vec<String>, error::DecapodError> {
+    let db_path = store_root.join(crate::core::schemas::TODO_DB_NAME);
+    if !db_path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let conn = db::db_connect(&db_path.to_string_lossy())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT t.id, t.assigned_to, e.payload
+             FROM tasks t
+             JOIN task_events e ON e.task_id = t.id
+             WHERE t.status NOT IN ('done', 'archived')
+               AND t.assigned_to != ''
+               AND e.event_type = 'task.comment'
+             ORDER BY e.ts ASC, e.event_id ASC",
+        )
+        .map_err(error::DecapodError::RusqliteError)?;
+    let rows = stmt
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+            ))
+        })
+        .map_err(error::DecapodError::RusqliteError)?;
+
+    let mut comments = Vec::new();
+    for row in rows {
+        let (todo_id, assigned_to, payload) = row.map_err(error::DecapodError::RusqliteError)?;
+        let payload: serde_json::Value =
+            serde_json::from_str(&payload).unwrap_or(serde_json::Value::Null);
+        if payload.get("kind").and_then(|v| v.as_str()) != Some("fuzzy-consolidation") {
+            continue;
+        }
+        let comment = payload
+            .get("comment")
+            .and_then(|v| v.as_str())
+            .unwrap_or("fuzzy-consolidation comment");
+        comments.push(format!("{todo_id} assigned_to={assigned_to}: {comment}"));
+    }
+
+    Ok(comments)
 }
 
 fn validate_git_protected_branch(

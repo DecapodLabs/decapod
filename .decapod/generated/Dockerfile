@@ -3,7 +3,7 @@
 # Regenerate via: decapod auto container run --image-profile alpine
 FROM rust:1.91.1-alpine
 ENV PATH="/usr/local/cargo/bin:${PATH}"
-ARG DECAPOD_VERSION=0.60.14
+ARG DECAPOD_VERSION=0.61.1
 RUN apk add --no-cache bash build-base ca-certificates coreutils curl git openssh-client sqlite-dev sqlite-static
 RUN update-ca-certificates
 COPY .decapod/generated/decapod /usr/local/bin/decapod
