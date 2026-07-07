@@ -12,6 +12,25 @@ const RUNTIME_NODES: &[&str] = &[
     "data/POSTGRESQL",
 ];
 
+const CORE_NODES: &[&str] = &[
+    "core/ARCHITECTURE",
+    "core/DATA",
+    "core/DECAPOD",
+    "core/DEMANDS",
+    "core/DEPRECATION",
+    "core/DOCS",
+    "core/EMERGENCY_PROTOCOL",
+    "core/ENGINEERING_EXCELLENCE",
+    "core/GAPS",
+    "core/INTERFACES",
+    "core/METADATA",
+    "core/METHODOLOGY",
+    "core/PLUGINS",
+    "core/RESEARCH",
+    "core/SCAFFOLDING",
+    "core/SPECS",
+];
+
 fn load_constitution_asset() -> serde_json::Value {
     serde_json::from_str(include_str!("../assets/constitution.json")).expect("constitution json")
 }
@@ -121,6 +140,64 @@ fn scaffolding_nodes_have_architect_grade_guidance() {
 }
 
 #[test]
+fn all_core_nodes_have_architect_grade_routing_guidance() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+
+    let actual_core_count = nodes.keys().filter(|id| id.starts_with("core/")).count();
+    assert_eq!(
+        actual_core_count,
+        CORE_NODES.len(),
+        "CORE_NODES test list must cover every core/* node"
+    );
+
+    for node_id in CORE_NODES {
+        let node = nodes
+            .get(*node_id)
+            .unwrap_or_else(|| panic!("missing core node {node_id}"));
+        assert_architect_grade_fields(node_id, node);
+
+        let sections = node["sections"].as_object().expect("sections object");
+        for section in ["loop_guards", "proof_planning"] {
+            assert!(
+                sections
+                    .get(section)
+                    .and_then(|items| items.as_array())
+                    .is_some_and(|items| items.len() >= 3),
+                "{node_id}.{section} must prevent routing/proof-planning loops"
+            );
+        }
+    }
+}
+
+#[test]
+fn core_lookup_routes_loop_reports_and_untrusted_attachments() {
+    let constitution = load_constitution_asset();
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+
+    let expected = [
+        ("routing loop", "core/GAPS"),
+        ("proof planning", "core/SPECS"),
+        ("untrusted attachment", "core/EMERGENCY_PROTOCOL"),
+        ("malicious attachment", "core/EMERGENCY_PROTOCOL"),
+        ("unsafe patch", "core/EMERGENCY_PROTOCOL"),
+        ("core routing", "core/DECAPOD"),
+    ];
+
+    for (term, node_id) in expected {
+        let entries = lookup
+            .get(term)
+            .unwrap_or_else(|| panic!("lookup must include {term}"))
+            .as_array()
+            .unwrap_or_else(|| panic!("lookup.{term} must be an array"));
+        assert!(
+            entries.iter().any(|v| v.as_str() == Some(node_id)),
+            "lookup.{term} must route to {node_id}"
+        );
+    }
+}
+
+#[test]
 fn lookup_routes_init_and_major_runtime_terms() {
     let constitution = load_constitution_asset();
     let lookup = constitution["lookup"].as_object().expect("lookup object");
@@ -168,4 +245,27 @@ fn embedded_constitution_preserves_architect_grade_fields() {
     let node: serde_json::Value =
         serde_json::from_slice(&output.stdout).expect("constitution get json");
     assert_architect_grade_fields("core/SCAFFOLDING", &node);
+}
+
+#[test]
+fn embedded_constitution_preserves_core_architect_grade_fields() {
+    for node_id in ["core/DECAPOD", "core/GAPS", "core/EMERGENCY_PROTOCOL"] {
+        let output = Command::new(resolve_decapod_bin())
+            .args(["constitution", "get", node_id])
+            .output()
+            .expect("run decapod constitution get");
+        assert!(
+            output.status.success(),
+            "constitution get {node_id} failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let node: serde_json::Value =
+            serde_json::from_slice(&output.stdout).expect("constitution get json");
+        assert_architect_grade_fields(node_id, &node);
+        assert!(
+            node["sections"]["loop_guards"].as_array().is_some(),
+            "{node_id} must preserve loop guards in embedded output"
+        );
+    }
 }

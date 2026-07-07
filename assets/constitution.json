@@ -25,7 +25,11 @@
         "ambiguous",
         "init",
         "workspace",
-        "scaffolding"
+        "scaffolding",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [
@@ -65,7 +69,9 @@
           "workflow, testing, release, incident, product, platform, operating practice -> core/METHODOLOGY.",
           "research, papers, seminal, theory, academic -> core/RESEARCH.",
           "todo, validate, knowledge, context, capsule, container, health, policy, watcher, skill, eval -> core/PLUGINS.",
-          "intent contract, security contract, git behavior, amendment, system authority, evaluation governance -> core/SPECS."
+          "intent contract, security contract, git behavior, amendment, system authority, evaluation governance -> core/SPECS.",
+          "malicious attachment, untrusted zip, unsafe patch, exploit-looking input -> core/EMERGENCY_PROTOCOL, then translate only the human-readable symptom into safe requirements.",
+          "router loop, proof planning loop, context oscillation -> core/GAPS plus the router that owns the intended artifact."
         ],
         "apply": [
           "After core routing, retrieve domain entries and carry forward only the concepts needed to improve the next inference step.",
@@ -74,6 +80,133 @@
         "avoid": [
           "Do not treat the human phrase as a complete requirement when platform, user, data, interface, trust boundary, deployment, or proof is unknown.",
           "Do not answer from generic model memory when a precise Decapod route can provide domain terms, decision axes, or constraints."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/DECAPOD` as the root router for raw human intent and first-hop Decapod routing; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is the smallest core namespace that can reduce uncertainty before implementation; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "Which single core surface resolves the next material uncertainty?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/DECAPOD",
+          "use_when": "The task's next material uncertainty is about raw human intent and first-hop Decapod routing.",
+          "avoid_when": "loading every core node or cycling between routers without new evidence",
+          "implications": "Carry forward this node only until it selects the smallest core namespace that can reduce uncertainty before implementation and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/DECAPOD` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "a captured intent packet with assumptions, stop conditions, and the first proof expectation",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "A routing decision names the selected core node, rejected alternatives, and the proof gate that will validate the next step.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/DECAPOD` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when raw human intent and first-hop Decapod routing changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "A routing decision names the selected core node, rejected alternatives, and the proof gate that will validate the next step.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -96,7 +229,9 @@
         "container",
         "specs",
         "proof",
-        "agent"
+        "agent",
+        "routing",
+        "decision"
       ],
       "links": {
         "references": [
@@ -126,7 +261,7 @@
         "decide": [
           "Classify the primary environment language separately from Decapod itself; Decapod is the agent control layer, not the application base image.",
           "Capture the smallest runnable path before optional structure: package manager, entrypoint, test command, build command, and container command.",
-          "Distinguish source scaffolding from managed workspace scaffolding. Project files belong to the user; .decapod/generated files are Decapod-managed contracts."
+          "Distinguish source scaffolding from managed workspace scaffolding. Project files belong to the user; Decapod generated workspace files are managed contracts."
         ],
         "route": [
           "rust -> architecture/RUST; go -> architecture/GO; java or jvm -> architecture/JAVA; python -> architecture/PYTHON; ruby -> architecture/RUBY.",
@@ -147,155 +282,133 @@
         "proceed_when": [
           "Proceed when the generated project has a named runtime, a first command, a first proof, and specs that preserve unanswered architectural questions.",
           "Proceed when the Decapod layer and the user project layer are visibly separate in the workspace container contract."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
         ]
       },
       "architect_notes": [
-        "Scaffolding is an architectural act because it sets path names, command names, dependency managers, and proof expectations that future agents will copy.",
-        "The best first scaffold is intentionally boring: it makes the first correct change easy and leaves high-cost commitments visible instead of hidden.",
-        "Generated work should optimize for reversible motion. Pin decisions that affect compatibility, security, state, or release behavior."
+        "Treat `core/SCAFFOLDING` as the project scaffolding router for init answers, generated files, managed workspace Dockerfiles, and first project proof loops; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is technology, data, container, and project spec doctrine that directly affects generated artifacts; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
       ],
       "init_questions": [
         {
-          "id": "primary_language",
-          "prompt": "What is the primary project language or runtime?",
-          "why": "The answer drives package manager, base image, test command, and generated file layout.",
+          "id": "next_uncertainty",
+          "prompt": "What artifact, runtime, and proof command must exist immediately after init?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
           "answers": [
-            "rust",
-            "go",
-            "java",
-            "python",
-            "ruby",
-            "javascript",
-            "other"
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
           ]
         },
         {
-          "id": "project_shape",
-          "prompt": "What is the first runnable project shape?",
-          "why": "A CLI, service, library, web app, worker, or script needs different files and proof.",
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
           "answers": [
-            "cli",
-            "service",
-            "library",
-            "web app",
-            "worker",
-            "script"
-          ]
-        },
-        {
-          "id": "state_boundary",
-          "prompt": "Where will persistent state live, if anywhere?",
-          "why": "Persistence changes migrations, backup posture, test fixtures, and container services.",
-          "answers": [
-            "none",
-            "filesystem",
-            "postgres",
-            "sqlite",
-            "external service"
-          ]
-        },
-        {
-          "id": "deployment_hint",
-          "prompt": "Is the target local-only, containerized, serverless, VM, Kubernetes, or unknown?",
-          "why": "Deployment hints affect health checks, ports, config, and generated operational notes.",
-          "answers": [
-            "local",
-            "container",
-            "serverless",
-            "vm",
-            "kubernetes",
-            "unknown"
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
           ]
         }
       ],
       "decision_matrix": [
         {
-          "choice": "Generate from explicit user language",
-          "use_when": "The user selected a language or config already declares one.",
-          "avoid_when": "Signals conflict between lockfiles, source files, and user intent.",
-          "implications": "Use the selected ecosystem as the project layer and install Decapod as the agent layer inside the workspace image."
+          "choice": "Use core/SCAFFOLDING",
+          "use_when": "The task's next material uncertainty is about init answers, generated files, managed workspace Dockerfiles, and first project proof loops.",
+          "avoid_when": "treating the initial template as final architecture or making Decapod Rust the user project default",
+          "implications": "Carry forward this node only until it selects technology, data, container, and project spec doctrine that directly affects generated artifacts and a proof surface."
         },
         {
-          "choice": "Infer from repository evidence",
-          "use_when": "Existing lockfiles, manifests, tests, and source ratios point to one ecosystem.",
-          "avoid_when": "The repo is polyglot or the user asked to migrate ecosystems.",
-          "implications": "Record inference evidence in specs and keep generated mutations minimal until proof confirms the command path."
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
         },
         {
-          "choice": "Ask one sharper question",
-          "use_when": "The initial language, state, or deployment facts are material and cannot be inferred.",
-          "avoid_when": "A conservative local-only scaffold can proceed without harming future choices.",
-          "implications": "Stop before writing files that would encode a false ecosystem or persistence decision."
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
         }
       ],
       "tradeoffs": [
         {
-          "axis": "template completeness",
-          "option_a": "Barebones runnable skeleton.",
-          "option_b": "Full framework opinion with many files.",
-          "guidance": "Default barebones. Add framework structure after the user names it or the repo proves it."
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
         },
         {
-          "axis": "managed workspace mutability",
-          "option_a": "Regenerate the Dockerfile from template each time.",
-          "option_b": "Treat it as a living managed file that agents can mutate.",
-          "guidance": "Use a minimal template once, then preserve agent changes while validating Decapod layer expectations."
-        },
-        {
-          "axis": "Decapod version source",
-          "option_a": "Use the installed or released Decapod image tag.",
-          "option_b": "Bind a local Decapod binary for special cases.",
-          "guidance": "Prefer released tags for reproducibility and allow local binding only when the workspace explicitly opts into that fallback."
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
         }
       ],
       "scaffolding": {
         "capture": [
-          "Primary language, package manager, first runnable target, test/build commands, container runtime, persistence hint, and deployment hint.",
-          "Whether the workspace Dockerfile should use a released Decapod layer or a local binary bind for unreleased development."
+          "Capture why `core/SCAFFOLDING` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
         ],
         "generate": [
-          "A minimal project skeleton for the selected ecosystem, not for Decapod itself.",
-          "A .decapod/generated Dockerfile that separates the project runtime layer from the Decapod tool layer.",
-          "Living specs that record choices, assumptions, unanswered questions, and proof commands."
+          "a minimal project and workspace contract that separates user runtime from the Decapod agent layer",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
         ],
         "defer": [
-          "Framework-specific directory trees until the user names the framework or existing files prove it.",
-          "Production infrastructure, cloud IAM, managed databases, and queues until operating boundaries are explicit."
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
         ],
         "proof": [
-          "The fresh scaffold must complete its documented build or test command in a clean checkout.",
-          "The workspace container must include only the runtime and tools needed for the selected project language plus the Decapod layer."
+          "A fresh checkout can run the documented first command and the workspace image includes the selected project runtime plus Decapod.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
         ]
       },
       "spec_impacts": {
         "intent": [
-          "State the selected ecosystem and why it was selected.",
-          "Preserve unknowns about deployment, state, security, and user workflow."
+          "Record `core/SCAFFOLDING` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
         ],
         "architecture": [
-          "Describe the runtime layer, Decapod layer, managed Dockerfile behavior, and first proof loop.",
-          "Record the scaffold as a starting point, not a final architecture."
+          "Record architectural impact when init answers, generated files, managed workspace Dockerfiles, and first project proof loops changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
         ],
         "interfaces": [
-          "List generated commands, files, ports, public modules, and external services as contracts.",
-          "Mark .decapod/generated Dockerfile as managed but intentionally mutable by agents inside workspaces."
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
         ],
         "proof": [
-          "The fresh scaffold must complete its documented build or test command in a clean checkout.",
-          "The workspace container must include only the runtime and tools needed for the selected project language plus the Decapod layer."
+          "A fresh checkout can run the documented first command and the workspace image includes the selected project runtime plus Decapod.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
         ]
       },
       "proof": {
         "static": [
-          "Generated JSON, TOML, YAML, and package manifests must parse.",
-          "Repeated init or validation must not erase intentional workspace Dockerfile mutations."
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
         ],
         "runtime": [
-          "The fresh scaffold must complete its documented build or test command in a clean checkout.",
-          "The workspace container must include only the runtime and tools needed for the selected project language plus the Decapod layer."
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
         ],
         "release": [
-          "Released Decapod images must be taggable by version and short release commit SHA when used as the Decapod layer."
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -414,6 +527,133 @@
         "avoid": [
           "Do not default to React, mobile, Kubernetes, serverless, microservices, or AI features unless the retrieved domain path or repo context supports it.",
           "Do not choose architecture before naming the user workflow and the first production slice."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/ARCHITECTURE` as the architecture router for system shape, runtime boundaries, platform choices, and technical tradeoffs; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is the architecture, data, interface, or methodology node that owns the concrete decision axis; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "Which boundary decision is irreversible enough to record before writing code?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/ARCHITECTURE",
+          "use_when": "The task's next material uncertainty is about system shape, runtime boundaries, platform choices, and technical tradeoffs.",
+          "avoid_when": "choosing frameworks, cloud resources, or deployment topology before product and state boundaries are known",
+          "implications": "Carry forward this node only until it selects the architecture, data, interface, or methodology node that owns the concrete decision axis and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/ARCHITECTURE` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "runtime layout, boundary documentation, ADR placeholders, and container dependencies only when selected",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "The chosen architecture has a runnable slice or explicit deferral with a validation plan.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/ARCHITECTURE` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when system shape, runtime boundaries, platform choices, and technical tradeoffs changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "The chosen architecture has a runnable slice or explicit deferral with a validation plan.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -434,7 +674,11 @@
         "overview",
         "maintainer",
         "usage",
-        "operator"
+        "operator",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [
@@ -477,6 +721,133 @@
         "avoid": [
           "Do not place operational agent rules in public README content when AGENTS.md or core/spec/interface authority owns the rule.",
           "Do not document aspirational behavior as current behavior without marking status and proof gap."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/DOCS` as the documentation router for human-facing explanations, operator playbooks, audits, release notes, and translation maps; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is the docs node whose audience and evidence requirements match the requested document; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "Who will act on this document, and what evidence must they be able to verify?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/DOCS",
+          "use_when": "The task's next material uncertainty is about human-facing explanations, operator playbooks, audits, release notes, and translation maps.",
+          "avoid_when": "publishing claims that are not backed by commands, generated specs, code references, or current behavior",
+          "implications": "Carry forward this node only until it selects the docs node whose audience and evidence requirements match the requested document and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/DOCS` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "README, architecture overview, migration notes, playbooks, or release docs only when their audience is known",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "Documented commands, capabilities, and warnings match current CLI output or tested behavior.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/DOCS` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when human-facing explanations, operator playbooks, audits, release notes, and translation maps changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "Documented commands, capabilities, and warnings match current CLI output or tested behavior.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -498,7 +869,11 @@
         "claims",
         "glossary",
         "context-pack",
-        "todo-schema"
+        "todo-schema",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [
@@ -554,6 +929,133 @@
         "avoid": [
           "Do not infer interface semantics from implementation convenience when a schema or contract node exists.",
           "Do not create duplicate authority by describing the same machine contract in multiple places."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/INTERFACES` as the interface router for schemas, envelopes, control-plane payloads, store models, generated specs, claims, and compatibility rules; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is the interface node that owns the producer, consumer, schema, and compatibility lifecycle; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "Which producer and consumer depend on this contract staying stable?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/INTERFACES",
+          "use_when": "The task's next material uncertainty is about schemas, envelopes, control-plane payloads, store models, generated specs, claims, and compatibility rules.",
+          "avoid_when": "inventing payload shapes or treating implementation details as public contracts without schema proof",
+          "implications": "Carry forward this node only until it selects the interface node that owns the producer, consumer, schema, and compatibility lifecycle and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/INTERFACES` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "schema files, examples, compatibility tests, and generated spec references for contract-bearing surfaces",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "A consumer can validate the schema or example and incompatible changes are called out explicitly.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/INTERFACES` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when schemas, envelopes, control-plane payloads, store models, generated specs, claims, and compatibility rules changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "A consumer can validate the schema or example and incompatible changes are called out explicitly.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -577,7 +1079,11 @@
         "platform",
         "operations",
         "memory",
-        "knowledge"
+        "knowledge",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [
@@ -624,6 +1130,133 @@
         "avoid": [
           "Do not let methodology become a substitute for domain knowledge or executable proof.",
           "Do not follow a guide mechanically when the retrieved domain node exposes a stronger constraint."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/METHODOLOGY` as the delivery methodology router for product, architecture process, testing, operations, release, incident, research, memory, and platform practice; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is the methodology node that supplies the execution discipline for the task stage; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "What repeatable practice reduces risk for this stage of work?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/METHODOLOGY",
+          "use_when": "The task's next material uncertainty is about product, architecture process, testing, operations, release, incident, research, memory, and platform practice.",
+          "avoid_when": "substituting generic best practices for a project-specific proof path or decision gate",
+          "implications": "Carry forward this node only until it selects the methodology node that supplies the execution discipline for the task stage and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/METHODOLOGY` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "plans, checklists, ADR shells, release runbooks, or incident records when process artifacts are needed",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "The chosen process produces inspectable artifacts and does not hide unresolved risk.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/METHODOLOGY` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when product, architecture process, testing, operations, release, incident, research, memory, and platform practice changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "The chosen process produces inspectable artifacts and does not hide unresolved risk.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -648,7 +1281,11 @@
         "watcher",
         "skill",
         "eval",
-        "capsule"
+        "capsule",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [
@@ -703,6 +1340,133 @@
         "avoid": [
           "Do not rely on deprecated or SPEC surfaces for production claims.",
           "Do not mark a subsystem usable unless its proof surface is executable or the limitation is explicit."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/PLUGINS` as the Decapod subsystem router for todo, validate, container, context, policy, health, federation, watcher, eval, and other plugin surfaces; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is the plugin node that owns the command, state boundary, side effect, and proof contract; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "Which Decapod subsystem owns this operation and what proof artifact does it emit?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/PLUGINS",
+          "use_when": "The task's next material uncertainty is about todo, validate, container, context, policy, health, federation, watcher, eval, and other plugin surfaces.",
+          "avoid_when": "calling a subsystem as if it can mutate state or produce proof that its contract does not expose",
+          "implications": "Carry forward this node only until it selects the plugin node that owns the command, state boundary, side effect, and proof contract and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/PLUGINS` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "plugin-facing configuration, generated artifacts, or proof hooks only where the plugin owns the lifecycle",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "Subsystem use is tied to documented command output, state mutation boundaries, and validation evidence.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/PLUGINS` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when todo, validate, container, context, policy, health, federation, watcher, eval, and other plugin surfaces changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "Subsystem use is tied to documented command output, state mutation boundaries, and validation evidence.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -724,7 +1488,10 @@
         "evaluation",
         "judge",
         "contract",
-        "governance"
+        "governance",
+        "routing",
+        "proof",
+        "decision"
       ],
       "links": {
         "references": [
@@ -767,6 +1534,133 @@
         "avoid": [
           "Do not bypass a binding spec because a local change is easy.",
           "Do not silently change doctrine, authority, security posture, or mutation rules."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/SPECS` as the binding specification router for intent, system authority, security, git behavior, amendments, evaluations, and skill governance; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is the specs node whose contract is binding for the requested change; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "Which living contract would become false if this work shipped without a spec update?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/SPECS",
+          "use_when": "The task's next material uncertainty is about intent, system authority, security, git behavior, amendments, evaluations, and skill governance.",
+          "avoid_when": "editing code while specs contradict the requested behavior or omit a changed public contract",
+          "implications": "Carry forward this node only until it selects the specs node whose contract is binding for the requested change and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/SPECS` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "living spec updates, acceptance criteria, interface contracts, and validation notes before broad implementation",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "The spec change is reflected in validation, tests, or explicit acceptance evidence.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/SPECS` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when intent, system authority, security, git behavior, amendments, evaluations, and skill governance changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "The spec change is reflected in validation, tests, or explicit acceptance evidence.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -787,7 +1681,11 @@
         "index",
         "classification",
         "corpus",
-        "retrieval-metadata"
+        "retrieval-metadata",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [
@@ -821,6 +1719,133 @@
         "avoid": [
           "Do not let metadata become a second source of truth for behavior.",
           "Do not add broad tags that cause unrelated retrieval hits."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/METADATA` as the metadata router for skills, taxonomy, retrieval metadata, human-agent UX descriptors, and auxiliary corpus cards; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is metadata nodes that clarify discovery, ownership, versioning, or agent UX context; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "What retrieval or UX decision depends on this metadata being correct?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/METADATA",
+          "use_when": "The task's next material uncertainty is about skills, taxonomy, retrieval metadata, human-agent UX descriptors, and auxiliary corpus cards.",
+          "avoid_when": "letting metadata silently change behavior without provenance, stability, or lookup expectations",
+          "implications": "Carry forward this node only until it selects metadata nodes that clarify discovery, ownership, versioning, or agent UX context and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/METADATA` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "metadata entries, routing keys, skill cards, and retrieval hints with explicit ownership and lifecycle",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "Metadata can be discovered by lookup and does not point to stale or missing capabilities.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/METADATA` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when skills, taxonomy, retrieval metadata, human-agent UX descriptors, and auxiliary corpus cards changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "Metadata can be discovered by lookup and does not point to stale or missing capabilities.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -842,7 +1867,11 @@
         "resilience",
         "testing",
         "architecture",
-        "customer trust"
+        "customer trust",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [
@@ -908,6 +1937,133 @@
         "avoid": [
           "Do not ship vibes: local success without proof, hidden assumptions, or missing recovery path is incomplete.",
           "Do not add abstraction, dependency, state, or distributed coordination without naming the lifecycle cost."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/ENGINEERING_EXCELLENCE` as the cross-cutting engineering quality router for maintainability, security, observability, operability, correctness, cost, and customer trust; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is the architecture, methodology, data, or interface node that owns the specific quality risk; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "Which quality attribute will fail first if this design is wrong?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/ENGINEERING_EXCELLENCE",
+          "use_when": "The task's next material uncertainty is about maintainability, security, observability, operability, correctness, cost, and customer trust.",
+          "avoid_when": "using excellence as a vague approval stamp instead of selecting measurable quality gates",
+          "implications": "Carry forward this node only until it selects the architecture, methodology, data, or interface node that owns the specific quality risk and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/ENGINEERING_EXCELLENCE` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "quality gates, instrumentation seams, test layers, and operational checks when risk warrants them",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "Quality claims have a command, metric, invariant, or review artifact attached.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/ENGINEERING_EXCELLENCE` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when maintainability, security, observability, operability, correctness, cost, and customer trust changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "Quality claims have a command, metric, invariant, or review artifact attached.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -929,7 +2085,11 @@
         "unknown",
         "contradiction",
         "proof gap",
-        "methodology vacuum"
+        "methodology vacuum",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [],
@@ -954,6 +2114,133 @@
         "avoid": [
           "Do not treat a gap as a bug unless a governing requirement already exists and implementation violates it.",
           "Do not invent missing doctrine inside the final answer when Decapod needs a routed gap or follow-up query."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/GAPS` as the gap and incompleteness router for missing doctrine, missing proof, unresolved assumptions, stale specs, unclear authority, and unknown capability; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is the node that can close the gap or to a human clarification when doctrine cannot resolve it; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "What missing fact would change the implementation or proof plan?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/GAPS",
+          "use_when": "The task's next material uncertainty is about missing doctrine, missing proof, unresolved assumptions, stale specs, unclear authority, and unknown capability.",
+          "avoid_when": "papering over unknowns with confident implementation or burying risk in summaries",
+          "implications": "Carry forward this node only until it selects the node that can close the gap or to a human clarification when doctrine cannot resolve it and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/GAPS` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "explicit TODOs, spec uncertainty markers, issue links, and deferred proof hooks rather than fake completeness",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "The gap is either resolved with evidence or tracked with owner, blocker, and next decision.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/GAPS` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when missing doctrine, missing proof, unresolved assumptions, stale specs, unclear authority, and unknown capability changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "The gap is either resolved with evidence or tracked with owner, blocker, and next decision.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -974,7 +2261,11 @@
         "precedence",
         "user demand",
         "override",
-        "intent constraint"
+        "intent constraint",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [
@@ -1002,6 +2293,133 @@
         "avoid": [
           "Do not ignore a human constraint because it is inconvenient.",
           "Do not satisfy a demand by weakening auditability, proof, boundaries, or explicit authority."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/DEMANDS` as the human demand and precedence router for explicit constraints, non-negotiables, scope changes, priorities, and conflict resolution; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is the affected core/spec/methodology node after applying human-stated precedence; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "Which user statement is binding, and what earlier assumption does it supersede?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/DEMANDS",
+          "use_when": "The task's next material uncertainty is about explicit constraints, non-negotiables, scope changes, priorities, and conflict resolution.",
+          "avoid_when": "overriding explicit user demands with generic conventions or older inferred assumptions",
+          "implications": "Carry forward this node only until it selects the affected core/spec/methodology node after applying human-stated precedence and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/DEMANDS` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "recorded constraints, acceptance criteria, and priority notes that future agents can recover",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "The final change demonstrates each explicit demand or documents why it cannot be satisfied.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/DEMANDS` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when explicit constraints, non-negotiables, scope changes, priorities, and conflict resolution changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "The final change demonstrates each explicit demand or documents why it cannot be satisfied.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -1022,7 +2440,11 @@
         "retire",
         "remove",
         "legacy",
-        "breaking change"
+        "breaking change",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [],
@@ -1047,6 +2469,133 @@
         "avoid": [
           "Do not silently remove a surface that agents or users may still call.",
           "Do not leave deprecated material as equal authority beside its replacement."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/DEPRECATION` as the deprecation and replacement router for retirement, migration, compatibility windows, replacement routes, and duplicate authority removal; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is the owner of the deprecated surface plus the successor node or compatibility spec; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "Who still depends on the old surface and what evidence proves they can move?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/DEPRECATION",
+          "use_when": "The task's next material uncertainty is about retirement, migration, compatibility windows, replacement routes, and duplicate authority removal.",
+          "avoid_when": "removing old behavior before migration, compatibility, and rollback expectations are documented",
+          "implications": "Carry forward this node only until it selects the owner of the deprecated surface plus the successor node or compatibility spec and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/DEPRECATION` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "migration notes, compatibility shims, warnings, and removal milestones only when a successor is named",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "Old and new routes are tested or the breaking removal is explicitly approved and documented.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/DEPRECATION` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when retirement, migration, compatibility windows, replacement routes, and duplicate authority removal changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "Old and new routes are tested or the breaking removal is explicitly approved and documented.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -1068,7 +2617,11 @@
         "security",
         "data loss",
         "authority conflict",
-        "unsafe"
+        "unsafe",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [],
@@ -1093,6 +2646,133 @@
         "avoid": [
           "Do not quick-fix a critical unknown before preserving evidence and naming the affected boundary.",
           "Do not continue implementation when validation cannot terminate or proof cannot be defined."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/EMERGENCY_PROTOCOL` as the risk stop and containment router for security, data safety, authority ambiguity, store boundary violations, proof failures, and unsafe mutation pressure; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is stop, ask the human, or query the narrowest safety node before mutation continues; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "What must be stopped or isolated before any further inference or mutation is safe?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/EMERGENCY_PROTOCOL",
+          "use_when": "The task's next material uncertainty is about security, data safety, authority ambiguity, store boundary violations, proof failures, and unsafe mutation pressure.",
+          "avoid_when": "continuing implementation when authority, secrets, data loss, or proof custody is unresolved",
+          "implications": "Carry forward this node only until it selects stop, ask the human, or query the narrowest safety node before mutation continues and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/EMERGENCY_PROTOCOL` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "containment notes, blocked-state records, rollback steps, and minimum safe proof before resuming work",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "Unsafe inputs are quarantined, not executed, and the recovery path is recorded before proceeding.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/EMERGENCY_PROTOCOL` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when security, data safety, authority ambiguity, store boundary violations, proof failures, and unsafe mutation pressure changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "Unsafe inputs are quarantined, not executed, and the recovery path is recorded before proceeding.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -6772,7 +8452,7 @@
       },
       "sections": {
         "match": [
-          "Use when updating .decapod/generated/specs/, validating alignment, or checking for drift."
+          "Use when updating Decapod generated project specs, validating alignment, or checking for drift."
         ],
         "concepts": [
           "Acceptance Criteria: Falsifiable, testable conditions that define the success of a feature or task.",
@@ -6897,7 +8577,7 @@
         ],
         "concepts": [
           "Decapod uses a dual-store model: repository state (shared, versioned) vs user state (local, ephemeral).",
-          "Generated artifacts (.decapod/generated/) are deterministic outputs of the system, not sources of truth.",
+          "Generated artifacts are deterministic outputs of the system, not sources of truth.",
           "Direct mutation of Decapod internal state files bypasses validation and corrupts the system."
         ],
         "ambiguity": [
@@ -6908,7 +8588,7 @@
           "Identify the correct CLI or RPC surface to update state, rather than editing files directly."
         ],
         "standards": [
-          "Agents must never manually edit files inside `.decapod/data/` or `.decapod/generated/`.",
+          "Agents must never manually edit Decapod internal state stores or generated artifact directories.",
           "All state mutations must be auditable and performed through the approved Decapod interfaces."
         ],
         "failure_modes": [
@@ -10368,7 +12048,11 @@
         "pipeline",
         "state",
         "schema",
-        "partitions"
+        "partitions",
+        "routing",
+        "proof",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [
@@ -10399,6 +12083,133 @@
         ],
         "avoid": [
           "Do not mutate data schemas without verifying migration and rollback paths."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/DATA` as the data router for state ownership, databases, caches, migrations, pipelines, and retention; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is data/DATABASE, data/POSTGRESQL, data/CACHING, data/PIPELINES, or data/DATA_ENGINEERING as appropriate; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "What state must survive process restart, and who owns changing it?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/DATA",
+          "use_when": "The task's next material uncertainty is about state ownership, databases, caches, migrations, pipelines, and retention.",
+          "avoid_when": "generating schemas or caches before ownership, rollback, consistency, and recovery expectations are known",
+          "implications": "Carry forward this node only until it selects data/DATABASE, data/POSTGRESQL, data/CACHING, data/PIPELINES, or data/DATA_ENGINEERING as appropriate and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/DATA` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "migration directories, local data fixtures, seed strategy, and test database services only when state is selected",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "Migrations, rollback, seed data, or pipeline replay can be exercised in a clean workspace.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/DATA` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when state ownership, databases, caches, migrations, pipelines, and retention changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "Migrations, rollback, seed data, or pipeline replay can be exercised in a clean workspace.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     },
@@ -13900,7 +15711,10 @@
         "distributed",
         "ai",
         "hardware",
-        "systems"
+        "systems",
+        "routing",
+        "specs",
+        "decision"
       ],
       "links": {
         "references": [
@@ -14008,6 +15822,133 @@
         "apply": [
           "Carry forward cited constraints from seminal papers into implementation design.",
           "Use research to resolve fundamental architectural trade-offs (e.g., CAP theorem vs External Consistency)."
+        ],
+        "loop_guards": [
+          "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
+          "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
+          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+        ],
+        "proof_planning": [
+          "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
+          "Map the route to at least one proof surface: test, schema validation, generated spec update, command output, or explicit deferred blocker.",
+          "Do not claim completion from constitution retrieval alone; completion requires repo-state proof after mutation."
+        ]
+      },
+      "architect_notes": [
+        "Treat `core/RESEARCH` as the research and theory router for foundational papers, academic concepts, prior art, and theory-to-practice implications; it should reduce uncertainty before implementation rather than justify work already chosen.",
+        "The correct next hop is research nodes that clarify the concept, then to architecture or methodology for application; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+      ],
+      "init_questions": [
+        {
+          "id": "next_uncertainty",
+          "prompt": "What decision changes if this research result is true or false?",
+          "why": "This prevents router loops by forcing the agent to name the next uncertainty that changes action.",
+          "answers": [
+            "ask human",
+            "query narrower node",
+            "update specs",
+            "generate scaffold",
+            "run proof",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "What evidence will prove this route was sufficient for the next step?",
+          "why": "Core routing must feed proof planning instead of ending as advisory context.",
+          "answers": [
+            "test",
+            "schema",
+            "spec refresh",
+            "command output",
+            "review evidence",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Use core/RESEARCH",
+          "use_when": "The task's next material uncertainty is about foundational papers, academic concepts, prior art, and theory-to-practice implications.",
+          "avoid_when": "using research references as decoration without tying them to a present engineering decision",
+          "implications": "Carry forward this node only until it selects research nodes that clarify the concept, then to architecture or methodology for application and a proof surface."
+        },
+        {
+          "choice": "Ask or record a gap",
+          "use_when": "A missing human fact would change the generated artifact, spec update, or proof plan.",
+          "avoid_when": "The repo already contains enough evidence to choose a reversible, local-only next step.",
+          "implications": "Preserve uncertainty in specs or issue notes rather than fabricating requirements."
+        },
+        {
+          "choice": "Route to adjacent doctrine",
+          "use_when": "A narrower node owns the concrete technology, interface, methodology, data, plugin, or spec contract.",
+          "avoid_when": "The adjacent node would only repeat the same uncertainty and create a loop.",
+          "implications": "Retrieve the adjacent node once, then act, ask, or explicitly defer with proof expectations."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus convergence",
+          "option_a": "Load broad core context for safety.",
+          "option_b": "Converge quickly on the narrowest route and artifact.",
+          "guidance": "Start broad only at raw intent, then converge. Re-expansion requires a new fact or a failed proof gate."
+        },
+        {
+          "axis": "autonomy versus custody",
+          "option_a": "Proceed with explicit assumptions when the next step is reversible.",
+          "option_b": "Stop for human clarification when a wrong assumption would alter contracts or safety.",
+          "guidance": "Autonomy is acceptable only when assumptions are named and the proof plan can falsify them quickly."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture why `core/RESEARCH` was selected, which adjacent routes were rejected, and what uncertainty remains.",
+          "Capture the first artifact or generated spec that will prove the routing decision was useful."
+        ],
+        "generate": [
+          "research notes, citation-backed assumptions, and decision context when theory affects design",
+          "Generate only the minimal artifact needed for the next proof loop; avoid broad templates from core-level context alone."
+        ],
+        "defer": [
+          "Defer framework, deployment, data, or plugin choices that belong to a narrower doctrine node.",
+          "Defer any mutation based on untrusted attachments, external patches, or unverified generated content until manually reviewed and translated into safe requirements."
+        ],
+        "proof": [
+          "The research claim is cited, bounded, and translated into a concrete design implication or rejected as irrelevant.",
+          "A later agent can reconstruct the routing path from issue notes, specs, tests, or validation output without relying on chat history."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record `core/RESEARCH` when it materially changes accepted scope, assumptions, non-goals, or human-facing acceptance criteria.",
+          "Preserve unresolved questions explicitly instead of compressing them into confident prose."
+        ],
+        "architecture": [
+          "Record architectural impact when foundational papers, academic concepts, prior art, and theory-to-practice implications changes runtime boundaries, generated files, state ownership, or deployment shape.",
+          "Link from architecture notes to the narrower constitution node that owns the concrete decision."
+        ],
+        "interfaces": [
+          "Record public commands, schemas, generated files, data contracts, or control-plane payloads that become compatibility surfaces.",
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+        ],
+        "proof": [
+          "The research claim is cited, bounded, and translated into a concrete design implication or rejected as irrelevant.",
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node is discoverable through lookup terms and linked from the relevant core or section router.",
+          "Structured fields survive embedding and are returned by `decapod constitution get`."
+        ],
+        "runtime": [
+          "A representative agent task can use the node to choose one next action without re-entering a router loop.",
+          "Proof planning names the command, schema, generated spec, or artifact that will validate the next step."
+        ],
+        "release": [
+          "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
       }
     }
@@ -18678,6 +20619,31 @@
     "dockerfile": [
       "architecture/CONTAINERS",
       "core/SCAFFOLDING"
+    ],
+    "routing loop": [
+      "core/DECAPOD",
+      "core/GAPS"
+    ],
+    "proof planning": [
+      "core/DECAPOD",
+      "core/SPECS",
+      "core/GAPS"
+    ],
+    "untrusted attachment": [
+      "core/EMERGENCY_PROTOCOL",
+      "core/DEMANDS"
+    ],
+    "malicious attachment": [
+      "core/EMERGENCY_PROTOCOL",
+      "core/DEMANDS"
+    ],
+    "unsafe patch": [
+      "core/EMERGENCY_PROTOCOL",
+      "core/DEPRECATION"
+    ],
+    "core routing": [
+      "core/DECAPOD",
+      "core/GAPS"
     ]
   }
 }
