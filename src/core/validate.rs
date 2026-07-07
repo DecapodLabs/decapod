@@ -26,7 +26,7 @@ use crate::core::validation_epoch::{
 };
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::plugins::internalize::{self, DeterminismClass, InternalizationManifest, ReplayClass};
-use crate::{db, primitives, todo};
+use crate::{db, primitives, todo, workspace};
 use fancy_regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -4142,6 +4142,22 @@ fn validate_git_push_pr_gate(
             ),
             ctx,
         );
+        match workspace::verify_workunit_gate_for_publish(repo_root, &current_branch) {
+            Ok(()) => pass(
+                &format!(
+                    "Workspace branch '{}' has a verified workunit trajectory for PR review.",
+                    current_branch
+                ),
+                ctx,
+            ),
+            Err(err) => fail(
+                &format!(
+                    "PR_TRAJECTORY_MISSING: branch '{}' has an open PR but no verified workunit trajectory: {}",
+                    current_branch, err
+                ),
+                ctx,
+            ),
+        }
     }
 
     Ok(())

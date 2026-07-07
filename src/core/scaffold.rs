@@ -1244,28 +1244,14 @@ pub fn refresh_project_specs(
         let content_hash = hash_text(&content);
         let dest = project_root.join(spec.path);
         let existing_content = fs::read_to_string(&dest).ok();
-
-        let mut is_customized = false;
-        let mut final_content_hash = content_hash;
-        if let Some(ref existing) = existing_manifest
-            && let Some(entry) = existing.files.iter().find(|f| f.path == spec.path)
-            && let Some(ref existing_str) = existing_content
-        {
-            let disk_hash = hash_text(existing_str);
-            if disk_hash != entry.template_hash {
-                is_customized = true;
-                final_content_hash = disk_hash;
-            }
-        }
-
-        if !is_customized && existing_content.as_deref() != Some(content.as_str()) {
+        if existing_content.as_deref() != Some(content.as_str()) {
             file_writes.push((dest, content));
         }
 
         manifest_entries.push(ProjectSpecManifestEntry {
             path: spec.path.to_string(),
             template_hash,
-            content_hash: final_content_hash,
+            content_hash,
         });
     }
 

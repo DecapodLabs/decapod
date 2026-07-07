@@ -6,7 +6,9 @@ use decapod::core::error::DecapodError;
 use decapod::core::external_action::{self, ExternalCapability};
 use decapod::core::migration;
 use decapod::core::repomap;
-use decapod::core::scaffold::{ScaffoldOptions, scaffold_project_entrypoints};
+use decapod::core::scaffold::{
+    DiagramStyle, ScaffoldOptions, SpecsSeed, refresh_project_specs, scaffold_project_entrypoints,
+};
 use decapod::core::schemas;
 use decapod::core::store::{Store, StoreKind};
 use decapod::core::validate;
@@ -43,6 +45,54 @@ fn assets_docs_and_templates_resolve() {
 
     assert!(assets::get_doc("core/DOES_NOT_EXIST").is_none());
     assert!(assets::get_template("plugins/DOES_NOT_EXIST").is_none());
+}
+
+#[test]
+fn refresh_project_specs_rewrites_generated_markdown() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    fs::create_dir_all(root.join(".decapod/generated/specs")).expect("create specs dir");
+
+    let initial_seed = SpecsSeed {
+        product_name: Some("old-product".to_string()),
+        product_summary: Some("Old summary that should be replaced.".to_string()),
+        architecture_direction: Some("cli".to_string()),
+        product_type: Some("cli".to_string()),
+        primary_languages: vec!["Rust".to_string()],
+        detected_surfaces: vec!["cargo".to_string()],
+        done_criteria: Some("old validation".to_string()),
+    };
+    refresh_project_specs(root, DiagramStyle::Mermaid, Some(&initial_seed))
+        .expect("initial refresh");
+
+    let intent_path = root.join(".decapod/generated/specs/INTENT.md");
+    fs::write(
+        &intent_path,
+        "# Intent\n\n## Product Outcome\nStale generated product claim.\n",
+    )
+    .expect("write stale intent");
+
+    let updated_seed = SpecsSeed {
+        product_name: Some("decapod".to_string()),
+        product_summary: Some("Fresh generated summary from current repo context.".to_string()),
+        architecture_direction: Some("cli".to_string()),
+        product_type: Some("cli".to_string()),
+        primary_languages: vec!["Rust".to_string()],
+        detected_surfaces: vec!["cargo".to_string(), "bazel".to_string()],
+        done_criteria: Some("Decapod validate passes with trajectory artifacts.".to_string()),
+    };
+    refresh_project_specs(root, DiagramStyle::Mermaid, Some(&updated_seed))
+        .expect("second refresh rewrites specs");
+
+    let intent = fs::read_to_string(intent_path).expect("read intent");
+    assert!(
+        intent.contains("Fresh generated summary from current repo context."),
+        "refresh should rewrite generated markdown from current context, got:\n{intent}"
+    );
+    assert!(
+        !intent.contains("Stale generated product claim."),
+        "refresh should not preserve stale generated body text"
+    );
 }
 
 #[test]

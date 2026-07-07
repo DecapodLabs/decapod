@@ -11,6 +11,31 @@ use tempfile::TempDir;
 // Helpers
 // ---------------------------------------------------------------------------
 
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(p) = std::path::Path::new(cargo_bin).canonicalize() {
+        return p;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let p = std::path::Path::new(&runfiles_dir)
+            .join("_main")
+            .join("decapod");
+        if p.exists() {
+            return p;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|p| p.to_path_buf()))
+    {
+        let p = parent.join("decapod");
+        if p.exists() {
+            return p;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
+
 /// Create a temp dir with git init + decapod init --force.
 fn setup_workspace() -> (TempDir, PathBuf) {
     let tmp = TempDir::new().expect("tempdir");
@@ -45,14 +70,15 @@ fn setup_workspace() -> (TempDir, PathBuf) {
         .unwrap();
 
     // decapod init --force
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let exe = resolve_decapod_bin();
+    let out = Command::new(&exe)
         .args(["init", "--force"])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
     assert!(out.status.success(), "decapod init --force failed");
 
-    let session = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let session = Command::new(&exe)
         .args(["session", "acquire"])
         .current_dir(&dir)
         .output()
@@ -69,7 +95,7 @@ fn setup_workspace() -> (TempDir, PathBuf) {
 
 /// Run decapod with given args. Returns (success, stdout+stderr).
 fn run(dir: &PathBuf, args: &[&str]) -> (bool, String) {
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(args)
         .current_dir(dir)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
@@ -107,7 +133,7 @@ fn fail(dir: &PathBuf, args: &[&str]) {
 
 /// Extract first task ID from `todo --format json list` output.
 fn extract_task_id(dir: &PathBuf) -> String {
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(["todo", "--format", "json", "list"])
         .current_dir(dir)
         .output()
@@ -136,7 +162,7 @@ fn extract_task_id(dir: &PathBuf) -> String {
 
 #[test]
 fn t001_version() {
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .arg("--version")
         .output()
         .unwrap();
@@ -153,7 +179,7 @@ fn t001_version() {
 
 #[test]
 fn t002_help() {
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .arg("--help")
         .output()
         .unwrap();
@@ -162,9 +188,7 @@ fn t002_help() {
 
 #[test]
 fn t003_no_args_errors() {
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .output()
-        .unwrap();
+    let out = Command::new(resolve_decapod_bin()).output().unwrap();
     assert!(!out.status.success());
 }
 
@@ -1103,7 +1127,7 @@ fn t240_group_help() {
 
 #[test]
 fn t280_invalid_subcommand() {
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .arg("notacommand")
         .output()
         .unwrap();
