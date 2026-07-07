@@ -6,7 +6,7 @@ This is the primary orientation surface for AI agents. Before performing impleme
 
 ## When to Call Decapod
 
-Call Decapod at **Inference Pressure Points**:
+Call Decapod at **Inference Pressure Points**. Each call should move transient agent activity into governed repo state under `.decapod/`: intent, context, custody, boundaries, validation, or completion.
 
 1.  **Before Implementation:** Claim the task and ensure the workspace.
     - `decapod todo claim --id <id>`
@@ -24,6 +24,7 @@ Call Decapod at **Inference Pressure Points**:
 - **Follow the Errors:** Decapod error messages are deterministic recovery instructions. If a call fails, do not guess; follow the error's guidance.
 - **Respect the Schema:** Consult Decapod configuration to understand the current repo's policy (e.g., if container isolation is required).
 - **Maintain Custody:** Update `specs/INTENT.md` if your research reveals that the original task intent needs refinement.
+- **Preserve State:** Do not rely on chat history as the only record. Use Decapod todos, workspaces, specs, context capsules, validation, and proof artifacts so future agents and reviewers can recover the work from the repository.
 
 ## Documentation Index
 
