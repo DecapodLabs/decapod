@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.61.1](https://github.com/DecapodLabs/decapod/compare/v0.61.0...v0.61.1) - 2026-07-07
+
+### Other
+
+- Migrate to Bazel build system and update CI/validation workflows ([#785](https://github.com/DecapodLabs/decapod/pull/785))
+
 ## [0.61.0](https://github.com/DecapodLabs/decapod/compare/v0.60.17...v0.61.0) - 2026-07-07
 
 ### Other
