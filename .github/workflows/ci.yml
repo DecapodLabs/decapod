@@ -72,8 +72,9 @@ jobs:
         with:
           fetch-depth: 1
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: 1.91.1
           components: rustfmt
       - name: Format check
         run: cargo fmt --all -- --check
@@ -88,8 +89,9 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: 1.91.1
           components: clippy
       - name: Restore cache
         uses: Swatinem/rust-cache@v2
@@ -161,7 +163,9 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.91.1
       - name: Verify golden vectors exist
         run: |
           echo "=== Verifying golden vectors exist ==="
