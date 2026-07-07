@@ -94,12 +94,12 @@
         "summary": {
           "type": "string",
           "minLength": 40,
-          "maxLength": 240
+          "maxLength": 320
         },
         "terms": {
           "type": "array",
           "minItems": 5,
-          "maxItems": 16,
+          "maxItems": 24,
           "items": {
             "type": "string",
             "minLength": 2,
@@ -113,20 +113,212 @@
         "sections": {
           "type": "object",
           "minProperties": 4,
-          "maxProperties": 8,
+          "maxProperties": 12,
           "propertyNames": {
             "pattern": "^[a-z][a-z0-9_]{2,32}$"
           },
           "additionalProperties": {
             "type": "array",
             "minItems": 1,
-            "maxItems": 8,
+            "maxItems": 12,
             "items": {
               "type": "string",
               "minLength": 20,
-              "maxLength": 320
+              "maxLength": 640
             }
           }
+        },
+        "architect_notes": {
+          "$ref": "#/definitions/text_list"
+        },
+        "init_questions": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/definitions/init_question"
+          }
+        },
+        "decision_matrix": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/definitions/decision"
+          }
+        },
+        "tradeoffs": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/definitions/tradeoff"
+          }
+        },
+        "scaffolding": {
+          "$ref": "#/definitions/scaffolding"
+        },
+        "spec_impacts": {
+          "$ref": "#/definitions/spec_impacts"
+        },
+        "proof": {
+          "$ref": "#/definitions/proof"
+        }
+      }
+    },
+    "text_list": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "string",
+        "minLength": 20,
+        "maxLength": 640
+      }
+    },
+    "init_question": {
+      "type": "object",
+      "required": [
+        "id",
+        "prompt",
+        "why"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{2,48}$"
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 240
+        },
+        "why": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 320
+        },
+        "answers": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          }
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": [
+        "choice",
+        "use_when",
+        "avoid_when",
+        "implications"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "choice": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 96
+        },
+        "use_when": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 320
+        },
+        "avoid_when": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 320
+        },
+        "implications": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 480
+        }
+      }
+    },
+    "tradeoff": {
+      "type": "object",
+      "required": [
+        "axis",
+        "option_a",
+        "option_b",
+        "guidance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "axis": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 96
+        },
+        "option_a": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 240
+        },
+        "option_b": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 240
+        },
+        "guidance": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 480
+        }
+      }
+    },
+    "scaffolding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "capture": {
+          "$ref": "#/definitions/text_list"
+        },
+        "generate": {
+          "$ref": "#/definitions/text_list"
+        },
+        "defer": {
+          "$ref": "#/definitions/text_list"
+        },
+        "proof": {
+          "$ref": "#/definitions/text_list"
+        }
+      }
+    },
+    "spec_impacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "intent": {
+          "$ref": "#/definitions/text_list"
+        },
+        "architecture": {
+          "$ref": "#/definitions/text_list"
+        },
+        "interfaces": {
+          "$ref": "#/definitions/text_list"
+        },
+        "proof": {
+          "$ref": "#/definitions/text_list"
+        }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "static": {
+          "$ref": "#/definitions/text_list"
+        },
+        "runtime": {
+          "$ref": "#/definitions/text_list"
+        },
+        "release": {
+          "$ref": "#/definitions/text_list"
         }
       }
     },
