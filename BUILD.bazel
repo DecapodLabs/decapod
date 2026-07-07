@@ -82,7 +82,12 @@ rust_test(
         },
         data = [
             "//:decapod",
-        ],
+            ".decapod/config.toml",
+            ".decapod/contracts/README_CONTRACTS.json",
+        ] + glob([
+            ".decapod/generated/**/*",
+            ".decapod/governance/**/*",
+        ]),
         deps = [
             ":decapod_lib",
         ] + all_crate_deps(normal = True, normal_dev = True),
