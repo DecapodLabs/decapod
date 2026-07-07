@@ -2,6 +2,8 @@
 
 Decapod generates and manages various artifacts to maintain the chain of custody.
 
+These artifacts are the inspectable surface of `.decapod/` as the repo-native substrate for governed agent work. They preserve the state that should survive beyond a chat transcript: intent, architecture assumptions, selected context, validation output, and proof provenance.
+
 ## `.decapod/generated/`
 
 All generated artifacts live under this directory.
