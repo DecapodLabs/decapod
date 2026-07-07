@@ -1,23 +1,71 @@
 # Interfaces
 
-## Inbound Contracts
-- **CLI Subcommand Surface**: Commands such as `init`, `todo`, `workspace`, `validate`, `rpc`, and `qa`.
-- **JSON-RPC Schema**: Direct invocations mapping operation string and parameter payload (e.g. `todo.claim`, `specs.refresh`).
+## Contract Principles
+- Prefer explicit schemas over implicit behavior.
+- Every mutating interface defines idempotency semantics.
+- Every failure path maps to a typed, documented error code.
+
+## Generated Contract Depth
+Generated interface specs should include:
+- API/CLI contracts with request/response schemas.
+- Read/write ownership for each storage path.
+- Idempotency and retry behavior for mutations.
+- Typed failure classes and recovery instructions.
+
+## API / RPC Contracts
+| Interface | Method | Request Schema | Response Schema | Errors | Idempotency |
+|---|---|---|---|---|---|
+| `TODO` | `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
+
+## Event Consumers
+| Consumer | Event | Ordering Requirement | Retry Policy | DLQ Policy |
+|---|---|---|---|---|
+| `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
 
 ## Outbound Dependencies
-| Dependency | Purpose | Minimum Version | Failure Behavior |
-|---|---|---|---|
-| Git CLI | Worktree creation, branch switching, status checking | 2.30+ | Block workspace command |
-| Docker CLI | Container creation and execution | 20.10+ | Skip container step, log warning |
+| Dependency | Purpose | SLA | Timeout | Circuit-Breaker |
+|---|---|---|---|---|
+| `TODO` | `TODO` | `TODO` | `TODO` | `TODO` |
+
+## Inbound Contracts
+- API / RPC entrypoints:
+- CLI surfaces:
+- Event/webhook consumers:
+- Repository-detected surfaces: cargo
 
 ## Data Ownership
-- All backplane data resides under `.decapod/data/`.
-- SQLite database (`todo.db`) stores current tasks, claims, and event logs.
-- Manifest file (`.manifest.json`) defines ownership hashes and fingerprints for living specs.
+- Source-of-truth tables/collections:
+- Cross-boundary read models:
+- Consistency expectations:
+
+## Error Taxonomy Example (cli)
+```rust
+#[derive(Debug, thiserror::Error)]
+pub enum ApiError {
+    #[error("validation failed: {0}")]
+    Validation(String),
+    #[error("upstream timeout")]
+    UpstreamTimeout,
+    #[error("conflict: {0}")]
+    Conflict(String),
+}
+```
 
 ## Failure Semantics
-Decapod uses typed Rust errors (`DecapodError` enum in `src/core/error.rs`) mapped to CLI status codes:
-- `ValidationError`: Input parameters, file layouts, or metadata did not pass checks (exit code 1).
-- `ConfigError`: Stale, malformed, or missing `.decapod/config.toml` (exit code 1).
-- `NotFound`: The requested todo or file was not found (exit code 1).
-- `IoError`: Underlying filesystem or subcommand failures (exit code 1).
+| Failure Class | Retry/Backoff | Client Contract | Observability |
+|---|---|---|---|
+| Validation | No retry | 4xx typed error | warn log + metric |
+| Dependency timeout | Exponential backoff | 503 with retryable code | error log + alert |
+| Conflict | Conditional retry | 409 with conflict detail | info log + metric |
+
+## Timeout Budget
+| Hop | Budget (ms) | Notes |
+|---|---|---|
+| Client -> Edge/API | 500 | Includes auth + routing |
+| API -> Domain | 300 | Includes validation |
+| Domain -> Store/Dependency | 200 | Includes retry overhead |
+
+## Interface Versioning
+- Version strategy (`v1`, date-based, semver):
+- Backward-compatibility guarantees:
+- Deprecation window and removal policy:

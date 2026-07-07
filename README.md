@@ -20,7 +20,7 @@
   <a href="https://github.com/DecapodLabs/decapod/blob/master/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 </p>
 
-Canonical Contract: `assets/constitution.json` section `core/DECAPOD`
+Canonical Contract: [assets/constitution.json (core/DECAPOD)](assets/constitution.json#L5)
 
 ---
 

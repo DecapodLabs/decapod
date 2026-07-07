@@ -4,51 +4,113 @@
 cli
 
 ## What This Project Is
-decapod is a CLI control-plane governance tool built using Rust.
-It operates as a daemonless local coordinator, providing state tracking, validation gates, and sandbox environments for coding agents.
+decapod is a cli project built using Rust.
+cli
+
+Architectural principles:
+- **Simplicity**: Keep components focused and reusable.
+- **Modularity**: Clearly defined interface boundaries and dependency separation.
+- **Reliability**: Graceful failure handling and thorough verification.
 
 ## Current Facts
 - Runtime/languages: Rust
-- Detected surfaces/framework hints: cargo CLI
+- Detected surfaces/framework hints: cargo
 - Product type: cli
+
+## Architecture Map
+This project's architecture consists of the following key layers/directories:
+- `src/`: Main source directory containing primary logic.
+- `tests/`: Integration and unit test suite.
+
+## Data Flows
+- Inbound request/command parses and validates at the entrypoint.
+- Core runtime handles business logic and initiates queries or state changes.
+- Storage adapter reads or writes data to the underlying persistence layers.
+
+## Strongest Existing Primitives
+- Define the strongest existing primitives in the codebase (e.g., helper utilities, base controllers, data access layers).
 
 ## Topology
 ```mermaid
 flowchart LR
-  U[Agent] --> C[CLI Entrypoint]
-  C --> DB[(SQLite Database)]
-  C --> W[Git Worktree Sandbox]
-  C --> V[Validation Engine]
-  V --> PR[GitHub Pull Request]
+  U[User] --> C[CLI Entrypoint]
+  C --> R[Command Router]
+  R --> E[Core Engine]
+  E --> S[(Local Store)]
+  E --> X[External APIs / Filesystem]
+```
+
+## Store Boundaries
+```mermaid
+flowchart LR
+  I[Inbound Requests] --> C[Core Logic]
+  C --> W[(Write Store)]
+  C --> R[(Read Store)]
+```
+
+## Happy Path Sequence
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant C as CLI
+  participant E as Core Engine
+  participant S as Store
+  U->>C: Run command
+  C->>E: Parse + validate
+  E->>S: Persist mutation
+  S-->>E: Ack
+  E-->>C: Result
+  C-->>U: Structured output
+```
+
+## Error Path
+```mermaid
+sequenceDiagram
+  participant Client
+  participant Service
+  participant Store
+  Client->>Service: Request
+  Service->>Store: Database Query
+  Store--xService: Error/Timeout
+  Service-->>Client: Typed Error / Recovery Instructions
 ```
 
 ## Execution Path
-- **CLI Ingress**: Parsed in `src/cli.rs` and dispatched in `src/lib.rs`.
-- **Session Authentication**: Active `DECAPOD_SESSION_PASSWORD` validation.
-- **SQLite Operation**: Claims or completed logs saved in `.decapod/data/`.
-- **Worktree Hook**: Branch setup and isolated execution in `.decapod/workspaces/`.
+- Ingress parse + validation:
+- Policy/interlock checks:
+- Core execution + persistence:
+- Verification and artifact emission:
 
 ## Concurrency and Runtime Model
-- **Execution model**: Synchronous single-threaded CLI commands.
-- **Isolation boundaries**: Process boundaries for each command execution; directory and Git-branch sandboxes for the active workspaces.
-- **Backpressure strategy**: Sqlite transaction retry-loop with random jitter backoff.
-- **Shared state synchronization**: SQLite write-ahead-logging (WAL) and file locking.
+- Execution model:
+- Isolation boundaries:
+- Backpressure strategy:
+- Shared state synchronization:
 
 ## Deployment Topology
-- **Runtime units**: Single cargo-compiled static binary.
-- **Region/zone model**: Local developer machine or CI container.
+- Runtime units:
+- Region/zone model:
+- Rollout strategy (blue/green/canary):
+- Rollback trigger and blast-radius scope:
 
 ## Data and Contracts
-- **Inbound contracts**: CLI subcommands and JSON-RPC payloads.
-- **Outbound dependencies**: Local Git command-line client, local Docker daemon.
-- **Schema evolution**: Linear SQLite migrations in `src/core/migration.rs` with automatic backup creation.
+- Inbound contracts (CLI/API/events):
+- Outbound dependencies (datastores/queues/external APIs):
+- Data ownership boundaries:
+- Schema evolution + migration policy:
 
-## Delivery Plan
-- **Slice 1**: Core SQLite backed task and claiming subsystems.
-- **Slice 2**: Workspace Git worktree sandboxing.
-- **Slice 3**: Integrated validation engine checks.
+## ADR Register
+| ADR | Title | Status | Rationale | Date |
+|---|---|---|---|---|
+| ADR-001 | Initial topology choice | Proposed | Define first stable architecture | YYYY-MM-DD |
+
+## Delivery Plan (first 3 slices)
+- Slice 1 (ship first):
+- Slice 2:
+- Slice 3:
 
 ## Risks and Mitigations
-- **Lock contention**: Handled by transaction retry loop.
-- **Workspace pollution**: Prevented by cleaning up stale worktrees during prune commands.
-- **Drift**: Prevented by strict manifest hashing.
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| Contract drift across components | Medium | High | Spec + schema checks in CI |
+| Runtime saturation under peak load | Medium | High | Capacity model + load tests |

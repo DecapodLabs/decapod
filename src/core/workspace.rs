@@ -15,6 +15,7 @@ use crate::plugins::eval;
 use fancy_regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -705,15 +706,22 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
         .join(".decapod")
         .join("generated")
         .join("Dockerfile");
-    let output = Command::new(runtime)
-        .args([
-            "build",
-            "-t",
-            image_tag,
-            "-f",
-            dockerfile_path.to_str().unwrap_or("Dockerfile"),
-            workspace_path.to_str().unwrap_or("."),
-        ])
+    let mut build = Command::new(runtime);
+    build
+        .arg("build")
+        .arg("-t")
+        .arg(image_tag)
+        .arg("-f")
+        .arg(dockerfile_path.to_str().unwrap_or("Dockerfile"));
+    if env_bool("DECAPOD_CONTAINER_LOCAL_BINARY_FALLBACK", false) {
+        build
+            .arg("--build-arg")
+            .arg("DECAPOD_IMAGE=debian:bookworm-slim")
+            .arg("--build-arg")
+            .arg("DECAPOD_USE_LOCAL_BINARY=1");
+    }
+    let output = build
+        .arg(workspace_path.to_str().unwrap_or("."))
         .output()
         .map_err(DecapodError::IoError)?;
 
@@ -725,6 +733,13 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
     }
 
     Ok(())
+}
+
+fn env_bool(name: &str, default_value: bool) -> bool {
+    match env::var(name) {
+        Ok(v) => matches!(v.to_ascii_lowercase().as_str(), "1" | "true" | "yes" | "on"),
+        Err(_) => default_value,
+    }
 }
 
 pub fn get_main_repo_root(current_dir: &Path) -> Result<PathBuf, DecapodError> {

@@ -450,10 +450,18 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
     let agent_id = "test-agent-container-no-todo";
 
     let fake_bin = dir.join("fake-bin");
+    let runtime_log = dir.join("runtime-args.log");
     std::fs::create_dir_all(&fake_bin).expect("create fake bin");
     for runtime in ["docker", "podman"] {
         let fake_runtime = fake_bin.join(runtime);
-        std::fs::write(&fake_runtime, "#!/bin/sh\nexit 0\n").expect("write fake runtime");
+        std::fs::write(
+            &fake_runtime,
+            format!(
+                "#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{}'\nexit 0\n",
+                runtime_log.display()
+            ),
+        )
+        .expect("write fake runtime");
         let mut perms = std::fs::metadata(&fake_runtime)
             .expect("fake runtime metadata")
             .permissions();
@@ -472,6 +480,7 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
         .env("PATH", fake_path)
         .env("DECAPOD_AGENT_ID", agent_id)
         .env("DECAPOD_SESSION_PASSWORD", &password)
+        .env("DECAPOD_CONTAINER_LOCAL_BINARY_FALLBACK", "1")
         .output()
         .expect("workspace ensure --container");
 
@@ -538,5 +547,11 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
             || worktree_path.contains(generated_task_hash)
             || worktree_path.contains(&generated_task_sanitized),
         "container worktree should use generated todo scope, got: {worktree_path}"
+    );
+    let runtime_args = std::fs::read_to_string(&runtime_log).expect("runtime args log");
+    assert!(
+        runtime_args.contains("--build-arg DECAPOD_IMAGE=debian:bookworm-slim")
+            && runtime_args.contains("--build-arg DECAPOD_USE_LOCAL_BINARY=1"),
+        "workspace container proof should pass local binary fallback build args, got: {runtime_args}"
     );
 }

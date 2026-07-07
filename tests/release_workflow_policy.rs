@@ -21,6 +21,67 @@ fn release_workflow_lets_release_plz_update_the_manifest() {
 }
 
 #[test]
+fn release_workflow_publishes_decapod_ghcr_image() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let workflow = fs::read_to_string(root.join(".github/workflows/release.yml"))
+        .expect("read release workflow");
+    let dockerfile =
+        fs::read_to_string(root.join("Dockerfile.workspace")).expect("read workspace Dockerfile");
+
+    assert!(
+        workflow.contains("packages: write"),
+        "release workflow needs package publishing permission for GHCR"
+    );
+    assert!(
+        workflow.contains("ghcr.io/decapodlabs/decapod"),
+        "release workflow should publish the Decapod image to GHCR"
+    );
+    assert!(
+        workflow.contains("docker/build-push-action@"),
+        "release workflow should build and push the Decapod image"
+    );
+    assert!(
+        workflow.contains("sha_short=${GITHUB_SHA::7}"),
+        "release workflow should compute the preferred 7-character commit SHA"
+    );
+    assert!(
+        workflow.contains("type=raw,value=sha-${{ steps.commit.outputs.sha_short }}"),
+        "release workflow should publish a short-SHA image tag"
+    );
+    assert!(
+        workflow.contains("type=raw,value=${{ github.ref_name }}${{ matrix.tag_suffix }}")
+            && workflow.contains(
+                "type=raw,value=sha-${{ steps.commit.outputs.sha_short }}${{ matrix.tag_suffix }}"
+            )
+            && workflow.contains("latest-alpine"),
+        "release workflow should publish glibc and alpine Decapod image variants"
+    );
+    assert!(
+        workflow.contains("file: Dockerfile.workspace"),
+        "release workflow should build the committed Decapod workspace image Dockerfile"
+    );
+    assert!(
+        dockerfile.contains("Decapod workspace image shim"),
+        "Decapod image Dockerfile should describe its role as the workspace image shim"
+    );
+    assert!(
+        dockerfile.contains("ARG DECAPOD_BUILD_IMAGE=rust:1.96.1-slim-bookworm")
+            && dockerfile.contains("ARG DECAPOD_RUNTIME_IMAGE=debian:bookworm-slim")
+            && dockerfile.contains("apk add --no-cache")
+            && dockerfile.contains("apt-get install -y --no-install-recommends"),
+        "Decapod image Dockerfile should default to glibc while supporting alpine variant builds"
+    );
+    assert!(
+        dockerfile.contains("COPY --from=build /opt/decapod/bin/decapod /usr/local/bin/decapod"),
+        "Decapod image should publish the compiled decapod binary"
+    );
+    assert!(
+        dockerfile.contains("LABEL org.opencontainers.image.revision=\"$DECAPOD_REVISION\""),
+        "Decapod image should carry the release commit revision label"
+    );
+}
+
+#[test]
 fn public_release_surface_has_no_private_propodus_dependency() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let cargo_toml = fs::read_to_string(root.join("Cargo.toml")).expect("read Cargo.toml");

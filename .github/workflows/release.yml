@@ -18,6 +18,7 @@ permissions:
   contents: write
   pull-requests: write
   id-token: write
+  packages: write
 
 # This task will run whenever you push a git tag that looks like a version
 # like "1.0.0", "v0.1.0-prerelease.1", "my-app/0.1.0", "releases/v1.0.0", etc.
@@ -123,6 +124,64 @@ jobs:
         with:
           name: artifacts-plan-dist-manifest
           path: plan-dist-manifest.json
+
+  publish-decapod-image:
+    name: Publish Decapod GHCR Image (${{ matrix.variant }})
+    runs-on: ubuntu-24.04
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: glibc
+            tag_suffix: ""
+            latest_tag: latest
+            build_image: rust:1.96.1-slim-bookworm
+            runtime_image: debian:bookworm-slim
+          - variant: musl
+            tag_suffix: "-alpine"
+            latest_tag: latest-alpine
+            build_image: rust:1.96.1-alpine
+            runtime_image: alpine:3.20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compute short SHA
+        id: commit
+        shell: bash
+        run: echo "sha_short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/decapodlabs/decapod
+          tags: |
+            type=raw,value=${{ github.ref_name }}${{ matrix.tag_suffix }}
+            type=raw,value=sha-${{ steps.commit.outputs.sha_short }}${{ matrix.tag_suffix }}
+            type=raw,value=${{ matrix.latest_tag }},enable=${{ !contains(github.ref_name, '-') }}
+      - name: Build and push Decapod image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.workspace
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            DECAPOD_VERSION=${{ github.ref_name }}
+            DECAPOD_REVISION=${{ steps.commit.outputs.sha_short }}
+            DECAPOD_BUILD_IMAGE=${{ matrix.build_image }}
+            DECAPOD_RUNTIME_IMAGE=${{ matrix.runtime_image }}
 
   # Build and packages all the platform-specific things
   build-local-artifacts:

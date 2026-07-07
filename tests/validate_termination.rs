@@ -207,6 +207,8 @@ fn validate_timeout_does_not_strand_db_for_followup_commands() {
 #[test]
 fn validate_json_reports_self_heal_and_structured_summary() {
     let (_tmp, dir, password) = setup_repo();
+    let dockerfile_path = dir.join(".decapod/generated/Dockerfile");
+    fs::write(&dockerfile_path, "FROM rust:1.91.1-alpine\n").expect("write stale Dockerfile");
 
     let validate = run_decapod(
         &dir,
@@ -256,6 +258,62 @@ fn validate_json_reports_self_heal_and_structured_summary() {
             .any(|action| action["action"] == "heal_container_runtime_override"),
         "validate should not write container-runtime override markers automatically"
     );
+    assert!(
+        payload["self_heal"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|action| {
+                action["action"] == "heal_generated_dockerfile" && action["outcome"] == "refreshed"
+            }),
+        "validate should refresh stale generated Dockerfile"
+    );
+    let dockerfile_content = fs::read_to_string(&dockerfile_path).expect("read Dockerfile");
+    assert!(dockerfile_content.contains("FROM $DECAPOD_IMAGE"));
+    assert!(
+        dockerfile_content.contains("COPY .decapod/generated/decapod /usr/local/bin/decapod.local")
+    );
+
+    let mutated = dockerfile_content
+        .replace(
+            &format!(
+                "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}",
+                env!("CARGO_PKG_VERSION")
+            ),
+            "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.0.0",
+        )
+        .replace(
+            &format!("ARG DECAPOD_VERSION={}", env!("CARGO_PKG_VERSION")),
+            "ARG DECAPOD_VERSION=0.0.0",
+        )
+        + "RUN echo project workspace mutation\n";
+    fs::write(&dockerfile_path, mutated).expect("write mutated Dockerfile");
+
+    let second_validate = run_decapod(
+        &dir,
+        &["validate", "--format", "json"],
+        &[
+            ("DECAPOD_CONTAINER", "1"),
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        second_validate.status.success(),
+        "second validate should preserve project Dockerfile mutations; stderr:\n{}",
+        String::from_utf8_lossy(&second_validate.stderr)
+    );
+    let maintained = fs::read_to_string(&dockerfile_path).expect("read maintained Dockerfile");
+    assert!(maintained.contains(&format!(
+        "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}",
+        env!("CARGO_PKG_VERSION")
+    )));
+    assert!(maintained.contains(&format!(
+        "ARG DECAPOD_VERSION={}",
+        env!("CARGO_PKG_VERSION")
+    )));
+    assert!(maintained.contains("RUN echo project workspace mutation"));
 }
 
 #[test]
