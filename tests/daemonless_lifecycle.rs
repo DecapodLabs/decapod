@@ -4,8 +4,34 @@ use std::thread;
 use std::time::Duration;
 use tempfile::TempDir;
 
+fn resolve_decapod_bin() -> std::path::PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(p) = std::path::Path::new(cargo_bin).canonicalize() {
+        return p;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let p = std::path::Path::new(&runfiles_dir)
+            .join("_main")
+            .join("decapod");
+        if p.exists() {
+            return p;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|p| p.to_path_buf()))
+    {
+        let p = parent.join("decapod");
+        if p.exists() {
+            return p;
+        }
+    }
+    std::path::PathBuf::from(cargo_bin)
+}
+
 fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let exe = resolve_decapod_bin();
+    Command::new(exe)
         .current_dir(dir)
         .args(args)
         .output()

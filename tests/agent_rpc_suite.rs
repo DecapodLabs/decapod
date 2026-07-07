@@ -9,6 +9,31 @@ static SESSION_PASSWORD: OnceLock<String> = OnceLock::new();
 static RPC_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 static CLAIMED_TODO_ID: OnceLock<String> = OnceLock::new();
 
+fn resolve_decapod_bin() -> std::path::PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(p) = std::path::Path::new(cargo_bin).canonicalize() {
+        return p;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let p = std::path::Path::new(&runfiles_dir)
+            .join("_main")
+            .join("decapod");
+        if p.exists() {
+            return p;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|p| p.to_path_buf()))
+    {
+        let p = parent.join("decapod");
+        if p.exists() {
+            return p;
+        }
+    }
+    std::path::PathBuf::from(cargo_bin)
+}
+
 fn test_repo_root() -> &'static PathBuf {
     TEST_REPO_ROOT.get_or_init(|| {
         let dir = std::env::temp_dir().join(format!("decapod_rpc_suite_{}", new_ulid()));
@@ -25,7 +50,8 @@ fn test_repo_root() -> &'static PathBuf {
             String::from_utf8_lossy(&git_init.stderr)
         );
 
-        let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        let exe = resolve_decapod_bin();
+        let init = Command::new(exe)
             .current_dir(&dir)
             .args(["init", "--force"])
             .output()
@@ -41,7 +67,8 @@ fn test_repo_root() -> &'static PathBuf {
 }
 
 fn run_decapod(args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    let exe = resolve_decapod_bin();
+    let mut cmd = Command::new(exe);
     cmd.current_dir(test_repo_root()).args(args);
     for (k, v) in envs {
         cmd.env(k, v);
@@ -197,7 +224,8 @@ fn run_rpc(request: serde_json::Value) -> serde_json::Value {
 
     let run_rpc_once = |req: &serde_json::Value| -> serde_json::Value {
         for attempt in 1..=2 {
-            let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+            let exe = resolve_decapod_bin();
+            let mut cmd = Command::new(exe);
             cmd.current_dir(test_repo_root())
                 .args(["rpc", "--stdin"])
                 .env("DECAPOD_AGENT_ID", "unknown")

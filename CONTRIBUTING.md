@@ -30,71 +30,27 @@ Examples:
 
 ## Local Dev
 
-The `decapod` binary must remain independently buildable and runnable on ordinary machines. Nix is supported here only as an optional contributor shell for local testing, formatting, linting, and CI reproduction.
+Decapod uses Bazel (coordinated via Bazelisk) as its primary build and test system.
 
-If you do not use Nix, normal Cargo workflows are still valid:
-
-```bash
-cargo build --locked
-cargo test --all-features
-cargo clippy --all-targets --all-features -- -D warnings
-decapod validate
-```
-
-## Optional Nix Dev Shell
-
-This repo includes a `flake.nix` for contributors who want a reproducible local toolchain. It is meant to remove machine-specific setup friction around Rust, `clippy`, `rustfmt`, `clang`, and `lld`.
-
-What it is for:
-
-- Reproducing CI locally.
-- Getting the expected formatter/linter/test toolchain quickly.
-- Avoiding host-specific linker/tooling drift.
-
-What it is not for:
-
-- Running the shipped `decapod` binary in production.
-- Making Nix a runtime dependency of the project.
-- Requiring contributors to adopt Nix just to use Decapod.
-
-### Nix Crash Course
-
-If you have Nix with flakes enabled, enter the shell with:
+To build, test, and run validation locally, you can use the following commands:
 
 ```bash
-nix develop .#ci
+# Build the decapod binary
+bazelisk build //:decapod
+
+# Run all tests
+bazelisk test //:core_tests
+
+# Run a specific test
+bazelisk test //:entrypoint_correctness
+
+# Initialize and validate decapod locally
+bazel run //:decapod -- init --proof
+bazel run //:decapod -- validate
 ```
 
-That drops you into a shell with the repo's expected Rust toolchain and linker setup. From there, the normal commands work as usual:
+If you do not have Bazelisk installed, you can install it via your package manager (e.g., `npm install -g @bazel/bazelisk`, `brew install bazelisk`, etc.).
 
-```bash
-cargo fmt --all -- --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test --all-features --test agent_rpc_suite -- --test-threads=1
-decapod validate
-```
-
-If you prefer one-off commands without entering an interactive shell:
-
-```bash
-nix develop .#ci -c cargo fmt --all -- --check
-nix develop .#ci -c cargo clippy --all-targets --all-features -- -D warnings
-nix develop .#ci -c cargo test --all-features
-```
-
-### When To Use It
-
-Use the flake when:
-
-- `cargo fmt`, `clippy`, or tests fail because your host toolchain/linker differs from CI.
-- You want to reproduce the Linux CI environment closely.
-- You want a clean, disposable contributor toolchain.
-
-Skip it when:
-
-- Your local Rust setup already works.
-- You are only consuming the `decapod` binary.
-- You do not want Nix on your machine.
 
 ## Release Discipline
 

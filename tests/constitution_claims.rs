@@ -17,8 +17,34 @@ struct ConstitutionTable {
     notes: String,
 }
 
+fn resolve_decapod_bin() -> std::path::PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(p) = std::path::Path::new(cargo_bin).canonicalize() {
+        return p;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let p = std::path::Path::new(&runfiles_dir)
+            .join("_main")
+            .join("decapod");
+        if p.exists() {
+            return p;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|p| p.to_path_buf()))
+    {
+        let p = parent.join("decapod");
+        if p.exists() {
+            return p;
+        }
+    }
+    std::path::PathBuf::from(cargo_bin)
+}
+
 fn load_constitution_claims() -> Vec<ConstitutionTable> {
-    let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let exe = resolve_decapod_bin();
+    let output = Command::new(exe)
         .args(["constitution", "get", "interfaces/CLAIMS"])
         .output()
         .expect("run decapod constitution get");

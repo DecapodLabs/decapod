@@ -1276,7 +1276,7 @@ pub fn cleanup_stale_agent_assignments(
                     )
                     .map_err(error::DecapodError::RusqliteError)?;
                     sync_legacy_owner_column(conn, &task_id)?;
-                    released_count += changed as usize;
+                    released_count += changed;
 
                     let ev = TodoEvent {
                         ts: ts.clone(),

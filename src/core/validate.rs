@@ -5287,7 +5287,7 @@ pub fn run_validation(
     let fail_total = (fails.len() as u32).max(fail_count);
     let warn_total = (warns.len() as u32).max(warn_count);
     let mut gate_timings = timings.into_inner().unwrap();
-    gate_timings.sort_by(|a, b| b.1.cmp(&a.1));
+    gate_timings.sort_by_key(|b| std::cmp::Reverse(b.1));
 
     Ok(ValidationReport {
         status: if fail_total > 0 { "fail" } else { "ok" }.to_string(),

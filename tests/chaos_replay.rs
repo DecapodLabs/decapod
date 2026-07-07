@@ -5,6 +5,31 @@ use std::thread;
 use std::time::Duration;
 use tempfile::TempDir;
 
+fn resolve_decapod_bin() -> std::path::PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(p) = std::path::Path::new(cargo_bin).canonicalize() {
+        return p;
+    }
+    if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+        let p = std::path::Path::new(&runfiles_dir)
+            .join("_main")
+            .join("decapod");
+        if p.exists() {
+            return p;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|p| p.to_path_buf()))
+    {
+        let p = parent.join("decapod");
+        if p.exists() {
+            return p;
+        }
+    }
+    std::path::PathBuf::from(cargo_bin)
+}
+
 fn setup_workspace() -> (TempDir, PathBuf) {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path().to_path_buf();
@@ -26,7 +51,8 @@ fn setup_workspace() -> (TempDir, PathBuf) {
         .expect("git config name");
     std::fs::write(dir.join("README.md"), "# chaos replay\n").expect("write readme");
 
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let exe = resolve_decapod_bin();
+    let out = Command::new(&exe)
         .args(["init", "--force"])
         .current_dir(&dir)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
@@ -34,7 +60,7 @@ fn setup_workspace() -> (TempDir, PathBuf) {
         .expect("decapod init");
     assert!(out.status.success(), "decapod init --force failed");
 
-    let session = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let session = Command::new(&exe)
         .args(["session", "acquire"])
         .current_dir(&dir)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
@@ -51,7 +77,7 @@ fn setup_workspace() -> (TempDir, PathBuf) {
     let mut warm_ok = false;
     let mut warm_out = String::new();
     for attempt in 0..=5 {
-        let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        let out = Command::new(&exe)
             .args(["todo", "list"])
             .current_dir(&dir)
             .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
@@ -80,8 +106,9 @@ fn run(dir: &PathBuf, args: &[&str]) -> (bool, String) {
 /// Run a decapod command with retry logic for transient SQLite I/O errors
 /// that occur under heavy concurrent process contention.
 fn run_with_retries(dir: &PathBuf, args: &[&str], max_retries: u32) -> (bool, String) {
+    let exe = resolve_decapod_bin();
     for attempt in 0..=max_retries {
-        let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        let out = Command::new(&exe)
             .args(args)
             .current_dir(dir)
             .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
