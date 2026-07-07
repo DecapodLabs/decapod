@@ -60,7 +60,7 @@ rust_test(
     srcs = ["tests/core/core.rs"],
     edition = "2024",
     rustc_env = {
-        "CARGO_BIN_EXE_decapod": "$(execpath //:decapod)",
+        "CARGO_BIN_EXE_decapod": "./$(rootpath //:decapod)",
     },
     data = [
         "//:decapod",
@@ -78,7 +78,7 @@ rust_test(
         srcs = [path],
         edition = "2024",
         rustc_env = {
-            "CARGO_BIN_EXE_decapod": "$(execpath //:decapod)",
+            "CARGO_BIN_EXE_decapod": "./$(rootpath //:decapod)",
         },
         data = [
             "//:decapod",
@@ -98,7 +98,7 @@ rust_test(
         srcs = [path],
         edition = "2024",
         rustc_env = {
-            "CARGO_BIN_EXE_decapod": "$(execpath //:decapod)",
+            "CARGO_BIN_EXE_decapod": "./$(rootpath //:decapod)",
         },
         data = [
             "//:decapod",
