@@ -669,10 +669,12 @@ fn push_branch_to_origin(repo: &Path, branch: &str) -> Result<(), error::Decapod
 
 fn default_image_for_profile(profile: ImageProfile) -> &'static str {
     match profile {
-        ImageProfile::DebianSlim => "rust:1.91.1",
+        ImageProfile::DebianSlim => "rust:1.96.1",
         ImageProfile::Alpine => "alpine:3.20",
     }
 }
+
+const DECAPOD_IMAGE_REPOSITORY: &str = "ghcr.io/decapodlabs/decapod";
 
 fn resolve_runtime_image(
     runtime: &str,
@@ -685,25 +687,35 @@ fn resolve_runtime_image(
     }
     match profile {
         ImageProfile::DebianSlim => Ok(default_image_for_profile(profile).to_string()),
-        ImageProfile::Alpine => ensure_local_alpine_image(runtime, repo),
+        ImageProfile::Alpine => ensure_local_generated_workspace_image(runtime, repo),
     }
 }
 
-fn ensure_local_alpine_image(runtime: &str, repo: &Path) -> Result<String, error::DecapodError> {
+fn ensure_local_generated_workspace_image(
+    runtime: &str,
+    repo: &Path,
+) -> Result<String, error::DecapodError> {
     let repo_slug = repo
         .file_name()
         .and_then(|s| s.to_str())
         .map(sanitize_name)
         .filter(|s| !s.is_empty())
         .unwrap_or_else(|| "repo".to_string());
-    let image_tag = format!("decapod-local-{repo_slug}:alpine");
+    let image_tag = format!("decapod-local-{repo_slug}:workspace");
 
     let dockerfile = prepare_generated_container_profile(repo)?;
 
-    let output = Command::new(runtime)
-        .arg("build")
-        .arg("-f")
-        .arg(&dockerfile)
+    let local_binary_fallback = env_bool("DECAPOD_CONTAINER_LOCAL_BINARY_FALLBACK", false);
+    let mut build = Command::new(runtime);
+    build.arg("build").arg("-f").arg(&dockerfile);
+    if local_binary_fallback {
+        build
+            .arg("--build-arg")
+            .arg("DECAPOD_IMAGE=debian:bookworm-slim")
+            .arg("--build-arg")
+            .arg("DECAPOD_USE_LOCAL_BINARY=1");
+    }
+    let output = build
         .arg("-t")
         .arg(&image_tag)
         .arg(repo)
@@ -713,7 +725,7 @@ fn ensure_local_alpine_image(runtime: &str, repo: &Path) -> Result<String, error
         return Err(auto_remediable_validation_error(
             "container_image_build_failed",
             format!(
-                "Failed to build local alpine image '{}'\nstdout:\n{}\nstderr:\n{}",
+                "Failed to build local generated workspace image '{}'\nstdout:\n{}\nstderr:\n{}",
                 image_tag,
                 String::from_utf8_lossy(&output.stdout).trim(),
                 String::from_utf8_lossy(&output.stderr).trim()
@@ -763,10 +775,21 @@ fn make_executable(_path: &Path) -> Result<(), error::DecapodError> {
 
 #[derive(Debug, Clone, Copy)]
 struct ProjectCapabilities {
+    primary_language: Option<ProjectLanguage>,
     rust: bool,
     node: bool,
     python: bool,
     go: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ProjectLanguage {
+    Rust,
+    Go,
+    Python,
+    Node,
+    Ruby,
+    Java,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -778,18 +801,31 @@ struct DockerfileTemplateSchemaComponent {
     base_images: BTreeMap<&'static str, &'static str>,
     required_packages: Vec<&'static str>,
     stack_packages: BTreeMap<&'static str, Vec<&'static str>>,
+    apt_required_packages: Vec<&'static str>,
+    apt_stack_packages: BTreeMap<&'static str, Vec<&'static str>>,
     extra_packages_env: &'static str,
+    legacy_extra_packages_env: &'static str,
 }
 
 fn dockerfile_template_schema_component() -> DockerfileTemplateSchemaComponent {
     let mut base_images = BTreeMap::new();
-    base_images.insert("default", "rust:1.91.1-alpine");
-    base_images.insert("rust", "rust:1.91.1-alpine");
+    base_images.insert("decapod", DECAPOD_IMAGE_REPOSITORY);
 
     let mut stack_packages = BTreeMap::new();
+    stack_packages.insert("rust", vec!["rust", "cargo"]);
     stack_packages.insert("node", vec!["nodejs", "npm"]);
     stack_packages.insert("python", vec!["python3", "py3-pip"]);
     stack_packages.insert("go", vec!["go"]);
+    stack_packages.insert("ruby", vec!["ruby", "ruby-dev"]);
+    stack_packages.insert("java", vec!["openjdk21"]);
+
+    let mut apt_stack_packages = BTreeMap::new();
+    apt_stack_packages.insert("rust", vec!["rustc", "cargo", "build-essential"]);
+    apt_stack_packages.insert("node", vec!["nodejs", "npm"]);
+    apt_stack_packages.insert("python", vec!["python3", "python3-pip"]);
+    apt_stack_packages.insert("go", vec!["golang-go"]);
+    apt_stack_packages.insert("ruby", vec!["ruby", "ruby-dev"]);
+    apt_stack_packages.insert("java", vec!["openjdk-17-jdk"]);
 
     DockerfileTemplateSchemaComponent {
         schema_version: "1.0.0",
@@ -802,19 +838,30 @@ fn dockerfile_template_schema_component() -> DockerfileTemplateSchemaComponent {
             "openssh-client",
             "ca-certificates",
             "bash",
-            "build-base",
             "curl",
             "coreutils",
-            "sqlite-dev",
-            "sqlite-static",
+            "sqlite-libs",
         ],
         stack_packages,
-        extra_packages_env: "DECAPOD_CONTAINER_APK_PACKAGES",
+        apt_required_packages: vec![
+            "git",
+            "openssh-client",
+            "ca-certificates",
+            "bash",
+            "curl",
+            "coreutils",
+            "libsqlite3-0",
+        ],
+        apt_stack_packages,
+        extra_packages_env: "DECAPOD_CONTAINER_SYSTEM_PACKAGES",
+        legacy_extra_packages_env: "DECAPOD_CONTAINER_APK_PACKAGES",
     }
 }
 
 fn detect_project_capabilities(repo: &Path) -> ProjectCapabilities {
+    let primary_language = detect_primary_language_from_config(repo);
     ProjectCapabilities {
+        primary_language,
         rust: repo.join("Cargo.toml").exists(),
         node: repo.join("package.json").exists()
             || repo.join("pnpm-lock.yaml").exists()
@@ -826,6 +873,45 @@ fn detect_project_capabilities(repo: &Path) -> ProjectCapabilities {
     }
 }
 
+fn detect_primary_language_from_config(repo: &Path) -> Option<ProjectLanguage> {
+    let config = repo.join(".decapod").join("config.toml");
+    let content = fs::read_to_string(config).ok()?;
+    let parsed: toml::Value = toml::from_str(&content).ok()?;
+    let languages = parsed
+        .get("repo")
+        .and_then(|repo| repo.get("primary_languages"))
+        .and_then(|value| value.as_array())?;
+    languages
+        .iter()
+        .filter_map(|value| value.as_str())
+        .find_map(ProjectLanguage::from_config_value)
+}
+
+impl ProjectLanguage {
+    fn from_config_value(value: &str) -> Option<Self> {
+        match value.trim().to_ascii_lowercase().as_str() {
+            "rust" => Some(Self::Rust),
+            "go" | "golang" => Some(Self::Go),
+            "python" | "python3" => Some(Self::Python),
+            "node" | "nodejs" | "javascript" | "typescript" => Some(Self::Node),
+            "ruby" => Some(Self::Ruby),
+            "java" | "jvm" => Some(Self::Java),
+            _ => None,
+        }
+    }
+
+    fn package_key(self) -> &'static str {
+        match self {
+            Self::Rust => "rust",
+            Self::Go => "go",
+            Self::Python => "python",
+            Self::Node => "node",
+            Self::Ruby => "ruby",
+            Self::Java => "java",
+        }
+    }
+}
+
 pub fn generated_dockerfile_for_repo(repo: &Path) -> String {
     let capabilities = detect_project_capabilities(repo);
     render_generated_dockerfile(&capabilities)
@@ -833,14 +919,83 @@ pub fn generated_dockerfile_for_repo(repo: &Path) -> String {
 
 fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
     let component = dockerfile_template_schema_component();
-    let extra = std::env::var(component.extra_packages_env).unwrap_or_default();
-    let mut pkgs: BTreeSet<String> = BTreeSet::new();
-    for base in &component.required_packages {
-        pkgs.insert((*base).to_string());
+    let extra = std::env::var(component.extra_packages_env)
+        .or_else(|_| std::env::var(component.legacy_extra_packages_env))
+        .unwrap_or_default();
+    let mut apk_pkgs: BTreeSet<String> = component
+        .required_packages
+        .iter()
+        .map(|pkg| (*pkg).to_string())
+        .collect();
+    let mut apt_pkgs: BTreeSet<String> = component
+        .apt_required_packages
+        .iter()
+        .map(|pkg| (*pkg).to_string())
+        .collect();
+    add_project_packages(
+        &mut apk_pkgs,
+        &component.stack_packages,
+        capabilities,
+        &extra,
+    );
+    add_project_packages(
+        &mut apt_pkgs,
+        &component.apt_stack_packages,
+        capabilities,
+        "",
+    );
+    for pkg in extra.split_whitespace().filter(|s| !s.trim().is_empty()) {
+        apt_pkgs.insert(pkg.trim().to_string());
     }
+    let apk_pkg_line = apk_pkgs.into_iter().collect::<Vec<_>>().join(" ");
+    let apt_pkg_line = apt_pkgs.into_iter().collect::<Vec<_>>().join(" ");
+    let decapod_version = env!("CARGO_PKG_VERSION");
+    let decapod_image_repository = component
+        .base_images
+        .get("decapod")
+        .copied()
+        .unwrap_or(DECAPOD_IMAGE_REPOSITORY);
+    let decapod_image = format!("{decapod_image_repository}:v{decapod_version}");
+    format!(
+        "# Generated by decapod container profile\n\
+         # Path: .decapod/generated/Dockerfile\n\
+         # Managed seed: Decapod maintains the image/version header; agents may\n\
+         # mutate project-specific packages and commands in workspace branches.\n\
+         ARG DECAPOD_IMAGE={decapod_image}\n\
+         FROM $DECAPOD_IMAGE\n\
+         ARG DECAPOD_VERSION={decapod_version}\n\
+         ARG DECAPOD_USE_LOCAL_BINARY=0\n\
+         LABEL org.opencontainers.image.base.name=\"$DECAPOD_IMAGE\"\n\
+         LABEL org.decapod.version=\"$DECAPOD_VERSION\"\n\
+         RUN if command -v apk >/dev/null 2>&1; then \\\n\
+                 apk add --no-cache {apk_pkg_line}; \\\n\
+             elif command -v apt-get >/dev/null 2>&1; then \\\n\
+                 apt-get update && \\\n\
+                 apt-get install -y --no-install-recommends {apt_pkg_line} && \\\n\
+                 rm -rf /var/lib/apt/lists/*; \\\n\
+             else \\\n\
+                 echo \"No supported package manager found\" >&2; exit 1; \\\n\
+             fi\n\
+         RUN update-ca-certificates\n\
+         COPY .decapod/generated/decapod /usr/local/bin/decapod.local\n\
+         RUN chmod 0755 /usr/local/bin/decapod.local && \\\n\
+             if [ \"$DECAPOD_USE_LOCAL_BINARY\" = \"1\" ]; then \\\n\
+                 cp /usr/local/bin/decapod.local /usr/local/bin/decapod; \\\n\
+             fi\n\
+         RUN if [ \"$DECAPOD_USE_LOCAL_BINARY\" != \"1\" ]; then \\\n\
+                 /usr/local/bin/decapod --help >/dev/null; \\\n\
+             fi\n"
+    )
+}
+
+fn add_project_packages(
+    pkgs: &mut BTreeSet<String>,
+    stack_packages: &BTreeMap<&'static str, Vec<&'static str>>,
+    capabilities: &ProjectCapabilities,
+    extra: &str,
+) {
     if capabilities.node {
-        for pkg in component
-            .stack_packages
+        for pkg in stack_packages
             .get("node")
             .into_iter()
             .flat_map(|v| v.iter())
@@ -849,8 +1004,7 @@ fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
         }
     }
     if capabilities.python {
-        for pkg in component
-            .stack_packages
+        for pkg in stack_packages
             .get("python")
             .into_iter()
             .flat_map(|v| v.iter())
@@ -859,9 +1013,22 @@ fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
         }
     }
     if capabilities.go {
-        for pkg in component
-            .stack_packages
-            .get("go")
+        for pkg in stack_packages.get("go").into_iter().flat_map(|v| v.iter()) {
+            pkgs.insert((*pkg).to_string());
+        }
+    }
+    if capabilities.rust {
+        for pkg in stack_packages
+            .get("rust")
+            .into_iter()
+            .flat_map(|v| v.iter())
+        {
+            pkgs.insert((*pkg).to_string());
+        }
+    }
+    if let Some(language) = capabilities.primary_language {
+        for pkg in stack_packages
+            .get(language.package_key())
             .into_iter()
             .flat_map(|v| v.iter())
         {
@@ -871,38 +1038,6 @@ fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
     for p in extra.split_whitespace().filter(|s| !s.trim().is_empty()) {
         pkgs.insert(p.trim().to_string());
     }
-    let pkg_line = pkgs.into_iter().collect::<Vec<_>>().join(" ");
-    let base = if capabilities.rust {
-        component
-            .base_images
-            .get("rust")
-            .copied()
-            .unwrap_or("rust:1.91.1-alpine")
-    } else {
-        component
-            .base_images
-            .get("default")
-            .copied()
-            .unwrap_or("alpine:3.20")
-    };
-    let rust_path = "ENV PATH=\"/usr/local/cargo/bin:${PATH}\"\n";
-    let decapod_version = env!("CARGO_PKG_VERSION");
-    format!(
-        "# Generated by decapod container profile\n\
-         # Path: .decapod/generated/Dockerfile\n\
-         # Regenerate via: decapod auto container run --image-profile alpine\n\
-         FROM {base}\n\
-         {rust_path}\
-         ARG DECAPOD_VERSION={decapod_version}\n\
-         RUN apk add --no-cache {pkg_line}\n\
-         RUN update-ca-certificates\n\
-         COPY .decapod/generated/decapod /usr/local/bin/decapod\n\
-         RUN chmod 0755 /usr/local/bin/decapod && \\\n\
-             (/usr/local/bin/decapod --help >/dev/null || \\\n\
-                 (cargo install decapod --version \"$DECAPOD_VERSION\" --locked --force && \\\n\
-                  cp /usr/local/cargo/bin/decapod /usr/local/bin/decapod)) && \\\n\
-             /usr/local/bin/decapod --help >/dev/null\n"
-    )
 }
 
 fn current_uid_gid() -> Option<(String, String)> {
@@ -1388,8 +1523,8 @@ pub fn schema() -> serde_json::Value {
             { "name": "run", "parameters": ["agent", "cmd", "branch", "task_id", "push", "pr", "pr_base", "pr_title", "pr_body", "image_profile", "image", "timeout_seconds", "memory", "cpus", "repo", "keep_worktree", "inherit_env", "local_only"] }
         ],
         "profiles": {
-            "debian-slim": "rust:1.91.1",
-            "alpine": "local build from .decapod/generated/Dockerfile (alpine + detected project dependencies + current decapod binary)"
+            "debian-slim": "rust:1.96.1",
+            "alpine": "local build from .decapod/generated/Dockerfile (Decapod workspace seed + detected project dependencies + current decapod binary)"
         },
         "components": {
             "dockerfile_template": dockerfile_component
@@ -1416,7 +1551,7 @@ mod tests {
             "docker",
             &repo,
             &workspace,
-            "rust:1.91.1",
+            "rust:1.96.1",
             "agent-a",
             "cargo test -q",
             "ahr/branch",
@@ -1457,7 +1592,7 @@ mod tests {
             "docker",
             &repo,
             &workspace,
-            "rust:1.91.1",
+            "rust:1.96.1",
             "agent-a",
             "cargo test -q",
             "ahr/branch",
@@ -1488,7 +1623,7 @@ mod tests {
             "podman",
             &repo,
             &workspace,
-            "rust:1.91.1",
+            "rust:1.96.1",
             "agent-a",
             "decapod validate",
             "ahr/branch",
@@ -1520,46 +1655,59 @@ mod tests {
     }
 
     #[test]
-    fn alpine_dockerfile_includes_git_ssh_and_rust_when_needed() {
+    fn generated_workspace_dockerfile_includes_decapod_and_rust_when_needed() {
         let content = render_generated_dockerfile(&ProjectCapabilities {
+            primary_language: Some(ProjectLanguage::Rust),
             rust: true,
             node: false,
             python: false,
             go: false,
         });
-        assert!(content.contains("FROM rust:1.91.1-alpine"));
-        assert!(content.contains("ENV PATH=\"/usr/local/cargo/bin:${PATH}\""));
+        assert!(content.contains(&format!(
+            "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}",
+            env!("CARGO_PKG_VERSION")
+        )));
+        assert!(content.contains("FROM $DECAPOD_IMAGE"));
+        assert!(content.contains("ARG DECAPOD_USE_LOCAL_BINARY=0"));
         assert!(content.contains("git"));
         assert!(content.contains("openssh-client"));
-        assert!(content.contains("build-base"));
         assert!(content.contains("coreutils"));
-        assert!(content.contains("sqlite-dev"));
-        assert!(content.contains("sqlite-static"));
+        assert!(content.contains("sqlite-libs"));
+        assert!(content.contains("libsqlite3-0"));
+        assert!(content.contains("rust"));
+        assert!(content.contains("rustc"));
+        assert!(content.contains("cargo"));
+        assert!(!content.contains("sqlite-dev"));
+        assert!(!content.contains("sqlite-static"));
         assert!(content.contains(&format!(
             "ARG DECAPOD_VERSION={}",
             env!("CARGO_PKG_VERSION")
         )));
-        assert!(content.contains("COPY .decapod/generated/decapod /usr/local/bin/decapod"));
-        assert!(content.contains("cargo install decapod --version \"$DECAPOD_VERSION\""));
-        assert!(content.contains("cp /usr/local/cargo/bin/decapod /usr/local/bin/decapod"));
+        assert!(content.contains("COPY .decapod/generated/decapod /usr/local/bin/decapod.local"));
+        assert!(content.contains("DECAPOD_USE_LOCAL_BINARY"));
+        assert!(content.contains("cp /usr/local/bin/decapod.local /usr/local/bin/decapod"));
         assert!(content.contains("/usr/local/bin/decapod --help >/dev/null"));
     }
 
     #[test]
-    fn alpine_dockerfile_uses_rust_base_for_decapod_install_fallback() {
+    fn generated_workspace_dockerfile_layers_project_packages_on_decapod_image() {
         let content = render_generated_dockerfile(&ProjectCapabilities {
+            primary_language: Some(ProjectLanguage::Python),
             rust: false,
             node: false,
             python: false,
             go: false,
         });
-        assert!(content.contains("FROM rust:1.91.1-alpine"));
-        assert!(content.contains("ENV PATH=\"/usr/local/cargo/bin:${PATH}\""));
+        assert!(content.contains("FROM $DECAPOD_IMAGE"));
         assert!(content.contains("git"));
         assert!(content.contains("coreutils"));
+        assert!(content.contains("python3"));
+        assert!(content.contains("py3-pip"));
+        assert!(content.contains("python3-pip"));
+        assert!(content.contains("decapod.local"));
         assert!(!content.contains("nodejs"));
-        assert!(!content.contains("python3"));
         assert!(!content.contains(" go "));
+        assert!(!content.contains(" golang-go "));
     }
 
     #[test]
@@ -1582,13 +1730,38 @@ mod tests {
             "current decapod binary should be staged into the generated build context"
         );
         let content = fs::read_to_string(dockerfile).expect("read Dockerfile");
-        assert!(content.contains("COPY .decapod/generated/decapod /usr/local/bin/decapod"));
+        assert!(content.contains("COPY .decapod/generated/decapod /usr/local/bin/decapod.local"));
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn generated_dockerfile_final_stage_uses_configured_primary_language() {
+        let root = std::env::temp_dir().join(format!(
+            "decapod-primary-language-{}",
+            crate::core::ulid::new_ulid().to_lowercase()
+        ));
+        fs::create_dir_all(root.join(".decapod")).expect("mkdir .decapod");
+        fs::write(
+            root.join(".decapod").join("config.toml"),
+            r#"
+[repo]
+primary_languages = ["Python"]
+"#,
+        )
+        .expect("write config");
+
+        let content = generated_dockerfile_for_repo(&root);
+        assert!(content.contains("FROM $DECAPOD_IMAGE"));
+        assert!(content.contains("python3"));
+        assert!(content.contains("py3-pip"));
+        assert!(content.contains("decapod.local"));
+
         let _ = fs::remove_dir_all(&root);
     }
 
     #[cfg(unix)]
     #[test]
-    fn local_alpine_image_builds_generated_dockerfile_from_repo_context() {
+    fn local_generated_image_builds_generated_dockerfile_from_repo_context() {
         use std::os::unix::fs::PermissionsExt;
 
         let root = std::env::temp_dir().join(format!(
@@ -1610,13 +1783,13 @@ mod tests {
         perms.set_mode(0o755);
         fs::set_permissions(&fake_runtime, perms).expect("chmod");
 
-        let image =
-            ensure_local_alpine_image(fake_runtime.to_str().unwrap(), &root).expect("local image");
+        let image = ensure_local_generated_workspace_image(fake_runtime.to_str().unwrap(), &root)
+            .expect("local image");
 
         assert_eq!(
             image,
             format!(
-                "decapod-local-{}:alpine",
+                "decapod-local-{}:workspace",
                 root.file_name().unwrap().to_string_lossy()
             )
         );
@@ -1654,11 +1827,13 @@ mod tests {
     #[test]
     fn generated_dockerfile_expands_with_detected_stacks() {
         let content = render_generated_dockerfile(&ProjectCapabilities {
+            primary_language: Some(ProjectLanguage::Go),
             rust: false,
             node: true,
             python: true,
             go: true,
         });
+        assert!(content.contains("FROM $DECAPOD_IMAGE"));
         assert!(content.contains("nodejs"));
         assert!(content.contains("python3"));
         assert!(content.contains("go"));
@@ -1677,6 +1852,12 @@ mod tests {
         );
         assert_eq!(
             component.get("extra_packages_env").and_then(|v| v.as_str()),
+            Some("DECAPOD_CONTAINER_SYSTEM_PACKAGES")
+        );
+        assert_eq!(
+            component
+                .get("legacy_extra_packages_env")
+                .and_then(|v| v.as_str()),
             Some("DECAPOD_CONTAINER_APK_PACKAGES")
         );
     }
