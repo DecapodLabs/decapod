@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.61.0](https://github.com/DecapodLabs/decapod/compare/v0.60.17...v0.61.0) - 2026-07-07
+
+### Other
+
+- Add validation epoch provenance ([#786](https://github.com/DecapodLabs/decapod/pull/786))
+
 ## [0.60.17](https://github.com/DecapodLabs/decapod/compare/v0.60.16...v0.60.17) - 2026-07-07
 
 ### Other
