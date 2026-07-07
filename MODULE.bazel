@@ -1,6 +1,5 @@
 module(
     name = "decapod",
-    version = "0.60.14",
 )
 
 bazel_dep(name = "rules_rust", version = "0.71.2")
