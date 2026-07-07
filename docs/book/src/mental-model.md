@@ -1,6 +1,8 @@
 # Mental Model
 
-To use Decapod effectively, it helps to understand it not as a prompt framework or a wrapper, but as a **kernel** for repository governance. Decapod is built with an agent-first design, users will rarely interface directly with the decapod cli. Most users only install decapod and run the initializer in each project directory.
+To use Decapod effectively, it helps to understand it not as a prompt framework, model router, swarm manager, or wrapper, but as a **kernel** for repository governance. Decapod is built with an agent-first design, users will rarely interface directly with the decapod cli. Most users only install decapod and run the initializer in each project directory.
+
+The practical output of that kernel is durable project state. `.decapod/` preserves the parts of agent work that should not live only in a chat transcript: intent, selected context, workspace custody, boundaries, validation evidence, and completion status.
 
 ## The Kernel Analogy
 
@@ -9,6 +11,7 @@ In an operating system, the kernel manages hardware resources and provides a sta
 - **Resources:** Decapod manages git worktrees, containers, and the state of work units (Todos).
 - **API:** Agents call Decapod via a structured CLI or JSON-RPC interface to request resources or validate their state.
 - **Isolation:** Decapod ensures that processes (agents) don't interfere with each other or the system's "main memory" (the root repository branch).
+- **State:** Decapod records the governed trail of the work in the repository so another agent, reviewer, or CI run can resume or audit without depending on the original transcript.
 
 ## Pressure Points: The Agentic Loop
 
@@ -25,5 +28,4 @@ Decapod serves as the "thin waist" of agentic software engineering. On the "top"
 
 ## Epistemic Custody
 
-A central concept in Decapod is **Epistemic Custody**. This is the preserved, auditable chain between the initial human intent, the context provided to the model, the assumptions made during implementation, and the final proof of completion. Decapod ensures this chain is never broken, making agent work fully falsifiable and transparent (see [Artifact Reference](reference/artifacts.md)).
-
+A central concept in Decapod is **Epistemic Custody**. This is the preserved, auditable chain between the initial human intent, the context provided to the model, the assumptions made during implementation, and the final proof of completion. Decapod keeps that chain in governed repo state, making agent work fully falsifiable and transparent even after the original session has ended (see [Artifact Reference](reference/artifacts.md)).

@@ -451,13 +451,15 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
 
     let fake_bin = dir.join("fake-bin");
     std::fs::create_dir_all(&fake_bin).expect("create fake bin");
-    let fake_docker = fake_bin.join("docker");
-    std::fs::write(&fake_docker, "#!/bin/sh\nexit 0\n").expect("write fake docker");
-    let mut perms = std::fs::metadata(&fake_docker)
-        .expect("fake docker metadata")
-        .permissions();
-    perms.set_mode(0o755);
-    std::fs::set_permissions(&fake_docker, perms).expect("chmod fake docker");
+    for runtime in ["docker", "podman"] {
+        let fake_runtime = fake_bin.join(runtime);
+        std::fs::write(&fake_runtime, "#!/bin/sh\nexit 0\n").expect("write fake runtime");
+        let mut perms = std::fs::metadata(&fake_runtime)
+            .expect("fake runtime metadata")
+            .permissions();
+        perms.set_mode(0o755);
+        std::fs::set_permissions(&fake_runtime, perms).expect("chmod fake runtime");
+    }
 
     let path = std::env::var_os("PATH").expect("PATH");
     let mut paths = vec![fake_bin];

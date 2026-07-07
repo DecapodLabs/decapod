@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.60.17](https://github.com/DecapodLabs/decapod/compare/v0.60.16...v0.60.17) - 2026-07-07
+
+### Other
+
+- Clarify Decapod repo-native substrate docs ([#783](https://github.com/DecapodLabs/decapod/pull/783))
+
+## [0.60.16](https://github.com/DecapodLabs/decapod/compare/v0.60.15...v0.60.16) - 2026-07-06
+
+### Other
+
+- Update README.md
+- Update README.md
+- Update README.md
+
+## [0.60.15](https://github.com/DecapodLabs/decapod/compare/v0.60.14...v0.60.15) - 2026-06-30
+
+### Other
+
+- Fix workspace container Decapod image
+
 ## [0.60.14](https://github.com/DecapodLabs/decapod/compare/v0.60.13...v0.60.14) - 2026-06-27
 
 ### Fixed

@@ -12,7 +12,7 @@ cargo install decapod
 
 ## 2. Initialization
 
-Initialize your repository. This creates the `.decapod/` directory and scaffolds the initial agent entrypoints (`AGENTS.md`, etc.). Agents will routinely run this during validation stages with the `--proof` flag for non-interactive agent-driven autonomous upgrades (see [Configuration](configuration.md) and [Constitution](concepts/constitution.md)).
+Initialize your repository. This creates the `.decapod/` directory and scaffolds the initial agent entrypoints (`AGENTS.md`, etc.). `.decapod/` is the repo-native substrate where governed agent work records intent, context, custody, boundaries, validation evidence, and completion state. Agents will routinely run this during validation stages with the `--proof` flag for non-interactive agent-driven autonomous upgrades (see [Configuration](configuration.md) and [Constitution](concepts/constitution.md)).
 
 ```bash
 decapod init
@@ -20,7 +20,7 @@ decapod init
 
 ## 3. Orientation
 
-Verify that your repository meets basic governance requirements. Decapod will check for the presence of mandatory files and invariants. Agents will automatically call `decapod validate` as needed (see [Proof & Validation](concepts/proof.md)).
+Verify that your repository meets basic governance requirements. Decapod will check for the presence of mandatory files and invariants, then report whether the current repo state satisfies the governed execution contract. Agents will automatically call `decapod validate` as needed (see [Proof & Validation](concepts/proof.md)).
 
 ```bash
 decapod validate
@@ -28,7 +28,7 @@ decapod validate
 
 ## 4. The Agent Handshake
 
-Before performing governed work, an agent must acquire a session. This establishes the agent's identity and permissions for the current work period (see [CLI Reference](reference/cli.md#decapod-session)). Human users should never call this.
+Before performing governed work, an agent must acquire a session. This establishes the agent's identity and permissions for the current work period so later task, workspace, and proof records are attributable (see [CLI Reference](reference/cli.md#decapod-session)). Human users should never call this.
 
 ```bash
 decapod session acquire
@@ -36,7 +36,7 @@ decapod session acquire
 
 ## 5. Claiming a Task
 
-Identify a task from the backlog and claim it. This prevents other agents from attempting the same work simultaneously (see [Single-Agent Workflows](workflows/single-agent.md) and [Multi-Agent Workflows](workflows/multi-agent.md)). Human users should never call this.
+Identify a task from the backlog and claim it. The todo turns a user request into explicit project state and prevents other agents from attempting the same work simultaneously (see [Single-Agent Workflows](workflows/single-agent.md) and [Multi-Agent Workflows](workflows/multi-agent.md)). Human users should never call this.
 
 ```bash
 # Add a task if one doesn't exist
@@ -49,7 +49,7 @@ decapod todo claim --id <task-id>
 
 ## 6. Entering the Workspace
 
-Create an isolated git worktree for the task. Decapod ensures you are working in a clean environment, safely away from the main branch (see [Workspace Sandboxing](concepts/workspaces.md)). Human users should never call this.
+Create an isolated git worktree for the task. Decapod turns workspace custody into inspectable repo state and ensures you are working in a clean environment, safely away from the main branch (see [Workspace Sandboxing](concepts/workspaces.md)). Human users should never call this.
 
 ```bash
 decapod workspace ensure
@@ -59,7 +59,7 @@ decapod workspace ensure
 
 ## 7. Delivery and Proof
 
-Once implementation is complete within the isolated workspace, run validation and mark the task as done. This generates the final proof artifacts (see [Artifact Reference](reference/artifacts.md)). Human users should never call this.
+Once implementation is complete within the isolated workspace, run validation and mark the task as done. This turns completion into a verified state transition and generates the final proof artifacts (see [Artifact Reference](reference/artifacts.md)). Human users should never call this.
 
 ```bash
 decapod validate

@@ -2,6 +2,8 @@
 
 Decapod manages a finite set of stateful entities. Understanding their lifecycles is critical for successful agentic operation.
 
+These entities are the durable substrate for governed work. They turn a temporary agent conversation into inspectable project state that can be resumed, audited, verified, and handed off.
+
 ## 1. Tasks (Todos)
 The primary unit of work.
 - **States:** `open` -> `claimed` -> `done` | `archived`.

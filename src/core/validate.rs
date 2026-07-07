@@ -81,6 +81,35 @@ fn auto_remediable_validation_message(code: &str, message: &str, agent_action: &
     )
 }
 
+fn canonical_or_self(path: &Path) -> PathBuf {
+    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+}
+
+fn path_contains_decapod_workspaces(path: &Path) -> bool {
+    let mut saw_decapod = false;
+    for component in path.components() {
+        let value = component.as_os_str().to_string_lossy();
+        if saw_decapod && value == "workspaces" {
+            return true;
+        }
+        saw_decapod = value == ".decapod";
+    }
+    false
+}
+
+fn is_decapod_isolated_worktree(main_root: &Path, repo_root: &Path) -> bool {
+    if !crate::core::workspace::is_worktree(repo_root).unwrap_or(false) {
+        return false;
+    }
+
+    let owner_root = crate::core::workspace::get_main_repo_root(repo_root)
+        .unwrap_or_else(|_| main_root.to_path_buf());
+    let workspaces_path = canonical_or_self(&owner_root.join(".decapod").join("workspaces"));
+    let repo_root = canonical_or_self(repo_root);
+
+    repo_root.starts_with(workspaces_path) || path_contains_decapod_workspaces(&repo_root)
+}
+
 /// Spawn a validation gate in a rayon scope with timing and error capture.
 ///
 /// Replaces ~10 lines of boilerplate per gate with a single invocation.
@@ -3567,10 +3596,7 @@ fn validate_git_workspace_context(
         return Ok(());
     }
 
-    let is_worktree = crate::core::workspace::is_worktree(repo_root).unwrap_or(false);
-
-    let workspaces_path = main_root.join(".decapod").join("workspaces");
-    let is_isolated = is_worktree && repo_root.starts_with(&workspaces_path);
+    let is_isolated = is_decapod_isolated_worktree(main_root, repo_root);
 
     if is_isolated {
         pass("Running in isolated workspace (.decapod/workspaces/)", ctx);
@@ -5371,8 +5397,79 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_allowed_non_code_path, is_non_code_path, strip_git_quotes};
+    use super::{
+        ValidationContext, is_allowed_non_code_path, is_decapod_isolated_worktree,
+        is_non_code_path, path_contains_decapod_workspaces, strip_git_quotes,
+        validate_git_workspace_context,
+    };
     use super::{is_protected_git_branch, parse_ahead_behind_counts};
+    use std::fs;
+    use std::sync::atomic::Ordering;
+    use tempfile::tempdir;
+
+    fn git_init(dir: &std::path::Path) {
+        std::process::Command::new("git")
+            .args(["init"])
+            .current_dir(dir)
+            .output()
+            .expect("git init");
+        std::process::Command::new("git")
+            .args(["config", "user.email", "test@test.com"])
+            .current_dir(dir)
+            .output()
+            .expect("git config email");
+        std::process::Command::new("git")
+            .args(["config", "user.name", "Test"])
+            .current_dir(dir)
+            .output()
+            .expect("git config name");
+    }
+
+    fn git_commit(dir: &std::path::Path, msg: &str) {
+        fs::write(dir.join(".gitkeep"), "").expect("write gitkeep");
+        std::process::Command::new("git")
+            .args(["add", "-A"])
+            .current_dir(dir)
+            .output()
+            .expect("git add");
+        std::process::Command::new("git")
+            .args(["commit", "-m", msg])
+            .current_dir(dir)
+            .output()
+            .expect("git commit");
+    }
+
+    fn decapod_worktree_fixture() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
+        let tmp = tempdir().expect("tempdir");
+        let main_root = tmp.path().join("main");
+        fs::create_dir_all(&main_root).expect("create main");
+        git_init(&main_root);
+        git_commit(&main_root, "init");
+
+        let wt_path = main_root
+            .join(".decapod")
+            .join("workspaces")
+            .join("agent-test-task");
+        fs::create_dir_all(wt_path.parent().unwrap()).expect("create workspaces dir");
+        let output = std::process::Command::new("git")
+            .args([
+                "worktree",
+                "add",
+                "-b",
+                "agent/test/task",
+                wt_path.to_str().unwrap(),
+            ])
+            .current_dir(&main_root)
+            .output()
+            .expect("git worktree add");
+        assert!(
+            output.status.success(),
+            "git worktree add failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        (tmp, main_root, wt_path)
+    }
 
     #[test]
     fn protected_branch_matching_is_limited_to_protected_refs() {
@@ -5388,6 +5485,46 @@ mod tests {
         assert_eq!(parse_ahead_behind_counts("3\t1\n"), Some((3, 1)));
         assert_eq!(parse_ahead_behind_counts("0 12"), Some((0, 12)));
         assert_eq!(parse_ahead_behind_counts("bad 12"), None);
+    }
+
+    #[test]
+    fn isolated_worktree_detection_uses_owning_main_repo() {
+        let (_tmp, main_root, wt_path) = decapod_worktree_fixture();
+
+        assert!(is_decapod_isolated_worktree(&main_root, &wt_path));
+        assert!(
+            is_decapod_isolated_worktree(&wt_path, &wt_path),
+            "validation can pass the worktree as main_root; detection must still resolve the owner repo"
+        );
+    }
+
+    #[test]
+    fn git_workspace_context_accepts_decapod_worktree_when_main_root_is_worktree() {
+        let (_tmp, _main_root, wt_path) = decapod_worktree_fixture();
+        let ctx = ValidationContext::new();
+
+        validate_git_workspace_context(&ctx, &wt_path, &wt_path)
+            .expect("workspace context validation");
+
+        assert_eq!(
+            ctx.fail_count.load(Ordering::Relaxed),
+            0,
+            "unexpected validation failures: {:?}",
+            ctx.fails.lock().unwrap()
+        );
+    }
+
+    #[test]
+    fn decapod_workspaces_path_detection_requires_adjacent_segments() {
+        assert!(path_contains_decapod_workspaces(std::path::Path::new(
+            "/repo/.decapod/workspaces/agent-task"
+        )));
+        assert!(!path_contains_decapod_workspaces(std::path::Path::new(
+            "/repo/.decapod/generated/workspaces/agent-task"
+        )));
+        assert!(!path_contains_decapod_workspaces(std::path::Path::new(
+            "/repo/decapod/workspaces/agent-task"
+        )));
     }
 
     // --- is_allowed_non_code_path ---
