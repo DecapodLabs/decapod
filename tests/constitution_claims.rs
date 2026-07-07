@@ -23,17 +23,20 @@ fn resolve_decapod_bin() -> std::path::PathBuf {
         return p;
     }
     if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
-        let p = std::path::Path::new(&runfiles_dir).join("_main").join("decapod");
+        let p = std::path::Path::new(&runfiles_dir)
+            .join("_main")
+            .join("decapod");
         if p.exists() {
             return p;
         }
     }
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(parent) = exe.parent() {
-            let p = parent.join("decapod");
-            if p.exists() {
-                return p;
-            }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|p| p.to_path_buf()))
+    {
+        let p = parent.join("decapod");
+        if p.exists() {
+            return p;
         }
     }
     std::path::PathBuf::from(cargo_bin)

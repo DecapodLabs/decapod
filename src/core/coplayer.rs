@@ -66,7 +66,7 @@ pub fn resolve_snapshot(
     };
 
     let mut common_ops: Vec<_> = ops_count.into_iter().collect();
-    common_ops.sort_by(|a, b| b.1.cmp(&a.1));
+    common_ops.sort_by_key(|b| std::cmp::Reverse(b.1));
     let common_ops = common_ops.into_iter().take(5).map(|(op, _)| op).collect();
 
     let risk_profile = if total < 5 {
