@@ -25,13 +25,18 @@ fn workunit_canonical_serialization_is_deterministic() {
                 gate: "state_commit".to_string(),
                 status: "pass".to_string(),
                 artifact_ref: Some("sha256:bbb".to_string()),
+                evaluator_epoch: None,
+                validation_epoch: None,
             },
             WorkUnitProofResult {
                 gate: "validate_passes".to_string(),
                 status: "pass".to_string(),
                 artifact_ref: Some("sha256:aaa".to_string()),
+                evaluator_epoch: None,
+                validation_epoch: None,
             },
         ],
+        validation_epoch: None,
         status: WorkUnitStatus::Claimed,
     };
 
@@ -56,7 +61,10 @@ fn workunit_canonicalization_sorts_and_dedups_contract_arrays() {
             gate: "b".to_string(),
             status: "pass".to_string(),
             artifact_ref: None,
+            evaluator_epoch: None,
+            validation_epoch: None,
         }],
+        validation_epoch: None,
         status: WorkUnitStatus::Draft,
     };
 

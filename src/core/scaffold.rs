@@ -1322,6 +1322,7 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     ".decapod/.stfolder",
     ".decapod/workspaces",
     ".decapod/generated/*",
+    "!.decapod/generated/validation-epoch.json",
     "!.decapod/data/",
     "!.decapod/data/knowledge.promotions.jsonl",
     "!.decapod/generated/Dockerfile",

@@ -681,6 +681,10 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must allowlist generated Dockerfile in .gitignore"
     );
     assert!(
+        gitignore.contains("!.decapod/generated/validation-epoch.json"),
+        "decapod init must allowlist generated validation epoch receipt in .gitignore"
+    );
+    assert!(
         gitignore.contains("!.decapod/generated/context/*.json"),
         "decapod init must allowlist generated context capsule artifacts in .gitignore"
     );

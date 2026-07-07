@@ -109,6 +109,27 @@ fn verify_mvp_pass_fail_unknown_flow() {
         "todo done --validated failed: {}",
         String::from_utf8_lossy(&done_validated.stderr)
     );
+    let db = Connection::open(repo.join(".decapod/data/todo.db")).unwrap();
+    let artifacts_json: String = db
+        .query_row(
+            "SELECT verification_artifacts FROM task_verification WHERE todo_id = ?1",
+            rusqlite::params![todo_id.clone()],
+            |row| row.get(0),
+        )
+        .unwrap();
+    let artifacts: Value = serde_json::from_str(&artifacts_json).unwrap();
+    let evaluator_epoch = artifacts["evaluator_epoch"]
+        .as_str()
+        .expect("verification artifact evaluator_epoch");
+    assert!(evaluator_epoch.starts_with("ve_"));
+    assert_eq!(
+        artifacts["validation_epoch"]["epoch_id"], evaluator_epoch,
+        "completed todo artifacts should record the active validation epoch"
+    );
+    assert_eq!(
+        artifacts["proof_plan_results"][0]["evaluator_epoch"], evaluator_epoch,
+        "proof records should carry evaluator epoch provenance"
+    );
 
     let verify_pass = run_cmd(repo, &["qa", "verify", "--json"]);
     assert!(
