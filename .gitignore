@@ -76,3 +76,7 @@ err.log
 
 # --- Claude Code Hooks ---
 .claude/
+
+# --- Bazel ---
+/bazel-*
+
