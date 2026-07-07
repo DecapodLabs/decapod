@@ -216,7 +216,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@v0
+        uses: bazel-contrib/setup-bazel@0.13.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
@@ -247,7 +247,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@v0
+        uses: bazel-contrib/setup-bazel@0.13.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
@@ -319,7 +319,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@v0
+        uses: bazel-contrib/setup-bazel@0.13.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
@@ -338,7 +338,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@v0
+        uses: bazel-contrib/setup-bazel@0.13.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
@@ -357,7 +357,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@v0
+        uses: bazel-contrib/setup-bazel@0.13.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
@@ -376,7 +376,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@v0
+        uses: bazel-contrib/setup-bazel@0.13.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
@@ -395,7 +395,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@v0
+        uses: bazel-contrib/setup-bazel@0.13.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
@@ -419,7 +419,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@v0
+        uses: bazel-contrib/setup-bazel@0.13.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
@@ -439,7 +439,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@v0
+        uses: bazel-contrib/setup-bazel@0.13.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}-release

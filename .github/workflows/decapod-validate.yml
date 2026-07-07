@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@v0
+        uses: bazel-contrib/setup-bazel@0.13.0
         with:
           bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
+          disk-cache: decapod-validate
           repository-cache: true
       - name: Decapod Validate
         env:
