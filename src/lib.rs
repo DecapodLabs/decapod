@@ -6151,11 +6151,6 @@ fn run_workspace_command(
                 kind: StoreKind::Repo,
                 root: governance_root.join(".decapod").join("data"),
             };
-            plan_governance::ensure_execute_ready(plan_governance::ExecuteCheckInput {
-                project_root: &governance_root,
-                store_root: &project_store.root,
-                todo_id: None,
-            })?;
             let report = run_validation_bounded(
                 &project_store,
                 &governance_root,
@@ -6496,13 +6491,6 @@ mod rpc_handlers {
     ) -> Result<RpcResponse, error::DecapodError> {
         let params: WorkspacePublishParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
-
-        let store_root = ctx.project_root.join(".decapod").join("data");
-        plan_governance::ensure_execute_ready(plan_governance::ExecuteCheckInput {
-            project_root: ctx.project_root,
-            store_root: &store_root,
-            todo_id: None,
-        })?;
 
         let result =
             workspace::publish_workspace(ctx.project_root, params.title, params.description)?;
