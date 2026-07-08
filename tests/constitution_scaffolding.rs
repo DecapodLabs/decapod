@@ -68,6 +68,45 @@ const ARCHITECTURE_DOCTRINE_FIELDS: &[&str] = &[
     "proof",
 ];
 
+const METHODOLOGY_NODES: &[&str] = &[
+    "methodology/ARCHITECTURE",
+    "methodology/CI_CD",
+    "methodology/ENGINEERING_MANAGEMENT",
+    "methodology/INCIDENT_RESPONSE",
+    "methodology/KNOWLEDGE",
+    "methodology/MARKET_INTELLIGENCE",
+    "methodology/MEMORY",
+    "methodology/METRICS",
+    "methodology/OPERATING_MODEL_EXECUTION",
+    "methodology/OPERATIONS",
+    "methodology/PLATFORM",
+    "methodology/PRODUCT",
+    "methodology/QA",
+    "methodology/RELEASE_MANAGEMENT",
+    "methodology/RESEARCH",
+    "methodology/RESEARCH_PRODUCTION",
+    "methodology/SOUL",
+    "methodology/STRATEGIC_DECISION",
+    "methodology/STRATEGY_DIAGNOSIS",
+    "methodology/STRATEGY_ECONOMICS",
+    "methodology/TESTING",
+    "methodology/VALUE_RISK_GOVERNANCE",
+    "methodology/EXECUTIVE_ALIGNMENT",
+];
+
+const METHODOLOGY_DOCTRINE_FIELDS: &[&str] = ARCHITECTURE_DOCTRINE_FIELDS;
+
+const METHODOLOGY_SPEC_IMPACT_FIELDS: &[&str] = &[
+    "intent",
+    "architecture",
+    "interfaces",
+    "operations",
+    "security",
+    "validation",
+    "semantics",
+    "proof",
+];
+
 const CORE_NODES: &[&str] = &[
     "core/ARCHITECTURE",
     "core/DATA",
@@ -85,6 +124,86 @@ const CORE_NODES: &[&str] = &[
     "core/RESEARCH",
     "core/SCAFFOLDING",
     "core/SPECS",
+];
+
+const STRATEGY_METHODOLOGY_NODES: &[&str] = &[
+    "methodology/STRATEGIC_DECISION",
+    "methodology/STRATEGY_DIAGNOSIS",
+    "methodology/MARKET_INTELLIGENCE",
+    "methodology/STRATEGY_ECONOMICS",
+    "methodology/OPERATING_MODEL_EXECUTION",
+    "methodology/VALUE_RISK_GOVERNANCE",
+    "methodology/EXECUTIVE_ALIGNMENT",
+];
+
+const STRATEGY_CHILD_NODES: &[&str] = &[
+    "methodology/STRATEGY_DIAGNOSIS",
+    "methodology/MARKET_INTELLIGENCE",
+    "methodology/STRATEGY_ECONOMICS",
+    "methodology/OPERATING_MODEL_EXECUTION",
+    "methodology/VALUE_RISK_GOVERNANCE",
+    "methodology/EXECUTIVE_ALIGNMENT",
+];
+
+const STRATEGY_MODE_LOOKUPS: &[(&str, &str)] = &[
+    ("situation assessment", "methodology/STRATEGY_DIAGNOSIS"),
+    ("growth barriers", "methodology/STRATEGY_DIAGNOSIS"),
+    ("assumption audit", "methodology/STRATEGY_DIAGNOSIS"),
+    ("market mapping", "methodology/MARKET_INTELLIGENCE"),
+    (
+        "competitive intelligence",
+        "methodology/MARKET_INTELLIGENCE",
+    ),
+    ("customer segmentation", "methodology/MARKET_INTELLIGENCE"),
+    ("profit pool analysis", "methodology/MARKET_INTELLIGENCE"),
+    ("strategic options", "methodology/STRATEGY_ECONOMICS"),
+    ("pricing strategy", "methodology/STRATEGY_ECONOMICS"),
+    ("business case", "methodology/STRATEGY_ECONOMICS"),
+    ("portfolio review", "methodology/STRATEGY_ECONOMICS"),
+    ("operating model", "methodology/OPERATING_MODEL_EXECUTION"),
+    (
+        "initiative prioritization",
+        "methodology/OPERATING_MODEL_EXECUTION",
+    ),
+    (
+        "transformation roadmap",
+        "methodology/OPERATING_MODEL_EXECUTION",
+    ),
+    ("war gaming", "methodology/VALUE_RISK_GOVERNANCE"),
+    ("risk mitigation", "methodology/VALUE_RISK_GOVERNANCE"),
+    ("risk register", "methodology/VALUE_RISK_GOVERNANCE"),
+    ("kpi architecture", "methodology/VALUE_RISK_GOVERNANCE"),
+    ("value realization", "methodology/VALUE_RISK_GOVERNANCE"),
+    ("stakeholder alignment", "methodology/EXECUTIVE_ALIGNMENT"),
+    ("narrative builder", "methodology/EXECUTIVE_ALIGNMENT"),
+    ("decision memo", "methodology/EXECUTIVE_ALIGNMENT"),
+];
+
+const STRATEGY_SEARCH_QUERIES: &[(&str, &str)] = &[
+    (
+        "growth barriers assumption audit root cause",
+        "methodology/STRATEGY_DIAGNOSIS",
+    ),
+    (
+        "market mapping customer segmentation profit pool",
+        "methodology/MARKET_INTELLIGENCE",
+    ),
+    (
+        "pricing strategy business case portfolio review",
+        "methodology/STRATEGY_ECONOMICS",
+    ),
+    (
+        "operating model initiative prioritization transformation roadmap",
+        "methodology/OPERATING_MODEL_EXECUTION",
+    ),
+    (
+        "war gaming risk register kpi architecture value realization",
+        "methodology/VALUE_RISK_GOVERNANCE",
+    ),
+    (
+        "stakeholder alignment narrative builder decision memo",
+        "methodology/EXECUTIVE_ALIGNMENT",
+    ),
 ];
 
 fn load_constitution_asset() -> serde_json::Value {
@@ -149,6 +268,17 @@ fn assert_architect_grade_fields(node_id: &str, node: &serde_json::Value) {
 
     for field in ["static", "runtime", "release"] {
         assert_non_empty_array(&node["proof"][field], &format!("{node_id}.proof.{field}"));
+    }
+}
+
+fn assert_methodology_delivery_fields(node_id: &str, node: &serde_json::Value) {
+    assert_architect_grade_fields(node_id, node);
+
+    for field in METHODOLOGY_SPEC_IMPACT_FIELDS {
+        assert_non_empty_array(
+            &node["spec_impacts"][*field],
+            &format!("{node_id}.spec_impacts.{field}"),
+        );
     }
 }
 
@@ -280,31 +410,107 @@ fn all_architecture_nodes_have_architect_grade_guidance() {
 }
 
 #[test]
-fn schema_requires_doctrine_model_for_architecture_nodes_only() {
+fn all_methodology_nodes_have_architect_grade_delivery_doctrine() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+
+    let actual_methodology_count = nodes
+        .keys()
+        .filter(|id| id.starts_with("methodology/"))
+        .count();
+    assert_eq!(
+        actual_methodology_count,
+        METHODOLOGY_NODES.len(),
+        "METHODOLOGY_NODES test list must cover every methodology/* node"
+    );
+
+    let core_refs = nodes["core/METHODOLOGY"]["links"]["references"]
+        .as_array()
+        .expect("core methodology references");
+
+    for node_id in METHODOLOGY_NODES {
+        let node = nodes
+            .get(*node_id)
+            .unwrap_or_else(|| panic!("missing methodology node {node_id}"));
+        assert_eq!(
+            node["category"].as_str(),
+            Some("methodology"),
+            "{node_id} must remain in the methodology namespace"
+        );
+        assert_methodology_delivery_fields(node_id, node);
+
+        assert!(
+            core_refs
+                .iter()
+                .any(|value| value.as_str() == Some(node_id)),
+            "core/METHODOLOGY must route to {node_id}"
+        );
+
+        assert!(
+            node["links"]["referenced_by"]
+                .as_array()
+                .is_some_and(|refs| refs
+                    .iter()
+                    .any(|value| value.as_str() == Some("core/METHODOLOGY"))),
+            "{node_id} must be referenced by core/METHODOLOGY"
+        );
+
+        let sections = node["sections"].as_object().expect("sections object");
+        for section in ["match", "ambiguity", "failure_modes", "proceed_when"] {
+            assert!(
+                sections
+                    .get(section)
+                    .and_then(|items| items.as_array())
+                    .is_some_and(|items| !items.is_empty()),
+                "{node_id}.{section} must preserve route, stop, risk, and proceed guidance"
+            );
+        }
+
+        assert!(
+            lookup.values().any(|entries| {
+                entries.as_array().is_some_and(|entries| {
+                    entries.iter().any(|entry| entry.as_str() == Some(node_id))
+                })
+            }),
+            "{node_id} must remain reachable through at least one lookup term"
+        );
+    }
+}
+
+#[test]
+fn schema_requires_doctrine_model_for_uplifted_namespaces() {
     let schema = load_constitution_schema();
 
     assert_eq!(
         schema["x-doctrine_model"]["schema_version"].as_str(),
-        Some("architecture-doctrine-v1"),
-        "schema must document the architecture doctrine model version"
+        Some("section-doctrine-v1"),
+        "schema must document the section doctrine model version"
     );
     assert!(
         schema["x-doctrine_model"]["migration_strategy"]
             .as_str()
-            .is_some_and(|strategy| strategy.contains("migrated in place")),
-        "schema must document in-place architecture node migration"
+            .is_some_and(|strategy| strategy.contains("architecture and methodology nodes")),
+        "schema must document in-place uplifted namespace migration"
     );
 
     let node_schema = &schema["definitions"]["node"];
-    let architecture_rule = node_schema["allOf"]
+    let rules = node_schema["allOf"]
         .as_array()
-        .and_then(|rules| rules.first())
+        .expect("node schema must declare doctrine conditionals");
+    let architecture_rule = rules
+        .iter()
+        .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("architecture"))
         .expect("node schema must declare architecture doctrine conditional");
     assert_eq!(
         architecture_rule["if"]["properties"]["category"]["const"].as_str(),
         Some("architecture"),
         "conditional must target architecture nodes"
     );
+    let methodology_rule = rules
+        .iter()
+        .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("methodology"))
+        .expect("node schema must declare methodology doctrine conditional");
 
     let required = architecture_rule["then"]["required"]
         .as_array()
@@ -313,6 +519,26 @@ fn schema_requires_doctrine_model_for_architecture_nodes_only() {
         assert!(
             required.iter().any(|value| value.as_str() == Some(field)),
             "architecture schema must require {field}"
+        );
+    }
+
+    let required = methodology_rule["then"]["required"]
+        .as_array()
+        .expect("methodology doctrine required fields");
+    for field in METHODOLOGY_DOCTRINE_FIELDS {
+        assert!(
+            required.iter().any(|value| value.as_str() == Some(field)),
+            "methodology schema must require {field}"
+        );
+    }
+
+    let spec_impacts = schema["definitions"]["spec_impacts"]["properties"]
+        .as_object()
+        .expect("spec_impacts properties");
+    for field in METHODOLOGY_SPEC_IMPACT_FIELDS {
+        assert!(
+            spec_impacts.contains_key(*field),
+            "schema spec_impacts must allow methodology {field}"
         );
     }
 
@@ -325,7 +551,7 @@ fn schema_requires_doctrine_model_for_architecture_nodes_only() {
             .any(|field| base_required
                 .iter()
                 .any(|value| value.as_str() == Some(field))),
-        "non-architecture nodes must keep the compact node contract"
+        "non-uplifted nodes must keep the compact node contract"
     );
 }
 
@@ -415,6 +641,99 @@ fn core_lookup_routes_loop_reports_and_untrusted_attachments() {
 }
 
 #[test]
+fn constitution_routes_strategy_decision_nudges_through_methodology() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+    let parent_id = "methodology/STRATEGIC_DECISION";
+
+    for node_id in STRATEGY_METHODOLOGY_NODES {
+        let node = nodes
+            .get(*node_id)
+            .unwrap_or_else(|| panic!("missing methodology node {node_id}"));
+        assert_eq!(node["category"].as_str(), Some("methodology"));
+
+        for section in [
+            "match",
+            "concepts",
+            "ambiguity",
+            "decisions",
+            "standards",
+            "failure_modes",
+            "next_queries",
+            "proceed_when",
+        ] {
+            assert_non_empty_array(&node["sections"][section], &format!("{node_id}.{section}"));
+        }
+    }
+
+    let core_refs = nodes["core/METHODOLOGY"]["links"]["references"]
+        .as_array()
+        .expect("core methodology references");
+    assert!(
+        core_refs
+            .iter()
+            .any(|value| value.as_str() == Some(parent_id)),
+        "core/METHODOLOGY must route to {parent_id}"
+    );
+
+    let product_refs = nodes["methodology/PRODUCT"]["links"]["references"]
+        .as_array()
+        .expect("product methodology references");
+    assert!(
+        product_refs
+            .iter()
+            .any(|value| value.as_str() == Some(parent_id)),
+        "methodology/PRODUCT must route to {parent_id}"
+    );
+
+    let parent_refs = nodes[parent_id]["links"]["references"]
+        .as_array()
+        .expect("strategy decision references");
+    for child_id in STRATEGY_CHILD_NODES {
+        assert!(
+            parent_refs
+                .iter()
+                .any(|value| value.as_str() == Some(child_id)),
+            "{parent_id} must route to {child_id}"
+        );
+    }
+
+    let parent_standards = nodes[parent_id]["sections"]["standards"]
+        .as_array()
+        .expect("standards array")
+        .iter()
+        .filter_map(|value| value.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    for expected in [
+        "decision statement",
+        "options considered",
+        "load-bearing assumptions",
+        "material risks",
+        "success metrics",
+        "next evidence tests",
+    ] {
+        assert!(
+            parent_standards.contains(expected),
+            "{parent_id}.standards must nudge agents toward {expected}"
+        );
+    }
+
+    for (term, node_id) in STRATEGY_MODE_LOOKUPS {
+        let entries = lookup
+            .get(*term)
+            .unwrap_or_else(|| panic!("lookup must include {term}"))
+            .as_array()
+            .unwrap_or_else(|| panic!("lookup.{term} must be an array"));
+        assert!(
+            entries.iter().any(|value| value.as_str() == Some(node_id)),
+            "lookup.{term} must route to {node_id}"
+        );
+    }
+}
+
+#[test]
 fn lookup_routes_init_and_major_runtime_terms() {
     let constitution = load_constitution_asset();
     let lookup = constitution["lookup"].as_object().expect("lookup object");
@@ -443,6 +762,27 @@ fn lookup_routes_init_and_major_runtime_terms() {
         assert!(
             entries.iter().any(|v| v.as_str() == Some(node_id)),
             "lookup.{term} must route to {node_id}"
+        );
+    }
+}
+
+#[test]
+fn embedded_constitution_search_surfaces_strategy_decision_methodology() {
+    for (query, node_id) in STRATEGY_SEARCH_QUERIES {
+        let output = Command::new(resolve_decapod_bin())
+            .args(["constitution", "search", "--query", query])
+            .output()
+            .expect("run decapod constitution search");
+        assert!(
+            output.status.success(),
+            "constitution search failed for {query}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(
+            stdout.contains(node_id),
+            "constitution search must surface {node_id} for {query}:\n{stdout}"
         );
     }
 }
@@ -516,6 +856,38 @@ fn embedded_constitution_preserves_architecture_architect_grade_fields() {
                 })
             }),
             "{node_id} must preserve doctrine decision guidance in embedded output"
+        );
+    }
+}
+
+#[test]
+fn embedded_constitution_preserves_methodology_delivery_doctrine() {
+    for node_id in [
+        "methodology/ARCHITECTURE",
+        "methodology/PRODUCT",
+        "methodology/QA",
+        "methodology/STRATEGIC_DECISION",
+    ] {
+        let output = Command::new(resolve_decapod_bin())
+            .args(["constitution", "get", node_id])
+            .output()
+            .expect("run decapod constitution get");
+        assert!(
+            output.status.success(),
+            "constitution get {node_id} failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let node: serde_json::Value =
+            serde_json::from_slice(&output.stdout).expect("constitution get json");
+        assert_methodology_delivery_fields(node_id, &node);
+        assert!(
+            node["scaffolding"]["capture"]
+                .as_array()
+                .is_some_and(|items| items.iter().any(|item| item
+                    .as_str()
+                    .is_some_and(|text| text.contains("user outcome")))),
+            "{node_id} must preserve consultative capture guidance in embedded output"
         );
     }
 }
