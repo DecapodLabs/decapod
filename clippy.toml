@@ -1,0 +1,12 @@
+# clippy.toml
+# Enforce high-level API usage and security standards by restricting low-level/raw std APIs.
+
+disallowed-methods = [
+    { path = "std::net::TcpStream::connect", reason = "Please use our approved asynchronous networking abstractions (like tokio::net::TcpStream or reqwest client) to ensure proper tracing and task cancellation." },
+    { path = "std::net::UdpSocket::bind", reason = "Use tokio::net::UdpSocket for asynchronous non-blocking UDP communication." },
+]
+
+disallowed-types = [
+    { path = "std::net::TcpStream", reason = "Avoid blocking TcpStream; use tokio::net::TcpStream." },
+    { path = "std::net::UdpSocket", reason = "Avoid blocking UdpSocket; use tokio::net::UdpSocket." },
+]
