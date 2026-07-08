@@ -2,6 +2,11 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Decapod Constitution Core Discovery Graph",
   "version": "3.0.0",
+  "x-doctrine_model": {
+    "schema_version": "architecture-doctrine-v1",
+    "migration_strategy": "architecture nodes are migrated in place; non-architecture nodes keep the compact node contract until their namespace is explicitly uplifted",
+    "compatibility": "the node output shape remains stable for current consumers while architecture nodes gain required doctrine fields"
+  },
   "type": "object",
   "required": [
     "$schema",
@@ -39,6 +44,31 @@
   "definitions": {
     "node": {
       "type": "object",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "architecture"
+              }
+            },
+            "required": [
+              "category"
+            ]
+          },
+          "then": {
+            "required": [
+              "architect_notes",
+              "init_questions",
+              "decision_matrix",
+              "tradeoffs",
+              "scaffolding",
+              "spec_impacts",
+              "proof"
+            ]
+          }
+        }
+      ],
       "required": [
         "id",
         "category",
