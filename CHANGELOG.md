@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.62.6](https://github.com/DecapodLabs/decapod/compare/v0.62.5...v0.62.6) - 2026-07-08
+
+### Other
+
+- Uplift architecture constitution doctrine model ([#815](https://github.com/DecapodLabs/decapod/pull/815))
+
 ## [0.62.5](https://github.com/DecapodLabs/decapod/compare/v0.62.4...v0.62.5) - 2026-07-07
 
 ### Other
