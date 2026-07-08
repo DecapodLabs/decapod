@@ -3,9 +3,13 @@
   "title": "Decapod Constitution Core Discovery Graph",
   "version": "3.0.0",
   "x-doctrine_model": {
-    "schema_version": "architecture-doctrine-v1",
-    "migration_strategy": "architecture nodes are migrated in place; non-architecture nodes keep the compact node contract until their namespace is explicitly uplifted",
-    "compatibility": "the node output shape remains stable for current consumers while architecture nodes gain required doctrine fields"
+    "schema_version": "section-doctrine-v1",
+    "uplifted_namespaces": [
+      "architecture",
+      "methodology"
+    ],
+    "migration_strategy": "architecture and methodology nodes are migrated in place; other namespaces keep the compact node contract until explicitly uplifted",
+    "compatibility": "the node output shape remains stable for current consumers while uplifted namespaces gain required doctrine fields"
   },
   "type": "object",
   "required": [
@@ -50,6 +54,29 @@
             "properties": {
               "category": {
                 "const": "architecture"
+              }
+            },
+            "required": [
+              "category"
+            ]
+          },
+          "then": {
+            "required": [
+              "architect_notes",
+              "init_questions",
+              "decision_matrix",
+              "tradeoffs",
+              "scaffolding",
+              "spec_impacts",
+              "proof"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "methodology"
               }
             },
             "required": [
@@ -333,6 +360,18 @@
           "$ref": "#/definitions/text_list"
         },
         "proof": {
+          "$ref": "#/definitions/text_list"
+        },
+        "operations": {
+          "$ref": "#/definitions/text_list"
+        },
+        "security": {
+          "$ref": "#/definitions/text_list"
+        },
+        "validation": {
+          "$ref": "#/definitions/text_list"
+        },
+        "semantics": {
           "$ref": "#/definitions/text_list"
         }
       }
