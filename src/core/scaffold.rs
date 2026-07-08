@@ -1308,7 +1308,6 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     ".decapod/.stfolder",
     ".decapod/workspaces",
     ".decapod/generated/*",
-    "!.decapod/generated/validation-epoch.json",
     "!.decapod/data/",
     "!.decapod/data/knowledge.promotions.jsonl",
     "!.decapod/generated/Dockerfile",
@@ -1326,6 +1325,12 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     "!.decapod/generated/specs/*.md",
     "!.decapod/generated/specs/.manifest.json",
 ];
+
+/// Deprecated Decapod-managed .gitignore rules that should be removed on init.
+///
+/// Keep stale allowlists out of downstream repos when a formerly tracked generated
+/// artifact becomes volatile local state.
+const DEPRECATED_DECAPOD_GITIGNORE_RULES: &[&str] = &["!.decapod/generated/validation-epoch.json"];
 
 /// Ensure a given entry exists in the project's .gitignore file.
 /// Creates the file if it doesn't exist. Appends the entry if not already present.
@@ -1345,6 +1350,37 @@ fn ensure_gitignore_entry(target_dir: &Path, entry: &str) -> Result<(), error::D
     new_content.push_str(entry);
     new_content.push('\n');
     fs::write(&gitignore_path, new_content).map_err(error::DecapodError::IoError)?;
+    Ok(())
+}
+
+fn remove_deprecated_gitignore_entries(target_dir: &Path) -> Result<(), error::DecapodError> {
+    let gitignore_path = target_dir.join(".gitignore");
+    let Ok(content) = fs::read_to_string(&gitignore_path) else {
+        return Ok(());
+    };
+
+    let mut removed = false;
+    let mut lines = Vec::new();
+    for line in content.lines() {
+        if DEPRECATED_DECAPOD_GITIGNORE_RULES
+            .iter()
+            .any(|deprecated| line.trim() == *deprecated)
+        {
+            removed = true;
+            continue;
+        }
+        lines.push(line);
+    }
+
+    if !removed {
+        return Ok(());
+    }
+
+    let mut updated = lines.join("\n");
+    if !updated.is_empty() {
+        updated.push('\n');
+    }
+    fs::write(&gitignore_path, updated).map_err(error::DecapodError::IoError)?;
     Ok(())
 }
 
@@ -1532,6 +1568,7 @@ pub fn scaffold_project_entrypoints(
 
     // Ensure Decapod-managed ignore/allowlist rules are present in the user's .gitignore.
     if !opts.dry_run {
+        remove_deprecated_gitignore_entries(&opts.target_dir)?;
         for rule in DECAPOD_GITIGNORE_RULES {
             ensure_gitignore_entry(&opts.target_dir, rule)?;
         }
