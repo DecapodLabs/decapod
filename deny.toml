@@ -1,47 +1,37 @@
 # deny.toml
 # Configuration for cargo-deny
 
+[graph]
+all-features = false
+no-default-features = false
+
 [advisories]
-version = 2
-# The path where the database is fetched/stored
-db-path = "~/.cargo/advisories"
-# The git repository to use for the database
-db-urls = ["https://github.com/rustsec/advisory-db"]
-# How to handle database updates
-vulnerability = "deny"
-unmaintained = "warn"
-unsound = "warn"
-notice = "warn"
 
 [licenses]
-version = 2
-# Reject copyleft licenses like GPL unless explicitly authorized
-private = { ignore = false }
-unlicensed = "deny"
 allow = [
     "MIT",
     "Apache-2.0",
     "BSD-3-Clause",
     "BSD-2-Clause",
     "Unicode-DFS-2016",
+    "Unicode-3.0",
     "ISC",
     "CC0-1.0",
     "OpenSSL",
     "Zlib",
     "0BSD",
 ]
+confidence-threshold = 0.8
+
+[licenses.private]
+ignore = false
 
 [bans]
-version = 2
-# Warn on multiple versions of the same crate to reduce bloat
 multiple-versions = "warn"
-# Skip duplicate checks for these, if necessary (e.g. standard ones)
-skip = []
-# Skip build script runs (if needed)
-skip-tree = []
+wildcards = "allow"
 
 [sources]
-version = 2
-# Allow only crates.io and local paths
+unknown-registry = "warn"
+unknown-git = "warn"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 allow-git = []
