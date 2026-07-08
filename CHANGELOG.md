@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.63.0](https://github.com/DecapodLabs/decapod/compare/v0.62.7...v0.63.0) - 2026-07-08
+
+### Other
+
+- Stop tracking validation epoch receipt ([#820](https://github.com/DecapodLabs/decapod/pull/820))
+
 ## [0.62.7](https://github.com/DecapodLabs/decapod/compare/v0.62.6...v0.62.7) - 2026-07-08
 
 ### Other
