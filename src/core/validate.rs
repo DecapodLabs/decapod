@@ -20,10 +20,7 @@ use crate::core::project_specs::{
 };
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
-use crate::core::validation_epoch::{
-    VALIDATION_EPOCH_RECEIPT, ValidationEpochMetadata, active_validation_epoch,
-    write_active_validation_epoch_receipt,
-};
+use crate::core::validation_epoch::{ValidationEpochMetadata, active_validation_epoch};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::plugins::internalize::{self, DeterminismClass, InternalizationManifest, ReplayClass};
 use crate::{db, primitives, todo, workspace};
@@ -1170,7 +1167,6 @@ fn validate_generated_artifact_whitelist(
         ".decapod/data/knowledge.promotions.jsonl",
         ".decapod/generated/specs/.manifest",
         ".decapod/generated/specs/.manifest.json",
-        VALIDATION_EPOCH_RECEIPT,
         ".decapod/generated/policy/context_capsule_policy.json",
         ".decapod/generated/artifacts/provenance/kcr_trend.jsonl",
     ];
@@ -5359,7 +5355,6 @@ pub fn run_validation(
 
     let elapsed = total_start.elapsed();
     let validation_epoch = active_validation_epoch(working_root)?;
-    write_active_validation_epoch_receipt(working_root, &validation_epoch)?;
     let pass_count = ctx.pass_count.load(Ordering::Relaxed);
     let fail_count = ctx.fail_count.load(Ordering::Relaxed);
     let warn_count = ctx.warn_count.load(Ordering::Relaxed);

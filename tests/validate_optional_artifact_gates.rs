@@ -618,17 +618,17 @@ fn validate_fails_when_gitignore_missing_generated_whitelist_rules() {
 }
 
 #[test]
-fn validate_fails_when_non_whitelisted_generated_file_is_tracked() {
+fn validate_fails_when_validation_epoch_receipt_is_tracked() {
     let (_tmp, dir, password) = setup_repo();
-    let rogue = dir.join(".decapod/generated/rogue.json");
-    fs::create_dir_all(rogue.parent().expect("rogue parent")).expect("mkdir generated");
-    fs::write(&rogue, "{}\n").expect("write rogue generated file");
+    let receipt = dir.join(".decapod/generated/validation-epoch.json");
+    fs::create_dir_all(receipt.parent().expect("receipt parent")).expect("mkdir generated");
+    fs::write(&receipt, "{}\n").expect("write validation epoch receipt");
 
     let add = Command::new("git")
         .current_dir(&dir)
-        .args(["add", "-f", ".decapod/generated/rogue.json"])
+        .args(["add", "-f", ".decapod/generated/validation-epoch.json"])
         .output()
-        .expect("git add rogue generated");
+        .expect("git add validation epoch receipt");
     assert!(
         add.status.success(),
         "forced git add should succeed: {}",
@@ -646,7 +646,7 @@ fn validate_fails_when_non_whitelisted_generated_file_is_tracked() {
     );
     assert!(
         !validate.status.success(),
-        "validate should fail when non-whitelisted generated file is tracked"
+        "validate should fail when validation epoch receipt is tracked"
     );
     let stderr = combined_output(&validate);
     assert!(

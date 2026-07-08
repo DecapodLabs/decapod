@@ -243,12 +243,10 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     );
 
     let receipt_path = dir.join(".decapod/generated/validation-epoch.json");
-    let receipt: Value = serde_json::from_str(
-        &fs::read_to_string(&receipt_path).expect("validation epoch receipt should exist"),
-    )
-    .expect("validation epoch receipt should parse");
-    assert_eq!(receipt["kind"], "decapod.validation_epoch");
-    assert_eq!(receipt["active_epoch"]["epoch_id"], epoch_id);
+    assert!(
+        !receipt_path.exists(),
+        "validate must not write a mutable validation epoch receipt into tracked generated artifacts"
+    );
     assert!(payload["self_heal"].is_array());
     assert!(
         !payload["self_heal"]

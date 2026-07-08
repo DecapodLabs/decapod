@@ -731,8 +731,8 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must allowlist generated Dockerfile in .gitignore"
     );
     assert!(
-        gitignore.contains("!.decapod/generated/validation-epoch.json"),
-        "decapod init must allowlist generated validation epoch receipt in .gitignore"
+        !gitignore.contains("!.decapod/generated/validation-epoch.json"),
+        "decapod init must keep validation epoch receipts ignored as volatile local state"
     );
     assert!(
         gitignore.contains("!.decapod/generated/context/*.json"),
@@ -788,8 +788,18 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "default diagram style should scaffold ascii topology block"
     );
 
-    // Second run should succeed with checksum verification (files unchanged)
+    let gitignore_path = live_target.join(".gitignore");
+    let mut stale_gitignore = fs::read_to_string(&gitignore_path).expect("read .gitignore");
+    stale_gitignore.push_str("!.decapod/generated/validation-epoch.json\n");
+    fs::write(&gitignore_path, stale_gitignore).expect("seed stale validation epoch allowlist");
+
+    // Second run should succeed with checksum verification and prune deprecated ignore rules.
     scaffold_project_entrypoints(&live_opts).expect("second scaffold succeeds when files match");
+    let gitignore = fs::read_to_string(&gitignore_path).expect("read refreshed .gitignore");
+    assert!(
+        !gitignore.contains("!.decapod/generated/validation-epoch.json"),
+        "decapod init must remove stale validation epoch allowlist rules from existing projects"
+    );
 
     let force_opts = ScaffoldOptions {
         target_dir: live_target.clone(),

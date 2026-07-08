@@ -42,7 +42,6 @@ dev/
 # Allowlist deterministic generated artifact used as container build baseline.
 !.decapod/data/
 !.decapod/data/knowledge.promotions.jsonl
-!.decapod/generated/validation-epoch.json
 !.decapod/generated/Dockerfile
 !.decapod/generated/context/
 !.decapod/generated/context/*.json
@@ -80,4 +79,3 @@ err.log
 
 # --- Bazel ---
 /bazel-*
-

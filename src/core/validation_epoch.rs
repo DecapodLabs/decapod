@@ -8,7 +8,6 @@ use std::fs;
 use std::path::Path;
 
 pub const VALIDATION_EPOCH_SCHEMA_VERSION: &str = "1.0.0";
-pub const VALIDATION_EPOCH_RECEIPT: &str = ".decapod/generated/validation-epoch.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ValidationEpochMetadata {
@@ -25,13 +24,6 @@ pub struct ValidationEpochMetadata {
     pub generated_specs_manifest_hash: String,
     pub generated_specs_fingerprint: String,
     pub material_hashes: BTreeMap<String, String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ValidationEpochReceipt {
-    pub kind: String,
-    pub active_epoch: ValidationEpochMetadata,
-    pub proof_applicability: String,
 }
 
 pub fn active_validation_epoch(
@@ -128,29 +120,6 @@ pub fn active_validation_epoch(
         generated_specs_fingerprint,
         material_hashes,
     })
-}
-
-pub fn write_active_validation_epoch_receipt(
-    project_root: &Path,
-    epoch: &ValidationEpochMetadata,
-) -> Result<(), error::DecapodError> {
-    let receipt = ValidationEpochReceipt {
-        kind: "decapod.validation_epoch".to_string(),
-        active_epoch: epoch.clone(),
-        proof_applicability:
-            "Only proof records with this evaluator epoch count as current proof evidence."
-                .to_string(),
-    };
-    let path = project_root.join(VALIDATION_EPOCH_RECEIPT);
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
-    }
-    let body = serde_json::to_string_pretty(&receipt).map_err(|e| {
-        error::DecapodError::ValidationError(format!(
-            "Failed to encode validation epoch receipt: {e}"
-        ))
-    })?;
-    fs::write(path, format!("{body}\n")).map_err(error::DecapodError::IoError)
 }
 
 fn extract_version(markdown: &str) -> Option<String> {
