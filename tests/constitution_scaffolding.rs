@@ -87,6 +87,86 @@ const CORE_NODES: &[&str] = &[
     "core/SPECS",
 ];
 
+const STRATEGY_METHODOLOGY_NODES: &[&str] = &[
+    "methodology/STRATEGIC_DECISION",
+    "methodology/STRATEGY_DIAGNOSIS",
+    "methodology/MARKET_INTELLIGENCE",
+    "methodology/STRATEGY_ECONOMICS",
+    "methodology/OPERATING_MODEL_EXECUTION",
+    "methodology/VALUE_RISK_GOVERNANCE",
+    "methodology/EXECUTIVE_ALIGNMENT",
+];
+
+const STRATEGY_CHILD_NODES: &[&str] = &[
+    "methodology/STRATEGY_DIAGNOSIS",
+    "methodology/MARKET_INTELLIGENCE",
+    "methodology/STRATEGY_ECONOMICS",
+    "methodology/OPERATING_MODEL_EXECUTION",
+    "methodology/VALUE_RISK_GOVERNANCE",
+    "methodology/EXECUTIVE_ALIGNMENT",
+];
+
+const STRATEGY_MODE_LOOKUPS: &[(&str, &str)] = &[
+    ("situation assessment", "methodology/STRATEGY_DIAGNOSIS"),
+    ("growth barriers", "methodology/STRATEGY_DIAGNOSIS"),
+    ("assumption audit", "methodology/STRATEGY_DIAGNOSIS"),
+    ("market mapping", "methodology/MARKET_INTELLIGENCE"),
+    (
+        "competitive intelligence",
+        "methodology/MARKET_INTELLIGENCE",
+    ),
+    ("customer segmentation", "methodology/MARKET_INTELLIGENCE"),
+    ("profit pool analysis", "methodology/MARKET_INTELLIGENCE"),
+    ("strategic options", "methodology/STRATEGY_ECONOMICS"),
+    ("pricing strategy", "methodology/STRATEGY_ECONOMICS"),
+    ("business case", "methodology/STRATEGY_ECONOMICS"),
+    ("portfolio review", "methodology/STRATEGY_ECONOMICS"),
+    ("operating model", "methodology/OPERATING_MODEL_EXECUTION"),
+    (
+        "initiative prioritization",
+        "methodology/OPERATING_MODEL_EXECUTION",
+    ),
+    (
+        "transformation roadmap",
+        "methodology/OPERATING_MODEL_EXECUTION",
+    ),
+    ("war gaming", "methodology/VALUE_RISK_GOVERNANCE"),
+    ("risk mitigation", "methodology/VALUE_RISK_GOVERNANCE"),
+    ("risk register", "methodology/VALUE_RISK_GOVERNANCE"),
+    ("kpi architecture", "methodology/VALUE_RISK_GOVERNANCE"),
+    ("value realization", "methodology/VALUE_RISK_GOVERNANCE"),
+    ("stakeholder alignment", "methodology/EXECUTIVE_ALIGNMENT"),
+    ("narrative builder", "methodology/EXECUTIVE_ALIGNMENT"),
+    ("decision memo", "methodology/EXECUTIVE_ALIGNMENT"),
+];
+
+const STRATEGY_SEARCH_QUERIES: &[(&str, &str)] = &[
+    (
+        "growth barriers assumption audit root cause",
+        "methodology/STRATEGY_DIAGNOSIS",
+    ),
+    (
+        "market mapping customer segmentation profit pool",
+        "methodology/MARKET_INTELLIGENCE",
+    ),
+    (
+        "pricing strategy business case portfolio review",
+        "methodology/STRATEGY_ECONOMICS",
+    ),
+    (
+        "operating model initiative prioritization transformation roadmap",
+        "methodology/OPERATING_MODEL_EXECUTION",
+    ),
+    (
+        "war gaming risk register kpi architecture value realization",
+        "methodology/VALUE_RISK_GOVERNANCE",
+    ),
+    (
+        "stakeholder alignment narrative builder decision memo",
+        "methodology/EXECUTIVE_ALIGNMENT",
+    ),
+];
+
 fn load_constitution_asset() -> serde_json::Value {
     serde_json::from_str(include_str!("../assets/constitution.json")).expect("constitution json")
 }
@@ -415,6 +495,99 @@ fn core_lookup_routes_loop_reports_and_untrusted_attachments() {
 }
 
 #[test]
+fn constitution_routes_strategy_decision_nudges_through_methodology() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+    let parent_id = "methodology/STRATEGIC_DECISION";
+
+    for node_id in STRATEGY_METHODOLOGY_NODES {
+        let node = nodes
+            .get(*node_id)
+            .unwrap_or_else(|| panic!("missing methodology node {node_id}"));
+        assert_eq!(node["category"].as_str(), Some("methodology"));
+
+        for section in [
+            "match",
+            "concepts",
+            "ambiguity",
+            "decisions",
+            "standards",
+            "failure_modes",
+            "next_queries",
+            "proceed_when",
+        ] {
+            assert_non_empty_array(&node["sections"][section], &format!("{node_id}.{section}"));
+        }
+    }
+
+    let core_refs = nodes["core/METHODOLOGY"]["links"]["references"]
+        .as_array()
+        .expect("core methodology references");
+    assert!(
+        core_refs
+            .iter()
+            .any(|value| value.as_str() == Some(parent_id)),
+        "core/METHODOLOGY must route to {parent_id}"
+    );
+
+    let product_refs = nodes["methodology/PRODUCT"]["links"]["references"]
+        .as_array()
+        .expect("product methodology references");
+    assert!(
+        product_refs
+            .iter()
+            .any(|value| value.as_str() == Some(parent_id)),
+        "methodology/PRODUCT must route to {parent_id}"
+    );
+
+    let parent_refs = nodes[parent_id]["links"]["references"]
+        .as_array()
+        .expect("strategy decision references");
+    for child_id in STRATEGY_CHILD_NODES {
+        assert!(
+            parent_refs
+                .iter()
+                .any(|value| value.as_str() == Some(child_id)),
+            "{parent_id} must route to {child_id}"
+        );
+    }
+
+    let parent_standards = nodes[parent_id]["sections"]["standards"]
+        .as_array()
+        .expect("standards array")
+        .iter()
+        .filter_map(|value| value.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    for expected in [
+        "decision statement",
+        "options considered",
+        "load-bearing assumptions",
+        "material risks",
+        "success metrics",
+        "next evidence tests",
+    ] {
+        assert!(
+            parent_standards.contains(expected),
+            "{parent_id}.standards must nudge agents toward {expected}"
+        );
+    }
+
+    for (term, node_id) in STRATEGY_MODE_LOOKUPS {
+        let entries = lookup
+            .get(*term)
+            .unwrap_or_else(|| panic!("lookup must include {term}"))
+            .as_array()
+            .unwrap_or_else(|| panic!("lookup.{term} must be an array"));
+        assert!(
+            entries.iter().any(|value| value.as_str() == Some(node_id)),
+            "lookup.{term} must route to {node_id}"
+        );
+    }
+}
+
+#[test]
 fn lookup_routes_init_and_major_runtime_terms() {
     let constitution = load_constitution_asset();
     let lookup = constitution["lookup"].as_object().expect("lookup object");
@@ -443,6 +616,27 @@ fn lookup_routes_init_and_major_runtime_terms() {
         assert!(
             entries.iter().any(|v| v.as_str() == Some(node_id)),
             "lookup.{term} must route to {node_id}"
+        );
+    }
+}
+
+#[test]
+fn embedded_constitution_search_surfaces_strategy_decision_methodology() {
+    for (query, node_id) in STRATEGY_SEARCH_QUERIES {
+        let output = Command::new(resolve_decapod_bin())
+            .args(["constitution", "search", "--query", query])
+            .output()
+            .expect("run decapod constitution search");
+        assert!(
+            output.status.success(),
+            "constitution search failed for {query}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(
+            stdout.contains(node_id),
+            "constitution search must surface {node_id} for {query}:\n{stdout}"
         );
     }
 }
