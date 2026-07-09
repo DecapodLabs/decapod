@@ -1,0 +1,37 @@
+# deny.toml
+# Configuration for cargo-deny
+
+[graph]
+all-features = false
+no-default-features = false
+
+[advisories]
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "BSD-2-Clause",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "ISC",
+    "CC0-1.0",
+    "OpenSSL",
+    "Zlib",
+    "0BSD",
+]
+confidence-threshold = 0.8
+
+[licenses.private]
+ignore = false
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+
+[sources]
+unknown-registry = "warn"
+unknown-git = "warn"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

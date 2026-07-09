@@ -101,6 +101,23 @@ jobs:
       - name: Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
 
+  # DEPS-LINT: Cargo deny and unused dependency checks
+  deps-lint:
+    name: Lint (dependencies)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Install cargo-machete
+        uses: taiki-e/install-action@cargo-machete
+      - name: Run cargo-machete check
+        run: cargo machete
+      - name: Check license and duplicate dependencies
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
+
   # HEALTH: consumes the shared decapod binary from setup
   health:
     name: Health Checks
