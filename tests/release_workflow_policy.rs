@@ -82,6 +82,31 @@ fn release_workflow_publishes_decapod_ghcr_image() {
 }
 
 #[test]
+fn release_workflow_can_resume_existing_github_release() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let workflow = fs::read_to_string(root.join(".github/workflows/release.yml"))
+        .expect("read release workflow");
+
+    assert!(
+        workflow.contains("release_tag=\"${{ needs.plan.outputs.tag }}\"")
+            && workflow.contains("gh release view \"$release_tag\""),
+        "release workflow should check whether the GitHub release already exists"
+    );
+    assert!(
+        workflow.contains("gh release edit \"$release_tag\""),
+        "release workflow should update release metadata when rerun after release creation"
+    );
+    assert!(
+        workflow.contains("gh release upload \"$release_tag\" artifacts/* --clobber"),
+        "release workflow should replace assets when rerun against an existing release"
+    );
+    assert!(
+        workflow.contains("gh release create \"$release_tag\" --target \"$RELEASE_COMMIT\""),
+        "release workflow should still create the GitHub release on the first publish"
+    );
+}
+
+#[test]
 fn public_release_surface_has_no_private_propodus_dependency() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let cargo_toml = fs::read_to_string(root.join("Cargo.toml")).expect("read Cargo.toml");
