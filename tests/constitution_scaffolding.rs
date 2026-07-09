@@ -641,6 +641,80 @@ fn core_lookup_routes_loop_reports_and_untrusted_attachments() {
 }
 
 #[test]
+fn core_decapod_routes_agentic_work_substrate() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+    let core = &nodes["core/DECAPOD"];
+
+    assert!(
+        core["summary"]
+            .as_str()
+            .is_some_and(|summary| summary.contains("governed work substrate")),
+        "core/DECAPOD summary must make the substrate thesis explicit"
+    );
+
+    for term in ["agentic", "substrate", "custody", "validation"] {
+        assert!(
+            core["terms"]
+                .as_array()
+                .is_some_and(|terms| terms.iter().any(|value| value.as_str() == Some(term))),
+            "core/DECAPOD terms must include {term}"
+        );
+    }
+
+    let route_text = core["sections"]["route"]
+        .as_array()
+        .expect("core/DECAPOD route entries")
+        .iter()
+        .filter_map(|value| value.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    for expected in [
+        "agentic work substrate",
+        "bounded scope",
+        "coordination state",
+        "independently reviewable completion",
+    ] {
+        assert!(
+            route_text.contains(expected),
+            "core/DECAPOD route guidance must mention {expected}"
+        );
+    }
+
+    let notes = core["architect_notes"]
+        .as_array()
+        .expect("core/DECAPOD architect notes")
+        .iter()
+        .filter_map(|value| value.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        notes.contains("governed agent action over trusted repo-native evidence"),
+        "core/DECAPOD architect notes must distinguish governed action from context feeding"
+    );
+
+    for (term, node_id) in [
+        ("agentic work substrate", "core/DECAPOD"),
+        ("substrate", "interfaces/CONTROL_PLANE"),
+        ("custody", "interfaces/TODO_SCHEMA"),
+        ("bounded", "core/INTERFACES"),
+        ("scope", "interfaces/PLAN_GOVERNED_EXECUTION"),
+        ("completion", "plugins/VERIFY"),
+    ] {
+        let entries = lookup
+            .get(term)
+            .unwrap_or_else(|| panic!("lookup must include {term}"))
+            .as_array()
+            .unwrap_or_else(|| panic!("lookup.{term} must be an array"));
+        assert!(
+            entries.iter().any(|value| value.as_str() == Some(node_id)),
+            "lookup.{term} must route to {node_id}"
+        );
+    }
+}
+
+#[test]
 fn constitution_routes_strategy_decision_nudges_through_methodology() {
     let constitution = load_constitution_asset();
     let nodes = constitution["nodes"].as_object().expect("nodes object");

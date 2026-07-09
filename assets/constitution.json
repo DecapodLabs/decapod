@@ -8,7 +8,7 @@
       "title": "Decapod Root Router",
       "authority": "root-router",
       "binding": "binding",
-      "summary": "Start here after raw human input. Route intent into the smallest useful core surface before the agent reasons about a solution.",
+      "summary": "Start here after raw human input. Route intent into Decapod's governed work substrate so agent action becomes bounded, inspectable, coordinated, validated, and proof-backed before solution reasoning.",
       "terms": [
         "decapod",
         "root",
@@ -22,6 +22,10 @@
         "scaffold",
         "constitution",
         "pre-inference",
+        "agentic",
+        "substrate",
+        "custody",
+        "validation",
         "ambiguous",
         "init",
         "workspace",
@@ -54,7 +58,8 @@
       "sections": {
         "match": [
           "Use first when the human prompt is broad, cross-domain, underspecified, or uses product slang like app, service, platform, workflow, tool, or integration.",
-          "Use when the agent cannot yet tell whether the task is product, architecture, interface, methodology, plugin, spec, docs, metadata, or emergency work."
+          "Use when the agent cannot yet tell whether the task is product, architecture, interface, methodology, plugin, spec, docs, metadata, or emergency work.",
+          "Use when the prompt concerns Decapod as the substrate for governed agent action rather than a prompt pack, dashboard, generic workflow tool, or context-only layer."
         ],
         "decide": [
           "Classify the task surface before solution reasoning: product intent, architecture shape, interface contract, implementation subsystem, docs, spec, or operational risk.",
@@ -66,6 +71,7 @@
           "app, feature, UI, backend, API, data, auth, scale, deploy, secure -> core/ARCHITECTURE plus methodology/PRODUCT when product shape is unclear.",
           "database, cache, pipeline, schema, state, migrations -> core/DATA.",
           "schema, contract, envelope, store, control plane, context pack, claim, machine surface -> core/INTERFACES.",
+          "agentic work substrate, custody, bounded scope, coordination state, evidence, or independently reviewable completion -> core/INTERFACES plus core/PLUGINS.",
           "workflow, testing, release, incident, product, platform, operating practice -> core/METHODOLOGY.",
           "research, papers, seminal, theory, academic -> core/RESEARCH.",
           "todo, validate, knowledge, context, capsule, container, health, policy, watcher, skill, eval -> core/PLUGINS.",
@@ -95,7 +101,8 @@
       "architect_notes": [
         "Treat `core/DECAPOD` as the root router for raw human intent and first-hop Decapod routing; it should reduce uncertainty before implementation rather than justify work already chosen.",
         "The correct next hop is the smallest core namespace that can reduce uncertainty before implementation; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
-        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
+        "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes.",
+        "Decapod's root claim is governed agent action over trusted repo-native evidence: tools and providers are replaceable, but intent, scope, custody, validation, and proof are not."
       ],
       "init_questions": [
         {
@@ -24239,6 +24246,19 @@
       "interfaces/PROCEDURAL_NORMS",
       "metadata/skills/AGENT_DECAPOD_INTERFACE"
     ],
+    "agentic": [
+      "core/DECAPOD",
+      "interfaces/CONTROL_PLANE",
+      "interfaces/TODO_SCHEMA",
+      "plugins/TODO"
+    ],
+    "agentic work substrate": [
+      "core/DECAPOD",
+      "interfaces/CONTROL_PLANE",
+      "interfaces/TODO_SCHEMA",
+      "interfaces/CLAIMS",
+      "plugins/VERIFY"
+    ],
     "app": [
       "core/DECAPOD",
       "core/ARCHITECTURE"
@@ -24269,6 +24289,14 @@
     "constitution": [
       "core/DECAPOD",
       "specs/AMENDMENTS"
+    ],
+    "substrate": [
+      "core/DECAPOD",
+      "interfaces/CONTROL_PLANE",
+      "interfaces/STORE_MODEL",
+      "interfaces/TODO_SCHEMA",
+      "plugins/TODO",
+      "plugins/VERIFY"
     ],
     "pre-inference": [
       "core/DECAPOD"
@@ -24905,9 +24933,12 @@
       "specs/evaluations/VARIANCE_EVALS"
     ],
     "bounded": [
+      "core/DECAPOD",
+      "core/INTERFACES",
       "architecture/ALGORITHMS",
       "architecture/CONCURRENCY",
       "interfaces/AGENT_CONTEXT_PACK",
+      "interfaces/TODO_SCHEMA",
       "plugins/CRON",
       "plugins/REFLEX",
       "plugins/WATCHER"
@@ -25661,8 +25692,11 @@
       "architecture/ENCRYPTION"
     ],
     "custody": [
+      "core/DECAPOD",
       "architecture/ENCRYPTION",
-      "architecture/SECRETS"
+      "architecture/SECRETS",
+      "interfaces/STORE_MODEL",
+      "interfaces/TODO_SCHEMA"
     ],
     "that": [
       "architecture/ENTERPRISE",
@@ -26373,7 +26407,10 @@
       "docs/NEGLECTED_ASPECTS_LEDGER"
     ],
     "work": [
+      "core/DECAPOD",
       "docs/NEGLECTED_ASPECTS_LEDGER",
+      "interfaces/CONTROL_PLANE",
+      "interfaces/TODO_SCHEMA",
       "plugins/AUDIT",
       "plugins/HEARTBEAT",
       "plugins/TODO"
@@ -26389,6 +26426,7 @@
       "docs/NEGLECTED_ASPECTS_LEDGER"
     ],
     "completion": [
+      "core/DECAPOD",
       "docs/NEGLECTED_ASPECTS_LEDGER",
       "interfaces/CLAIMS",
       "plugins/VERIFY"
@@ -26993,6 +27031,9 @@
       "methodology/PRODUCT"
     ],
     "scope": [
+      "core/DECAPOD",
+      "interfaces/PLAN_GOVERNED_EXECUTION",
+      "interfaces/TODO_SCHEMA",
       "methodology/PRODUCT",
       "specs/INTENT"
     ],
