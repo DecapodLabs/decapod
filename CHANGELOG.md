@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.63.4](https://github.com/DecapodLabs/decapod/compare/v0.63.3...v0.63.4) - 2026-07-09
+
+### Other
+
+- Fix release workflow reruns for existing releases ([#834](https://github.com/DecapodLabs/decapod/pull/834))
+
 ## [0.63.3](https://github.com/DecapodLabs/decapod/compare/v0.63.2...v0.63.3) - 2026-07-09
 
 ### Other
