@@ -114,7 +114,7 @@ jobs:
       - name: Run cargo-machete check
         run: cargo machete
       - name: Check license and duplicate dependencies
-        uses: EmbarkStudios/cargo-deny-action@v1
+        uses: EmbarkStudios/cargo-deny-action@v2
         with:
           command: check
 
