@@ -1,0 +1,20 @@
+# .config/nextest.toml
+# Nextest configuration for Decapod
+
+[profile.default]
+# Fail-fast defaults
+fail-fast = true
+# Thread count (can be customized)
+# threads = { count = 4 }
+
+# Slow test configuration: mark tests taking more than 30s as slow
+slow-timeout = { period = "30s", terminate-after = 2 }
+
+# Retries for flaky tests (disabled by default in local dev, enabled in CI)
+retries = 0
+
+[profile.ci]
+# In CI, retry flaky tests up to 2 times
+retries = 2
+# Detailed execution status in CI
+status-level = "all"

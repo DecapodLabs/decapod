@@ -51,6 +51,56 @@ bazel run //:decapod -- validate
 
 If you do not have Bazelisk installed, you can install it via your package manager (e.g., `npm install -g @bazel/bazelisk`, `brew install bazelisk`, etc.).
 
+## Recommended Workflow Tooling
+
+While Bazel is used for CI/CD and large-scale tests, local iteration is supported via standard Cargo tooling. The following tools are recommended for code quality, dependency integrity, and developer productivity:
+
+### 1. Code Coverage (`cargo-llvm-cov`)
+Use LLVM source-based instrumentation to generate precise line and region coverage reports:
+```bash
+cargo install cargo-llvm-cov
+cargo llvm-cov --html
+```
+
+### 2. Dependency Audit & Safety (`cargo-deny` & `cargo-audit`)
+Audit dependencies for duplicate versions, unapproved licenses, and known vulnerabilities:
+```bash
+# Custom dependency lints (duplicate check, license limits)
+cargo install cargo-deny --locked
+cargo deny check
+
+# Security vulnerability checks
+cargo install cargo-audit --locked
+cargo audit
+```
+
+### 3. Clean dependencies (`cargo-machete` & `cargo-udeps`)
+Find and remove unused dependencies:
+```bash
+# Fast heuristic checker
+cargo install cargo-machete
+cargo machete
+
+# Nightly compiler-accurate checker
+cargo install cargo-udeps --locked
+cargo +nightly udeps
+```
+
+### 4. Interactive Consistency Lints (`clippy.toml`)
+We configure Clippy via `clippy.toml` to disallow raw standard library APIs (like blocking sockets) in favor of async libraries or project-wide connection pools. Running standard `cargo clippy` will check this automatically.
+
+### 5. Fast Test Loop (`cargo-nextest` & `cargo-watch`)
+Speed up testing cycles with a modern test runner and auto-check on file changes:
+```bash
+# Run tests in parallel in separate processes
+cargo install cargo-nextest --locked
+cargo nextest run
+
+# Watch code for saves and auto-check
+cargo install cargo-watch
+cargo watch -x check
+```
+
 
 ## Release Discipline
 
