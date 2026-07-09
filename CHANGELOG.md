@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.63.1](https://github.com/DecapodLabs/decapod/compare/v0.63.0...v0.63.1) - 2026-07-09
+
+### Other
+
+- Standardize Rust Developer Workflow Tooling ([#827](https://github.com/DecapodLabs/decapod/pull/827))
+
 ## [0.63.0](https://github.com/DecapodLabs/decapod/compare/v0.62.7...v0.63.0) - 2026-07-08
 
 ### Other
