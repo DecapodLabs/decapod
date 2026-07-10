@@ -5530,54 +5530,6 @@ fn run_plan_command(
                 .unwrap()
             );
         }
-        PlanCommand::Phase(phase_cli) => match phase_cli.command {
-            PlanPhaseCommand::Add {
-                id,
-                required_artifacts,
-                required_verified_todos,
-                exit_required_artifacts,
-                exit_required_verified_todos,
-                remediation,
-            } => {
-                let entry_gates = required_artifacts
-                    .into_iter()
-                    .map(|path| plan_governance::PhaseGate::ArtifactExists { path })
-                    .chain(
-                        required_verified_todos
-                            .into_iter()
-                            .map(|todo_id| plan_governance::PhaseGate::TodoVerified { todo_id }),
-                    )
-                    .collect();
-                let exit_gates = exit_required_artifacts
-                    .into_iter()
-                    .map(|path| plan_governance::PhaseGate::ArtifactExists { path })
-                    .chain(
-                        exit_required_verified_todos
-                            .into_iter()
-                            .map(|todo_id| plan_governance::PhaseGate::TodoVerified { todo_id }),
-                    )
-                    .collect();
-                let plan = plan_governance::add_phase(
-                    project_root,
-                    &project_store.root,
-                    plan_governance::GovernedPhase {
-                        id,
-                        entry_gates,
-                        exit_gates,
-                        remediation,
-                    },
-                )?;
-                println!("{}", serde_json::to_string_pretty(&plan).unwrap());
-            }
-            PlanPhaseCommand::Enter { id } => {
-                let plan = plan_governance::enter_phase(project_root, &project_store.root, &id)?;
-                println!("{}", serde_json::to_string_pretty(&plan).unwrap());
-            }
-            PlanPhaseCommand::Complete { id } => {
-                let plan = plan_governance::complete_phase(project_root, &project_store.root, &id)?;
-                println!("{}", serde_json::to_string_pretty(&plan).unwrap());
-            }
-        },
     }
 
     Ok(())

@@ -86,8 +86,10 @@ fn init_with_backend_local_is_default() {
     let config_path = tmp.path().join(".decapod/config.toml");
     let config = fs::read_to_string(config_path).expect("read config.toml");
     assert!(config.contains("mode = \"local\""));
-    assert!(config.contains("[cloud]"));
-    assert!(config.contains("enabled = false"));
+    assert!(
+        !config.contains("[cloud]"),
+        "cloud section must not be serialized when cloud is disabled: {config}"
+    );
 }
 
 #[test]

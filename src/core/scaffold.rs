@@ -692,12 +692,6 @@ sequenceDiagram
 - Data ownership boundaries:
 - Schema evolution + migration policy:
 
-## Governed Phase Execution
-- Plan phases are stored in the existing governed plan artifact, not in a parallel workflow store.
-- A bounded cross-process file lock serializes phase mutations; atomic rename makes each persisted transition all-or-nothing.
-- The linear lifecycle is pending -> active -> completed. Work readiness requires an active phase whenever phases are declared.
-- Entry and exit gates share a closed, locally evaluable vocabulary: artifact existence and current verified TODO evidence.
-
 ## ADR Register
 | ADR | Title | Status | Rationale | Date |
 |---|---|---|---|---|
@@ -791,13 +785,6 @@ Generated interface specs should include:
 - Version strategy (`v1`, date-based, semver):
 - Backward-compatibility guarantees:
 - Deprecation window and removal policy:
-
-## Governed Phase Gates
-- `decapod govern plan phase add` persists ordered phase contracts. Identical declarations are idempotent; conflicting duplicates and unknown TODO references are rejected.
-- `phase enter` requires the next incomplete phase and evaluates entry gates. `phase complete` requires the active phase and evaluates exit gates.
-- Artifact gates are existence proof only at evaluation time. Verified-TODO gates require a current Decapod verification record and are evidence proof.
-- Plan mutations use a bounded cross-process lock plus atomic rename. A phase-bearing plan cannot execute work without an active phase or enter `DONE` before every phase is terminal.
-- Stable automation markers: `PHASE_GATE_FAILED`, `PHASE_EXIT_GATE_FAILED`, `INVALID_PHASE_TRANSITION`, `INVALID_PHASE_COMPLETION`, `PHASE_LOCKED`, `INVALID_PHASE_CONTRACT`.
 "#
     )
 }
@@ -900,11 +887,6 @@ flowchart LR
 - Statistical thresholds (if non-deterministic):
 - Rollback criteria:
 
-## Governed Phase Validation
-- Validate phase contracts when loading a plan: unique IDs, contiguous completed prefix, next-in-order active phase, and terminal plan state only after all phases complete.
-- Test entry and exit denial for absent artifacts and invalidated verification evidence.
-- Treat artifact gates as existence checks, not content or correctness proof; use verified TODO gates when executable Decapod proof is required.
-
 ## Bounded Execution
 | Operation | Timeout | Failure Mode |
 |---|---|---|
@@ -974,18 +956,6 @@ stateDiagram-v2
 |---|---|---|
 | create/update mutation | request_id | return original result |
 | async enqueue | event_id | ignore duplicate enqueue |
-
-## Governed Phase State
-```mermaid
-stateDiagram-v2
-  [*] --> Pending
-  Pending --> Active: enter next phase + entry gates pass
-  Active --> Completed: exit gates pass
-  Completed --> Pending: next declared phase
-  Completed --> [*]: final declared phase
-```
-- Ordered phase contracts are linear; phase gates cannot express phase-to-phase dependencies, so cyclic and self-dependent graphs are not representable.
-- Re-entering an active phase and re-completing a terminal phase are idempotent.
 
 ## Language Note
 - Primary language inferred: {lang}
