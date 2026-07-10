@@ -37,13 +37,6 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod govern`
 - **Intent:** Governance: policy, health, proofs, audits
 
-### `decapod govern plan phase`
-- **Intent:** Declare, enter, and complete ordered plan phases with deterministic gates.
-- **Contract:** `phase add` is idempotent for an identical definition and is locked after execution starts. `phase enter --id <phase>` accepts only the next incomplete phase; `phase complete --id <phase>` accepts only the active phase and moves it to terminal state after exit gates pass.
-- **Supported gates:** `--require-artifact` and `--exit-require-artifact` prove only that a repo-relative path exists at gate evaluation time. `--require-verified-todo` and `--exit-require-verified-todo` require a current completed Decapod verification record. Narrative assertions, agent booleans, and arbitrary shell commands are not phase evidence.
-- **Enforcement:** Work readiness, including `todo done`, requires an active phase whenever a plan declares phases. Plan completion requires every declared phase to be terminal.
-- **Failure markers:** `PHASE_GATE_FAILED`, `PHASE_EXIT_GATE_FAILED`, `INVALID_PHASE_TRANSITION`, `INVALID_PHASE_COMPLETION`, `PHASE_LOCKED`, `PHASE_DEFINITION_LOCKED`, `INVALID_PHASE_CONTRACT`, `UNKNOWN_PHASE_TODO`.
-
 ## `decapod data`
 - **Intent:** Data: archives, knowledge, context, schemas
 
