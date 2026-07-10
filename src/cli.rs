@@ -523,6 +523,32 @@ pub(crate) struct PlanCli {
     pub command: PlanCommand,
 }
 
+#[derive(clap::Args, Debug)]
+pub(crate) struct PlanPhaseCli {
+    #[clap(subcommand)]
+    pub command: PlanPhaseCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum PlanPhaseCommand {
+    /// Declare an ordered phase and its deterministic entry gates
+    Add {
+        #[clap(long)]
+        id: String,
+        #[clap(long = "require-artifact")]
+        required_artifacts: Vec<String>,
+        #[clap(long = "require-verified-todo")]
+        required_verified_todos: Vec<String>,
+        #[clap(long)]
+        remediation: Option<String>,
+    },
+    /// Enter the next declared phase after its entry gates pass
+    Enter {
+        #[clap(long)]
+        id: String,
+    },
+}
+
 #[derive(clap::ValueEnum, Clone, Debug)]
 pub(crate) enum PlanStateArg {
     Draft,
@@ -620,6 +646,8 @@ pub(crate) enum PlanCommand {
         #[clap(long)]
         todo_id: Option<String>,
     },
+    /// Declare and enter deterministic ordered execution phases
+    Phase(PlanPhaseCli),
 }
 
 #[derive(clap::Args, Debug)]

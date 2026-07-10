@@ -7,7 +7,7 @@ These files are the project-local contract for humans and agents.
 - Project: decapod
 - Outcome: Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to converge on human intent, shape context before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
 - Detected languages: Rust
-- Detected surfaces: cargo, git, docker
+- Detected surfaces: cargo
 
 ## How to use this folder
 - [INTENT.md](./INTENT.md): what success means and what is explicitly out of scope.
@@ -30,24 +30,13 @@ These files are the project-local contract for humans and agents.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
 
 ## Day-0 Onboarding Checklist
-- [x] Replace all placeholders in all 8 spec files.
-- [x] Confirm primary user outcome and acceptance criteria in [INTENT.md](./INTENT.md).
-- [x] Confirm topology and runtime model in [ARCHITECTURE.md](./ARCHITECTURE.md).
-- [x] Document all inbound/outbound contracts in [INTERFACES.md](./INTERFACES.md).
-- [x] Define validation gates and CI proof surfaces in [VALIDATION.md](./VALIDATION.md).
-- [x] Define state machines and invariants in [SEMANTICS.md](./SEMANTICS.md).
-- [x] Define SLOs, alerting, and incident process in [OPERATIONS.md](./OPERATIONS.md).
-- [x] Define threat model and auth/authz decisions in [SECURITY.md](./SECURITY.md).
-- [x] Ensure architecture diagram, docs, changelog, and tests are mapped to promotion gates.
-- [x] Run all validation/test commands and attach evidence artifacts.
-
-## Spec Maintenance
-These specs are **living contracts**. Update them when:
-- New CLI commands or RPC operations are added (`INTERFACES.md`)
-- New validation gates are introduced (`VALIDATION.md`)
-- State machines or invariants change (`SEMANTICS.md`)
-- Architecture decisions are recorded (`ARCHITECTURE.md` + ADR register)
-- Operational procedures evolve (`OPERATIONS.md`)
-- Security boundaries shift (`SECURITY.md`)
-
-Run `decapod validate --refresh-specs` to regenerate scaffold sections from current config.
+- [ ] Replace all placeholders in all 8 spec files.
+- [ ] Confirm primary user outcome and acceptance criteria in [INTENT.md](./INTENT.md).
+- [ ] Confirm topology and runtime model in [ARCHITECTURE.md](./ARCHITECTURE.md).
+- [ ] Document all inbound/outbound contracts in [INTERFACES.md](./INTERFACES.md).
+- [ ] Define validation gates and CI proof surfaces in [VALIDATION.md](./VALIDATION.md).
+- [ ] Define state machines and invariants in [SEMANTICS.md](./SEMANTICS.md).
+- [ ] Define SLOs, alerting, and incident process in [OPERATIONS.md](./OPERATIONS.md).
+- [ ] Define threat model and auth/authz decisions in [SECURITY.md](./SECURITY.md).
+- [ ] Ensure architecture diagram, docs, changelog, and tests are mapped to promotion gates.
+- [ ] Run all validation/test commands and attach evidence artifacts.

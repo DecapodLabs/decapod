@@ -6,7 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const PLAN_SCHEMA_VERSION: &str = "1.0.0";
+const PLAN_SCHEMA_VERSION: &str = "1.1.0";
 const PLAN_PATH: &str = ".decapod/governance/plan.json";
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -24,6 +24,26 @@ pub struct ScopeConstraints {
     #[serde(default)]
     pub forbidden_paths: Vec<String>,
     pub file_touch_budget: Option<usize>,
+}
+
+/// A deterministic gate evaluated before its phase may be entered.
+///
+/// This intentionally supports only predicates Decapod can check locally. Narrative
+/// claims, shell snippets, and arbitrary agent-provided status are not phase evidence.
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum PhaseGate {
+    ArtifactExists { path: String },
+    TodoVerified { todo_id: String },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+pub struct GovernedPhase {
+    pub id: String,
+    #[serde(default)]
+    pub entry_gates: Vec<PhaseGate>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub remediation: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -48,6 +68,11 @@ pub struct GovernedPlan {
     pub deferred_questions: Vec<String>,
     #[serde(default)]
     pub constraints: ScopeConstraints,
+    /// Ordered phases are optional to preserve compatibility with existing plans.
+    #[serde(default)]
+    pub phases: Vec<GovernedPhase>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_phase: Option<String>,
     pub updated_at: String,
 }
 
@@ -98,6 +123,7 @@ pub fn load_plan(project_root: &Path) -> Result<Option<GovernedPlan>, error::Dec
     let plan: GovernedPlan = serde_json::from_slice(&bytes).map_err(|e| {
         error::DecapodError::ValidationError(format!("Invalid plan artifact JSON: {e}"))
     })?;
+    validate_phase_structure(&plan)?;
     Ok(Some(plan))
 }
 
@@ -109,7 +135,9 @@ pub fn save_plan(project_root: &Path, plan: &GovernedPlan) -> Result<(), error::
     let bytes = serde_json::to_vec_pretty(plan).map_err(|e| {
         error::DecapodError::ValidationError(format!("Unable to serialize plan artifact: {e}"))
     })?;
-    fs::write(path, bytes).map_err(error::DecapodError::IoError)?;
+    let tmp = path.with_extension(format!("tmp-{}", crate::core::ulid::new_ulid()));
+    fs::write(&tmp, bytes).map_err(error::DecapodError::IoError)?;
+    fs::rename(tmp, path).map_err(error::DecapodError::IoError)?;
     Ok(())
 }
 
@@ -130,8 +158,119 @@ pub fn init_plan(
         unresolved_contradictions: input.unresolved_contradictions,
         deferred_questions: input.deferred_questions,
         constraints: input.constraints,
+        phases: Vec::new(),
+        active_phase: None,
         updated_at: crate::core::time::now_epoch_z(),
     };
+    save_plan(project_root, &plan)?;
+    Ok(plan)
+}
+
+pub fn add_phase(
+    project_root: &Path,
+    phase: GovernedPhase,
+) -> Result<GovernedPlan, error::DecapodError> {
+    validate_phase_definition(&phase)?;
+    let mut plan = load_plan(project_root)?.ok_or_else(|| {
+        marker_error(
+            "NEEDS_PLAN_APPROVAL",
+            "Plan artifact is missing. Run `decapod govern plan init` first.",
+            None,
+        )
+    })?;
+
+    if plan.active_phase.is_some() {
+        return Err(marker_error(
+            "PHASE_DEFINITION_LOCKED",
+            "Phase definitions cannot change after execution has entered a phase.",
+            Some(json!({ "active_phase": plan.active_phase })),
+        ));
+    }
+
+    if let Some(existing) = plan.phases.iter().find(|item| item.id == phase.id) {
+        if existing == &phase {
+            return Ok(plan);
+        }
+        return Err(marker_error(
+            "PHASE_CONFLICT",
+            "A phase with this ID already has a different contract.",
+            Some(json!({ "phase": phase.id })),
+        ));
+    }
+
+    plan.phases.push(phase);
+    plan.updated_at = crate::core::time::now_epoch_z();
+    save_plan(project_root, &plan)?;
+    Ok(plan)
+}
+
+pub fn enter_phase(
+    project_root: &Path,
+    store_root: &Path,
+    phase_id: &str,
+) -> Result<GovernedPlan, error::DecapodError> {
+    let mut plan = load_plan(project_root)?.ok_or_else(|| {
+        marker_error(
+            "NEEDS_PLAN_APPROVAL",
+            "Plan artifact is missing. Run `decapod govern plan init` first.",
+            None,
+        )
+    })?;
+
+    if plan.state != PlanState::Approved {
+        return Err(marker_error(
+            "NEEDS_PLAN_APPROVAL",
+            "Phase transition is blocked until the plan is APPROVED.",
+            Some(json!({ "current_state": format!("{:?}", plan.state).to_uppercase() })),
+        ));
+    }
+
+    let phase_index = plan
+        .phases
+        .iter()
+        .position(|phase| phase.id == phase_id)
+        .ok_or_else(|| {
+            marker_error(
+                "UNKNOWN_PHASE",
+                "Phase transition references an undeclared phase.",
+                Some(json!({ "phase": phase_id })),
+            )
+        })?;
+
+    if plan.active_phase.as_deref() == Some(phase_id) {
+        return Ok(plan);
+    }
+    let expected_previous = phase_index
+        .checked_sub(1)
+        .map(|index| plan.phases[index].id.as_str());
+    if plan.active_phase.as_deref() != expected_previous {
+        return Err(marker_error(
+            "INVALID_PHASE_TRANSITION",
+            "Phases must be entered in their declared order.",
+            Some(json!({
+                "requested": phase_id,
+                "required_previous": expected_previous,
+                "active_phase": plan.active_phase,
+            })),
+        ));
+    }
+
+    let phase = &plan.phases[phase_index];
+    let failures = evaluate_phase_gates(project_root, store_root, &phase.entry_gates)?;
+    if !failures.is_empty() {
+        return Err(marker_error(
+            "PHASE_GATE_FAILED",
+            "Phase entry is blocked until deterministic gate predicates pass.",
+            Some(json!({
+                "phase": phase.id,
+                "failures": failures,
+                "remediation": phase.remediation,
+            })),
+        ));
+    }
+
+    plan.active_phase = Some(phase_id.to_string());
+    plan.updated_at = crate::core::time::now_epoch_z();
     save_plan(project_root, &plan)?;
     Ok(plan)
 }
@@ -361,6 +500,101 @@ pub fn marker_error(
         }
         None => error::DecapodError::ValidationError(format!("{marker}: {message}")),
     }
+}
+
+fn validate_phase_structure(plan: &GovernedPlan) -> Result<(), error::DecapodError> {
+    let mut ids = std::collections::HashSet::new();
+    for phase in &plan.phases {
+        validate_phase_definition(phase)?;
+        if !ids.insert(&phase.id) {
+            return Err(marker_error(
+                "INVALID_PHASE_CONTRACT",
+                "Phase IDs must be unique.",
+                Some(json!({ "phase": phase.id })),
+            ));
+        }
+    }
+    if let Some(active) = &plan.active_phase
+        && !ids.contains(active)
+    {
+        return Err(marker_error(
+            "INVALID_PHASE_CONTRACT",
+            "The active phase must exist in the declared ordered phase list.",
+            Some(json!({ "active_phase": active })),
+        ));
+    }
+    Ok(())
+}
+
+fn validate_phase_definition(phase: &GovernedPhase) -> Result<(), error::DecapodError> {
+    if phase.id.trim().is_empty() {
+        return Err(marker_error(
+            "INVALID_PHASE_CONTRACT",
+            "Phase IDs must not be empty.",
+            None,
+        ));
+    }
+    for gate in &phase.entry_gates {
+        if let PhaseGate::ArtifactExists { path } = gate {
+            let path = Path::new(path);
+            if path.is_absolute() || path.components().any(|part| part.as_os_str() == "..") {
+                return Err(marker_error(
+                    "INVALID_PHASE_CONTRACT",
+                    "Artifact gate paths must be repo-relative and must not escape the repository.",
+                    Some(json!({ "path": path })),
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn evaluate_phase_gates(
+    project_root: &Path,
+    store_root: &Path,
+    gates: &[PhaseGate],
+) -> Result<Vec<serde_json::Value>, error::DecapodError> {
+    let mut failures = Vec::new();
+    let db_path = crate::core::todo::todo_db_path(store_root);
+    let conn = Connection::open(&db_path).map_err(error::DecapodError::RusqliteError)?;
+
+    for gate in gates {
+        match gate {
+            PhaseGate::ArtifactExists { path } => {
+                if !project_root.join(path).exists() {
+                    failures.push(json!({
+                        "kind": "artifact_exists",
+                        "path": path,
+                        "reason": "required repo-relative artifact is absent",
+                    }));
+                }
+            }
+            PhaseGate::TodoVerified { todo_id } => {
+                let verified: Option<i64> = conn
+                    .query_row(
+                        "SELECT 1
+                         FROM tasks t
+                         JOIN task_verification v ON v.todo_id = t.id
+                         WHERE t.id = ?1
+                           AND t.status = 'done'
+                           AND LOWER(v.last_verified_status) IN ('verified', 'pass')
+                         LIMIT 1",
+                        rusqlite::params![todo_id],
+                        |row| row.get(0),
+                    )
+                    .optional()
+                    .map_err(error::DecapodError::RusqliteError)?;
+                if verified.is_none() {
+                    failures.push(json!({
+                        "kind": "todo_verified",
+                        "todo_id": todo_id,
+                        "reason": "TODO lacks a completed Decapod verification record",
+                    }));
+                }
+            }
+        }
+    }
+    Ok(failures)
 }
 
 fn enforce_scope_constraints(

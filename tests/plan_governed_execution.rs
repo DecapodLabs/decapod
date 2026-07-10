@@ -159,3 +159,138 @@ fn plan_gate_returns_needs_human_input_until_questions_cleared() {
         String::from_utf8_lossy(&ok.stderr)
     );
 }
+
+#[test]
+fn ordered_phases_require_artifacts_and_reject_skipped_transitions() {
+    let (_tmp, dir, todo_id) = setup_repo();
+
+    let init_plan = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "plan",
+            "init",
+            "--title",
+            "Phase gate fixture",
+            "--intent",
+            "Demonstrate deterministic phase entry",
+            "--todo-id",
+            &todo_id,
+        ],
+    );
+    assert!(init_plan.status.success());
+    assert!(
+        run_decapod(&dir, &["govern", "plan", "approve"])
+            .status
+            .success()
+    );
+
+    for phase in ["context", "implementation"] {
+        let add = run_decapod(
+            &dir,
+            &[
+                "govern",
+                "plan",
+                "phase",
+                "add",
+                "--id",
+                phase,
+                "--require-artifact",
+                "evidence/context.json",
+                "--remediation",
+                "Create the required evidence artifact before continuing.",
+            ],
+        );
+        assert!(
+            add.status.success(),
+            "phase add failed: {}",
+            String::from_utf8_lossy(&add.stderr)
+        );
+    }
+
+    let missing_artifact = run_decapod(
+        &dir,
+        &["govern", "plan", "phase", "enter", "--id", "context"],
+    );
+    assert!(!missing_artifact.status.success());
+    assert!(String::from_utf8_lossy(&missing_artifact.stderr).contains("PHASE_GATE_FAILED"));
+
+    std::fs::create_dir_all(dir.join("evidence")).expect("evidence dir");
+    std::fs::write(dir.join("evidence/context.json"), "{}\n").expect("evidence artifact");
+
+    let first = run_decapod(
+        &dir,
+        &["govern", "plan", "phase", "enter", "--id", "context"],
+    );
+    assert!(
+        first.status.success(),
+        "first phase should enter: {}",
+        String::from_utf8_lossy(&first.stderr)
+    );
+
+    let second = run_decapod(
+        &dir,
+        &["govern", "plan", "phase", "enter", "--id", "implementation"],
+    );
+    assert!(
+        second.status.success(),
+        "next ordered phase should enter: {}",
+        String::from_utf8_lossy(&second.stderr)
+    );
+
+    let backwards = run_decapod(
+        &dir,
+        &["govern", "plan", "phase", "enter", "--id", "context"],
+    );
+    assert!(!backwards.status.success());
+    assert!(String::from_utf8_lossy(&backwards.stderr).contains("INVALID_PHASE_TRANSITION"));
+}
+
+#[test]
+fn phase_entry_requires_decapod_verified_todo_evidence() {
+    let (_tmp, dir, todo_id) = setup_repo();
+    let init_plan = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "plan",
+            "init",
+            "--title",
+            "Proof phase fixture",
+            "--intent",
+            "Require independently recorded proof",
+            "--todo-id",
+            &todo_id,
+        ],
+    );
+    assert!(init_plan.status.success());
+    assert!(
+        run_decapod(&dir, &["govern", "plan", "approve"])
+            .status
+            .success()
+    );
+
+    let add = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "plan",
+            "phase",
+            "add",
+            "--id",
+            "complete",
+            "--require-verified-todo",
+            &todo_id,
+        ],
+    );
+    assert!(add.status.success());
+
+    let blocked = run_decapod(
+        &dir,
+        &["govern", "plan", "phase", "enter", "--id", "complete"],
+    );
+    assert!(!blocked.status.success());
+    let stderr = String::from_utf8_lossy(&blocked.stderr);
+    assert!(stderr.contains("PHASE_GATE_FAILED"));
+    assert!(stderr.contains("TODO lacks a completed Decapod verification record"));
+}

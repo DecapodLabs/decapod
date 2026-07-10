@@ -37,6 +37,12 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod govern`
 - **Intent:** Governance: policy, health, proofs, audits
 
+### `decapod govern plan phase`
+- **Intent:** Declare and enter ordered plan phases with deterministic entry gates.
+- **Contract:** `phase add` is idempotent for an identical phase definition and is locked once a phase has been entered. `phase enter --id <phase>` accepts only the next declared phase after its entry gates pass.
+- **Supported gates:** Repo-relative artifact existence and a TODO with a completed Decapod verification record. Narrative assertions, agent booleans, and arbitrary shell commands are not phase evidence.
+- **Failure markers:** `PHASE_GATE_FAILED`, `INVALID_PHASE_TRANSITION`, `PHASE_DEFINITION_LOCKED`, `INVALID_PHASE_CONTRACT`.
+
 ## `decapod data`
 - **Intent:** Data: archives, knowledge, context, schemas
 
