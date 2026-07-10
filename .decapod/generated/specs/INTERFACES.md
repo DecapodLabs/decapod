@@ -69,3 +69,10 @@ pub enum ApiError {
 - Version strategy (`v1`, date-based, semver):
 - Backward-compatibility guarantees:
 - Deprecation window and removal policy:
+
+## Governed Phase Gates
+- `decapod govern plan phase add` persists ordered phase contracts. Identical declarations are idempotent; conflicting duplicates and unknown TODO references are rejected.
+- `phase enter` requires the next incomplete phase and evaluates entry gates. `phase complete` requires the active phase and evaluates exit gates.
+- Artifact gates are existence proof only at evaluation time. Verified-TODO gates require a current Decapod verification record and are evidence proof.
+- Plan mutations use a bounded cross-process lock plus atomic rename. A phase-bearing plan cannot execute work without an active phase or enter `DONE` before every phase is terminal.
+- Stable automation markers: `PHASE_GATE_FAILED`, `PHASE_EXIT_GATE_FAILED`, `INVALID_PHASE_TRANSITION`, `INVALID_PHASE_COMPLETION`, `PHASE_LOCKED`, `INVALID_PHASE_CONTRACT`.

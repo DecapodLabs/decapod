@@ -49,5 +49,17 @@ stateDiagram-v2
 | create/update mutation | request_id | return original result |
 | async enqueue | event_id | ignore duplicate enqueue |
 
+## Governed Phase State
+```mermaid
+stateDiagram-v2
+  [*] --> Pending
+  Pending --> Active: enter next phase + entry gates pass
+  Active --> Completed: exit gates pass
+  Completed --> Pending: next declared phase
+  Completed --> [*]: final declared phase
+```
+- Ordered phase contracts are linear; phase gates cannot express phase-to-phase dependencies, so cyclic and self-dependent graphs are not representable.
+- Re-entering an active phase and re-completing a terminal phase are idempotent.
+
 ## Language Note
 - Primary language inferred: Rust

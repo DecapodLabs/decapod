@@ -539,11 +539,20 @@ pub(crate) enum PlanPhaseCommand {
         required_artifacts: Vec<String>,
         #[clap(long = "require-verified-todo")]
         required_verified_todos: Vec<String>,
+        #[clap(long = "exit-require-artifact")]
+        exit_required_artifacts: Vec<String>,
+        #[clap(long = "exit-require-verified-todo")]
+        exit_required_verified_todos: Vec<String>,
         #[clap(long)]
         remediation: Option<String>,
     },
     /// Enter the next declared phase after its entry gates pass
     Enter {
+        #[clap(long)]
+        id: String,
+    },
+    /// Complete the active phase after its deterministic exit gates pass
+    Complete {
         #[clap(long)]
         id: String,
     },

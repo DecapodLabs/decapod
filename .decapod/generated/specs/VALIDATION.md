@@ -84,6 +84,11 @@ flowchart LR
 - Statistical thresholds (if non-deterministic):
 - Rollback criteria:
 
+## Governed Phase Validation
+- Validate phase contracts when loading a plan: unique IDs, contiguous completed prefix, next-in-order active phase, and terminal plan state only after all phases complete.
+- Test entry and exit denial for absent artifacts and invalidated verification evidence.
+- Treat artifact gates as existence checks, not content or correctness proof; use verified TODO gates when executable Decapod proof is required.
+
 ## Bounded Execution
 | Operation | Timeout | Failure Mode |
 |---|---|---|

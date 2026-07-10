@@ -99,6 +99,12 @@ sequenceDiagram
 - Data ownership boundaries:
 - Schema evolution + migration policy:
 
+## Governed Phase Execution
+- Plan phases are stored in the existing governed plan artifact, not in a parallel workflow store.
+- A bounded cross-process file lock serializes phase mutations; atomic rename makes each persisted transition all-or-nothing.
+- The linear lifecycle is pending -> active -> completed. Work readiness requires an active phase whenever phases are declared.
+- Entry and exit gates share a closed, locally evaluable vocabulary: artifact existence and current verified TODO evidence.
+
 ## ADR Register
 | ADR | Title | Status | Rationale | Date |
 |---|---|---|---|---|
