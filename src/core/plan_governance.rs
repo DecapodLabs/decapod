@@ -138,6 +138,7 @@ fn acquire_plan_lock(project_root: &Path) -> Result<PlanLock, error::DecapodErro
         .create(true)
         .read(true)
         .write(true)
+        .truncate(false)
         .open(lock_path)
         .map_err(error::DecapodError::IoError)?;
     for _ in 0..100 {
@@ -665,23 +666,22 @@ fn validate_phase_structure(plan: &GovernedPlan) -> Result<(), error::DecapodErr
             ));
         }
     }
-    if let Some(active) = &plan.active_phase {
-        if plan.completed_phases.iter().any(|phase| phase == active)
+    if let Some(active) = &plan.active_phase
+        && (plan.completed_phases.iter().any(|phase| phase == active)
             || plan
                 .phases
                 .get(plan.completed_phases.len())
                 .map(|phase| &phase.id)
-                != Some(active)
-        {
-            return Err(marker_error(
-                "INVALID_PHASE_CONTRACT",
-                "The active phase must be the next incomplete declared phase.",
-                Some(json!({
-                    "active_phase": active,
-                    "completed_phases": plan.completed_phases,
-                })),
-            ));
-        }
+                != Some(active))
+    {
+        return Err(marker_error(
+            "INVALID_PHASE_CONTRACT",
+            "The active phase must be the next incomplete declared phase.",
+            Some(json!({
+                "active_phase": active,
+                "completed_phases": plan.completed_phases,
+            })),
+        ));
     }
     if plan.state == PlanState::Done
         && !plan.phases.is_empty()
