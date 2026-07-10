@@ -512,3 +512,121 @@ fn concurrent_phase_entry_is_serialized_and_idempotent() {
     let status: serde_json::Value = serde_json::from_slice(&status.stdout).expect("status json");
     assert_eq!(status["plan"]["active_phase"], "implementation");
 }
+
+#[test]
+fn ordered_phase_lifecycle_reaches_done_only_after_final_completion() {
+    let (_tmp, dir, todo_id) = setup_repo();
+    assert!(
+        run_decapod(
+            &dir,
+            &[
+                "govern",
+                "plan",
+                "init",
+                "--title",
+                "Complete lifecycle fixture",
+                "--intent",
+                "Exercise entry and exit phase gates",
+                "--todo-id",
+                &todo_id,
+            ],
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_decapod(&dir, &["govern", "plan", "approve"])
+            .status
+            .success()
+    );
+    assert!(
+        run_decapod(
+            &dir,
+            &[
+                "govern",
+                "plan",
+                "phase",
+                "add",
+                "--id",
+                "context",
+                "--exit-require-artifact",
+                "evidence/exit.json",
+            ],
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_decapod(
+            &dir,
+            &["govern", "plan", "phase", "add", "--id", "implementation",],
+        )
+        .status
+        .success()
+    );
+
+    let out_of_order = run_decapod(
+        &dir,
+        &["govern", "plan", "phase", "enter", "--id", "implementation"],
+    );
+    assert!(!out_of_order.status.success());
+    assert!(String::from_utf8_lossy(&out_of_order.stderr).contains("INVALID_PHASE_TRANSITION"));
+
+    assert!(
+        run_decapod(
+            &dir,
+            &["govern", "plan", "phase", "enter", "--id", "context"],
+        )
+        .status
+        .success()
+    );
+    let missing_exit = run_decapod(
+        &dir,
+        &["govern", "plan", "phase", "complete", "--id", "context"],
+    );
+    assert!(!missing_exit.status.success());
+    assert!(String::from_utf8_lossy(&missing_exit.stderr).contains("PHASE_EXIT_GATE_FAILED"));
+
+    std::fs::create_dir_all(dir.join("evidence")).expect("evidence dir");
+    std::fs::write(dir.join("evidence/exit.json"), "{}\n").expect("exit evidence");
+    assert!(
+        run_decapod(
+            &dir,
+            &["govern", "plan", "phase", "complete", "--id", "context"],
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_decapod(
+            &dir,
+            &["govern", "plan", "phase", "enter", "--id", "implementation",],
+        )
+        .status
+        .success()
+    );
+
+    let before_final = run_decapod(&dir, &["govern", "plan", "status"]);
+    let before_final: serde_json::Value =
+        serde_json::from_slice(&before_final.stdout).expect("status json");
+    assert_ne!(before_final["plan"]["state"], "DONE");
+
+    assert!(
+        run_decapod(
+            &dir,
+            &[
+                "govern",
+                "plan",
+                "phase",
+                "complete",
+                "--id",
+                "implementation",
+            ],
+        )
+        .status
+        .success()
+    );
+    let done = run_decapod(&dir, &["govern", "plan", "status"]);
+    let done: serde_json::Value = serde_json::from_slice(&done.stdout).expect("status json");
+    assert_eq!(done["plan"]["state"], "DONE");
+}
