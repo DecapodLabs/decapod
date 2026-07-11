@@ -814,16 +814,16 @@ Key features:
 - **CI/CD Integration**: Automatic execution of validation gates on push.
 
 ## Generated Spec Refresh Gates
-Decapod must keep generated specs synchronized at governance pressure points. When repository surfaces change, validation should either fail with a concrete refresh instruction or, when explicitly requested through a refresh path, regenerate the existing spec files and update the manifest fingerprint. Refresh must update the canonical spec set rather than creating one-off analysis files.
+Decapod must keep generated specs synchronized at governance pressure points. Fresh `decapod init` may scaffold a missing specs directory. After initialization, refresh must re-evaluate the existing codebase, preserve authored spec content, update codebase-derived attestations, and refresh the manifest rather than rendering scaffold replacements.
 
 Refresh-capable paths:
 - `decapod validate --refresh-specs`
 - `decapod rpc --op specs.refresh`
-- initialization or scaffold refresh paths that regenerate `.decapod/generated/specs/*.md`
+- fresh initialization only: scaffold `.decapod/generated/specs/*.md` when the directory is absent
 
 Refresh output requirements:
-- Preserve hand-maintained epistemic custody fields where possible.
-- Blend repo context into the existing canonical spec files.
+- Preserve all authored canonical spec content.
+- Re-evaluate repo surfaces and update codebase-derived attestation blocks.
 - Update `.decapod/generated/specs/.manifest.json` after writing files.
 - Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set.
 
@@ -1221,6 +1221,17 @@ pub fn refresh_project_specs(
     seed: Option<&SpecsSeed>,
 ) -> Result<ProjectSpecsManifest, error::DecapodError> {
     let specs_dir = project_root.join(crate::core::project_specs::LOCAL_PROJECT_SPECS_DIR);
+    if specs_dir.exists()
+        && fs::read_dir(&specs_dir)
+            .map_err(error::DecapodError::IoError)?
+            .next()
+            .is_some()
+    {
+        return Err(error::DecapodError::ValidationError(
+            "Refusing to regenerate existing living specs from scaffolding; use the codebase re-evaluation refresh path instead."
+                .to_string(),
+        ));
+    }
     fs::create_dir_all(&specs_dir).map_err(error::DecapodError::IoError)?;
 
     let existing_manifest = read_specs_manifest(project_root)?;
