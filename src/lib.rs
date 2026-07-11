@@ -4992,8 +4992,14 @@ fn run_validation_bounded(
     let w_root = workspace_root.to_path_buf();
 
     std::thread::spawn(move || {
-        let mut result =
-            validate::run_validation(&store_cloned, &g_root, &w_root, verbose, refresh_specs, projections);
+        let mut result = validate::run_validation(
+            &store_cloned,
+            &g_root,
+            &w_root,
+            verbose,
+            refresh_specs,
+            projections,
+        );
         for attempt in 1..=2 {
             let should_retry = match &result {
                 Err(error::DecapodError::RusqliteError(err)) => {
@@ -5012,8 +5018,14 @@ fn run_validation_bounded(
             }
             let backoff_ms = 200_u64 * attempt as u64;
             std::thread::sleep(std::time::Duration::from_millis(backoff_ms));
-            result =
-                validate::run_validation(&store_cloned, &g_root, &w_root, verbose, refresh_specs, false);
+            result = validate::run_validation(
+                &store_cloned,
+                &g_root,
+                &w_root,
+                verbose,
+                refresh_specs,
+                false,
+            );
         }
         let _ = tx.send(result);
     });

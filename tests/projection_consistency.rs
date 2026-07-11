@@ -93,8 +93,11 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
     // Create a src/lib.rs file which is a tracked path
     let src_dir = dir.join("src");
     fs::create_dir_all(&src_dir).expect("create src dir");
-    fs::write(src_dir.join("lib.rs"), "// This changes the repo fingerprint\npub fn hello() {}\n")
-        .expect("write src/lib.rs to mutate repo");
+    fs::write(
+        src_dir.join("lib.rs"),
+        "// This changes the repo fingerprint\npub fn hello() {}\n",
+    )
+    .expect("write src/lib.rs to mutate repo");
 
     // Refresh specs so the manifest fingerprint matches the new repo state
     // This isolates the context capsule test from the specs validation
@@ -129,11 +132,14 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
         String::from_utf8_lossy(&projections.stdout)
     );
 
-    let payload: Value = serde_json::from_slice(&projections.stdout).expect("validate json payload");
+    let payload: Value =
+        serde_json::from_slice(&projections.stdout).expect("validate json payload");
     assert_eq!(payload["report"]["status"], "fail");
     assert!(payload["report"]["fail_count"].as_u64().unwrap_or(0) > 0);
 
-    let failures = payload["report"]["failures"].as_array().expect("failures array");
+    let failures = payload["report"]["failures"]
+        .as_array()
+        .expect("failures array");
     let projection_failure = failures.iter().find(|f| {
         let msg = f.as_str().unwrap_or("");
         msg.contains("[PROJECTION]")
@@ -170,8 +176,11 @@ fn projection_validation_catches_spec_manifest_hash_mismatch_while_normal_passes
         String::from_utf8_lossy(&projections.stdout)
     );
 
-    let payload: Value = serde_json::from_slice(&projections.stdout).expect("validate json payload");
-    let failures = payload["report"]["failures"].as_array().expect("failures array");
+    let payload: Value =
+        serde_json::from_slice(&projections.stdout).expect("validate json payload");
+    let failures = payload["report"]["failures"]
+        .as_array()
+        .expect("failures array");
     let projection_failure = failures.iter().find(|f| {
         let msg = f.as_str().unwrap_or("");
         msg.contains("[PROJECTION]")
@@ -197,7 +206,13 @@ fn projection_validation_catches_done_task_without_proof_artifacts_while_normal_
     // Add a task and mark it done
     let task_add = run_decapod(
         &dir,
-        &["todo", "add", "Test task for projection validation", "--priority", "high"],
+        &[
+            "todo",
+            "add",
+            "Test task for projection validation",
+            "--priority",
+            "high",
+        ],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -224,7 +239,8 @@ fn projection_validation_catches_done_task_without_proof_artifacts_while_normal_
         "todo list failed: {}",
         String::from_utf8_lossy(&todo_list.stderr)
     );
-    let list_output: Value = serde_json::from_slice(&todo_list.stdout).expect("parse todo list json");
+    let list_output: Value =
+        serde_json::from_slice(&todo_list.stdout).expect("parse todo list json");
     let task_id = list_output["items"]
         .as_array()
         .expect("items array")
@@ -284,8 +300,11 @@ fn projection_validation_catches_done_task_without_proof_artifacts_while_normal_
         String::from_utf8_lossy(&projections.stdout)
     );
 
-    let payload: Value = serde_json::from_slice(&projections.stdout).expect("validate json payload");
-    let failures = payload["report"]["failures"].as_array().expect("failures array");
+    let payload: Value =
+        serde_json::from_slice(&projections.stdout).expect("validate json payload");
+    let failures = payload["report"]["failures"]
+        .as_array()
+        .expect("failures array");
     let evidence_failure = failures.iter().find(|f| {
         let msg = f.as_str().unwrap_or("");
         msg.contains("[EVIDENCE]")
@@ -308,7 +327,13 @@ fn projection_validation_catches_done_task_without_proof_artifacts_while_normal_
 fn get_valid_context_capsule(dir: &Path, password: &str) -> Value {
     let out = run_decapod(
         dir,
-        &["rpc", "--op", "context.capsule.query", "--params", r#"{"topic":"test","scope":"core","limit":1}"#],
+        &[
+            "rpc",
+            "--op",
+            "context.capsule.query",
+            "--params",
+            r#"{"topic":"test","scope":"core","limit":1}"#,
+        ],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", password),
@@ -329,6 +354,9 @@ fn write_context_capsule(dir: &Path, capsule: &Value) {
     fs::create_dir_all(&context_dir).expect("create context dir");
     let capsule_path = context_dir.join("test_task.json");
     // Write the capsule as-is - it already has a valid hash from the RPC
-    fs::write(&capsule_path, serde_json::to_string_pretty(capsule).expect("serialize capsule"))
-        .expect("write capsule");
+    fs::write(
+        &capsule_path,
+        serde_json::to_string_pretty(capsule).expect("serialize capsule"),
+    )
+    .expect("write capsule");
 }

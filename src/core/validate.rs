@@ -3788,9 +3788,15 @@ fn validate_projection_consistency(
     let specs_dir = main_root.join(".decapod").join("generated").join("specs");
     let manifest_path = specs_dir.join(".manifest.json");
     let todo_db = main_root.join(".decapod").join("data").join("todo.db");
-    let todo_events = main_root.join(".decapod").join("data").join("todo.events.jsonl");
+    let todo_events = main_root
+        .join(".decapod")
+        .join("data")
+        .join("todo.events.jsonl");
     let context_dir = main_root.join(".decapod").join("generated").join("context");
-    let workunit_dir = main_root.join(".decapod").join("governance").join("workunits");
+    let workunit_dir = main_root
+        .join(".decapod")
+        .join("governance")
+        .join("workunits");
 
     if !config_path.exists() {
         findings.push(ProjectionFinding {
@@ -3801,7 +3807,8 @@ fn validate_projection_consistency(
             remediation: "Run `decapod init` to scaffold repository configuration".to_string(),
         });
     } else {
-        let config_content = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
+        let config_content =
+            fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
         let config: toml::Value = toml::from_str(&config_content).map_err(|e| {
             error::DecapodError::ValidationError(format!("Invalid config.toml: {e}"))
         })?;
@@ -3826,7 +3833,9 @@ fn validate_projection_consistency(
         findings.push(ProjectionFinding {
             surface: ".decapod/generated/specs/".to_string(),
             kind: SurfaceKind::Projection,
-            expected: "specs directory must exist with INTENT.md, ARCHITECTURE.md, INTERFACES.md, etc.".to_string(),
+            expected:
+                "specs directory must exist with INTENT.md, ARCHITECTURE.md, INTERFACES.md, etc."
+                    .to_string(),
             observed: "MISSING".to_string(),
             remediation: "Run `decapod init --force` to scaffold project specs".to_string(),
         });
@@ -3852,11 +3861,15 @@ fn validate_projection_consistency(
     }
 
     if manifest_path.exists() {
-        let manifest_content = fs::read_to_string(&manifest_path).map_err(error::DecapodError::IoError)?;
+        let manifest_content =
+            fs::read_to_string(&manifest_path).map_err(error::DecapodError::IoError)?;
         let manifest: serde_json::Value = serde_json::from_str(&manifest_content).map_err(|e| {
             error::DecapodError::ValidationError(format!("Invalid specs manifest: {e}"))
         })?;
-        if let Some(repo_fp) = manifest.get("repo_signal_fingerprint").and_then(|v| v.as_str()) {
+        if let Some(repo_fp) = manifest
+            .get("repo_signal_fingerprint")
+            .and_then(|v| v.as_str())
+        {
             let current_fp = crate::core::project_specs::repo_signal_fingerprint(main_root)?;
             if repo_fp != current_fp {
                 findings.push(ProjectionFinding {
@@ -3871,10 +3884,14 @@ fn validate_projection_consistency(
         if let Some(files) = manifest.get("files").and_then(|v| v.as_array()) {
             for entry in files {
                 let path = entry.get("path").and_then(|v| v.as_str()).unwrap_or("");
-                let content_hash = entry.get("content_hash").and_then(|v| v.as_str()).unwrap_or("");
+                let content_hash = entry
+                    .get("content_hash")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
                 let full_path = main_root.join(path);
                 if full_path.exists() {
-                    let body = fs::read_to_string(&full_path).map_err(error::DecapodError::IoError)?;
+                    let body =
+                        fs::read_to_string(&full_path).map_err(error::DecapodError::IoError)?;
                     let current_hash = crate::core::project_specs::hash_text(&body);
                     if current_hash != content_hash {
                         findings.push(ProjectionFinding {
@@ -3882,7 +3899,9 @@ fn validate_projection_consistency(
                             kind: SurfaceKind::Projection,
                             expected: format!("content hash {content_hash}"),
                             observed: format!("divergent hash {current_hash}"),
-                            remediation: "Run `decapod rpc --op specs.refresh` to acknowledge spec changes".to_string(),
+                            remediation:
+                                "Run `decapod rpc --op specs.refresh` to acknowledge spec changes"
+                                    .to_string(),
                         });
                     }
                 }
@@ -3900,14 +3919,20 @@ fn validate_projection_consistency(
 
     if todo_db.exists() && todo_events.exists() {
         let conn = db::db_connect_for_validate(&todo_db.to_string_lossy())?;
-        let done_count: i64 = conn.query_row(
-            "SELECT COUNT(*) FROM tasks WHERE status = 'done'",
-            [],
-            |row| row.get(0),
-        ).map_err(error::DecapodError::RusqliteError)?;
+        let done_count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM tasks WHERE status = 'done'",
+                [],
+                |row| row.get(0),
+            )
+            .map_err(error::DecapodError::RusqliteError)?;
 
         if done_count > 0 {
-            let proof_dir = main_root.join(".decapod").join("generated").join("artifacts").join("provenance");
+            let proof_dir = main_root
+                .join(".decapod")
+                .join("generated")
+                .join("artifacts")
+                .join("provenance");
             let artifact_manifest = proof_dir.join("artifact_manifest.json");
             let proof_manifest = proof_dir.join("proof_manifest.json");
             let intent_checklist = proof_dir.join("intent_convergence_checklist.json");
@@ -3936,18 +3961,28 @@ fn validate_projection_consistency(
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
                 let capsule: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
-                    error::DecapodError::ValidationError(format!("Invalid context capsule {}: {}", path.display(), e))
+                    error::DecapodError::ValidationError(format!(
+                        "Invalid context capsule {}: {}",
+                        path.display(),
+                        e
+                    ))
                 })?;
-                if let Some(fp) = capsule.get("repo_signal_fingerprint").and_then(|v| v.as_str()) {
-                    if fp != current_fp {
-                        findings.push(ProjectionFinding {
-                            surface: format!(".decapod/generated/context/{}", path.file_name().unwrap().to_string_lossy()),
-                            kind: SurfaceKind::Projection,
-                            expected: format!("repo_signal_fingerprint {current_fp}"),
-                            observed: format!("stale fingerprint {fp}"),
-                            remediation: "Regenerate context capsule with current repo signal".to_string(),
-                        });
-                    }
+                if let Some(fp) = capsule
+                    .get("repo_signal_fingerprint")
+                    .and_then(|v| v.as_str())
+                    && fp != current_fp
+                {
+                    findings.push(ProjectionFinding {
+                        surface: format!(
+                            ".decapod/generated/context/{}",
+                            path.file_name().unwrap().to_string_lossy()
+                        ),
+                        kind: SurfaceKind::Projection,
+                        expected: format!("repo_signal_fingerprint {current_fp}"),
+                        observed: format!("stale fingerprint {fp}"),
+                        remediation: "Regenerate context capsule with current repo signal"
+                            .to_string(),
+                    });
                 }
             }
         }
@@ -3960,17 +3995,26 @@ fn validate_projection_consistency(
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
                 let manifest: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
-                    error::DecapodError::ValidationError(format!("Invalid workunit manifest {}: {}", path.display(), e))
+                    error::DecapodError::ValidationError(format!(
+                        "Invalid workunit manifest {}: {}",
+                        path.display(),
+                        e
+                    ))
                 })?;
                 if let Some(task_id) = manifest.get("task_id").and_then(|v| v.as_str()) {
                     let conn = db::db_connect_for_validate(&todo_db.to_string_lossy())?;
-                    let status: Option<String> = conn.query_row(
-                        "SELECT status FROM tasks WHERE id = ?1",
-                        rusqlite::params![task_id],
-                        |row| row.get(0),
-                    ).ok();
+                    let status: Option<String> = conn
+                        .query_row(
+                            "SELECT status FROM tasks WHERE id = ?1",
+                            rusqlite::params![task_id],
+                            |row| row.get(0),
+                        )
+                        .ok();
                     if status.as_deref() == Some("done") {
-                        let status = manifest.get("status").and_then(|v| v.as_str()).unwrap_or("");
+                        let status = manifest
+                            .get("status")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("");
                         if status != "Verified" {
                             findings.push(ProjectionFinding {
                                 surface: format!(".decapod/governance/workunits/{}", path.file_name().unwrap().to_string_lossy()),
@@ -3987,7 +4031,10 @@ fn validate_projection_consistency(
     }
 
     if findings.is_empty() {
-        pass("All Decapod-owned projections are consistent with authority and evidence", ctx);
+        pass(
+            "All Decapod-owned projections are consistent with authority and evidence",
+            ctx,
+        );
     } else {
         for finding in &findings {
             let type_str = match finding.kind {
@@ -5744,8 +5791,7 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
 #[cfg(test)]
 mod tests {
     use super::{
-        SurfaceKind,
-        ValidationContext, is_allowed_non_code_path, is_decapod_isolated_worktree,
+        SurfaceKind, ValidationContext, is_allowed_non_code_path, is_decapod_isolated_worktree,
         is_non_code_path, path_contains_decapod_workspaces, strip_git_quotes,
         validate_git_workspace_context,
     };

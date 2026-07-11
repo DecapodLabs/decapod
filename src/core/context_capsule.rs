@@ -53,7 +53,6 @@ impl DeterministicContextCapsule {
             sources,
             snippets,
             policy: self.policy.clone(),
-            repo_signal_fingerprint: self.repo_signal_fingerprint.clone(),
         }
     }
 
@@ -85,7 +84,6 @@ struct CanonicalCapsule {
     sources: Vec<ContextCapsuleSource>,
     snippets: Vec<ContextCapsuleSnippet>,
     policy: CapsulePolicyBinding,
-    repo_signal_fingerprint: String,
 }
 
 fn capsule_schema_version_default() -> String {
