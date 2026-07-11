@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.63.7](https://github.com/DecapodLabs/decapod/compare/v0.63.6...v0.63.7) - 2026-07-11
+
+### Fixed
+
+- use decapod docs ingest for agent orientation corpus ([#843](https://github.com/DecapodLabs/decapod/pull/843))
+
 ## [0.63.6](https://github.com/DecapodLabs/decapod/compare/v0.63.5...v0.63.6) - 2026-07-11
 
 ### Fixed
