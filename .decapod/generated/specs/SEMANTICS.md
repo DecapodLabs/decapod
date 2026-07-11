@@ -59,6 +59,19 @@ stateDiagram-v2
     Approved --> Annotating: new unknowns discovered
 ```
 
+### Plan Phase State
+```mermaid
+stateDiagram-v2
+    [*] --> Pending: phase declared
+    Pending --> Active: enter phase + entry gates pass
+    Active --> Completed: exit phase + exit gates pass
+    Completed --> Pending: next phase declared
+    Completed --> [*]: final phase complete
+```
+- Declared phases are entered and completed in order; only one phase may be active.
+- A phase-bearing plan cannot reach `DONE` until every phase is completed.
+- Entry and exit gates are explicit proof checkpoints; artifact requirements are checked at transition time.
+
 ### Obligation State (Derived, Never Asserted)
 ```mermaid
 stateDiagram-v2
@@ -90,6 +103,7 @@ stateDiagram-v2
 | Capability-gated external actions | Security | Every `git`/`docker`/`cargo` call declares capability |
 | No secrets in config.toml | Security | `validate` config gate rejects forbidden keys |
 | Specs manifest tracks template drift | Governance | `validate` specs gate fails on stale template_hash |
+| Ordered phase completion | Governance | Phase transitions reject out-of-order, concurrent, or incomplete execution |
 
 ## Event Sourcing Schema
 

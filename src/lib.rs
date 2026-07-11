@@ -9,14 +9,15 @@
 pub(crate) mod cli;
 pub mod constitution;
 pub mod core;
+pub(crate) mod plan_governance;
 pub mod plugins;
 pub(crate) mod subsystems;
 
 use cli::*;
 
 use core::{
-    cloud_backend, db, docs, docs_cli, error, flight_recorder, migration, obligation,
-    plan_governance, proof, repomap, scaffold, state_commit,
+    cloud_backend, db, docs, docs_cli, error, flight_recorder, migration, obligation, proof,
+    repomap, scaffold, state_commit,
     store::{Store, StoreKind, find_decapod_project_root, find_governance_root},
     todo, trace, validate, workspace,
 };
@@ -5396,6 +5397,7 @@ fn run_plan_command(
                         forbidden_paths,
                         file_touch_budget,
                     },
+                    phases: vec![],
                 },
             )?;
             println!("{}", serde_json::to_string_pretty(&plan).unwrap());
@@ -5477,6 +5479,7 @@ fn run_plan_command(
                             file_touch_budget,
                         })
                     },
+                    phases: None,
                 },
             )?;
             println!("{}", serde_json::to_string_pretty(&plan).unwrap());
@@ -5529,6 +5532,126 @@ fn run_plan_command(
                 }))
                 .unwrap()
             );
+        }
+        PlanCommand::PhaseAdd {
+            id,
+            name,
+            description,
+        } => {
+            let plan = plan_governance::add_phase(
+                project_root,
+                plan_governance::Phase {
+                    id,
+                    name,
+                    description,
+                    entry_gates: vec![],
+                    exit_gates: vec![],
+                    entered: false,
+                    completed: false,
+                    entered_at: None,
+                    completed_at: None,
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::PhaseUpdate {
+            id,
+            name,
+            description,
+        } => {
+            let plan = plan_governance::update_phase(project_root, &id, name, description)?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::PhaseList => {
+            let plan = plan_governance::load_plan(project_root)?.ok_or_else(|| {
+                error::DecapodError::ValidationError("Plan artifact is missing".to_string())
+            })?;
+            println!("{}", serde_json::to_string_pretty(&plan.phases).unwrap());
+        }
+        PlanCommand::PhaseShow { id } => {
+            let plan = plan_governance::load_plan(project_root)?.ok_or_else(|| {
+                error::DecapodError::ValidationError("Plan artifact is missing".to_string())
+            })?;
+            let phase = plan
+                .phases
+                .iter()
+                .find(|phase| phase.id == id)
+                .ok_or_else(|| {
+                    error::DecapodError::ValidationError(format!("Phase with ID '{id}' not found"))
+                })?;
+            println!("{}", serde_json::to_string_pretty(phase).unwrap());
+        }
+        PlanCommand::AddEntryGate {
+            phase_id,
+            description,
+        } => {
+            let plan = plan_governance::add_gate(
+                project_root,
+                &phase_id,
+                true,
+                plan_governance::Gate {
+                    description,
+                    required_artifacts: vec![],
+                    validation_checks: vec![],
+                    satisfied: false,
+                    satisfied_at: None,
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::AddExitGate {
+            phase_id,
+            description,
+        } => {
+            let plan = plan_governance::add_gate(
+                project_root,
+                &phase_id,
+                false,
+                plan_governance::Gate {
+                    description,
+                    required_artifacts: vec![],
+                    validation_checks: vec![],
+                    satisfied: false,
+                    satisfied_at: None,
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::UpdateGate {
+            phase_id,
+            gate_index,
+            is_entry_gate,
+            description,
+        } => {
+            let plan = plan_governance::update_gate(
+                project_root,
+                &phase_id,
+                is_entry_gate,
+                gate_index,
+                description,
+            )?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::SatisfyGate {
+            phase_id,
+            gate_index,
+            is_entry_gate,
+        } => {
+            let plan = plan_governance::satisfy_gate(
+                project_root,
+                &phase_id,
+                if is_entry_gate { "entry" } else { "exit" },
+                gate_index,
+            )?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::EnterPhase { phase_id } => {
+            let plan = plan_governance::enter_phase(project_root, &phase_id)?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::ExitPhase { phase_id } => {
+            let plan = plan_governance::complete_phase(project_root, &phase_id)?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
         }
     }
 

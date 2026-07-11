@@ -4744,9 +4744,9 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
                     .map(|p| p.to_path_buf())
                     .unwrap_or(std::env::current_dir().unwrap())
             });
-            if crate::core::plan_governance::load_plan(&project_root)?.is_some() {
-                crate::core::plan_governance::ensure_execute_ready(
-                    crate::core::plan_governance::ExecuteCheckInput {
+            if crate::plan_governance::load_plan(&project_root)?.is_some() {
+                crate::plan_governance::ensure_execute_ready(
+                    crate::plan_governance::ExecuteCheckInput {
                         project_root: &project_root,
                         store_root: &store.root,
                         todo_id: Some(&task_id),

@@ -120,7 +120,7 @@ flowchart TD
 | `Store` | `core/store.rs` | Dual-store abstraction (User/Repo) with root discovery |
 | `WorkspaceStatus` | `core/workspace.rs` | Git + container status, blockers, allowed ops |
 | `Todo` + events | `core/todo.rs` | Task CRUD, claims, event sourcing, deterministic rebuild |
-| `GovernedPlan` | `core/plan_governance.rs` | State machine with scope constraints, execute gate |
+| `GovernedPlan` | `src/plan_governance.rs` | State machine with scope constraints, ordered phases, and proof gates |
 | `WorkUnitManifest` | `core/workunit.rs` | Intent/spec/state/proof chain with canonical hashing |
 | `ObligationNode` | `core/obligation.rs` | Dependency graph, derived status, proof gating |
 | `DeterministicContextCapsule` | `core/context_capsule.rs` | Immutable sources + snippets, SHA256 hash, policy binding |

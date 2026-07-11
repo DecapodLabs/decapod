@@ -64,6 +64,16 @@ flowchart LR
 
 ## Promotion Gates
 
+### Plan Phase Governance Gate
+| Check | Failure Mode |
+|-------|--------------|
+| Phase IDs are unique and non-empty | Fail |
+| Phases enter and complete in declaration order | Fail |
+| Only one phase is active at a time | Fail |
+| Entry and exit gates pass before transition | Fail |
+| Phase-bearing plans cannot bypass incomplete phases to `DONE` | Fail |
+| Required artifact gates exist at transition time | Fail |
+
 ### Blocking Gates (Must Pass)
 | Gate | Command | Evidence |
 |------|---------|----------|

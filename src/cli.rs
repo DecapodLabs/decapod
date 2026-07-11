@@ -2,9 +2,8 @@
 //!
 //! All clap-derived types live here. Dispatch logic lives in `dispatch/`.
 
-use crate::core::{
-    constitution_cli, docs_cli, flight_recorder, obligation, plan_governance, todo, workunit,
-};
+use crate::core::{constitution_cli, docs_cli, flight_recorder, obligation, todo, workunit};
+use crate::plan_governance;
 use crate::plugins::{
     aptitude, container, cron, decide, doctor, eval, federation, health, internalize, lcm, map_ops,
     policy, primitives, reflex, verify, workflow,
@@ -619,6 +618,75 @@ pub(crate) enum PlanCommand {
     CheckExecute {
         #[clap(long)]
         todo_id: Option<String>,
+    },
+    /// Add a new phase to the plan
+    PhaseAdd {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        name: String,
+        #[clap(long)]
+        description: String,
+    },
+    /// Update an existing phase
+    PhaseUpdate {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        name: Option<String>,
+        #[clap(long)]
+        description: Option<String>,
+    },
+    /// List all phases in the plan
+    PhaseList,
+    /// Show details of a specific phase
+    PhaseShow {
+        #[clap(long)]
+        id: String,
+    },
+    /// Add an entry gate to a phase
+    AddEntryGate {
+        #[clap(long)]
+        phase_id: String,
+        #[clap(long)]
+        description: String,
+    },
+    /// Add an exit gate to a phase
+    AddExitGate {
+        #[clap(long)]
+        phase_id: String,
+        #[clap(long)]
+        description: String,
+    },
+    /// Update a gate's description
+    UpdateGate {
+        #[clap(long)]
+        phase_id: String,
+        #[clap(long)]
+        gate_index: usize,
+        #[clap(long)]
+        is_entry_gate: bool,
+        #[clap(long)]
+        description: String,
+    },
+    /// Mark a gate as satisfied
+    SatisfyGate {
+        #[clap(long)]
+        phase_id: String,
+        #[clap(long)]
+        gate_index: usize,
+        #[clap(long)]
+        is_entry_gate: bool,
+    },
+    /// Enter a phase (verify entry gates are satisfied)
+    EnterPhase {
+        #[clap(long)]
+        phase_id: String,
+    },
+    /// Exit a phase (verify exit gates are satisfied)
+    ExitPhase {
+        #[clap(long)]
+        phase_id: String,
     },
 }
 

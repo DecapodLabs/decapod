@@ -330,9 +330,22 @@ AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_TODO_CLAIM_CONFLICT severity=tran
   "unresolved_contradictions": [],
   "deferred_questions": [],
   "constraints": { "forbidden_paths": [".decapod/data/"], "file_touch_budget": 50 },
+  "phases": [{
+    "id": "plan",
+    "name": "Plan",
+    "description": "Ordered execution phase",
+    "entry_gates": [],
+    "exit_gates": [],
+    "entered": false,
+    "completed": false
+  }],
   "updated_at": "1720000000Z"
 }
 ```
+
+Plans with phases expose ordered execution through `phase-add`, `enter-phase`, and
+`exit-phase`; entry and exit gates must be satisfied before the corresponding
+transition, and `DONE` requires every declared phase to be complete.
 
 ### ObligationNode
 ```json
