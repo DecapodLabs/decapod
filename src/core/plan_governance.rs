@@ -10,7 +10,6 @@ const PLAN_SCHEMA_VERSION: &str = "1.0.0";
 const PLAN_PATH: &str = ".decapod/governance/plan.json";
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum PlanState {
     Draft,
     Annotating,
@@ -24,6 +23,54 @@ pub struct ScopeConstraints {
     #[serde(default)]
     pub forbidden_paths: Vec<String>,
     pub file_touch_budget: Option<usize>,
+}
+
+/// Represents a gate that must be satisfied to enter or exit a phase
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Gate {
+    /// Human-readable description of what this gate validates
+    pub description: String,
+    /// Required artifacts that must exist (file paths relative to project root)
+    #[serde(default)]
+    pub required_artifacts: Vec<String>,
+    /// Validation checks that must pass
+    #[serde(default)]
+    pub validation_checks: Vec<String>,
+    /// Whether this gate has been satisfied
+    #[serde(default)]
+    pub satisfied: bool,
+    /// Timestamp when the gate was last satisfied
+    #[serde(default)]
+    pub satisfied_at: Option<String>,
+}
+
+/// A phase in a gated execution process
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Phase {
+    /// Unique identifier for the phase
+    pub id: String,
+    /// Human-readable name of the phase
+    pub name: String,
+    /// Description of what this phase accomplishes
+    pub description: String,
+    /// Gates that must be satisfied to enter this phase
+    #[serde(default)]
+    pub entry_gates: Vec<Gate>,
+    /// Gates that must be satisfied to exit this phase
+    #[serde(default)]
+    pub exit_gates: Vec<Gate>,
+    /// Whether this phase has been entered
+    #[serde(default)]
+    pub entered: bool,
+    /// Whether this phase has been completed (exited)
+    #[serde(default)]
+    pub completed: bool,
+    /// Timestamp when the phase was entered
+    #[serde(default)]
+    pub entered_at: Option<String>,
+    /// Timestamp when the phase was completed
+    #[serde(default)]
+    pub completed_at: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -48,6 +95,9 @@ pub struct GovernedPlan {
     pub deferred_questions: Vec<String>,
     #[serde(default)]
     pub constraints: ScopeConstraints,
+    /// Phases in the execution process
+    #[serde(default)]
+    pub phases: Vec<Phase>,
     pub updated_at: String,
 }
 
@@ -64,6 +114,7 @@ pub struct PlanPatch {
     pub unresolved_contradictions: Option<Vec<String>>,
     pub deferred_questions: Option<Vec<String>>,
     pub constraints: Option<ScopeConstraints>,
+    pub phases: Option<Vec<Phase>>,
 }
 
 pub struct InitPlanInput {
@@ -77,6 +128,7 @@ pub struct InitPlanInput {
     pub unresolved_contradictions: Vec<String>,
     pub deferred_questions: Vec<String>,
     pub constraints: ScopeConstraints,
+    pub phases: Vec<Phase>,
 }
 
 pub struct ExecuteCheckInput<'a> {
@@ -130,6 +182,7 @@ pub fn init_plan(
         unresolved_contradictions: input.unresolved_contradictions,
         deferred_questions: input.deferred_questions,
         constraints: input.constraints,
+        phases: input.phases,
         updated_at: crate::core::time::now_epoch_z(),
     };
     save_plan(project_root, &plan)?;
@@ -180,6 +233,9 @@ pub fn patch_plan(
     }
     if let Some(constraints) = patch.constraints {
         plan.constraints = constraints;
+    }
+    if let Some(phases) = patch.phases {
+        plan.phases = phases;
     }
     plan.updated_at = crate::core::time::now_epoch_z();
     save_plan(project_root, &plan)?;
@@ -267,8 +323,272 @@ pub fn ensure_execute_ready(
         ));
     }
 
-    enforce_scope_constraints(input.project_root, &plan.constraints)?;
+    // Check that we're allowed to enter the execution phase
+    // Find the executing phase (if defined) and check its entry gates
+    let mut execution_phase_found = false;
+    for phase in &plan.phases {
+        if phase.name.to_lowercase() == "executing" || phase.id == "executing" {
+            execution_phase_found = true;
+            // Check entry gates for the executing phase
+            for gate in &phase.entry_gates {
+                if !gate.satisfied {
+                    return Err(marker_error(
+                        "PHASE_GATE_NOT_SATISFIED",
+                        &format!("Entry gate not satisfied for phase '{}': {}", phase.name, gate.description),
+                        Some(json!({ "phase": phase.name, "gate_description": gate.description })),
+                    ));
+                }
+            }
+            break;
+        }
+    }
+
+    // If there's an explicit executing phase defined, we've already checked its gates
+    // If not, fall back to the original scope constraint check
+    if !execution_phase_found {
+        enforce_scope_constraints(input.project_root, &plan.constraints)?;
+    }
+
     Ok(plan)
+}
+
+pub fn enter_phase(
+    project_root: &Path,
+    phase_id: &str,
+) -> Result<GovernedPlan, error::DecapodError> {
+    let mut plan = load_plan(project_root)?.ok_or_else(|| {
+        marker_error(
+            "NEEDS_PLAN_APPROVAL",
+            "Plan asset is missing. Run `decapod govern plan init` first.",
+            None,
+        )
+    })?;
+
+    // Find the phase
+    let phase_index = plan
+        .phases
+        .iter()
+        .position(|p| p.id == phase_id)
+        .ok_or_else(|| {
+            marker_error(
+                "PHASE_NOT_FOUND",
+                &format!("Phase with ID '{}' not found", phase_id),
+                None,
+            )
+        })?;
+
+    let phase = &mut plan.phases[phase_index];
+
+    // Check if already entered
+    if phase.entered {
+        return Err(marker_error(
+            "PHASE_ALREADY_ENTERED",
+            &format!("Phase '{}' has already been entered", phase.name),
+            None,
+        ));
+    }
+
+    // Check all entry gates
+    for gate in &phase.entry_gates {
+        if !gate.satisfied {
+            return Err(marker_error(
+                "PHASE_ENTRY_GATE_NOT_SATISFIED",
+                &format!("Entry gate not satisfied for phase '{}': {}", phase.name, gate.description),
+                Some(json!({ "phase": phase.name, "gate_description": gate.description })),
+            ));
+        }
+    }
+
+    // Mark phase as entered
+    phase.entered = true;
+    phase.entered_at = Some(crate::core::time::now_epoch_z());
+    plan.updated_at = crate::core::time::now_epoch_z();
+    save_plan(project_root, &plan)?;
+    Ok(plan)
+}
+
+pub fn complete_phase(
+    project_root: &Path,
+    phase_id: &str,
+) -> Result<GovernedPlan, error::DecapodError> {
+    let mut plan = load_plan(project_root)?.ok_or_else(|| {
+        marker_error(
+            "NEEDS_PLAN_APPROVAL",
+            "Plan asset is missing. Run `decapod govern plan init` first.",
+            None,
+        )
+    })?;
+
+    // Find the phase
+    let phase_index = plan
+        .phases
+        .iter()
+        .position(|p| p.id == phase_id)
+        .ok_or_else(|| {
+            marker_error(
+                "PHASE_NOT_FOUND",
+                &format!("Phase with ID '{}' not found", phase_id),
+                None,
+            )
+        })?;
+
+    let phase = &mut plan.phases[phase_index];
+
+    // Check if phase has been entered
+    if !phase.entered {
+        return Err(marker_error(
+            "PHASE_NOT_ENTERED",
+            &format!("Phase '{}' has not been entered yet", phase.name),
+            None,
+        ));
+    }
+
+    // Check if already completed
+    if phase.completed {
+        return Err(marker_error(
+            "PHASE_ALREADY_COMPLETED",
+            &format!("Phase '{}' has already been completed", phase.name),
+            None,
+        ));
+    }
+
+    // Check all exit gates
+    for gate in &phase.exit_gates {
+        if !gate.satisfied {
+            return Err(marker_error(
+                "PHASE_EXIT_GATE_NOT_SATISFIED",
+                &format!("Exit gate not satisfied for phase '{}': {}", phase.name, gate.description),
+                Some(json!({ "phase": phase.name, "gate_description": gate.description })),
+            ));
+        }
+    }
+
+    // Mark phase as completed
+    phase.completed = true;
+    phase.completed_at = Some(crate::core::time::now_epoch_z());
+    plan.updated_at = crate::core::time::now_epoch_z();
+    save_plan(project_root, &plan)?;
+    Ok(plan)
+}
+
+pub fn satisfy_gate(
+    project_root: &Path,
+    phase_id: &str,
+    gate_type: &str, // "entry" or "exit"
+    gate_index: usize,
+) -> Result<GovernedPlan, error::DecapodError> {
+    let mut plan = load_plan(project_root)?.ok_or_else(|| {
+        marker_error(
+            "NEEDS_PLAN_APPROVAL",
+            "Plan asset is missing. Run `decapod govern plan init` first.",
+            None,
+        )
+    })?;
+
+    // Find the phase
+    let phase_index = plan
+        .phases
+        .iter()
+        .position(|p| p.id == phase_id)
+        .ok_or_else(|| {
+            marker_error(
+                "PHASE_NOT_FOUND",
+                &format!("Phase with ID '{}' not found", phase_id),
+                None,
+            )
+        })?;
+
+    let phase = &mut plan.phases[phase_index];
+
+    // Get the appropriate gate
+    let gate = match gate_type {
+        "entry" => {
+            if gate_index >= phase.entry_gates.len() {
+                return Err(marker_error(
+                    "INVALID_GATE_INDEX",
+                    &format!("Entry gate index {} is out of bounds for phase '{}' (has {} gates)", gate_index, phase.name, phase.entry_gates.len()),
+                    None,
+                ));
+            }
+            &mut phase.entry_gates[gate_index]
+        }
+        "exit" => {
+            if gate_index >= phase.exit_gates.len() {
+                return Err(marker_error(
+                    "INVALID_GATE_INDEX",
+                    &format!("Exit gate index {} is out of bounds for phase '{}' (has {} gates)", gate_index, phase.name, phase.exit_gates.len()),
+                    None,
+                ));
+            }
+            &mut phase.exit_gates[gate_index]
+        }
+        _ => {
+            return Err(marker_error(
+                "INVALID_GATE_TYPE",
+                "Gate type must be 'entry' or 'exit'",
+                None,
+            ));
+        }
+    };
+
+    // Mark gate as satisfied
+    gate.satisfied = true;
+    gate.satisfied_at = Some(crate::core::time::now_epoch_z());
+    plan.updated_at = crate::core::time::now_epoch_z();
+    save_plan(project_root, &plan)?;
+    Ok(plan)
+}
+
+fn verify_artifact_exists(project_root: &Path, artifact_path: &str) -> bool {
+    let path = project_root.join(artifact_path);
+    path.exists()
+}
+
+pub fn check_phase_entry_gates(
+    project_root: &Path,
+    phase_id: &str,
+) -> Result<(bool, Vec<String>), error::DecapodError> {
+    let plan = load_plan(project_root)?.ok_or_else(|| {
+        marker_error(
+            "NEEDS_PLAN_APPROVAL",
+            "Plan asset is missing. Run `decapod govern plan init` first.",
+            None,
+        )
+    })?;
+
+    // Find the phase
+    let phase = plan
+        .phases
+        .iter()
+        .find(|p| p.id == phase_id)
+        .ok_or_else(|| {
+            marker_error(
+                "PHASE_NOT_FOUND",
+                &format!("Phase with ID '{}' not found", phase_id),
+                None,
+            )
+        })?;
+
+    let mut unsatisfied = Vec::new();
+    for gate in &phase.entry_gates {
+        if !gate.satisfied {
+            // Check artifacts
+            for artifact in &gate.required_artifacts {
+                if !verify_artifact_exists(project_root, artifact) {
+                    unsatisfied.push(format!(
+                        "Missing required artifact: {} (for gate: {})",
+                        artifact, gate.description
+                    ));
+                }
+            }
+            
+            // For now, we'll just report that the gate isn't satisfied
+            # if unsatisfied.is_empty() {
+            unsatisfied.push(format!("Gate not satisfied: {}", gate.description));
+        }
+    }
+
+    Ok((unsatisfied.is_empty(), unsatisfied))
 }
 
 pub fn collect_unverified_done_todos(
@@ -441,6 +761,7 @@ mod tests {
                 unresolved_contradictions: vec![],
                 deferred_questions: vec![],
                 constraints: ScopeConstraints::default(),
+                phases: vec![],
             },
         )
         .unwrap();

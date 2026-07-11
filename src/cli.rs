@@ -616,16 +616,92 @@ pub(crate) enum PlanCommand {
     /// Display current plan artifact
     Status,
     /// Execute readiness check with typed pushback markers
+    /// Set plan state
+    SetState {
+        #[clap(long, value_enum)]
+        state: PlanStateArg,
+    },
+    /// Shortcut for setting plan state to APPROVED
+    Approve,
+    /// Display current plan artifact
+    Status,
+    /// Execute readiness check with typed pushback markers
     CheckExecute {
         #[clap(long)]
         todo_id: Option<String>,
     },
+    /// Add a new phase to the plan
+    PhaseAdd {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        name: String,
+        #[clap(long)]
+        description: String,
+    },
+    /// Update an existing phase
+    PhaseUpdate {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        name: Option<String>,
+        #[clap(long)]
+        description: Option<String>,
+    },
+    /// List all phases in the plan
+    PhaseList,
+    /// Show details of a specific phase
+    PhaseShow {
+        #[clap(long)]
+        id: String,
+    },
+    /// Add an entry gate to a phase
+    AddEntryGate {
+        #[clap(long)]
+        phase_id: String,
+        #[clap(long)]
+        description: String,
+    },
+    /// Add an exit gate to a phase
+    AddExitGate {
+        #[clap(long)]
+        phase_id: String,
+        #[clap(long)]
+        description: String,
+    },
+    /// Update a gate's description
+    UpdateGate {
+        #[clap(long)]
+        phase_id: String,
+        #[clap(long)]
+        gate_index: usize,
+        #[clap(long)]
+        is_entry_gate: bool,
+        #[clap(long)]
+        description: String,
+    },
+    /// Mark a gate as satisfied
+    SatisfyGate {
+        #[clap(long)]
+        phase_id: String,
+        #[clap(long)]
+        gate_index: usize,
+        #[clap(long)]
+        is_entry_gate: bool,
+    },
+    /// Enter a phase (verify entry gates are satisfied)
+    EnterPhase {
+        #[clap(long)]
+        phase_id: String,
+    },
+    /// Exit a phase (verify exit gates are satisfied)
+    ExitPhase {
+        #[clap(long)]
+        phase_id: String,
+    },
 }
 
 #[derive(clap::Args, Debug)]
-pub(crate) struct WorkunitCli {
-    #[clap(subcommand)]
-    pub command: WorkunitCommand,
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]
