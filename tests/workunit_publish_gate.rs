@@ -59,6 +59,7 @@ fn write_capsule(root: &std::path::Path, task_id: &str) {
             repo_revision: "UNBORN:master".to_string(),
         },
         capsule_hash: String::new(),
+        repo_signal_fingerprint: "test_fingerprint".to_string(),
     };
     write_context_capsule(root, &capsule).expect("write capsule");
 }

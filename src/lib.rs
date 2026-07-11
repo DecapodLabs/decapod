@@ -4718,6 +4718,7 @@ fn run_validate_command(
         workspace_root,
         validate_cli.verbose,
         validate_cli.refresh_specs,
+        validate_cli.projections,
     )?;
     for _ in 0..2 {
         if report.fail_count == 0 {
@@ -4734,6 +4735,7 @@ fn run_validate_command(
             workspace_root,
             validate_cli.verbose,
             validate_cli.refresh_specs,
+            validate_cli.projections,
         )?;
     }
 
@@ -4980,6 +4982,7 @@ fn run_validation_bounded(
     workspace_root: &Path,
     verbose: bool,
     refresh_specs: bool,
+    projections: bool,
 ) -> Result<validate::ValidationReport, error::DecapodError> {
     let timeout_secs = validate_timeout_secs();
     let started = std::time::Instant::now();
@@ -4990,7 +4993,7 @@ fn run_validation_bounded(
 
     std::thread::spawn(move || {
         let mut result =
-            validate::run_validation(&store_cloned, &g_root, &w_root, verbose, refresh_specs);
+            validate::run_validation(&store_cloned, &g_root, &w_root, verbose, refresh_specs, projections);
         for attempt in 1..=2 {
             let should_retry = match &result {
                 Err(error::DecapodError::RusqliteError(err)) => {
@@ -5010,7 +5013,7 @@ fn run_validation_bounded(
             let backoff_ms = 200_u64 * attempt as u64;
             std::thread::sleep(std::time::Duration::from_millis(backoff_ms));
             result =
-                validate::run_validation(&store_cloned, &g_root, &w_root, verbose, refresh_specs);
+                validate::run_validation(&store_cloned, &g_root, &w_root, verbose, refresh_specs, false);
         }
         let _ = tx.send(result);
     });
@@ -6385,6 +6388,7 @@ fn run_workspace_command(
                     workspace_root,
                     false,
                     false,
+                    false,
                 )?;
                 report_summary = Some(report);
             }
@@ -6410,6 +6414,7 @@ fn run_workspace_command(
                 &project_store,
                 &governance_root,
                 workspace_root,
+                false,
                 false,
                 false,
             )?;
@@ -7443,6 +7448,7 @@ mod rpc_handlers {
             workspace_root,
             false,
             params.refresh_specs,
+            false,
         );
 
         match res {

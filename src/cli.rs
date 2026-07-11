@@ -39,6 +39,9 @@ pub(crate) struct ValidateCli {
     /// Automatically refresh specs when staleness is detected
     #[clap(long)]
     pub refresh_specs: bool,
+    /// Enable projection-consistency validation for Decapod-managed governance surfaces
+    #[clap(long)]
+    pub projections: bool,
 }
 
 #[derive(clap::Args, Debug)]
