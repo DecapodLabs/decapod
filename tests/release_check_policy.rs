@@ -76,6 +76,7 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
         }],
         policy: CapsulePolicyBinding::default(),
         capsule_hash: String::new(),
+        repo_signal_fingerprint: "test_fingerprint".to_string(),
     }
     .with_recomputed_hash()
     .expect("compute capsule hash");
