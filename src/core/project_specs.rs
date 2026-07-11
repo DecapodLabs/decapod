@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
@@ -194,6 +195,9 @@ fn repo_signal_requires_content_hash(rel_path: &str) -> bool {
         || rel_path.starts_with("infra/")
         || rel_path.starts_with("deploy/")
         || rel_path.starts_with("k8s/")
+        || rel_path.starts_with("src/")
+        || rel_path.starts_with("tests/")
+        || rel_path.starts_with(".github/workflows/")
         || rel_path.ends_with(".sql")
 }
 
@@ -308,11 +312,7 @@ pub fn read_specs_manifest(
 pub fn refresh_specs_manifest(
     project_root: &Path,
 ) -> Result<ProjectSpecsManifest, error::DecapodError> {
-    let existing = read_specs_manifest(project_root)?.ok_or_else(|| {
-        error::DecapodError::NotFound(
-            "Project specs manifest not found. Run `decapod init` first.".to_string(),
-        )
-    })?;
+    let existing = read_specs_manifest(project_root)?;
 
     let mut manifest_entries = Vec::new();
     for spec in LOCAL_PROJECT_SPECS {
@@ -324,10 +324,14 @@ pub fn refresh_specs_manifest(
         let content_hash = hash_text(&body);
 
         let template_hash = existing
-            .files
-            .iter()
-            .find(|f| f.path == spec.path)
-            .map(|f| f.template_hash.clone())
+            .as_ref()
+            .and_then(|manifest| {
+                manifest
+                    .files
+                    .iter()
+                    .find(|f| f.path == spec.path)
+                    .map(|f| f.template_hash.clone())
+            })
             .unwrap_or_else(|| content_hash.clone());
 
         manifest_entries.push(ProjectSpecManifestEntry {
@@ -339,7 +343,10 @@ pub fn refresh_specs_manifest(
 
     let manifest = ProjectSpecsManifest {
         schema_version: LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA.to_string(),
-        template_version: existing.template_version,
+        template_version: existing
+            .as_ref()
+            .map(|manifest| manifest.template_version.clone())
+            .unwrap_or_else(|| crate::core::scaffold::PROJECT_SPEC_TEMPLATE_VERSION.to_string()),
         generated_at: crate::core::time::now_epoch_z(),
         repo_signal_fingerprint: repo_signal_fingerprint(project_root)?,
         files: manifest_entries,
@@ -352,6 +359,71 @@ pub fn refresh_specs_manifest(
     fs::write(manifest_path, manifest_body).map_err(error::DecapodError::IoError)?;
 
     Ok(manifest)
+}
+
+const CODEBASE_ATTESTATION_START: &str = "<!-- decapod:codebase-attestation:start -->";
+const CODEBASE_ATTESTATION_END: &str = "<!-- decapod:codebase-attestation:end -->";
+
+fn codebase_surface_summary(project_root: &Path) -> Result<String, error::DecapodError> {
+    let mut files = Vec::new();
+    collect_significant_repo_paths(project_root, project_root, &mut files)?;
+    let mut counts = BTreeMap::<String, usize>::new();
+    for path in files {
+        let rel = path
+            .strip_prefix(project_root)
+            .unwrap_or(path.as_path())
+            .to_string_lossy();
+        let surface = rel.split('/').next().unwrap_or(".").to_string();
+        *counts.entry(surface).or_default() += 1;
+    }
+    Ok(counts
+        .into_iter()
+        .map(|(surface, count)| format!("`{surface}/` ({count} files)"))
+        .collect::<Vec<_>>()
+        .join(", "))
+}
+
+fn update_codebase_attestation(body: &str, fingerprint: &str, surfaces: &str) -> String {
+    let section = format!(
+        "{CODEBASE_ATTESTATION_START}\n## Codebase Attestation\n\n- Repository signal fingerprint: `{fingerprint}`\n- Significant implementation surfaces: {surfaces}\n- Refreshed from the current codebase by `decapod specs.refresh`\n{CODEBASE_ATTESTATION_END}"
+    );
+    if let Some(start) = body.find(CODEBASE_ATTESTATION_START) {
+        let end = body[start..]
+            .find(CODEBASE_ATTESTATION_END)
+            .map(|offset| start + offset + CODEBASE_ATTESTATION_END.len());
+        if let Some(end) = end {
+            let mut updated = String::with_capacity(body.len());
+            updated.push_str(&body[..start]);
+            updated.push_str(&section);
+            updated.push_str(&body[end..]);
+            return updated;
+        }
+    }
+    format!("{}\n\n{}\n", body.trim_end(), section)
+}
+
+/// Re-evaluate existing living specs against the current repository.
+///
+/// This intentionally preserves each document's authored content and updates
+/// only the codebase-derived attestation block plus manifest hashes. Scaffold
+/// rendering belongs exclusively to fresh `decapod init`.
+pub fn refresh_specs_from_codebase(
+    project_root: &Path,
+) -> Result<ProjectSpecsManifest, error::DecapodError> {
+    let fingerprint = repo_signal_fingerprint(project_root)?;
+    let surfaces = codebase_surface_summary(project_root)?;
+    for spec in LOCAL_PROJECT_SPECS {
+        let path = project_root.join(spec.path);
+        if !path.exists() {
+            continue;
+        }
+        let body = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+        let updated = update_codebase_attestation(&body, &fingerprint, &surfaces);
+        if updated != body {
+            fs::write(path, updated).map_err(error::DecapodError::IoError)?;
+        }
+    }
+    refresh_specs_manifest(project_root)
 }
 
 #[cfg(test)]
@@ -392,5 +464,29 @@ Real product summary.
             first_markdown_content_line(markdown).as_deref(),
             Some("Real product summary.")
         );
+    }
+
+    #[test]
+    fn repo_signal_fingerprint_changes_when_source_changes() {
+        let dir = tempfile::tempdir().unwrap();
+        let src = dir.path().join("src");
+        fs::create_dir_all(&src).unwrap();
+        fs::write(src.join("main.rs"), "fn main() {}\n").unwrap();
+        let before = repo_signal_fingerprint(dir.path()).unwrap();
+        fs::write(
+            src.join("main.rs"),
+            "fn main() { println!(\"changed\"); }\n",
+        )
+        .unwrap();
+        let after = repo_signal_fingerprint(dir.path()).unwrap();
+        assert_ne!(before, after);
+    }
+
+    #[test]
+    fn codebase_attestation_preserves_authored_spec_content() {
+        let body = "# Intent\n\nAuthored product contract.\n";
+        let updated = update_codebase_attestation(body, "abc123", "`src/` (2 files)");
+        assert!(updated.contains("Authored product contract."));
+        assert!(updated.contains("Repository signal fingerprint: `abc123`"));
     }
 }

@@ -146,7 +146,7 @@ jobs:
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
       - name: Run validation harness
-        run: decapod validate
+        run: decapod validate --refresh-specs
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
           DECAPOD_VALIDATE_TIMEOUT_SECS: "120"

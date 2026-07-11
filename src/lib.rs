@@ -1669,6 +1669,10 @@ fn run_init_apply(
         agent_files_to_generate.push("AGENTS.md".to_string());
     }
 
+    let generate_specs = init_with.specs
+        && !target_dir
+            .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
+            .exists();
     let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
         target_dir: target_dir.clone(),
         force: init_with.force,
@@ -1677,7 +1681,7 @@ fn run_init_apply(
         created_backups,
         all: init_with.all,
         preserved_agent_content,
-        generate_specs: init_with.specs,
+        generate_specs,
         generate_ci: init_with.ci,
         diagram_style: match init_with.diagram_style {
             InitDiagramStyle::Ascii => scaffold::DiagramStyle::Ascii,
@@ -7922,7 +7926,7 @@ mod rpc_handlers {
         let _params: SpecsRefreshParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
-        let manifest = crate::core::scaffold::refresh_project_specs_from_config(ctx.project_root)?;
+        let manifest = crate::core::project_specs::refresh_specs_from_codebase(ctx.project_root)?;
 
         Ok(success_response(
             ctx.request.id.clone(),

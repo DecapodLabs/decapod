@@ -48,7 +48,7 @@ fn assets_docs_and_templates_resolve() {
 }
 
 #[test]
-fn refresh_project_specs_rewrites_generated_markdown() {
+fn scaffold_specs_are_fresh_project_only() {
     let tmp = tempdir().unwrap();
     let root = tmp.path();
     fs::create_dir_all(root.join(".decapod/generated/specs")).expect("create specs dir");
@@ -81,17 +81,20 @@ fn refresh_project_specs_rewrites_generated_markdown() {
         detected_surfaces: vec!["cargo".to_string(), "bazel".to_string()],
         done_criteria: Some("Decapod validate passes with trajectory artifacts.".to_string()),
     };
-    refresh_project_specs(root, DiagramStyle::Mermaid, Some(&updated_seed))
-        .expect("second refresh rewrites specs");
+    let refresh = refresh_project_specs(root, DiagramStyle::Mermaid, Some(&updated_seed));
+    assert!(
+        refresh.is_err(),
+        "scaffold refresh must refuse to replace an existing living spec"
+    );
 
     let intent = fs::read_to_string(intent_path).expect("read intent");
     assert!(
-        intent.contains("Fresh generated summary from current repo context."),
-        "refresh should rewrite generated markdown from current context, got:\n{intent}"
+        intent.contains("Stale generated product claim."),
+        "existing spec content must remain untouched by scaffold refresh, got:\n{intent}"
     );
     assert!(
-        !intent.contains("Stale generated product claim."),
-        "refresh should not preserve stale generated body text"
+        !intent.contains("Fresh generated summary from current repo context."),
+        "scaffold refresh must not replace authored spec content"
     );
 }
 
