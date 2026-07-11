@@ -10,7 +10,6 @@ use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
 use crate::core::migration;
 use crate::core::output;
-use crate::core::plan_governance;
 use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_DIR,
     LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
@@ -22,6 +21,7 @@ use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
 use crate::core::validation_epoch::{ValidationEpochMetadata, active_validation_epoch};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
+use crate::plan_governance;
 use crate::plugins::internalize::{self, DeterminismClass, InternalizationManifest, ReplayClass};
 use crate::{db, primitives, todo, workspace};
 use fancy_regex::Regex;

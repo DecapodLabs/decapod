@@ -2,9 +2,8 @@
 //!
 //! All clap-derived types live here. Dispatch logic lives in `dispatch/`.
 
-use crate::core::{
-    constitution_cli, docs_cli, flight_recorder, obligation, plan_governance, todo, workunit,
-};
+use crate::core::{constitution_cli, docs_cli, flight_recorder, obligation, todo, workunit};
+use crate::plan_governance;
 use crate::plugins::{
     aptitude, container, cron, decide, doctor, eval, federation, health, internalize, lcm, map_ops,
     policy, primitives, reflex, verify, workflow,
@@ -616,16 +615,6 @@ pub(crate) enum PlanCommand {
     /// Display current plan artifact
     Status,
     /// Execute readiness check with typed pushback markers
-    /// Set plan state
-    SetState {
-        #[clap(long, value_enum)]
-        state: PlanStateArg,
-    },
-    /// Shortcut for setting plan state to APPROVED
-    Approve,
-    /// Display current plan artifact
-    Status,
-    /// Execute readiness check with typed pushback markers
     CheckExecute {
         #[clap(long)]
         todo_id: Option<String>,
@@ -702,6 +691,9 @@ pub(crate) enum PlanCommand {
 }
 
 #[derive(clap::Args, Debug)]
+pub(crate) struct WorkunitCli {
+    #[clap(subcommand)]
+    pub command: WorkunitCommand,
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]
