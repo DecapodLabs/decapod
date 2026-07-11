@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.64.0](https://github.com/DecapodLabs/decapod/compare/v0.63.7...v0.64.0) - 2026-07-11
+
+### Added
+
+- add projection-consistency validation for Decapod-governed surfaces ([#847](https://github.com/DecapodLabs/decapod/pull/847))
+
 ## [0.63.7](https://github.com/DecapodLabs/decapod/compare/v0.63.6...v0.63.7) - 2026-07-11
 
 ### Fixed
