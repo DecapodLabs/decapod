@@ -247,8 +247,8 @@ See `AGENTS.md` for the universal contract.
 
 ## Orientation & Documentation
 
-- **Read `docs/agent/api-index.md` before using Decapod beyond help/version checks.**
-- Use `docs/agent/command-contracts.md` instead of guessing command arguments.
+- **Run `decapod docs ingest` before using Decapod beyond help/version checks.**
+- Use `decapod docs` command output instead of guessing command arguments.
 - Treat Decapod errors as recovery instructions.
 - Respect repo-local config policy and workspace boundaries.
 - Do not bypass Decapod boundaries to appear productive.
@@ -310,13 +310,15 @@ This is a Decapod-managed repository. **Strict Dependency: You are strictly boun
 
 ## Mandatory Orientation
 
-**Before performing any Decapod operations beyond help/version checks, you MUST read the Agent API Orientation corpus:**
+**Before performing any Decapod operations beyond help/version checks, you MUST ingest the Agent API Orientation corpus from the Decapod binary:**
 
-1. Read **[docs/agent/api-index.md](docs/agent/api-index.md)** for high-level orientation.
-2. Consult **[docs/agent/command-contracts.md](docs/agent/command-contracts.md)** for specific command requirements and recovery paths.
-3. Reference **[docs/agent/payload-examples.md](docs/agent/payload-examples.md)** for valid call shapes.
+```bash
+decapod docs ingest
+```
 
-**Note on Constitution vs Docs:** Agents use `decapod constitution` to discover technology, primitives in software engineering and delivery, and for scoping pre-inference context. Agents use `decapod docs` to learn the decapod binary interface - its commands, CLI flags, and payloads to run against the decapod binary itself.
+This command outputs the embedded agent documentation (api-index.md, command-contracts.md, payload-examples.md, error-recovery.md, state-model.md, config-schema.md, mcp.md) directly from the binary — no filesystem reads required.
+
+**Note on Constitution vs Docs:** Agents use `decapod constitution` to discover technology, primitives in software engineering and delivery, and for scoping pre-inference context. Agents use `decapod docs` to access the embedded agent-facing methodology documentation (restricted to docs/agent/).
 
 ## Mandatory Initialization
 
@@ -363,7 +365,7 @@ decapod constitution search --query "<problem>"
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
 11. **MUST** maintain **Living Specs**: treat `.decapod/generated/specs/*` as dynamic documents.
-12. **MUST** use the command contracts in `docs/agent/command-contracts.md` instead of guessing arguments.
+12. **MUST** use the command contracts from `decapod docs` output instead of guessing arguments.
 
 ## Decapod Invocation Contract
 Agents act. Decapod orients. Call Decapod at decision boundaries: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, context loss, or multi-agent collision risk.
