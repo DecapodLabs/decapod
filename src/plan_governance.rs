@@ -304,10 +304,10 @@ pub fn update_phase(
                 None,
             )
         })?;
-    if let Some(name) = name {
-        if !name.trim().is_empty() {
-            phase.name = name;
-        }
+    if let Some(name) = name
+        && !name.trim().is_empty()
+    {
+        phase.name = name;
     }
     if let Some(description) = description {
         phase.description = description;
