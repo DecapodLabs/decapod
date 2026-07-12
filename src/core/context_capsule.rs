@@ -90,6 +90,7 @@ struct CanonicalCapsule {
     workunit_id: Option<String>,
     sources: Vec<ContextCapsuleSource>,
     snippets: Vec<ContextCapsuleSnippet>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     capabilities: Vec<String>,
     policy: CapsulePolicyBinding,
 }

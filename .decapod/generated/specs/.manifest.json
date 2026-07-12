@@ -3,6 +3,8 @@
   "template_version": "scaffold-v3",
   "generated_at": "1783740983Z",
   "repo_signal_fingerprint": "0eadab2fd390ec95a047df493be62c3def85ef8fe5560bf2dff31be4d8a31a75",
+  "declared_capabilities": [],
+  "capability_definition_version": "1.0.0",
   "files": [
     {
       "path": ".decapod/generated/specs/README.md",
