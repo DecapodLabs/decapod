@@ -9051,7 +9051,8 @@ mod init_prompt_tests {
     }
 
     #[test]
-    fn mixed_scripts_repo_infers_multiple_languages_without_compiled_bias() -> Result<(), error::DecapodError> {
+    fn mixed_scripts_repo_infers_multiple_languages_without_compiled_bias()
+    -> Result<(), error::DecapodError> {
         let tmp = tempdir().expect("tempdir");
         fs::write(tmp.path().join("task.py"), "print('ok')\n").expect("python fixture");
         fs::write(tmp.path().join("deploy.sh"), "#!/usr/bin/env bash\n").expect("shell fixture");
