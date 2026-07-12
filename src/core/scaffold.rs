@@ -5,17 +5,18 @@
 //! - Embedded methodology documents
 
 use crate::core::assets;
+use crate::core::capabilities::{CapabilityRegistry, apply_capability_overlays};
 use crate::core::capsule_policy::{GENERATED_POLICY_REL_PATH, default_policy_json_pretty};
+use crate::core::container_runtime;
 use crate::core::error;
 use crate::core::project_specs::{
-    LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_INTENT,
-    LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
+    LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_DIR,
+    LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
     LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
     LOCAL_PROJECT_SPECS_README, LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS,
     LOCAL_PROJECT_SPECS_VALIDATION, ProjectSpecManifestEntry, ProjectSpecsManifest, hash_text,
     read_specs_manifest, repo_signal_fingerprint,
 };
-use crate::plugins::container;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -77,6 +78,7 @@ pub struct SpecsSeed {
     pub primary_languages: Vec<String>,
     pub detected_surfaces: Vec<String>,
     pub done_criteria: Option<String>,
+    pub capabilities: Vec<String>,
 }
 
 pub const PROJECT_SPEC_TEMPLATE_VERSION: &str = "scaffold-v3";
@@ -1145,8 +1147,9 @@ fn render_project_spec_content(
     diagram_style: DiagramStyle,
     seed: Option<&SpecsSeed>,
 ) -> Option<String> {
-    match rel_path {
-        LOCAL_PROJECT_SPECS_README => Some(specs_readme_template(seed)),
+    let capabilities = seed.map(|s| s.capabilities.as_slice()).unwrap_or(&[]);
+    let base_content = match rel_path {
+        LOCAL_PROJECT_SPECS_README => Some(specs_readme_template(None)),
         LOCAL_PROJECT_SPECS_INTENT => Some(specs_intent_template(seed)),
         LOCAL_PROJECT_SPECS_ARCHITECTURE => Some(specs_architecture_template(diagram_style, seed)),
         LOCAL_PROJECT_SPECS_INTERFACES => Some(specs_interfaces_template(seed)),
@@ -1155,7 +1158,8 @@ fn render_project_spec_content(
         LOCAL_PROJECT_SPECS_OPERATIONS => Some(specs_operations_template(seed)),
         LOCAL_PROJECT_SPECS_SECURITY => Some(specs_security_template(seed)),
         _ => None,
-    }
+    };
+    base_content.map(|content| apply_capability_overlays(rel_path, content, capabilities))
 }
 
 fn project_spec_scaffold_hash(rel_path: &str, diagram_style: DiagramStyle) -> Option<String> {
@@ -1211,6 +1215,7 @@ pub fn refresh_project_specs_from_config(
         primary_languages: config.repo.primary_languages,
         detected_surfaces: config.repo.detected_surfaces,
         done_criteria: config.repo.done_criteria,
+        capabilities: config.repo.capabilities,
     };
     refresh_project_specs(project_root, diagram_style, Some(&seed))
 }
@@ -1703,7 +1708,8 @@ Agents operating in this repo MUST maintain these artifacts to ensure long-horiz
     fs::create_dir_all(generated_dir.join("migrations")).map_err(error::DecapodError::IoError)?;
     let dockerfile_path = generated_dir.join("Dockerfile");
     if !dockerfile_path.exists() {
-        let dockerfile_content = container::generated_dockerfile_for_repo(&opts.target_dir);
+        let dockerfile_content =
+            crate::plugins::container::generated_dockerfile_for_repo(&opts.target_dir);
         fs::write(&dockerfile_path, dockerfile_content).map_err(error::DecapodError::IoError)?;
     }
     let version_counter_path = generated_dir.join("version_counter.json");
@@ -1771,9 +1777,9 @@ Agents operating in this repo MUST maintain these artifacts to ensure long-horiz
             let mut final_content_hash = hash_text(&content);
             if let Some(ref existing) = existing_manifest
                 && let Some(entry) = existing.files.iter().find(|f| f.path == rel_path)
-                && let Some(ref existing_str) = existing_content
+                && let Some(existing_str) = existing_content
             {
-                let disk_hash = hash_text(existing_str);
+                let disk_hash = hash_text(&existing_str);
                 if disk_hash != entry.template_hash {
                     is_customized = true;
                     if !opts.force {

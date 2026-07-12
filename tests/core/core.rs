@@ -61,6 +61,7 @@ fn scaffold_specs_are_fresh_project_only() {
         primary_languages: vec!["Rust".to_string()],
         detected_surfaces: vec!["cargo".to_string()],
         done_criteria: Some("old validation".to_string()),
+        capabilities: vec![],
     };
     refresh_project_specs(root, DiagramStyle::Mermaid, Some(&initial_seed))
         .expect("initial refresh");
@@ -80,6 +81,7 @@ fn scaffold_specs_are_fresh_project_only() {
         primary_languages: vec!["Rust".to_string()],
         detected_surfaces: vec!["cargo".to_string(), "bazel".to_string()],
         done_criteria: Some("Decapod validate passes with trajectory artifacts.".to_string()),
+        capabilities: vec![],
     };
     let refresh = refresh_project_specs(root, DiagramStyle::Mermaid, Some(&updated_seed));
     assert!(

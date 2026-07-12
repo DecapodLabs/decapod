@@ -8,6 +8,7 @@ pub mod assets;
 pub mod assurance;
 pub mod auth;
 pub mod broker;
+pub mod capabilities;
 pub mod capsule_policy;
 pub mod cloud_backend;
 pub mod constitution_cli;

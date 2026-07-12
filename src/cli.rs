@@ -385,6 +385,8 @@ pub struct RepoContext {
     pub container_workspaces: bool,
     #[serde(default)]
     pub mode: BackendType,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capabilities: Vec<String>,
 }
 
 fn default_container_workspaces_true() -> bool {
