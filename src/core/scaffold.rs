@@ -5,17 +5,18 @@
 //! - Embedded methodology documents
 
 use crate::core::assets;
-use crate::core::capabilities::apply_capability_overlays;
+use crate::core::capabilities::{CapabilityRegistry, apply_capability_overlays};
 use crate::core::capsule_policy::{GENERATED_POLICY_REL_PATH, default_policy_json_pretty};
 use crate::core::error;
 use crate::core::project_specs::{
-    LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_INTENT,
-    LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
+    LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE,
+    LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
     LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
     LOCAL_PROJECT_SPECS_README, LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS,
     LOCAL_PROJECT_SPECS_VALIDATION, ProjectSpecManifestEntry, ProjectSpecsManifest, hash_text,
     read_specs_manifest, repo_signal_fingerprint,
 };
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -45,6 +46,8 @@ pub struct ScaffoldOptions {
     pub diagram_style: DiagramStyle,
     /// Intent/architecture seed captured from inferred or user-confirmed repo context.
     pub specs_seed: Option<SpecsSeed>,
+    /// Capabilities declared for the project (for scaffolding proposals)
+    pub capabilities: Vec<String>,
 }
 
 pub struct ScaffoldSummary {
@@ -1668,42 +1671,6 @@ pub fn scaffold_project_entrypoints(
     // Generate .decapod/generated/Dockerfile from Rust-owned template component.
     let generated_dir = opts.target_dir.join(".decapod/generated");
     fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
-    fs::create_dir_all(generated_dir.join("context")).map_err(error::DecapodError::IoError)?;
-    fs::create_dir_all(generated_dir.join("policy")).map_err(error::DecapodError::IoError)?;
-    fs::create_dir_all(generated_dir.join("artifacts").join("provenance"))
-        .map_err(error::DecapodError::IoError)?;
-    fs::create_dir_all(generated_dir.join("artifacts").join("custody"))
-        .map_err(error::DecapodError::IoError)?;
-    let custody_readme_path = generated_dir
-        .join("artifacts")
-        .join("custody")
-        .join("README.md");
-    if !custody_readme_path.exists() {
-        let custody_readme_content = r#"# Epistemic Custody Artifacts
-
-This directory tracks the preserved chain of intent, context, assumptions, and proof for this repository.
-
-## Directory Structure
-- `assumptions.md`: Log of active and verified assumptions.
-- `contradictions.md`: Log of evidence that conflicts with current plans or assumptions.
-- `deferred_questions.md`: Questions identified during work that were postponed.
-- `evidence/`: Detailed proof artifacts (logs, screenshots, data captures) tied to specific claims.
-
-## Agent Guidance
-Agents operating in this repo MUST maintain these artifacts to ensure long-horizon integrity. Do not compress away uncertainty; surface it here so it remains inspectable by humans and future agent passes.
-"#;
-        fs::write(&custody_readme_path, custody_readme_content)
-            .map_err(error::DecapodError::IoError)?;
-    }
-    fs::create_dir_all(generated_dir.join("artifacts").join("inventory"))
-        .map_err(error::DecapodError::IoError)?;
-    fs::create_dir_all(
-        generated_dir
-            .join("artifacts")
-            .join("diagnostics")
-            .join("validate"),
-    )
-    .map_err(error::DecapodError::IoError)?;
     fs::create_dir_all(generated_dir.join("migrations")).map_err(error::DecapodError::IoError)?;
     let dockerfile_path = generated_dir.join("Dockerfile");
     if !dockerfile_path.exists() {
@@ -1732,7 +1699,48 @@ Agents operating in this repo MUST maintain these artifacts to ensure long-horiz
     let generated_policy_path = opts.target_dir.join(GENERATED_POLICY_REL_PATH);
     if !generated_policy_path.exists() {
         let policy_body = default_policy_json_pretty()?;
+        if let Some(parent) = generated_policy_path.parent() {
+            fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+        }
         fs::write(generated_policy_path, policy_body).map_err(error::DecapodError::IoError)?;
+    }
+
+    // Always create epistemic custody artifacts directory (core Decapod infrastructure)
+    let custody_dir = opts.target_dir.join(".decapod/generated/artifacts/custody");
+    if !custody_dir.exists() {
+        fs::create_dir_all(&custody_dir).map_err(error::DecapodError::IoError)?;
+    }
+
+    // Capability-driven scaffolding proposals
+    let scaffolding_proposals = if !opts.capabilities.is_empty() {
+        generate_scaffolding_proposals(&opts.capabilities, &opts.target_dir)?
+    } else {
+        Vec::new()
+    };
+
+    // Print proposals for user review (non-blocking)
+    if !scaffolding_proposals.is_empty() && !opts.dry_run {
+        eprintln!("\nScaffolding proposals from declared capabilities:");
+        for prop in &scaffolding_proposals {
+            eprintln!(
+                "  [{}] {} -> {}",
+                prop.capability_id,
+                prop.description,
+                prop.path.display()
+            );
+        }
+        eprintln!();
+    }
+
+    // Create scaffolding directories from capability recommendations
+    for prop in &scaffolding_proposals {
+        if let Some(parent) = prop.path.parent() {
+            fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+        }
+        // Create the directory/file if it doesn't exist
+        if !prop.path.exists() {
+            fs::create_dir_all(&prop.path).map_err(error::DecapodError::IoError)?;
+        }
     }
 
     let (specs_created, specs_unchanged, specs_preserved) = if opts.generate_specs {
@@ -1840,4 +1848,38 @@ Agents operating in this repo MUST maintain these artifacts to ensure long-horiz
         ci_unchanged,
         ci_preserved,
     })
+}
+
+/// A scaffolding proposal derived from capability recommendations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScaffoldingProposal {
+    pub capability_id: String,
+    pub description: String,
+    pub path: PathBuf,
+    pub reason: String,
+}
+
+/// Generate scaffolding proposals from declared capabilities
+pub fn generate_scaffolding_proposals(
+    capabilities: &[String],
+    target_dir: &Path,
+) -> Result<Vec<ScaffoldingProposal>, error::DecapodError> {
+    let mut proposals = Vec::new();
+    let _registry = CapabilityRegistry::new();
+
+    for cap_id in capabilities {
+        if let Some(def) = CapabilityRegistry::new().get(cap_id) {
+            for rec in &def.scaffolding_recommendations {
+                let proposal = ScaffoldingProposal {
+                    capability_id: cap_id.clone(),
+                    description: rec.clone(),
+                    path: target_dir.join(rec),
+                    reason: format!("Recommended by capability: {}", def.name),
+                };
+                proposals.push(proposal);
+            }
+        }
+    }
+
+    Ok(proposals)
 }

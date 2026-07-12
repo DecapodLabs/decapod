@@ -5,8 +5,6 @@
 //! scaffolding, validation gates, and proof requirements.
 
 use crate::core::error;
-use crate::core::project_specs::LOCAL_PROJECT_SPECS;
-use crate::core::scaffold::SpecsSeed;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
@@ -115,6 +113,7 @@ impl CapabilityRegistry {
                 "migrations/ directory for schema migrations".to_string(),
                 "storage/ or repository/ abstraction layer".to_string(),
                 "test fixtures for database integration tests".to_string(),
+                ".decapod/generated/artifacts/custody/ directory for epistemic custody artifacts".to_string(),
             ],
             evidence_signals: vec![
                 "Database migration files (e.g., migrations/*.sql)".to_string(),
@@ -554,7 +553,7 @@ impl CapabilityRegistry {
 
     /// Canonicalize capabilities: sort and deduplicate.
     pub fn canonicalize_capabilities(capabilities: &[String]) -> Vec<String> {
-        let mut caps: HashSet<_> = capabilities.iter().cloned().collect();
+        let caps: HashSet<_> = capabilities.iter().cloned().collect();
         let mut sorted: Vec<_> = caps.into_iter().collect();
         sorted.sort();
         sorted
@@ -941,7 +940,7 @@ fn spec_path_ends_with(spec_name: &str, path: &str) -> bool {
     path.ends_with(spec_name) || path.contains(&format!("/{}", spec_name))
 }
 
-fn apply_overlay(mut content: String, capability_id: &str, spec_path: &str) -> String {
+fn apply_overlay(content: String, capability_id: &str, spec_path: &str) -> String {
     let marker = format!("<!-- CAPABILITY: {} -->", capability_id);
 
     // Check if overlay already applied

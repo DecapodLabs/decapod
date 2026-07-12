@@ -1704,6 +1704,7 @@ fn run_init_apply(
             done_criteria: repo_ctx.done_criteria.clone(),
             capabilities: repo_ctx.capabilities.clone(),
         }),
+        capabilities: repo_ctx.capabilities.clone(),
     })?;
 
     let target_display = setup_decapod_root
@@ -4382,6 +4383,7 @@ fn heal_validation_scaffold(
             done_criteria: repo_ctx.done_criteria.clone(),
             capabilities: repo_ctx.capabilities.clone(),
         }),
+        capabilities: repo_ctx.capabilities.clone(),
     })?;
 
     Ok(Some(ValidationHealAction {
