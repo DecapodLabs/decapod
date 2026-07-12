@@ -7955,7 +7955,11 @@ mod rpc_handlers {
         let _params: SpecsRefreshParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
-        let manifest = crate::core::project_specs::refresh_specs_from_codebase(ctx.project_root)?;
+        let config = crate::cli::DecapodProjectConfig::load(ctx.project_root).unwrap_or_default();
+        let manifest = crate::core::project_specs::refresh_specs_from_codebase(
+            ctx.project_root,
+            &config.repo.capabilities,
+        )?;
 
         Ok(success_response(
             ctx.request.id.clone(),

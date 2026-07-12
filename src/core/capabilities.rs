@@ -560,27 +560,18 @@ impl CapabilityRegistry {
     }
 
     /// Validate a set of capabilities, returning conflicts and missing requirements.
+    /// Unknown capabilities are allowed (open vocabulary), but known capabilities
+    /// are checked for conflicts and missing requirements.
     pub fn validate_capabilities(&self, capabilities: &[String]) -> Result<(), String> {
         let canonical = Self::canonicalize_capabilities(capabilities);
         let caps: HashSet<_> = canonical.iter().cloned().collect();
-
-        // Check for unknown capabilities
-        for cap in &canonical {
-            if !self.capabilities.contains_key(cap) {
-                return Err(format!(
-                    "Unknown capability: '{}'. Supported: {}",
-                    cap,
-                    self.ids().join(", ")
-                ));
-            }
-        }
 
         // Check for duplicates (canonicalize handles this, but we can double-check)
         if capabilities.len() != caps.len() {
             return Err("Duplicate capabilities declared".to_string());
         }
 
-        // Check conflicts
+        // Check conflicts - only for known capabilities
         for cap_id in &canonical {
             if let Some(def) = self.capabilities.get(cap_id) {
                 for conflict in &def.conflicts {
@@ -594,7 +585,7 @@ impl CapabilityRegistry {
             }
         }
 
-        // Check requirements
+        // Check requirements - only for known capabilities
         for cap_id in &canonical {
             if let Some(def) = self.capabilities.get(cap_id) {
                 for req in &def.requires {
@@ -1221,8 +1212,8 @@ mod tests {
     fn test_validate_unknown_capability() {
         let registry = CapabilityRegistry::new();
         let result = registry.validate_capabilities(&["unknown-capability".to_string()]);
-        assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Unknown capability"));
+        // Unknown capabilities are now allowed (open vocabulary)
+        assert!(result.is_ok());
     }
 
     #[test]

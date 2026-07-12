@@ -1491,7 +1491,11 @@ fn validate_project_specs_docs(
         if out_of_sync_specs.is_empty() {
             pass("Project specs content hashes match manifest", ctx);
         } else if refresh_specs {
-            let _ = crate::core::project_specs::refresh_specs_from_codebase(repo_root)?;
+            let config = crate::cli::DecapodProjectConfig::load(repo_root).unwrap_or_default();
+            let _ = crate::core::project_specs::refresh_specs_from_codebase(
+                repo_root,
+                &config.repo.capabilities,
+            )?;
             specs_refreshed = true;
             pass(
                 "Project specs re-evaluated against the current codebase",
@@ -1535,7 +1539,11 @@ fn validate_project_specs_docs(
             info(
                 "STALE_SPECS_FINGERPRINT: Significant codebase surfaces changed since the last spec attestation. Re-evaluating living specs...",
             );
-            let _ = crate::core::project_specs::refresh_specs_from_codebase(repo_root)?;
+            let config = crate::cli::DecapodProjectConfig::load(repo_root).unwrap_or_default();
+            let _ = crate::core::project_specs::refresh_specs_from_codebase(
+                repo_root,
+                &config.repo.capabilities,
+            )?;
             pass(
                 "Project specs re-evaluated against the current codebase",
                 ctx,

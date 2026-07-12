@@ -9,12 +9,11 @@ use crate::core::capabilities::{CapabilityRegistry, apply_capability_overlays};
 use crate::core::capsule_policy::{GENERATED_POLICY_REL_PATH, default_policy_json_pretty};
 use crate::core::error;
 use crate::core::project_specs::{
-    LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE,
-    LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
-    LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
-    LOCAL_PROJECT_SPECS_README, LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS,
-    LOCAL_PROJECT_SPECS_VALIDATION, ProjectSpecManifestEntry, ProjectSpecsManifest, hash_text,
-    read_specs_manifest, repo_signal_fingerprint,
+    CAPABILITY_DEFINITION_VERSION, LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_ARCHITECTURE, LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES,
+    LOCAL_PROJECT_SPECS_MANIFEST, LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA,
+    LOCAL_PROJECT_SPECS_OPERATIONS, LOCAL_PROJECT_SPECS_README, LOCAL_PROJECT_SPECS_SECURITY,
+    LOCAL_PROJECT_SPECS_SEMANTICS, LOCAL_PROJECT_SPECS_VALIDATION, ProjectSpecManifestEntry,
+    ProjectSpecsManifest, hash_text, read_specs_manifest, repo_signal_fingerprint,
 };
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -1288,6 +1287,8 @@ pub fn refresh_project_specs(
             .map(|existing| existing.generated_at.clone())
             .unwrap_or_else(crate::core::time::now_epoch_z),
         repo_signal_fingerprint: current_repo_fingerprint,
+        declared_capabilities: vec![],
+        capability_definition_version: CAPABILITY_DEFINITION_VERSION.to_string(),
         files: manifest_entries,
     };
 
@@ -1818,6 +1819,8 @@ pub fn scaffold_project_entrypoints(
                 template_version: PROJECT_SPEC_TEMPLATE_VERSION.to_string(),
                 generated_at: crate::core::time::now_epoch_z(),
                 repo_signal_fingerprint: repo_signal_fingerprint(&opts.target_dir)?,
+                declared_capabilities: opts.capabilities.clone(),
+                capability_definition_version: CAPABILITY_DEFINITION_VERSION.to_string(),
                 files: manifest_entries,
             };
             let manifest_path = opts.target_dir.join(LOCAL_PROJECT_SPECS_MANIFEST);
