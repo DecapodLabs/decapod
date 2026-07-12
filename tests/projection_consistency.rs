@@ -203,15 +203,16 @@ fn capability_survives_config_context_spec_deterministically() {
     let mut config: toml::Value = toml::from_str(&config_content).expect("parse config.toml");
     
     // Ensure repo.capabilities exists as an array
-    if !config.get("repo").and_then(|r| r.get("capabilities")).is_some() {
-        config["repo"]["capabilities"] = toml::Value::Array(vec![]);
+    let repo_table = config["repo"].as_table_mut().expect("repo table");
+    if repo_table.get("capabilities").is_none() {
+        repo_table.insert("capabilities".to_string(), toml::Value::Array(vec![]));
     }
     
     // Add arbitrary capability "houseboat" to config
-    config["repo"]["capabilities"].as_array_mut().unwrap().push(
+    repo_table["capabilities"].as_array_mut().unwrap().push(
         toml::Value::String("houseboat".to_string()),
     );
-    config["repo"]["capabilities"].as_array_mut().unwrap().push(
+    repo_table["capabilities"].as_array_mut().unwrap().push(
         toml::Value::String("persistent-state".to_string()),
     );
     fs::write(&config_path, toml::to_string_pretty(&config).expect("serialize config")).expect("write config.toml");

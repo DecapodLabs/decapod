@@ -1704,9 +1704,9 @@ fn run_init_apply(
     }
 
     let generate_specs = init_with.specs
-        && !target_dir
+        && (init_with.force || !target_dir
             .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
-            .exists();
+            .exists());
     let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
         target_dir: target_dir.clone(),
         force: init_with.force,
