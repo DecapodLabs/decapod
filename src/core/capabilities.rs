@@ -547,15 +547,26 @@ impl CapabilityRegistry {
 
     /// Get all capability IDs.
     pub fn ids(&self) -> Vec<String> {
-        self.capabilities.keys().cloned().collect()
+        let mut ids: Vec<_> = self.capabilities.keys().cloned().collect();
+        ids.sort();
+        ids
+    }
+
+    /// Canonicalize capabilities: sort and deduplicate.
+    pub fn canonicalize_capabilities(capabilities: &[String]) -> Vec<String> {
+        let mut caps: HashSet<_> = capabilities.iter().cloned().collect();
+        let mut sorted: Vec<_> = caps.into_iter().collect();
+        sorted.sort();
+        sorted
     }
 
     /// Validate a set of capabilities, returning conflicts and missing requirements.
     pub fn validate_capabilities(&self, capabilities: &[String]) -> Result<(), String> {
-        let caps: HashSet<_> = capabilities.iter().cloned().collect();
+        let canonical = Self::canonicalize_capabilities(capabilities);
+        let caps: HashSet<_> = canonical.iter().cloned().collect();
 
         // Check for unknown capabilities
-        for cap in capabilities {
+        for cap in &canonical {
             if !self.capabilities.contains_key(cap) {
                 return Err(format!(
                     "Unknown capability: '{}'. Supported: {}",
@@ -565,13 +576,13 @@ impl CapabilityRegistry {
             }
         }
 
-        // Check for duplicates
+        // Check for duplicates (canonicalize handles this, but we can double-check)
         if capabilities.len() != caps.len() {
             return Err("Duplicate capabilities declared".to_string());
         }
 
         // Check conflicts
-        for cap_id in capabilities {
+        for cap_id in &canonical {
             if let Some(def) = self.capabilities.get(cap_id) {
                 for conflict in &def.conflicts {
                     if caps.contains(conflict) {
@@ -585,7 +596,7 @@ impl CapabilityRegistry {
         }
 
         // Check requirements
-        for cap_id in capabilities {
+        for cap_id in &canonical {
             if let Some(def) = self.capabilities.get(cap_id) {
                 for req in &def.requires {
                     if !caps.contains(req) {
@@ -603,7 +614,8 @@ impl CapabilityRegistry {
 
     /// Generate capability overlays for spec generation.
     pub fn generate_overlays(&self, capabilities: &[String]) -> Vec<CapabilityOverlay> {
-        capabilities
+        let canonical = Self::canonicalize_capabilities(capabilities);
+        canonical
             .iter()
             .filter_map(|id| self.capabilities.get(id))
             .map(|def| CapabilityOverlay {
@@ -897,14 +909,15 @@ pub fn apply_capability_overlays(
     mut content: String,
     capabilities: &[String],
 ) -> String {
-    if capabilities.is_empty() {
+    let canonical = CapabilityRegistry::canonicalize_capabilities(capabilities);
+    if canonical.is_empty() {
         return content;
     }
 
     let registry = CapabilityRegistry::new();
 
-    for cap_id in capabilities {
-        if let Some(def) = CapabilityRegistry::new().get(cap_id) {
+    for cap_id in &canonical {
+        if let Some(def) = registry.get(cap_id.as_str()) {
             // Check if this capability affects this spec
             if def
                 .affected_specs

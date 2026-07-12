@@ -55,5 +55,6 @@
     "policy_path": "",
     "repo_revision": ""
   },
-  "capsule_hash": "4dfb9cae4e1da9d21f109037982d1e2244accf747da5c029605ab1ae50f2f237"
+  "capsule_hash": "4dfb9cae4e1da9d21f109037982d1e2244accf747da5c029605ab1ae50f2f237",
+  "repo_signal_fingerprint": ""
 }
