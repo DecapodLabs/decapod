@@ -22,15 +22,3 @@ detected_surfaces = ["cargo"]
 external_tracker = false
 container_workspaces = true
 mode = "local"
-capabilities = [
-    "authentication",
-    "background-processing",
-    "event-driven",
-    "external-integrations",
-    "infrastructure-management",
-    "multi-tenant",
-    "persistent-state",
-    "public-api",
-    "scheduled-jobs",
-    "secrets-handling",
-]

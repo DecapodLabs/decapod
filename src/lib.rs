@@ -272,11 +272,38 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
     ctx.detected_surfaces.sort();
     ctx.detected_surfaces.dedup();
 
-    // Infer capabilities from repository evidence
-    let inferred = core::capabilities::infer_capabilities(target_dir)?;
-    ctx.capabilities = inferred.iter().map(|i| i.capability_id.clone()).collect();
-    ctx.capabilities.sort();
-    ctx.capabilities.dedup();
+    // Load declared capabilities from config.toml
+    let config_path = target_dir.join(".decapod/config.toml");
+    if config_path.exists() {
+        if let Ok(content) = fs::read_to_string(&config_path) {
+            if let Ok(config) = toml::from_str::<crate::cli::DecapodProjectConfig>(&content) {
+                ctx.capabilities = config.repo.capabilities;
+                ctx.capabilities.sort();
+                ctx.capabilities.dedup();
+            }
+        }
+    }
+
+    // If no declared capabilities, infer from repository evidence
+    if ctx.capabilities.is_empty() {
+        let inferred = core::capabilities::infer_capabilities(target_dir)?;
+        ctx.capabilities = inferred.iter().map(|i| i.capability_id.clone()).collect();
+        ctx.capabilities.sort();
+        ctx.capabilities.dedup();
+    } else {
+        // Still run inference to populate ctx.capabilities with inferred for comparison
+        let inferred = core::capabilities::infer_capabilities(target_dir)?;
+        let inferred_ids: Vec<String> = inferred.iter().map(|i| i.capability_id.clone()).collect();
+        
+        // Merge declared and inferred, removing duplicates
+        for id in inferred_ids {
+            if !ctx.capabilities.contains(&id) {
+                ctx.capabilities.push(id);
+            }
+        }
+        ctx.capabilities.sort();
+        ctx.capabilities.dedup();
+    }
 
     Ok(ctx)
 }
