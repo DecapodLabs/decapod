@@ -628,6 +628,12 @@ impl CapabilityRegistry {
     }
 }
 
+impl Default for CapabilityRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// A capability overlay for spec generation.
 #[derive(Debug, Clone)]
 pub struct CapabilityOverlay {
