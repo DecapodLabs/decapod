@@ -3,6 +3,7 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
+use crate::core::capabilities::reconcile_capability_overlays;
 use crate::core::error;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -345,15 +346,33 @@ pub fn refresh_specs_manifest(
         });
     }
 
+    let template_version = existing
+        .as_ref()
+        .map(|manifest| manifest.template_version.clone())
+        .unwrap_or_else(|| crate::core::scaffold::PROJECT_SPEC_TEMPLATE_VERSION.to_string());
+    let canonical_capabilities =
+        crate::core::capabilities::CapabilityRegistry::canonicalize_capabilities(
+            declared_capabilities,
+        );
+    let repo_signal_fingerprint = repo_signal_fingerprint(project_root)?;
+    let generated_at = existing
+        .as_ref()
+        .filter(|manifest| {
+            manifest.schema_version == LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA
+                && manifest.template_version == template_version
+                && manifest.repo_signal_fingerprint == repo_signal_fingerprint
+                && manifest.declared_capabilities == canonical_capabilities
+                && manifest.capability_definition_version == CAPABILITY_DEFINITION_VERSION
+                && manifest.files == manifest_entries
+        })
+        .map(|manifest| manifest.generated_at.clone())
+        .unwrap_or_else(crate::core::time::now_epoch_z);
     let manifest = ProjectSpecsManifest {
         schema_version: LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA.to_string(),
-        template_version: existing
-            .as_ref()
-            .map(|manifest| manifest.template_version.clone())
-            .unwrap_or_else(|| crate::core::scaffold::PROJECT_SPEC_TEMPLATE_VERSION.to_string()),
-        generated_at: crate::core::time::now_epoch_z(),
-        repo_signal_fingerprint: repo_signal_fingerprint(project_root)?,
-        declared_capabilities: declared_capabilities.to_vec(),
+        template_version,
+        generated_at,
+        repo_signal_fingerprint,
+        declared_capabilities: canonical_capabilities,
         capability_definition_version: CAPABILITY_DEFINITION_VERSION.to_string(),
         files: manifest_entries,
     };
@@ -425,7 +444,8 @@ pub fn refresh_specs_from_codebase(
             continue;
         }
         let body = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
-        let updated = update_codebase_attestation(&body, &fingerprint, &surfaces);
+        let updated = reconcile_capability_overlays(spec.path, body.clone(), declared_capabilities);
+        let updated = update_codebase_attestation(&updated, &fingerprint, &surfaces);
         if updated != body {
             fs::write(path, updated).map_err(error::DecapodError::IoError)?;
         }

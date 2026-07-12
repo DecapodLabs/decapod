@@ -274,33 +274,19 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
 
     // Load declared capabilities from config.toml
     let config_path = target_dir.join(".decapod/config.toml");
-    if config_path.exists() {
-        if let Ok(content) = fs::read_to_string(&config_path) {
-            if let Ok(config) = toml::from_str::<crate::cli::DecapodProjectConfig>(&content) {
-                ctx.capabilities = config.repo.capabilities;
-                ctx.capabilities.sort();
-                ctx.capabilities.dedup();
-            }
-        }
+    if config_path.exists()
+        && let Ok(content) = fs::read_to_string(&config_path)
+        && let Ok(config) = toml::from_str::<crate::cli::DecapodProjectConfig>(&content)
+    {
+        ctx.capabilities = config.repo.capabilities;
+        ctx.capabilities.sort();
+        ctx.capabilities.dedup();
     }
 
     // If no declared capabilities, infer from repository evidence
     if ctx.capabilities.is_empty() {
         let inferred = core::capabilities::infer_capabilities(target_dir)?;
         ctx.capabilities = inferred.iter().map(|i| i.capability_id.clone()).collect();
-        ctx.capabilities.sort();
-        ctx.capabilities.dedup();
-    } else {
-        // Still run inference to populate ctx.capabilities with inferred for comparison
-        let inferred = core::capabilities::infer_capabilities(target_dir)?;
-        let inferred_ids: Vec<String> = inferred.iter().map(|i| i.capability_id.clone()).collect();
-        
-        // Merge declared and inferred, removing duplicates
-        for id in inferred_ids {
-            if !ctx.capabilities.contains(&id) {
-                ctx.capabilities.push(id);
-            }
-        }
         ctx.capabilities.sort();
         ctx.capabilities.dedup();
     }
@@ -1704,9 +1690,10 @@ fn run_init_apply(
     }
 
     let generate_specs = init_with.specs
-        && (init_with.force || !target_dir
-            .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
-            .exists());
+        && (init_with.force
+            || !target_dir
+                .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
+                .exists());
     let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
         target_dir: target_dir.clone(),
         force: init_with.force,

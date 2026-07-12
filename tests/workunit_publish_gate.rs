@@ -51,6 +51,7 @@ fn write_capsule(root: &std::path::Path, task_id: &str) {
             source_path: "interfaces/PLAN_GOVERNED_EXECUTION".to_string(),
             text: "promotion path is proof-gated".to_string(),
         }],
+        capabilities: vec![],
         policy: CapsulePolicyBinding {
             risk_tier: "medium".to_string(),
             policy_hash: "abc123".to_string(),

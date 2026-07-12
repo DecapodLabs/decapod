@@ -912,6 +912,10 @@ pub fn apply_capability_overlays(
 
     let registry = CapabilityRegistry::new();
 
+    if spec_path_ends_with("INTENT.md", spec_path) {
+        content = apply_capability_declaration(content, &canonical);
+    }
+
     for cap_id in &canonical {
         if let Some(def) = registry.get(cap_id.as_str()) {
             // Check if this capability affects this spec
@@ -927,15 +931,45 @@ pub fn apply_capability_overlays(
     content
 }
 
+/// Reconcile capability-owned sections while preserving authored content outside
+/// the explicit marker ranges. This is the controlled regeneration path used by
+/// `specs.refresh` after a capability declaration changes.
+pub fn reconcile_capability_overlays(
+    spec_path: &str,
+    mut content: String,
+    capabilities: &[String],
+) -> String {
+    for definition in CapabilityRegistry::new().all() {
+        let start = format!(
+            "<!-- decapod:capability-overlay:{}:start -->",
+            definition.id
+        );
+        let end = format!("<!-- decapod:capability-overlay:{}:end -->", definition.id);
+        while let Some(start_pos) = content.find(&start) {
+            let Some(end_offset) = content[start_pos..].find(&end) else {
+                break;
+            };
+            let end_pos = start_pos + end_offset + end.len();
+            content = remove_marked_block(content, start_pos, end_pos);
+        }
+    }
+
+    apply_capability_overlays(spec_path, content, capabilities)
+}
+
 fn spec_path_ends_with(spec_name: &str, path: &str) -> bool {
     path.ends_with(spec_name) || path.contains(&format!("/{}", spec_name))
 }
 
 fn apply_overlay(content: String, capability_id: &str, spec_path: &str) -> String {
-    let marker = format!("<!-- CAPABILITY: {} -->", capability_id);
+    let start_marker = format!(
+        "<!-- decapod:capability-overlay:{}:start -->",
+        capability_id
+    );
+    let end_marker = format!("<!-- decapod:capability-overlay:{}:end -->", capability_id);
 
     // Check if overlay already applied
-    if content.contains(&marker) {
+    if content.contains(&start_marker) {
         return content;
     }
 
@@ -968,6 +1002,7 @@ fn apply_overlay(content: String, capability_id: &str, spec_path: &str) -> Strin
     };
 
     if let Some(overlay) = overlay {
+        let overlay = format!("{start_marker}\n{overlay}\n{end_marker}");
         // Insert overlay before the first major section after the title
         if let Some(pos) = content.find("\n## ") {
             let mut result = content[..pos].to_string();
@@ -976,6 +1011,59 @@ fn apply_overlay(content: String, capability_id: &str, spec_path: &str) -> Strin
             return result;
         }
     }
+    content
+}
+
+fn apply_capability_declaration(mut content: String, capabilities: &[String]) -> String {
+    let start = "<!-- decapod:declared-capabilities:start -->";
+    let end = "<!-- decapod:declared-capabilities:end -->";
+    while let Some(start_pos) = content.find(start) {
+        let Some(end_offset) = content[start_pos..].find(end) else {
+            break;
+        };
+        let end_pos = start_pos + end_offset + end.len();
+        content = remove_marked_block(content, start_pos, end_pos);
+    }
+    if capabilities.is_empty() {
+        return content;
+    }
+    let body = capabilities
+        .iter()
+        .map(|capability| format!("- `{capability}`"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let section = format!("{start}\n\n## Declared Capability Surfaces\n\n{body}\n\n{end}");
+    if let Some(pos) = content.find("\n## ") {
+        let mut result = content[..pos].to_string();
+        result.push_str("\n\n");
+        result.push_str(&section);
+        result.push_str(&content[pos..]);
+        result
+    } else {
+        format!("{}\n\n{}\n", content.trim_end(), section)
+    }
+}
+
+fn remove_marked_block(mut content: String, start_pos: usize, end_pos: usize) -> String {
+    let line_start = content[..start_pos]
+        .rfind('\n')
+        .map(|position| position + 1)
+        .unwrap_or(start_pos);
+    let line_end = content[end_pos..]
+        .find('\n')
+        .map(|position| end_pos + position + 1)
+        .unwrap_or(end_pos);
+    let remove_start = if line_start > 0 && content[..line_start].ends_with('\n') {
+        line_start - 1
+    } else {
+        line_start
+    };
+    let remove_end = if content[line_end..].starts_with('\n') {
+        line_end + 1
+    } else {
+        line_end
+    };
+    content.replace_range(remove_start..remove_end, "");
     content
 }
 

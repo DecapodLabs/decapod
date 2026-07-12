@@ -3805,6 +3805,7 @@ fn validate_projection_consistency(
         .join(".decapod")
         .join("governance")
         .join("workunits");
+    let mut declared_capabilities = Vec::new();
 
     if !config_path.exists() {
         findings.push(ProjectionFinding {
@@ -3820,6 +3821,14 @@ fn validate_projection_consistency(
         let config: toml::Value = toml::from_str(&config_content).map_err(|e| {
             error::DecapodError::ValidationError(format!("Invalid config.toml: {e}"))
         })?;
+        declared_capabilities = config
+            .get("repo")
+            .and_then(|repo| repo.get("capabilities"))
+            .and_then(|value| value.as_array())
+            .into_iter()
+            .flatten()
+            .filter_map(|value| value.as_str().map(str::to_string))
+            .collect();
         let has_product_summary = config
             .get("repo")
             .and_then(|r| r.get("product_summary"))
@@ -3833,6 +3842,43 @@ fn validate_projection_consistency(
                 expected: "repo.product_summary must be set (declared intent anchor)".to_string(),
                 observed: "empty or missing product_summary".to_string(),
                 remediation: "Set repo.product_summary in .decapod/config.toml".to_string(),
+            });
+        }
+    }
+
+    if declared_capabilities
+        .iter()
+        .any(|capability| capability == "persistent-state")
+    {
+        let migrations_dir = main_root.join("migrations");
+        let migration_files = if migrations_dir.is_dir() {
+            fs::read_dir(&migrations_dir)
+                .map_err(error::DecapodError::IoError)?
+                .filter_map(Result::ok)
+                .filter(|entry| entry.path().is_file())
+                .filter(|entry| {
+                    matches!(
+                        entry.path().extension().and_then(|ext| ext.to_str()),
+                        Some("sql") | Some("migration")
+                    )
+                })
+                .filter(|entry| {
+                    fs::metadata(entry.path())
+                        .map(|metadata| metadata.len() > 0)
+                        .unwrap_or(false)
+                })
+                .count()
+        } else {
+            0
+        };
+        if migration_files == 0 {
+            findings.push(ProjectionFinding {
+                surface: "migrations/".to_string(),
+                kind: SurfaceKind::Evidence,
+                expected: "persistent-state requires at least one non-empty SQL or migration file"
+                    .to_string(),
+                observed: "no executable migration artifact found".to_string(),
+                remediation: "Add a tested migration under migrations/ or remove persistent-state from repo.capabilities".to_string(),
             });
         }
     }
