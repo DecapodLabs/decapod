@@ -1,5 +1,26 @@
 # Architecture
 
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+
+## Persistent State Architecture Overlay
+
+### State Ownership
+- Each entity type MUST have a designated state owner
+- State ownership boundaries MUST be explicitly documented
+- Cross-boundary state access MUST go through defined interfaces
+
+### Transaction Boundaries
+- All multi-entity mutations MUST occur within explicit transactions
+- Transaction boundaries MUST be documented in ARCHITECTURE.md
+- Compensating transactions for distributed operations
+
+### Storage Abstraction
+- Storage ownership, consistency behavior, and access boundaries MUST be explicit
+- Portability or swappable implementations are project decisions, not universal requirements
+- Migration and rollback treatment MUST match the selected storage technology
+<!-- decapod:capability-overlay:persistent-state:end -->
 ## Direction
 CLI governance runtime with dual-store architecture, git worktree isolation, and deterministic context management.
 
@@ -12,6 +33,12 @@ Decapod is a Rust CLI governance kernel for AI agents. It runs on-demand (daemon
 - **Workspace Isolation**: Git worktrees mandatory; containers optional but gated
 - **Deterministic**: Same inputs → identical outputs; event logs enable full rebuild
 - **Capability-Gated**: External actions (git, docker, fs) require declared capabilities
+
+## Capability Ownership
+
+Declared capabilities are repository-shaping context, not a closed feature taxonomy. The current codebase owns authentication and authorization boundaries, durable SQLite/JSONL state, event-ledger rebuilds, workflow and scheduled automation, external tool integrations, and stable CLI/JSON-RPC interfaces. Each surface must retain an explicit owner, invariant, and proof path; capability labels must not silently select storage, queue, deployment, or service-level architecture.
+
+Persistent state is proven by the configured `[repo.migration_validation]` command in `.decapod/config.toml`; migration directory presence is discovery evidence only.
 - **Interface Abstraction**: Agents access `.decapod/` only via CLI (INV-STORE-BOUNDARY)
 
 ## Current Facts
@@ -368,7 +395,7 @@ Verification and artifact emission:
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27cc0f02dc7957543cdbdf24ea2c9c76ba799689d10f465ebee32f3aa6ef28bf`
+- Repository signal fingerprint: `28eee4513cb6544f57ad1253f9f4d48562c520bb1dbd674824769cb0b09f9051`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (85 files), `tests/` (3 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

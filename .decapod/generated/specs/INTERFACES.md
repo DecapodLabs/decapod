@@ -1,5 +1,27 @@
 # Interfaces
 
+
+<!-- decapod:capability-overlay:public-api:start -->
+
+
+## Public API Capability Overlay
+
+### API Contract Requirements
+- All public endpoints MUST define explicit request/response schemas
+- Versioning strategy MUST be documented (URL path or header-based)
+- All public endpoints MUST implement idempotency for mutating operations
+- Rate limiting and pagination MUST be implemented for list endpoints
+
+### Compatibility Guarantees
+- Backward-compatible changes ONLY within a version
+- Breaking changes require new version (v1, v2, etc.)
+- Deprecation and removal policy MUST be selected for this project and proven against its consumers
+
+### Security Requirements
+- All public endpoints MUST implement authentication
+- Abuse-control enforcement point MUST be a documented project decision
+- Input validation MUST reject malformed requests with typed errors
+<!-- decapod:capability-overlay:public-api:end -->
 ## Contract Principles
 - Prefer explicit schemas over implicit behavior.
 - Every mutating interface defines idempotency semantics.
@@ -19,6 +41,10 @@ Generated interface specs include:
 - Capabilities report schema for agent discovery
 
 ## CLI / RPC Contracts
+
+### Declared Capability Configuration
+
+`.decapod/config.toml` may declare `repo.declared_capabilities` as a sorted, deduplicated list. The legacy `repo.capabilities` spelling remains readable for compatibility. Capability declarations shape context and generated specifications but do not grant external-action permissions by themselves; runtime authorization remains governed by the action capability and session/policy checks.
 
 ### Core Commands (Agent-Facing)
 
@@ -394,7 +420,7 @@ Agents declare needed capabilities via `assurance.evaluate` params; interlocks b
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27cc0f02dc7957543cdbdf24ea2c9c76ba799689d10f465ebee32f3aa6ef28bf`
+- Repository signal fingerprint: `28eee4513cb6544f57ad1253f9f4d48562c520bb1dbd674824769cb0b09f9051`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (85 files), `tests/` (3 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

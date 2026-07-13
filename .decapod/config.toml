@@ -22,3 +22,20 @@ detected_surfaces = ["cargo"]
 external_tracker = false
 container_workspaces = true
 mode = "local"
+declared_capabilities = [
+    "authentication",
+    "authorization",
+    "background-processing",
+    "event-driven",
+    "external-integrations",
+    "persistent-state",
+    "public-api",
+    "scheduled-jobs",
+]
+
+[repo.migration_validation]
+command = "cargo"
+args = ["test", "--lib", "core::migration"]
+working_directory = "."
+timeout_seconds = 120
+expected_exit_code = 0

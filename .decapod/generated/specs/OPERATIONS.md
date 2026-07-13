@@ -1,5 +1,48 @@
 # Operations
 
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+
+## Persistent State Operations Overlay
+
+### Backup & Recovery
+- Backup scope, schedule, retention, and restore evidence MUST be selected for the project
+- Recovery point objectives MUST be explicit project decisions, not assumed values
+- Recovery time objectives MUST be explicit project decisions, not assumed values
+- Restore verification cadence MUST be recorded with the operational proof plan
+
+### Migration Operations
+- All schema changes via migration files
+- Migration rollback procedures documented
+- Zero-downtime migration strategy for production
+- Migration health checks and rollback triggers
+<!-- decapod:capability-overlay:persistent-state:end -->
+## Background Processing Operations Overlay
+
+### Queue Visibility
+- Queue depth, processing rate, and latency MUST be monitored
+- Dead letter queue MUST be visible and alerted
+- Worker health and processing rate metrics required
+
+### Shutdown Behavior
+- Graceful shutdown: stop accepting new work, finish current job
+- Drain behavior and timeout MUST be selected for the deployment
+- Termination and requeue behavior MUST be selected and proven for the deployment
+
+### Worker Health
+- Worker liveness and readiness probes
+- Queue depth alerts for backpressure detection
+- Processing latency percentiles (p50, p95, p99)
+<!-- decapod:capability-overlay:background-processing:end -->
+## Capability Operations
+
+Operational ownership follows the declared surfaces: session/authentication and policy/authorization protect mutations; SQLite/JSONL state and migrations require executable proof; workflow and scheduled jobs require bounded execution and failure visibility; Git/Cargo/container integrations remain explicit external actions; and CLI/JSON-RPC contracts remain machine-facing compatibility surfaces. Capability declarations must not be used as a substitute for command-level evidence.
+
 ## Operational Readiness Checklist
 - [ ] On-call ownership defined (local development tool — typically self-serve)
 - [ ] SLOs defined for validation latency and workspace creation
@@ -239,7 +282,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27cc0f02dc7957543cdbdf24ea2c9c76ba799689d10f465ebee32f3aa6ef28bf`
+- Repository signal fingerprint: `28eee4513cb6544f57ad1253f9f4d48562c520bb1dbd674824769cb0b09f9051`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (85 files), `tests/` (3 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
