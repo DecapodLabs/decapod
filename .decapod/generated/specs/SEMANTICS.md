@@ -1,5 +1,9 @@
 # Semantics
 
+## Capability Semantics
+
+Capability labels are canonicalized for deterministic projection but preserve their human-defined meaning. Recognized packs contribute obligations and negative constraints; unknown labels remain valid context. Persistent-state semantics require migration treatment and executable validation, while event-driven/background-processing semantics require the project to declare delivery, retry, idempotency, and recovery behavior rather than inheriting universal guarantees.
+
 ## State Machines
 
 ### Workspace State
