@@ -1,26 +1,5 @@
 # Security
 
-
-<!-- decapod:capability-overlay:public-api:start -->
-
-
-## Public API Security Overlay
-
-### Authentication Requirements
-- All public endpoints MUST validate authentication tokens
-- Token validation MUST include expiry, revocation, and scope checks
-- Anonymous access MUST be explicitly documented and justified
-
-### Input Validation
-- All request bodies MUST be validated against schemas
-- Reject requests with unknown fields (strict schema validation)
-- Size limits MUST be enforced on all request bodies
-
-### Rate Limiting
-- Limits and enforcement boundaries MUST be selected for this deployment
-- Clustered enforcement behavior MUST be documented when applicable
-- Client-visible throttling behavior MUST be part of the contract when applicable
-<!-- decapod:capability-overlay:public-api:end -->
 ## Capability Security Boundaries
 
 Authentication establishes the agent session; authorization and external-action capability checks independently constrain mutations such as Git, Cargo, and container execution. Declared repository capabilities are intent context only and never bypass session, policy, workspace, or proof gates. Secrets remain environment/session material and are not placed in `.decapod/config.toml`.

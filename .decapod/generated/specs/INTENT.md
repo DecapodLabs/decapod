@@ -5,13 +5,15 @@
 
 ## Declared Capability Surfaces
 
+- `agent-helper`
 - `authentication`
 - `authorization`
 - `background-processing`
+- `control-plane`
 - `event-driven`
 - `external-integrations`
+- `governance-kernel`
 - `persistent-state`
-- `public-api`
 - `scheduled-jobs`
 
 <!-- decapod:declared-capabilities:end -->

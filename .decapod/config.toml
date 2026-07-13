@@ -23,13 +23,15 @@ external_tracker = false
 container_workspaces = true
 mode = "local"
 declared_capabilities = [
+    "agent-helper",
     "authentication",
     "authorization",
     "background-processing",
+    "control-plane",
     "event-driven",
     "external-integrations",
+    "governance-kernel",
     "persistent-state",
-    "public-api",
     "scheduled-jobs",
 ]
 

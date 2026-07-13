@@ -8,23 +8,6 @@
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 
-
-<!-- decapod:capability-overlay:public-api:start -->
-
-
-## Public API Validation Overlay
-
-### Contract Tests
-- All public endpoints MUST have contract tests
-- Request/response schema validation on every request
-- Compatibility regression tests for each version
-
-### Security Tests
-- Authentication bypass tests
-- Malformed input handling tests
-- Rate limit enforcement tests
-- Token expiry/revocation tests
-<!-- decapod:capability-overlay:public-api:end -->
 ## Persistent State Validation Overlay
 
 ### Migration Proof Command

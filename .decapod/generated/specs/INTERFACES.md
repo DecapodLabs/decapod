@@ -1,27 +1,5 @@
 # Interfaces
 
-
-<!-- decapod:capability-overlay:public-api:start -->
-
-
-## Public API Capability Overlay
-
-### API Contract Requirements
-- All public endpoints MUST define explicit request/response schemas
-- Versioning strategy MUST be documented (URL path or header-based)
-- All public endpoints MUST implement idempotency for mutating operations
-- Rate limiting and pagination MUST be implemented for list endpoints
-
-### Compatibility Guarantees
-- Backward-compatible changes ONLY within a version
-- Breaking changes require new version (v1, v2, etc.)
-- Deprecation and removal policy MUST be selected for this project and proven against its consumers
-
-### Security Requirements
-- All public endpoints MUST implement authentication
-- Abuse-control enforcement point MUST be a documented project decision
-- Input validation MUST reject malformed requests with typed errors
-<!-- decapod:capability-overlay:public-api:end -->
 ## Contract Principles
 - Prefer explicit schemas over implicit behavior.
 - Every mutating interface defines idempotency semantics.

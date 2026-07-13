@@ -1,16 +1,18 @@
 {
   "schema_version": "1.0.0",
   "template_version": "scaffold-v3",
-  "generated_at": "1783909837Z",
+  "generated_at": "1783910285Z",
   "repo_signal_fingerprint": "28eee4513cb6544f57ad1253f9f4d48562c520bb1dbd674824769cb0b09f9051",
   "declared_capabilities": [
+    "agent-helper",
     "authentication",
     "authorization",
     "background-processing",
+    "control-plane",
     "event-driven",
     "external-integrations",
+    "governance-kernel",
     "persistent-state",
-    "public-api",
     "scheduled-jobs"
   ],
   "capability_definition_version": "1.0.0",
@@ -23,7 +25,7 @@
     {
       "path": ".decapod/generated/specs/INTENT.md",
       "template_hash": "e6c06430e23ca87ae33169a6b1f9c70a3fd283655f5b5b29755fb83181f989e9",
-      "content_hash": "ce9ff75f704074054c61d5ad7997e1e07213817ba9479aa34e28e92bec84ed60"
+      "content_hash": "b706943c128640c9837e2342c58ceeec9c7811cf8865261499dc950ac89ce117"
     },
     {
       "path": ".decapod/generated/specs/ARCHITECTURE.md",
@@ -33,12 +35,12 @@
     {
       "path": ".decapod/generated/specs/INTERFACES.md",
       "template_hash": "15cc8c3bbfe951da695384106eb78a44c7af28ddc002bcc83c8a7770229fe999",
-      "content_hash": "e57480f197b7d45c18fc5d62765c2a85d10ef83ad2be9fa928842f91f6a4db28"
+      "content_hash": "01444470b898d84b0a6fc9f07d381e427704e5866e43d84b22c07a8db33e062b"
     },
     {
       "path": ".decapod/generated/specs/VALIDATION.md",
       "template_hash": "2779e85d72593f90b0f8f79fcbf4e382daf59b49610e821b9704cd0e26862c18",
-      "content_hash": "d210d75b93399bfdef81b947c6a578dec18f656331a29c81c5529d94c7154c41"
+      "content_hash": "6cd74397b7f62c0bec1a0ccba6b199733dd42b1af7f850f1ed8cc60dbf41bc93"
     },
     {
       "path": ".decapod/generated/specs/SEMANTICS.md",
@@ -53,7 +55,7 @@
     {
       "path": ".decapod/generated/specs/SECURITY.md",
       "template_hash": "b283bdc62b7c2fce411becf6b31928d1b3502da28be7ad618531e3e1820fc147",
-      "content_hash": "c965a8e7e3ea8587d1aa2fd61404eef6efed5675ebf876d1f71632af52318c2e"
+      "content_hash": "17cb906714913830cad4c798bccb550032804a6e5dc4bc1e1b171545ea16395a"
     }
   ]
 }
