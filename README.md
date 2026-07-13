@@ -22,6 +22,8 @@
 
 Canonical Contract: [assets/constitution.json (core/DECAPOD)](assets/constitution.json#L5)
 
+Paper: [Accountable Agentic Execution](https://decapodlabs.github.io/accountable-agentic-execution/)
+
 ---
 
 ## Quick Start
