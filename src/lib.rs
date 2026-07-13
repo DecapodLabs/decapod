@@ -4157,6 +4157,70 @@ fn validate_intent_convergence_manifest(
     Ok(lineage)
 }
 
+/// Projection-only provenance validation. Release validation owns the three
+/// manifest schemas; this adapter adds the identity binding required when a
+/// repository contains completed task state.
+pub(crate) fn validate_projection_provenance(
+    project_root: &Path,
+    expected_epoch: &str,
+) -> Vec<String> {
+    let base = project_root.join(".decapod/generated/artifacts/provenance");
+    let manifests = [
+        (
+            "artifact_manifest.json",
+            validate_artifact_manifest(project_root, &base.join("artifact_manifest.json")),
+        ),
+        (
+            "proof_manifest.json",
+            validate_proof_manifest(project_root, &base.join("proof_manifest.json")),
+        ),
+        (
+            "intent_convergence_checklist.json",
+            validate_intent_convergence_manifest(
+                project_root,
+                &base.join("intent_convergence_checklist.json"),
+            ),
+        ),
+    ];
+    let mut errors = Vec::new();
+    for (name, validation) in manifests {
+        let path = base.join(name);
+        if let Err(error) = validation {
+            errors.push(format!("{name}: {error}"));
+            continue;
+        }
+        let raw = match fs::read_to_string(&path) {
+            Ok(raw) => raw,
+            Err(error) => {
+                errors.push(format!("{name}: cannot read validated manifest: {error}"));
+                continue;
+            }
+        };
+        let value: serde_json::Value = match serde_json::from_str(&raw) {
+            Ok(value) => value,
+            Err(error) => {
+                errors.push(format!("{name}: invalid JSON: {error}"));
+                continue;
+            }
+        };
+        for field in ["task_id", "session_id", "validation_epoch"] {
+            let present = value
+                .get(field)
+                .and_then(|v| v.as_str())
+                .is_some_and(|v| !v.is_empty());
+            if !present {
+                errors.push(format!("{name}: missing non-empty {field}"));
+            }
+        }
+        if value.get("validation_epoch").and_then(|v| v.as_str()) != Some(expected_epoch) {
+            errors.push(format!(
+                "{name}: validation_epoch does not match active epoch {expected_epoch}"
+            ));
+        }
+    }
+    errors
+}
+
 fn build_release_inventory(project_root: &Path) -> Result<serde_json::Value, error::DecapodError> {
     let mut paths = Vec::new();
     let mut roots = vec!["src", "tests"];

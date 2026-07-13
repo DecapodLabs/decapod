@@ -1,5 +1,8 @@
 use crate::core::capsule_policy::CapsulePolicyBinding;
-use crate::core::{assets, docs, error, project_specs::repo_signal_fingerprint};
+use crate::core::{
+    assets, docs, error,
+    project_specs::{config_input_hash, repo_signal_fingerprint, spec_input_hash},
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -34,6 +37,10 @@ pub struct DeterministicContextCapsule {
     pub capsule_hash: String,
     #[serde(default)]
     pub repo_signal_fingerprint: String,
+    #[serde(default)]
+    pub config_input_hash: String,
+    #[serde(default)]
+    pub spec_input_hash: String,
 }
 
 impl DeterministicContextCapsule {
@@ -60,6 +67,8 @@ impl DeterministicContextCapsule {
             snippets,
             capabilities,
             policy: self.policy.clone(),
+            config_input_hash: self.config_input_hash.clone(),
+            spec_input_hash: self.spec_input_hash.clone(),
         }
     }
 
@@ -93,6 +102,10 @@ struct CanonicalCapsule {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     capabilities: Vec<String>,
     policy: CapsulePolicyBinding,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    config_input_hash: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    spec_input_hash: String,
 }
 
 fn capsule_schema_version_default() -> String {
@@ -194,6 +207,8 @@ pub fn query_embedded_capsule_governed(
         policy,
         capsule_hash: String::new(),
         repo_signal_fingerprint: repo_signal_fingerprint(repo_root).unwrap_or_default(),
+        config_input_hash: config_input_hash(repo_root).unwrap_or_default(),
+        spec_input_hash: spec_input_hash(repo_root).unwrap_or_default(),
     };
 
     capsule.with_recomputed_hash().map_err(|e| {

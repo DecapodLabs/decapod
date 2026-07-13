@@ -260,6 +260,43 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
 }
 
 #[test]
+fn projection_validation_rejects_manifest_capability_and_hash_drift() {
+    let (_tmp, dir, password) = setup_repo();
+    let refresh = run_decapod(
+        &dir,
+        &["rpc", "--op", "specs.refresh"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(refresh.status.success());
+
+    set_capabilities(&dir, &["control-plane"]);
+    let result = run_validate(&dir, &password, true);
+    assert!(!result.status.success());
+    let output = String::from_utf8_lossy(&result.stdout);
+    assert!(output.contains("config_input_hash") || output.contains("declared_capabilities"));
+}
+
+#[test]
+fn projection_validation_rejects_missing_capsule_provenance_and_hash() {
+    let (_tmp, dir, password) = setup_repo();
+    let mut capsule = get_valid_context_capsule(&dir, &password);
+    capsule.as_object_mut().unwrap().remove("config_input_hash");
+    capsule.as_object_mut().unwrap().remove("spec_input_hash");
+    capsule["capsule_hash"] = serde_json::Value::String("tampered".to_string());
+    write_context_capsule(&dir, &capsule);
+
+    let result = run_validate(&dir, &password, true);
+    assert!(!result.status.success());
+    let output = String::from_utf8_lossy(&result.stdout);
+    assert!(output.contains("config_input_hash"));
+    assert!(output.contains("capsule_hash"));
+}
+
+#[test]
 fn capability_survives_config_context_spec_deterministically() {
     let (_tmp, dir, _password) = setup_repo();
 
@@ -567,6 +604,16 @@ fn persistent_state_activates_executable_migration_gate() {
         "sh",
         &["-c", "grep -q 'CREATE TABLE' migrations/001_initial.sql"],
     );
+    let refresh_after_config = run_decapod(
+        &dir,
+        &["rpc", "--op", "specs.refresh"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(refresh_after_config.status.success());
     let projections3 = run_validate(&dir, &password, true);
     assert!(
         projections3.status.success(),

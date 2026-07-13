@@ -61,6 +61,8 @@ fn write_capsule(root: &std::path::Path, task_id: &str) {
         },
         capsule_hash: String::new(),
         repo_signal_fingerprint: "test_fingerprint".to_string(),
+        config_input_hash: String::new(),
+        spec_input_hash: String::new(),
     };
     write_context_capsule(root, &capsule).expect("write capsule");
 }

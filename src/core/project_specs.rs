@@ -171,6 +171,12 @@ pub struct ProjectSpecsManifest {
     pub declared_capabilities: Vec<String>,
     #[serde(default)]
     pub capability_definition_version: String,
+    /// Hash of the canonical, parsed `.decapod/config.toml` input.
+    #[serde(default)]
+    pub config_input_hash: String,
+    /// Hash of the ordered living-spec inputs, excluding this manifest.
+    #[serde(default)]
+    pub spec_input_hash: String,
     pub files: Vec<ProjectSpecManifestEntry>,
 }
 
@@ -178,6 +184,32 @@ pub fn hash_text(text: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(text.as_bytes());
     format!("{:x}", hasher.finalize())
+}
+
+pub fn config_input_hash(project_root: &Path) -> Result<String, error::DecapodError> {
+    let config = crate::cli::DecapodProjectConfig::load(project_root)?;
+    let canonical = serde_json::to_vec(&config).map_err(|e| {
+        error::DecapodError::ValidationError(format!("Failed to canonicalize config.toml: {e}"))
+    })?;
+    Ok(hash_text(&String::from_utf8_lossy(&canonical)))
+}
+
+pub fn spec_input_hash(project_root: &Path) -> Result<String, error::DecapodError> {
+    let mut hasher = Sha256::new();
+    for spec in LOCAL_PROJECT_SPECS {
+        let path = project_root.join(spec.path);
+        if !path.exists() {
+            hasher.update(spec.path.as_bytes());
+            hasher.update(b"\0absent\n");
+            continue;
+        }
+        let body = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
+        hasher.update(spec.path.as_bytes());
+        hasher.update(b"\0");
+        hasher.update(hash_text(&body).as_bytes());
+        hasher.update(b"\n");
+    }
+    Ok(format!("{:x}", hasher.finalize()))
 }
 
 fn repo_signal_requires_content_hash(rel_path: &str) -> bool {
@@ -359,6 +391,8 @@ pub fn refresh_specs_manifest(
             declared_capabilities,
         );
     let repo_signal_fingerprint = repo_signal_fingerprint(project_root)?;
+    let config_input_hash = config_input_hash(project_root)?;
+    let spec_input_hash = spec_input_hash(project_root)?;
     let generated_at = existing
         .as_ref()
         .filter(|manifest| {
@@ -367,6 +401,8 @@ pub fn refresh_specs_manifest(
                 && manifest.repo_signal_fingerprint == repo_signal_fingerprint
                 && manifest.declared_capabilities == canonical_capabilities
                 && manifest.capability_definition_version == CAPABILITY_DEFINITION_VERSION
+                && manifest.config_input_hash == config_input_hash
+                && manifest.spec_input_hash == spec_input_hash
                 && manifest.files == manifest_entries
         })
         .map(|manifest| manifest.generated_at.clone())
@@ -378,6 +414,8 @@ pub fn refresh_specs_manifest(
         repo_signal_fingerprint,
         declared_capabilities: canonical_capabilities,
         capability_definition_version: CAPABILITY_DEFINITION_VERSION.to_string(),
+        config_input_hash,
+        spec_input_hash,
         files: manifest_entries,
     };
 

@@ -13,8 +13,8 @@ use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
     LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
     LOCAL_PROJECT_SPECS_README, LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS,
-    LOCAL_PROJECT_SPECS_VALIDATION, ProjectSpecManifestEntry, ProjectSpecsManifest, hash_text,
-    read_specs_manifest, repo_signal_fingerprint,
+    LOCAL_PROJECT_SPECS_VALIDATION, ProjectSpecManifestEntry, ProjectSpecsManifest,
+    config_input_hash, hash_text, read_specs_manifest, repo_signal_fingerprint, spec_input_hash,
 };
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -1292,6 +1292,8 @@ pub fn refresh_project_specs(
             .map(|seed| CapabilityRegistry::canonicalize_capabilities(&seed.capabilities))
             .unwrap_or_default(),
         capability_definition_version: CAPABILITY_DEFINITION_VERSION.to_string(),
+        config_input_hash: config_input_hash(project_root)?,
+        spec_input_hash: spec_input_hash(project_root)?,
         files: manifest_entries,
     };
 
@@ -1816,6 +1818,16 @@ pub fn scaffold_project_entrypoints(
                 repo_signal_fingerprint: repo_signal_fingerprint(&opts.target_dir)?,
                 declared_capabilities: opts.capabilities.clone(),
                 capability_definition_version: CAPABILITY_DEFINITION_VERSION.to_string(),
+                config_input_hash: if opts.target_dir.join(".decapod/config.toml").exists() {
+                    config_input_hash(&opts.target_dir)?
+                } else {
+                    String::new()
+                },
+                spec_input_hash: if opts.target_dir.join(".decapod/config.toml").exists() {
+                    spec_input_hash(&opts.target_dir)?
+                } else {
+                    String::new()
+                },
                 files: manifest_entries,
             };
             let manifest_path = opts.target_dir.join(LOCAL_PROJECT_SPECS_MANIFEST);

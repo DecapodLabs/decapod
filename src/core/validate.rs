@@ -15,7 +15,7 @@ use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_INTERFACES, LOCAL_PROJECT_SPECS_MANIFEST,
     LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
     LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS, LOCAL_PROJECT_SPECS_VALIDATION,
-    hash_text, read_specs_manifest, repo_signal_fingerprint,
+    config_input_hash, hash_text, read_specs_manifest, repo_signal_fingerprint, spec_input_hash,
 };
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
@@ -3895,7 +3895,7 @@ fn run_migration_validation(
 fn validate_projection_consistency(
     ctx: &ValidationContext,
     main_root: &Path,
-    _working_root: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Projection Consistency Gate");
 
@@ -3942,6 +3942,10 @@ fn validate_projection_consistency(
             .flatten()
             .filter_map(|value| value.as_str().map(str::to_string))
             .collect();
+        declared_capabilities =
+            crate::core::capabilities::CapabilityRegistry::canonicalize_capabilities(
+                &declared_capabilities,
+            );
         migration_validation = config
             .get("repo")
             .and_then(|repo| repo.get("migration_validation"))
@@ -4052,6 +4056,49 @@ fn validate_projection_consistency(
                 });
             }
         }
+        let expected_config_hash = config_input_hash(main_root)?;
+        let expected_spec_hash = spec_input_hash(main_root)?;
+        for (field, expected) in [
+            ("config_input_hash", expected_config_hash.as_str()),
+            ("spec_input_hash", expected_spec_hash.as_str()),
+        ] {
+            match manifest.get(field).and_then(|v| v.as_str()) {
+                Some(actual) if actual == expected => {}
+                Some(actual) => findings.push(ProjectionFinding {
+                    surface: ".decapod/generated/specs/.manifest.json".to_string(),
+                    kind: SurfaceKind::Authority,
+                    expected: format!("{field}={expected}"),
+                    observed: format!("{field}={actual}"),
+                    remediation: "Refresh the living specs manifest from the canonical config and specs inputs".to_string(),
+                }),
+                None => findings.push(ProjectionFinding {
+                    surface: ".decapod/generated/specs/.manifest.json".to_string(),
+                    kind: SurfaceKind::Authority,
+                    expected: format!("{field} must be present"),
+                    observed: "missing".to_string(),
+                    remediation: "Refresh the living specs manifest to record canonical input hashes".to_string(),
+                }),
+            }
+        }
+        let manifest_capabilities = manifest
+            .get("declared_capabilities")
+            .and_then(|v| v.as_array())
+            .map(|values| {
+                values
+                    .iter()
+                    .filter_map(|v| v.as_str().map(str::to_string))
+                    .collect::<Vec<_>>()
+            });
+        if manifest_capabilities.as_ref() != Some(&declared_capabilities) {
+            findings.push(ProjectionFinding {
+                surface: ".decapod/generated/specs/.manifest.json".to_string(),
+                kind: SurfaceKind::Authority,
+                expected: format!("declared_capabilities={declared_capabilities:?}"),
+                observed: format!("declared_capabilities={manifest_capabilities:?}"),
+                remediation: "Refresh the living specs manifest from .decapod/config.toml"
+                    .to_string(),
+            });
+        }
         if let Some(files) = manifest.get("files").and_then(|v| v.as_array()) {
             for entry in files {
                 let path = entry.get("path").and_then(|v| v.as_str()).unwrap_or("");
@@ -4121,6 +4168,18 @@ fn validate_projection_consistency(
                     remediation: "Run `decapod todo done --validated --artifact <path>` or `decapod qa verify capture` to generate proof artifacts".to_string(),
                 });
             }
+            if has_artifact && has_proof && has_intent {
+                let epoch = active_validation_epoch(main_root)?;
+                for message in crate::validate_projection_provenance(main_root, &epoch.epoch_id) {
+                    findings.push(ProjectionFinding {
+                        surface: ".decapod/generated/artifacts/provenance/".to_string(),
+                        kind: SurfaceKind::Evidence,
+                        expected: "schema-valid provenance bound to one task, session, and active validation epoch".to_string(),
+                        observed: message,
+                        remediation: "Regenerate provenance using the current validated task/session/epoch".to_string(),
+                    });
+                }
+            }
         }
     }
 
@@ -4131,17 +4190,76 @@ fn validate_projection_consistency(
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
-                let capsule: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
-                    error::DecapodError::ValidationError(format!(
-                        "Invalid context capsule {}: {}",
-                        path.display(),
-                        e
-                    ))
-                })?;
-                if let Some(fp) = capsule
-                    .get("repo_signal_fingerprint")
-                    .and_then(|v| v.as_str())
-                    && fp != current_fp
+                let capsule: DeterministicContextCapsule =
+                    serde_json::from_str(&raw).map_err(|e| {
+                        error::DecapodError::ValidationError(format!(
+                            "Invalid context capsule {}: {}",
+                            path.display(),
+                            e
+                        ))
+                    })?;
+                let expected_config_hash = config_input_hash(main_root)?;
+                let expected_spec_hash = spec_input_hash(main_root)?;
+                for (field, actual, expected) in [
+                    (
+                        "config_input_hash",
+                        capsule.config_input_hash.as_str(),
+                        expected_config_hash.as_str(),
+                    ),
+                    (
+                        "spec_input_hash",
+                        capsule.spec_input_hash.as_str(),
+                        expected_spec_hash.as_str(),
+                    ),
+                ] {
+                    if actual.is_empty() || actual != expected {
+                        findings.push(ProjectionFinding {
+                            surface: format!(
+                                ".decapod/generated/context/{}",
+                                path.file_name().unwrap().to_string_lossy()
+                            ),
+                            kind: SurfaceKind::Authority,
+                            expected: format!("{field}={expected}"),
+                            observed: if actual.is_empty() {
+                                "missing".to_string()
+                            } else {
+                                actual.to_string()
+                            },
+                            remediation:
+                                "Regenerate the context capsule from current config/spec inputs"
+                                    .to_string(),
+                        });
+                    }
+                }
+                match capsule.computed_hash_hex() {
+                    Ok(expected) if expected == capsule.capsule_hash => {}
+                    Ok(expected) => findings.push(ProjectionFinding {
+                        surface: format!(
+                            ".decapod/generated/context/{}",
+                            path.file_name().unwrap().to_string_lossy()
+                        ),
+                        kind: SurfaceKind::Evidence,
+                        expected: format!("capsule_hash={expected}"),
+                        observed: format!("capsule_hash={}", capsule.capsule_hash),
+                        remediation:
+                            "Regenerate the context capsule so its content hash is recomputed"
+                                .to_string(),
+                    }),
+                    Err(error) => findings.push(ProjectionFinding {
+                        surface: format!(
+                            ".decapod/generated/context/{}",
+                            path.file_name().unwrap().to_string_lossy()
+                        ),
+                        kind: SurfaceKind::Evidence,
+                        expected: "capsule hash input must be canonical JSON".to_string(),
+                        observed: error.to_string(),
+                        remediation:
+                            "Rewrite the context capsule through the Decapod context query"
+                                .to_string(),
+                    }),
+                }
+                if !capsule.repo_signal_fingerprint.is_empty()
+                    && capsule.repo_signal_fingerprint != current_fp
                 {
                     findings.push(ProjectionFinding {
                         surface: format!(
@@ -4150,12 +4268,42 @@ fn validate_projection_consistency(
                         ),
                         kind: SurfaceKind::Projection,
                         expected: format!("repo_signal_fingerprint {current_fp}"),
-                        observed: format!("stale fingerprint {fp}"),
+                        observed: format!("stale fingerprint {}", capsule.repo_signal_fingerprint),
                         remediation: "Regenerate context capsule with current repo signal"
                             .to_string(),
                     });
                 }
             }
+        }
+    }
+
+    if working_root.exists()
+        && working_root
+            .to_string_lossy()
+            .contains(".decapod/workspaces")
+    {
+        let status = workspace::get_workspace_status(working_root)?;
+        let worktree_path_valid = status
+            .git
+            .worktree_path
+            .as_ref()
+            .is_some_and(|path| path.exists());
+        if !status.git.in_worktree || !worktree_path_valid || status.git.is_protected {
+            findings.push(ProjectionFinding {
+                surface: "workspace".to_string(),
+                kind: SurfaceKind::Authority,
+                expected: "live todo-owned worktree on an unprotected branch".to_string(),
+                observed: format!(
+                    "branch={}, in_worktree={}, worktree_path_valid={}, protected={}",
+                    status.git.current_branch,
+                    status.git.in_worktree,
+                    worktree_path_valid,
+                    status.git.is_protected
+                ),
+                remediation:
+                    "Recreate the workspace with `decapod workspace ensure` and rerun validation"
+                        .to_string(),
+            });
         }
     }
 
