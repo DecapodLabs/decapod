@@ -11,15 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.13.0
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache Decapod
+        uses: actions/cache@v4
         with:
-          bazelisk-cache: true
-          disk-cache: decapod-validate
-          repository-cache: true
+          path: ~/.cargo/bin/decapod
+          key: ${{ runner.os }}-decapod
+      - name: Install Decapod
+        run: |
+          if ! command -v decapod &> /dev/null; then
+            cargo install decapod
+          fi
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
-          bazel run //:decapod -- init --proof
-          bazel run //:decapod -- validate
+          decapod init --proof --force
+          decapod validate

@@ -28,6 +28,8 @@ pub struct DeterministicContextCapsule {
     pub sources: Vec<ContextCapsuleSource>,
     pub snippets: Vec<ContextCapsuleSnippet>,
     #[serde(default)]
+    pub capabilities: Vec<String>,
+    #[serde(default)]
     pub policy: CapsulePolicyBinding,
     pub capsule_hash: String,
     #[serde(default)]
@@ -44,6 +46,10 @@ impl DeterministicContextCapsule {
         snippets.sort();
         snippets.dedup();
 
+        let mut capabilities = self.capabilities.clone();
+        capabilities.sort();
+        capabilities.dedup();
+
         CanonicalCapsule {
             schema_version: self.schema_version.clone(),
             topic: self.topic.clone(),
@@ -52,6 +58,7 @@ impl DeterministicContextCapsule {
             workunit_id: self.workunit_id.clone(),
             sources,
             snippets,
+            capabilities,
             policy: self.policy.clone(),
         }
     }
@@ -83,6 +90,8 @@ struct CanonicalCapsule {
     workunit_id: Option<String>,
     sources: Vec<ContextCapsuleSource>,
     snippets: Vec<ContextCapsuleSnippet>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    capabilities: Vec<String>,
     policy: CapsulePolicyBinding,
 }
 
@@ -181,6 +190,7 @@ pub fn query_embedded_capsule_governed(
         workunit_id: workunit_id.map(str::to_string),
         sources,
         snippets,
+        capabilities: declared_capabilities(repo_root),
         policy,
         capsule_hash: String::new(),
         repo_signal_fingerprint: repo_signal_fingerprint(repo_root).unwrap_or_default(),
@@ -189,6 +199,15 @@ pub fn query_embedded_capsule_governed(
     capsule.with_recomputed_hash().map_err(|e| {
         error::DecapodError::ValidationError(format!("failed to canonicalize context capsule: {e}"))
     })
+}
+
+fn declared_capabilities(repo_root: &Path) -> Vec<String> {
+    let mut capabilities = crate::cli::DecapodProjectConfig::load(repo_root)
+        .map(|config| config.repo.capabilities)
+        .unwrap_or_default();
+    capabilities.sort();
+    capabilities.dedup();
+    capabilities
 }
 
 fn validate_scope(scope: &str) -> Result<(), error::DecapodError> {

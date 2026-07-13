@@ -364,3 +364,11 @@ Verification and artifact emission:
 | Capsule policy drift (repo revision mismatch) | Medium | Medium | Policy binding includes `repo_revision`; validate gate checks lineage |
 | Schema migration failure | Low | High | Additive-only migrations; deterministic rebuild verification gate |
 | Agent session token leakage | Low | High | Per-agent `DECAPOD_SESSION_PASSWORD`; broker verification; short TTL |
+
+<!-- decapod:codebase-attestation:start -->
+## Codebase Attestation
+
+- Repository signal fingerprint: `27cc0f02dc7957543cdbdf24ea2c9c76ba799689d10f465ebee32f3aa6ef28bf`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (85 files), `tests/` (3 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->

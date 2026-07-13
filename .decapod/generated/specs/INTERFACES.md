@@ -390,3 +390,11 @@ Every external command execution goes through `external_action::execute(store_ro
 | `ShellExec` | Arbitrary (restricted) | broker.events.jsonl |
 
 Agents declare needed capabilities via `assurance.evaluate` params; interlocks block undeclared mutations.
+
+<!-- decapod:codebase-attestation:start -->
+## Codebase Attestation
+
+- Repository signal fingerprint: `27cc0f02dc7957543cdbdf24ea2c9c76ba799689d10f465ebee32f3aa6ef28bf`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (85 files), `tests/` (3 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->

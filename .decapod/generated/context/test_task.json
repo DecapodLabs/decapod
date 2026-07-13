@@ -1,0 +1,28 @@
+{
+  "capsule_hash": "79842b2981177c890fd216ee60ad2ef662cb479a8f436e22ef61eba72e12cc2e",
+  "policy": {
+    "policy_hash": "01a9984c70ab7f37aa4b0b7eb401bec8d289a984f9f0809038e001e9ae51d818",
+    "policy_path": ".decapod/generated/policy/context_capsule_policy.json",
+    "policy_version": "jit-capsule-policy-v1",
+    "repo_revision": "UNBORN:master",
+    "risk_tier": "medium"
+  },
+  "repo_signal_fingerprint": "2970ce3e414495e66bc389e227eeec027de95a56c2bb07fe92dbc32c317ea1a7",
+  "schema_version": "1.1.0",
+  "scope": "core",
+  "snippets": [
+    {
+      "source_path": "core/ARCHITECTURE",
+      "text": "# core/ARCHITECTURE\n**Authority:** namespace-router\n**Layer:** core\n**Binding:** binding\n\nRoute product and system-building intent into architecture concepts before implementation inference.\n\n## ask\n\nAsk platform choice when app could mean iOS, Android, web, desktop, CLI, WASM, or cross-platform."
+    }
+  ],
+  "sources": [
+    {
+      "path": "core/ARCHITECTURE",
+      "section": "core/ARCHITECTURE"
+    }
+  ],
+  "task_id": null,
+  "topic": "test",
+  "workunit_id": null
+}

@@ -3,6 +3,7 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
+use crate::core::capabilities::reconcile_capability_overlays;
 use crate::core::error;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -18,6 +19,7 @@ pub const LOCAL_PROJECT_SPECS_OPERATIONS: &str = ".decapod/generated/specs/OPERA
 pub const LOCAL_PROJECT_SPECS_SECURITY: &str = ".decapod/generated/specs/SECURITY.md";
 pub const LOCAL_PROJECT_SPECS_MANIFEST: &str = ".decapod/generated/specs/.manifest.json";
 pub const LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA: &str = "1.0.0";
+pub const CAPABILITY_DEFINITION_VERSION: &str = "1.0.0";
 
 #[derive(Clone, Copy, Debug)]
 pub struct LocalProjectSpec {
@@ -163,6 +165,12 @@ pub struct ProjectSpecsManifest {
     pub template_version: String,
     pub generated_at: String,
     pub repo_signal_fingerprint: String,
+    /// Optional for manifests written before capability provenance was added.
+    /// Refresh upgrades legacy manifests to the current schema deterministically.
+    #[serde(default)]
+    pub declared_capabilities: Vec<String>,
+    #[serde(default)]
+    pub capability_definition_version: String,
     pub files: Vec<ProjectSpecManifestEntry>,
 }
 
@@ -311,6 +319,7 @@ pub fn read_specs_manifest(
 
 pub fn refresh_specs_manifest(
     project_root: &Path,
+    declared_capabilities: &[String],
 ) -> Result<ProjectSpecsManifest, error::DecapodError> {
     let existing = read_specs_manifest(project_root)?;
 
@@ -341,14 +350,34 @@ pub fn refresh_specs_manifest(
         });
     }
 
+    let template_version = existing
+        .as_ref()
+        .map(|manifest| manifest.template_version.clone())
+        .unwrap_or_else(|| crate::core::scaffold::PROJECT_SPEC_TEMPLATE_VERSION.to_string());
+    let canonical_capabilities =
+        crate::core::capabilities::CapabilityRegistry::canonicalize_capabilities(
+            declared_capabilities,
+        );
+    let repo_signal_fingerprint = repo_signal_fingerprint(project_root)?;
+    let generated_at = existing
+        .as_ref()
+        .filter(|manifest| {
+            manifest.schema_version == LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA
+                && manifest.template_version == template_version
+                && manifest.repo_signal_fingerprint == repo_signal_fingerprint
+                && manifest.declared_capabilities == canonical_capabilities
+                && manifest.capability_definition_version == CAPABILITY_DEFINITION_VERSION
+                && manifest.files == manifest_entries
+        })
+        .map(|manifest| manifest.generated_at.clone())
+        .unwrap_or_else(crate::core::time::now_epoch_z);
     let manifest = ProjectSpecsManifest {
         schema_version: LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA.to_string(),
-        template_version: existing
-            .as_ref()
-            .map(|manifest| manifest.template_version.clone())
-            .unwrap_or_else(|| crate::core::scaffold::PROJECT_SPEC_TEMPLATE_VERSION.to_string()),
-        generated_at: crate::core::time::now_epoch_z(),
-        repo_signal_fingerprint: repo_signal_fingerprint(project_root)?,
+        template_version,
+        generated_at,
+        repo_signal_fingerprint,
+        declared_capabilities: canonical_capabilities,
+        capability_definition_version: CAPABILITY_DEFINITION_VERSION.to_string(),
         files: manifest_entries,
     };
 
@@ -409,6 +438,7 @@ fn update_codebase_attestation(body: &str, fingerprint: &str, surfaces: &str) ->
 /// rendering belongs exclusively to fresh `decapod init`.
 pub fn refresh_specs_from_codebase(
     project_root: &Path,
+    declared_capabilities: &[String],
 ) -> Result<ProjectSpecsManifest, error::DecapodError> {
     let fingerprint = repo_signal_fingerprint(project_root)?;
     let surfaces = codebase_surface_summary(project_root)?;
@@ -418,12 +448,13 @@ pub fn refresh_specs_from_codebase(
             continue;
         }
         let body = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
-        let updated = update_codebase_attestation(&body, &fingerprint, &surfaces);
+        let updated = reconcile_capability_overlays(spec.path, body.clone(), declared_capabilities);
+        let updated = update_codebase_attestation(&updated, &fingerprint, &surfaces);
         if updated != body {
             fs::write(path, updated).map_err(error::DecapodError::IoError)?;
         }
     }
-    refresh_specs_manifest(project_root)
+    refresh_specs_manifest(project_root, declared_capabilities)
 }
 
 #[cfg(test)]
@@ -488,5 +519,19 @@ Real product summary.
         let updated = update_codebase_attestation(body, "abc123", "`src/` (2 files)");
         assert!(updated.contains("Authored product contract."));
         assert!(updated.contains("Repository signal fingerprint: `abc123`"));
+    }
+
+    #[test]
+    fn legacy_manifest_without_capability_provenance_is_readable() {
+        let legacy = r#"{
+          "schema_version": "1.0.0",
+          "template_version": "scaffold-v3",
+          "generated_at": "1Z",
+          "repo_signal_fingerprint": "abc",
+          "files": []
+        }"#;
+        let parsed: ProjectSpecsManifest = serde_json::from_str(legacy).unwrap();
+        assert!(parsed.declared_capabilities.is_empty());
+        assert!(parsed.capability_definition_version.is_empty());
     }
 }

@@ -22,11 +22,3 @@ detected_surfaces = ["cargo"]
 external_tracker = false
 container_workspaces = true
 mode = "local"
-
-[cloud]
-enabled = false
-experimental = true
-provider = "vercel"
-api_url = "https://decapod-cloud.vercel.app"
-project_id = ""
-repo_id = ""

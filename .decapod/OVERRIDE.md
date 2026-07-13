@@ -396,3 +396,24 @@ over the embedded JSON constitution.
 ### metadata/skills/INTENT_REFINEMENT
 
 ---
+### core/RESEARCH
+### core/SCAFFOLDING
+### methodology/EXECUTIVE_ALIGNMENT
+### methodology/MARKET_INTELLIGENCE
+### methodology/OPERATING_MODEL_EXECUTION
+### methodology/QA
+### methodology/STRATEGIC_DECISION
+### methodology/STRATEGY_DIAGNOSIS
+### methodology/STRATEGY_ECONOMICS
+### methodology/VALUE_RISK_GOVERNANCE
+### architecture/GO
+### architecture/JAVA
+### architecture/JAVASCRIPT
+### architecture/PYTHON
+### architecture/REACT
+### architecture/RUBY
+### architecture/RUST
+### architecture/TERRAFORM
+### data/DATA_ENGINEERING
+### data/POSTGRESQL
+### docs/agent/mcp.md

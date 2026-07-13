@@ -157,7 +157,7 @@ fn is_not_git_repository_error(err: &error::DecapodError) -> bool {
     )
 }
 
-fn infer_repo_context(target_dir: &Path) -> RepoContext {
+fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodError> {
     let mut ctx = RepoContext {
         product_name: target_dir
             .file_name()
@@ -271,7 +271,27 @@ fn infer_repo_context(target_dir: &Path) -> RepoContext {
     ctx.primary_languages.dedup();
     ctx.detected_surfaces.sort();
     ctx.detected_surfaces.dedup();
-    ctx
+
+    // Load declared capabilities from config.toml
+    let config_path = target_dir.join(".decapod/config.toml");
+    if config_path.exists()
+        && let Ok(content) = fs::read_to_string(&config_path)
+        && let Ok(config) = toml::from_str::<crate::cli::DecapodProjectConfig>(&content)
+    {
+        ctx.capabilities = config.repo.capabilities;
+        ctx.capabilities.sort();
+        ctx.capabilities.dedup();
+    }
+
+    // If no declared capabilities, infer from repository evidence
+    if ctx.capabilities.is_empty() {
+        let inferred = core::capabilities::infer_capabilities(target_dir)?;
+        ctx.capabilities = inferred.iter().map(|i| i.capability_id.clone()).collect();
+        ctx.capabilities.sort();
+        ctx.capabilities.dedup();
+    }
+
+    Ok(ctx)
 }
 
 fn infer_languages_from_source_files(target_dir: &Path, ctx: &mut RepoContext) {
@@ -1670,9 +1690,10 @@ fn run_init_apply(
     }
 
     let generate_specs = init_with.specs
-        && !target_dir
-            .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
-            .exists();
+        && (init_with.force
+            || !target_dir
+                .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
+                .exists());
     let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
         target_dir: target_dir.clone(),
         force: init_with.force,
@@ -1695,7 +1716,9 @@ fn run_init_apply(
             primary_languages: repo_ctx.primary_languages.clone(),
             detected_surfaces: repo_ctx.detected_surfaces.clone(),
             done_criteria: repo_ctx.done_criteria.clone(),
+            capabilities: repo_ctx.capabilities.clone(),
         }),
+        capabilities: repo_ctx.capabilities.clone(),
     })?;
 
     let target_display = setup_decapod_root
@@ -1935,7 +1958,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             let mut init_with = init_with;
             init_with.dir = Some(init_target.clone());
             init_with.project_dir = None;
-            let mut repo_ctx = infer_repo_context(&init_target);
+            let mut repo_ctx = infer_repo_context(&init_target)?;
             apply_repo_context_env_overrides(&mut repo_ctx);
             apply_repo_context_cli_overrides(&mut repo_ctx, &init_with);
             if repo_ctx.mode == crate::cli::BackendType::Cloud
@@ -4352,7 +4375,7 @@ fn heal_validation_scaffold(
         return Ok(None);
     }
 
-    let repo_ctx = infer_repo_context(project_root);
+    let repo_ctx = infer_repo_context(project_root)?;
     let summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
         target_dir: project_root.to_path_buf(),
         force: false,
@@ -4365,14 +4388,16 @@ fn heal_validation_scaffold(
         generate_ci: true,
         diagram_style: scaffold::DiagramStyle::Ascii,
         specs_seed: Some(scaffold::SpecsSeed {
-            product_name: repo_ctx.product_name,
-            product_summary: repo_ctx.product_summary,
-            architecture_direction: repo_ctx.architecture_direction,
-            product_type: repo_ctx.product_type,
-            primary_languages: repo_ctx.primary_languages,
-            detected_surfaces: repo_ctx.detected_surfaces,
-            done_criteria: repo_ctx.done_criteria,
+            product_name: repo_ctx.product_name.clone(),
+            product_summary: repo_ctx.product_summary.clone(),
+            architecture_direction: repo_ctx.architecture_direction.clone(),
+            product_type: repo_ctx.product_type.clone(),
+            primary_languages: repo_ctx.primary_languages.clone(),
+            detected_surfaces: repo_ctx.detected_surfaces.clone(),
+            done_criteria: repo_ctx.done_criteria.clone(),
+            capabilities: repo_ctx.capabilities.clone(),
         }),
+        capabilities: repo_ctx.capabilities.clone(),
     })?;
 
     Ok(Some(ValidationHealAction {
@@ -7944,7 +7969,11 @@ mod rpc_handlers {
         let _params: SpecsRefreshParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
-        let manifest = crate::core::project_specs::refresh_specs_from_codebase(ctx.project_root)?;
+        let config = crate::cli::DecapodProjectConfig::load(ctx.project_root).unwrap_or_default();
+        let manifest = crate::core::project_specs::refresh_specs_from_codebase(
+            ctx.project_root,
+            &config.repo.capabilities,
+        )?;
 
         Ok(success_response(
             ctx.request.id.clone(),
@@ -9042,7 +9071,8 @@ mod init_prompt_tests {
     }
 
     #[test]
-    fn mixed_scripts_repo_infers_multiple_languages_without_compiled_bias() {
+    fn mixed_scripts_repo_infers_multiple_languages_without_compiled_bias()
+    -> Result<(), error::DecapodError> {
         let tmp = tempdir().expect("tempdir");
         fs::write(tmp.path().join("task.py"), "print('ok')\n").expect("python fixture");
         fs::write(tmp.path().join("deploy.sh"), "#!/usr/bin/env bash\n").expect("shell fixture");
@@ -9050,13 +9080,14 @@ mod init_prompt_tests {
         fs::write(tmp.path().join("tool.ts"), "export const ok = true;\n").expect("ts fixture");
         fs::write(tmp.path().join("probe.go"), "package main\n").expect("go fixture");
 
-        let ctx = infer_repo_context(tmp.path());
+        let ctx = infer_repo_context(tmp.path())?;
 
         assert!(ctx.primary_languages.contains(&"go".to_string()));
         assert!(ctx.primary_languages.contains(&"python".to_string()));
         assert!(ctx.primary_languages.contains(&"shell".to_string()));
         assert!(ctx.primary_languages.contains(&"typescript".to_string()));
         assert_ne!(ctx.primary_languages, vec!["rust".to_string()]);
+        Ok(())
     }
 
     #[test]

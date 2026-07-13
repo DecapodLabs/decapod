@@ -385,6 +385,35 @@ pub struct RepoContext {
     pub container_workspaces: bool,
     #[serde(default)]
     pub mode: BackendType,
+    #[serde(
+        rename = "declared_capabilities",
+        alias = "capabilities",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
+    pub capabilities: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub migration_validation: Option<MigrationValidationConfig>,
+}
+
+/// Human-governed executable proof for the persistent-state capability.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MigrationValidationConfig {
+    pub command: String,
+    #[serde(default)]
+    pub args: Vec<String>,
+    #[serde(default)]
+    pub working_directory: Option<String>,
+    #[serde(default = "default_migration_timeout_seconds")]
+    pub timeout_seconds: u64,
+    #[serde(default)]
+    pub expected_exit_code: i32,
+    #[serde(default)]
+    pub evidence_path: Option<String>,
+}
+
+fn default_migration_timeout_seconds() -> u64 {
+    60
 }
 
 fn default_container_workspaces_true() -> bool {

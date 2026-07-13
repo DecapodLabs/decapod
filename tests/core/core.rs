@@ -61,6 +61,7 @@ fn scaffold_specs_are_fresh_project_only() {
         primary_languages: vec!["Rust".to_string()],
         detected_surfaces: vec!["cargo".to_string()],
         done_criteria: Some("old validation".to_string()),
+        capabilities: vec![],
     };
     refresh_project_specs(root, DiagramStyle::Mermaid, Some(&initial_seed))
         .expect("initial refresh");
@@ -80,6 +81,7 @@ fn scaffold_specs_are_fresh_project_only() {
         primary_languages: vec!["Rust".to_string()],
         detected_surfaces: vec!["cargo".to_string(), "bazel".to_string()],
         done_criteria: Some("Decapod validate passes with trajectory artifacts.".to_string()),
+        capabilities: vec![],
     };
     let refresh = refresh_project_specs(root, DiagramStyle::Mermaid, Some(&updated_seed));
     assert!(
@@ -703,6 +705,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         generate_ci: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Ascii,
         specs_seed: None,
+        capabilities: vec![],
     };
     scaffold_project_entrypoints(&dry_run_opts).expect("dry run scaffold");
     assert!(!dry_run_target.join("AGENTS.md").exists());
@@ -720,6 +723,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         generate_ci: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Ascii,
         specs_seed: None,
+        capabilities: vec![],
     };
     scaffold_project_entrypoints(&live_opts).expect("live scaffold");
     assert!(live_target.join("AGENTS.md").exists());
@@ -816,6 +820,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         generate_ci: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Ascii,
         specs_seed: None,
+        capabilities: vec![],
     };
     scaffold_project_entrypoints(&force_opts).expect("force scaffold");
 
@@ -832,6 +837,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         generate_ci: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Mermaid,
         specs_seed: None,
+        capabilities: vec![],
     };
     scaffold_project_entrypoints(&mermaid_opts).expect("mermaid scaffold");
     let mermaid_arch =

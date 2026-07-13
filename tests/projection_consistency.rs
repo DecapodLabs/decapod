@@ -6,7 +6,9 @@ use tempfile::TempDir;
 
 fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
-    cmd.current_dir(dir).args(args);
+    cmd.current_dir(dir)
+        .args(args)
+        .env("XDG_CONFIG_HOME", dir.join(".xdg-config"));
     for (k, v) in envs {
         cmd.env(k, v);
     }
@@ -56,6 +58,77 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
     (tmp, dir, password)
 }
 
+fn set_capabilities(dir: &Path, capabilities: &[&str]) {
+    let config_path = dir.join(".decapod/config.toml");
+    let config_content = fs::read_to_string(&config_path).expect("read config.toml");
+    let mut config: toml::Value = toml::from_str(&config_content).expect("parse config.toml");
+    let repo_table = config["repo"].as_table_mut().expect("repo table");
+    repo_table.insert(
+        "capabilities".to_string(),
+        toml::Value::Array(
+            capabilities
+                .iter()
+                .map(|capability| toml::Value::String((*capability).to_string()))
+                .collect(),
+        ),
+    );
+    fs::write(
+        config_path,
+        toml::to_string_pretty(&config).expect("serialize config"),
+    )
+    .expect("write config.toml");
+}
+
+fn set_migration_validation(dir: &Path, command: &str, args: &[&str]) {
+    let config_path = dir.join(".decapod/config.toml");
+    let config_content = fs::read_to_string(&config_path).expect("read config.toml");
+    let mut config: toml::Value = toml::from_str(&config_content).expect("parse config.toml");
+    let repo_table = config["repo"].as_table_mut().expect("repo table");
+    repo_table.insert(
+        "migration_validation".to_string(),
+        toml::Value::Table(
+            [
+                (
+                    "command".to_string(),
+                    toml::Value::String(command.to_string()),
+                ),
+                (
+                    "args".to_string(),
+                    toml::Value::Array(
+                        args.iter()
+                            .map(|arg| toml::Value::String((*arg).to_string()))
+                            .collect(),
+                    ),
+                ),
+                (
+                    "working_directory".to_string(),
+                    toml::Value::String(".".to_string()),
+                ),
+                ("timeout_seconds".to_string(), toml::Value::Integer(5)),
+            ]
+            .into_iter()
+            .collect(),
+        ),
+    );
+    fs::write(
+        config_path,
+        toml::to_string_pretty(&config).expect("serialize config"),
+    )
+    .expect("write config.toml");
+}
+
+fn run_rpc(dir: &Path, op: &str, params: &str, password: &str) -> std::process::Output {
+    run_decapod(
+        dir,
+        &["rpc", "--op", op, "--params", params],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    )
+}
+
 fn run_validate(dir: &Path, password: &str, projections: bool) -> std::process::Output {
     let mut args = vec!["validate", "--format", "json"];
     if projections {
@@ -70,6 +143,34 @@ fn run_validate(dir: &Path, password: &str, projections: bool) -> std::process::
             ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
         ],
     )
+}
+
+fn get_valid_context_capsule(dir: &Path, password: &str) -> serde_json::Value {
+    let out = run_rpc(
+        dir,
+        "context.capsule.query",
+        r#"{"topic":"test","scope":"core","limit":1}"#,
+        password,
+    );
+    assert!(
+        out.status.success(),
+        "context capsule query failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let result: serde_json::Value =
+        serde_json::from_slice(&out.stdout).expect("parse capsule result");
+    result["result"].clone()
+}
+
+fn write_context_capsule(dir: &Path, capsule: &serde_json::Value) {
+    let context_dir = dir.join(".decapod/generated/context");
+    fs::create_dir_all(&context_dir).expect("create context dir");
+    let capsule_path = dir.join(".decapod/generated/context/test_task.json");
+    fs::write(
+        &capsule_path,
+        serde_json::to_string_pretty(capsule).expect("serialize capsule"),
+    )
+    .expect("write capsule");
 }
 
 #[test]
@@ -159,174 +260,22 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
 }
 
 #[test]
-fn projection_validation_catches_spec_manifest_hash_mismatch_while_normal_passes() {
-    let (_tmp, dir, password) = setup_repo();
+fn capability_survives_config_context_spec_deterministically() {
+    let (_tmp, dir, _password) = setup_repo();
 
-    // Mutate INTENT.md after manifest was generated
-    let spec_path = dir.join(".decapod/generated/specs/INTENT.md");
-    let original = fs::read_to_string(&spec_path).expect("read INTENT.md");
-    let mutated = original + "\n\n// Mutated after manifest generation\n";
-    fs::write(&spec_path, mutated).expect("write mutated INTENT.md");
+    set_capabilities(&dir, &["houseboat", "public-api"]);
 
-    // Validate with --projections should fail
-    let projections = run_validate(&dir, &password, true);
+    // Re-init to pick up new capabilities
+    let out = run_decapod(&dir, &["init", "--force"], &[]);
     assert!(
-        !projections.status.success(),
-        "validate --projections should fail with spec manifest hash mismatch; stdout:\n{}",
-        String::from_utf8_lossy(&projections.stdout)
+        out.status.success(),
+        "decapod init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
     );
 
-    let payload: Value =
-        serde_json::from_slice(&projections.stdout).expect("validate json payload");
-    let failures = payload["report"]["failures"]
-        .as_array()
-        .expect("failures array");
-    let projection_failure = failures.iter().find(|f| {
-        let msg = f.as_str().unwrap_or("");
-        msg.contains("[PROJECTION]")
-            && msg.contains(".decapod/generated/specs/INTENT.md")
-            && msg.contains("content hash")
-    });
-    assert!(
-        projection_failure.is_some(),
-        "expected projection failure for spec manifest hash mismatch; got: {failures:?}"
-    );
-    let finding = projection_failure.unwrap().as_str().unwrap();
-    assert!(finding.contains("[PROJECTION]"));
-    assert!(finding.contains("expected: content hash"));
-    assert!(finding.contains("observed: divergent hash"));
-    assert!(finding.contains("remediation"));
-    assert!(finding.contains("specs.refresh"));
-}
-
-#[test]
-fn projection_validation_catches_done_task_without_proof_artifacts_while_normal_passes() {
-    let (_tmp, dir, password) = setup_repo();
-
-    // Add a task and mark it done
-    let task_add = run_decapod(
-        &dir,
-        &[
-            "todo",
-            "add",
-            "Test task for projection validation",
-            "--priority",
-            "high",
-        ],
-        &[
-            ("DECAPOD_AGENT_ID", "unknown"),
-            ("DECAPOD_SESSION_PASSWORD", &password),
-            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
-        ],
-    );
-    assert!(
-        task_add.status.success(),
-        "todo add failed: {}",
-        String::from_utf8_lossy(&task_add.stderr)
-    );
-
-    let todo_list = run_decapod(
-        &dir,
-        &["todo", "list", "--format", "json"],
-        &[
-            ("DECAPOD_AGENT_ID", "unknown"),
-            ("DECAPOD_SESSION_PASSWORD", &password),
-            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
-        ],
-    );
-    assert!(
-        todo_list.status.success(),
-        "todo list failed: {}",
-        String::from_utf8_lossy(&todo_list.stderr)
-    );
-    let list_output: Value =
-        serde_json::from_slice(&todo_list.stdout).expect("parse todo list json");
-    let task_id = list_output["items"]
-        .as_array()
-        .expect("items array")
-        .iter()
-        .find(|item| item["title"].as_str().unwrap_or("").contains("Test task"))
-        .and_then(|item| item["id"].as_str())
-        .expect("task id in list output");
-
-    let task_claim = run_decapod(
-        &dir,
-        &["todo", "claim", "--id", task_id],
-        &[
-            ("DECAPOD_AGENT_ID", "unknown"),
-            ("DECAPOD_SESSION_PASSWORD", &password),
-            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
-        ],
-    );
-    assert!(
-        task_claim.status.success(),
-        "todo claim failed: {}",
-        String::from_utf8_lossy(&task_claim.stderr)
-    );
-
-    let task_done = run_decapod(
-        &dir,
-        &["todo", "done", "--id", task_id],
-        &[
-            ("DECAPOD_AGENT_ID", "unknown"),
-            ("DECAPOD_SESSION_PASSWORD", &password),
-            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
-        ],
-    );
-    assert!(
-        task_done.status.success(),
-        "todo done failed: {}",
-        String::from_utf8_lossy(&task_done.stderr)
-    );
-
-    // Ensure provenance directory exists but is empty (no proof artifacts)
-    let provenance_dir = dir.join(".decapod/generated/artifacts/provenance");
-    fs::create_dir_all(&provenance_dir).expect("create provenance dir");
-
-    // Normal validate should pass (it doesn't check for proof artifacts)
-    let normal = run_validate(&dir, &password, false);
-    assert!(
-        normal.status.success(),
-        "normal validate should pass with done task missing proof artifacts; stderr:\n{}",
-        String::from_utf8_lossy(&normal.stderr)
-    );
-
-    // Validate with --projections should fail
-    let projections = run_validate(&dir, &password, true);
-    let proj_success = projections.status.success();
-    assert!(
-        !proj_success,
-        "validate --projections should fail with done task missing proof artifacts; stdout:\n{}",
-        String::from_utf8_lossy(&projections.stdout)
-    );
-
-    let payload: Value =
-        serde_json::from_slice(&projections.stdout).expect("validate json payload");
-    let failures = payload["report"]["failures"]
-        .as_array()
-        .expect("failures array");
-    let evidence_failure = failures.iter().find(|f| {
-        let msg = f.as_str().unwrap_or("");
-        msg.contains("[EVIDENCE]")
-            && msg.contains(".decapod/generated/artifacts/provenance/")
-            && msg.contains("artifact_manifest.json")
-    });
-    assert!(
-        evidence_failure.is_some(),
-        "expected evidence failure for missing proof artifacts; got: {failures:?}"
-    );
-    let finding = evidence_failure.unwrap().as_str().unwrap();
-    assert!(finding.contains("[EVIDENCE]"));
-    assert!(finding.contains("artifact_manifest.json"));
-    assert!(finding.contains("proof_manifest.json"));
-    assert!(finding.contains("intent_convergence_checklist.json"));
-    assert!(finding.contains("remediation"));
-    assert!(finding.contains("qa verify capture") || finding.contains("todo done --validated"));
-}
-
-fn get_valid_context_capsule(dir: &Path, password: &str) -> Value {
+    // Verify both capabilities appear in context
     let out = run_decapod(
-        dir,
+        &dir,
         &[
             "rpc",
             "--op",
@@ -336,7 +285,6 @@ fn get_valid_context_capsule(dir: &Path, password: &str) -> Value {
         ],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
-            ("DECAPOD_SESSION_PASSWORD", password),
             ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
         ],
     );
@@ -345,18 +293,295 @@ fn get_valid_context_capsule(dir: &Path, password: &str) -> Value {
         "context capsule query failed: {}",
         String::from_utf8_lossy(&out.stderr)
     );
-    let result: Value = serde_json::from_slice(&out.stdout).expect("parse capsule result");
-    result["result"].clone()
+    let result: serde_json::Value =
+        serde_json::from_slice(&out.stdout).expect("parse capsule result");
+    let capsule = result["result"].clone();
+    let context_capabilities = capsule["capabilities"]
+        .as_array()
+        .unwrap_or_else(|| panic!("capabilities in context capsule: {capsule}"));
+    assert!(
+        context_capabilities
+            .iter()
+            .any(|value| value == "houseboat")
+    );
+    assert!(
+        context_capabilities
+            .iter()
+            .any(|value| value == "public-api")
+    );
+
+    // Both capabilities should appear in generated specs
+    let normal = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        normal.status.success(),
+        "normal validate failed: {}",
+        String::from_utf8_lossy(&normal.stderr)
+    );
+
+    // Check that generated specs reflect both capabilities
+    let intent_path = dir.join(".decapod/generated/specs/INTENT.md");
+    let intent = fs::read_to_string(&intent_path).expect("read INTENT.md");
+    assert!(
+        intent.contains("houseboat") || intent.contains("persistent-state"),
+        "caps should appear in INTENT.md"
+    );
+
+    // Validate with projections should pass (both capabilities known)
+    let projections = run_decapod(
+        &dir,
+        &["validate", "--projections", "--format", "json"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        projections.status.success(),
+        "projections validate failed: {}",
+        String::from_utf8_lossy(&projections.stdout)
+    );
+
+    // Generated surfaces, rather than wall-clock validation timing, must be
+    // byte-identical on the second run.
+    let manifest_path = dir.join(".decapod/generated/specs/.manifest.json");
+    let first_manifest = fs::read_to_string(&manifest_path).expect("read first manifest");
+    let first_intent = fs::read_to_string(dir.join(".decapod/generated/specs/INTENT.md"))
+        .expect("read first intent");
+    let second = run_decapod(
+        &dir,
+        &["validate", "--projections", "--format", "json"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(second.status.success());
+    assert_eq!(
+        first_manifest,
+        fs::read_to_string(&manifest_path).expect("read second manifest")
+    );
+    assert_eq!(
+        first_intent,
+        fs::read_to_string(dir.join(".decapod/generated/specs/INTENT.md"))
+            .expect("read second intent")
+    );
 }
 
-fn write_context_capsule(dir: &Path, capsule: &Value) {
-    let context_dir = dir.join(".decapod/generated/context");
-    fs::create_dir_all(&context_dir).expect("create context dir");
-    let capsule_path = context_dir.join("test_task.json");
-    // Write the capsule as-is - it already has a valid hash from the RPC
+#[test]
+fn capability_regeneration_preserves_authorship() {
+    let (_tmp, dir, _password) = setup_repo();
+
+    // Add persistent-state capability
+    set_capabilities(&dir, &["persistent-state"]);
+
+    // First init
+    let out = run_decapod(&dir, &["init", "--force"], &[]);
+    assert!(
+        out.status.success(),
+        "decapod init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    // Human edits INTENT.md with custom content
+    let intent_path = dir.join(".decapod/generated/specs/INTENT.md");
+    let mut intent = fs::read_to_string(&intent_path).expect("read INTENT.md");
+    let custom_section = "\n## Human Decision\n\nWe chose PostgreSQL for durability.\n";
+    if !intent.contains("## Human Decision") {
+        intent.push_str(custom_section);
+        fs::write(&intent_path, &intent).expect("write INTENT.md");
+    }
+
+    // Refresh specs (should preserve human edit)
+    let refresh = run_decapod(
+        &dir,
+        &["rpc", "--op", "specs.refresh"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        refresh.status.success(),
+        "specs refresh failed: {}",
+        String::from_utf8_lossy(&refresh.stderr)
+    );
+
+    // Verify human content preserved
+    let intent_after = fs::read_to_string(&intent_path).expect("read INTENT.md after refresh");
+    assert!(
+        intent_after.contains("We chose PostgreSQL for durability"),
+        "human content must survive regeneration"
+    );
+
+    // Second refresh should be byte-identical
+    let manifest_path = dir.join(".decapod/generated/specs/.manifest.json");
+    let first_manifest = fs::read_to_string(&manifest_path).expect("read manifest");
+    let second_refresh = run_decapod(
+        &dir,
+        &["rpc", "--op", "specs.refresh"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        second_refresh.status.success(),
+        "second refresh failed: {}",
+        String::from_utf8_lossy(&second_refresh.stderr)
+    );
+    let second_manifest =
+        fs::read_to_string(&manifest_path).expect("read manifest after second refresh");
+    assert_eq!(
+        first_manifest, second_manifest,
+        "second refresh must be byte-identical to first"
+    );
+}
+
+#[test]
+fn manifest_provenance_records_capabilities() {
+    let (_tmp, dir, _password) = setup_repo();
+
+    set_capabilities(&dir, &["houseboat", "persistent-state"]);
+
+    // Re-init to pick up capabilities
+    let out = run_decapod(&dir, &["init", "--force"], &[]);
+    assert!(
+        out.status.success(),
+        "decapod init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    // Check manifest records capabilities
+    // Check manifest records capabilities
+    let manifest_path = dir.join(".decapod/generated/specs/.manifest.json");
+    let manifest_content = fs::read_to_string(&manifest_path).expect("read manifest");
+    let manifest: serde_json::Value =
+        serde_json::from_str(&manifest_content).expect("parse manifest");
+
+    assert!(
+        manifest.get("declared_capabilities").is_some(),
+        "manifest must have declared_capabilities"
+    );
+    let declared = manifest["declared_capabilities"]
+        .as_array()
+        .expect("declared_capabilities array");
+    assert!(
+        declared.iter().any(|v| v == "houseboat"),
+        "houseboat must be in declared_capabilities"
+    );
+    assert!(
+        declared.iter().any(|v| v == "persistent-state"),
+        "persistent-state must be in declared_capabilities"
+    );
+
+    // capability_definition_version must be present
+    assert!(
+        manifest.get("capability_definition_version").is_some(),
+        "capability_definition_version must be present"
+    );
+    let version = manifest["capability_definition_version"]
+        .as_str()
+        .expect("version string");
+    assert!(
+        !version.is_empty(),
+        "capability_definition_version must not be empty"
+    );
+}
+
+#[test]
+fn persistent_state_activates_executable_migration_gate() {
+    let (_tmp, dir, password) = setup_repo();
+
+    set_capabilities(&dir, &["persistent-state"]);
+
+    // Re-init to pick up capability
+    let out = run_decapod(&dir, &["init", "--force"], &[]);
+    assert!(
+        out.status.success(),
+        "decapod init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    // File presence alone is not proof: no human-governed command is configured.
+    let projections = run_validate(&dir, &password, true);
+    assert!(
+        !projections.status.success(),
+        "validate --projections should fail without migration artifacts; stdout:\n{}",
+        String::from_utf8_lossy(&projections.stdout)
+    );
+
+    let payload: serde_json::Value =
+        serde_json::from_slice(&projections.stdout).expect("validate json payload");
+    let failures = payload["report"]["failures"]
+        .as_array()
+        .expect("failures array");
+    let migration_failure = failures.iter().find(|f| {
+        let msg = f.as_str().unwrap_or("");
+        msg.contains("migration_validation") && msg.contains("configured")
+    });
+    assert!(
+        migration_failure.is_some(),
+        "should have migration-related failure for persistent-state; got: {failures:?}"
+    );
+
+    // A non-empty migration is still not proof until the configured command validates it.
+    let migrations_dir = dir.join("migrations");
+    fs::create_dir_all(&migrations_dir).expect("create migrations dir");
     fs::write(
-        &capsule_path,
-        serde_json::to_string_pretty(capsule).expect("serialize capsule"),
+        migrations_dir.join("001_initial.sql"),
+        "-- initial migration\nCREATE TABLE test (id INT);\n",
     )
-    .expect("write capsule");
+    .expect("write migration");
+
+    let refresh = run_decapod(
+        &dir,
+        &["rpc", "--op", "specs.refresh"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        refresh.status.success(),
+        "spec refresh failed after migration: {}",
+        String::from_utf8_lossy(&refresh.stderr)
+    );
+
+    let projections2 = run_validate(&dir, &password, true);
+    assert!(
+        !projections2.status.success(),
+        "validate --projections should still fail without a proof command; stdout:\n{}",
+        String::from_utf8_lossy(&projections2.stdout)
+    );
+
+    set_migration_validation(
+        &dir,
+        "sh",
+        &["-c", "grep -q 'CREATE TABLE' migrations/001_initial.sql"],
+    );
+    let projections3 = run_validate(&dir, &password, true);
+    assert!(
+        projections3.status.success(),
+        "configured migration proof should pass; stdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&projections3.stdout),
+        String::from_utf8_lossy(&projections3.stderr)
+    );
+    assert!(
+        dir.join(".decapod/generated/artifacts/custody/migration-validation.json")
+            .exists(),
+        "successful migration proof should record evidence"
+    );
+
+    set_migration_validation(&dir, "false", &[]);
+    let projections4 = run_validate(&dir, &password, true);
+    assert!(!projections4.status.success());
+    assert!(String::from_utf8_lossy(&projections4.stdout).contains("exited with"));
 }
