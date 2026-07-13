@@ -114,9 +114,7 @@ jobs:
       - name: Run cargo-machete check
         run: cargo machete
       - name: Check license and duplicate dependencies
-        uses: EmbarkStudios/cargo-deny-action@v2
-        with:
-          command: check
+        run: cargo install cargo-deny && cargo deny check
 
   # HEALTH: consumes the shared decapod binary from setup
   health:
