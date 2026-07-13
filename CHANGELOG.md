@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.65.0](https://github.com/DecapodLabs/decapod/compare/v0.64.0...v0.65.0) - 2026-07-13
+
+### Added
+
+- add capability-driven spec generation and repository scaffolding ([#849](https://github.com/DecapodLabs/decapod/pull/849))
+
 ## [0.64.0](https://github.com/DecapodLabs/decapod/compare/v0.63.7...v0.64.0) - 2026-07-11
 
 ### Added
