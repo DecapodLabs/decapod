@@ -20,6 +20,10 @@ Generated interface specs include:
 
 ## CLI / RPC Contracts
 
+### Declared Capability Configuration
+
+`.decapod/config.toml` may declare `repo.declared_capabilities` as a sorted, deduplicated list. The legacy `repo.capabilities` spelling remains readable for compatibility. Capability declarations shape context and generated specifications but do not grant external-action permissions by themselves; runtime authorization remains governed by the action capability and session/policy checks.
+
 ### Core Commands (Agent-Facing)
 
 | Command | Purpose | Key Flags | Output |

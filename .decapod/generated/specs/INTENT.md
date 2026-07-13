@@ -1,5 +1,22 @@
 # Intent
 
+
+<!-- decapod:declared-capabilities:start -->
+
+## Declared Capability Surfaces
+
+- `agent-helper`
+- `authentication`
+- `authorization`
+- `background-processing`
+- `control-plane`
+- `event-driven`
+- `external-integrations`
+- `governance-kernel`
+- `persistent-state`
+- `scheduled-jobs`
+
+<!-- decapod:declared-capabilities:end -->
 ## Product Outcome
 Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to converge on human intent, shape context before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
 

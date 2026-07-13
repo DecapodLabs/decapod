@@ -1,9 +1,47 @@
 # Semantics
 
-## Capability Semantics
 
-Capability labels are canonicalized for deterministic projection but preserve their human-defined meaning. Recognized packs contribute obligations and negative constraints; unknown labels remain valid context. Persistent-state semantics require migration treatment and executable validation, while event-driven/background-processing semantics require the project to declare delivery, retry, idempotency, and recovery behavior rather than inheriting universal guarantees.
+<!-- decapod:capability-overlay:background-processing:start -->
 
+
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+
+## Persistent State Semantics Overlay
+
+### Transaction Semantics
+- All multi-entity operations MUST be atomic
+- Read-after-write consistency within transaction boundaries
+- Eventual consistency windows MUST be documented
+
+### Migration Semantics
+- Schema migrations MUST be backward-compatible
+- Migration rollback procedures MUST be documented
+- Data integrity checks post-migration
+
+### Recovery Semantics
+- Point-in-time recovery capability
+- Recovery objectives MUST be selected for the project and recorded as proof obligations
+- Recovery test cadence MUST be selected for the project and recorded as a proof obligation
+<!-- decapod:capability-overlay:persistent-state:end -->
+## Background Processing Semantics Overlay
+
+### Retry Semantics
+- Retry and backoff behavior MUST be selected and documented for each work class
+- Poison-work handling MUST be selected and documented for each work class
+- Retry MUST preserve the declared side-effect and idempotency semantics
+
+### Idempotency
+- Each job MUST declare whether it is idempotent, transactional, compensating, or otherwise duplicate-safe
+- Deduplication or compensation mechanisms are project decisions and require proof
+- Duplicate execution MUST follow the job's declared duplicate-handling semantics
+
+### Poison Message Handling
+- Messages failing after max retries go to dead letter queue
+- DLQ MUST be monitored and alerted
+- Manual replay capability for DLQ messages
+<!-- decapod:capability-overlay:background-processing:end -->
 ## State Machines
 
 ### Workspace State

@@ -1,5 +1,9 @@
 # Security
 
+## Capability Security Boundaries
+
+Authentication establishes the agent session; authorization and external-action capability checks independently constrain mutations such as Git, Cargo, and container execution. Declared repository capabilities are intent context only and never bypass session, policy, workspace, or proof gates. Secrets remain environment/session material and are not placed in `.decapod/config.toml`.
+
 ## Threat Model
 ```mermaid
 flowchart LR

@@ -1,5 +1,48 @@
 # Operations
 
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+
+## Persistent State Operations Overlay
+
+### Backup & Recovery
+- Backup scope, schedule, retention, and restore evidence MUST be selected for the project
+- Recovery point objectives MUST be explicit project decisions, not assumed values
+- Recovery time objectives MUST be explicit project decisions, not assumed values
+- Restore verification cadence MUST be recorded with the operational proof plan
+
+### Migration Operations
+- All schema changes via migration files
+- Migration rollback procedures documented
+- Zero-downtime migration strategy for production
+- Migration health checks and rollback triggers
+<!-- decapod:capability-overlay:persistent-state:end -->
+## Background Processing Operations Overlay
+
+### Queue Visibility
+- Queue depth, processing rate, and latency MUST be monitored
+- Dead letter queue MUST be visible and alerted
+- Worker health and processing rate metrics required
+
+### Shutdown Behavior
+- Graceful shutdown: stop accepting new work, finish current job
+- Drain behavior and timeout MUST be selected for the deployment
+- Termination and requeue behavior MUST be selected and proven for the deployment
+
+### Worker Health
+- Worker liveness and readiness probes
+- Queue depth alerts for backpressure detection
+- Processing latency percentiles (p50, p95, p99)
+<!-- decapod:capability-overlay:background-processing:end -->
+## Capability Operations
+
+Operational ownership follows the declared surfaces: session/authentication and policy/authorization protect mutations; SQLite/JSONL state and migrations require executable proof; workflow and scheduled jobs require bounded execution and failure visibility; Git/Cargo/container integrations remain explicit external actions; and CLI/JSON-RPC contracts remain machine-facing compatibility surfaces. Capability declarations must not be used as a substitute for command-level evidence.
+
 ## Operational Readiness Checklist
 - [ ] On-call ownership defined (local development tool — typically self-serve)
 - [ ] SLOs defined for validation latency and workspace creation
