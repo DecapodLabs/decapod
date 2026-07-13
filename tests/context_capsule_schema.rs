@@ -38,6 +38,8 @@ fn context_capsule_canonical_serialization_is_deterministic() {
         policy: Default::default(),
         capsule_hash: String::new(),
         repo_signal_fingerprint: "test_fingerprint".to_string(),
+        config_input_hash: String::new(),
+        spec_input_hash: String::new(),
     };
 
     let bytes1 = capsule.canonical_json_bytes().expect("serialize #1");
@@ -69,6 +71,8 @@ fn context_capsule_with_recomputed_hash_is_stable() {
         policy: Default::default(),
         capsule_hash: "wrong".to_string(),
         repo_signal_fingerprint: "test_fingerprint".to_string(),
+        config_input_hash: String::new(),
+        spec_input_hash: String::new(),
     };
 
     let normalized1 = base.with_recomputed_hash().expect("normalize #1");
