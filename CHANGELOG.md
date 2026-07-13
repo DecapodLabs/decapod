@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.66.0](https://github.com/DecapodLabs/decapod/compare/v0.65.0...v0.66.0) - 2026-07-13
+
+### Fixed
+
+- close Issue 845 projection provenance gaps ([#864](https://github.com/DecapodLabs/decapod/pull/864))
+
 ## [0.65.0](https://github.com/DecapodLabs/decapod/compare/v0.64.0...v0.65.0) - 2026-07-13
 
 ### Added
