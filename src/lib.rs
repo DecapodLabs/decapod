@@ -7070,6 +7070,84 @@ mod rpc_handlers {
         ))
     }
 
+    pub(crate) fn handle_context_bundle_export(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let params: ContextBundleExportParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
+        let limit = params.limit.unwrap_or(6);
+        let resolved_policy = core::capsule_policy::resolve_capsule_policy(
+            ctx.project_root,
+            &params.scope,
+            params.risk_tier.as_deref(),
+            limit,
+            false,
+        )?;
+        let capsule = core::context_capsule::query_embedded_capsule_governed(
+            ctx.project_root,
+            &params.topic,
+            &params.scope,
+            params.task_id.as_deref(),
+            params.workunit_id.as_deref(),
+            resolved_policy.effective_limit,
+            resolved_policy.binding,
+        )?;
+        let workunit = params
+            .task_id
+            .as_deref()
+            .or(params.workunit_id.as_deref())
+            .and_then(|task_id| core::workunit::workunit_path(ctx.project_root, task_id).ok())
+            .filter(|path| path.exists())
+            .map(|_| {
+                core::workunit::load_workunit(
+                    ctx.project_root,
+                    params
+                        .task_id
+                        .as_deref()
+                        .or(params.workunit_id.as_deref())
+                        .unwrap(),
+                )
+            })
+            .transpose()?;
+        let bundle = core::context_bundle::build_bundle(
+            ctx.project_root,
+            capsule,
+            workunit,
+            params.uncertainty.unwrap_or_default(),
+            params.constraints.unwrap_or_default(),
+        )?;
+        let path = core::context_bundle::write_bundle(ctx.project_root, &bundle)?;
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::json!({"bundle": bundle, "path": path})),
+            vec![path.to_string_lossy().to_string()],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_context_bundle_import(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let params: ContextBundleImportParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
+        let bundle = core::context_bundle::read_bundle(ctx.project_root, Path::new(&params.path))?;
+        let path = core::context_bundle::write_bundle(ctx.project_root, &bundle)?;
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::json!({"status": "ok", "bundle": bundle, "path": path})),
+            vec![path.to_string_lossy().to_string()],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
     pub(crate) fn handle_context_bindings(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
@@ -8147,6 +8225,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         "workspace.publish" => rpc_handlers::handle_workspace_publish(&rpc_ctx)?,
         "context.resolve" | "context.scope" => rpc_handlers::handle_context_resolve(&rpc_ctx)?,
         "context.capsule.query" => rpc_handlers::handle_context_capsule_query(&rpc_ctx)?,
+        "context.bundle.export" => rpc_handlers::handle_context_bundle_export(&rpc_ctx)?,
+        "context.bundle.import" => rpc_handlers::handle_context_bundle_import(&rpc_ctx)?,
         "context.bindings" => rpc_handlers::handle_context_bindings(&rpc_ctx)?,
         "constitution.get" => rpc_handlers::handle_constitution_get(&rpc_ctx)?,
         "constitution.links.query" => rpc_handlers::handle_constitution_links_query(&rpc_ctx)?,

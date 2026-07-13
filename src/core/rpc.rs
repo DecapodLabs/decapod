@@ -164,6 +164,23 @@ pub struct ContextCapsuleQueryParams {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ContextBundleExportParams {
+    pub topic: String,
+    pub scope: String,
+    pub task_id: Option<String>,
+    pub workunit_id: Option<String>,
+    pub limit: Option<usize>,
+    pub risk_tier: Option<String>,
+    pub uncertainty: Option<Vec<String>>,
+    pub constraints: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ContextBundleImportParams {
+    pub path: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ContextBindingsParams {}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

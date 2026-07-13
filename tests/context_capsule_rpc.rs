@@ -1,4 +1,5 @@
 use serde_json::Value;
+use std::fs;
 use std::path::Path;
 use std::process::Command;
 use tempfile::TempDir;
@@ -281,4 +282,134 @@ fn rpc_context_capsule_query_write_auto_binds_workunit_state_ref() {
         has_workunit_path,
         "expected touched paths to include bound workunit manifest path"
     );
+}
+
+#[test]
+fn rpc_context_bundle_round_trip_rejects_tamper_and_stale_inputs() {
+    let (_tmp, dir) = setup_repo();
+    let init = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "workunit",
+            "init",
+            "--task-id",
+            "test_bundle",
+            "--intent-ref",
+            "intent://portable-handoff",
+        ],
+    );
+    assert!(init.status.success(), "workunit init failed");
+    let params = r#"{"topic":"portable handoff","scope":"interfaces","task_id":"test_bundle","limit":4,"uncertainty":["z-unresolved","a-unresolved"],"constraints":["must preserve policy","must retain state refs"]}"#;
+
+    let exported = run_decapod(
+        &dir,
+        &["rpc", "--op", "context.bundle.export", "--params", params],
+    );
+    assert!(
+        exported.status.success(),
+        "bundle export failed: {}",
+        String::from_utf8_lossy(&exported.stderr)
+    );
+    let payload: Value = serde_json::from_slice(&exported.stdout).expect("parse export payload");
+    let bundle = payload["result"]["bundle"].clone();
+    let bundle_path = payload["result"]["path"].as_str().expect("bundle path");
+    assert_eq!(
+        bundle["uncertainty"],
+        serde_json::json!(["z-unresolved", "a-unresolved"])
+    );
+    assert_eq!(bundle["constraints"].as_array().unwrap().len(), 2);
+    assert!(bundle["project_identity"]["declared_capabilities"].is_array());
+    assert_eq!(bundle["workunit"]["task_id"], "test_bundle");
+    assert_eq!(
+        bundle["workunit"]["intent_ref"],
+        "intent://portable-handoff"
+    );
+    assert!(
+        !bundle["bundle_hash"]
+            .as_str()
+            .unwrap_or_default()
+            .is_empty()
+    );
+
+    let imported = run_decapod(
+        &dir,
+        &[
+            "rpc",
+            "--op",
+            "context.bundle.import",
+            "--params",
+            &format!(r#"{{"path":"{bundle_path}"}}"#),
+        ],
+    );
+    assert!(
+        imported.status.success(),
+        "bundle import failed: {}",
+        String::from_utf8_lossy(&imported.stderr)
+    );
+
+    let mut incompatible = bundle.clone();
+    incompatible["schema_version"] = Value::String("9.0.0".to_string());
+    fs::write(
+        bundle_path,
+        serde_json::to_vec_pretty(&incompatible).unwrap(),
+    )
+    .expect("write incompatible bundle");
+    let incompatible_result = run_decapod(
+        &dir,
+        &[
+            "rpc",
+            "--op",
+            "context.bundle.import",
+            "--params",
+            &format!(r#"{{"path":"{bundle_path}"}}"#),
+        ],
+    );
+    assert!(!incompatible_result.status.success());
+    assert!(
+        String::from_utf8_lossy(&incompatible_result.stderr)
+            .contains("CONTEXT_BUNDLE_INCOMPATIBLE")
+    );
+
+    let mut tampered = bundle.clone();
+    tampered["bundle_hash"] = Value::String("tampered".to_string());
+    fs::write(bundle_path, serde_json::to_vec_pretty(&tampered).unwrap()).expect("tamper bundle");
+    let rejected = run_decapod(
+        &dir,
+        &[
+            "rpc",
+            "--op",
+            "context.bundle.import",
+            "--params",
+            &format!(r#"{{"path":"{bundle_path}"}}"#),
+        ],
+    );
+    assert!(
+        !rejected.status.success(),
+        "tampered bundle must be rejected"
+    );
+    assert!(String::from_utf8_lossy(&rejected.stderr).contains("CONTEXT_BUNDLE_TAMPERED"));
+
+    fs::write(bundle_path, serde_json::to_vec_pretty(&bundle).unwrap()).expect("restore bundle");
+    let config_path = dir.join(".decapod/config.toml");
+    let config_content = fs::read_to_string(&config_path).expect("read config");
+    let mut config: toml::Value = toml::from_str(&config_content).expect("parse config");
+    config["repo"]["product_summary"] = toml::Value::String("changed after export".to_string());
+    fs::write(
+        &config_path,
+        toml::to_string_pretty(&config).expect("serialize config"),
+    )
+    .expect("change config");
+    let stale = run_decapod(
+        &dir,
+        &[
+            "rpc",
+            "--op",
+            "context.bundle.import",
+            "--params",
+            &format!(r#"{{"path":"{bundle_path}"}}"#),
+        ],
+    );
+    assert!(!stale.status.success(), "stale bundle must be rejected");
+    assert!(String::from_utf8_lossy(&stale.stderr).contains("CONTEXT_BUNDLE_STALE"));
 }

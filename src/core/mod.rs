@@ -14,6 +14,7 @@ pub mod cloud_backend;
 pub mod constitution_cli;
 pub mod constitution_schema;
 pub mod container_runtime;
+pub mod context_bundle;
 pub mod context_capsule;
 pub mod coplayer;
 pub mod db;
