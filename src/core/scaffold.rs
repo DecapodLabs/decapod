@@ -1736,16 +1736,8 @@ pub fn scaffold_project_entrypoints(
         eprintln!();
     }
 
-    // Create scaffolding directories from capability recommendations
-    for prop in &scaffolding_proposals {
-        if let Some(parent) = prop.path.parent() {
-            fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
-        }
-        // Create the directory/file if it doesn't exist
-        if !prop.path.exists() {
-            fs::create_dir_all(&prop.path).map_err(error::DecapodError::IoError)?;
-        }
-    }
+    // Proposals are reviewable intent-transfer artifacts. They are not an
+    // authorization to create arbitrary architecture or directories.
 
     let (specs_created, specs_unchanged, specs_preserved) = if opts.generate_specs {
         let mut created = 0usize;

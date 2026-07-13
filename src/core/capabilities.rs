@@ -459,79 +459,15 @@ impl CapabilityRegistry {
             conflicts: vec![],
             requires: vec![],
         });
-
-        self.register(CapabilityDefinition {
-            id: "secrets-handling".to_string(),
-            name: "Secrets Handling".to_string(),
-            purpose:
-                "The repository manages secrets with rotation, encryption, and access control."
-                    .to_string(),
-            affected_specs: vec![
-                "SECURITY.md".to_string(),
-                "OPERATIONS.md".to_string(),
-                "VALIDATION.md".to_string(),
-            ],
-            required_decisions: vec![
-                "Secrets store/provider".to_string(),
-                "Rotation schedule and automation".to_string(),
-                "Encryption at rest and in transit".to_string(),
-            ],
-            proof_obligations: vec![
-                "Secret rotation tests".to_string(),
-                "Encryption verification tests".to_string(),
-                "Access audit tests".to_string(),
-            ],
-            scaffolding_recommendations: vec![
-                "secrets/ module".to_string(),
-                "Secret rotation scripts".to_string(),
-            ],
-            evidence_signals: vec![
-                "Secrets manager integration".to_string(),
-                "Encryption configuration".to_string(),
-                "Rotation scripts or automation".to_string(),
-            ],
-            conflicts: vec![],
-            requires: vec![],
-        });
-
-        self.register(CapabilityDefinition {
-            id: "infrastructure-management".to_string(),
-            name: "Infrastructure Management".to_string(),
-            purpose: "The repository manages infrastructure as code with plan-before-apply, drift detection, and rollback.".to_string(),
-            affected_specs: vec![
-                "ARCHITECTURE.md".to_string(),
-                "SECURITY.md".to_string(),
-                "VALIDATION.md".to_string(),
-                "OPERATIONS.md".to_string(),
-            ],
-            required_decisions: vec![
-                "IaC tool/format (Terraform, Pulumi, etc.)".to_string(),
-                "Environment promotion strategy".to_string(),
-                "Drift detection and remediation".to_string(),
-            ],
-            proof_obligations: vec![
-                "Plan-before-apply checks".to_string(),
-                "Drift detection tests".to_string(),
-                "Rollback validation tests".to_string(),
-            ],
-            scaffolding_recommendations: vec![
-                "infrastructure/ or iac/ directory".to_string(),
-                "Environment separation".to_string(),
-                "Policy check integration".to_string(),
-            ],
-            evidence_signals: vec![
-                "Terraform/Pulumi/CloudFormation files".to_string(),
-                "Plan/apply automation".to_string(),
-                "Drift detection configuration".to_string(),
-            ],
-            conflicts: vec![],
-            requires: vec![],
-        });
     }
 
     /// Register a capability definition.
     pub fn register(&mut self, def: CapabilityDefinition) {
-        self.capabilities.insert(def.id.clone(), def);
+        let id = def.id.clone();
+        assert!(
+            self.capabilities.insert(id.clone(), def).is_none(),
+            "duplicate built-in capability registration: {id}"
+        );
     }
 
     /// Get a capability by ID.
@@ -716,6 +652,10 @@ fn check_evidence_signal(repo_root: &Path, signal: &str) -> Result<bool, error::
                 "migrations/*.rs",
                 "db/migrate/*.rb",
                 "migrations/*.py",
+                "migrations/",
+                "db/migrate/",
+                "alembic.ini",
+                "prisma/migrations/",
             ],
         ),
         "ORM models or repository abstractions" => check_content_patterns(
@@ -1002,6 +942,7 @@ fn apply_overlay(content: String, capability_id: &str, spec_path: &str) -> Strin
     };
 
     if let Some(overlay) = overlay {
+        let overlay = normalize_overlay_language(overlay);
         let overlay = format!("{start_marker}\n{overlay}\n{end_marker}");
         // Insert overlay before the first major section after the title
         if let Some(pos) = content.find("\n## ") {
@@ -1012,6 +953,121 @@ fn apply_overlay(content: String, capability_id: &str, spec_path: &str) -> Strin
         }
     }
     content
+}
+
+/// Built-in packs transfer obligations without silently choosing local architecture,
+/// service levels, or delivery guarantees for the project.
+fn normalize_overlay_language(mut overlay: String) -> String {
+    let replacements = [
+        (
+            "Deprecation window: minimum 90 days before removal",
+            "Deprecation and removal policy MUST be selected for this project and proven against its consumers",
+        ),
+        (
+            "Rate limiting MUST be enforced at the API gateway level",
+            "Abuse-control enforcement point MUST be a documented project decision",
+        ),
+        (
+            "Per-client rate limits MUST be enforced",
+            "Limits and enforcement boundaries MUST be selected for this deployment",
+        ),
+        (
+            "Distributed rate limiting for clustered deployments",
+            "Clustered enforcement behavior MUST be documented when applicable",
+        ),
+        (
+            "Rate limit headers MUST be returned (Retry-After, X-RateLimit-*)",
+            "Client-visible throttling behavior MUST be part of the contract when applicable",
+        ),
+        (
+            "Storage layer MUST be abstracted behind repository interfaces",
+            "Storage ownership, consistency behavior, and access boundaries MUST be explicit",
+        ),
+        (
+            "Repository implementations MUST be swappable",
+            "Portability or swappable implementations are project decisions, not universal requirements",
+        ),
+        (
+            "Migration path for storage changes MUST be documented",
+            "Migration and rollback treatment MUST match the selected storage technology",
+        ),
+        (
+            "Automated backup schedule: daily incremental, weekly full",
+            "Backup scope, schedule, retention, and restore evidence MUST be selected for the project",
+        ),
+        (
+            "Recovery point objective (RPO): < 1 hour",
+            "Recovery point objectives MUST be explicit project decisions, not assumed values",
+        ),
+        (
+            "Recovery time objective (RTO): < 4 hours",
+            "Recovery time objectives MUST be explicit project decisions, not assumed values",
+        ),
+        (
+            "Backup restoration tested quarterly",
+            "Restore verification cadence MUST be recorded with the operational proof plan",
+        ),
+        (
+            "RPO/RTO targets documented",
+            "Recovery objectives MUST be selected for the project and recorded as proof obligations",
+        ),
+        (
+            "Recovery procedures tested quarterly",
+            "Recovery test cadence MUST be selected for the project and recorded as a proof obligation",
+        ),
+        (
+            "Exponential backoff with jitter (base: 2s, max: 5min, max attempts: 5)",
+            "Retry and backoff behavior MUST be selected and documented for each work class",
+        ),
+        (
+            "Dead letter queue for messages exceeding max attempts",
+            "Poison-work handling MUST be selected and documented for each work class",
+        ),
+        (
+            "Retry MUST NOT cause duplicate side effects (idempotency required)",
+            "Retry MUST preserve the declared side-effect and idempotency semantics",
+        ),
+        (
+            "All background jobs MUST be idempotent",
+            "Each job MUST declare whether it is idempotent, transactional, compensating, or otherwise duplicate-safe",
+        ),
+        (
+            "Idempotency keys REQUIRED for all mutating operations",
+            "Deduplication or compensation mechanisms are project decisions and require proof",
+        ),
+        (
+            "Duplicate execution MUST return original result",
+            "Duplicate execution MUST follow the job's declared duplicate-handling semantics",
+        ),
+        (
+            "Maximum drain time: 30 seconds",
+            "Drain behavior and timeout MUST be selected for the deployment",
+        ),
+        (
+            "Forceful termination after timeout with job requeue",
+            "Termination and requeue behavior MUST be selected and proven for the deployment",
+        ),
+        (
+            "Exactly-once processing verification",
+            "Verify the declared delivery guarantee; do not claim exactly-once behavior without proof",
+        ),
+        (
+            "Exponential backoff with jitter verified",
+            "Configured retry/backoff policy verified",
+        ),
+        (
+            "Max retry attempts enforced",
+            "Configured retry bound or unbounded policy verified",
+        ),
+        (
+            "Dead letter queue population verified",
+            "Poison-work handling verified when the project declares it",
+        ),
+    ];
+    for (from, to) in replacements {
+        overlay = overlay.replace(from, to);
+    }
+    overlay
 }
 
 fn apply_capability_declaration(mut content: String, capabilities: &[String]) -> String {
@@ -1188,7 +1244,10 @@ fn persistent_state_validation_overlay() -> String {
 - Transaction boundary tests\n\
 - Concurrency conflict tests\n\
 - Data integrity validation after recovery"
-        .to_string()
+        .replace(
+            "### Migration Tests",
+            "### Migration Proof Command\n- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof\n- The configured command MUST define its working directory, timeout, expected exit code, and evidence output\n\n### Migration Tests",
+        )
 }
 
 fn background_processing_semantics_overlay() -> String {
@@ -1258,6 +1317,26 @@ mod tests {
         assert!(registry.get("public-api").is_some());
         assert!(registry.get("persistent-state").is_some());
         assert!(registry.get("background-processing").is_some());
+        assert_eq!(registry.ids().len(), 12);
+        assert_eq!(registry.ids().len(), registry.all().len());
+    }
+
+    #[test]
+    #[should_panic(expected = "duplicate built-in capability registration")]
+    fn duplicate_registry_ids_are_rejected() {
+        let mut registry = CapabilityRegistry::new();
+        registry.register(CapabilityDefinition {
+            id: "public-api".to_string(),
+            name: "duplicate".to_string(),
+            purpose: String::new(),
+            affected_specs: vec![],
+            required_decisions: vec![],
+            proof_obligations: vec![],
+            scaffolding_recommendations: vec![],
+            evidence_signals: vec![],
+            conflicts: vec![],
+            requires: vec![],
+        });
     }
 
     #[test]
@@ -1310,5 +1389,30 @@ mod tests {
         let overlays =
             registry.generate_overlays(&["public-api".to_string(), "persistent-state".to_string()]);
         assert_eq!(overlays.len(), 2);
+    }
+
+    #[test]
+    fn built_in_overlays_do_not_select_universal_service_levels() {
+        let content = apply_capability_overlays(
+            "VALIDATION.md",
+            "# Validation\n\n## Gates\n".to_string(),
+            &[
+                "public-api".to_string(),
+                "persistent-state".to_string(),
+                "background-processing".to_string(),
+            ],
+        );
+        for forbidden in [
+            "90 days",
+            "daily incremental",
+            "< 1 hour",
+            "< 4 hours",
+            "30 seconds",
+            "Exactly-once processing verification",
+        ] {
+            assert!(!content.contains(forbidden), "overlay contains {forbidden}");
+        }
+        assert!(content.contains("Migration Proof Command"));
+        assert!(content.contains("project decision"));
     }
 }

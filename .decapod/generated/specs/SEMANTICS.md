@@ -262,3 +262,11 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 - CLI: Clap 4 derive
 - RPC: JSON over stdin/stdout (no HTTP)
 - Event logs: JSONL (one JSON object per line)
+
+<!-- decapod:codebase-attestation:start -->
+## Codebase Attestation
+
+- Repository signal fingerprint: `27cc0f02dc7957543cdbdf24ea2c9c76ba799689d10f465ebee32f3aa6ef28bf`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (85 files), `tests/` (3 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->

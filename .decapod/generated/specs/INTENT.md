@@ -170,3 +170,11 @@ flowchart LR
 | Cloud sync protocol beyond init registration? | Core team | 2026-Q3 | Deferred |
 | Federation trust model for multi-repo? | Core team | 2026-Q3 | Deferred |
 | Long-term capsule storage tiering strategy? | Core team | 2026-Q4 | Deferred |
+
+<!-- decapod:codebase-attestation:start -->
+## Codebase Attestation
+
+- Repository signal fingerprint: `27cc0f02dc7957543cdbdf24ea2c9c76ba799689d10f465ebee32f3aa6ef28bf`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (85 files), `tests/` (3 files)
+- Refreshed from the current codebase by `decapod specs.refresh`
+<!-- decapod:codebase-attestation:end -->

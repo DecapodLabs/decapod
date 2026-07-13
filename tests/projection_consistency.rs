@@ -79,6 +79,44 @@ fn set_capabilities(dir: &Path, capabilities: &[&str]) {
     .expect("write config.toml");
 }
 
+fn set_migration_validation(dir: &Path, command: &str, args: &[&str]) {
+    let config_path = dir.join(".decapod/config.toml");
+    let config_content = fs::read_to_string(&config_path).expect("read config.toml");
+    let mut config: toml::Value = toml::from_str(&config_content).expect("parse config.toml");
+    let repo_table = config["repo"].as_table_mut().expect("repo table");
+    repo_table.insert(
+        "migration_validation".to_string(),
+        toml::Value::Table(
+            [
+                (
+                    "command".to_string(),
+                    toml::Value::String(command.to_string()),
+                ),
+                (
+                    "args".to_string(),
+                    toml::Value::Array(
+                        args.iter()
+                            .map(|arg| toml::Value::String((*arg).to_string()))
+                            .collect(),
+                    ),
+                ),
+                (
+                    "working_directory".to_string(),
+                    toml::Value::String(".".to_string()),
+                ),
+                ("timeout_seconds".to_string(), toml::Value::Integer(5)),
+            ]
+            .into_iter()
+            .collect(),
+        ),
+    );
+    fs::write(
+        config_path,
+        toml::to_string_pretty(&config).expect("serialize config"),
+    )
+    .expect("write config.toml");
+}
+
 fn run_rpc(dir: &Path, op: &str, params: &str, password: &str) -> std::process::Output {
     run_decapod(
         dir,
@@ -471,7 +509,7 @@ fn persistent_state_activates_executable_migration_gate() {
         String::from_utf8_lossy(&out.stderr)
     );
 
-    // Run validation with --projections (should fail without migration artifacts)
+    // File presence alone is not proof: no human-governed command is configured.
     let projections = run_validate(&dir, &password, true);
     assert!(
         !projections.status.success(),
@@ -486,15 +524,14 @@ fn persistent_state_activates_executable_migration_gate() {
         .expect("failures array");
     let migration_failure = failures.iter().find(|f| {
         let msg = f.as_str().unwrap_or("");
-        msg.contains("migration") && msg.contains("persistent-state")
+        msg.contains("migration_validation") && msg.contains("configured")
     });
     assert!(
         migration_failure.is_some(),
         "should have migration-related failure for persistent-state; got: {failures:?}"
     );
 
-    // Create migration artifacts to satisfy the gate
-    // Create migration artifacts to satisfy the gate
+    // A non-empty migration is still not proof until the configured command validates it.
     let migrations_dir = dir.join("migrations");
     fs::create_dir_all(&migrations_dir).expect("create migrations dir");
     fs::write(
@@ -518,11 +555,33 @@ fn persistent_state_activates_executable_migration_gate() {
         String::from_utf8_lossy(&refresh.stderr)
     );
 
-    // Re-validate should now pass the persistent-state gate
     let projections2 = run_validate(&dir, &password, true);
     assert!(
-        projections2.status.success(),
-        "validate --projections should pass with migration artifacts; stdout:\n{}",
+        !projections2.status.success(),
+        "validate --projections should still fail without a proof command; stdout:\n{}",
         String::from_utf8_lossy(&projections2.stdout)
     );
+
+    set_migration_validation(
+        &dir,
+        "sh",
+        &["-c", "grep -q 'CREATE TABLE' migrations/001_initial.sql"],
+    );
+    let projections3 = run_validate(&dir, &password, true);
+    assert!(
+        projections3.status.success(),
+        "configured migration proof should pass; stdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&projections3.stdout),
+        String::from_utf8_lossy(&projections3.stderr)
+    );
+    assert!(
+        dir.join(".decapod/generated/artifacts/custody/migration-validation.json")
+            .exists(),
+        "successful migration proof should record evidence"
+    );
+
+    set_migration_validation(&dir, "false", &[]);
+    let projections4 = run_validate(&dir, &password, true);
+    assert!(!projections4.status.success());
+    assert!(String::from_utf8_lossy(&projections4.stdout).contains("exited with"));
 }

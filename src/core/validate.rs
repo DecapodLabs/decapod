@@ -30,7 +30,9 @@ use serde_json;
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::fs;
+use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::process::Stdio;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{Duration, Instant};
@@ -3783,6 +3785,113 @@ fn validate_commit_often_gate(
     Ok(())
 }
 
+fn run_migration_validation(
+    repo_root: &Path,
+    config: &crate::cli::MigrationValidationConfig,
+) -> Result<(), String> {
+    if config.command.trim().is_empty() || config.timeout_seconds == 0 {
+        return Err(
+            "command must be non-empty and timeout_seconds must be greater than zero".to_string(),
+        );
+    }
+    let working_directory = config.working_directory.as_deref().unwrap_or(".");
+    let working_path = Path::new(working_directory);
+    if working_path.is_absolute() || working_path.components().any(|c| c.as_os_str() == "..") {
+        return Err("working_directory must be a repository-relative path".to_string());
+    }
+    let working_path = repo_root.join(working_path);
+    if !working_path.is_dir() {
+        return Err(format!(
+            "working_directory does not exist: {working_directory}"
+        ));
+    }
+
+    let started = Instant::now();
+    let mut child = std::process::Command::new(&config.command)
+        .args(&config.args)
+        .current_dir(&working_path)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|err| format!("could not start '{}': {err}", config.command))?;
+    let stdout = child.stdout.take().expect("stdout was piped");
+    let stderr = child.stderr.take().expect("stderr was piped");
+    let stdout_thread = std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        let _ = std::io::BufReader::new(stdout).read_to_end(&mut bytes);
+        bytes
+    });
+    let stderr_thread = std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        let _ = std::io::BufReader::new(stderr).read_to_end(&mut bytes);
+        bytes
+    });
+    let timeout = Duration::from_secs(config.timeout_seconds);
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break status,
+            Ok(None) if started.elapsed() >= timeout => {
+                let _ = child.kill();
+                let _ = child.wait();
+                let _ = stdout_thread.join();
+                let _ = stderr_thread.join();
+                return Err(format!(
+                    "command timed out after {} seconds",
+                    config.timeout_seconds
+                ));
+            }
+            Ok(None) => std::thread::sleep(Duration::from_millis(10)),
+            Err(err) => return Err(format!("could not monitor command: {err}")),
+        }
+    };
+    let stdout = stdout_thread.join().unwrap_or_default();
+    let stderr = stderr_thread.join().unwrap_or_default();
+    let exit_code = status.code().unwrap_or(-1);
+    let mut output = String::from_utf8_lossy(&stdout).to_string();
+    output.push_str(&String::from_utf8_lossy(&stderr));
+    let output_summary: String = output.chars().take(2000).collect();
+    let evidence_path = config
+        .evidence_path
+        .as_deref()
+        .unwrap_or(".decapod/generated/artifacts/custody/migration-validation.json");
+    let evidence_relative = Path::new(evidence_path);
+    if evidence_relative.is_absolute()
+        || evidence_relative
+            .components()
+            .any(|c| c.as_os_str() == "..")
+    {
+        return Err("evidence_path must be repository-relative".to_string());
+    }
+    let evidence_path = repo_root.join(evidence_relative);
+    if let Some(parent) = evidence_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|err| format!("could not create evidence directory: {err}"))?;
+    }
+    let evidence = serde_json::json!({
+        "schema_version": "1.0.0",
+        "kind": "migration_validation",
+        "command": config.command,
+        "args": config.args,
+        "working_directory": working_directory,
+        "expected_exit_code": config.expected_exit_code,
+        "actual_exit_code": exit_code,
+        "duration_ms": started.elapsed().as_millis(),
+        "output_summary": output_summary,
+        "timestamp": format!("{}Z", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs()),
+        "repo_signal_fingerprint": repo_signal_fingerprint(repo_root).unwrap_or_default(),
+    });
+    let evidence_bytes = serde_json::to_vec_pretty(&evidence).map_err(|err| err.to_string())?;
+    fs::write(&evidence_path, evidence_bytes)
+        .map_err(|err| format!("could not record evidence: {err}"))?;
+    if exit_code != config.expected_exit_code {
+        return Err(format!(
+            "command exited with {exit_code}, expected {}",
+            config.expected_exit_code
+        ));
+    }
+    Ok(())
+}
+
 fn validate_projection_consistency(
     ctx: &ValidationContext,
     main_root: &Path,
@@ -3806,6 +3915,7 @@ fn validate_projection_consistency(
         .join("governance")
         .join("workunits");
     let mut declared_capabilities = Vec::new();
+    let mut migration_validation = None;
 
     if !config_path.exists() {
         findings.push(ProjectionFinding {
@@ -3829,6 +3939,10 @@ fn validate_projection_consistency(
             .flatten()
             .filter_map(|value| value.as_str().map(str::to_string))
             .collect();
+        migration_validation = config
+            .get("repo")
+            .and_then(|repo| repo.get("migration_validation"))
+            .cloned();
         let has_product_summary = config
             .get("repo")
             .and_then(|r| r.get("product_summary"))
@@ -3848,38 +3962,38 @@ fn validate_projection_consistency(
 
     if declared_capabilities
         .iter()
-        .any(|capability| capability == "persistent-state")
+        .any(|c| c == "persistent-state")
     {
-        let migrations_dir = main_root.join("migrations");
-        let migration_files = if migrations_dir.is_dir() {
-            fs::read_dir(&migrations_dir)
-                .map_err(error::DecapodError::IoError)?
-                .filter_map(Result::ok)
-                .filter(|entry| entry.path().is_file())
-                .filter(|entry| {
-                    matches!(
-                        entry.path().extension().and_then(|ext| ext.to_str()),
-                        Some("sql") | Some("migration")
-                    )
-                })
-                .filter(|entry| {
-                    fs::metadata(entry.path())
-                        .map(|metadata| metadata.len() > 0)
-                        .unwrap_or(false)
-                })
-                .count()
-        } else {
-            0
-        };
-        if migration_files == 0 {
-            findings.push(ProjectionFinding {
-                surface: "migrations/".to_string(),
-                kind: SurfaceKind::Evidence,
-                expected: "persistent-state requires at least one non-empty SQL or migration file"
-                    .to_string(),
-                observed: "no executable migration artifact found".to_string(),
-                remediation: "Add a tested migration under migrations/ or remove persistent-state from repo.capabilities".to_string(),
-            });
+        match migration_validation {
+            Some(value) => match toml::from_str::<crate::cli::MigrationValidationConfig>(
+                &toml::to_string(&value).unwrap_or_default(),
+            ) {
+                Ok(config) => {
+                    if let Err(message) = run_migration_validation(main_root, &config) {
+                        findings.push(ProjectionFinding {
+                            surface: "repo.migration_validation".to_string(),
+                            kind: SurfaceKind::Evidence,
+                            expected: format!("configured migration proof exits {} and records evidence", config.expected_exit_code),
+                            observed: message,
+                            remediation: "Fix the human-governed migration_validation command/configuration and rerun validation".to_string(),
+                        });
+                    }
+                }
+                Err(err) => findings.push(ProjectionFinding {
+                    surface: "repo.migration_validation".to_string(),
+                    kind: SurfaceKind::Authority,
+                    expected: "command, working_directory, timeout_seconds, expected_exit_code".to_string(),
+                    observed: format!("invalid migration validation configuration: {err}"),
+                    remediation: "Configure repo.migration_validation with an executable project proof command".to_string(),
+                }),
+            },
+            None => findings.push(ProjectionFinding {
+                surface: "repo.migration_validation".to_string(),
+                kind: SurfaceKind::Authority,
+                expected: "persistent-state requires a configured executable migration proof command".to_string(),
+                observed: "no migration_validation command configured".to_string(),
+                remediation: "Add [repo.migration_validation] with command, args, working_directory, and timeout_seconds; file presence is not proof".to_string(),
+            }),
         }
     }
 
