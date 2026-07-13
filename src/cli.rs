@@ -385,7 +385,12 @@ pub struct RepoContext {
     pub container_workspaces: bool,
     #[serde(default)]
     pub mode: BackendType,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "declared_capabilities",
+        alias = "capabilities",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub capabilities: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub migration_validation: Option<MigrationValidationConfig>,

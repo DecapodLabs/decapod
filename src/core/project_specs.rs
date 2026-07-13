@@ -165,7 +165,11 @@ pub struct ProjectSpecsManifest {
     pub template_version: String,
     pub generated_at: String,
     pub repo_signal_fingerprint: String,
+    /// Optional for manifests written before capability provenance was added.
+    /// Refresh upgrades legacy manifests to the current schema deterministically.
+    #[serde(default)]
     pub declared_capabilities: Vec<String>,
+    #[serde(default)]
     pub capability_definition_version: String,
     pub files: Vec<ProjectSpecManifestEntry>,
 }
@@ -515,5 +519,19 @@ Real product summary.
         let updated = update_codebase_attestation(body, "abc123", "`src/` (2 files)");
         assert!(updated.contains("Authored product contract."));
         assert!(updated.contains("Repository signal fingerprint: `abc123`"));
+    }
+
+    #[test]
+    fn legacy_manifest_without_capability_provenance_is_readable() {
+        let legacy = r#"{
+          "schema_version": "1.0.0",
+          "template_version": "scaffold-v3",
+          "generated_at": "1Z",
+          "repo_signal_fingerprint": "abc",
+          "files": []
+        }"#;
+        let parsed: ProjectSpecsManifest = serde_json::from_str(legacy).unwrap();
+        assert!(parsed.declared_capabilities.is_empty());
+        assert!(parsed.capability_definition_version.is_empty());
     }
 }

@@ -3933,7 +3933,10 @@ fn validate_projection_consistency(
         })?;
         declared_capabilities = config
             .get("repo")
-            .and_then(|repo| repo.get("capabilities"))
+            .and_then(|repo| {
+                repo.get("declared_capabilities")
+                    .or_else(|| repo.get("capabilities"))
+            })
             .and_then(|value| value.as_array())
             .into_iter()
             .flatten()
