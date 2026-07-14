@@ -6441,6 +6441,30 @@ fn run_workspace_command(
         WorkspaceCommand::Ensure { branch, container } => {
             let agent_id =
                 std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            // A dirty protected checkout is an actionable orchestration blocker. Report it in
+            // the same JSON shape as a successful ensure instead of returning only a human error
+            // and leaving callers without machine-readable next actions.
+            if let Ok(status) = workspace::get_workspace_status(project_root)
+                && status.git.is_protected
+                && status.git.has_local_mods
+                && !status.git.in_worktree
+            {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "status": "pending",
+                        "branch": status.git.current_branch,
+                        "is_protected": status.git.is_protected,
+                        "can_work": status.can_work,
+                        "in_container": status.container.in_container,
+                        "docker_available": status.container.docker_available,
+                        "worktree_path": status.git.worktree_path,
+                        "blockers": status.blockers,
+                        "required_actions": status.required_actions,
+                    })
+                );
+                return Ok(());
+            }
             let config = if branch.is_some() || container {
                 Some(workspace::WorkspaceConfig {
                     branch,

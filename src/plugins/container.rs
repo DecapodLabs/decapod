@@ -1429,7 +1429,7 @@ fn build_container_script(
          git config --global user.name \"${DECAPOD_GIT_USER_NAME:-Decapod Agent}\"\n\
          git config --global user.email \"${DECAPOD_GIT_USER_EMAIL:-agent@decapod.local}\"\n\
          if ! command -v decapod >/dev/null 2>&1 && [ -f Cargo.toml ] && command -v cargo >/dev/null 2>&1; then\n\
-           decapod() { cargo run --quiet -- \"$@\"; }\n\
+           decapod() { cargo run --quiet --bin decapod -- \"$@\"; }\n\
          fi\n\
          if command -v decapod >/dev/null 2>&1; then\n\
            decapod version >/dev/null 2>&1 || true\n\
@@ -1574,7 +1574,7 @@ mod tests {
         );
         assert!(joined.contains("-v /tmp/repo/.decapod:/tmp/repo/.decapod/workspaces/w1/.decapod"));
         assert!(joined.contains("DECAPOD_LOCAL_ONLY=1"));
-        assert!(joined.contains("decapod() { cargo run --quiet -- \"$@\"; }"));
+        assert!(joined.contains("decapod() { cargo run --quiet --bin decapod -- \"$@\"; }"));
         assert!(joined.contains("git_safe checkout -B 'ahr/branch'"));
         assert!(!joined.contains("git_safe fetch --no-write-fetch-head origin 'master'"));
         assert!(!joined.contains("git_safe rebase origin/'master'"));

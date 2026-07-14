@@ -1,23 +1,11 @@
 # Model Context Protocol (MCP)
 
-Decapod supports integration with MCP-compatible agent environments to provide structured resources and tools.
+Decapod currently provides a Decapod-specific structured RPC interface over process stdin/stdout. It does not currently implement an MCP server, MCP lifecycle, MCP resource discovery, or MCP tool discovery.
 
-## Resources
+MCP adapters remain a planned integration surface. An adapter may map MCP resources and tools to Decapod operations, but that mapping is not part of the current Decapod binary contract.
 
-When connected via MCP, Decapod exposes:
-- `decapod://constitution/*`: Direct access to constitution nodes.
-- `decapod://todo/list`: The current actionable backlog.
-- `decapod://specs/intent`: The project's intent specification.
+## Current local handshake
 
-## Tools
+`decapod handshake` records local declarations, scope, proof declarations, document hashes, and a deterministic artifact hash. The hash makes the recorded data tamper-evident; it does not authenticate a model provider, harness, binary, human principal, or organization.
 
-Standard Decapod operations are available as MCP tools. If your environment supports MCP, you SHOULD use these tools instead of raw CLI calls to benefit from structured parsing and better error handling.
-
-Key tools include:
-- `orientation_get`: Retrieve the orientation packet for a task.
-- `validate_repo`: Run the full project validation gate.
-- `aptitude_query`: Search the shared memory for project-specific knowledge.
-
-## Handshake
-
-In MCP sessions, ensure you have called `decapod handshake` at least once to establish your agent identity within the repository's governance log. This identity persists across tool calls and resource retrievals.
+The local session credential establishes repository-local custody and correlation for the current session. It must not be described as provider authentication.

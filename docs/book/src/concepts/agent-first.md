@@ -25,7 +25,7 @@ Agents should not just "write code"; they should maintain intent. Decapod promot
 Shared memory allows agents to learn from each other. If one agent discovers an obscure bug in a library, it can record that observation in Aptitude, which subsequent agents will automatically retrieve during context resolution.
 
 ### 4. Protocol-Native (MCP)
-By supporting the **Model Context Protocol (MCP)**, Decapod allows agents to treat the repository as a structured resource graph rather than a raw filesystem (see [Model Context Protocol (MCP)](mcp.md)).
+Decapod reserves an adapter boundary for the **Model Context Protocol (MCP)** so future integrations can expose the repository as a structured resource graph (see [Model Context Protocol (MCP)](mcp.md)). The current binary provides a Decapod-specific RPC interface; it does not itself implement MCP.
 
 
 ## Design Patterns for Agents

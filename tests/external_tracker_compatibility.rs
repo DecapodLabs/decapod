@@ -34,6 +34,7 @@ fn setup_repo(dir: &std::path::Path) {
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["init", "--force"])
         .current_dir(dir)
+        .env("XDG_CONFIG_HOME", dir.join(".config"))
         .output()
         .expect("decapod init");
     assert!(init_out.status.success(), "init failed");
@@ -78,6 +79,7 @@ fn test_external_tracker_env_var_relaxation() {
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["workspace", "ensure"])
         .current_dir(&worktree_dir)
+        .env("XDG_CONFIG_HOME", dir.join(".config"))
         .output()
         .expect("workspace ensure");
 
@@ -103,6 +105,7 @@ fn test_external_tracker_env_var_relaxation() {
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["workspace", "ensure"])
         .current_dir(&worktree_dir)
+        .env("XDG_CONFIG_HOME", dir.join(".config"))
         .env("BEADS_TASK_ID", "123")
         .output()
         .expect("workspace ensure with env");
@@ -153,6 +156,7 @@ fn test_external_tracker_config_toml_relaxation() {
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["workspace", "ensure"])
         .current_dir(&worktree_dir)
+        .env("XDG_CONFIG_HOME", dir.join(".config"))
         .output()
         .expect("workspace ensure with config.toml");
 
@@ -182,11 +186,17 @@ fn test_workspace_ensure_json_orchestration_data() {
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["workspace", "ensure", "--container"])
         .current_dir(dir)
+        .env("XDG_CONFIG_HOME", dir.join(".config"))
         .output()
         .expect("workspace ensure --container");
 
     let stdout = String::from_utf8_lossy(&out.stdout);
-    let json: serde_json::Value = serde_json::from_str(&stdout).expect("valid json");
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap_or_else(|error| {
+        panic!(
+            "workspace ensure --container must return orchestration JSON: {error}; stdout={stdout:?}; stderr={:?}",
+            String::from_utf8_lossy(&out.stderr)
+        )
+    });
 
     // Status should be pending/ok depending on blockers
     // But importantly, it should contain blockers and required_actions
@@ -205,8 +215,8 @@ fn test_workspace_ensure_json_orchestration_data() {
         "should have blockers for protected branch + container request"
     );
 
-    // Check for resolve_hint if container environment is being prepared
-    // In this test environment, it might just be the "on protected branch" blocker
+    // A workspace blocker may be either the protected-branch cleanup gate or a
+    // container-preparation action, depending on whether the fixture is dirty.
     let has_workspace_blocker = blockers.iter().any(|b| b["kind"] == "workspace_required");
     if has_workspace_blocker {
         let blocker = blockers
@@ -214,10 +224,11 @@ fn test_workspace_ensure_json_orchestration_data() {
             .find(|b| b["kind"] == "workspace_required")
             .unwrap();
         let hint = blocker["resolve_hint"].as_str().unwrap();
-        // It should start with either docker or podman
         assert!(
-            hint.starts_with("docker ") || hint.starts_with("podman "),
-            "hint should use detected runtime: {hint}"
+            hint.starts_with("docker ")
+                || hint.starts_with("podman ")
+                || hint.starts_with("Commit/stash/discard local changes"),
+            "workspace blocker should expose an actionable hint: {hint}"
         );
     }
 }
