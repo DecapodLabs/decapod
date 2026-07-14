@@ -83,6 +83,8 @@ This document defines the normative operational contracts for the Decapod CLI.
 ### Operation: `WorkspacePublish`
 ### Operation: `ContextResolve`
 ### Operation: `ContextCapsuleQuery`
+### Operation: `ContextBundleExport`
+### Operation: `ContextBundleImport`
 ### Operation: `ContextBindings`
 ### Operation: `ConstitutionGet`
 ### Operation: `ConstitutionLinksQuery`
