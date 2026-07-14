@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.66.4](https://github.com/DecapodLabs/decapod/compare/v0.66.3...v0.66.4) - 2026-07-14
+
+### Fixed
+
+- stabilize docs, workspace, and container contracts ([#885](https://github.com/DecapodLabs/decapod/pull/885))
+
 ## [0.66.3](https://github.com/DecapodLabs/decapod/compare/v0.66.2...v0.66.3) - 2026-07-13
 
 ### Other
