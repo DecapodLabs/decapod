@@ -6211,9 +6211,15 @@ mod tests {
     }
 
     #[test]
-    fn git_workspace_context_accepts_decapod_worktree_when_main_root_is_worktree() {
+    fn issue_757_workspace_status_and_validate_agree_on_decapod_worktree() {
         let (_tmp, _main_root, wt_path) = decapod_worktree_fixture();
         let ctx = ValidationContext::new();
+
+        let status = crate::workspace::get_workspace_status(&wt_path)
+            .expect("workspace status should resolve the isolated worktree");
+        assert!(status.git.in_worktree);
+        assert!(!status.git.is_main_repo);
+        assert!(status.can_work);
 
         validate_git_workspace_context(&ctx, &wt_path, &wt_path)
             .expect("workspace context validation");

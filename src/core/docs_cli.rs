@@ -140,7 +140,7 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             Ok(DocsRunResult::default())
         }
         DocsCommand::Show { path, source } => {
-            let normalized_path = path.strip_prefix("embedded/").unwrap_or(&path).to_string();
+            let normalized_path = normalize_agent_doc_path(&path);
 
             if !normalized_path.starts_with("docs/agent/") {
                 return Err(error::DecapodError::ValidationError(format!(
@@ -281,6 +281,20 @@ pub fn run_docs_cli(cli: DocsCli) -> Result<DocsRunResult, error::DecapodError> 
             Ok(DocsRunResult::default())
         }
     }
+}
+
+fn normalize_agent_doc_path(path: &str) -> String {
+    let path = path.strip_prefix("embedded/").unwrap_or(path);
+    if path.starts_with("docs/agent/") {
+        return path.to_string();
+    }
+
+    let short_name = path.strip_suffix(".md").unwrap_or(path);
+    if !short_name.contains('/') {
+        return format!("docs/agent/{short_name}.md");
+    }
+
+    path.to_string()
 }
 
 /// Helper function to find the .decapod repo root

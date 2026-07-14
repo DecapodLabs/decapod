@@ -81,6 +81,7 @@ fn setup_workspace() -> (TempDir, PathBuf) {
     let session = Command::new(&exe)
         .args(["session", "acquire"])
         .current_dir(&dir)
+        .env("XDG_CONFIG_HOME", dir.join(".config"))
         .output()
         .expect("decapod session acquire");
     assert!(
@@ -98,6 +99,7 @@ fn run(dir: &PathBuf, args: &[&str]) -> (bool, String) {
     let out = Command::new(resolve_decapod_bin())
         .args(args)
         .current_dir(dir)
+        .env("XDG_CONFIG_HOME", dir.join(".config"))
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .expect("failed to run decapod");
@@ -290,6 +292,8 @@ fn t030_docs() {
     let (_tmp, dir) = setup_workspace();
     // T030
     ok(&dir, &["docs", "show", "docs/agent/api-index.md"]);
+    // T030a: short agent-doc names are normalized to docs/agent/*.md
+    ok(&dir, &["docs", "show", "api-index"]);
     // T031
     ok(&dir, &["docs", "show", "docs/agent/README.md"]);
     // T032

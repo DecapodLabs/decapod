@@ -1,37 +1,11 @@
 # Model Context Protocol (MCP)
 
-Decapod is designed to be a "Protocol First" governance layer. While it provides a rich CLI, its core value is in standardizing the context and control signals exchanged between repositories and AI models. This aligns perfectly with the **Model Context Protocol (MCP)**.
+Decapod's current agent interface is a Decapod-specific structured RPC envelope over process stdin/stdout. It is not JSON-RPC 2.0 and the binary does not currently implement an MCP server, MCP lifecycle, or native MCP resource and tool discovery.
 
-## Decapod as an MCP Provider
+MCP support is an adapter boundary tracked separately from the current runtime. Future adapters may expose Decapod resources and operations through MCP, but those bindings should not be read as capabilities of the current binary.
 
-Decapod integrates with MCP-compatible environments (like Claude Desktop or specialized IDE extensions) by acting as an MCP Server. This allows agents to access Decapod's governance kernel directly through standard protocol messages.
+## Current local handshake
 
-### Exposed MCP Resources
+`decapod handshake` records local declarations, scope, proof declarations, document hashes, and a deterministic artifact hash. That hash provides tamper-evident integrity for the recorded handshake data; it does not authenticate a model provider, harness, binary, human principal, or organization.
 
-- **Constitution:** Browsable nodes of the technology and methodology graph (see [Repository Constitution](constitution.md)).
-- **Tasks:** The current todo list and ownership state (see [Single-Agent Workflow](../workflows/single-agent.md)).
-- **Specs:** The living specifications (`INTENT.md`, `ARCHITECTURE.md`, etc.) for the project (see [Explicit Intent](intent.md) and [Artifact Reference](../reference/artifacts.md)).
-- **Context Capsules:** Deterministic snapshots of repo state used for inference (see [Agent-First Architecture](agent-first.md)).
-
-### Exposed MCP Tools
-
-Decapod exposes its core CLI capabilities as MCP Tools, allowing agents to perform operations detailed in the [CLI Reference](../reference/cli.md):
-- `todo_add` / `todo_claim`
-- `workspace_ensure`
-- `constitution_search`
-- `validate`
-
-
-## Benefits of MCP Integration
-
-1.  **Lower Friction:** Agents don't need to "learn" CLI flags if they can call structured tools via MCP.
-2.  **Rich Context:** MCP allows for richer metadata (like URIs and structured resources) to be passed alongside documentation.
-3.  **Discovery:** MCP-native agents can automatically discover Decapod's capabilities as soon as they connect to the repository.
-
-## Handshaking and Identity
-
-Decapod uses its `handshake` command to generate a deterministic identity artifact. In an MCP context, this ensures that the agent provider and the local governance kernel have a shared, cryptographically verifiable understanding of which agent is operating on which task.
-
-## Future Direction
-
-We are actively expanding Decapod's MCP surface to support native resource templates and more granular tool definitions, making Decapod the standard "Governance MCP" for any repository it manages.
+The repository-local session credential establishes local custody and correlation for the current session. It is not external provider authentication. See [Identity and provenance](https://github.com/DecapodLabs/decapod/issues/876) and [the interoperability profile](https://github.com/DecapodLabs/decapod/issues/870) for the boundaries future adapters must preserve.

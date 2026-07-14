@@ -85,3 +85,26 @@ fn test_config_schema_alignment() {
         );
     }
 }
+
+#[test]
+fn test_mcp_docs_match_current_adapter_boundary() {
+    let agent_mcp = fs::read_to_string("docs/agent/mcp.md").expect("read agent MCP docs");
+    let book_mcp = fs::read_to_string("docs/book/src/concepts/mcp.md").expect("read book MCP docs");
+    let agent_first =
+        fs::read_to_string("docs/book/src/concepts/agent-first.md").expect("read agent-first docs");
+
+    for docs in [&agent_mcp, &book_mcp, &agent_first] {
+        assert!(
+            docs.contains("adapter") || docs.contains("adapter boundary"),
+            "MCP documentation must identify the adapter boundary"
+        );
+        assert!(
+            docs.contains("does not") || docs.contains("not part"),
+            "MCP documentation must state the current implementation boundary"
+        );
+    }
+
+    assert!(agent_mcp.contains("tamper-evident"));
+    assert!(agent_mcp.contains("does not authenticate a model provider"));
+    assert!(!agent_first.contains("By supporting the **Model Context Protocol (MCP)**"));
+}
