@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.66.10](https://github.com/DecapodLabs/decapod/compare/v0.66.9...v0.66.10) - 2026-07-15
+
+### Added
+
+- support declared_capabilities in decapod init ([#900](https://github.com/DecapodLabs/decapod/pull/900))
+
 ## [0.66.9](https://github.com/DecapodLabs/decapod/compare/v0.66.8...v0.66.9) - 2026-07-15
 
 ### Fixed
