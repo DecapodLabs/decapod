@@ -28,7 +28,7 @@
     {
       "gate": "validate_passes",
       "status": "pass",
-      "artifact_ref": "DECAPOD_CONTAINER=1 DECAPOD_VALIDATE_SKIP_GIT_GATES=1 decapod validate --format json (193 passed, 0 failed)"
+      "artifact_ref": "DECAPOD_CONTAINER=1 decapod validate --format json (198 passed, 0 failed)"
     }
   ],
   "status": "VERIFIED"
