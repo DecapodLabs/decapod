@@ -149,6 +149,16 @@ fn epoch_secs(ts: &str) -> Option<i64> {
     ts.trim_end_matches('Z').parse::<i64>().ok()
 }
 
+fn validation_proof_reason(validate_ok: bool, hashes_match: bool) -> &'static str {
+    if !validate_ok && hashes_match {
+        "decapod validate did not pass; output hash is unchanged from the baseline, so verification remains blocked"
+    } else if !validate_ok {
+        "decapod validate did not pass"
+    } else {
+        "validate output hash changed"
+    }
+}
+
 fn normalize_validate_output(raw: &str) -> String {
     let ansi = Regex::new(r"\x1B\[[0-9;]*[A-Za-z]").expect("valid ANSI regex");
     let elapsed_re = Regex::new(r" elapsed=\S+").expect("valid elapsed regex");
@@ -604,24 +614,16 @@ fn verify_target(
         let (validate_ok, actual_hash) =
             run_validate_and_hash(store_root, repo_root, Some(&target.todo_id))?;
         let expected = expected_hash.unwrap_or_default();
+        let hashes_match = actual_hash == expected;
 
-        if !validate_ok {
+        if !validate_ok || !hashes_match {
             result.status = "fail".to_string();
             result.proofs.push(ProofCheckResult {
                 gate: "validate_passes".to_string(),
                 status: "fail".to_string(),
                 expected_output_hash: Some(expected),
                 actual_output_hash: Some(actual_hash),
-                reason: Some("decapod validate did not pass".to_string()),
-            });
-        } else if actual_hash != expected {
-            result.status = "fail".to_string();
-            result.proofs.push(ProofCheckResult {
-                gate: "validate_passes".to_string(),
-                status: "fail".to_string(),
-                expected_output_hash: Some(expected),
-                actual_output_hash: Some(actual_hash),
-                reason: Some("validate output hash changed".to_string()),
+                reason: Some(validation_proof_reason(validate_ok, hashes_match).to_string()),
             });
         } else {
             result.proofs.push(ProofCheckResult {
@@ -1128,6 +1130,9 @@ pub fn run_verify_cli(
                         p.expected_output_hash.as_deref().unwrap_or("n/a"),
                         p.actual_output_hash.as_deref().unwrap_or("n/a")
                     );
+                    if let Some(reason) = &p.reason {
+                        println!("    reason: {reason}");
+                    }
                 }
             }
             for a in &r.artifacts {
@@ -1170,4 +1175,33 @@ pub fn run_verify_cli(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::validation_proof_reason;
+
+    #[test]
+    fn stable_failed_validation_remains_blocked_with_explicit_reason() {
+        assert_eq!(
+            validation_proof_reason(false, true),
+            "decapod validate did not pass; output hash is unchanged from the baseline, so verification remains blocked"
+        );
+    }
+
+    #[test]
+    fn failed_validation_with_changed_output_reports_validation_failure() {
+        assert_eq!(
+            validation_proof_reason(false, false),
+            "decapod validate did not pass"
+        );
+    }
+
+    #[test]
+    fn passing_validation_with_changed_output_reports_hash_drift() {
+        assert_eq!(
+            validation_proof_reason(true, false),
+            "validate output hash changed"
+        );
+    }
 }
