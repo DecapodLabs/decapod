@@ -920,6 +920,9 @@ pub(crate) struct QaCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum QaCommand {
+    /// Inspect validation, proof, task, and workspace recovery state without mutating it.
+    Diagnose(crate::plugins::verify::DiagnoseCli),
+
     /// Verify previously completed work (proof replay + drift checks)
     Verify(verify::VerifyCli),
 

@@ -6349,6 +6349,9 @@ fn run_qa_command(
     workspace_root: &Path,
 ) -> Result<(), error::DecapodError> {
     match qa_cli.command {
+        QaCommand::Diagnose(diagnose_cli) => {
+            verify::run_diagnose_cli(project_store, workspace_root, diagnose_cli)?
+        }
         QaCommand::Verify(verify_cli) => {
             verify::run_verify_cli(project_store, workspace_root, verify_cli)?
         }
@@ -6615,6 +6618,7 @@ fn run_workspace_command(
                     } else {
                         None
                     },
+                    base_branch: None,
                 })
             } else {
                 None
@@ -6984,6 +6988,7 @@ mod rpc_handlers {
             branch: Some(b),
             use_container: false,
             base_image: None,
+            base_branch: None,
         });
 
         let status = workspace::ensure_workspace(ctx.project_root, config, &agent_id)?;

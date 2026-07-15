@@ -78,9 +78,14 @@ fn is_container_workspaces_disabled(repo_root: &Path) -> bool {
     }
 }
 
-fn auto_remediable_validation_message(code: &str, message: &str, agent_action: &str) -> String {
+fn auto_remediable_validation_message(
+    code: &str,
+    message: impl AsRef<str>,
+    agent_action: &str,
+) -> String {
     format!(
-        "AUTOREMEDIABLE_VALIDATION_ERROR code={code} severity=transient auto_remediable=true audience=agent agent_action=\"{agent_action}\" user_note=\"Recoverable validation issue; the agent should take this action or report the concrete blocker.\"\n{message}"
+        "AUTOREMEDIABLE_VALIDATION_ERROR code={code} severity=transient auto_remediable=true audience=agent agent_action=\"{agent_action}\" user_note=\"Recoverable validation issue; the agent should take this action or report the concrete blocker.\"\n{message}",
+        message = message.as_ref()
     )
 }
 
@@ -3625,6 +3630,22 @@ fn validate_git_workspace_context(
 
     if is_isolated {
         pass("Running in isolated workspace (.decapod/workspaces/)", ctx);
+    } else if let Ok(status) = workspace::get_workspace_status(repo_root)
+        && status.git.in_worktree
+        && !status.git.is_main_repo
+    {
+        let path = status.git.worktree_path.as_deref().unwrap_or(repo_root);
+        fail(
+            &auto_remediable_validation_message(
+                "workspace_context_mismatch",
+                format!(
+                    "Git reports an isolated worktree at '{}' but it is not Decapod-owned under '.decapod/workspaces/'. The host worktree detector and validation context disagree about custody.",
+                    path.display()
+                ),
+                "Agent: run `decapod workspace status`; enter the Decapod-reported worktree or run `decapod workspace ensure`, then rerun validation.",
+            ),
+            ctx,
+        );
     } else {
         fail(
             "Not running in isolated git worktree - must use .decapod/workspaces/ to prevent disrupting the root repository",
@@ -4919,7 +4940,7 @@ fn validate_tooling_gate(
                         fail(
                             &auto_remediable_validation_message(
                                 "cargo_fmt_failed",
-                                &format!(
+                                format!(
                                     "Rust code formatting failed - run `cargo fmt --all`.\nstderr:\n{}",
                                     String::from_utf8_lossy(&output.stderr).trim()
                                 ),
@@ -4934,7 +4955,7 @@ fn validate_tooling_gate(
                     fail(
                         &auto_remediable_validation_message(
                             "cargo_fmt_execution_failed",
-                            &format!("Failed to run cargo fmt: {e}"),
+                            format!("Failed to run cargo fmt: {e}"),
                             "Agent: switch to a complete Rust toolchain, then retry validation.",
                         ),
                         ctx,
@@ -4953,7 +4974,7 @@ fn validate_tooling_gate(
                         fail(
                             &auto_remediable_validation_message(
                                 "cargo_clippy_failed",
-                                &format!(
+                                format!(
                                     "Rust linting failed - run `cargo clippy --all-targets --all-features`.\nstderr:\n{}",
                                     String::from_utf8_lossy(&output.stderr).trim()
                                 ),
@@ -4968,7 +4989,7 @@ fn validate_tooling_gate(
                     fail(
                         &auto_remediable_validation_message(
                             "cargo_clippy_execution_failed",
-                            &format!("Failed to run cargo clippy: {e}"),
+                            format!("Failed to run cargo clippy: {e}"),
                             "Agent: switch to a complete Rust toolchain, then retry validation.",
                         ),
                         ctx,
@@ -6230,6 +6251,36 @@ mod tests {
             "unexpected validation failures: {:?}",
             ctx.fails.lock().unwrap()
         );
+    }
+
+    #[test]
+    fn external_worktree_reports_context_mismatch_instead_of_generic_failure() {
+        let (_tmp, main_root, _decapod_path) = decapod_worktree_fixture();
+        let external_path = main_root
+            .parent()
+            .expect("fixture parent")
+            .join("external-worktree");
+        let output = std::process::Command::new("git")
+            .args([
+                "worktree",
+                "add",
+                "-b",
+                "external/agent",
+                external_path.to_str().unwrap(),
+            ])
+            .current_dir(&main_root)
+            .output()
+            .expect("external worktree should start");
+        assert!(output.status.success());
+
+        let ctx = ValidationContext::new();
+        validate_git_workspace_context(&ctx, &main_root, &external_path)
+            .expect("workspace context validation");
+        let failures = ctx.fails.lock().unwrap();
+        assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 1);
+        assert!(failures.iter().any(|failure| {
+            failure.contains("workspace_context_mismatch") && failure.contains("not Decapod-owned")
+        }));
     }
 
     #[test]
