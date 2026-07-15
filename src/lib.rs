@@ -3254,12 +3254,112 @@ struct HandshakeArtifact {
     schema_version: String,
     request_id: String,
     agent_id: String,
+    identity_assertions: Vec<IdentityAssertion>,
     repo_version: String,
     scope: String,
     proofs: Vec<String>,
     declared_docs: Vec<String>,
     doc_hashes: serde_json::Value,
     artifact_hash: String,
+}
+
+/// Evidence-bearing identity claims recorded by the local handshake.
+///
+/// These fields deliberately model what was claimed separately from what a
+/// verifier accepted. A local environment declaration is useful for
+/// correlation, but it is not provider, principal, or organization
+/// authentication without an external trust root.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+struct IdentityAssertion {
+    claim_kind: String,
+    subject_type: String,
+    asserted_value: String,
+    evidence_class: String,
+    authority: Option<String>,
+    verifier: Option<String>,
+    scope: String,
+    issued_at_epoch_secs: u64,
+    expires_at_epoch_secs: Option<u64>,
+    revocation: Option<String>,
+    verification_method: String,
+    verification_result: String,
+}
+
+fn build_identity_assertions(
+    agent_id: &str,
+    provider: Option<&str>,
+    scope: &str,
+    issued_at_epoch_secs: u64,
+) -> Vec<IdentityAssertion> {
+    let mut assertions = vec![IdentityAssertion {
+        claim_kind: "agent_id".to_string(),
+        subject_type: "agent".to_string(),
+        asserted_value: agent_id.to_string(),
+        evidence_class: "self-declared".to_string(),
+        authority: None,
+        verifier: None,
+        scope: scope.to_string(),
+        issued_at_epoch_secs,
+        expires_at_epoch_secs: None,
+        revocation: None,
+        verification_method: "environment declaration".to_string(),
+        verification_result: "unverified".to_string(),
+    }];
+
+    if let Some(provider) = provider.map(str::trim).filter(|value| !value.is_empty()) {
+        assertions.push(IdentityAssertion {
+            claim_kind: "agent_provider".to_string(),
+            subject_type: "model_provider".to_string(),
+            asserted_value: provider.to_string(),
+            evidence_class: "self-declared".to_string(),
+            authority: None,
+            verifier: None,
+            scope: scope.to_string(),
+            issued_at_epoch_secs,
+            expires_at_epoch_secs: None,
+            revocation: None,
+            verification_method: "environment declaration".to_string(),
+            verification_result: "unverified".to_string(),
+        });
+    }
+
+    assertions
+}
+
+#[cfg(test)]
+mod handshake_identity_tests {
+    use super::build_identity_assertions;
+
+    #[test]
+    fn records_agent_and_provider_as_separate_unverified_claims() {
+        let assertions =
+            build_identity_assertions("agent/codex", Some("example-provider"), "task-123", 42);
+
+        assert_eq!(assertions.len(), 2);
+        assert_eq!(assertions[0].claim_kind, "agent_id");
+        assert_eq!(assertions[0].subject_type, "agent");
+        assert_eq!(assertions[0].asserted_value, "agent/codex");
+        assert_eq!(assertions[1].claim_kind, "agent_provider");
+        assert_eq!(assertions[1].subject_type, "model_provider");
+        assert_eq!(assertions[1].asserted_value, "example-provider");
+
+        for assertion in assertions {
+            assert_eq!(assertion.evidence_class, "self-declared");
+            assert_eq!(assertion.verification_result, "unverified");
+            assert_eq!(assertion.scope, "task-123");
+            assert_eq!(assertion.issued_at_epoch_secs, 42);
+            assert!(assertion.authority.is_none());
+            assert!(assertion.verifier.is_none());
+        }
+    }
+
+    #[test]
+    fn omits_an_empty_provider_claim() {
+        let assertions = build_identity_assertions("agent/codex", Some("  "), "task-123", 42);
+
+        assert_eq!(assertions.len(), 1);
+        assert_eq!(assertions[0].claim_kind, "agent_id");
+    }
 }
 
 fn hash_bytes_hex(input: &[u8]) -> String {
@@ -3311,10 +3411,15 @@ fn build_handshake_artifact(
     }
 
     let request_id = crate::core::ulid::new_ulid();
+    let agent_id = current_agent_id();
+    let provider = std::env::var("DECAPOD_AGENT_PROVIDER").ok();
+    let identity_assertions =
+        build_identity_assertions(&agent_id, provider.as_deref(), scope, now_epoch_secs());
     let mut unsigned = serde_json::json!({
         "schema_version": "1.0.0",
         "request_id": request_id,
-        "agent_id": current_agent_id(),
+        "agent_id": agent_id,
+        "identity_assertions": identity_assertions,
         "repo_version": migration::DECAPOD_VERSION,
         "scope": scope,
         "proofs": proofs,
