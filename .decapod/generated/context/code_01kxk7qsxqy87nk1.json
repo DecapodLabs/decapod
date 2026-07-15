@@ -65,10 +65,10 @@
     "policy_hash": "4be692d786ecc3514b98ed3228e133501360531cdcb4ef77fe3b3a111c9e38cb",
     "policy_version": "jit-capsule-policy-v1",
     "policy_path": ".decapod/generated/policy/context_capsule_policy.json",
-    "repo_revision": "ee5ea30e9978262d0f346b3bbb67283e095fafc7"
+    "repo_revision": "fabb8c86d4327b530ef6530913775fdc5d2356bc"
   },
-  "capsule_hash": "8fa91c32b45b7b5ad5f51133e7e44afb564b84b339c2e42cbf1365cb033ac00e",
-  "repo_signal_fingerprint": "d3408b97eb3d2bfe93e519bf7ff2b572367ddf05d742d7b742cc08bd8bcf1135",
+  "capsule_hash": "2eee8441c7e17f03d6de0ac3194cf8da1cdd1e847bc056e3443c1244abbb461e",
+  "repo_signal_fingerprint": "3ae5b9e9e77b5a3f29469f2257f4008766aa165ca3488b6942cde7ba0e9b1d2f",
   "config_input_hash": "6e958933af74996864b23def11bd21fe19c5be73f42bf09f382267d45ad5af65",
-  "spec_input_hash": "0ba33f440a1a3f2a5056cb74e20cc69ee1cf02b9a05cae4c87489f8016b4fdf9"
+  "spec_input_hash": "34e3eafff21bffcf638f7e1fd092b82c13e573e2727546ce11cecde8783dc6ff"
 }

@@ -165,6 +165,7 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
         ctx.architecture_direction = existing_cfg.repo.architecture_direction.clone();
         ctx.product_type = existing_cfg.repo.product_type.clone();
         ctx.done_criteria = existing_cfg.repo.done_criteria.clone();
+        ctx.base_branch = existing_cfg.repo.base_branch.clone();
         ctx.primary_languages = existing_cfg.repo.primary_languages.clone();
         ctx.detected_surfaces = existing_cfg.repo.detected_surfaces.clone();
         ctx.capabilities = existing_cfg.repo.capabilities.clone();
@@ -176,6 +177,9 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
             .file_name()
             .and_then(|s| s.to_str())
             .map(|s| s.to_string());
+    }
+    if ctx.base_branch.is_none() {
+        ctx.base_branch = workspace::detect_base_branch(target_dir);
     }
 
     if target_dir.join("Cargo.toml").exists() {
@@ -1982,10 +1986,15 @@ pub fn run() -> Result<(), error::DecapodError> {
             } else {
                 resolve_existing_init_dir(&current_dir)?
             };
+            let configured_base_branch = load_project_config_if_present(&init_target)?
+                .and_then(|config| config.repo.base_branch);
             let mut init_with = init_with;
             init_with.dir = Some(init_target.clone());
             init_with.project_dir = None;
             let mut repo_ctx = infer_repo_context(&init_target)?;
+            if configured_base_branch.is_some() {
+                repo_ctx.base_branch = configured_base_branch;
+            }
             apply_repo_context_env_overrides(&mut repo_ctx);
             apply_repo_context_cli_overrides(&mut repo_ctx, &init_with);
             if repo_ctx.mode == crate::cli::BackendType::Cloud
@@ -3281,12 +3290,112 @@ struct HandshakeArtifact {
     schema_version: String,
     request_id: String,
     agent_id: String,
+    identity_assertions: Vec<IdentityAssertion>,
     repo_version: String,
     scope: String,
     proofs: Vec<String>,
     declared_docs: Vec<String>,
     doc_hashes: serde_json::Value,
     artifact_hash: String,
+}
+
+/// Evidence-bearing identity claims recorded by the local handshake.
+///
+/// These fields deliberately model what was claimed separately from what a
+/// verifier accepted. A local environment declaration is useful for
+/// correlation, but it is not provider, principal, or organization
+/// authentication without an external trust root.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+struct IdentityAssertion {
+    claim_kind: String,
+    subject_type: String,
+    asserted_value: String,
+    evidence_class: String,
+    authority: Option<String>,
+    verifier: Option<String>,
+    scope: String,
+    issued_at_epoch_secs: u64,
+    expires_at_epoch_secs: Option<u64>,
+    revocation: Option<String>,
+    verification_method: String,
+    verification_result: String,
+}
+
+fn build_identity_assertions(
+    agent_id: &str,
+    provider: Option<&str>,
+    scope: &str,
+    issued_at_epoch_secs: u64,
+) -> Vec<IdentityAssertion> {
+    let mut assertions = vec![IdentityAssertion {
+        claim_kind: "agent_id".to_string(),
+        subject_type: "agent".to_string(),
+        asserted_value: agent_id.to_string(),
+        evidence_class: "self-declared".to_string(),
+        authority: None,
+        verifier: None,
+        scope: scope.to_string(),
+        issued_at_epoch_secs,
+        expires_at_epoch_secs: None,
+        revocation: None,
+        verification_method: "environment declaration".to_string(),
+        verification_result: "unverified".to_string(),
+    }];
+
+    if let Some(provider) = provider.map(str::trim).filter(|value| !value.is_empty()) {
+        assertions.push(IdentityAssertion {
+            claim_kind: "agent_provider".to_string(),
+            subject_type: "model_provider".to_string(),
+            asserted_value: provider.to_string(),
+            evidence_class: "self-declared".to_string(),
+            authority: None,
+            verifier: None,
+            scope: scope.to_string(),
+            issued_at_epoch_secs,
+            expires_at_epoch_secs: None,
+            revocation: None,
+            verification_method: "environment declaration".to_string(),
+            verification_result: "unverified".to_string(),
+        });
+    }
+
+    assertions
+}
+
+#[cfg(test)]
+mod handshake_identity_tests {
+    use super::build_identity_assertions;
+
+    #[test]
+    fn records_agent_and_provider_as_separate_unverified_claims() {
+        let assertions =
+            build_identity_assertions("agent/codex", Some("example-provider"), "task-123", 42);
+
+        assert_eq!(assertions.len(), 2);
+        assert_eq!(assertions[0].claim_kind, "agent_id");
+        assert_eq!(assertions[0].subject_type, "agent");
+        assert_eq!(assertions[0].asserted_value, "agent/codex");
+        assert_eq!(assertions[1].claim_kind, "agent_provider");
+        assert_eq!(assertions[1].subject_type, "model_provider");
+        assert_eq!(assertions[1].asserted_value, "example-provider");
+
+        for assertion in assertions {
+            assert_eq!(assertion.evidence_class, "self-declared");
+            assert_eq!(assertion.verification_result, "unverified");
+            assert_eq!(assertion.scope, "task-123");
+            assert_eq!(assertion.issued_at_epoch_secs, 42);
+            assert!(assertion.authority.is_none());
+            assert!(assertion.verifier.is_none());
+        }
+    }
+
+    #[test]
+    fn omits_an_empty_provider_claim() {
+        let assertions = build_identity_assertions("agent/codex", Some("  "), "task-123", 42);
+
+        assert_eq!(assertions.len(), 1);
+        assert_eq!(assertions[0].claim_kind, "agent_id");
+    }
 }
 
 fn hash_bytes_hex(input: &[u8]) -> String {
@@ -3338,10 +3447,15 @@ fn build_handshake_artifact(
     }
 
     let request_id = crate::core::ulid::new_ulid();
+    let agent_id = current_agent_id();
+    let provider = std::env::var("DECAPOD_AGENT_PROVIDER").ok();
+    let identity_assertions =
+        build_identity_assertions(&agent_id, provider.as_deref(), scope, now_epoch_secs());
     let mut unsigned = serde_json::json!({
         "schema_version": "1.0.0",
         "request_id": request_id,
-        "agent_id": current_agent_id(),
+        "agent_id": agent_id,
+        "identity_assertions": identity_assertions,
         "repo_version": migration::DECAPOD_VERSION,
         "scope": scope,
         "proofs": proofs,
@@ -4704,26 +4818,6 @@ fn attempt_validation_failure_heal(
         && let Some(action) = heal_container_runtime_override(project_root)?
     {
         actions.push(action);
-    }
-
-    if report
-        .failures
-        .iter()
-        .any(|msg| msg.contains("declared_capabilities="))
-    {
-        if let Ok(config) = crate::cli::DecapodProjectConfig::load(project_root) {
-            let caps = crate::core::capabilities::CapabilityRegistry::canonicalize_capabilities(
-                &config.repo.capabilities,
-            );
-            if crate::core::project_specs::refresh_specs_from_codebase(project_root, &caps).is_ok()
-            {
-                actions.push(ValidationHealAction {
-                    action: "specs.refresh".to_string(),
-                    outcome: "repaired".to_string(),
-                    detail: "Refreshed specs manifest to align declared capabilities".to_string(),
-                });
-            }
-        }
     }
 
     Ok(actions)

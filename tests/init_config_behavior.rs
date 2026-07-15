@@ -10,6 +10,66 @@ fn run_decapod(dir: &std::path::Path, args: &[&str]) -> std::process::Output {
         .expect("run decapod")
 }
 
+fn run_git(dir: &std::path::Path, args: &[&str]) {
+    let output = Command::new("git")
+        .args(args)
+        .current_dir(dir)
+        .output()
+        .expect("run git");
+    assert!(
+        output.status.success(),
+        "git {:?} failed: {}",
+        args,
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
+fn init_persists_remote_default_base_branch() {
+    let tmp = tempdir().expect("tempdir");
+    run_git(tmp.path(), &["init", "-q"]);
+    run_git(tmp.path(), &["config", "user.email", "test@test.com"]);
+    run_git(tmp.path(), &["config", "user.name", "Test"]);
+    fs::write(tmp.path().join("README.md"), "# project\n").expect("write readme");
+    run_git(tmp.path(), &["add", "README.md"]);
+    run_git(tmp.path(), &["commit", "-m", "initial"]);
+    run_git(tmp.path(), &["branch", "-M", "main"]);
+    run_git(
+        tmp.path(),
+        &[
+            "remote",
+            "add",
+            "origin",
+            "git@github.com:example/project.git",
+        ],
+    );
+    run_git(
+        tmp.path(),
+        &["update-ref", "refs/remotes/origin/main", "HEAD"],
+    );
+    run_git(
+        tmp.path(),
+        &[
+            "symbolic-ref",
+            "refs/remotes/origin/HEAD",
+            "refs/remotes/origin/main",
+        ],
+    );
+
+    let out = run_decapod(tmp.path(), &["init", "with", "--force"]);
+    assert!(
+        out.status.success(),
+        "decapod init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let config =
+        fs::read_to_string(tmp.path().join(".decapod/config.toml")).expect("read config.toml");
+    assert!(
+        config.contains("base_branch = \"main\""),
+        "init should persist the remote default branch: {config}"
+    );
+}
+
 #[test]
 fn init_with_backend_cloud_saves_to_config() {
     let tmp = tempdir().expect("tempdir");
