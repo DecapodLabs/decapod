@@ -375,6 +375,9 @@ pub struct RepoContext {
     pub product_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub done_criteria: Option<String>,
+    /// Repository base branch used for isolated workspaces and publication.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_branch: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub primary_languages: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
