@@ -1049,6 +1049,105 @@ pub struct PublishResult {
     pub pr_url: Option<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct PublishRemote {
+    name: String,
+    url: String,
+}
+
+fn is_network_remote_url(url: &str) -> bool {
+    let trimmed = url.trim();
+    if trimmed.is_empty()
+        || trimmed.starts_with('/')
+        || trimmed.starts_with("./")
+        || trimmed.starts_with("../")
+        || trimmed.starts_with("file://")
+    {
+        return false;
+    }
+
+    trimmed.contains("://") || trimmed.starts_with("git@")
+}
+
+fn github_repo_slug(url: &str) -> Option<String> {
+    let trimmed = url.trim().trim_end_matches('/').trim_end_matches(".git");
+    let path = if let Some(path) = trimmed.strip_prefix("git@github.com:") {
+        path
+    } else if let Some(path) = trimmed.strip_prefix("https://github.com/") {
+        path
+    } else if let Some(path) = trimmed.strip_prefix("http://github.com/") {
+        path
+    } else if let Some(path) = trimmed.strip_prefix("ssh://git@github.com/") {
+        path
+    } else {
+        return None;
+    };
+
+    let mut parts = path.split('/');
+    let owner = parts.next()?.trim();
+    let repo = parts.next()?.trim();
+    if owner.is_empty() || repo.is_empty() || parts.next().is_some() {
+        return None;
+    }
+    Some(format!("{owner}/{repo}"))
+}
+
+fn resolve_publish_remote(repo_root: &Path) -> Result<PublishRemote, DecapodError> {
+    let dir = repo_root.to_str().unwrap_or(".");
+    let remotes = Command::new("git")
+        .args(["-C", dir, "remote"])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if !remotes.status.success() {
+        return Err(DecapodError::ValidationError(format!(
+            "Cannot inspect git remotes: {}",
+            String::from_utf8_lossy(&remotes.stderr).trim()
+        )));
+    }
+
+    let remote_names = String::from_utf8_lossy(&remotes.stdout);
+    let names: Vec<&str> = remote_names
+        .lines()
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .collect();
+
+    let mut candidates = Vec::new();
+    for name in names {
+        let mut remote = Command::new("git")
+            .args(["-C", dir, "remote", "get-url", "--push", name])
+            .output()
+            .map_err(DecapodError::IoError)?;
+        if !remote.status.success() {
+            remote = Command::new("git")
+                .args(["-C", dir, "remote", "get-url", name])
+                .output()
+                .map_err(DecapodError::IoError)?;
+        }
+        if !remote.status.success() {
+            continue;
+        }
+        let url = String::from_utf8_lossy(&remote.stdout).trim().to_string();
+        if is_network_remote_url(&url) {
+            candidates.push(PublishRemote {
+                name: name.to_string(),
+                url,
+            });
+        }
+    }
+
+    candidates
+        .iter()
+        .find(|remote| remote.name == "origin")
+        .cloned()
+        .or_else(|| candidates.into_iter().next())
+        .ok_or_else(|| {
+            DecapodError::ValidationError(
+                "Cannot publish: no network-capable git remote is configured. The workspace may inherit a local-clone origin; add the upstream GitHub remote before retrying, for example: git remote add upstream git@github.com:OWNER/REPO.git. No commit was pushed.".to_string(),
+            )
+        })
+}
+
 /// Publish workspace changes: commit, push, and optionally create a PR
 pub fn publish_workspace(
     repo_root: &Path,
@@ -1082,6 +1181,11 @@ pub fn publish_workspace(
     }
     verify_workunit_gate_for_publish(repo_root, &status.git.current_branch)?;
     eval::verify_eval_gate_for_publish(&repo_root.join(".decapod").join("data"))?;
+
+    // Resolve the actual network remote before committing. Decapod-created
+    // worktrees can inherit a local-clone origin, which must never be
+    // treated as publication to the upstream GitHub repository.
+    let publish_remote = resolve_publish_remote(repo_root)?;
 
     let dir = repo_root.to_str().unwrap_or(".");
 
@@ -1125,14 +1229,14 @@ pub fn publish_workspace(
         .trim()
         .to_string();
 
-    // 3. Push branch to origin
+    // 3. Push branch to the selected network remote.
     let push_output = Command::new("git")
         .args([
             "-C",
             dir,
             "push",
             "-u",
-            "origin",
+            &publish_remote.name,
             &status.git.current_branch,
         ])
         .output()
@@ -1144,14 +1248,7 @@ pub fn publish_workspace(
         )));
     }
 
-    // Get remote URL
-    let remote_output = Command::new("git")
-        .args(["-C", dir, "remote", "get-url", "origin"])
-        .output()
-        .map_err(DecapodError::IoError)?;
-    let remote_url = String::from_utf8_lossy(&remote_output.stdout)
-        .trim()
-        .to_string();
+    let remote_url = publish_remote.url.clone();
 
     // 4. If gh CLI is available, create a PR
     let pr_url = if Command::new("gh")
@@ -1171,6 +1268,11 @@ pub fn publish_workspace(
             "--head",
             &status.git.current_branch,
         ];
+        let repo_slug = github_repo_slug(&publish_remote.url);
+        if let Some(slug) = repo_slug.as_deref() {
+            pr_args.push("--repo");
+            pr_args.push(slug);
+        }
         let desc;
         if let Some(ref d) = description {
             desc = d.clone();
@@ -1544,6 +1646,21 @@ pub fn prune_workspaces(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
+
+    fn git(dir: &Path, args: &[&str]) {
+        let output = Command::new("git")
+            .args(args)
+            .current_dir(dir)
+            .output()
+            .expect("git command should start");
+        assert!(
+            output.status.success(),
+            "git {:?} failed: {}",
+            args,
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
 
     #[test]
     fn test_extract_task_ids_from_branch() {
@@ -1575,5 +1692,61 @@ mod tests {
             extract_task_ids_from_branch("agent/unknown/some-feature-branch"),
             Vec::<String>::new()
         );
+    }
+
+    #[test]
+    fn test_resolve_publish_remote_skips_local_clone_origin() {
+        let tmp = tempdir().expect("tempdir");
+        git(tmp.path(), &["init", "-q"]);
+        git(
+            tmp.path(),
+            &["remote", "add", "origin", "/tmp/decapod-root-clone"],
+        );
+        git(
+            tmp.path(),
+            &[
+                "remote",
+                "add",
+                "upstream",
+                "git@github.com:DecapodLabs/decapod.git",
+            ],
+        );
+
+        let remote = resolve_publish_remote(tmp.path()).expect("network remote");
+        assert_eq!(
+            remote,
+            PublishRemote {
+                name: "upstream".to_string(),
+                url: "git@github.com:DecapodLabs/decapod.git".to_string(),
+            }
+        );
+    }
+
+    #[test]
+    fn test_resolve_publish_remote_fails_closed_without_network_remote() {
+        let tmp = tempdir().expect("tempdir");
+        git(tmp.path(), &["init", "-q"]);
+        git(
+            tmp.path(),
+            &["remote", "add", "origin", "/tmp/decapod-root-clone"],
+        );
+
+        let error = resolve_publish_remote(tmp.path()).expect_err("local remote must not publish");
+        let message = error.to_string();
+        assert!(message.contains("no network-capable git remote"));
+        assert!(message.contains("No commit was pushed"));
+    }
+
+    #[test]
+    fn test_github_repo_slug_supports_common_remote_forms() {
+        assert_eq!(
+            github_repo_slug("git@github.com:DecapodLabs/decapod.git"),
+            Some("DecapodLabs/decapod".to_string())
+        );
+        assert_eq!(
+            github_repo_slug("https://github.com/DecapodLabs/decapod.git"),
+            Some("DecapodLabs/decapod".to_string())
+        );
+        assert_eq!(github_repo_slug("/tmp/decapod-root-clone"), None);
     }
 }
