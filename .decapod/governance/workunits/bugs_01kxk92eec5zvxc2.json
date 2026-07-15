@@ -18,7 +18,7 @@
     {
       "gate": "state_commit",
       "status": "pass",
-      "artifact_ref": "1652010"
+      "artifact_ref": "c59c1c0"
     },
     {
       "gate": "test:cargo-test-release-workflow-policy",
