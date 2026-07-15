@@ -218,7 +218,7 @@ cargo vet             # Supply-chain auditing (manual)
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7354a225b9c74d23c57b625a53ff9f4b5f0679474155f5a002c0f95ce5b45f35`
+- Repository signal fingerprint: `3b6e857461916ca64233e814547602329c46dae403ffa58b14a379aac4dbf4a1`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (86 files), `tests/` (3 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

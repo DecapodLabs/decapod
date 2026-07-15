@@ -167,6 +167,9 @@ pub(crate) struct InitGroupCli {
     /// Seed detected surfaces (repeatable and/or comma-separated).
     #[clap(long = "surface", value_delimiter = ',')]
     pub detected_surfaces: Vec<String>,
+    /// Seed declared capabilities (repeatable and/or comma-separated).
+    #[clap(long = "declared-capability", alias = "capability", value_delimiter = ',')]
+    pub declared_capabilities: Vec<String>,
     /// Enable container workspaces (enabled by default).
     ///
     /// WARNING: Disabling container workspaces is only safe for single-agent workflows.
@@ -265,6 +268,9 @@ pub(crate) struct InitWithCli {
     /// Seed detected surfaces (repeatable and/or comma-separated).
     #[clap(long = "surface", value_delimiter = ',')]
     pub detected_surfaces: Vec<String>,
+    /// Seed declared capabilities (repeatable and/or comma-separated).
+    #[clap(long = "declared-capability", alias = "capability", value_delimiter = ',')]
+    pub declared_capabilities: Vec<String>,
     /// Enable container workspaces (enabled by default).
     ///
     /// WARNING: Disabling container workspaces is only safe for single-agent workflows.
@@ -375,9 +381,6 @@ pub struct RepoContext {
     pub product_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub done_criteria: Option<String>,
-    /// Repository base branch used for isolated workspaces and publication.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub base_branch: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub primary_languages: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
