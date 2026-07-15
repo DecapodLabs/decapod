@@ -1,0 +1,35 @@
+{
+  "task_id": "bugs_01kxk92eec5zvxc2",
+  "intent_ref": "github:DecapodLabs/decapod#886",
+  "spec_refs": [
+    ".decapod/generated/specs/VALIDATION.md",
+    ".github/workflows/release.yml"
+  ],
+  "state_refs": [
+    ".decapod/generated/context/bugs_01kxk92eec5zvxc2.json",
+    "state://release-workflow/ghcr-public"
+  ],
+  "proof_plan": [
+    "state_commit",
+    "test:cargo-test-release-workflow-policy",
+    "validate_passes"
+  ],
+  "proof_results": [
+    {
+      "gate": "state_commit",
+      "status": "pass",
+      "artifact_ref": "b2a9bea"
+    },
+    {
+      "gate": "test:cargo-test-release-workflow-policy",
+      "status": "pass",
+      "artifact_ref": "tests/release_workflow_policy.rs"
+    },
+    {
+      "gate": "validate_passes",
+      "status": "pass",
+      "artifact_ref": "DECAPOD_CONTAINER=1 decapod validate --format json (198 passed, 0 failed)"
+    }
+  ],
+  "status": "VERIFIED"
+}

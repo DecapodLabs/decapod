@@ -82,6 +82,32 @@ fn release_workflow_publishes_decapod_ghcr_image() {
 }
 
 #[test]
+fn release_workflow_verifies_anonymous_ghcr_pull() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let workflow = fs::read_to_string(root.join(".github/workflows/release.yml"))
+        .expect("read release workflow");
+
+    assert!(
+        workflow.contains("name: Verify anonymous GHCR pull"),
+        "release workflow should verify the published image without caller credentials"
+    );
+    assert!(
+        workflow.contains(
+            "https://ghcr.io/token?service=ghcr.io&scope=repository:decapodlabs/decapod:pull"
+        ),
+        "release workflow should request an anonymous pull token"
+    );
+    assert!(
+        workflow.contains("Authorization: Bearer $token"),
+        "release workflow should use the anonymous registry token for the manifest request"
+    );
+    assert!(
+        workflow.contains("https://ghcr.io/v2/decapodlabs/decapod/manifests/$IMAGE_TAG"),
+        "release workflow should fetch the exact variant tag that it just published"
+    );
+}
+
+#[test]
 fn release_workflow_can_resume_existing_github_release() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let workflow = fs::read_to_string(root.join(".github/workflows/release.yml"))

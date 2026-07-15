@@ -1766,7 +1766,6 @@ pub fn scaffold_project_entrypoints(
             specs_files.push((spec.path, content));
         }
 
-        let existing_manifest = read_specs_manifest(&opts.target_dir)?;
         for (rel_path, mut content) in specs_files {
             // Epistemic Custody Preservation:
             // If we are regenerating INTENT.md and it already exists, try to preserve the Epistemic Custody Fields section.
@@ -1778,23 +1777,18 @@ pub fn scaffold_project_entrypoints(
             let dest = opts.target_dir.join(rel_path);
             let existing_content = fs::read_to_string(&dest).ok();
 
-            let mut is_customized = false;
             let mut final_content_hash = hash_text(&content);
-            if let Some(ref existing) = existing_manifest
-                && let Some(entry) = existing.files.iter().find(|f| f.path == rel_path)
-                && let Some(existing_str) = existing_content
-            {
-                let disk_hash = hash_text(&existing_str);
-                if disk_hash != entry.template_hash {
-                    is_customized = true;
-                    if !opts.force {
-                        final_content_hash = disk_hash;
-                    }
+            if let Some(existing_str) = existing_content {
+                // Living specs are project-owned contracts. `--force` may repair
+                // missing scaffold files, but must not replace authored content
+                // with a fresh scaffold; use the specs refresh path for a
+                // deliberate re-evaluation.
+                final_content_hash = hash_text(&existing_str);
+                if final_content_hash == hash_text(&content) {
+                    unchanged += 1;
+                } else {
+                    preserved += 1;
                 }
-            }
-
-            if is_customized && !opts.force {
-                preserved += 1;
             } else {
                 match write_file(opts, rel_path, &content)? {
                     FileAction::Created => created += 1,
