@@ -4940,7 +4940,7 @@ fn validate_tooling_gate(
                         fail(
                             &auto_remediable_validation_message(
                                 "cargo_fmt_failed",
-                                &format!(
+                                format!(
                                     "Rust code formatting failed - run `cargo fmt --all`.\nstderr:\n{}",
                                     String::from_utf8_lossy(&output.stderr).trim()
                                 ),
@@ -4955,7 +4955,7 @@ fn validate_tooling_gate(
                     fail(
                         &auto_remediable_validation_message(
                             "cargo_fmt_execution_failed",
-                            &format!("Failed to run cargo fmt: {e}"),
+                            format!("Failed to run cargo fmt: {e}"),
                             "Agent: switch to a complete Rust toolchain, then retry validation.",
                         ),
                         ctx,
@@ -4974,7 +4974,7 @@ fn validate_tooling_gate(
                         fail(
                             &auto_remediable_validation_message(
                                 "cargo_clippy_failed",
-                                &format!(
+                                format!(
                                     "Rust linting failed - run `cargo clippy --all-targets --all-features`.\nstderr:\n{}",
                                     String::from_utf8_lossy(&output.stderr).trim()
                                 ),
@@ -4989,7 +4989,7 @@ fn validate_tooling_gate(
                     fail(
                         &auto_remediable_validation_message(
                             "cargo_clippy_execution_failed",
-                            &format!("Failed to run cargo clippy: {e}"),
+                            format!("Failed to run cargo clippy: {e}"),
                             "Agent: switch to a complete Rust toolchain, then retry validation.",
                         ),
                         ctx,

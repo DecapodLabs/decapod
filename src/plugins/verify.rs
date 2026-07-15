@@ -1314,10 +1314,10 @@ pub fn run_diagnose_cli(
                     task["proof"]["status"].as_str().unwrap_or("unknown"),
                     task["next_command"].as_str().unwrap_or("unknown")
                 );
-                if let Some(reason) = task["proof"]["notes"].as_str() {
-                    if !reason.is_empty() {
-                        println!("  proof note: {reason}");
-                    }
+                if let Some(reason) = task["proof"]["notes"].as_str()
+                    && !reason.is_empty()
+                {
+                    println!("  proof note: {reason}");
                 }
             }
         }
