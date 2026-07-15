@@ -354,6 +354,14 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
         true
     };
 
+    if pr {
+        workspace::check_merge_conflicts_for_branch(
+            &repo,
+            &workspace.base_branch,
+            &workspace.branch,
+        )?;
+    }
+
     if push {
         push_branch_to_origin(&repo, &workspace.branch)?;
     }
@@ -423,17 +431,7 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
 }
 
 fn resolve_base_branch(repo_root: &Path, explicit: Option<&str>) -> String {
-    explicit
-        .filter(|branch| !branch.trim().is_empty())
-        .map(str::to_string)
-        .or_else(|| {
-            crate::cli::DecapodProjectConfig::load(repo_root)
-                .ok()
-                .and_then(|config| config.repo.base_branch)
-                .filter(|branch| !branch.trim().is_empty())
-        })
-        .or_else(|| workspace::detect_base_branch(repo_root))
-        .unwrap_or_else(|| "master".to_string())
+    workspace::resolve_base_branch(repo_root, explicit)
 }
 
 fn execute_container_with_timeout(

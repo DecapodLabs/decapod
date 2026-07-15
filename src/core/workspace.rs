@@ -73,6 +73,9 @@ pub struct WorkspaceConfig {
     pub use_container: bool,
     /// Base image for container (if use_container is true)
     pub base_image: Option<String>,
+    /// Repository base branch used when creating the worktree.
+    #[serde(default)]
+    pub base_branch: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -531,6 +534,7 @@ pub fn ensure_workspace(
             branch: Some(branch),
             use_container: cfg.use_container,
             base_image: cfg.base_image,
+            base_branch: cfg.base_branch,
         }
     } else {
         let ts = std::time::SystemTime::now()
@@ -546,6 +550,7 @@ pub fn ensure_workspace(
             )),
             use_container: false,
             base_image: None,
+            base_branch: None,
         }
     };
     let branch = config.branch.as_deref().ok_or_else(|| {
@@ -556,7 +561,12 @@ pub fn ensure_workspace(
     let worktree_path = if status.git.in_worktree {
         repo_root.to_path_buf()
     } else {
-        create_worktree(repo_root, branch, agent_id, &todo_scope)?
+        let base_branch = config
+            .base_branch
+            .as_deref()
+            .map(str::to_string)
+            .unwrap_or_else(|| resolve_base_branch(&main_repo, None));
+        create_worktree(repo_root, branch, agent_id, &todo_scope, &base_branch)?
     };
 
     // 2. Ensure container (if requested)
@@ -599,6 +609,7 @@ fn create_worktree(
     branch: &str,
     agent_id: &str,
     todo_scope: &str,
+    base_branch: &str,
 ) -> Result<PathBuf, DecapodError> {
     let main_repo = get_main_repo_root(repo_root)?;
     let workspaces_dir = main_repo.join(".decapod").join("workspaces");
@@ -616,17 +627,23 @@ fn create_worktree(
         return Ok(worktree_path);
     }
 
-    // git worktree add <path> -b <branch>
+    let start_point = base_ref_for_branch(&main_repo, base_branch);
+
+    // git worktree add <path> -b <branch> <base-ref>
+    let mut args = vec![
+        "-C".to_string(),
+        main_repo.to_string_lossy().to_string(),
+        "worktree".to_string(),
+        "add".to_string(),
+        "-b".to_string(),
+        branch.to_string(),
+        worktree_path.to_string_lossy().to_string(),
+    ];
+    if let Some(start_point) = &start_point {
+        args.push(start_point.clone());
+    }
     let output = Command::new("git")
-        .args([
-            "-C",
-            main_repo.to_str().unwrap_or("."),
-            "worktree",
-            "add",
-            "-b",
-            branch,
-            worktree_path.to_str().unwrap_or("."),
-        ])
+        .args(&args)
         .output()
         .map_err(DecapodError::IoError)?;
 
@@ -822,6 +839,121 @@ fn is_branch_protected(branch: &str) -> bool {
         }
     }
     false
+}
+
+/// Resolve the repository base branch used by workspace and publication paths.
+pub fn resolve_base_branch(repo_root: &Path, explicit: Option<&str>) -> String {
+    explicit
+        .filter(|branch| !branch.trim().is_empty())
+        .map(str::to_string)
+        .or_else(|| {
+            crate::cli::DecapodProjectConfig::load(repo_root)
+                .ok()
+                .and_then(|config| config.repo.base_branch)
+                .filter(|branch| !branch.trim().is_empty())
+        })
+        .or_else(|| detect_base_branch(repo_root))
+        .unwrap_or_else(|| "master".to_string())
+}
+
+fn base_ref_for_branch(repo_root: &Path, branch: &str) -> Option<String> {
+    let remote_ref = format!("refs/remotes/origin/{branch}");
+    if git_ref_exists(repo_root, &remote_ref) {
+        return Some(format!("origin/{branch}"));
+    }
+    let local_ref = format!("refs/heads/{branch}");
+    git_ref_exists(repo_root, &local_ref).then(|| branch.to_string())
+}
+
+fn git_ref_exists(repo_root: &Path, git_ref: &str) -> bool {
+    Command::new("git")
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "show-ref",
+            "--verify",
+            "--quiet",
+            git_ref,
+        ])
+        .status()
+        .map(|status| status.success())
+        .unwrap_or(false)
+}
+
+/// Check whether the current branch can merge the selected base without conflicts.
+///
+/// This is read-only: `git merge-tree` computes the result without changing the
+/// worktree or index. A missing local base ref fails closed with setup guidance.
+pub fn check_merge_conflicts(repo_root: &Path, base_branch: &str) -> Result<(), DecapodError> {
+    let head_branch = current_branch(repo_root)?;
+    check_merge_conflicts_for_branch(repo_root, base_branch, &head_branch)
+}
+
+/// Check a named local branch against the configured base without checking it out.
+pub fn check_merge_conflicts_for_branch(
+    repo_root: &Path,
+    base_branch: &str,
+    head_branch: &str,
+) -> Result<(), DecapodError> {
+    let base_ref = base_ref_for_branch(repo_root, base_branch).ok_or_else(|| {
+        DecapodError::ValidationError(format!(
+            "AUTOREMEDIABLE_VALIDATION_ERROR code=PR_BASE_REF_MISSING severity=transient auto_remediable=true audience=agent agent_action=\"fetch the configured base branch, then rerun publication\" user_note=\"The configured PR base is not available in local Git metadata.\"\nCannot preflight merge conflicts: base branch '{base_branch}' is missing locally. Fetch origin/{base_branch} and retry."
+        ))
+    })?;
+    let output = Command::new("git")
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "merge-tree",
+            "--write-tree",
+            &base_ref,
+            head_branch,
+        ])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if output.status.success() {
+        return Ok(());
+    }
+
+    let details = format!(
+        "{}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let details = details
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .take(20)
+        .collect::<Vec<_>>()
+        .join("\\n");
+    Err(DecapodError::ValidationError(format!(
+        "AUTOREMEDIABLE_VALIDATION_ERROR code=PR_MERGE_CONFLICT severity=blocking auto_remediable=true audience=agent agent_action=\"rebase or merge {base_branch} into the feature branch, resolve conflicts, rerun validation, and retry publication\" user_note=\"The feature branch cannot be safely proposed against the configured base branch.\"\nMerge conflict preflight failed for '{head_branch}' against '{base_ref}'.\n{details}"
+    )))
+}
+
+fn current_branch(repo_root: &Path) -> Result<String, DecapodError> {
+    let output = Command::new("git")
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "branch",
+            "--show-current",
+        ])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(DecapodError::ValidationError(format!(
+            "failed determining current branch: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+    let branch = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if branch.is_empty() {
+        return Err(DecapodError::ValidationError(
+            "Cannot preflight merge conflicts from a detached HEAD".to_string(),
+        ));
+    }
+    Ok(branch)
 }
 
 /// Detect the repository's base branch from local Git metadata.
@@ -1235,6 +1367,7 @@ pub fn publish_workspace(
     // worktrees can inherit a local-clone origin, which must never be
     // treated as publication to the upstream GitHub repository.
     let publish_remote = resolve_publish_remote(repo_root)?;
+    let base_branch = resolve_base_branch(repo_root, None);
 
     let dir = repo_root.to_str().unwrap_or(".");
 
@@ -1278,6 +1411,10 @@ pub fn publish_workspace(
         .trim()
         .to_string();
 
+    // Preflight against the same base that publication will use. This runs
+    // before any push or PR creation and never mutates the worktree.
+    check_merge_conflicts(repo_root, &base_branch)?;
+
     // 3. Push branch to the selected network remote.
     let push_output = Command::new("git")
         .args([
@@ -1316,6 +1453,8 @@ pub fn publish_workspace(
             pr_title,
             "--head",
             &status.git.current_branch,
+            "--base",
+            &base_branch,
         ];
         let repo_slug = github_repo_slug(&publish_remote.url);
         if let Some(slug) = repo_slug.as_deref() {
@@ -1776,6 +1915,71 @@ mod tests {
         );
 
         assert_eq!(detect_base_branch(tmp.path()).as_deref(), Some("main"));
+    }
+
+    #[test]
+    fn merge_preflight_detects_conflicts_against_configured_base() {
+        let tmp = tempdir().expect("tempdir");
+        git(tmp.path(), &["init", "-q"]);
+        git(tmp.path(), &["config", "user.email", "test@test.com"]);
+        git(tmp.path(), &["config", "user.name", "Test"]);
+        std::fs::write(tmp.path().join("file.txt"), "base\n").expect("write base");
+        git(tmp.path(), &["add", "file.txt"]);
+        git(tmp.path(), &["commit", "-m", "initial"]);
+        git(tmp.path(), &["branch", "-M", "main"]);
+        git(tmp.path(), &["checkout", "-b", "feature"]);
+        std::fs::write(tmp.path().join("file.txt"), "feature\n").expect("write feature");
+        git(tmp.path(), &["commit", "-am", "feature"]);
+        git(tmp.path(), &["checkout", "main"]);
+        std::fs::write(tmp.path().join("file.txt"), "base-update\n").expect("write base update");
+        git(tmp.path(), &["commit", "-am", "base update"]);
+        git(tmp.path(), &["checkout", "feature"]);
+
+        let error = check_merge_conflicts(tmp.path(), "main").expect_err("conflict expected");
+        assert!(error.to_string().contains("PR_MERGE_CONFLICT"));
+        assert!(error.to_string().contains("rebase or merge main"));
+    }
+
+    #[test]
+    fn resolve_base_branch_prefers_explicit_value_then_repository_metadata() {
+        let tmp = tempdir().expect("tempdir");
+        git(tmp.path(), &["init", "-q"]);
+        git(tmp.path(), &["config", "user.email", "test@test.com"]);
+        git(tmp.path(), &["config", "user.name", "Test"]);
+        std::fs::write(tmp.path().join("README.md"), "# project\n").expect("write readme");
+        git(tmp.path(), &["add", "README.md"]);
+        git(tmp.path(), &["commit", "-m", "initial"]);
+        git(tmp.path(), &["branch", "-M", "main"]);
+
+        assert_eq!(resolve_base_branch(tmp.path(), Some("release")), "release");
+        assert_eq!(resolve_base_branch(tmp.path(), None), "main");
+    }
+
+    #[test]
+    fn worktree_creation_starts_from_resolved_base_branch() {
+        let tmp = tempdir().expect("tempdir");
+        git(tmp.path(), &["init", "-q"]);
+        git(tmp.path(), &["config", "user.email", "test@test.com"]);
+        git(tmp.path(), &["config", "user.name", "Test"]);
+        std::fs::write(tmp.path().join("README.md"), "main\n").expect("write readme");
+        git(tmp.path(), &["add", "README.md"]);
+        git(tmp.path(), &["commit", "-m", "initial"]);
+        git(tmp.path(), &["branch", "-M", "main"]);
+        git(tmp.path(), &["checkout", "-b", "unrelated"]);
+        std::fs::write(tmp.path().join("README.md"), "unrelated\n").expect("write unrelated");
+        git(tmp.path(), &["commit", "-am", "unrelated"]);
+
+        let worktree = create_worktree(tmp.path(), "agent/test-base", "agent", "scope", "main")
+            .expect("worktree should be created from base");
+        let head = Command::new("git")
+            .args(["-C", worktree.to_str().unwrap(), "rev-parse", "HEAD"])
+            .output()
+            .expect("read worktree head");
+        let base = Command::new("git")
+            .args(["-C", tmp.path().to_str().unwrap(), "rev-parse", "main"])
+            .output()
+            .expect("read base head");
+        assert_eq!(head.stdout, base.stdout);
     }
 
     #[test]
