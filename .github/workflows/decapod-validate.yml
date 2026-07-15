@@ -17,15 +17,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/decapod
-          key: ${{ runner.os }}-decapod-${{ hashFiles('Cargo.toml', 'Cargo.lock') }}
+          key: ${{ runner.os }}-decapod
       - name: Install Decapod
         run: |
-          if ! command -v decapod &> /dev/null; then
-            cargo install decapod
-          fi
+          cargo install --path . --force
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
           decapod init --proof --force
+          rm -f *.bak
           decapod validate
