@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.66.7](https://github.com/DecapodLabs/decapod/compare/v0.66.6...v0.66.7) - 2026-07-15
+
+### Added
+
+- record handshake identity evidence ([#894](https://github.com/DecapodLabs/decapod/pull/894))
+
 ## [0.66.6](https://github.com/DecapodLabs/decapod/compare/v0.66.5...v0.66.6) - 2026-07-15
 
 ### Added
