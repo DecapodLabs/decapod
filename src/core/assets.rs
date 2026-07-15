@@ -619,6 +619,7 @@ jobs:
         run: |
           decapod init --proof --force
           git restore --source=HEAD -- .decapod/generated/specs .github/workflows/decapod-validate.yml
+          decapod rpc --op specs.refresh
           decapod validate
 "#
     .to_string()
