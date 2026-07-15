@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.66.5](https://github.com/DecapodLabs/decapod/compare/v0.66.4...v0.66.5) - 2026-07-15
+
+### Other
+
+- verify public GHCR workspace image access ([#890](https://github.com/DecapodLabs/decapod/pull/890))
+
 ## [0.66.4](https://github.com/DecapodLabs/decapod/compare/v0.66.3...v0.66.4) - 2026-07-14
 
 ### Fixed
