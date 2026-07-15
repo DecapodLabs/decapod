@@ -28,6 +28,6 @@ jobs:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
           decapod init --proof --force
-          git restore --source=HEAD -- .decapod/generated/specs .github/workflows/decapod-validate.yml
+          git restore --source=HEAD -- .decapod/config.toml .decapod/generated .github/workflows/decapod-validate.yml
           decapod rpc --op specs.refresh
           decapod validate
