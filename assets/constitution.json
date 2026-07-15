@@ -62,6 +62,8 @@
           "Use when the prompt concerns Decapod as the substrate for governed agent action rather than a prompt pack, dashboard, generic workflow tool, or context-only layer."
         ],
         "decide": [
+          "All agent interactions are strictly bound to the Decapod local-first governance kernel.",
+          "Agents must run control-plane discovery (decapod capabilities --format json) and orient themselves prior to executing any workspace commands.",
           "Classify the task surface before solution reasoning: product intent, architecture shape, interface contract, implementation subsystem, docs, spec, or operational risk.",
           "Select the smallest core route that can disambiguate the prompt; do not load adjacent families merely because they may become relevant later.",
           "If intent remains materially ambiguous after routing, ask a focused question or query a narrower node before inference.",
@@ -4010,6 +4012,8 @@
           "Use when handling regulated data (PII, PHI, PCI) or preparing for security audits."
         ],
         "concepts": [
+          "Workspace Isolation: Agents are prohibited from working on main or master or modifying the root repository's active branch. Isolated workspaces must be created via decapod workspace ensure.",
+          "Todo Claim Mandatory: Agents must create and claim a Decapod todo before running decapod workspace ensure, decapod workspace ensure --container, or executing any containerized task.",
           "Data Classification: Categorize every field by sensitivity level and map it to required technical controls.",
           "Audit Evidence: Automatically collect and store execution logs as immutable evidence of control adherence.",
           "Subject Rights: Design for Data Subject Access Requests (DSAR) and the right-to-delete from the start."
@@ -4378,6 +4382,8 @@
           "Use when writing Dockerfiles, configuring container runtimes, or establishing image build pipelines."
         ],
         "concepts": [
+          "Docker Workspace Security: Container workspaces require Docker/Podman isolation.",
+          "Privilege Escalation: Agents must request elevated administrator permissions before running Docker/container workspace setup and execution commands.",
           "Containers are ephemeral. Any state written to the container filesystem is lost on restart.",
           "Image size impacts deployment velocity and attack surface. Smaller is faster and safer.",
           "Supply chain security requires knowing exactly what binaries and libraries are inside the image."
@@ -11932,6 +11938,12 @@
           "Use when interacting with Decapod CLI/RPC, handling response envelopes, or sequencing agent actions."
         ],
         "concepts": [
+          "INV-DAEMONLESS: Decapod must not leave background processes running.",
+          "INV-BOUNDED-VALIDATE: decapod validate must terminate within bounded time (30s).",
+          "INV-STORE-BOUNDARY: Agents must not directly mutate files under .decapod/* without using the CLI.",
+          "INV-SESSION-AUTH: Mutations require an active local session authenticated via DECAPOD_SESSION_PASSWORD.",
+          "INV-PROOF-GATED: VERIFIED status requires passing all registered proof-plan gates.",
+          "INV-ROOT-ISOLATION: Agents must not mutate files in the main repository checkout directly.",
           "Operation Sequencing: The strict order in which operations must be performed (e.g., claim before ensure).",
           "Receipts: Structured evidence returned by operations, including hashes, timestamps, and touched paths.",
           "Allowed Next Operations: The state-machine transitions permitted by the control plane based on the current context.",
@@ -12511,6 +12523,9 @@
           "Use when determining next agent actions, evaluating ambiguity, or performing mutations."
         ],
         "concepts": [
+          "Mandatory agent bootstrapping sequence: (decapod capabilities --format json | grep -q '\"is_latest\":true') || (cargo install decapod && decapod init --proof) && decapod docs ingest && decapod validate && decapod session acquire && decapod rpc --op agent.init && decapod workspace status && decapod todo add \"<task>\" && decapod todo claim --id <task-id> && decapod infer orientation --task-id <task-id> && decapod workspace ensure && cd .decapod/workspaces/<your-worktree> && decapod constitution get core/DECAPOD && decapod rpc --op context.resolve",
+          "Pre-Inference Governance: Retrieve core/DECAPOD and domain nodes before planning or coding. Stop and query human if Decapod emits a Decision Gate.",
+          "Epistemic Custody: Preserve uncertainty in specs/issue logs. Carry forward assumptions recursively. Tie completion claims directly to measured proof.",
           "Call Decapod Early: The constitution is pre-inference faculty; retrieve doctrine before plan hardening.",
           "Ask When Blocked: Stop and request human clarification if ambiguity prevents safe, governed inference.",
           "Preserve Evidence: Every mutation must be accompanied by executable proof or validation logs.",
@@ -12565,6 +12580,8 @@
           "Use when updating Decapod generated project specs, validating alignment, or checking for drift."
         ],
         "concepts": [
+          "Living Specs: Treat files under .decapod/generated/specs/* as dynamic contracts. Review and update INTENT.md, ARCHITECTURE.md, and INTERFACES.md to align specs with intent.",
+          "Project Configuration: Read .decapod/config.toml as user-editable project context and update it when project scope changes.",
           "Acceptance Criteria: Falsifiable, testable conditions that define the success of a feature or task.",
           "Requirement Boundaries: The specific code paths, files, and subsystems that the spec governs.",
           "Proof Targets: The exact test or verification script required to prove the spec is satisfied.",
@@ -12745,6 +12762,8 @@
           "Use when executing tests, recording proof events, or mapping failures to remediation."
         ],
         "concepts": [
+          "Validation Gate: A task cannot be marked done without decapod validate passing successfully.",
+          "Safety Check Sequences: Run decapod capabilities, decapod docs ingest, and decapod validate regularly to verify system state.",
           "Expected Command: The exact shell command or script used to execute a specific test or gate.",
           "Evidence Capture: The structured logs, receipts, or artifacts that prove a test result and status.",
           "Validation Mapping: Linking test results to truth labels ('verified', 'failing', 'stale') and claims.",
