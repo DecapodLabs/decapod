@@ -167,6 +167,13 @@ pub(crate) struct InitGroupCli {
     /// Seed detected surfaces (repeatable and/or comma-separated).
     #[clap(long = "surface", value_delimiter = ',')]
     pub detected_surfaces: Vec<String>,
+    /// Seed declared capabilities (repeatable and/or comma-separated).
+    #[clap(
+        long = "declared-capability",
+        alias = "capability",
+        value_delimiter = ','
+    )]
+    pub declared_capabilities: Vec<String>,
     /// Enable container workspaces (enabled by default).
     ///
     /// WARNING: Disabling container workspaces is only safe for single-agent workflows.
@@ -265,6 +272,13 @@ pub(crate) struct InitWithCli {
     /// Seed detected surfaces (repeatable and/or comma-separated).
     #[clap(long = "surface", value_delimiter = ',')]
     pub detected_surfaces: Vec<String>,
+    /// Seed declared capabilities (repeatable and/or comma-separated).
+    #[clap(
+        long = "declared-capability",
+        alias = "capability",
+        value_delimiter = ','
+    )]
+    pub declared_capabilities: Vec<String>,
     /// Enable container workspaces (enabled by default).
     ///
     /// WARNING: Disabling container workspaces is only safe for single-agent workflows.

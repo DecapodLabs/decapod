@@ -745,3 +745,72 @@ fn init_preserves_manually_added_custody_fields_in_intent_md() {
         "re-init should preserve manually added assumptions in INTENT.md"
     );
 }
+
+#[test]
+fn init_supports_and_preserves_declared_capabilities() {
+    let tmp = tempdir().expect("tempdir");
+
+    // 1. Init with custom declared capabilities
+    let out = run_decapod(
+        tmp.path(),
+        &[
+            "init",
+            "with",
+            "--declared-capability",
+            "persistent-state",
+            "--declared-capability",
+            "scheduled-jobs",
+            "--force",
+        ],
+    );
+    assert!(
+        out.status.success(),
+        "decapod init with custom capabilities failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let config_path = tmp.path().join(".decapod/config.toml");
+    let config_content = fs::read_to_string(&config_path).expect("read config");
+    assert!(
+        config_content.contains("persistent-state") && config_content.contains("scheduled-jobs"),
+        "config should contain custom declared capabilities: {}",
+        config_content
+    );
+
+    // Verify manifest has them
+    let manifest_path = tmp.path().join(".decapod/generated/specs/.manifest.json");
+    let manifest_content = fs::read_to_string(&manifest_path).expect("read manifest");
+    assert!(
+        manifest_content.contains("persistent-state"),
+        "manifest should contain persistent-state capability: {}",
+        manifest_content
+    );
+    assert!(
+        manifest_content.contains("scheduled-jobs"),
+        "manifest should contain scheduled-jobs capability: {}",
+        manifest_content
+    );
+
+    // 2. Re-init with --force, and verify it PRESERVES them
+    let out = run_decapod(tmp.path(), &["init", "--force"]);
+    assert!(
+        out.status.success(),
+        "decapod init --force failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let config_content = fs::read_to_string(&config_path).expect("read config");
+    assert!(
+        config_content.contains("persistent-state"),
+        "config should preserve persistent-state capability after force re-init: {}",
+        config_content
+    );
+
+    // 3. Verify validation passes successfully
+    let out = run_decapod(tmp.path(), &["validate"]);
+    assert!(
+        out.status.success(),
+        "decapod validate failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+}

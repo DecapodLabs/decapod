@@ -158,14 +158,29 @@ fn is_not_git_repository_error(err: &error::DecapodError) -> bool {
 }
 
 fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodError> {
-    let mut ctx = RepoContext {
-        product_name: target_dir
+    let mut ctx = RepoContext::default();
+    if let Some(existing_cfg) = load_project_config_if_present(target_dir)? {
+        ctx.product_name = existing_cfg.repo.product_name.clone();
+        ctx.product_summary = existing_cfg.repo.product_summary.clone();
+        ctx.architecture_direction = existing_cfg.repo.architecture_direction.clone();
+        ctx.product_type = existing_cfg.repo.product_type.clone();
+        ctx.done_criteria = existing_cfg.repo.done_criteria.clone();
+        ctx.base_branch = existing_cfg.repo.base_branch.clone();
+        ctx.primary_languages = existing_cfg.repo.primary_languages.clone();
+        ctx.detected_surfaces = existing_cfg.repo.detected_surfaces.clone();
+        ctx.capabilities = existing_cfg.repo.capabilities.clone();
+        ctx.migration_validation = existing_cfg.repo.migration_validation.clone();
+    }
+
+    if ctx.product_name.is_none() {
+        ctx.product_name = target_dir
             .file_name()
             .and_then(|s| s.to_str())
-            .map(|s| s.to_string()),
-        base_branch: workspace::detect_base_branch(target_dir),
-        ..RepoContext::default()
-    };
+            .map(|s| s.to_string());
+    }
+    if ctx.base_branch.is_none() {
+        ctx.base_branch = workspace::detect_base_branch(target_dir);
+    }
 
     if target_dir.join("Cargo.toml").exists() {
         ctx.primary_languages.push("rust".to_string());
@@ -520,10 +535,20 @@ fn apply_repo_context_cli_overrides(ctx: &mut RepoContext, init_with: &InitWithC
             .filter(|s| !s.is_empty())
             .collect();
     }
+    if !init_with.declared_capabilities.is_empty() {
+        ctx.capabilities = init_with
+            .declared_capabilities
+            .iter()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+    }
     ctx.container_workspaces = init_with.container_workspaces;
     ctx.mode = init_with.mode.clone();
     dedupe_sorted(&mut ctx.primary_languages);
     dedupe_sorted(&mut ctx.detected_surfaces);
+    ctx.capabilities.sort();
+    ctx.capabilities.dedup();
 }
 
 fn prompt_line(prompt: &str) -> Result<String, error::DecapodError> {
@@ -1405,6 +1430,7 @@ fn init_with_from_config(
         done_criteria: config.repo.done_criteria.clone(),
         primary_languages: config.repo.primary_languages.clone(),
         detected_surfaces: config.repo.detected_surfaces.clone(),
+        declared_capabilities: config.repo.capabilities.clone(),
         container_workspaces: config.repo.container_workspaces,
         mode: if config.cloud.as_ref().map(|c| c.enabled).unwrap_or(false)
             || config.repo.mode == crate::cli::BackendType::Cloud
@@ -1907,6 +1933,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                         if !init_group.detected_surfaces.is_empty() {
                             with.detected_surfaces = init_group.detected_surfaces.clone();
                         }
+                        if !init_group.declared_capabilities.is_empty() {
+                            with.declared_capabilities = init_group.declared_capabilities.clone();
+                        }
                         with
                     } else {
                         let diagram_style = if io::stdin().is_terminal() && !init_group.proof {
@@ -1935,6 +1964,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             done_criteria: init_group.done_criteria.clone(),
                             primary_languages: init_group.primary_languages.clone(),
                             detected_surfaces: init_group.detected_surfaces.clone(),
+                            declared_capabilities: init_group.declared_capabilities.clone(),
                             container_workspaces: init_group.container_workspaces,
                             mode: init_group.mode.clone(),
                             git: init_group.git,
