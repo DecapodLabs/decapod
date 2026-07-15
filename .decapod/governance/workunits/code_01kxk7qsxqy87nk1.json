@@ -1,0 +1,19 @@
+{
+  "task_id": "code_01kxk7qsxqy87nk1",
+  "intent_ref": ".decapod/generated/specs/INTENT.md",
+  "spec_refs": [],
+  "state_refs": [
+    ".decapod/generated/context/code_01kxk7qsxqy87nk1.json"
+  ],
+  "proof_plan": [
+    "validation"
+  ],
+  "proof_results": [
+    {
+      "gate": "validation",
+      "status": "pass",
+      "artifact_ref": ".agents/rules/decapod_compliance.md"
+    }
+  ],
+  "status": "VERIFIED"
+}
