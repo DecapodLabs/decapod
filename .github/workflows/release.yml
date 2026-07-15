@@ -182,6 +182,20 @@ jobs:
             DECAPOD_REVISION=${{ steps.commit.outputs.sha_short }}
             DECAPOD_BUILD_IMAGE=${{ matrix.build_image }}
             DECAPOD_RUNTIME_IMAGE=${{ matrix.runtime_image }}
+      - name: Verify anonymous GHCR pull
+        env:
+          IMAGE_TAG: ${{ github.ref_name }}${{ matrix.tag_suffix }}
+        run: |
+          set -euo pipefail
+          token="$(curl --fail-with-body --silent --show-error --location \
+            "https://ghcr.io/token?service=ghcr.io&scope=repository:decapodlabs/decapod:pull" \
+            | jq --raw-output '.token // empty')"
+          test -n "$token"
+          curl --fail-with-body --silent --show-error --location \
+            -H "Authorization: Bearer $token" \
+            -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json" \
+            "https://ghcr.io/v2/decapodlabs/decapod/manifests/$IMAGE_TAG" \
+            >/dev/null
 
   # Build and packages all the platform-specific things
   build-local-artifacts:
