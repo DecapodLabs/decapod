@@ -617,7 +617,7 @@ jobs:
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
-          decapod init --proof
+          decapod init --proof --force
           decapod validate
 "#
     .to_string()

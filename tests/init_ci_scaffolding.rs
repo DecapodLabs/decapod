@@ -29,7 +29,7 @@ fn init_scaffolds_github_action_workflow() {
     let content = fs::read_to_string(workflow_path).expect("read workflow file");
     assert!(content.contains("name: Decapod Validate"));
     assert!(content.contains("decapod validate"));
-    assert!(content.contains("decapod init --proof"));
+    assert!(content.contains("decapod init --proof --force"));
     assert!(content.contains("DECAPOD_VALIDATE_SKIP_GIT_GATES: 1"));
     assert!(content.contains("on:"));
     assert!(content.contains("push:"));
