@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.1.0",
+  "topic": "decapod",
+  "scope": "interfaces",
+  "task_id": "code_01kxk7qsxqy87nk1",
+  "workunit_id": null,
+  "sources": [
+    {
+      "path": "interfaces/STORE_MODEL",
+      "section": "concepts"
+    },
+    {
+      "path": "interfaces/CONTROL_PLANE",
+      "section": "concepts"
+    },
+    {
+      "path": "interfaces/PROCEDURAL_NORMS",
+      "section": "concepts"
+    },
+    {
+      "path": "interfaces/INTERNALIZATION_SCHEMA",
+      "section": "concepts"
+    }
+  ],
+  "snippets": [
+    {
+      "source_path": "interfaces/STORE_MODEL",
+      "text": "## concepts\n\nDecapod uses a dual-store model: repository state (shared, versioned) vs user state (local, ephemeral).\nGenerated artifacts are deterministic outputs of the system, not sources of truth.\nDirect mutation of Decapod internal state files bypasses validation and corrupts the system."
+    },
+    {
+      "source_path": "interfaces/CONTROL_PLANE",
+      "text": "## concepts\n\nOperation Sequencing: The strict order in which operations must be performed (e.g., claim before ensure).\nReceipts: Structured evidence returned by operations, including hashes, timestamps, and touched paths.\nAllowed Next Operations: The state-machine transitions permitted by the control plane based on the current context.\nMutation Boundary: The line between Decapod-governed state and the user's working directory."
+    },
+    {
+      "source_path": "interfaces/PROCEDURAL_NORMS",
+      "text": "## concepts\n\nCall Decapod Early: The constitution is pre-inference faculty; retrieve doctrine before plan hardening.\nAsk When Blocked: Stop and request human clarification if ambiguity prevents safe, governed inference.\nPreserve Evidence: Every mutation must be accompanied by executable proof or validation logs.\nStop on Risk: Halt execution immediately if trust boundaries or authority rules are violated."
+    },
+    {
+      "source_path": "interfaces/INTERNALIZATION_SCHEMA",
+      "text": "## concepts\n\nAttachment: Creating a Decapod-governed link and provenance record for external information.\nInspection and Validation: Verifying that internalized payloads match strict schema and authority rules.\nLifecycle Management: Handling the detachment and cleanup of knowledge that is no longer valid.\nScope and Authority: Assigning the correct layer and provenance to the internalized knowledge."
+    }
+  ],
+  "capabilities": [
+    "agent-helper",
+    "authentication",
+    "authorization",
+    "background-processing",
+    "control-plane",
+    "event-driven",
+    "external-integrations",
+    "governance-kernel",
+    "persistent-state",
+    "scheduled-jobs"
+  ],
+  "policy": {
+    "risk_tier": "medium",
+    "policy_hash": "4be692d786ecc3514b98ed3228e133501360531cdcb4ef77fe3b3a111c9e38cb",
+    "policy_version": "jit-capsule-policy-v1",
+    "policy_path": ".decapod/generated/policy/context_capsule_policy.json",
+    "repo_revision": "8fd2a195cd7172df5f6b8cc9581ec3e6594c9119"
+  },
+  "capsule_hash": "b64037a186d40dee4bc00ee5318a680b841db09cb6fb8220caa91892b17a125a",
+  "repo_signal_fingerprint": "8e4c04fd6c84dc0ec6f3ed7d36a3822d85ae47d2b7afbd57bde07c0d6d62a1eb",
+  "config_input_hash": "6e958933af74996864b23def11bd21fe19c5be73f42bf09f382267d45ad5af65",
+  "spec_input_hash": "ee323ebd79696a08183359c97eb0773812e0ba609ccc7ac68d13cdf869ae1311"
+}
