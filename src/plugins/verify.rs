@@ -5,6 +5,7 @@ use crate::core::state_commit;
 use crate::core::store::Store;
 use crate::core::todo;
 use crate::core::validation_epoch::{ValidationEpochMetadata, active_validation_epoch};
+use crate::core::workspace;
 use crate::plugins::federation;
 use clap::{Parser, Subcommand};
 use fancy_regex::Regex;
@@ -26,6 +27,20 @@ pub struct VerifyCli {
     stale: bool,
     #[clap(subcommand)]
     command: Option<VerifyCommand>,
+}
+
+#[derive(Parser, Debug)]
+#[clap(
+    name = "diagnose",
+    about = "Inspect validation recovery state without mutation"
+)]
+pub struct DiagnoseCli {
+    /// Diagnose one TODO; without this flag, recent proof-bearing done TODOs are shown.
+    #[clap(long)]
+    pub todo: Option<String>,
+    /// Output machine-readable JSON.
+    #[clap(long)]
+    pub json: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -57,6 +72,7 @@ struct VerifyTarget {
     proof_plan: Option<String>,
     artifacts: Option<String>,
     last_verified_at: Option<String>,
+    last_verified_status: Option<String>,
     verification_policy_days: i64,
 }
 
@@ -149,13 +165,19 @@ fn epoch_secs(ts: &str) -> Option<i64> {
     ts.trim_end_matches('Z').parse::<i64>().ok()
 }
 
-fn validation_proof_reason(validate_ok: bool, hashes_match: bool) -> &'static str {
+fn validation_proof_reason(validate_ok: bool, hashes_match: bool, todo_id: &str) -> String {
     if !validate_ok && hashes_match {
-        "decapod validate did not pass; output hash is unchanged from the baseline, so verification remains blocked"
+        format!(
+            "decapod validate did not pass; output hash is unchanged from the baseline, so verification remains blocked. Next: fix the reported validation gate, then run `decapod qa verify todo {todo_id}`"
+        )
     } else if !validate_ok {
-        "decapod validate did not pass"
+        format!(
+            "decapod validate did not pass. Next: fix the reported validation gate, then run `decapod qa verify todo {todo_id}`"
+        )
     } else {
-        "validate output hash changed"
+        format!(
+            "validate output hash changed. Next: review the drift, then recapture with `decapod qa verify regen {todo_id}` if the change is intentional"
+        )
     }
 }
 
@@ -363,7 +385,7 @@ fn load_targets(
         let mut out = Vec::new();
         if let Some(id) = single_id {
             let mut stmt = conn.prepare(
-                "SELECT t.id, t.status, v.proof_plan, v.verification_artifacts, v.last_verified_at, COALESCE(v.verification_policy_days, 90)\n                 FROM tasks t\n                 LEFT JOIN task_verification v ON v.todo_id = t.id\n                 WHERE t.id = ?1",
+                "SELECT t.id, t.status, v.proof_plan, v.verification_artifacts, v.last_verified_at, v.last_verified_status, COALESCE(v.verification_policy_days, 90)\n                 FROM tasks t\n                 LEFT JOIN task_verification v ON v.todo_id = t.id\n                 WHERE t.id = ?1",
             )?;
             let rows = stmt.query_map(rusqlite::params![id], |row| {
                 Ok(VerifyTarget {
@@ -372,7 +394,8 @@ fn load_targets(
                     proof_plan: row.get(2)?,
                     artifacts: row.get(3)?,
                     last_verified_at: row.get(4)?,
-                    verification_policy_days: row.get(5)?,
+                    last_verified_status: row.get(5)?,
+                    verification_policy_days: row.get(6)?,
                 })
             })?;
 
@@ -381,7 +404,7 @@ fn load_targets(
             }
         } else {
             let mut stmt = conn.prepare(
-                "SELECT t.id, t.status, v.proof_plan, v.verification_artifacts, v.last_verified_at, COALESCE(v.verification_policy_days, 90)\n                 FROM tasks t\n                 LEFT JOIN task_verification v ON v.todo_id = t.id\n                 WHERE t.status = 'done'\n                   AND v.proof_plan IS NOT NULL\n                   AND v.proof_plan <> ''\n                 ORDER BY t.updated_at DESC",
+                "SELECT t.id, t.status, v.proof_plan, v.verification_artifacts, v.last_verified_at, v.last_verified_status, COALESCE(v.verification_policy_days, 90)\n                 FROM tasks t\n                 LEFT JOIN task_verification v ON v.todo_id = t.id\n                 WHERE t.status = 'done'\n                   AND v.proof_plan IS NOT NULL\n                   AND v.proof_plan <> ''\n                 ORDER BY t.updated_at DESC",
             )?;
             let rows = stmt.query_map([], |row| {
                 Ok(VerifyTarget {
@@ -390,7 +413,8 @@ fn load_targets(
                     proof_plan: row.get(2)?,
                     artifacts: row.get(3)?,
                     last_verified_at: row.get(4)?,
-                    verification_policy_days: row.get(5)?,
+                    last_verified_status: row.get(5)?,
+                    verification_policy_days: row.get(6)?,
                 })
             })?;
 
@@ -623,7 +647,11 @@ fn verify_target(
                 status: "fail".to_string(),
                 expected_output_hash: Some(expected),
                 actual_output_hash: Some(actual_hash),
-                reason: Some(validation_proof_reason(validate_ok, hashes_match).to_string()),
+                reason: Some(validation_proof_reason(
+                    validate_ok,
+                    hashes_match,
+                    &target.todo_id,
+                )),
             });
         } else {
             result.proofs.push(ProofCheckResult {
@@ -1177,6 +1205,202 @@ pub fn run_verify_cli(
     Ok(())
 }
 
+/// Emit a read-only recovery report for validation, proof, task, and workspace state.
+pub fn run_diagnose_cli(
+    store: &Store,
+    repo_root: &Path,
+    cli: DiagnoseCli,
+) -> Result<(), error::DecapodError> {
+    let main_root = workspace::get_main_repo_root(repo_root)?;
+    let workspace_status = workspace::get_workspace_status(repo_root)?;
+    let config = crate::cli::DecapodProjectConfig::load(&main_root).ok();
+    let expected_container = config
+        .as_ref()
+        .map(|config| config.repo.container_workspaces)
+        .unwrap_or(false);
+    let base_branch = workspace::resolve_base_branch(&main_root, None);
+
+    let tasks = if let Some(id) = cli.todo.as_deref() {
+        let task = todo::get_task(&store.root, id)?
+            .ok_or_else(|| error::DecapodError::NotFound(format!("TODO not found: {id}")))?;
+        vec![task]
+    } else {
+        todo::list_tasks(
+            &store.root,
+            Some("done".to_string()),
+            None,
+            None,
+            None,
+            None,
+        )?
+        .into_iter()
+        .filter(|task| !task.assigned_to.is_empty())
+        .take(12)
+        .collect()
+    };
+
+    let task_reports = tasks
+        .iter()
+        .map(|task| {
+            let target = load_targets(store, Some(&task.id))?.into_iter().next();
+            Ok(diagnose_task(
+                task,
+                target.as_ref(),
+                &workspace_status,
+                expected_container,
+                &base_branch,
+            ))
+        })
+        .collect::<Result<Vec<_>, error::DecapodError>>()?;
+
+    let report = serde_json::json!({
+        "read_only": true,
+        "repo_root": main_root.to_string_lossy().to_string(),
+        "workspace": {
+            "path": repo_root.to_string_lossy().to_string(),
+            "branch": workspace_status.git.current_branch.clone(),
+            "in_worktree": workspace_status.git.in_worktree,
+            "is_main_repo": workspace_status.git.is_main_repo,
+            "is_protected": workspace_status.git.is_protected,
+            "worktree_path": workspace_status.git.worktree_path.clone(),
+            "base_branch": base_branch.clone(),
+        },
+        "execution_context": {
+            "expected": if expected_container { "container workspace" } else { "isolated host worktree" },
+            "actual": if workspace_status.container.in_container { "container workspace" } else { "host process" },
+            "validation_executed": false,
+        },
+        "tasks": task_reports,
+        "next": if workspace_status.git.is_protected || !workspace_status.git.in_worktree {
+            "decapod workspace ensure"
+        } else if expected_container && !workspace_status.container.in_container {
+            "decapod workspace ensure --container"
+        } else {
+            "inspect the task-specific next_command"
+        },
+    });
+
+    if cli.json {
+        println!("{}", serde_json::to_string_pretty(&report).unwrap());
+    } else {
+        println!("Decapod QA diagnostic (read-only)");
+        println!("Repository: {}", main_root.display());
+        println!(
+            "Workspace: branch={} in_worktree={} main_repo={} protected={} path={}",
+            workspace_status.git.current_branch,
+            workspace_status.git.in_worktree,
+            workspace_status.git.is_main_repo,
+            workspace_status.git.is_protected,
+            repo_root.display()
+        );
+        println!(
+            "Execution context: expected={}, actual={}",
+            report["execution_context"]["expected"]
+                .as_str()
+                .unwrap_or("unknown"),
+            report["execution_context"]["actual"]
+                .as_str()
+                .unwrap_or("unknown")
+        );
+        if task_reports.is_empty() {
+            println!("Tasks: none selected (pass --todo <id> to inspect a specific task)");
+        } else {
+            for task in &task_reports {
+                println!(
+                    "Task {}: state={} claim={} proof={} next={}",
+                    task["todo_id"].as_str().unwrap_or("unknown"),
+                    task["state"].as_str().unwrap_or("unknown"),
+                    task["claim"].as_str().unwrap_or("unknown"),
+                    task["proof"]["status"].as_str().unwrap_or("unknown"),
+                    task["next_command"].as_str().unwrap_or("unknown")
+                );
+                if let Some(reason) = task["proof"]["notes"].as_str() {
+                    if !reason.is_empty() {
+                        println!("  proof note: {reason}");
+                    }
+                }
+            }
+        }
+        println!(
+            "Next: {}",
+            report["next"].as_str().unwrap_or("inspect task")
+        );
+    }
+    Ok(())
+}
+
+fn diagnose_task(
+    task: &todo::Task,
+    target: Option<&VerifyTarget>,
+    workspace_status: &workspace::WorkspaceStatus,
+    expected_container: bool,
+    base_branch: &str,
+) -> serde_json::Value {
+    let proof_status = target
+        .and_then(|target| target.last_verified_status.as_deref())
+        .unwrap_or("missing");
+    let proof_status = match proof_status {
+        "pass" => "pass",
+        "fail" => "blocked",
+        "missing" => "missing",
+        _ => "unknown",
+    };
+    let proof_notes = target
+        .and_then(|target| target.artifacts.as_deref())
+        .and_then(|raw| serde_json::from_str::<VerificationArtifacts>(raw).ok())
+        .and_then(|artifacts| {
+            artifacts
+                .proof_plan_results
+                .into_iter()
+                .find(|proof| proof.proof_gate == "validate_passes")
+        })
+        .map(|proof| {
+            format!(
+                "baseline_status={} expected_hash={}",
+                proof.status, proof.output_hash
+            )
+        })
+        .or_else(|| target.and_then(|target| target.last_verified_at.clone()))
+        .unwrap_or_else(|| "verification baseline is missing".to_string());
+
+    let branch_matches = workspace_status.git.current_branch.contains(&task.hash)
+        || workspace_status.git.current_branch.contains(&task.id);
+    let claim = if task.assigned_to.is_empty() {
+        "unclaimed"
+    } else {
+        "claimed"
+    };
+    let next_command = if workspace_status.git.is_protected || !workspace_status.git.in_worktree {
+        "decapod workspace ensure".to_string()
+    } else if expected_container && !workspace_status.container.in_container {
+        "decapod workspace ensure --container".to_string()
+    } else if !branch_matches {
+        format!("switch to the todo-scoped workspace for {}", task.id)
+    } else if proof_status == "missing" {
+        format!("decapod todo done --id {} --validated", task.id)
+    } else if proof_status == "blocked" || proof_status == "unknown" {
+        format!("decapod validate && decapod qa verify todo {}", task.id)
+    } else {
+        "decapod workspace publish".to_string()
+    };
+
+    serde_json::json!({
+        "todo_id": task.id,
+        "state": task.status,
+        "claim": claim,
+        "assigned_to": task.assigned_to,
+        "branch_matches_todo": branch_matches,
+        "expected_base_branch": base_branch,
+        "proof": {
+            "status": proof_status,
+            "last_verified_at": target.and_then(|target| target.last_verified_at.clone()),
+            "notes": proof_notes,
+            "validation_hash_current": "not executed by read-only diagnose",
+        },
+        "next_command": next_command,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::validation_proof_reason;
@@ -1184,24 +1408,24 @@ mod tests {
     #[test]
     fn stable_failed_validation_remains_blocked_with_explicit_reason() {
         assert_eq!(
-            validation_proof_reason(false, true),
-            "decapod validate did not pass; output hash is unchanged from the baseline, so verification remains blocked"
+            validation_proof_reason(false, true, "bugs_01test"),
+            "decapod validate did not pass; output hash is unchanged from the baseline, so verification remains blocked. Next: fix the reported validation gate, then run `decapod qa verify todo bugs_01test`"
         );
     }
 
     #[test]
     fn failed_validation_with_changed_output_reports_validation_failure() {
         assert_eq!(
-            validation_proof_reason(false, false),
-            "decapod validate did not pass"
+            validation_proof_reason(false, false, "bugs_01test"),
+            "decapod validate did not pass. Next: fix the reported validation gate, then run `decapod qa verify todo bugs_01test`"
         );
     }
 
     #[test]
     fn passing_validation_with_changed_output_reports_hash_drift() {
         assert_eq!(
-            validation_proof_reason(true, false),
-            "validate output hash changed"
+            validation_proof_reason(true, false, "bugs_01test"),
+            "validate output hash changed. Next: review the drift, then recapture with `decapod qa verify regen bugs_01test` if the change is intentional"
         );
     }
 }
