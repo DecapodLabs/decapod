@@ -4715,7 +4715,8 @@ fn attempt_validation_failure_heal(
             let caps = crate::core::capabilities::CapabilityRegistry::canonicalize_capabilities(
                 &config.repo.capabilities,
             );
-            if crate::core::project_specs::refresh_specs_from_codebase(project_root, &caps).is_ok() {
+            if crate::core::project_specs::refresh_specs_from_codebase(project_root, &caps).is_ok()
+            {
                 actions.push(ValidationHealAction {
                     action: "specs.refresh".to_string(),
                     outcome: "repaired".to_string(),

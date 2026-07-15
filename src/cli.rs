@@ -168,7 +168,11 @@ pub(crate) struct InitGroupCli {
     #[clap(long = "surface", value_delimiter = ',')]
     pub detected_surfaces: Vec<String>,
     /// Seed declared capabilities (repeatable and/or comma-separated).
-    #[clap(long = "declared-capability", alias = "capability", value_delimiter = ',')]
+    #[clap(
+        long = "declared-capability",
+        alias = "capability",
+        value_delimiter = ','
+    )]
     pub declared_capabilities: Vec<String>,
     /// Enable container workspaces (enabled by default).
     ///
@@ -269,7 +273,11 @@ pub(crate) struct InitWithCli {
     #[clap(long = "surface", value_delimiter = ',')]
     pub detected_surfaces: Vec<String>,
     /// Seed declared capabilities (repeatable and/or comma-separated).
-    #[clap(long = "declared-capability", alias = "capability", value_delimiter = ',')]
+    #[clap(
+        long = "declared-capability",
+        alias = "capability",
+        value_delimiter = ','
+    )]
     pub declared_capabilities: Vec<String>,
     /// Enable container workspaces (enabled by default).
     ///
