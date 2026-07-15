@@ -607,7 +607,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/bin/decapod
-          key: ${{ runner.os }}-decapod
+          key: ${{ runner.os }}-decapod-${{ hashFiles('Cargo.toml', 'Cargo.lock') }}
       - name: Install Decapod
         run: |
           if ! command -v decapod &> /dev/null; then
@@ -618,8 +618,6 @@ jobs:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
         run: |
           decapod init --proof --force
-          git restore --source=HEAD -- .decapod/config.toml .decapod/generated .github/workflows/decapod-validate.yml
-          decapod rpc --op specs.refresh
           decapod validate
 "#
     .to_string()

@@ -30,10 +30,10 @@ fn init_scaffolds_github_action_workflow() {
     assert!(content.contains("name: Decapod Validate"));
     assert!(content.contains("decapod validate"));
     assert!(content.contains("decapod init --proof --force"));
-    assert!(content.contains(
-        "git restore --source=HEAD -- .decapod/config.toml .decapod/generated .github/workflows/decapod-validate.yml"
-    ));
-    assert!(content.contains("decapod rpc --op specs.refresh"));
+    assert!(
+        content
+            .contains("key: ${{ runner.os }}-decapod-${{ hashFiles('Cargo.toml', 'Cargo.lock') }}")
+    );
     assert!(content.contains("DECAPOD_VALIDATE_SKIP_GIT_GATES: 1"));
     assert!(content.contains("on:"));
     assert!(content.contains("push:"));
@@ -62,6 +62,29 @@ fn init_force_updates_existing_workflow() {
     assert!(
         content.contains("name: Decapod Validate"),
         "workflow should be updated with --force"
+    );
+}
+
+#[test]
+fn init_force_preserves_existing_living_specs() {
+    let tmp = tempdir().expect("tempdir");
+    let out = run_decapod(tmp.path(), &["init", "--proof"]);
+    assert!(out.status.success(), "initial init should succeed");
+
+    let specs_path = tmp.path().join(".decapod/generated/specs/README.md");
+    let mut authored = fs::read_to_string(&specs_path).expect("read generated README");
+    authored.push_str("\nProject-authored contract.\n");
+    fs::write(&specs_path, &authored).expect("write authored README");
+
+    let out = run_decapod(tmp.path(), &["init", "--proof", "--force"]);
+    assert!(
+        out.status.success(),
+        "force init should preserve living specs: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_eq!(
+        fs::read_to_string(specs_path).expect("read preserved README"),
+        authored
     );
 }
 
