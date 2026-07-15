@@ -1077,10 +1077,8 @@ fn github_repo_slug(url: &str) -> Option<String> {
         path
     } else if let Some(path) = trimmed.strip_prefix("http://github.com/") {
         path
-    } else if let Some(path) = trimmed.strip_prefix("ssh://git@github.com/") {
-        path
     } else {
-        return None;
+        trimmed.strip_prefix("ssh://git@github.com/")?
     };
 
     let mut parts = path.split('/');
