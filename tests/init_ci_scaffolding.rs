@@ -30,6 +30,9 @@ fn init_scaffolds_github_action_workflow() {
     assert!(content.contains("name: Decapod Validate"));
     assert!(content.contains("decapod validate"));
     assert!(content.contains("decapod init --proof --force"));
+    assert!(content.contains(
+        "git restore --source=HEAD -- .decapod/generated/specs .github/workflows/decapod-validate.yml"
+    ));
     assert!(content.contains("DECAPOD_VALIDATE_SKIP_GIT_GATES: 1"));
     assert!(content.contains("on:"));
     assert!(content.contains("push:"));
