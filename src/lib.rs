@@ -163,6 +163,7 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
             .file_name()
             .and_then(|s| s.to_str())
             .map(|s| s.to_string()),
+        base_branch: workspace::detect_base_branch(target_dir),
         ..RepoContext::default()
     };
 
@@ -1955,10 +1956,15 @@ pub fn run() -> Result<(), error::DecapodError> {
             } else {
                 resolve_existing_init_dir(&current_dir)?
             };
+            let configured_base_branch = load_project_config_if_present(&init_target)?
+                .and_then(|config| config.repo.base_branch);
             let mut init_with = init_with;
             init_with.dir = Some(init_target.clone());
             init_with.project_dir = None;
             let mut repo_ctx = infer_repo_context(&init_target)?;
+            if configured_base_branch.is_some() {
+                repo_ctx.base_branch = configured_base_branch;
+            }
             apply_repo_context_env_overrides(&mut repo_ctx);
             apply_repo_context_cli_overrides(&mut repo_ctx, &init_with);
             if repo_ctx.mode == crate::cli::BackendType::Cloud

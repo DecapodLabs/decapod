@@ -2,6 +2,7 @@ use crate::core::container_runtime;
 use crate::core::error;
 use crate::core::store::Store;
 use crate::core::time;
+use crate::core::workspace;
 use clap::{Parser, Subcommand, ValueEnum};
 use serde::Serialize;
 use serde_json::json;
@@ -44,8 +45,8 @@ pub enum ContainerCommand {
         push: bool,
         #[clap(long, default_value_t = false)]
         pr: bool,
-        #[clap(long, default_value = "master")]
-        pr_base: String,
+        #[clap(long)]
+        pr_base: Option<String>,
         #[clap(long)]
         pr_title: Option<String>,
         #[clap(long)]
@@ -167,7 +168,7 @@ pub fn run_container_cli(store: &Store, cli: ContainerCli) -> Result<(), error::
             task_id.as_deref(),
             push,
             pr,
-            &pr_base,
+            pr_base.as_deref(),
             pr_title.as_deref(),
             pr_body.as_deref(),
             image_profile,
@@ -221,7 +222,7 @@ pub fn run_container_for_claim(
         Some(task_id),
         push,
         pr,
-        "master",
+        None,
         pr_title.as_deref(),
         pr_body.as_deref(),
         ImageProfile::DebianSlim,
@@ -249,7 +250,7 @@ fn run_container(
     task_id: Option<&str>,
     push: bool,
     pr: bool,
-    pr_base: &str,
+    pr_base: Option<&str>,
     pr_title: Option<&str>,
     pr_body: Option<&str>,
     image_profile: ImageProfile,
@@ -293,7 +294,8 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
     let branch_name = branch
         .map(|s| s.to_string())
         .unwrap_or_else(|| default_branch_name(agent, task_id));
-    let workspace = prepare_workspace_clone(&repo, &branch_name, pr_base)?;
+    let base_branch = resolve_base_branch(&repo, pr_base);
+    let workspace = prepare_workspace_clone(&repo, &branch_name, &base_branch)?;
 
     let spec = build_docker_spec(
         &docker,
@@ -418,6 +420,20 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
     }
 
     Ok(RunSummary { value: summary })
+}
+
+fn resolve_base_branch(repo_root: &Path, explicit: Option<&str>) -> String {
+    explicit
+        .filter(|branch| !branch.trim().is_empty())
+        .map(str::to_string)
+        .or_else(|| {
+            crate::cli::DecapodProjectConfig::load(repo_root)
+                .ok()
+                .and_then(|config| config.repo.base_branch)
+                .filter(|branch| !branch.trim().is_empty())
+        })
+        .or_else(|| workspace::detect_base_branch(repo_root))
+        .unwrap_or_else(|| "master".to_string())
 }
 
 fn execute_container_with_timeout(
@@ -1652,6 +1668,20 @@ mod tests {
     fn default_branch_name_includes_agent_and_task() {
         let branch = default_branch_name("Agent_One", Some("R_ABC-123"));
         assert_eq!(branch, "agent/agent-one/r-abc-123");
+    }
+
+    #[test]
+    fn configured_base_branch_is_used_when_cli_override_is_absent() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        std::fs::create_dir_all(tmp.path().join(".decapod")).expect("config dir");
+        std::fs::write(
+            tmp.path().join(".decapod/config.toml"),
+            "schema_version = \"1.0.0\"\n\n[init]\nspecs = true\nci = true\ndiagram_style = \"ascii\"\nentrypoints = []\n\n[repo]\nbase_branch = \"main\"\n",
+        )
+        .expect("write config");
+
+        assert_eq!(resolve_base_branch(tmp.path(), None), "main");
+        assert_eq!(resolve_base_branch(tmp.path(), Some("release")), "release");
     }
 
     #[test]

@@ -824,6 +824,57 @@ fn is_branch_protected(branch: &str) -> bool {
     false
 }
 
+/// Detect the repository's base branch from local Git metadata.
+///
+/// `origin/HEAD` is the strongest local signal because it is set from the
+/// remote's advertised default branch. A protected checked-out branch and
+/// existing local main/master refs provide deterministic offline fallbacks.
+pub fn detect_base_branch(repo_root: &Path) -> Option<String> {
+    let symbolic_head = Command::new("git")
+        .args([
+            "-C",
+            repo_root.to_str().unwrap_or("."),
+            "symbolic-ref",
+            "--quiet",
+            "--short",
+            "refs/remotes/origin/HEAD",
+        ])
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .map(|output| clean_branch_name(String::from_utf8_lossy(&output.stdout).trim()).to_string())
+        .filter(|branch| !branch.is_empty());
+    if symbolic_head.is_some() {
+        return symbolic_head;
+    }
+
+    let current_branch = get_current_branch(repo_root).ok();
+    if let Some(branch) = current_branch.filter(|branch| is_branch_protected(branch)) {
+        return Some(branch);
+    }
+
+    for branch in ["main", "master"] {
+        let reference = format!("refs/heads/{branch}");
+        let exists = Command::new("git")
+            .args([
+                "-C",
+                repo_root.to_str().unwrap_or("."),
+                "show-ref",
+                "--verify",
+                "--quiet",
+                &reference,
+            ])
+            .status()
+            .map(|status| status.success())
+            .unwrap_or(false);
+        if exists {
+            return Some(branch.to_string());
+        }
+    }
+
+    None
+}
+
 fn clean_branch_name(name: &str) -> &str {
     let mut s = name.trim();
     if s.starts_with('*') {
@@ -1690,6 +1741,41 @@ mod tests {
             extract_task_ids_from_branch("agent/unknown/some-feature-branch"),
             Vec::<String>::new()
         );
+    }
+
+    #[test]
+    fn detects_remote_default_base_branch() {
+        let tmp = tempdir().expect("tempdir");
+        git(tmp.path(), &["init", "-q"]);
+        git(tmp.path(), &["config", "user.email", "test@test.com"]);
+        git(tmp.path(), &["config", "user.name", "Test"]);
+        std::fs::write(tmp.path().join("README.md"), "# project\n").expect("write readme");
+        git(tmp.path(), &["add", "README.md"]);
+        git(tmp.path(), &["commit", "-m", "initial"]);
+        git(tmp.path(), &["branch", "-M", "main"]);
+        git(
+            tmp.path(),
+            &[
+                "remote",
+                "add",
+                "origin",
+                "git@github.com:example/project.git",
+            ],
+        );
+        git(
+            tmp.path(),
+            &["update-ref", "refs/remotes/origin/main", "HEAD"],
+        );
+        git(
+            tmp.path(),
+            &[
+                "symbolic-ref",
+                "refs/remotes/origin/HEAD",
+                "refs/remotes/origin/main",
+            ],
+        );
+
+        assert_eq!(detect_base_branch(tmp.path()).as_deref(), Some("main"));
     }
 
     #[test]
