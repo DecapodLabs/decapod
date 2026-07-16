@@ -420,6 +420,16 @@ fn template_named_agent(file_stem: &str) -> String {
     )
 }
 
+pub fn canonical_template(name: &str) -> Option<String> {
+    match name {
+        "AGENTS.md" => Some(template_agents()),
+        "CLAUDE.md" => Some(template_named_agent("CLAUDE")),
+        "GEMINI.md" => Some(template_named_agent("GEMINI")),
+        "CODEX.md" => Some(template_named_agent("CODEX")),
+        _ => None,
+    }
+}
+
 fn template_readme() -> String {
     r#"# .decapod - Decapod Control Plane
 
@@ -576,10 +586,9 @@ over the embedded JSON constitution.
 
 pub fn get_template(name: &str) -> Option<String> {
     match name {
-        "AGENTS.md" => Some(template_agents()),
-        "CLAUDE.md" => Some(template_named_agent("CLAUDE")),
-        "GEMINI.md" => Some(template_named_agent("GEMINI")),
-        "CODEX.md" => Some(template_named_agent("CODEX")),
+        "AGENTS.md" | "CLAUDE.md" | "GEMINI.md" | "CODEX.md" => {
+            crate::core::entrypoint_integrity::render_entrypoint(name)
+        }
         "README.md" => Some(template_readme()),
         "OVERRIDE.md" => Some(template_override()),
         "decapod-validate.yml" => Some(template_github_action()),

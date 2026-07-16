@@ -4,6 +4,7 @@
 //! and that `decapod validate` enforces invariants and detects tampering.
 
 use decapod::core::assets;
+use decapod::core::entrypoint_integrity;
 use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
@@ -427,7 +428,7 @@ fn test_validate_fails_on_missing_invariant() {
     fs::write(&agents_path, tampered).expect("Failed to write tampered AGENTS.md");
 
     // Run decapod validate (should fail)
-    let (success, output) = run_decapod(&temp_path, &["validate"]);
+    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
     assert!(
         !success,
         "decapod validate should fail after tampering. Output:\n{output}"
@@ -436,7 +437,7 @@ fn test_validate_fails_on_missing_invariant() {
     // Check that it detected the missing invariant
     assert!(
         output.contains("Invariant missing: Router pointer to core/DECAPOD"),
-        "Validation should detect missing router invariant"
+        "Validation should detect missing router invariant. Output:\n{output}"
     );
 }
 
@@ -457,7 +458,7 @@ fn test_validate_fails_on_bloated_entrypoint() {
     fs::write(&claude_path, bloated).expect("Failed to write bloated CLAUDE.md");
 
     // Run decapod validate (should fail)
-    let (success, output) = run_decapod(&temp_path, &["validate"]);
+    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
     assert!(
         !success,
         "decapod validate should fail on bloated entrypoint. Output:\n{output}"
@@ -466,7 +467,7 @@ fn test_validate_fails_on_bloated_entrypoint() {
     // Check that it detected the line limit violation
     assert!(
         output.contains("CLAUDE.md exceeds line limit"),
-        "Validation should detect bloated entrypoint"
+        "Validation should detect bloated entrypoint. Output:\n{output}"
     );
 }
 
@@ -534,6 +535,190 @@ fn test_root_entrypoints_match_scaffold_generators() {
 }
 
 #[test]
+fn test_entrypoints_record_binary_release_and_specs_manifest_attestation() {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let temp_path = temp_dir.path().to_path_buf();
+    let (success, output) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(success, "decapod init should succeed: {output}");
+
+    for surface in entrypoint_integrity::ENTRYPOINT_FILES {
+        let content = fs::read_to_string(temp_path.join(surface)).expect("read entrypoint");
+        assert!(content.contains("<!-- decapod-release: 0.69.0 -->"));
+        assert!(content.contains(&format!(
+            "<!-- decapod-binary-sha256: {} -->",
+            entrypoint_integrity::BINARY_SHA256
+        )));
+    }
+
+    let manifest_body =
+        fs::read_to_string(temp_path.join(".decapod/generated/specs/.manifest.json"))
+            .expect("read specs manifest");
+    let manifest: serde_json::Value =
+        serde_json::from_str(&manifest_body).expect("parse specs manifest");
+    assert_eq!(manifest["decapod_release"], "0.69.0");
+    assert_eq!(manifest["binary_hash"], entrypoint_integrity::BINARY_SHA256);
+    assert_eq!(manifest["entrypoints"].as_array().unwrap().len(), 4);
+    for surface in entrypoint_integrity::ENTRYPOINT_FILES {
+        assert!(
+            manifest["entrypoints"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|entry| entry["path"] == surface)
+        );
+    }
+}
+
+#[test]
+fn test_validate_reports_payload_modified_entrypoint() {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let temp_path = temp_dir.path().to_path_buf();
+    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(success, "decapod init should succeed");
+    acquire_session(&temp_path);
+
+    let path = temp_path.join("AGENTS.md");
+    let mut content = fs::read_to_string(&path).expect("read AGENTS.md");
+    content.push_str("\nuser payload tamper\n");
+    fs::write(path, content).expect("tamper AGENTS.md");
+
+    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    assert!(!success, "tampered entrypoint must fail validation");
+    assert!(
+        output.contains("Finding: entrypoint_payload_modified"),
+        "expected typed payload finding. Output:\n{output}"
+    );
+}
+
+#[test]
+fn test_validate_rejects_rewritten_binary_sha_and_old_release() {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let temp_path = temp_dir.path().to_path_buf();
+    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(success, "decapod init should succeed");
+    acquire_session(&temp_path);
+
+    let path = temp_path.join("CLAUDE.md");
+    let content = fs::read_to_string(&path).expect("read CLAUDE.md");
+    let rewritten = content.replace(entrypoint_integrity::BINARY_SHA256, &"0".repeat(64));
+    fs::write(&path, rewritten).expect("rewrite binary sha");
+    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    assert!(!success, "rewritten binary sha must fail validation");
+    assert!(
+        output.contains("Finding: entrypoint_fingerprint_mismatch"),
+        "expected typed fingerprint finding. Output:\n{output}"
+    );
+
+    let content = fs::read_to_string(&path).expect("read rewritten CLAUDE.md");
+    let old_release = content.replace("decapod-release: 0.69.0", "decapod-release: 0.68.0");
+    fs::write(path, old_release).expect("rewrite release");
+    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    assert!(!success, "old release entrypoint must fail validation");
+    assert!(
+        output.contains("Finding: entrypoint_release_mismatch"),
+        "expected typed release finding. Output:\n{output}"
+    );
+}
+
+#[test]
+fn test_validate_rejects_missing_entrypoint_metadata() {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let temp_path = temp_dir.path().to_path_buf();
+    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(success, "decapod init should succeed");
+    acquire_session(&temp_path);
+
+    let path = temp_path.join("GEMINI.md");
+    let content = fs::read_to_string(&path).expect("read GEMINI.md");
+    let payload = content.lines().skip(2).collect::<Vec<_>>().join("\n");
+    fs::write(path, payload).expect("remove entrypoint metadata");
+    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    assert!(!success, "missing entrypoint metadata must fail validation");
+    assert!(
+        output.contains("Finding: entrypoint_metadata_missing"),
+        "expected typed metadata finding. Output:\n{output}"
+    );
+}
+
+#[test]
+fn test_validate_rejects_malformed_entrypoint_metadata() {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let temp_path = temp_dir.path().to_path_buf();
+    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(success, "decapod init should succeed");
+    acquire_session(&temp_path);
+
+    let path = temp_path.join("GEMINI.md");
+    let content = fs::read_to_string(&path).expect("read GEMINI.md");
+    let malformed = content.replace(
+        &format!(
+            "<!-- decapod-binary-sha256: {} -->",
+            entrypoint_integrity::BINARY_SHA256
+        ),
+        "<!-- decapod-binary-sha256: -->",
+    );
+    fs::write(path, malformed).expect("malform entrypoint metadata");
+    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    assert!(
+        !success,
+        "malformed entrypoint metadata must fail validation"
+    );
+    assert!(
+        output.contains("Finding: entrypoint_metadata_malformed"),
+        "expected typed metadata finding. Output:\n{output}"
+    );
+}
+
+#[test]
+fn test_only_explicit_regeneration_restores_entrypoint_integrity() {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let temp_path = temp_dir.path().to_path_buf();
+    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(success, "decapod init should succeed");
+
+    let path = temp_path.join("CODEX.md");
+    let mut content = fs::read_to_string(&path).expect("read CODEX.md");
+    content.push_str("\nmodified\n");
+    fs::write(&path, content).expect("tamper CODEX.md");
+
+    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    assert!(
+        !success,
+        "validation must not silently regenerate: {output}"
+    );
+    let (success, output) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(
+        success,
+        "explicit regeneration should restore entrypoint: {output}"
+    );
+    acquire_session(&temp_path);
+    let (success, output) = run_decapod(&temp_path, &["validate"]);
+    assert!(success, "regenerated entrypoint should validate: {output}");
+}
+
+#[cfg(unix)]
+#[test]
+fn test_validate_rejects_entrypoint_symlink() {
+    use std::os::unix::fs::symlink;
+
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let temp_path = temp_dir.path().to_path_buf();
+    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(success, "decapod init should succeed");
+    acquire_session(&temp_path);
+
+    let path = temp_path.join("CODEX.md");
+    fs::remove_file(&path).expect("remove CODEX.md");
+    symlink(temp_path.join("AGENTS.md"), &path).expect("replace CODEX.md with symlink");
+    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    assert!(!success, "entrypoint symlink must fail validation");
+    assert!(
+        output.contains("Finding: entrypoint_unsupported_file_type"),
+        "expected typed file-type finding. Output:\n{output}"
+    );
+}
+
+#[test]
 fn test_agent_entrypoints_are_consistent_except_header() {
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
@@ -544,18 +729,18 @@ fn test_agent_entrypoints_are_consistent_except_header() {
     assert!(
         root_claude
             .lines()
-            .next()
+            .nth(2)
             .is_some_and(|l| l.contains("CLAUDE.md")),
         "CLAUDE.md header should include CLAUDE.md"
     );
     assert_eq!(
-        root_claude.lines().skip(1).collect::<Vec<_>>(),
-        root_gemini.lines().skip(1).collect::<Vec<_>>(),
+        root_claude.lines().skip(3).collect::<Vec<_>>(),
+        root_gemini.lines().skip(3).collect::<Vec<_>>(),
         "Root entrypoints should only differ by file-specific header: CLAUDE.md != GEMINI.md"
     );
     assert_eq!(
-        root_claude.lines().skip(1).collect::<Vec<_>>(),
-        root_codex.lines().skip(1).collect::<Vec<_>>(),
+        root_claude.lines().skip(3).collect::<Vec<_>>(),
+        root_codex.lines().skip(3).collect::<Vec<_>>(),
         "Root entrypoints should only differ by file-specific header: CLAUDE.md != CODEX.md"
     );
 
@@ -564,13 +749,13 @@ fn test_agent_entrypoints_are_consistent_except_header() {
     let tpl_codex = assets::get_template("CODEX.md").expect("generated CODEX");
 
     assert_eq!(
-        tpl_claude.lines().skip(1).collect::<Vec<_>>(),
-        tpl_gemini.lines().skip(1).collect::<Vec<_>>(),
+        tpl_claude.lines().skip(3).collect::<Vec<_>>(),
+        tpl_gemini.lines().skip(3).collect::<Vec<_>>(),
         "Template entrypoints should only differ by file-specific header: CLAUDE.md != GEMINI.md"
     );
     assert_eq!(
-        tpl_claude.lines().skip(1).collect::<Vec<_>>(),
-        tpl_codex.lines().skip(1).collect::<Vec<_>>(),
+        tpl_claude.lines().skip(3).collect::<Vec<_>>(),
+        tpl_codex.lines().skip(3).collect::<Vec<_>>(),
         "Template entrypoints should only differ by file-specific header: CLAUDE.md != CODEX.md"
     );
 }

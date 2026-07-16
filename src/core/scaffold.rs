@@ -14,7 +14,8 @@ use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, LOCAL_PROJECT_SPECS_OPERATIONS,
     LOCAL_PROJECT_SPECS_README, LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS,
     LOCAL_PROJECT_SPECS_VALIDATION, ProjectSpecManifestEntry, ProjectSpecsManifest,
-    config_input_hash, hash_text, read_specs_manifest, repo_signal_fingerprint, spec_input_hash,
+    config_input_hash, entrypoint_manifest_entries, hash_text, read_specs_manifest,
+    repo_signal_fingerprint, spec_input_hash,
 };
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -831,6 +832,9 @@ Refresh output requirements:
 - Update `.decapod/generated/specs/.manifest.json` after writing files.
 - Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set.
 
+## Release-Bound Agent Entrypoint Integrity
+The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and compiled binary SHA-256; `.decapod/generated/specs/.manifest.json` records the same release identity plus `template_hash` and `content_hash` entries for `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md`. Default validation independently checks the compiled release contract, declared metadata, canonical payload, regular-file type, and manifest synchronization. Regeneration must be explicit through the installed Decapod release.
+
 ## Validation Decision Tree
 ```mermaid
 flowchart TD
@@ -1243,6 +1247,7 @@ pub fn refresh_project_specs(
 
     let existing_manifest = read_specs_manifest(project_root)?;
     let current_repo_fingerprint = repo_signal_fingerprint(project_root)?;
+    let entrypoints = entrypoint_manifest_entries(project_root)?;
     let mut manifest_entries = Vec::new();
     let mut file_writes: Vec<(PathBuf, String)> = Vec::new();
     for spec in LOCAL_PROJECT_SPECS {
@@ -1282,6 +1287,10 @@ pub fn refresh_project_specs(
                 existing.schema_version == LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA
                     && existing.template_version == PROJECT_SPEC_TEMPLATE_VERSION
                     && existing.repo_signal_fingerprint == current_repo_fingerprint
+                    && existing.decapod_release
+                        == crate::core::entrypoint_integrity::RELEASE_VERSION
+                    && existing.binary_hash == crate::core::entrypoint_integrity::BINARY_SHA256
+                    && existing.entrypoints == entrypoints
                     && existing.files == manifest_entries
                     && file_writes.is_empty()
             })
@@ -1294,6 +1303,9 @@ pub fn refresh_project_specs(
         capability_definition_version: CAPABILITY_DEFINITION_VERSION.to_string(),
         config_input_hash: config_input_hash(project_root)?,
         spec_input_hash: spec_input_hash(project_root)?,
+        decapod_release: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
+        binary_hash: crate::core::entrypoint_integrity::BINARY_SHA256.to_string(),
+        entrypoints,
         files: manifest_entries,
     };
 
@@ -1301,6 +1313,9 @@ pub fn refresh_project_specs(
         && existing.schema_version == manifest.schema_version
         && existing.template_version == manifest.template_version
         && existing.repo_signal_fingerprint == manifest.repo_signal_fingerprint
+        && existing.decapod_release == manifest.decapod_release
+        && existing.binary_hash == manifest.binary_hash
+        && existing.entrypoints == manifest.entrypoints
         && existing.files == manifest.files
         && file_writes.is_empty()
     {
@@ -1822,6 +1837,9 @@ pub fn scaffold_project_entrypoints(
                 } else {
                     String::new()
                 },
+                decapod_release: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
+                binary_hash: crate::core::entrypoint_integrity::BINARY_SHA256.to_string(),
+                entrypoints: entrypoint_manifest_entries(&opts.target_dir)?,
                 files: manifest_entries,
             };
             let manifest_path = opts.target_dir.join(LOCAL_PROJECT_SPECS_MANIFEST);
