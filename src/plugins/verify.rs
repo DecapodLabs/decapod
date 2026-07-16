@@ -1,4 +1,5 @@
 use crate::core::broker::DbBroker;
+use crate::core::completion_evidence;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::state_commit;
@@ -62,6 +63,17 @@ pub enum VerifyCommand {
     Prune {
         #[clap(value_name = "ID")]
         id: String,
+    },
+    /// Generate or independently verify a completion evidence record.
+    Completion {
+        #[clap(value_name = "ID")]
+        id: String,
+        /// Generate the record instead of verifying the existing record.
+        #[clap(long)]
+        write: bool,
+        /// Verify a specific record path instead of the default repository path.
+        #[clap(long)]
+        path: Option<PathBuf>,
     },
 }
 
@@ -1022,6 +1034,54 @@ pub fn run_verify_cli(
                     );
                 } else {
                     println!("{}", serde_json::json!({ "status": "ok", "todo_id": id }));
+                }
+                return Ok(());
+            }
+            VerifyCommand::Completion { id, write, path } => {
+                let record_path = path
+                    .clone()
+                    .unwrap_or(completion_evidence::default_record_path(repo_root, id)?);
+                if *write {
+                    let record = completion_evidence::build_record(repo_root, id)?;
+                    let written = completion_evidence::write_record(repo_root, &record)?;
+                    if cli.json {
+                        println!(
+                            "{}",
+                            serde_json::json!({
+                                "status": "ok",
+                                "task_id": id,
+                                "record_path": written,
+                                "evidence_hash": record.evidence_hash,
+                            })
+                        );
+                    } else {
+                        println!(
+                            "completion evidence written: {} ({})",
+                            written.display(),
+                            record.evidence_hash
+                        );
+                    }
+                } else {
+                    let report = completion_evidence::verify_record(repo_root, id, &record_path)?;
+                    if cli.json {
+                        println!("{}", serde_json::to_string_pretty(&report).unwrap());
+                    } else {
+                        println!("completion evidence {id} [{}]", report.status);
+                        for check in &report.checks {
+                            let detail = check
+                                .detail
+                                .as_deref()
+                                .map(|detail| format!(" ({detail})"))
+                                .unwrap_or_default();
+                            println!("- {}: {}{}", check.name, check.status, detail);
+                        }
+                    }
+                    if report.status != "current" {
+                        return Err(error::DecapodError::ValidationError(format!(
+                            "completion evidence verification status: {}",
+                            report.status
+                        )));
+                    }
                 }
                 return Ok(());
             }
