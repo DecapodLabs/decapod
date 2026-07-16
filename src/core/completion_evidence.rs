@@ -13,6 +13,8 @@ use std::process::Command;
 pub const COMPLETION_EVIDENCE_SCHEMA_VERSION: &str = "1.0.0";
 pub const COMPLETION_EVIDENCE_DIR: &str =
     ".decapod/generated/artifacts/provenance/completion_evidence";
+pub const IMPORTED_COMPLETION_EVIDENCE_DIR: &str =
+    ".decapod/generated/artifacts/provenance/completion_evidence/imports";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CompletionProofEvidence {
@@ -92,6 +94,37 @@ pub struct CompletionEvidenceRecord {
     pub evidence_hash: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SourceRepositoryBinding {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub repository_id: Option<String>,
+    pub head_revision: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_revision: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PortableCompletionEvidence {
+    pub schema_version: String,
+    pub source_repository: SourceRepositoryBinding,
+    pub record: CompletionEvidenceRecord,
+    pub capsule_artifact: FileDigest,
+    #[serde(default)]
+    pub proof_artifacts: Vec<FileDigest>,
+    pub envelope_hash: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PortableCompletionEvidenceVerification {
+    pub schema_version: String,
+    pub task_id: String,
+    pub envelope_hash: String,
+    pub structural_status: String,
+    pub local_decision: String,
+    pub checks: Vec<EvidenceCheck>,
+    pub unresolved_claims: Vec<UnresolvedClaim>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct EvidenceCheck {
     pub name: String,
@@ -146,6 +179,46 @@ impl CompletionEvidenceRecord {
     }
 }
 
+impl PortableCompletionEvidence {
+    fn canonicalized(&self) -> CanonicalPortableCompletionEvidence {
+        let mut proof_artifacts = self.proof_artifacts.clone();
+        proof_artifacts.sort();
+        proof_artifacts.dedup();
+        CanonicalPortableCompletionEvidence {
+            schema_version: self.schema_version.clone(),
+            source_repository: self.source_repository.clone(),
+            record: self.record.clone(),
+            capsule_artifact: self.capsule_artifact.clone(),
+            proof_artifacts,
+        }
+    }
+
+    pub fn canonical_json_bytes(&self) -> Result<Vec<u8>, serde_json::Error> {
+        serde_json::to_vec(&self.canonicalized())
+    }
+
+    pub fn computed_hash_hex(&self) -> Result<String, serde_json::Error> {
+        let mut hasher = Sha256::new();
+        hasher.update(self.canonical_json_bytes()?);
+        Ok(format!("sha256:{:x}", hasher.finalize()))
+    }
+
+    pub fn with_recomputed_hash(&self) -> Result<Self, serde_json::Error> {
+        let mut out = self.clone();
+        out.envelope_hash = out.computed_hash_hex()?;
+        Ok(out)
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct CanonicalPortableCompletionEvidence {
+    schema_version: String,
+    source_repository: SourceRepositoryBinding,
+    record: CompletionEvidenceRecord,
+    capsule_artifact: FileDigest,
+    proof_artifacts: Vec<FileDigest>,
+}
+
 pub fn default_record_path(
     project_root: &Path,
     task_id: &str,
@@ -154,6 +227,334 @@ pub fn default_record_path(
     Ok(project_root
         .join(COMPLETION_EVIDENCE_DIR)
         .join(format!("{task_id}.json")))
+}
+
+pub fn imported_record_path(
+    project_root: &Path,
+    envelope_hash: &str,
+) -> Result<PathBuf, error::DecapodError> {
+    if !envelope_hash.starts_with("sha256:")
+        || envelope_hash.len() != "sha256:".len() + 64
+        || !envelope_hash["sha256:".len()..]
+            .chars()
+            .all(|character| character.is_ascii_hexdigit())
+    {
+        return Err(error::DecapodError::ValidationError(
+            "portable completion evidence has an invalid envelope hash".to_string(),
+        ));
+    }
+    Ok(project_root
+        .join(IMPORTED_COMPLETION_EVIDENCE_DIR)
+        .join(format!("{envelope_hash}.json")))
+}
+
+pub fn export_record(
+    project_root: &Path,
+    task_id: &str,
+    record_path: &Path,
+    output_path: &Path,
+) -> Result<PortableCompletionEvidence, error::DecapodError> {
+    let record = read_local_record(project_root, task_id, record_path)?;
+    let report = verify_record(project_root, task_id, record_path)?;
+    if report.status != "current" {
+        return Err(error::DecapodError::ValidationError(format!(
+            "cannot export completion evidence with verification status {}",
+            report.status
+        )));
+    }
+
+    let capsule_artifact = digest_reference(project_root, &record.capsule.path)?;
+    let mut proof_artifacts = record
+        .proof_results
+        .iter()
+        .filter_map(|proof| proof.artifact.clone())
+        .collect::<Vec<_>>();
+    proof_artifacts.sort();
+    proof_artifacts.dedup();
+
+    let envelope = PortableCompletionEvidence {
+        schema_version: COMPLETION_EVIDENCE_SCHEMA_VERSION.to_string(),
+        source_repository: SourceRepositoryBinding {
+            repository_id: source_repository_id(project_root),
+            head_revision: record.repository.head_revision.clone(),
+            base_revision: record.repository.base_revision.clone(),
+        },
+        record,
+        capsule_artifact,
+        proof_artifacts,
+        envelope_hash: String::new(),
+    }
+    .with_recomputed_hash()
+    .map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "portable completion evidence serialization failed: {e}"
+        ))
+    })?;
+    validate_portable_evidence(&envelope)?;
+
+    let parent = output_path.parent().ok_or_else(|| {
+        error::DecapodError::ValidationError(
+            "portable completion evidence export has no parent directory".to_string(),
+        )
+    })?;
+    fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    let bytes = serde_json::to_vec_pretty(&envelope).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "portable completion evidence serialization failed: {e}"
+        ))
+    })?;
+    fs::write(output_path, bytes).map_err(error::DecapodError::IoError)?;
+    Ok(envelope)
+}
+
+pub fn import_record(
+    project_root: &Path,
+    task_id: &str,
+    input_path: &Path,
+) -> Result<(PathBuf, PortableCompletionEvidenceVerification), error::DecapodError> {
+    let envelope = read_portable_evidence(input_path)?;
+    if envelope.record.task_id != task_id {
+        return Err(error::DecapodError::ValidationError(format!(
+            "portable completion evidence task binding is {}, requested {task_id}",
+            envelope.record.task_id
+        )));
+    }
+    let destination = imported_record_path(project_root, &envelope.envelope_hash)?;
+    let parent = destination.parent().ok_or_else(|| {
+        error::DecapodError::ValidationError(
+            "portable completion evidence import has no destination directory".to_string(),
+        )
+    })?;
+    fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    let bytes = fs::read(input_path).map_err(error::DecapodError::IoError)?;
+    fs::write(&destination, bytes).map_err(error::DecapodError::IoError)?;
+    let report = verify_portable_evidence(project_root, task_id, &envelope, &destination)?;
+    Ok((destination, report))
+}
+
+pub fn read_portable_evidence(
+    input_path: &Path,
+) -> Result<PortableCompletionEvidence, error::DecapodError> {
+    let raw = fs::read_to_string(input_path).map_err(error::DecapodError::IoError)?;
+    let envelope = serde_json::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "portable completion evidence is not valid JSON: {e}"
+        ))
+    })?;
+    validate_portable_evidence(&envelope)?;
+    Ok(envelope)
+}
+
+fn validate_portable_evidence(
+    envelope: &PortableCompletionEvidence,
+) -> Result<(), error::DecapodError> {
+    if envelope.schema_version != COMPLETION_EVIDENCE_SCHEMA_VERSION {
+        return Err(error::DecapodError::ValidationError(format!(
+            "PORTABLE_COMPLETION_EVIDENCE_INCOMPATIBLE: schema_version {} is not supported",
+            envelope.schema_version
+        )));
+    }
+    let expected_envelope_hash = envelope.computed_hash_hex().map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "PORTABLE_COMPLETION_EVIDENCE_INVALID: envelope hash: {e}"
+        ))
+    })?;
+    if envelope.envelope_hash != expected_envelope_hash {
+        return Err(error::DecapodError::ValidationError(
+            "PORTABLE_COMPLETION_EVIDENCE_TAMPERED: envelope_hash does not match canonical contents"
+                .to_string(),
+        ));
+    }
+    let expected_record_hash = envelope.record.computed_hash_hex().map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "PORTABLE_COMPLETION_EVIDENCE_INVALID: record hash: {e}"
+        ))
+    })?;
+    if envelope.record.evidence_hash != expected_record_hash {
+        return Err(error::DecapodError::ValidationError(
+            "PORTABLE_COMPLETION_EVIDENCE_TAMPERED: evidence_hash does not match canonical record"
+                .to_string(),
+        ));
+    }
+    if envelope.source_repository.head_revision != envelope.record.repository.head_revision
+        || envelope.source_repository.base_revision != envelope.record.repository.base_revision
+    {
+        return Err(error::DecapodError::ValidationError(
+            "PORTABLE_COMPLETION_EVIDENCE_INVALID: source repository binding does not match record"
+                .to_string(),
+        ));
+    }
+
+    validate_relative_evidence_path(&envelope.record.capsule.path)?;
+    if envelope.capsule_artifact.path != envelope.record.capsule.path {
+        return Err(error::DecapodError::ValidationError(
+            "PORTABLE_COMPLETION_EVIDENCE_INVALID: capsule artifact does not match record"
+                .to_string(),
+        ));
+    }
+    for path in &envelope.record.repository.changed_paths {
+        validate_relative_evidence_path(path)?;
+    }
+    for entry in &envelope.record.repository.working_tree {
+        validate_relative_evidence_path(&entry.path)?;
+    }
+
+    let mut expected_artifacts = Vec::new();
+    for proof in &envelope.record.proof_results {
+        match (&proof.artifact_ref, &proof.artifact) {
+            (None, None) => {}
+            (Some(reference), Some(artifact)) => {
+                validate_relative_evidence_path(reference)?;
+                if artifact.path != *reference {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "PORTABLE_COMPLETION_EVIDENCE_INVALID: proof artifact path {} does not match reference {reference}",
+                        artifact.path
+                    )));
+                }
+                expected_artifacts.push(artifact.clone());
+            }
+            _ => {
+                return Err(error::DecapodError::ValidationError(
+                    "PORTABLE_COMPLETION_EVIDENCE_INVALID: proof artifact reference and digest must be paired"
+                        .to_string(),
+                ));
+            }
+        }
+    }
+    expected_artifacts.sort();
+    expected_artifacts.dedup();
+    let mut actual_artifacts = envelope.proof_artifacts.clone();
+    actual_artifacts.sort();
+    actual_artifacts.dedup();
+    if expected_artifacts != actual_artifacts {
+        return Err(error::DecapodError::ValidationError(
+            "PORTABLE_COMPLETION_EVIDENCE_INVALID: proof artifact custody manifest does not match record"
+                .to_string(),
+        ));
+    }
+    for artifact in &envelope.proof_artifacts {
+        validate_relative_evidence_path(&artifact.path)?;
+    }
+    Ok(())
+}
+
+fn validate_relative_evidence_path(path: &str) -> Result<(), error::DecapodError> {
+    let candidate = Path::new(path);
+    if path.is_empty()
+        || candidate.is_absolute()
+        || candidate
+            .components()
+            .any(|component| matches!(component, std::path::Component::ParentDir))
+    {
+        return Err(error::DecapodError::ValidationError(format!(
+            "PORTABLE_COMPLETION_EVIDENCE_INVALID: path is not repository-relative: {path}"
+        )));
+    }
+    Ok(())
+}
+
+fn source_repository_id(project_root: &Path) -> Option<String> {
+    let remote = optional_git_output(project_root, &["remote", "get-url", "origin"])?;
+    sanitized_source_repository_id(&remote)
+}
+
+fn sanitized_source_repository_id(remote: &str) -> Option<String> {
+    let remote = remote.trim();
+    if remote.is_empty() {
+        return None;
+    }
+    if let Some((host, path)) = remote
+        .strip_prefix("git@")
+        .and_then(|value| value.split_once(':'))
+    {
+        return Some(format!("ssh://{host}/{path}"));
+    }
+    if let Some((scheme, remainder)) = remote.split_once("://") {
+        let without_credentials = remainder
+            .rsplit_once('@')
+            .map(|(_, value)| value)
+            .unwrap_or(remainder);
+        return Some(format!("{scheme}://{without_credentials}"));
+    }
+    Some(remote.to_string())
+}
+
+fn verify_portable_evidence(
+    project_root: &Path,
+    task_id: &str,
+    envelope: &PortableCompletionEvidence,
+    imported_path: &Path,
+) -> Result<PortableCompletionEvidenceVerification, error::DecapodError> {
+    let mut checks = vec![check("envelope_integrity", "pass", None)];
+    let workunit_path = workunit::workunit_path(project_root, task_id)?;
+    let (structural_status, local_decision) = if !workunit_path.exists() {
+        checks.push(check(
+            "local_policy",
+            "fail",
+            Some("receiving repository has no matching local workunit".to_string()),
+        ));
+        ("structurally_valid", "rejected")
+    } else {
+        let local_report =
+            verify_record_value(project_root, task_id, &envelope.record, imported_path)?;
+        for local_check in local_report.checks {
+            checks.push(check(
+                &format!("local:{}", local_check.name),
+                &local_check.status,
+                local_check.detail,
+            ));
+        }
+        if local_report.status == "current" {
+            ("structurally_valid", "accepted")
+        } else {
+            checks.push(check(
+                "local_policy",
+                "fail",
+                Some(format!(
+                    "receiving repository verification status: {}",
+                    local_report.status
+                )),
+            ));
+            ("structurally_valid", "rejected")
+        }
+    };
+    Ok(PortableCompletionEvidenceVerification {
+        schema_version: envelope.schema_version.clone(),
+        task_id: task_id.to_string(),
+        envelope_hash: envelope.envelope_hash.clone(),
+        structural_status: structural_status.to_string(),
+        local_decision: local_decision.to_string(),
+        checks,
+        unresolved_claims: envelope.record.unresolved_claims.clone(),
+    })
+}
+
+fn read_local_record(
+    project_root: &Path,
+    task_id: &str,
+    record_path: &Path,
+) -> Result<CompletionEvidenceRecord, error::DecapodError> {
+    let record_path = fs::canonicalize(record_path).map_err(error::DecapodError::IoError)?;
+    let project_root_canonical =
+        fs::canonicalize(project_root).map_err(error::DecapodError::IoError)?;
+    if !record_path.starts_with(&project_root_canonical) {
+        return Err(error::DecapodError::ValidationError(
+            "completion evidence record must be inside the repository".to_string(),
+        ));
+    }
+    let raw = fs::read_to_string(&record_path).map_err(error::DecapodError::IoError)?;
+    let record: CompletionEvidenceRecord = serde_json::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "completion evidence record is not valid JSON: {e}"
+        ))
+    })?;
+    if record.task_id != task_id {
+        return Err(error::DecapodError::ValidationError(format!(
+            "completion evidence record task binding is {}, requested {task_id}",
+            record.task_id
+        )));
+    }
+    Ok(record)
 }
 
 pub fn build_record(
@@ -294,9 +695,18 @@ pub fn verify_record(
             "completion evidence record is not valid JSON: {e}"
         ))
     })?;
+    verify_record_value(project_root, task_id, &record, &record_path)
+}
+
+fn verify_record_value(
+    project_root: &Path,
+    task_id: &str,
+    record: &CompletionEvidenceRecord,
+    record_path: &Path,
+) -> Result<CompletionEvidenceVerification, error::DecapodError> {
     if record.schema_version != COMPLETION_EVIDENCE_SCHEMA_VERSION {
         return Ok(report(
-            &record,
+            record,
             "invalid",
             vec![check(
                 "schema",
@@ -310,7 +720,7 @@ pub fn verify_record(
     }
     if record.task_id != task_id {
         return Ok(report(
-            &record,
+            record,
             "invalid",
             vec![check(
                 "task_binding",
@@ -339,14 +749,14 @@ pub fn verify_record(
         )),
     ));
     if !record_hash_ok {
-        return Ok(report(&record, "altered", checks));
+        return Ok(report(record, "altered", checks));
     }
 
     let manifest = match workunit::load_workunit(project_root, task_id) {
         Ok(manifest) => manifest,
         Err(error) => {
             checks.push(check("workunit", "fail", Some(error.to_string())));
-            return Ok(report(&record, "incomplete", checks));
+            return Ok(report(record, "incomplete", checks));
         }
     };
     let current_workunit_hash = manifest.canonical_hash_hex().map_err(|e| {
@@ -468,7 +878,7 @@ pub fn verify_record(
         )),
     ));
 
-    let current_repository = repository_evidence(project_root, &record_path)?;
+    let current_repository = repository_evidence(project_root, record_path)?;
     let repository_ok = current_repository == record.repository;
     checks.push(check(
         "repository_state",
@@ -501,7 +911,7 @@ pub fn verify_record(
         } else {
             "current"
         };
-    Ok(report(&record, status, checks))
+    Ok(report(record, status, checks))
 }
 
 fn verify_proof_artifacts(
@@ -925,6 +1335,57 @@ mod tests {
     }
 
     #[test]
+    fn portable_source_repository_id_does_not_carry_remote_credentials() {
+        assert_eq!(
+            sanitized_source_repository_id("https://token:secret@github.com/org/repo.git"),
+            Some("https://github.com/org/repo.git".to_string())
+        );
+        assert_eq!(
+            sanitized_source_repository_id("git@github.com:org/repo.git"),
+            Some("ssh://github.com/org/repo.git".to_string())
+        );
+    }
+
+    #[test]
+    fn portable_envelope_is_tamper_evident_and_fails_closed_without_local_binding() {
+        let record = fixture().with_recomputed_hash().expect("record hash");
+        let envelope = PortableCompletionEvidence {
+            schema_version: COMPLETION_EVIDENCE_SCHEMA_VERSION.to_string(),
+            source_repository: SourceRepositoryBinding {
+                repository_id: Some("https://example.invalid/source".to_string()),
+                head_revision: record.repository.head_revision.clone(),
+                base_revision: record.repository.base_revision.clone(),
+            },
+            record,
+            capsule_artifact: FileDigest {
+                path: ".decapod/generated/context/task-1.json".to_string(),
+                sha256: "sha256:capsule".to_string(),
+                size: 1,
+            },
+            proof_artifacts: Vec::new(),
+            envelope_hash: String::new(),
+        }
+        .with_recomputed_hash()
+        .expect("envelope hash");
+        validate_portable_evidence(&envelope).expect("valid envelope");
+
+        let directory = tempdir().expect("temp directory");
+        let report = verify_portable_evidence(
+            directory.path(),
+            "task-1",
+            &envelope,
+            &directory.path().join("import.json"),
+        )
+        .expect("portable report");
+        assert_eq!(report.structural_status, "structurally_valid");
+        assert_eq!(report.local_decision, "rejected");
+
+        let mut tampered = envelope;
+        tampered.source_repository.repository_id = Some("tampered".to_string());
+        assert!(validate_portable_evidence(&tampered).is_err());
+    }
+
+    #[test]
     fn local_record_replays_and_detects_artifact_change() {
         let directory = tempdir().expect("temp directory");
         let root = directory.path();
@@ -991,6 +1452,13 @@ mod tests {
         let record_path = write_record(root, &record).expect("write record");
         let report = verify_record(root, "task-1", &record_path).expect("verify record");
         assert_eq!(report.status, "current");
+
+        let portable_path = root.parent().unwrap().join("completion-evidence.json");
+        let envelope = export_record(root, "task-1", &record_path, &portable_path)
+            .expect("export portable evidence");
+        assert_eq!(envelope.record.evidence_hash, record.evidence_hash);
+        let imported = read_portable_evidence(&portable_path).expect("read portable evidence");
+        assert_eq!(imported.envelope_hash, envelope.envelope_hash);
 
         fs::write(&proof_path, "altered\n").expect("alter proof");
         let report = verify_record(root, "task-1", &record_path).expect("verify altered record");

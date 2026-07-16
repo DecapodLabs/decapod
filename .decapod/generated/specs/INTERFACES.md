@@ -53,6 +53,7 @@ Generated interface specs include:
 | `decapod data knowledge add` | Add knowledge entry | `--id`, `--title`, `--text`, `--provenance` | KnowledgeEntry |
 | `decapod data knowledge search` | Search knowledge | `--query` | KnowledgeEntry[] |
 | `decapod qa verify` | Proof replay + drift check | — | VerificationReport |
+| `decapod qa verify completion <ID>` | Generate, verify, export, or import completion evidence | `--write`, `--path`, `--export`, `--import` | CompletionEvidenceVerification |
 | `decapod infer orientation` | Pre-inference context packet | `--intent`, `--task-id`, `--format` | OrientationPacket |
 | `decapod infer validate` | Post-inference verification | `--result`, `--intent`, `--format` | ValidationResult |
 | `decapod rpc --op <op>` | JSON-RPC interface | `--params`, `--stdin` | RpcResponse |
@@ -209,6 +210,8 @@ Response envelope (`RpcResponse`):
 | `.decapod/data/*.db` | Decapod CLI (single-writer per store) | Decapod CLI, validation (read-only) |
 | `.decapod/data/*.jsonl` | Decapod CLI (append-only) | Decapod CLI, flight-recorder, rebuild |
 | `.decapod/generated/context/*.json` | `capsule.query --write` | WorkUnit lineage, publish gate |
+| `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | `qa verify completion <ID> --write` | Completion verifier, promotion review |
+| `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | `qa verify completion <ID> --import` | Structural inspection and receiver-local decision |
 | `.decapod/generated/policy/context_capsule_policy.json` | `init` / scaffold | Capsule query resolution |
 | `.decapod/generated/specs/*.md` | `init --force` / `rpc specs.refresh` | Validation, agents |
 | `.decapod/generated/artifacts/provenance/*.json` | `workspace publish` / `validate` | Promotion, CI |
@@ -398,7 +401,7 @@ Agents declare needed capabilities via `assurance.evaluate` params; interlocks b
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `acdece1f7a55f5b8b2cfe935fc0c0dd6a8bd73fb264397e7d9402837a35002ba`
+- Repository signal fingerprint: `60000086784e970e6cf2b51749f783020d828a76a6dab39d546738e31f2f43f6`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (87 files), `tests/` (3 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

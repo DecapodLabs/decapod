@@ -135,6 +135,8 @@ cargo vet             # Supply-chain auditing (manual)
 - **Major**: Manual review (breaking changes)
 
 ### Signed Artifact / Provenance Strategy
+
+Completion evidence export carries canonical records, source revision bindings, and artifact digests. Imported completion evidence is stored as untrusted evidence and must pass receiving-repository verification; it does not import authority, publication permission, provider trust, or agent permissions. Signatures remain optional and do not replace semantic validation.
 - `cargo dist` generates signed checksums (GPG)
 - `decapod release inventory` emits deterministic SBOM
 - Provenance manifests: `artifact_manifest.json`, `proof_manifest.json`
@@ -218,7 +220,7 @@ cargo vet             # Supply-chain auditing (manual)
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `acdece1f7a55f5b8b2cfe935fc0c0dd6a8bd73fb264397e7d9402837a35002ba`
+- Repository signal fingerprint: `60000086784e970e6cf2b51749f783020d828a76a6dab39d546738e31f2f43f6`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (87 files), `tests/` (3 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

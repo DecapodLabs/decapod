@@ -74,6 +74,12 @@ pub enum VerifyCommand {
         /// Verify a specific record path instead of the default repository path.
         #[clap(long)]
         path: Option<PathBuf>,
+        /// Export the current local record as portable evidence to this path.
+        #[clap(long)]
+        export: Option<PathBuf>,
+        /// Import portable evidence from this path into receiving-repository custody.
+        #[clap(long)]
+        import: Option<PathBuf>,
     },
 }
 
@@ -1037,7 +1043,88 @@ pub fn run_verify_cli(
                 }
                 return Ok(());
             }
-            VerifyCommand::Completion { id, write, path } => {
+            VerifyCommand::Completion {
+                id,
+                write,
+                path,
+                export,
+                import,
+            } => {
+                if *write && (export.is_some() || import.is_some()) {
+                    return Err(error::DecapodError::ValidationError(
+                        "completion evidence --write cannot be combined with --export or --import"
+                            .to_string(),
+                    ));
+                }
+                if export.is_some() && import.is_some() {
+                    return Err(error::DecapodError::ValidationError(
+                        "completion evidence --export cannot be combined with --import".to_string(),
+                    ));
+                }
+                if import.is_some() && path.is_some() {
+                    return Err(error::DecapodError::ValidationError(
+                        "completion evidence --import cannot be combined with --path".to_string(),
+                    ));
+                }
+                if let Some(output_path) = export {
+                    let record_path = path
+                        .clone()
+                        .unwrap_or(completion_evidence::default_record_path(repo_root, id)?);
+                    let envelope = completion_evidence::export_record(
+                        repo_root,
+                        id,
+                        &record_path,
+                        output_path,
+                    )?;
+                    if cli.json {
+                        println!(
+                            "{}",
+                            serde_json::json!({
+                                "status": "ok",
+                                "task_id": id,
+                                "export_path": output_path,
+                                "envelope_hash": envelope.envelope_hash,
+                                "evidence_hash": envelope.record.evidence_hash,
+                            })
+                        );
+                    } else {
+                        println!(
+                            "portable completion evidence exported: {} ({})",
+                            output_path.display(),
+                            envelope.envelope_hash
+                        );
+                    }
+                    return Ok(());
+                }
+                if let Some(input_path) = import {
+                    let (stored_path, report) =
+                        completion_evidence::import_record(repo_root, id, input_path)?;
+                    if cli.json {
+                        println!("{}", serde_json::to_string_pretty(&report).unwrap());
+                    } else {
+                        println!(
+                            "portable completion evidence imported: {} [{} / {}]",
+                            stored_path.display(),
+                            report.structural_status,
+                            report.local_decision
+                        );
+                        for check in &report.checks {
+                            let detail = check
+                                .detail
+                                .as_deref()
+                                .map(|detail| format!(" ({detail})"))
+                                .unwrap_or_default();
+                            println!("- {}: {}{}", check.name, check.status, detail);
+                        }
+                    }
+                    if report.local_decision != "accepted" {
+                        return Err(error::DecapodError::ValidationError(format!(
+                            "portable completion evidence local decision: {}",
+                            report.local_decision
+                        )));
+                    }
+                    return Ok(());
+                }
                 let record_path = path
                     .clone()
                     .unwrap_or(completion_evidence::default_record_path(repo_root, id)?);
