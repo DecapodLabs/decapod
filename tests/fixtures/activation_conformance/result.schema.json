@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Decapod activation conformance result",
+  "type": "object",
+  "required": ["schema_version", "fixture", "intent", "host", "observations"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "fixture": {"const": "activation-conformance-v1"},
+    "intent": {"type": "string", "minLength": 1},
+    "host": {"type": "string", "minLength": 1},
+    "observations": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "required": ["id", "passed", "evidence"],
+        "properties": {
+          "id": {
+            "enum": [
+              "entrypoint_discovery",
+              "task_custody",
+              "orientation_before_mutation",
+              "workspace_custody",
+              "agent_initialization",
+              "context_resolution",
+              "proof_prerequisite_refusal",
+              "state_bound_context_capsule",
+              "normal_validation",
+              "proof_backed_completion"
+            ]
+          },
+          "passed": {"type": "boolean"},
+          "evidence": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
