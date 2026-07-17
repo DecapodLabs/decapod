@@ -1,7 +1,27 @@
 # Validation
 
 
+
 <!-- decapod:capability-overlay:background-processing:start -->
+
+
+## Background Processing Validation Overlay
+
+### Duplicate Delivery Tests
+- Same message delivered multiple times MUST produce same result
+- Idempotency key verification
+- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
+
+### Retry Tests
+- Configured retry/backoff policy verified
+- Configured retry bound or unbounded policy verified
+- Poison-work handling verified when the project declares it
+
+### Shutdown Tests
+- Graceful drain on signal
+- In-flight job completion or safe requeue
+- No data loss on forced termination
+<!-- decapod:capability-overlay:background-processing:end -->
 
 
 
@@ -25,23 +45,7 @@
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-## Background Processing Validation Overlay
 
-### Duplicate Delivery Tests
-- Same message delivered multiple times MUST produce same result
-- Idempotency key verification
-- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
-
-### Retry Tests
-- Configured retry/backoff policy verified
-- Configured retry bound or unbounded policy verified
-- Poison-work handling verified when the project declares it
-
-### Shutdown Tests
-- Graceful drain on signal
-- In-flight job completion or safe requeue
-- No data loss on forced termination
-<!-- decapod:capability-overlay:background-processing:end -->
 ## Capability Proof Requirements
 
 When `persistent-state` is declared, validation executes the human-governed `[repo.migration_validation]` command from `.decapod/config.toml`. The command defines its arguments, repository-relative working directory, timeout, expected exit code, and bounded evidence output. A non-empty migration file or recognized migration layout never satisfies this gate independently. Missing configuration, startup failure, timeout, unexpected exit status, or evidence-recording failure blocks validation.
@@ -340,7 +344,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a59bf96a4543d961d4c233bbfb3c7e42f2fc89460789a585994e4dc2746dc483`
-- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (88 files), `tests/` (4 files)
+- Repository signal fingerprint: `9a83eefe7c495c9b0878ccd652cd141a1b5cbd094e9f2f04e5a0ce535080cea7`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (89 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

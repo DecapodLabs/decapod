@@ -1,6 +1,7 @@
 # Architecture
 
 
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 
@@ -21,6 +22,7 @@
 - Portability or swappable implementations are project decisions, not universal requirements
 - Migration and rollback treatment MUST match the selected storage technology
 <!-- decapod:capability-overlay:persistent-state:end -->
+
 ## Direction
 CLI governance runtime with dual-store architecture, git worktree isolation, and deterministic context management.
 
@@ -395,7 +397,7 @@ Verification and artifact emission:
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a59bf96a4543d961d4c233bbfb3c7e42f2fc89460789a585994e4dc2746dc483`
-- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (88 files), `tests/` (4 files)
+- Repository signal fingerprint: `9a83eefe7c495c9b0878ccd652cd141a1b5cbd094e9f2f04e5a0ce535080cea7`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (89 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
