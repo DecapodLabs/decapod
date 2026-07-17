@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.71.3](https://github.com/DecapodLabs/decapod/compare/v0.71.2...v0.71.3) - 2026-07-17
+
+### Security
+
+- enforce claim-specific identity verification
+
 ## [0.71.2](https://github.com/DecapodLabs/decapod/compare/v0.71.1...v0.71.2) - 2026-07-17
 
 ### Fixed
