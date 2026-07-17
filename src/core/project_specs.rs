@@ -177,6 +177,16 @@ pub struct ProjectSpecsManifest {
     /// Hash of the ordered living-spec inputs, excluding this manifest.
     #[serde(default)]
     pub spec_input_hash: String,
+    /// Release identity of the Decapod binary that produced the projections.
+    #[serde(default)]
+    pub decapod_release: String,
+    /// Immutable release-contract SHA compiled into that Decapod binary.
+    #[serde(default)]
+    pub binary_hash: String,
+    /// Generated agent entrypoints attested using the same template/content
+    /// hash shape as the living spec files above.
+    #[serde(default)]
+    pub entrypoints: Vec<ProjectSpecManifestEntry>,
     pub files: Vec<ProjectSpecManifestEntry>,
 }
 
@@ -349,6 +359,29 @@ pub fn read_specs_manifest(
     Ok(Some(manifest))
 }
 
+pub fn entrypoint_manifest_entries(
+    project_root: &Path,
+) -> Result<Vec<ProjectSpecManifestEntry>, error::DecapodError> {
+    let mut entries = Vec::new();
+    for surface in crate::core::entrypoint_integrity::ENTRYPOINT_FILES {
+        let Some(rendered) = crate::core::entrypoint_integrity::render_entrypoint(surface) else {
+            continue;
+        };
+        let path = project_root.join(surface);
+        let content_hash = if path.is_file() {
+            hash_text(&fs::read_to_string(&path).map_err(error::DecapodError::IoError)?)
+        } else {
+            String::new()
+        };
+        entries.push(ProjectSpecManifestEntry {
+            path: surface.to_string(),
+            template_hash: hash_text(&rendered),
+            content_hash,
+        });
+    }
+    Ok(entries)
+}
+
 pub fn refresh_specs_manifest(
     project_root: &Path,
     declared_capabilities: &[String],
@@ -393,6 +426,7 @@ pub fn refresh_specs_manifest(
     let repo_signal_fingerprint = repo_signal_fingerprint(project_root)?;
     let config_input_hash = config_input_hash(project_root)?;
     let spec_input_hash = spec_input_hash(project_root)?;
+    let entrypoints = entrypoint_manifest_entries(project_root)?;
     let generated_at = existing
         .as_ref()
         .filter(|manifest| {
@@ -403,6 +437,9 @@ pub fn refresh_specs_manifest(
                 && manifest.capability_definition_version == CAPABILITY_DEFINITION_VERSION
                 && manifest.config_input_hash == config_input_hash
                 && manifest.spec_input_hash == spec_input_hash
+                && manifest.decapod_release == crate::core::entrypoint_integrity::RELEASE_VERSION
+                && manifest.binary_hash == crate::core::entrypoint_integrity::BINARY_SHA256
+                && manifest.entrypoints == entrypoints
                 && manifest.files == manifest_entries
         })
         .map(|manifest| manifest.generated_at.clone())
@@ -416,6 +453,9 @@ pub fn refresh_specs_manifest(
         capability_definition_version: CAPABILITY_DEFINITION_VERSION.to_string(),
         config_input_hash,
         spec_input_hash,
+        decapod_release: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
+        binary_hash: crate::core::entrypoint_integrity::BINARY_SHA256.to_string(),
+        entrypoints,
         files: manifest_entries,
     };
 

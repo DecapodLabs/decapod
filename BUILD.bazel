@@ -29,6 +29,11 @@ rust_library(
     compile_data = glob(["src/**/*.sql"]),
     edition = "2024",
     crate_name = "decapod",
+    # Keep Bazel's release identity aligned with Cargo.toml. rules_rust does
+    # not synthesize Cargo's package environment variables automatically.
+    rustc_env = {
+        "CARGO_PKG_VERSION": "0.69.1",
+    },
     deps = [
         ":build_script",
     ] + all_crate_deps(normal = True),

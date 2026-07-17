@@ -73,6 +73,9 @@ Decapod keeps generated specs synchronized at governance pressure points. When r
 - Update `.decapod/generated/specs/.manifest.json` after writing files
 - Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set
 
+## Release-Bound Agent Entrypoint Integrity
+The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and compiled binary SHA-256; `.decapod/generated/specs/.manifest.json` records the same release identity plus `template_hash` and `content_hash` entries for `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md`. Default validation independently checks the compiled release contract, declared metadata, canonical payload, regular-file type, and manifest synchronization. Regeneration must be explicit through the installed Decapod release.
+
 ## Validation Decision Tree
 ```mermaid
 flowchart TD
@@ -337,7 +340,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4dec04d4ceba8b9e2bb24a5431d08794bdaa0a759989e2e4eaa4cbbb1f838bfb`
-- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (87 files), `tests/` (4 files)
+- Repository signal fingerprint: `058d5cfccbc4f6cdf7755991ede06d6efc3e6541f32160169b9e64dafcc6acb1`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (88 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

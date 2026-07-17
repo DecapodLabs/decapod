@@ -624,6 +624,14 @@ fn validate_entrypoint_invariants(
 ) -> Result<(), error::DecapodError> {
     info("Four Invariants Gate");
 
+    for surface in crate::core::entrypoint_integrity::ENTRYPOINT_FILES {
+        if let Err(finding) =
+            crate::core::entrypoint_integrity::validate_entrypoint(working_root, surface)
+        {
+            fail(&finding.to_string(), ctx);
+        }
+    }
+
     // Check AGENTS.md for the four invariants
     let agents_path = working_root.join("AGENTS.md");
     if !agents_path.is_file() {
@@ -1474,6 +1482,46 @@ fn validate_project_specs_docs(
                     manifest.template_version,
                     crate::core::scaffold::PROJECT_SPEC_TEMPLATE_VERSION
                 ),
+                ctx,
+            );
+        }
+
+        if manifest.decapod_release == crate::core::entrypoint_integrity::RELEASE_VERSION {
+            pass(
+                "Project specs manifest records the running Decapod release",
+                ctx,
+            );
+        } else {
+            fail(
+                &format!(
+                    "STALE_ENTRYPOINT_RELEASE: specs manifest records Decapod release '{}' while the running binary is '{}'. Regenerate the governed entrypoints and refresh specs.",
+                    manifest.decapod_release,
+                    crate::core::entrypoint_integrity::RELEASE_VERSION
+                ),
+                ctx,
+            );
+        }
+        if manifest.binary_hash == crate::core::entrypoint_integrity::BINARY_SHA256 {
+            pass(
+                "Project specs manifest records the compiled Decapod binary SHA-256",
+                ctx,
+            );
+        } else {
+            fail(
+                "STALE_ENTRYPOINT_BINARY: specs manifest binary_hash does not match the compiled Decapod release contract. Regenerate the governed entrypoints and refresh specs.",
+                ctx,
+            );
+        }
+        let expected_entrypoints =
+            crate::core::project_specs::entrypoint_manifest_entries(repo_root)?;
+        if manifest.entrypoints == expected_entrypoints {
+            pass(
+                "Generated agent entrypoint hashes match the specs manifest",
+                ctx,
+            );
+        } else {
+            fail(
+                "OUT_OF_SYNC_ENTRYPOINTS: Generated agent entrypoint hashes differ from .decapod/generated/specs/.manifest.json. Regenerate the governed entrypoints and refresh specs.",
                 ctx,
             );
         }
