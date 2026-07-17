@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.69.1](https://github.com/DecapodLabs/decapod/compare/v0.69.0...v0.69.1) - 2026-07-16
+
+### Other
+
+- add governed activation conformance fixture ([#908](https://github.com/DecapodLabs/decapod/pull/908))
+
 ## [0.69.0](https://github.com/DecapodLabs/decapod/compare/v0.68.0...v0.69.0) - 2026-07-16
 
 ### Added
