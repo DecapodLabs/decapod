@@ -945,14 +945,35 @@ fn apply_overlay(content: String, capability_id: &str, spec_path: &str) -> Strin
         let overlay = normalize_overlay_language(overlay);
         let overlay = format!("{start_marker}\n{overlay}\n{end_marker}");
         // Insert overlay before the first major section after the title
-        if let Some(pos) = content.find("\n## ") {
+        if let Some(pos) = first_unmarked_section_start(&content) {
             let mut result = content[..pos].to_string();
-            result.push_str(&format!("\n\n{}", overlay));
+            result.push_str(&format!("\n\n{}\n\n", overlay));
             result.push_str(&content[pos..]);
             return result;
         }
     }
     content
+}
+
+fn first_unmarked_section_start(content: &str) -> Option<usize> {
+    let mut offset = 0;
+    let mut inside_overlay = false;
+
+    for line in content.split_inclusive('\n') {
+        let trimmed = line.trim_end_matches(['\r', '\n']);
+        if trimmed.starts_with("<!-- decapod:capability-overlay:")
+            && trimmed.ends_with(":start -->")
+        {
+            inside_overlay = true;
+        } else if !inside_overlay && trimmed.starts_with("## ") {
+            return Some(offset);
+        } else if inside_overlay && trimmed.ends_with(":end -->") {
+            inside_overlay = false;
+        }
+        offset += line.len();
+    }
+
+    None
 }
 
 /// Built-in packs transfer obligations without silently choosing local architecture,
@@ -1413,6 +1434,9 @@ mod tests {
             assert!(!content.contains(forbidden), "overlay contains {forbidden}");
         }
         assert!(content.contains("Migration Proof Command"));
-        assert!(content.contains("project decision"));
+        assert!(content.contains("Public API Validation Overlay"));
+        assert!(content.contains("Persistent State Validation Overlay"));
+        assert!(content.contains("Background Processing Validation Overlay"));
+        assert!(content.contains("Verify the declared delivery guarantee"));
     }
 }

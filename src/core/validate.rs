@@ -3669,7 +3669,6 @@ fn validate_git_workspace_context(
         pass("Running in isolated workspace (.decapod/workspaces/)", ctx);
     } else if let Ok(status) = workspace::get_workspace_status(repo_root)
         && status.git.in_worktree
-        && !status.git.is_main_repo
     {
         let path = status.git.worktree_path.as_deref().unwrap_or(repo_root);
         fail(
