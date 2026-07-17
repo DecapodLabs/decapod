@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.70.0](https://github.com/DecapodLabs/decapod/compare/v0.69.1...v0.70.0) - 2026-07-17
+
+### Added
+
+- bind generated entrypoints to binary release identity ([#911](https://github.com/DecapodLabs/decapod/pull/911))
+
 ## [0.69.1](https://github.com/DecapodLabs/decapod/compare/v0.69.0...v0.69.1) - 2026-07-16
 
 ### Other
