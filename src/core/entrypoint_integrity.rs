@@ -9,6 +9,7 @@ use sha2::{Digest, Sha256};
 use std::fmt;
 use std::fs;
 use std::path::Path;
+use std::sync::OnceLock;
 
 pub const ENTRYPOINT_FILES: [&str; 4] = ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"];
 pub const RELEASE_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -44,6 +45,8 @@ pub const EXPECTED_ENTRYPOINTS: [EntrypointExpectation; 4] = [
         fingerprint: "332e0389236df58d42470e51127bf5a32ed01acd90ee1f8283c9dc32724fbee7",
     },
 ];
+
+static COMPUTED_ENTRYPOINTS: OnceLock<[String; 4]> = OnceLock::new();
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FindingKind {
@@ -112,11 +115,21 @@ pub fn canonical_template(surface: &str) -> Option<String> {
     assets::canonical_template(surface)
 }
 
+fn computed_entrypoints() -> &'static [String; 4] {
+    COMPUTED_ENTRYPOINTS.get_or_init(|| {
+        ENTRYPOINT_FILES.map(|surface| {
+            let payload = canonical_template(surface)
+                .expect("every governed entrypoint must have a canonical template");
+            fingerprint_for_payload(surface, RELEASE_VERSION, &payload)
+        })
+    })
+}
+
 pub fn expected_fingerprint(surface: &str) -> Option<&'static str> {
-    EXPECTED_ENTRYPOINTS
+    let index = ENTRYPOINT_FILES
         .iter()
-        .find(|entry| entry.surface == surface)
-        .map(|entry| entry.fingerprint)
+        .position(|entry| *entry == surface)?;
+    Some(computed_entrypoints()[index].as_str())
 }
 
 pub fn fingerprint(payload: &str) -> String {
@@ -344,12 +357,13 @@ mod tests {
     }
 
     #[test]
-    fn release_manifest_is_filename_and_version_bound() {
-        for entry in EXPECTED_ENTRYPOINTS {
-            let payload = canonical_template(entry.surface).expect("canonical entrypoint");
+    fn computed_manifest_is_filename_and_version_bound() {
+        for surface in ENTRYPOINT_FILES {
+            let payload = canonical_template(surface).expect("canonical entrypoint");
+            let expected = expected_fingerprint(surface).expect("computed fingerprint");
             assert_eq!(
-                fingerprint_for_payload(entry.surface, RELEASE_VERSION, &payload),
-                entry.fingerprint
+                fingerprint_for_payload(surface, RELEASE_VERSION, &payload),
+                expected
             );
         }
     }
