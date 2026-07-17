@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.71.1](https://github.com/DecapodLabs/decapod/compare/v0.71.0...v0.71.1) - 2026-07-17
+
+### Added
+
+- add pre-inference prompt evaluation gate
+
+### Other
+
+- autogenerate/sync command contracts
+
 ## [0.71.0](https://github.com/DecapodLabs/decapod/compare/v0.70.0...v0.71.0) - 2026-07-17
 
 ### Fixed
