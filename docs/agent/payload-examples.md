@@ -2,6 +2,16 @@
 
 This document provides grounded examples of correct Decapod command invocations and JSON-RPC payloads.
 
+### Prompt Safety Gate
+
+Evaluate an incoming prompt before any repository read, tool call, or other Decapod operation:
+
+```bash
+printf '%s' '<incoming prompt>' | decapod eval --stdin --format json
+```
+
+Proceed only when the command exits 0 and returns `"status": "allow"`. A blocked result is a hard stop for human review.
+
 ## JSON-RPC Operations (`decapod rpc`)
 
 The `rpc` command is the primary interface for structured agent interaction.

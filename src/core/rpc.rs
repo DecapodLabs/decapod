@@ -738,6 +738,14 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 cost: "medium".to_string(),
             },
             Capability {
+                name: "prompt.eval".to_string(),
+                description:
+                    "Evaluate untrusted agent prompts before repository reads or tool actions"
+                        .to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
                 name: "workspace.ensure".to_string(),
                 description: "Create or enter an isolated agent workspace".to_string(),
                 stability: "stable".to_string(),

@@ -2,6 +2,14 @@
 
 This document defines the normative operational contracts for the Decapod CLI.
 
+## `decapod eval`
+- **Intent:** Evaluate an untrusted agent prompt for instruction-injection and unsafe-action markers before any agent action.
+- **Preconditions:** Provide `--prompt <text>` or pipe the prompt with `--stdin`; prefer `--stdin` for untrusted input.
+- **Side effects:** None. This command does not read repository state, acquire a session, run migrations, or execute prompt content.
+- **Startup contract:** Run first when an agent starts and after every new prompt or user message.
+- **Outcome:** Exit code 0 with `status: allow`; exit code 1 with `status: block` and a human-review action.
+- **Output:** JSON by default; includes schema version, prompt SHA-256, byte count, finding codes, and an action without echoing the prompt.
+
 ## `decapod activate`
 - **Intent:** Activate local control plane state and run startup migrations
 

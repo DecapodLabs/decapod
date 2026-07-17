@@ -45,6 +45,19 @@ pub(crate) struct ValidateCli {
 }
 
 #[derive(clap::Args, Debug)]
+pub(crate) struct AgentEvalCli {
+    /// Prompt text to evaluate. Prefer --stdin when the prompt is untrusted.
+    #[clap(long, conflicts_with = "stdin")]
+    pub prompt: Option<String>,
+    /// Read the untrusted prompt from stdin without interpreting it as shell input.
+    #[clap(long, conflicts_with = "prompt")]
+    pub stdin: bool,
+    /// Output format: 'json' or 'text'.
+    #[clap(long, default_value = "json", value_parser = ["json", "text"])]
+    pub format: String,
+}
+
+#[derive(clap::Args, Debug)]
 pub(crate) struct CapabilitiesCli {
     /// Output format: 'json' or 'text'.
     #[clap(long, default_value = "text")]
@@ -1033,6 +1046,10 @@ pub(crate) enum ContextGroupCommand {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum Command {
+    /// Evaluate an untrusted agent prompt before any repository or tool action.
+    #[clap(name = "eval")]
+    Eval(AgentEvalCli),
+
     /// Activate local control plane state and run startup migrations
     #[clap(name = "activate")]
     Activate,

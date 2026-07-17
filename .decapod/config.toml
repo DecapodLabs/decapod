@@ -17,6 +17,7 @@ product_summary = "Decapod is the daemonless, local-first governance kernel behi
 architecture_direction = "cli"
 product_type = "cli"
 done_criteria = "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
+base_branch = "master"
 primary_languages = ["Rust"]
 detected_surfaces = ["cargo"]
 external_tracker = false
@@ -37,7 +38,11 @@ declared_capabilities = [
 
 [repo.migration_validation]
 command = "cargo"
-args = ["test", "--lib", "core::migration"]
+args = [
+    "test",
+    "--lib",
+    "core::migration",
+]
 working_directory = "."
 timeout_seconds = 120
 expected_exit_code = 0
