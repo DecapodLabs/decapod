@@ -543,7 +543,7 @@ fn test_entrypoints_record_binary_release_and_specs_manifest_attestation() {
 
     for surface in entrypoint_integrity::ENTRYPOINT_FILES {
         let content = fs::read_to_string(temp_path.join(surface)).expect("read entrypoint");
-        assert!(content.contains("<!-- decapod-release: 0.69.0 -->"));
+        assert!(content.contains("<!-- decapod-release: 0.69.1 -->"));
         assert!(content.contains(&format!(
             "<!-- decapod-binary-sha256: {} -->",
             entrypoint_integrity::BINARY_SHA256
@@ -555,7 +555,7 @@ fn test_entrypoints_record_binary_release_and_specs_manifest_attestation() {
             .expect("read specs manifest");
     let manifest: serde_json::Value =
         serde_json::from_str(&manifest_body).expect("parse specs manifest");
-    assert_eq!(manifest["decapod_release"], "0.69.0");
+    assert_eq!(manifest["decapod_release"], "0.69.1");
     assert_eq!(manifest["binary_hash"], entrypoint_integrity::BINARY_SHA256);
     assert_eq!(manifest["entrypoints"].as_array().unwrap().len(), 4);
     for surface in entrypoint_integrity::ENTRYPOINT_FILES {
@@ -610,7 +610,7 @@ fn test_validate_rejects_rewritten_binary_sha_and_old_release() {
     );
 
     let content = fs::read_to_string(&path).expect("read rewritten CLAUDE.md");
-    let old_release = content.replace("decapod-release: 0.69.0", "decapod-release: 0.68.0");
+    let old_release = content.replace("decapod-release: 0.69.1", "decapod-release: 0.68.0");
     fs::write(path, old_release).expect("rewrite release");
     let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
     assert!(!success, "old release entrypoint must fail validation");

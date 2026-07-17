@@ -308,7 +308,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee705240a2b8b7f7ba71ed6f25a99b74784e333253bd1fec62bba569e97ce216`
-- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (88 files), `tests/` (3 files)
+- Repository signal fingerprint: `058d5cfccbc4f6cdf7755991ede06d6efc3e6541f32160169b9e64dafcc6acb1`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (88 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

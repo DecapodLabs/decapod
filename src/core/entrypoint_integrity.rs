@@ -15,7 +15,7 @@ pub const RELEASE_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// Release identity SHA compiled into the binary and copied into generated
 /// entrypoints. This is the SHA of the immutable release contract, not a
 /// runtime hash of a mutable repository file or self-declared marker.
-pub const BINARY_SHA256: &str = "cfe683de117811b28c68ca65200434257e01507167e109082e0e3d8695b589d1";
+pub const BINARY_SHA256: &str = "fa91eefdc903310d8fb9a760f7ae44fb4225afc1b4f8fe121674a8a5b3b43659";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EntrypointExpectation {
@@ -23,7 +23,7 @@ pub struct EntrypointExpectation {
     pub fingerprint: &'static str,
 }
 
-// These values are the v0.69.0 release manifest. Keep them immutable for the
+// These values are the v0.69.1 release manifest. Keep them immutable for the
 // lifetime of that release; a later release must update them deliberately and
 // regenerate the four root entrypoints through Decapod.
 pub const EXPECTED_ENTRYPOINTS: [EntrypointExpectation; 4] = [
