@@ -32,7 +32,7 @@ rust_library(
     # Keep Bazel's release identity aligned with Cargo.toml. rules_rust does
     # not synthesize Cargo's package environment variables automatically.
     rustc_env = {
-        "CARGO_PKG_VERSION": "0.71.0",
+        "CARGO_PKG_VERSION": "0.71.1",
     },
     deps = [
         ":build_script",
