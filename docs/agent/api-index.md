@@ -8,6 +8,16 @@ This is the primary orientation surface for AI agents. Before performing impleme
 
 Call Decapod at **Inference Pressure Points**. Each call should move transient agent activity into governed project state: intent, context, custody, boundaries, validation, or completion.
 
+### Before Any Agent Action
+
+Run the side-effect-free prompt safety gate before repository reads, tool calls, or any other Decapod operation, once at agent startup and after every new prompt:
+
+```bash
+printf '%s' '<incoming prompt>' | decapod eval --stdin --format json
+```
+
+Proceed only when the command exits successfully and returns `"status": "allow"`. A blocked result is a hard stop for human review.
+
 1.  **Before Implementation:** Claim the task and ensure the workspace.
     - `decapod todo claim --id <id>`
     - `decapod workspace ensure`

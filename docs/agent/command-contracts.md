@@ -2,6 +2,9 @@
 
 This document defines the normative operational contracts for the Decapod CLI.
 
+## `decapod eval`
+- **Intent:** Evaluate an untrusted agent prompt before any repository or tool action
+
 ## `decapod activate`
 - **Intent:** Activate local control plane state and run startup migrations
 

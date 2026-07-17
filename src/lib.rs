@@ -1827,7 +1827,12 @@ fn run_init_apply(
 }
 
 pub fn run() -> Result<(), error::DecapodError> {
-    let cli = Cli::parse();
+    let parsed_cli = Cli::parse();
+    let command = match parsed_cli.command {
+        Command::Eval(eval_cli) => return core::agent_eval::run_agent_eval_cli(eval_cli),
+        command => command,
+    };
+    let cli = Cli { command };
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let current_dir = std::env::current_dir()?;
     let decapod_root_option = find_decapod_project_root(&current_dir);
@@ -2300,6 +2305,7 @@ fn should_auto_clock_in(command: &Command) -> bool {
     match command {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
         Command::Activate
+        | Command::Eval(_)
         | Command::Init(_)
         | Command::Setup(_)
         | Command::Session(_)
@@ -2313,6 +2319,7 @@ fn command_requires_worktree(command: &Command) -> bool {
     match command {
         Command::Init(_)
         | Command::Activate
+        | Command::Eval(_)
         | Command::Setup(_)
         | Command::Session(_)
         | Command::Validate(_)
@@ -2350,6 +2357,7 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
     !matches!(
         command,
         Command::Validate(_)
+            | Command::Eval(_)
             | Command::Activate
             | Command::Constitution(_)
             | Command::Docs(_)
@@ -2365,6 +2373,7 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
     !matches!(
         command,
         Command::Validate(_)
+            | Command::Eval(_)
             | Command::Activate
             | Command::Constitution(_)
             | Command::Docs(_)
@@ -2536,6 +2545,7 @@ fn requires_session_token(command: &Command) -> bool {
     match command {
         // Bootstrap/session lifecycle + version + capabilities are sessionless.
         Command::Init(_)
+        | Command::Eval(_)
         | Command::Session(_)
         | Command::Activate
         | Command::Constitution(_)
@@ -6261,6 +6271,7 @@ fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Valu
     schemas.insert("primitives", primitives::schema());
     schemas.insert("decide", decide::schema());
     schemas.insert("docs", docs_cli::schema());
+    schemas.insert("prompt_eval", core::agent_eval::schema());
     schemas.insert("deprecations", deprecation_metadata());
     schemas.insert("lcm", lcm::schema());
     schemas.insert("map", map_ops::schema());
