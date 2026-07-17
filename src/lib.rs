@@ -3320,7 +3320,7 @@ struct IdentityAssertion {
     claim_kind: String,
     subject_type: String,
     asserted_value: String,
-    evidence_class: String,
+    evidence_class: IdentityEvidenceClass,
     authority: Option<String>,
     verifier: Option<String>,
     scope: String,
@@ -3328,7 +3328,106 @@ struct IdentityAssertion {
     expires_at_epoch_secs: Option<u64>,
     revocation: Option<String>,
     verification_method: String,
-    verification_result: String,
+    verification_result: IdentityVerificationResult,
+}
+
+/// Evidence classes describe how an identity claim was obtained. They are
+/// intentionally not a universal trust ranking: a repository-local policy
+/// decides which class is sufficient for a particular operation.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+enum IdentityEvidenceClass {
+    SelfDeclared,
+    LocallyObserved,
+    HarnessAttested,
+    RemotelyAuthenticated,
+    IndependentlyVerified,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+enum IdentityVerificationResult {
+    Unverified,
+    Verified,
+    Expired,
+    Revoked,
+    Rejected,
+    Indeterminate,
+}
+
+/// Local policy used to recompute an assertion's result. The producer's
+/// serialized `verification_result` is deliberately ignored by the evaluator.
+/// This keeps identity evidence claim-specific and prevents a forged result
+/// from becoming authority or proof of correctness.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct IdentityVerificationPolicy {
+    expected_scope: String,
+    now_epoch_secs: u64,
+    accepted_evidence_classes: Vec<IdentityEvidenceClass>,
+    require_authority: bool,
+    require_verifier: bool,
+}
+
+impl IdentityVerificationPolicy {
+    fn local_handshake(scope: &str, now_epoch_secs: u64) -> Self {
+        Self {
+            expected_scope: scope.to_string(),
+            now_epoch_secs,
+            accepted_evidence_classes: vec![IdentityEvidenceClass::SelfDeclared],
+            require_authority: false,
+            require_verifier: false,
+        }
+    }
+}
+
+fn verify_identity_assertion(
+    assertion: &IdentityAssertion,
+    policy: &IdentityVerificationPolicy,
+) -> IdentityVerificationResult {
+    if assertion.asserted_value.trim().is_empty() || assertion.scope.trim().is_empty() {
+        return IdentityVerificationResult::Rejected;
+    }
+    if assertion.scope != policy.expected_scope
+        || assertion.issued_at_epoch_secs > policy.now_epoch_secs
+    {
+        return IdentityVerificationResult::Rejected;
+    }
+    if assertion
+        .expires_at_epoch_secs
+        .is_some_and(|expires| expires <= policy.now_epoch_secs)
+    {
+        return IdentityVerificationResult::Expired;
+    }
+    if assertion
+        .revocation
+        .as_deref()
+        .is_some_and(|revocation| !revocation.trim().is_empty())
+    {
+        return IdentityVerificationResult::Revoked;
+    }
+
+    // Environment-provided values remain useful for correlation, but they
+    // cannot become verified merely because a policy accepts self-declaration.
+    if assertion.evidence_class == IdentityEvidenceClass::SelfDeclared {
+        return IdentityVerificationResult::Unverified;
+    }
+    if !policy
+        .accepted_evidence_classes
+        .contains(&assertion.evidence_class)
+    {
+        return IdentityVerificationResult::Rejected;
+    }
+    if policy.require_authority && assertion.authority.is_none() {
+        return IdentityVerificationResult::Indeterminate;
+    }
+    if policy.require_verifier && assertion.verifier.is_none() {
+        return IdentityVerificationResult::Indeterminate;
+    }
+    if assertion.verification_method.trim().is_empty() {
+        return IdentityVerificationResult::Indeterminate;
+    }
+
+    IdentityVerificationResult::Verified
 }
 
 fn build_identity_assertions(
@@ -3341,7 +3440,7 @@ fn build_identity_assertions(
         claim_kind: "agent_id".to_string(),
         subject_type: "agent".to_string(),
         asserted_value: agent_id.to_string(),
-        evidence_class: "self-declared".to_string(),
+        evidence_class: IdentityEvidenceClass::SelfDeclared,
         authority: None,
         verifier: None,
         scope: scope.to_string(),
@@ -3349,7 +3448,7 @@ fn build_identity_assertions(
         expires_at_epoch_secs: None,
         revocation: None,
         verification_method: "environment declaration".to_string(),
-        verification_result: "unverified".to_string(),
+        verification_result: IdentityVerificationResult::Unverified,
     }];
 
     if let Some(provider) = provider.map(str::trim).filter(|value| !value.is_empty()) {
@@ -3357,7 +3456,7 @@ fn build_identity_assertions(
             claim_kind: "agent_provider".to_string(),
             subject_type: "model_provider".to_string(),
             asserted_value: provider.to_string(),
-            evidence_class: "self-declared".to_string(),
+            evidence_class: IdentityEvidenceClass::SelfDeclared,
             authority: None,
             verifier: None,
             scope: scope.to_string(),
@@ -3365,7 +3464,7 @@ fn build_identity_assertions(
             expires_at_epoch_secs: None,
             revocation: None,
             verification_method: "environment declaration".to_string(),
-            verification_result: "unverified".to_string(),
+            verification_result: IdentityVerificationResult::Unverified,
         });
     }
 
@@ -3374,7 +3473,10 @@ fn build_identity_assertions(
 
 #[cfg(test)]
 mod handshake_identity_tests {
-    use super::build_identity_assertions;
+    use super::{
+        IdentityEvidenceClass, IdentityVerificationPolicy, IdentityVerificationResult,
+        build_identity_assertions, verify_identity_assertion,
+    };
 
     #[test]
     fn records_agent_and_provider_as_separate_unverified_claims() {
@@ -3390,8 +3492,14 @@ mod handshake_identity_tests {
         assert_eq!(assertions[1].asserted_value, "example-provider");
 
         for assertion in assertions {
-            assert_eq!(assertion.evidence_class, "self-declared");
-            assert_eq!(assertion.verification_result, "unverified");
+            assert_eq!(
+                assertion.evidence_class,
+                IdentityEvidenceClass::SelfDeclared
+            );
+            assert_eq!(
+                assertion.verification_result,
+                IdentityVerificationResult::Unverified
+            );
             assert_eq!(assertion.scope, "task-123");
             assert_eq!(assertion.issued_at_epoch_secs, 42);
             assert!(assertion.authority.is_none());
@@ -3405,6 +3513,87 @@ mod handshake_identity_tests {
 
         assert_eq!(assertions.len(), 1);
         assert_eq!(assertions[0].claim_kind, "agent_id");
+    }
+
+    #[test]
+    fn recomputes_results_instead_of_trusting_serialized_verification() {
+        let mut assertion =
+            build_identity_assertions("agent/codex", None, "task-123", 42).remove(0);
+        assertion.verification_result = IdentityVerificationResult::Verified;
+
+        let policy = IdentityVerificationPolicy::local_handshake("task-123", 42);
+        assert_eq!(
+            verify_identity_assertion(&assertion, &policy),
+            IdentityVerificationResult::Unverified
+        );
+    }
+
+    #[test]
+    fn stronger_policy_does_not_promote_self_declared_identity() {
+        let assertion = build_identity_assertions("agent/codex", None, "task-123", 42).remove(0);
+        let policy = IdentityVerificationPolicy {
+            expected_scope: "task-123".to_string(),
+            now_epoch_secs: 42,
+            accepted_evidence_classes: vec![IdentityEvidenceClass::RemotelyAuthenticated],
+            require_authority: true,
+            require_verifier: true,
+        };
+
+        assert_eq!(
+            verify_identity_assertion(&assertion, &policy),
+            IdentityVerificationResult::Unverified
+        );
+    }
+
+    #[test]
+    fn lifecycle_and_scope_fail_closed() {
+        let mut assertion =
+            build_identity_assertions("agent/codex", None, "task-123", 42).remove(0);
+        let policy = IdentityVerificationPolicy::local_handshake("task-123", 42);
+
+        assertion.expires_at_epoch_secs = Some(42);
+        assert_eq!(
+            verify_identity_assertion(&assertion, &policy),
+            IdentityVerificationResult::Expired
+        );
+
+        assertion.expires_at_epoch_secs = None;
+        assertion.revocation = Some("revoked-by-policy".to_string());
+        assert_eq!(
+            verify_identity_assertion(&assertion, &policy),
+            IdentityVerificationResult::Revoked
+        );
+
+        assertion.revocation = None;
+        assertion.scope = "other-task".to_string();
+        assert_eq!(
+            verify_identity_assertion(&assertion, &policy),
+            IdentityVerificationResult::Rejected
+        );
+    }
+
+    #[test]
+    fn policy_is_claim_specific() {
+        let mut assertions =
+            build_identity_assertions("agent/codex", Some("example-provider"), "task-123", 42);
+        assertions[0].evidence_class = IdentityEvidenceClass::LocallyObserved;
+        assertions[0].verification_method = "local process observation".to_string();
+        let policy = IdentityVerificationPolicy {
+            expected_scope: "task-123".to_string(),
+            now_epoch_secs: 42,
+            accepted_evidence_classes: vec![IdentityEvidenceClass::LocallyObserved],
+            require_authority: false,
+            require_verifier: false,
+        };
+
+        assert_eq!(
+            verify_identity_assertion(&assertions[0], &policy),
+            IdentityVerificationResult::Verified
+        );
+        assert_eq!(
+            verify_identity_assertion(&assertions[1], &policy),
+            IdentityVerificationResult::Unverified
+        );
     }
 }
 
@@ -3459,8 +3648,13 @@ fn build_handshake_artifact(
     let request_id = crate::core::ulid::new_ulid();
     let agent_id = current_agent_id();
     let provider = std::env::var("DECAPOD_AGENT_PROVIDER").ok();
-    let identity_assertions =
-        build_identity_assertions(&agent_id, provider.as_deref(), scope, now_epoch_secs());
+    let issued_at_epoch_secs = now_epoch_secs();
+    let mut identity_assertions =
+        build_identity_assertions(&agent_id, provider.as_deref(), scope, issued_at_epoch_secs);
+    let local_policy = IdentityVerificationPolicy::local_handshake(scope, issued_at_epoch_secs);
+    for assertion in &mut identity_assertions {
+        assertion.verification_result = verify_identity_assertion(assertion, &local_policy);
+    }
     let mut unsigned = serde_json::json!({
         "schema_version": "1.0.0",
         "request_id": request_id,
