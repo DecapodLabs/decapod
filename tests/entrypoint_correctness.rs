@@ -543,7 +543,10 @@ fn test_entrypoints_record_release_fingerprints_and_specs_manifest_attestation()
 
     for surface in entrypoint_integrity::ENTRYPOINT_FILES {
         let content = fs::read_to_string(temp_path.join(surface)).expect("read entrypoint");
-        assert!(content.contains("<!-- decapod-release: 0.70.0 -->"));
+        assert!(content.contains(&format!(
+            "<!-- decapod-release: {} -->",
+            entrypoint_integrity::RELEASE_VERSION
+        )));
         assert!(content.contains(&format!(
             "<!-- decapod-fingerprint: {} -->",
             entrypoint_integrity::expected_fingerprint(surface).expect("compiled fingerprint")
@@ -555,7 +558,10 @@ fn test_entrypoints_record_release_fingerprints_and_specs_manifest_attestation()
             .expect("read specs manifest");
     let manifest: serde_json::Value =
         serde_json::from_str(&manifest_body).expect("parse specs manifest");
-    assert_eq!(manifest["decapod_release"], "0.70.0");
+    assert_eq!(
+        manifest["decapod_release"],
+        entrypoint_integrity::RELEASE_VERSION
+    );
     assert!(
         !manifest
             .as_object()
@@ -599,6 +605,29 @@ fn test_validate_reports_payload_modified_entrypoint() {
 }
 
 #[test]
+fn test_validate_rejects_changes_to_every_root_markdown_entrypoint() {
+    for surface in entrypoint_integrity::ENTRYPOINT_FILES {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path().to_path_buf();
+        let (success, output) = run_decapod(&temp_path, &["init", "--force"]);
+        assert!(success, "decapod init should succeed: {output}");
+        acquire_session(&temp_path);
+
+        let path = temp_path.join(surface);
+        let mut content = fs::read_to_string(&path).expect("read entrypoint");
+        content.push_str("\nroot entrypoint payload tamper\n");
+        fs::write(&path, content).expect("tamper entrypoint");
+
+        let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+        assert!(!success, "changed {surface} must fail validation: {output}");
+        assert!(
+            output.contains("Finding: entrypoint_payload_modified"),
+            "changed {surface} must fail because its release/version-bound hash no longer matches: {output}"
+        );
+    }
+}
+
+#[test]
 fn test_validate_migrates_valid_legacy_entrypoint_metadata() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
@@ -630,7 +659,10 @@ fn test_validate_migrates_valid_legacy_entrypoint_metadata() {
     assert!(output.contains("heal_release_bound_entrypoints"));
 
     let content = fs::read_to_string(&path).expect("read rewritten CLAUDE.md");
-    assert!(content.contains("<!-- decapod-release: 0.70.0 -->"));
+    assert!(content.contains(&format!(
+        "<!-- decapod-release: {} -->",
+        entrypoint_integrity::RELEASE_VERSION
+    )));
     assert!(content.contains(&format!(
         "<!-- decapod-fingerprint: {} -->",
         entrypoint_integrity::expected_fingerprint("CLAUDE.md").expect("compiled fingerprint")

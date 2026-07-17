@@ -1,7 +1,27 @@
 # Operations
 
 
+
 <!-- decapod:capability-overlay:background-processing:start -->
+
+
+## Background Processing Operations Overlay
+
+### Queue Visibility
+- Queue depth, processing rate, and latency MUST be monitored
+- Dead letter queue MUST be visible and alerted
+- Worker health and processing rate metrics required
+
+### Shutdown Behavior
+- Graceful shutdown: stop accepting new work, finish current job
+- Drain behavior and timeout MUST be selected for the deployment
+- Termination and requeue behavior MUST be selected and proven for the deployment
+
+### Worker Health
+- Worker liveness and readiness probes
+- Queue depth alerts for backpressure detection
+- Processing latency percentiles (p50, p95, p99)
+<!-- decapod:capability-overlay:background-processing:end -->
 
 
 
@@ -22,23 +42,7 @@
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-## Background Processing Operations Overlay
 
-### Queue Visibility
-- Queue depth, processing rate, and latency MUST be monitored
-- Dead letter queue MUST be visible and alerted
-- Worker health and processing rate metrics required
-
-### Shutdown Behavior
-- Graceful shutdown: stop accepting new work, finish current job
-- Drain behavior and timeout MUST be selected for the deployment
-- Termination and requeue behavior MUST be selected and proven for the deployment
-
-### Worker Health
-- Worker liveness and readiness probes
-- Queue depth alerts for backpressure detection
-- Processing latency percentiles (p50, p95, p99)
-<!-- decapod:capability-overlay:background-processing:end -->
 ## Capability Operations
 
 Operational ownership follows the declared surfaces: session/authentication and policy/authorization protect mutations; SQLite/JSONL state and migrations require executable proof; workflow and scheduled jobs require bounded execution and failure visibility; Git/Cargo/container integrations remain explicit external actions; and CLI/JSON-RPC contracts remain machine-facing compatibility surfaces. Capability declarations must not be used as a substitute for command-level evidence.
@@ -282,7 +286,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a59bf96a4543d961d4c233bbfb3c7e42f2fc89460789a585994e4dc2746dc483`
-- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (88 files), `tests/` (4 files)
+- Repository signal fingerprint: `9a83eefe7c495c9b0878ccd652cd141a1b5cbd094e9f2f04e5a0ce535080cea7`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (89 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
