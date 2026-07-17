@@ -18,7 +18,7 @@ pub const LOCAL_PROJECT_SPECS_SEMANTICS: &str = ".decapod/generated/specs/SEMANT
 pub const LOCAL_PROJECT_SPECS_OPERATIONS: &str = ".decapod/generated/specs/OPERATIONS.md";
 pub const LOCAL_PROJECT_SPECS_SECURITY: &str = ".decapod/generated/specs/SECURITY.md";
 pub const LOCAL_PROJECT_SPECS_MANIFEST: &str = ".decapod/generated/specs/.manifest.json";
-pub const LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA: &str = "1.0.0";
+pub const LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA: &str = "1.1.0";
 pub const CAPABILITY_DEFINITION_VERSION: &str = "1.0.0";
 
 #[derive(Clone, Copy, Debug)]
@@ -157,6 +157,8 @@ pub struct ProjectSpecManifestEntry {
     pub path: String,
     pub template_hash: String,
     pub content_hash: String,
+    #[serde(default)]
+    pub fingerprint: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -180,9 +182,6 @@ pub struct ProjectSpecsManifest {
     /// Release identity of the Decapod binary that produced the projections.
     #[serde(default)]
     pub decapod_release: String,
-    /// Immutable release-contract SHA compiled into that Decapod binary.
-    #[serde(default)]
-    pub binary_hash: String,
     /// Generated agent entrypoints attested using the same template/content
     /// hash shape as the living spec files above.
     #[serde(default)]
@@ -377,6 +376,9 @@ pub fn entrypoint_manifest_entries(
             path: surface.to_string(),
             template_hash: hash_text(&rendered),
             content_hash,
+            fingerprint: crate::core::entrypoint_integrity::expected_fingerprint(surface)
+                .unwrap_or_default()
+                .to_string(),
         });
     }
     Ok(entries)
@@ -412,6 +414,7 @@ pub fn refresh_specs_manifest(
             path: spec.path.to_string(),
             template_hash,
             content_hash,
+            fingerprint: String::new(),
         });
     }
 
@@ -438,7 +441,6 @@ pub fn refresh_specs_manifest(
                 && manifest.config_input_hash == config_input_hash
                 && manifest.spec_input_hash == spec_input_hash
                 && manifest.decapod_release == crate::core::entrypoint_integrity::RELEASE_VERSION
-                && manifest.binary_hash == crate::core::entrypoint_integrity::BINARY_SHA256
                 && manifest.entrypoints == entrypoints
                 && manifest.files == manifest_entries
         })
@@ -454,7 +456,6 @@ pub fn refresh_specs_manifest(
         config_input_hash,
         spec_input_hash,
         decapod_release: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
-        binary_hash: crate::core::entrypoint_integrity::BINARY_SHA256.to_string(),
         entrypoints,
         files: manifest_entries,
     };

@@ -833,7 +833,7 @@ Refresh output requirements:
 - Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set.
 
 ## Release-Bound Agent Entrypoint Integrity
-The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and compiled binary SHA-256; `.decapod/generated/specs/.manifest.json` records the same release identity plus `template_hash` and `content_hash` entries for `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md`. Default validation independently checks the compiled release contract, declared metadata, canonical payload, regular-file type, and manifest synchronization. Regeneration must be explicit through the installed Decapod release.
+The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/generated/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
 
 ## Validation Decision Tree
 ```mermaid
@@ -1275,6 +1275,7 @@ pub fn refresh_project_specs(
             path: spec.path.to_string(),
             template_hash,
             content_hash,
+            fingerprint: String::new(),
         });
     }
 
@@ -1289,7 +1290,6 @@ pub fn refresh_project_specs(
                     && existing.repo_signal_fingerprint == current_repo_fingerprint
                     && existing.decapod_release
                         == crate::core::entrypoint_integrity::RELEASE_VERSION
-                    && existing.binary_hash == crate::core::entrypoint_integrity::BINARY_SHA256
                     && existing.entrypoints == entrypoints
                     && existing.files == manifest_entries
                     && file_writes.is_empty()
@@ -1304,7 +1304,6 @@ pub fn refresh_project_specs(
         config_input_hash: config_input_hash(project_root)?,
         spec_input_hash: spec_input_hash(project_root)?,
         decapod_release: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
-        binary_hash: crate::core::entrypoint_integrity::BINARY_SHA256.to_string(),
         entrypoints,
         files: manifest_entries,
     };
@@ -1314,7 +1313,6 @@ pub fn refresh_project_specs(
         && existing.template_version == manifest.template_version
         && existing.repo_signal_fingerprint == manifest.repo_signal_fingerprint
         && existing.decapod_release == manifest.decapod_release
-        && existing.binary_hash == manifest.binary_hash
         && existing.entrypoints == manifest.entrypoints
         && existing.files == manifest.files
         && file_writes.is_empty()
@@ -1816,6 +1814,7 @@ pub fn scaffold_project_entrypoints(
                 path: rel_path.to_string(),
                 template_hash,
                 content_hash: final_content_hash,
+                fingerprint: String::new(),
             });
         }
 
@@ -1838,7 +1837,6 @@ pub fn scaffold_project_entrypoints(
                     String::new()
                 },
                 decapod_release: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
-                binary_hash: crate::core::entrypoint_integrity::BINARY_SHA256.to_string(),
                 entrypoints: entrypoint_manifest_entries(&opts.target_dir)?,
                 files: manifest_entries,
             };

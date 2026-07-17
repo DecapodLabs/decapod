@@ -535,7 +535,7 @@ fn test_root_entrypoints_match_scaffold_generators() {
 }
 
 #[test]
-fn test_entrypoints_record_binary_release_and_specs_manifest_attestation() {
+fn test_entrypoints_record_release_fingerprints_and_specs_manifest_attestation() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
     let (success, output) = run_decapod(&temp_path, &["init", "--force"]);
@@ -543,10 +543,10 @@ fn test_entrypoints_record_binary_release_and_specs_manifest_attestation() {
 
     for surface in entrypoint_integrity::ENTRYPOINT_FILES {
         let content = fs::read_to_string(temp_path.join(surface)).expect("read entrypoint");
-        assert!(content.contains("<!-- decapod-release: 0.69.1 -->"));
+        assert!(content.contains("<!-- decapod-release: 0.70.0 -->"));
         assert!(content.contains(&format!(
-            "<!-- decapod-binary-sha256: {} -->",
-            entrypoint_integrity::BINARY_SHA256
+            "<!-- decapod-fingerprint: {} -->",
+            entrypoint_integrity::expected_fingerprint(surface).expect("compiled fingerprint")
         )));
     }
 
@@ -555,16 +555,24 @@ fn test_entrypoints_record_binary_release_and_specs_manifest_attestation() {
             .expect("read specs manifest");
     let manifest: serde_json::Value =
         serde_json::from_str(&manifest_body).expect("parse specs manifest");
-    assert_eq!(manifest["decapod_release"], "0.69.1");
-    assert_eq!(manifest["binary_hash"], entrypoint_integrity::BINARY_SHA256);
+    assert_eq!(manifest["decapod_release"], "0.70.0");
+    assert!(
+        !manifest
+            .as_object()
+            .expect("manifest object")
+            .contains_key("binary_hash")
+    );
     assert_eq!(manifest["entrypoints"].as_array().unwrap().len(), 4);
     for surface in entrypoint_integrity::ENTRYPOINT_FILES {
-        assert!(
-            manifest["entrypoints"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|entry| entry["path"] == surface)
+        let entry = manifest["entrypoints"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|entry| entry["path"] == surface)
+            .expect("entrypoint manifest entry");
+        assert_eq!(
+            entry["fingerprint"],
+            entrypoint_integrity::expected_fingerprint(surface).expect("compiled fingerprint")
         );
     }
 }
@@ -591,7 +599,7 @@ fn test_validate_reports_payload_modified_entrypoint() {
 }
 
 #[test]
-fn test_validate_rejects_rewritten_binary_sha_and_old_release() {
+fn test_validate_migrates_valid_legacy_entrypoint_metadata() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
     let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
@@ -600,24 +608,64 @@ fn test_validate_rejects_rewritten_binary_sha_and_old_release() {
 
     let path = temp_path.join("CLAUDE.md");
     let content = fs::read_to_string(&path).expect("read CLAUDE.md");
-    let rewritten = content.replace(entrypoint_integrity::BINARY_SHA256, &"0".repeat(64));
+    let rewritten = content
+        .replace(
+            &format!(
+                "<!-- decapod-release: {} -->",
+                entrypoint_integrity::RELEASE_VERSION
+            ),
+            "<!-- decapod-release: 0.69.1 -->",
+        )
+        .replace(
+            &format!(
+                "<!-- decapod-fingerprint: {} -->",
+                entrypoint_integrity::expected_fingerprint("CLAUDE.md")
+                    .expect("compiled fingerprint")
+            ),
+            "<!-- decapod-binary-sha256: legacy-release-contract -->",
+        );
     fs::write(&path, rewritten).expect("rewrite binary sha");
     let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
-    assert!(!success, "rewritten binary sha must fail validation");
+    assert!(success, "validate should refresh legacy metadata: {output}");
+    assert!(output.contains("heal_release_bound_entrypoints"));
+
+    let content = fs::read_to_string(&path).expect("read rewritten CLAUDE.md");
+    assert!(content.contains("<!-- decapod-release: 0.70.0 -->"));
+    assert!(content.contains(&format!(
+        "<!-- decapod-fingerprint: {} -->",
+        entrypoint_integrity::expected_fingerprint("CLAUDE.md").expect("compiled fingerprint")
+    )));
+}
+
+#[test]
+fn test_validate_rejects_tweaked_entrypoint_fingerprint() {
+    let temp_dir = TempDir::new().expect("Failed to create temp dir");
+    let temp_path = temp_dir.path().to_path_buf();
+    let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
+    assert!(success, "decapod init should succeed");
+    acquire_session(&temp_path);
+
+    let path = temp_path.join("CLAUDE.md");
+    let content = fs::read_to_string(&path).expect("read CLAUDE.md");
+    let expected =
+        entrypoint_integrity::expected_fingerprint("CLAUDE.md").expect("compiled fingerprint");
+    let rewritten = content.replace(
+        &format!("<!-- decapod-fingerprint: {expected} -->"),
+        "<!-- decapod-fingerprint: 0000000000000000000000000000000000000000000000000000000000000000 -->",
+    );
+    fs::write(&path, rewritten).expect("rewrite fingerprint");
+
+    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
+    assert!(
+        !success,
+        "validate must reject a tweaked fingerprint: {output}"
+    );
     assert!(
         output.contains("Finding: entrypoint_fingerprint_mismatch"),
         "expected typed fingerprint finding. Output:\n{output}"
     );
-
-    let content = fs::read_to_string(&path).expect("read rewritten CLAUDE.md");
-    let old_release = content.replace("decapod-release: 0.69.1", "decapod-release: 0.68.0");
-    fs::write(path, old_release).expect("rewrite release");
-    let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
-    assert!(!success, "old release entrypoint must fail validation");
-    assert!(
-        output.contains("Finding: entrypoint_release_mismatch"),
-        "expected typed release finding. Output:\n{output}"
-    );
+    let content = fs::read_to_string(path).expect("read tweaked CLAUDE.md");
+    assert!(content.contains("decapod-fingerprint: 000000000000"));
 }
 
 #[test]
@@ -652,10 +700,10 @@ fn test_validate_rejects_malformed_entrypoint_metadata() {
     let content = fs::read_to_string(&path).expect("read GEMINI.md");
     let malformed = content.replace(
         &format!(
-            "<!-- decapod-binary-sha256: {} -->",
-            entrypoint_integrity::BINARY_SHA256
+            "<!-- decapod-fingerprint: {} -->",
+            entrypoint_integrity::expected_fingerprint("GEMINI.md").expect("compiled fingerprint")
         ),
-        "<!-- decapod-binary-sha256: -->",
+        "<!-- decapod-fingerprint: -->",
     );
     fs::write(path, malformed).expect("malform entrypoint metadata");
     let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
@@ -670,7 +718,7 @@ fn test_validate_rejects_malformed_entrypoint_metadata() {
 }
 
 #[test]
-fn test_only_explicit_regeneration_restores_entrypoint_integrity() {
+fn test_validate_does_not_overwrite_payload_tamper() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
     let (success, _) = run_decapod(&temp_path, &["init", "--force"]);
@@ -684,7 +732,7 @@ fn test_only_explicit_regeneration_restores_entrypoint_integrity() {
     let (success, output) = run_decapod(&temp_path, &["validate", "--format", "json"]);
     assert!(
         !success,
-        "validation must not silently regenerate: {output}"
+        "validation must fail without overwriting payload tamper: {output}"
     );
     let (success, output) = run_decapod(&temp_path, &["init", "--force"]);
     assert!(
