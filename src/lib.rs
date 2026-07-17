@@ -4618,6 +4618,59 @@ fn heal_validation_scaffold(
     }))
 }
 
+fn heal_release_bound_entrypoints(
+    project_root: &Path,
+) -> Result<Option<ValidationHealAction>, error::DecapodError> {
+    let updated = core::entrypoint_integrity::refresh_entrypoint_metadata(project_root)?;
+    let all_entrypoints_valid =
+        core::entrypoint_integrity::ENTRYPOINT_FILES
+            .iter()
+            .all(|surface| {
+                core::entrypoint_integrity::validate_entrypoint(project_root, surface).is_ok()
+            });
+    if !all_entrypoints_valid {
+        return if updated == 0 {
+            Ok(None)
+        } else {
+            Ok(Some(ValidationHealAction {
+                action: "heal_release_bound_entrypoints".to_string(),
+                outcome: "refreshed".to_string(),
+                detail: format!(
+                    "Refreshed {updated} valid legacy release-bound entrypoint metadata file(s); validation remains blocked by another entrypoint integrity finding."
+                ),
+            }))
+        };
+    }
+
+    let expected_entries = core::project_specs::entrypoint_manifest_entries(project_root)?;
+    let manifest_needs_refresh = match core::project_specs::read_specs_manifest(project_root)? {
+        None => project_root
+            .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
+            .is_dir(),
+        Some(manifest) => {
+            manifest.schema_version != core::project_specs::LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA
+                || manifest.decapod_release != core::entrypoint_integrity::RELEASE_VERSION
+                || manifest.entrypoints != expected_entries
+        }
+    };
+    if updated == 0 && !manifest_needs_refresh {
+        return Ok(None);
+    }
+
+    let config = crate::cli::DecapodProjectConfig::load(project_root).unwrap_or_default();
+    let _ =
+        core::project_specs::refresh_specs_from_codebase(project_root, &config.repo.capabilities)?;
+
+    Ok(Some(ValidationHealAction {
+        action: "heal_release_bound_entrypoints".to_string(),
+        outcome: "refreshed".to_string(),
+        detail: format!(
+            "Refreshed {updated} release-bound entrypoint metadata file(s) and the generated specs manifest for Decapod {}.",
+            core::entrypoint_integrity::RELEASE_VERSION
+        ),
+    }))
+}
+
 fn heal_override_checksum(
     project_root: &Path,
 ) -> Result<Option<ValidationHealAction>, error::DecapodError> {
@@ -4930,6 +4983,9 @@ fn run_validate_command(
         heal_actions.push(action);
     }
     if let Some(action) = heal_validation_scaffold(workspace_root)? {
+        heal_actions.push(action);
+    }
+    if let Some(action) = heal_release_bound_entrypoints(workspace_root)? {
         heal_actions.push(action);
     }
     if let Some(action) = heal_agents_contract(workspace_root)? {

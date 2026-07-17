@@ -1501,17 +1501,6 @@ fn validate_project_specs_docs(
                 ctx,
             );
         }
-        if manifest.binary_hash == crate::core::entrypoint_integrity::BINARY_SHA256 {
-            pass(
-                "Project specs manifest records the compiled Decapod binary SHA-256",
-                ctx,
-            );
-        } else {
-            fail(
-                "STALE_ENTRYPOINT_BINARY: specs manifest binary_hash does not match the compiled Decapod release contract. Regenerate the governed entrypoints and refresh specs.",
-                ctx,
-            );
-        }
         let expected_entrypoints =
             crate::core::project_specs::entrypoint_manifest_entries(repo_root)?;
         if manifest.entrypoints == expected_entrypoints {
