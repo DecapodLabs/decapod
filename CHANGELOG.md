@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.71.2](https://github.com/DecapodLabs/decapod/compare/v0.71.1...v0.71.2) - 2026-07-17
+
+### Fixed
+
+- compute entrypoint hashes for the running release
+- build source binary in validation workflow
+- refresh entrypoint fingerprints for v0.71.1
+- restore capability and worktree validation contracts
+
 ## [0.71.1](https://github.com/DecapodLabs/decapod/compare/v0.71.0...v0.71.1) - 2026-07-17
 
 ### Added
