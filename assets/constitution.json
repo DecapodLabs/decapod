@@ -4012,8 +4012,8 @@
           "Use when handling regulated data (PII, PHI, PCI) or preparing for security audits."
         ],
         "concepts": [
-          "Workspace Isolation: Agents are prohibited from working on main or master or modifying the root repository's active branch. Isolated workspaces must be created via decapod workspace ensure.",
-          "Todo Claim Mandatory: Agents must create and claim a Decapod todo before running decapod workspace ensure, decapod workspace ensure --container, or executing any containerized task.",
+          "Isolation Boundaries: Define which regulated data may cross service, storage, and operational boundaries, and specify segregation or masking controls.",
+          "Control Ownership: Assign each compliance control an accountable owner, review cadence, and auditable evidence path.",
           "Data Classification: Categorize every field by sensitivity level and map it to required technical controls.",
           "Audit Evidence: Automatically collect and store execution logs as immutable evidence of control adherence.",
           "Subject Rights: Design for Data Subject Access Requests (DSAR) and the right-to-delete from the start."
