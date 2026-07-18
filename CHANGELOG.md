@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.71.4](https://github.com/DecapodLabs/decapod/compare/v0.71.3...v0.71.4) - 2026-07-18
+
+### Fixed
+
+- restore architect-grade compliance guidance
+
+### Other
+
+- refresh generated validation artifacts
+
 ## [0.71.3](https://github.com/DecapodLabs/decapod/compare/v0.71.2...v0.71.3) - 2026-07-17
 
 ### Security
