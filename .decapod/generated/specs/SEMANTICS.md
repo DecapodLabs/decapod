@@ -4,6 +4,8 @@
 
 
 
+
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 
@@ -314,7 +316,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `45cb4e58ffc125779cf749b3b9f94e6ecc2de5902fbc99adb102c0cfb6ea804f`
+- Repository signal fingerprint: `312a022991bd869fe00886e10dc0061e0ed3a7b34daa0b142d69833777baf09c`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (89 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
