@@ -4,7 +4,7 @@
 - Prefer explicit schemas over implicit behavior.
 - Every mutating interface defines idempotency semantics.
 - Every failure path maps to a typed, documented error code with auto-remediation guidance.
-- Daemonless: interfaces are synchronous CLI or JSON-RPC over stdin/stdout; the optional HTTP adapter is foreground-only and process-lifetime scoped.
+- Daemonless: all interfaces are synchronous CLI or JSON-RPC over stdin/stdout.
 - Capability-gated: external actions (git, docker, cargo, etc.) require declared capability.
 - CLI-only access to `.decapod/` (jail rule enforced in entrypoint docs).
 
@@ -57,7 +57,6 @@ Generated interface specs include:
 | `decapod infer orientation` | Pre-inference context packet | `--intent`, `--task-id`, `--format` | OrientationPacket |
 | `decapod infer validate` | Post-inference verification | `--result`, `--intent`, `--format` | ValidationResult |
 | `decapod rpc --op <op>` | JSON-RPC interface | `--params`, `--stdin` | RpcResponse |
-| `decapod rpc --http-server` | Foreground authenticated HTTP adapter for the same RPC profile | `--listen`, `--auth-token`, `--allow-remote`, `--max-body-bytes` | HTTP JSON response |
 
 ### JSON-RPC Operations (Agent-Native)
 
@@ -88,22 +87,6 @@ Response envelope (`RpcResponse`):
   "error": null
 }
 ```
-
-#### Optional Authenticated HTTP Transport
-
-The HTTP adapter is opt-in and must be run as the foreground `decapod rpc --http-server` command. It does not create a daemon, detach, install a service, or expose a second semantic control plane. Its default bind is `127.0.0.1:7331`; binding a non-loopback address requires `--allow-remote`. A non-empty bearer token is required from `--auth-token` or `DECAPOD_HTTP_TOKEN`.
-
-Requests use `POST /rpc/v1`, require `Content-Length`, and are limited to `--max-body-bytes` (default 1 MiB) with a 32 KiB header limit and a ten-second read timeout. Every request must include `Idempotency-Key` or `X-Decapod-Request-Id`. An idempotency key replays the cached response; a duplicate request ID is rejected with `409`. Authentication, framing, and replay checks happen before the body is delegated to the existing local RPC process, which remains the authority for session, policy, and mutation semantics.
-
-The Unix-domain group broker is an internal mutation-serialization mechanism, not a second agent-facing RPC API. It may route selected CLI mutations through a short-lived coordination leader, but it preserves the original arguments and semantic handler. Agents should select the CLI/RPC contract; HTTP and stdin/stdout are transport choices for that one implementation.
-
-#### Identity Assertion Contract
-
-Handshake identity assertions distinguish `self-declared`, `locally-observed`, `harness-attested`, `remotely-authenticated`, and `independently-verified` evidence classes. Assertions carry claim-specific scope and lifecycle fields plus optional `nonce`, `binding_hash`, and `signature` values. Receiver policy recomputes the result and may require configured authority/verifier identifiers and a matching keyed attestation digest. Nonce replay, invalid binding, forgery, expiry, revocation, and scope mismatch fail closed; a serialized `verification_result` is never trusted as proof.
-
-#### Portable Completion Evidence Contract
-
-`PortableCompletionEvidence` may include `artifact_contents` entries containing a digest, declared size, and hex-encoded bytes for each referenced capsule/proof artifact. A receiver validates the envelope and artifact bytes, stores immutable custody under the envelope hash and artifact digest, and writes a separate receiver decision report. Re-importing different bytes or a different decision for the same immutable path is rejected. Import never promotes source authority, publication permission, provider trust, or agent permissions.
 
 #### RPC Operation Catalog
 
@@ -178,7 +161,7 @@ Handshake identity assertions distinguish `self-declared`, `locally-observed`, `
 - **Shell completions**: Generated via clap (bash, zsh, fish, powershell)
 
 ### JSON-RPC Surface
-- **Transport**: stdin/stdout (newline-delimited JSON), or the opt-in foreground HTTP adapter at `POST /rpc/v1`
+- **Transport**: stdin/stdout (newline-delimited JSON)
 - **Session**: `DECAPOD_SESSION_PASSWORD` env var + `session.acquire` RPC
 - **Capabilities**: `decapod capabilities` / `rpc --op agent.init`
 
@@ -229,8 +212,6 @@ Handshake identity assertions distinguish `self-declared`, `locally-observed`, `
 | `.decapod/generated/context/*.json` | `capsule.query --write` | WorkUnit lineage, publish gate |
 | `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | `qa verify completion <ID> --write` | Completion verifier, promotion review |
 | `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | `qa verify completion <ID> --import` | Structural inspection and receiver-local decision |
-| `.decapod/generated/artifacts/provenance/completion_evidence/imports/<envelope>/artifacts/<digest>` | `qa verify completion <ID> --import` | Immutable receiver-side artifact custody |
-| `.decapod/generated/artifacts/provenance/completion_evidence/imports/<envelope>.decision.json` | `qa verify completion <ID> --import` | Separate receiver verification decision |
 | `.decapod/generated/policy/context_capsule_policy.json` | `init` / scaffold | Capsule query resolution |
 | `.decapod/generated/specs/*.md` | `init --force` / `rpc specs.refresh` | Validation, agents |
 | `.decapod/generated/artifacts/provenance/*.json` | `workspace publish` / `validate` | Promotion, CI |
@@ -293,7 +274,7 @@ AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_TODO_CLAIM_CONFLICT severity=tran
 - **Version strategy**: Semantic versioning for binary (`Cargo.toml` version), schema_version in config.toml (1.0.0), POLICY_SCHEMA_VERSION for capsule policy
 - **Backward-compatibility**: 
   - CLI: New flags additive; breaking changes require major version
-  - RPC: Operation names stable; new ops additive; params/results extensible. HTTP is an additive transport adapter and must preserve the stdin/stdout RPC semantics.
+  - RPC: Operation names stable; new ops additive; params/results extensible
   - Schemas: Additive migrations only (TODO_SCHEMA_VERSION tracks)
   - Config: `schema_version` gate in validate
 - **Deprecation window**: 2 minor versions for CLI flags; RPC ops never removed
@@ -420,7 +401,7 @@ Agents declare needed capabilities via `assurance.evaluate` params; interlocks b
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0b393ee74774752475148c2c5fbe524af975456d0d31d5083429de309e8ffefc`
+- Repository signal fingerprint: `81a546f1b00cf5510a2f1f2c5a96ab2830d77b37b08b541c3174c118293c186f`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

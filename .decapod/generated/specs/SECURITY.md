@@ -33,7 +33,6 @@ flowchart LR
 3. **Decapod ↔ Container**: Capability-gated (`ContainerExec`), elevated perms required
 4. **Decapod ↔ Cargo**: Capability-gated (`ProofExec`), runs in workspace
 5. **Decapod ↔ Stores**: CLI-only access (jail rule), brokered mutations
-6. **HTTP client ↔ foreground adapter**: Bearer token, loopback default, explicit remote opt-in, bounded requests, and request replay controls; the adapter delegates authority to the existing local RPC path
 
 ## STRIDE Table
 
@@ -59,15 +58,6 @@ flowchart LR
 - **Identity Source**: Git author/committer + SSH keys for remote
 - **Token Lifetime**: N/A (direct CLI invocation)
 - **Elevation**: `sudo`/`doas` required for `workspace ensure --container`
-
-### Identity Evidence
-- Self-declared environment values are recorded for correlation and remain `unverified`.
-- Locally observed, harness-attested, remotely authenticated, and independently verified claims are evaluated against claim-specific receiver policy; accepting an evidence class alone is insufficient.
-- Configured attestation requires scope, authority, verifier, binding hash, nonce, and keyed digest checks. Replayed nonces, forged digests, expired claims, revoked claims, and lifecycle/scope violations are rejected or remain indeterminate rather than being promoted.
-- The local session credential provides repository-local custody and correlation. It is not provider authentication and does not substitute for an attestation trust root.
-
-### Optional HTTP Authentication
-The HTTP transport is a foreground adapter, not a daemon or service. It requires a non-empty bearer token, binds to loopback by default, requires explicit `--allow-remote` for non-loopback addresses, caps headers/body size, and requires an idempotency key or request ID. Authentication and replay controls protect the adapter; semantic authorization remains in the existing session/policy/RPC path.
 
 ## Authorization
 
@@ -113,7 +103,7 @@ The HTTP transport is a foreground adapter, not a daemon or service. It requires
 ### Encryption in Transit
 - Git: SSH/HTTPS (delegated to git CLI)
 - Container: Local Docker socket (no network)
-- RPC: stdin/stdout (local process boundary); optional HTTP uses bearer-authenticated `POST /rpc/v1` and remains process-lifetime scoped
+- RPC: stdin/stdout (local process boundary)
 
 ### Redaction in Logs
 - `DECAPOD_SESSION_PASSWORD` never logged
@@ -146,7 +136,7 @@ cargo vet             # Supply-chain auditing (manual)
 
 ### Signed Artifact / Provenance Strategy
 
-Completion evidence export carries canonical records, source revision bindings, artifact digests, and optional artifact bytes. Imported completion evidence is stored as untrusted evidence and must pass receiving-repository verification; the receiver validates digest/size, stores immutable artifact custody, and persists a separate receiver decision. It does not import authority, publication permission, provider trust, or agent permissions. Attestation material is optional and does not replace semantic validation.
+Completion evidence export carries canonical records, source revision bindings, and artifact digests. Imported completion evidence is stored as untrusted evidence and must pass receiving-repository verification; it does not import authority, publication permission, provider trust, or agent permissions. Signatures remain optional and do not replace semantic validation.
 - `cargo dist` generates signed checksums (GPG)
 - `decapod release inventory` emits deterministic SBOM
 - Provenance manifests: `artifact_manifest.json`, `proof_manifest.json`
@@ -211,7 +201,6 @@ Completion evidence export carries canonical records, source revision bindings, 
 - [ ] Capsule policy `repo_revision` matches HEAD
 - [ ] WorkUnit manifests `VERIFIED` with proof artifacts attached
 - [ ] Provenance manifests present for `workspace publish`
-- [ ] Any HTTP deployment remains an explicitly launched foreground process with loopback binding unless remote exposure is deliberately approved
 
 ## Strongest Security Primitives
 1. **Capability-Gated External Actions**: Every `git`, `docker`, `cargo` call requires declared capability, logged with actor + operation
@@ -231,7 +220,7 @@ Completion evidence export carries canonical records, source revision bindings, 
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0b393ee74774752475148c2c5fbe524af975456d0d31d5083429de309e8ffefc`
+- Repository signal fingerprint: `81a546f1b00cf5510a2f1f2c5a96ab2830d77b37b08b541c3174c118293c186f`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

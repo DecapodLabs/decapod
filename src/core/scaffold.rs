@@ -1621,9 +1621,10 @@ pub fn scaffold_project_entrypoints(
     // This is critical - without it, all subsequent file operations will fail
     if !opts.target_dir.exists() {
         fs::create_dir_all(&opts.target_dir).map_err(|e| {
-            error::DecapodError::IoError(std::io::Error::other(
-                format!("Failed to create target directory '{}': {e}", opts.target_dir.display())
-            ))
+            error::DecapodError::IoError(std::io::Error::other(format!(
+                "Failed to create target directory '{}': {e}",
+                opts.target_dir.display()
+            )))
         })?;
     }
 
@@ -1748,33 +1749,32 @@ pub fn scaffold_project_entrypoints(
             "last_seen_version": env!("CARGO_PKG_VERSION"),
             "updated_at": now,
         });
-        if let Ok(body) = serde_json::to_string_pretty(&version_counter) {
-            if let Err(e) = fs::write(version_counter_path, body) {
-                eprintln!("warning: Failed to write version_counter.json: {e}");
-            }
+        if let Ok(body) = serde_json::to_string_pretty(&version_counter)
+            && let Err(e) = fs::write(version_counter_path, body)
+        {
+            eprintln!("warning: Failed to write version_counter.json: {e}");
         }
     }
 
     let generated_policy_path = opts.target_dir.join(GENERATED_POLICY_REL_PATH);
-    if !generated_policy_path.exists() {
-        if let Ok(policy_body) = default_policy_json_pretty() {
-            if let Some(parent) = generated_policy_path.parent() {
-                if let Err(e) = fs::create_dir_all(parent) {
-                    eprintln!("warning: Failed to create policy directory: {e}");
-                }
-            }
-            if let Err(e) = fs::write(&generated_policy_path, policy_body) {
-                eprintln!("warning: Failed to write policy JSON: {e}");
-            }
+    if !generated_policy_path.exists()
+        && let Ok(policy_body) = default_policy_json_pretty()
+        && let Some(parent) = generated_policy_path.parent()
+    {
+        if let Err(e) = fs::create_dir_all(parent) {
+            eprintln!("warning: Failed to create policy directory: {e}");
+        }
+        if let Err(e) = fs::write(&generated_policy_path, policy_body) {
+            eprintln!("warning: Failed to write policy JSON: {e}");
         }
     }
 
     // Always create epistemic custody artifacts directory (core Decapod infrastructure)
     let custody_dir = opts.target_dir.join(".decapod/generated/artifacts/custody");
-    if !custody_dir.exists() {
-        if let Err(e) = fs::create_dir_all(&custody_dir) {
-            eprintln!("warning: Failed to create custody directory: {e}");
-        }
+    if !custody_dir.exists()
+        && let Err(e) = fs::create_dir_all(&custody_dir)
+    {
+        eprintln!("warning: Failed to create custody directory: {e}");
     }
 
     // Capability-driven scaffolding proposals (non-fatal if this fails)
@@ -1855,13 +1855,13 @@ pub fn scaffold_project_entrypoints(
                 } else {
                     preserved += 1;
                 }
-} else {
-                    match try_write_file(opts, rel_path, &content) {
-                        FileAction::Created => created += 1,
-                        FileAction::Unchanged => unchanged += 1,
-                        FileAction::Preserved => preserved += 1,
-                    }
+            } else {
+                match try_write_file(opts, rel_path, &content) {
+                    FileAction::Created => created += 1,
+                    FileAction::Unchanged => unchanged += 1,
+                    FileAction::Preserved => preserved += 1,
                 }
+            }
 
             manifest_entries.push(ProjectSpecManifestEntry {
                 path: rel_path.to_string(),
@@ -1872,10 +1872,10 @@ pub fn scaffold_project_entrypoints(
         }
 
         if !opts.dry_run {
-            let repo_fingerprint = repo_signal_fingerprint(&opts.target_dir)
-                .unwrap_or_else(|_| "unknown".to_string());
-            let entrypoint_list = entrypoint_manifest_entries(&opts.target_dir)
-                .unwrap_or_else(|_| Vec::new());
+            let repo_fingerprint =
+                repo_signal_fingerprint(&opts.target_dir).unwrap_or_else(|_| "unknown".to_string());
+            let entrypoint_list =
+                entrypoint_manifest_entries(&opts.target_dir).unwrap_or_else(|_| Vec::new());
             let config_hash = if opts.target_dir.join(".decapod/config.toml").exists() {
                 config_input_hash(&opts.target_dir).unwrap_or_default()
             } else {
@@ -1901,12 +1901,14 @@ pub fn scaffold_project_entrypoints(
                 files: manifest_entries,
             };
             let manifest_path = opts.target_dir.join(LOCAL_PROJECT_SPECS_MANIFEST);
-            if let Err(e) = fs::create_dir_all(manifest_path.parent().unwrap_or(std::path::Path::new("/"))) {
+            if let Err(e) =
+                fs::create_dir_all(manifest_path.parent().unwrap_or(std::path::Path::new("/")))
+            {
                 eprintln!("warning: Failed to create specs directory: {e}");
-            } else if let Ok(manifest_body) = serde_json::to_string_pretty(&manifest) {
-                if let Err(e) = fs::write(&manifest_path, manifest_body) {
-                    eprintln!("warning: Failed to write specs manifest: {e}");
-                }
+            } else if let Ok(manifest_body) = serde_json::to_string_pretty(&manifest)
+                && let Err(e) = fs::write(&manifest_path, manifest_body)
+            {
+                eprintln!("warning: Failed to write specs manifest: {e}");
             }
         }
         (created, unchanged, preserved)
