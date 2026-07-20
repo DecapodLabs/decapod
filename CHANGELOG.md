@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.3](https://github.com/DecapodLabs/decapod/compare/v0.72.2...v0.72.3) - 2026-07-20
+
+### Fixed
+
+- derive Bazel package version from Cargo
+
+### Other
+
+- refresh v0.72.2 release metadata
+
 ## [0.72.2](https://github.com/DecapodLabs/decapod/compare/v0.72.1...v0.72.2) - 2026-07-20
 
 ### Fixed
