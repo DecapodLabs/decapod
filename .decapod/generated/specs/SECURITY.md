@@ -220,7 +220,7 @@ Completion evidence export carries canonical records, source revision bindings, 
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `312a022991bd869fe00886e10dc0061e0ed3a7b34daa0b142d69833777baf09c`
+- Repository signal fingerprint: `ebbdb3294c324b315438af5b6a6e7ba9d587920493d514bb4e6ddb0e3b8db64c`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (89 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
