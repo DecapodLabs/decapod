@@ -6,6 +6,11 @@
 
 
 
+
+
+
+
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 
@@ -34,11 +39,25 @@ CLI governance runtime with dual-store architecture, git worktree isolation, and
 Decapod is a Rust CLI governance kernel for AI agents. It runs on-demand (daemonless), manages project-scoped state in SQLite with event sourcing, enforces workspace isolation via git worktrees and optional Docker containers, and provides deterministic context capsules for inference governance.
 
 **Architectural Principles:**
-- **Daemonless**: No background processes; invoked by agents on demand (INV-DAEMONLESS)
+- **Daemonless**: No background processes or detached services; an optional HTTP adapter is a foreground CLI mode whose listener and child request handling end with the invoking process (INV-DAEMONLESS)
 - **Dual-Store**: User (blank-slate) + Repo (dogfood backlog, event-sourced, deterministic rebuild)
 - **Workspace Isolation**: Git worktrees mandatory; containers optional but gated
 - **Deterministic**: Same inputs → identical outputs; event logs enable full rebuild
 - **Capability-Gated**: External actions (git, docker, fs) require declared capabilities
+
+### Optional HTTP Adapter Boundary
+
+`core/http_transport.rs` is a deliberately narrow, opt-in adapter around the existing transport-neutral RPC profile. `decapod rpc --http-server` owns the listener in the foreground and delegates each authenticated request to the existing local RPC semantics; it does not install a service, daemon, supervisor, or persistent background process. Loopback binding is the default, remote binding requires explicit `--allow-remote`, bearer authentication is mandatory, and request headers/body sizes are bounded.
+
+HTTP framing, authentication, request identity, idempotency caching, and replay rejection belong to the adapter. Session checks, authority, policy, and semantic mutation remain owned by the existing local RPC path. This keeps HTTP a replaceable transport rather than a second control plane.
+
+The Unix-domain `core/group_broker.rs` is not a competing agent API: it is an internal, short-lived mutation serializer for selected Todo/Decide/Knowledge operations. It routes the original CLI arguments and does not define alternate RPC semantics. Agents must use the CLI/RPC contract; HTTP and stdin/stdout converge on the same handler path.
+
+### Provenance and Evidence Boundaries
+
+Identity assertions retain claim kind, subject type, evidence class, scope, lifecycle fields, authority/verifier, and optional nonce/binding/signature material. Verification is recomputed under a receiver policy; serialized verification results do not grant authority. Self-declared claims remain unverified, while configured attestation keys can verify claim-specific remote or harness evidence and reject expired, revoked, out-of-scope, forged, or replayed claims.
+
+Portable completion evidence is an envelope containing canonical records, source revision bindings, artifact digests, and optional hex-encoded artifact contents. The receiving repository validates content against digest/size, stores immutable custody by envelope and digest, and persists a separate receiver decision. Source authority and publication permission never cross the import boundary.
 
 ## Capability Ownership
 
@@ -160,6 +179,9 @@ flowchart TD
 | `CapsulePolicyBinding` | `core/capsule_policy.rs` | Risk tiers, scope allowlists, repo-revision binding |
 | `ValidationContext` | `core/validate.rs` | Gate timing, pass/fail/warn counts, auto-remediable errors |
 | `RpcResponse` | `core/rpc.rs` | Standard envelope: receipt, capsule, allowed_ops, interlock |
+| `HttpTransport` | `core/http_transport.rs` | Foreground authenticated HTTP framing, limits, idempotency, and replay protection |
+| `IdentityAssertion` | `src/lib.rs` | Claim-specific identity evidence and receiver-side verification |
+| `PortableCompletionEvidence` | `core/completion_evidence.rs` | Portable artifact custody and receiver-local completion decision |
 | `AssuranceEngine` | `core/assurance.rs` | Interlock resolution, advisory, attestation |
 | `FlightRecorder` | `core/flight_recorder.rs` | Timeline from broker/todo/federation/proof event logs |
 
@@ -401,7 +423,7 @@ Verification and artifact emission:
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0d6f25a6103a993ee229b04303812ff06bdca868c1b5418c57815d4319a89f2e`
+- Repository signal fingerprint: `0b393ee74774752475148c2c5fbe524af975456d0d31d5083429de309e8ffefc`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

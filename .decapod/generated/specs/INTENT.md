@@ -18,7 +18,7 @@
 
 <!-- decapod:declared-capabilities:end -->
 ## Product Outcome
-Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to converge on human intent, shape context before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
+Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to converge on human intent, shape context before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work. An optional authenticated HTTP adapter may expose the same RPC profile only while its foreground CLI process is running; it is not a background daemon or service deployment.
 
 ## What This Project Is
 Decapod is a Rust CLI project that implements a governance runtime for AI agents. It provides:
@@ -44,6 +44,9 @@ Decapod is a Rust CLI project that implements a governance runtime for AI agents
 
 **Agent Interface:**
 - JSON-RPC over stdin/stdout with standard envelope (receipt, context_capsule, allowed_next_ops, blocked_by, interlock, advisory, attestation)
+- Optional authenticated HTTP transport for the same RPC semantics, with loopback-by-default binding, explicit remote opt-in, bounded requests, and replay/idempotency controls
+- Identity evidence that separates self-declared claims from locally observed or trusted attested claims
+- Portable completion evidence that carries referenced artifact bytes for receiver-side custody and decision-making without importing source authority
 - Capabilities discovery via `decapod capabilities` / `decapod rpc --op agent.init`
 - Constitution graph queries (`constitution get`, `constitution links`) with embedded methodology docs
 
@@ -93,13 +96,13 @@ flowchart LR
 ## Non-Goals (Falsifiable)
 | Non-goal | How to falsify |
 |----------|----------------|
-| Background daemon / server mode | Any PR adds long-running process or port listener |
+| Background daemon / server mode | Any PR adds a background process, detached listener, or always-on service; a foreground `decapod rpc --http-server` invocation is allowed only while the invoking process remains active |
 | Cloud-managed state (beyond experimental opt-in) | Cloud sync mutates local `.decapod/data` without explicit user action |
 | Replacing agent reasoning | Any PR adds LLM calling or prompt engineering beyond context shaping |
 | General-purpose task queue | Any PR adds job scheduling unrelated to governance primitives |
 
 ## Constraints
-- **Technical**: Daemonless (INV-DAEMONLESS), SQLite WAL mode, git worktree isolation, container runtime optional but gated
+- **Technical**: Daemonless (INV-DAEMONLESS), SQLite WAL mode, git worktree isolation, container runtime optional but gated, and any HTTP listener must be foreground, opt-in, bounded, and process-lifetime scoped
 - **Operational**: Agents must claim todo before work, session token required, elevated permissions for container commands
 - **Security**: No secrets in config.toml, .decapod/ CLI-only access (jail rule), capability-gated external actions
 
@@ -177,6 +180,9 @@ flowchart LR
 - [x] Inference governance (orientation/validate/budget)
 - [x] Validation harness with auto-remediable errors
 - [x] JSON-RPC interface with standard envelope
+- [x] Optional foreground authenticated HTTP adapter for the transport-neutral RPC profile
+- [x] Claim-specific identity evidence with attestation binding, nonce replay checks, and lifecycle rejection
+- [x] Portable completion evidence with immutable receiver custody and a separate receiver decision
 - [x] Embedded constitution graph with links navigation
 - [ ] Cross-repo federation (experimental)
 - [ ] Cloud sync (experimental opt-in only)
@@ -191,7 +197,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0d6f25a6103a993ee229b04303812ff06bdca868c1b5418c57815d4319a89f2e`
+- Repository signal fingerprint: `0b393ee74774752475148c2c5fbe524af975456d0d31d5083429de309e8ffefc`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

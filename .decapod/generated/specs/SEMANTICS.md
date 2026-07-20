@@ -10,6 +10,16 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 
@@ -295,6 +305,18 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 3. **Specs Sync**: Template drift = fail (or `--refresh-specs` to acknowledge)
 4. **Config Schema**: `schema_version=1.0.0` required; forbidden keys rejected
 
+## Transport Semantics
+
+The canonical RPC semantics are transport-neutral. Newline-delimited JSON over stdin/stdout remains the default local interface. `decapod rpc --http-server` is an additive, opt-in foreground adapter for `POST /rpc/v1`; it applies bearer authentication, loopback-by-default binding, explicit remote opt-in, bounded headers/body, and request identity before delegating the same RPC request to local semantic handling. It must not detach, supervise, or survive the invoking process.
+
+An `Idempotency-Key` identifies a replayable request whose response may be cached. `X-Decapod-Request-Id` identifies a one-time request and duplicate use returns a replay conflict. The cache/replay window is bounded in memory and does not become durable governance state.
+
+## Identity and Evidence Semantics
+
+Claim evidence and verification outcome are separate values. Self-declared claims are retained but never promoted by serialization or by a permissive policy. Configured attestation can verify a claim-specific keyed digest over the claim fields, nonce, and binding hash; receiver policy also checks authority/verifier, scope, expiry, revocation, accepted evidence class, and nonce freshness.
+
+Portable completion evidence is structurally valid only when its canonical envelope and optional artifact contents agree. Receiver-local verification determines acceptance, while immutable custody and the receiver decision are stored separately from the imported envelope. Imported source claims do not become local authority.
+
 ## Idempotency Contracts
 
 | Operation | Idempotency Key | Duplicate Behavior |
@@ -309,18 +331,20 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 | `session acquire` | `agent_id` (from password) | Returns existing token |
 | `data knowledge add` | `id` (ULID) | Fails if ID exists |
 | `broker mutation` | `op+entity+id` | Append-only event log |
+| `HTTP idempotency` | `Idempotency-Key` | Cached response for duplicate idempotent requests |
+| `HTTP request replay` | `X-Decapod-Request-Id` | Duplicate request rejected with `409` |
 
 ## Language Note
 - Primary language: Rust (edition 2024, rust-version 1.96.1)
 - Schema definitions: Rust structs + serde + SQL DDL in `schemas.rs`
 - CLI: Clap 4 derive
-- RPC: JSON over stdin/stdout (no HTTP)
+- RPC: JSON over stdin/stdout by default, with an optional authenticated foreground HTTP adapter
 - Event logs: JSONL (one JSON object per line)
 
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0d6f25a6103a993ee229b04303812ff06bdca868c1b5418c57815d4319a89f2e`
+- Repository signal fingerprint: `0b393ee74774752475148c2c5fbe524af975456d0d31d5083429de309e8ffefc`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

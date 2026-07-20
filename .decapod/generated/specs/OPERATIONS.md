@@ -10,6 +10,16 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 
@@ -69,6 +79,18 @@ Operational ownership follows the declared surfaces: session/authentication and 
 - Prebuilt binaries via `cargo-dist` (GitHub Releases): linux-x86_64, linux-aarch64, macos-x86_64, macos-aarch64
 - Runs entirely in user's repository context
 - State stored in `.decapod/` within each repository
+
+### Optional Foreground HTTP RPC
+
+HTTP is permitted only as an explicitly launched, process-lifetime-scoped adapter:
+
+```bash
+decapod rpc --http-server --listen 127.0.0.1:7331 --auth-token "$DECAPOD_HTTP_TOKEN"
+```
+
+This command remains attached to the invoking terminal and exits with that process; it is not a daemon, service, supervisor, or deployment target. Keep the default loopback bind unless remote exposure is deliberately approved with `--allow-remote`. Operators must provide a non-empty bearer token, retain the request size limit, and treat `Idempotency-Key`/`X-Decapod-Request-Id` as request-correlation controls rather than durable task state.
+
+The adapter is operationally replaceable: stdin/stdout remains the canonical local transport, and session, authorization, validation, proof, and mutation semantics continue to execute through the existing local RPC path.
 
 **Runtime Requirements:**
 - Git 2.30+ (worktree support)
@@ -294,7 +316,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0d6f25a6103a993ee229b04303812ff06bdca868c1b5418c57815d4319a89f2e`
+- Repository signal fingerprint: `0b393ee74774752475148c2c5fbe524af975456d0d31d5083429de309e8ffefc`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

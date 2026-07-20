@@ -10,6 +10,16 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 
@@ -149,6 +159,9 @@ flowchart LR
 | Specs manifest sync | `decapod validate` (specs gate) | `.manifest.json` fingerprints match |
 | Capsule policy lineage | `decapod govern capsule query --write` | Policy hash binds to HEAD |
 | Completion evidence integrity | `decapod qa verify completion <ID>` | Canonical record, artifact, epoch, and receiver-local checks |
+| Identity evidence lifecycle | `cargo test --lib handshake_identity_tests` | Claim-specific scope, authority, attestation, replay, expiry, and revocation checks |
+| Portable evidence custody | `cargo test --lib core::completion_evidence::tests` | Artifact bytes, digest/size validation, immutable custody, and receiver decision persistence |
+| Foreground HTTP transport | `cargo test --lib core::http_transport::tests` plus `cargo clippy --all-targets --all-features -- -D warnings` | Loopback boundary, bounded framing, and daemonless adapter policy |
 
 ### Warning Gates (Non-Blocking, SLA Tracked)
 | Gate | Trigger | Follow-up SLA |
@@ -166,6 +179,8 @@ flowchart LR
 | Artifact manifest | `.decapod/generated/artifacts/provenance/artifact_manifest.json` | Promotion |
 | Completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | Reproducible completion review |
 | Imported completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | Untrusted external evidence inspection |
+| Imported artifact custody | `.decapod/generated/artifacts/provenance/completion_evidence/imports/<envelope>/artifacts/<digest>` | Receiver-owned immutable bytes |
+| Receiver decision | `.decapod/generated/artifacts/provenance/completion_evidence/imports/<envelope>.decision.json` | Separate local acceptance/rejection record |
 | Test logs | CI artifact store | Promotion |
 | Architecture diagram | `ARCHITECTURE.md` (in specs) | Promotion |
 | Changelog entry | `CHANGELOG.md` | Promotion |
@@ -352,7 +367,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0d6f25a6103a993ee229b04303812ff06bdca868c1b5418c57815d4319a89f2e`
+- Repository signal fingerprint: `0b393ee74774752475148c2c5fbe524af975456d0d31d5083429de309e8ffefc`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
