@@ -11783,6 +11783,117 @@
         "proceed_when": [
           "Proceed when the context pack is focused, authoritative, and completely addresses the task intent."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/AGENT_CONTEXT_PACK as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes retrieved snippets, task scope, authority ordering, bounded context, and agent pre-inference consumption.",
+        "Use the existing interfaces/AGENT_CONTEXT_PACK decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/AGENT_CONTEXT_PACK additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/AGENT_CONTEXT_PACK?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/AGENT_CONTEXT_PACK can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/AGENT_CONTEXT_PACK contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine exactly which snippets of code and which constitution nodes are strictly required for the immediate task."
+        },
+        {
+          "choice": "Evolve interfaces/AGENT_CONTEXT_PACK additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/AGENT_CONTEXT_PACK change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/AGENT_CONTEXT_PACK's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/AGENT_CONTEXT_PACK."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/AGENT_CONTEXT_PACK contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/AGENT_CONTEXT_PACK's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/AGENT_CONTEXT_PACK mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/AGENT_CONTEXT_PACK change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/AGENT_CONTEXT_PACK's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/AGENT_CONTEXT_PACK."
+        ],
+        "proof": [
+          "Map interfaces/AGENT_CONTEXT_PACK to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/AGENT_CONTEXT_PACK node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Context packs must explicitly label the provenance and authority level of the retrieved information."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/AGENT_CONTEXT_PACK without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the context pack is focused, authoritative, and completely addresses the task intent."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/AGENT_CONTEXT_PACK compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query methodology/MEMORY for context compaction strategies."
+        ]
       }
     },
     "interfaces/ARCHITECTURE_FOUNDATIONS": {
@@ -11834,6 +11945,117 @@
         ],
         "proceed_when": [
           "Proceed when foundational vocabulary is used to define the problem and state boundaries."
+        ]
+      },
+      "architect_notes": [
+        "Treat interfaces/ARCHITECTURE_FOUNDATIONS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes foundational architecture vocabulary: boundary, state, interface, runtime, deployment, and data flow.",
+        "Use the existing interfaces/ARCHITECTURE_FOUNDATIONS decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/ARCHITECTURE_FOUNDATIONS additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/ARCHITECTURE_FOUNDATIONS?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/ARCHITECTURE_FOUNDATIONS can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/ARCHITECTURE_FOUNDATIONS contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Identify the primary constraint axis for the design: latency, throughput, consistency, or cost."
+        },
+        {
+          "choice": "Evolve interfaces/ARCHITECTURE_FOUNDATIONS additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/ARCHITECTURE_FOUNDATIONS change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/ARCHITECTURE_FOUNDATIONS's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/ARCHITECTURE_FOUNDATIONS."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/ARCHITECTURE_FOUNDATIONS contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/ARCHITECTURE_FOUNDATIONS's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/ARCHITECTURE_FOUNDATIONS mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/ARCHITECTURE_FOUNDATIONS change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/ARCHITECTURE_FOUNDATIONS's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/ARCHITECTURE_FOUNDATIONS."
+        ],
+        "proof": [
+          "Map interfaces/ARCHITECTURE_FOUNDATIONS to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/ARCHITECTURE_FOUNDATIONS node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: All architectural designs must explicitly name their data flow, boundaries, and failure modes."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/ARCHITECTURE_FOUNDATIONS without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when foundational vocabulary is used to define the problem and state boundaries."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/ARCHITECTURE_FOUNDATIONS compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query architecture/SYSTEMS_DESIGN for implementation patterns."
         ]
       }
     },
@@ -11902,6 +12124,117 @@
         "proceed_when": [
           "Proceed when the claim is backed by a passing validation check and evidence is recorded."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/CLAIMS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes claim type, evidence, verification status, stale claim risk, and mapping claims to proof.",
+        "Use the existing interfaces/CLAIMS decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/CLAIMS additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/CLAIMS?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/CLAIMS can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/CLAIMS contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Decide whether a claim is 'enforced' (automated check), 'partially_enforced', or 'not_enforced' (human review)."
+        },
+        {
+          "choice": "Evolve interfaces/CLAIMS additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/CLAIMS change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/CLAIMS's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/CLAIMS."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/CLAIMS contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/CLAIMS's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/CLAIMS mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/CLAIMS change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/CLAIMS's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/CLAIMS."
+        ],
+        "proof": [
+          "Map interfaces/CLAIMS to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/CLAIMS node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Every 'REAL' subsystem must map to at least one enforced claim with an executable proof surface."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/CLAIMS without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the claim is backed by a passing validation check and evidence is recorded."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/CLAIMS compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/TESTING for specific proof mechanisms."
+        ]
       }
     },
     "interfaces/CONTROL_PLANE": {
@@ -11968,6 +12301,117 @@
         "proceed_when": [
           "Proceed when the operation receipt is valid, no blockers remain, and liveness is verified."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/CONTROL_PLANE as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes operation sequencing, receipts, allowed next operations, and mutation boundaries.",
+        "Use the existing interfaces/CONTROL_PLANE decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/CONTROL_PLANE additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/CONTROL_PLANE?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/CONTROL_PLANE can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/CONTROL_PLANE contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine the next allowed operation based on the receipt and liveness signals from the previous step."
+        },
+        {
+          "choice": "Evolve interfaces/CONTROL_PLANE additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/CONTROL_PLANE change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/CONTROL_PLANE's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/CONTROL_PLANE."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/CONTROL_PLANE contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/CONTROL_PLANE's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/CONTROL_PLANE mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/CONTROL_PLANE change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/CONTROL_PLANE's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/CONTROL_PLANE."
+        ],
+        "proof": [
+          "Map interfaces/CONTROL_PLANE to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/CONTROL_PLANE node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Agents must consult Decapod doctrine and retrieve context packs before hardening any plan or code."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/CONTROL_PLANE without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the operation receipt is valid, no blockers remain, and liveness is verified."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/CONTROL_PLANE compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query docs/CONTROL_PLANE_API for payload examples and error shapes."
+        ]
       }
     },
     "interfaces/DEMANDS_SCHEMA": {
@@ -12019,6 +12463,117 @@
         ],
         "proceed_when": [
           "Proceed when demands are structured, scoped, and conflicts are resolved per precedence."
+        ]
+      },
+      "architect_notes": [
+        "Treat interfaces/DEMANDS_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes how human constraints become structured demands: must, must-not, priority, and durability.",
+        "Use the existing interfaces/DEMANDS_SCHEMA decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/DEMANDS_SCHEMA additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/DEMANDS_SCHEMA?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/DEMANDS_SCHEMA can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/DEMANDS_SCHEMA contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine if a user's prompt should be encoded as a durable demand or an ephemeral preference."
+        },
+        {
+          "choice": "Evolve interfaces/DEMANDS_SCHEMA additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/DEMANDS_SCHEMA change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/DEMANDS_SCHEMA's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/DEMANDS_SCHEMA."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/DEMANDS_SCHEMA contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/DEMANDS_SCHEMA's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/DEMANDS_SCHEMA mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/DEMANDS_SCHEMA change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/DEMANDS_SCHEMA's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/DEMANDS_SCHEMA."
+        ],
+        "proof": [
+          "Map interfaces/DEMANDS_SCHEMA to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/DEMANDS_SCHEMA node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Structured demands must be linked to specific user intent or session IDs for auditability."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/DEMANDS_SCHEMA without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when demands are structured, scoped, and conflicts are resolved per precedence."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/DEMANDS_SCHEMA compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query specs/INTENT to link demands to outcome contracts."
         ]
       }
     },
@@ -12073,6 +12628,117 @@
         "proceed_when": [
           "Proceed when documentation changes respect the canonical/generated boundary and authority."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/DOC_RULES as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes machine-readable documentation rules: canonical vs generated, boundaries, and drift handling.",
+        "Use the existing interfaces/DOC_RULES decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/DOC_RULES additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/DOC_RULES?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/DOC_RULES can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/DOC_RULES contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Decide whether to update a hand-written doc or regenerate a spec after a structural change."
+        },
+        {
+          "choice": "Evolve interfaces/DOC_RULES additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/DOC_RULES change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/DOC_RULES's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/DOC_RULES."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/DOC_RULES contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/DOC_RULES's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/DOC_RULES mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/DOC_RULES change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/DOC_RULES's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/DOC_RULES."
+        ],
+        "proof": [
+          "Map interfaces/DOC_RULES to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/DOC_RULES node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: All docs must cite their authority layer and freshness/proof expectations to prevent drift."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/DOC_RULES without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when documentation changes respect the canonical/generated boundary and authority."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/DOC_RULES compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query core/DOCS for routing to specific document nodes."
+        ]
       }
     },
     "interfaces/GLOSSARY": {
@@ -12125,6 +12791,117 @@
         "proceed_when": [
           "Proceed when the vernacular is successfully mapped to canonical system terms and IDs."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/GLOSSARY as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes vocabulary governance: canonical terms, aliases, ambiguity reduction, and retrieval support.",
+        "Use the existing interfaces/GLOSSARY decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/GLOSSARY additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/GLOSSARY?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/GLOSSARY can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/GLOSSARY contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine if a new term should be added to the glossary or mapped to an existing canonical ID."
+        },
+        {
+          "choice": "Evolve interfaces/GLOSSARY additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/GLOSSARY change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/GLOSSARY's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/GLOSSARY."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/GLOSSARY contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/GLOSSARY's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/GLOSSARY mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/GLOSSARY change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/GLOSSARY's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/GLOSSARY."
+        ],
+        "proof": [
+          "Map interfaces/GLOSSARY to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/GLOSSARY node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Glossary entries support retrieval and clarity but do not invent binding behavioral rules."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/GLOSSARY without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the vernacular is successfully mapped to canonical system terms and IDs."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/GLOSSARY compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query core/METADATA for taxonomy and classification retrieval."
+        ]
       }
     },
     "interfaces/INTERNALIZATION_SCHEMA": {
@@ -12176,6 +12953,117 @@
         ],
         "proceed_when": [
           "Proceed when the internalization lifecycle is verified and schema-compliant."
+        ]
+      },
+      "architect_notes": [
+        "Treat interfaces/INTERNALIZATION_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes the lifecycle of attaching, inspecting, and validating external knowledge into Decapod-governed state.",
+        "Use the existing interfaces/INTERNALIZATION_SCHEMA decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/INTERNALIZATION_SCHEMA additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/INTERNALIZATION_SCHEMA?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/INTERNALIZATION_SCHEMA can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/INTERNALIZATION_SCHEMA contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Decide if external knowledge should be internalized as durable state or ephemeral context."
+        },
+        {
+          "choice": "Evolve interfaces/INTERNALIZATION_SCHEMA additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/INTERNALIZATION_SCHEMA change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/INTERNALIZATION_SCHEMA's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/INTERNALIZATION_SCHEMA."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/INTERNALIZATION_SCHEMA contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/INTERNALIZATION_SCHEMA's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/INTERNALIZATION_SCHEMA mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/INTERNALIZATION_SCHEMA change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/INTERNALIZATION_SCHEMA's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/INTERNALIZATION_SCHEMA."
+        ],
+        "proof": [
+          "Map interfaces/INTERNALIZATION_SCHEMA to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/INTERNALIZATION_SCHEMA node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: All internalized data must have an owner and timestamp to manage decay and re-validation."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/INTERNALIZATION_SCHEMA without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the internalization lifecycle is verified and schema-compliant."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/INTERNALIZATION_SCHEMA compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/KNOWLEDGE_SCHEMA for internal object shapes."
         ]
       }
     },
@@ -12231,6 +13119,117 @@
         "proceed_when": [
           "Proceed when the knowledge object is fully structured and its authority/freshness is clear."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/KNOWLEDGE_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes knowledge object shape: source, provenance, authority, summary, and retrieval tags.",
+        "Use the existing interfaces/KNOWLEDGE_SCHEMA decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/KNOWLEDGE_SCHEMA additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/KNOWLEDGE_SCHEMA?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/KNOWLEDGE_SCHEMA can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/KNOWLEDGE_SCHEMA contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine which retrieval tags provide the highest signal for the intended consumer agent."
+        },
+        {
+          "choice": "Evolve interfaces/KNOWLEDGE_SCHEMA additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/KNOWLEDGE_SCHEMA change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/KNOWLEDGE_SCHEMA's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/KNOWLEDGE_SCHEMA."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/KNOWLEDGE_SCHEMA contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/KNOWLEDGE_SCHEMA's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/KNOWLEDGE_SCHEMA mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/KNOWLEDGE_SCHEMA change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/KNOWLEDGE_SCHEMA's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/KNOWLEDGE_SCHEMA."
+        ],
+        "proof": [
+          "Map interfaces/KNOWLEDGE_SCHEMA to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/KNOWLEDGE_SCHEMA node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Knowledge objects must pass strict schema validation before being added to the persistent store."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/KNOWLEDGE_SCHEMA without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the knowledge object is fully structured and its authority/freshness is clear."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/KNOWLEDGE_SCHEMA compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/KNOWLEDGE_STORE for persistence and indexing rules."
+        ]
       }
     },
     "interfaces/KNOWLEDGE_STORE": {
@@ -12285,6 +13284,117 @@
         "proceed_when": [
           "Proceed when store integrity is verified and retrieval paths are optimized for context signals."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/KNOWLEDGE_STORE as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes persistent knowledge storage: indexing, update/delete semantics, and retrieval safety.",
+        "Use the existing interfaces/KNOWLEDGE_STORE decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/KNOWLEDGE_STORE additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/KNOWLEDGE_STORE?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/KNOWLEDGE_STORE can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/KNOWLEDGE_STORE contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine whether to purge a stale record or mark it as 'unverified' in the active index."
+        },
+        {
+          "choice": "Evolve interfaces/KNOWLEDGE_STORE additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/KNOWLEDGE_STORE change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/KNOWLEDGE_STORE's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/KNOWLEDGE_STORE."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/KNOWLEDGE_STORE contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/KNOWLEDGE_STORE's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/KNOWLEDGE_STORE mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/KNOWLEDGE_STORE change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/KNOWLEDGE_STORE's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/KNOWLEDGE_STORE."
+        ],
+        "proof": [
+          "Map interfaces/KNOWLEDGE_STORE to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/KNOWLEDGE_STORE node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: The knowledge store must enforce unique IDs and support deterministic, point-in-time retrieval."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/KNOWLEDGE_STORE without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when store integrity is verified and retrieval paths are optimized for context signals."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/KNOWLEDGE_STORE compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query architecture/KNOWLEDGE_BASE for technical implementation details."
+        ]
       }
     },
     "interfaces/LCM": {
@@ -12338,6 +13448,117 @@
         "proceed_when": [
           "Proceed when context is compacted without losing critical authority or proof signals."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/LCM as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes lossless context management: summary DAGs, deterministic compaction, and transfer boundaries.",
+        "Use the existing interfaces/LCM decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/LCM additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/LCM?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/LCM can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/LCM contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Decide which context branches are 'prunable' versus 'vital' for the current task sequence."
+        },
+        {
+          "choice": "Evolve interfaces/LCM additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/LCM change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/LCM's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/LCM."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/LCM contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/LCM's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/LCM mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/LCM change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/LCM's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/LCM."
+        ],
+        "proof": [
+          "Map interfaces/LCM to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/LCM node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Lossless context management must preserve governing anchors and the original proof evidence."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/LCM without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when context is compacted without losing critical authority or proof signals."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/LCM compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/AGENT_CONTEXT_PACK for session transfer boundaries."
+        ]
       }
     },
     "interfaces/MEMORY_INDEX": {
@@ -12389,6 +13610,117 @@
         ],
         "proceed_when": [
           "Proceed when memory retrieval is ranked by both semantic relevance and authority."
+        ]
+      },
+      "architect_notes": [
+        "Treat interfaces/MEMORY_INDEX as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes memory retrieval index: addressing, categorization, relevance, and search tiers.",
+        "Use the existing interfaces/MEMORY_INDEX decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/MEMORY_INDEX additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/MEMORY_INDEX?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/MEMORY_INDEX can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/MEMORY_INDEX contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine the appropriate tier (personal vs project) for indexing a new memory record."
+        },
+        {
+          "choice": "Evolve interfaces/MEMORY_INDEX additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/MEMORY_INDEX change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/MEMORY_INDEX's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/MEMORY_INDEX."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/MEMORY_INDEX contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/MEMORY_INDEX's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/MEMORY_INDEX mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/MEMORY_INDEX change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/MEMORY_INDEX's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/MEMORY_INDEX."
+        ],
+        "proof": [
+          "Map interfaces/MEMORY_INDEX to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/MEMORY_INDEX node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Index entries must be updated immediately after a linked memory record is modified."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/MEMORY_INDEX without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when memory retrieval is ranked by both semantic relevance and authority."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/MEMORY_INDEX compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/MEMORY_SCHEMA for record shapes and metadata requirements."
         ]
       }
     },
@@ -12442,6 +13774,117 @@
         "proceed_when": [
           "Proceed when the memory record matches the schema and its status is correctly labeled."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/MEMORY_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes durable memory record shape: subject, claim, provenance, scope, and status.",
+        "Use the existing interfaces/MEMORY_SCHEMA decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/MEMORY_SCHEMA additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/MEMORY_SCHEMA?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/MEMORY_SCHEMA can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/MEMORY_SCHEMA contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Decide if an existing record should be updated or if a new versioned record is required."
+        },
+        {
+          "choice": "Evolve interfaces/MEMORY_SCHEMA additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/MEMORY_SCHEMA change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/MEMORY_SCHEMA's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/MEMORY_SCHEMA."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/MEMORY_SCHEMA contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/MEMORY_SCHEMA's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/MEMORY_SCHEMA mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/MEMORY_SCHEMA change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/MEMORY_SCHEMA's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/MEMORY_SCHEMA."
+        ],
+        "proof": [
+          "Map interfaces/MEMORY_SCHEMA to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/MEMORY_SCHEMA node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Memory records must be schema-compliant and correctly scoped to prevent cross-repo pollution."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/MEMORY_SCHEMA without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the memory record matches the schema and its status is correctly labeled."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/MEMORY_SCHEMA compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query methodology/MEMORY for agent cognitive and distillation practices."
+        ]
       }
     },
     "interfaces/PLAN_GOVERNED_EXECUTION": {
@@ -12493,6 +13936,117 @@
         ],
         "proceed_when": [
           "Proceed when the plan is structured with explicit checkpoints and authorized mutations."
+        ]
+      },
+      "architect_notes": [
+        "Treat interfaces/PLAN_GOVERNED_EXECUTION as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes structured execution plans: steps, checkpoints, allowed mutations, and rollback.",
+        "Use the existing interfaces/PLAN_GOVERNED_EXECUTION decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/PLAN_GOVERNED_EXECUTION additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/PLAN_GOVERNED_EXECUTION?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/PLAN_GOVERNED_EXECUTION can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/PLAN_GOVERNED_EXECUTION contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine whether a failed checkpoint requires a full plan rollback or a surgical correction."
+        },
+        {
+          "choice": "Evolve interfaces/PLAN_GOVERNED_EXECUTION additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/PLAN_GOVERNED_EXECUTION change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/PLAN_GOVERNED_EXECUTION's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/PLAN_GOVERNED_EXECUTION."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/PLAN_GOVERNED_EXECUTION contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/PLAN_GOVERNED_EXECUTION's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/PLAN_GOVERNED_EXECUTION mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/PLAN_GOVERNED_EXECUTION change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/PLAN_GOVERNED_EXECUTION's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/PLAN_GOVERNED_EXECUTION."
+        ],
+        "proof": [
+          "Map interfaces/PLAN_GOVERNED_EXECUTION to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/PLAN_GOVERNED_EXECUTION node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Execution plans must be structured, versioned, and stored in the project-managed state."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/PLAN_GOVERNED_EXECUTION without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the plan is structured with explicit checkpoints and authorized mutations."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/PLAN_GOVERNED_EXECUTION compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/TODO_SCHEMA for linking plans to task IDs."
         ]
       }
     },
@@ -12549,6 +14103,117 @@
         "proceed_when": [
           "Proceed when the procedural conduct aligns with the 'Call Decapod Early' mandate and proof."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/PROCEDURAL_NORMS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes agent procedural conduct: call Decapod early, ask when blocked, and preserve evidence.",
+        "Use the existing interfaces/PROCEDURAL_NORMS decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/PROCEDURAL_NORMS additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/PROCEDURAL_NORMS?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/PROCEDURAL_NORMS can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/PROCEDURAL_NORMS contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Choose between making a documented assumption versus stopping to ask the user for input."
+        },
+        {
+          "choice": "Evolve interfaces/PROCEDURAL_NORMS additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/PROCEDURAL_NORMS change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/PROCEDURAL_NORMS's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/PROCEDURAL_NORMS."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/PROCEDURAL_NORMS contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/PROCEDURAL_NORMS's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/PROCEDURAL_NORMS mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/PROCEDURAL_NORMS change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/PROCEDURAL_NORMS's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/PROCEDURAL_NORMS."
+        ],
+        "proof": [
+          "Map interfaces/PROCEDURAL_NORMS to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/PROCEDURAL_NORMS node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Agents must cite the constitution node or spec that authorized their procedural path."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/PROCEDURAL_NORMS without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the procedural conduct aligns with the 'Call Decapod Early' mandate and proof."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/PROCEDURAL_NORMS compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query core/EMERGENCY_PROTOCOL for risk-based stops and containment."
+        ]
       }
     },
     "interfaces/PROJECT_SPECS": {
@@ -12604,6 +14269,117 @@
         ],
         "proceed_when": [
           "Proceed when the spec is hydrated with repo-specific details and explicit proof targets."
+        ]
+      },
+      "architect_notes": [
+        "Treat interfaces/PROJECT_SPECS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes generated project specs: intent, acceptance criteria, boundaries, and spec drift.",
+        "Use the existing interfaces/PROJECT_SPECS decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/PROJECT_SPECS additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/PROJECT_SPECS?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/PROJECT_SPECS can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/PROJECT_SPECS contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine if a spec change requires a corresponding update to the architecture overview doc."
+        },
+        {
+          "choice": "Evolve interfaces/PROJECT_SPECS additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/PROJECT_SPECS change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/PROJECT_SPECS's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/PROJECT_SPECS."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/PROJECT_SPECS contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/PROJECT_SPECS's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/PROJECT_SPECS mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/PROJECT_SPECS change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/PROJECT_SPECS's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/PROJECT_SPECS."
+        ],
+        "proof": [
+          "Map interfaces/PROJECT_SPECS to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/PROJECT_SPECS node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Project specs must be updated and validated *before* the final implementation proceeds."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/PROJECT_SPECS without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the spec is hydrated with repo-specific details and explicit proof targets."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/PROJECT_SPECS compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query specs/INTENT for the parent authority contract."
         ]
       }
     },
@@ -12667,6 +14443,117 @@
         "proceed_when": [
           "Proceed when the change passes all automated risk policies and secures necessary approvals."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/RISK_POLICY_GATE as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes risk classification, approval gates, blocked changes, policy outputs, and escalation.",
+        "Use the existing interfaces/RISK_POLICY_GATE decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/RISK_POLICY_GATE additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/RISK_POLICY_GATE?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/RISK_POLICY_GATE can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/RISK_POLICY_GATE contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine the severity of the proposed mutation and anticipate the required validation gates."
+        },
+        {
+          "choice": "Evolve interfaces/RISK_POLICY_GATE additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/RISK_POLICY_GATE change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/RISK_POLICY_GATE's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/RISK_POLICY_GATE."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/RISK_POLICY_GATE contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/RISK_POLICY_GATE's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/RISK_POLICY_GATE mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/RISK_POLICY_GATE change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/RISK_POLICY_GATE's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/RISK_POLICY_GATE."
+        ],
+        "proof": [
+          "Map interfaces/RISK_POLICY_GATE to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/RISK_POLICY_GATE node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Never bypass a risk policy gate. If a change is blocked, the agent must explain why and halt."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/RISK_POLICY_GATE without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the change passes all automated risk policies and secures necessary approvals."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/RISK_POLICY_GATE compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query architecture/COMPLIANCE for regulated boundaries."
+        ]
       }
     },
     "interfaces/STORE_MODEL": {
@@ -12729,6 +14616,117 @@
         "proceed_when": [
           "Proceed when the correct store is identified and mutation occurs exclusively via the CLI/RPC."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/STORE_MODEL as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes local repo state, user state, created artifacts, operational DB state, sync boundaries, and direct mutation risks.",
+        "Use the existing interfaces/STORE_MODEL decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/STORE_MODEL additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/STORE_MODEL?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/STORE_MODEL can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/STORE_MODEL contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine if a preference or configuration should be saved globally (repo) or locally (user)."
+        },
+        {
+          "choice": "Evolve interfaces/STORE_MODEL additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/STORE_MODEL change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/STORE_MODEL's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/STORE_MODEL."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/STORE_MODEL contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/STORE_MODEL's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/STORE_MODEL mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/STORE_MODEL change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/STORE_MODEL's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/STORE_MODEL."
+        ],
+        "proof": [
+          "Map interfaces/STORE_MODEL to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/STORE_MODEL node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Agents must never manually edit Decapod internal state stores or generated artifact directories."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/STORE_MODEL without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the correct store is identified and mutation occurs exclusively via the CLI/RPC."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/STORE_MODEL compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query core/INTERFACES to verify schema shapes."
+        ]
       }
     },
     "interfaces/TESTING": {
@@ -12786,6 +14784,117 @@
         ],
         "proceed_when": [
           "Proceed when the test command is known and the evidence capture path is configured."
+        ]
+      },
+      "architect_notes": [
+        "Treat interfaces/TESTING as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes testing interface: expected command, evidence capture, and validation status.",
+        "Use the existing interfaces/TESTING decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/TESTING additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/TESTING?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/TESTING can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/TESTING contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine whether a failing test is a regression or a symptom of an outdated project spec."
+        },
+        {
+          "choice": "Evolve interfaces/TESTING additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/TESTING change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/TESTING's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/TESTING."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/TESTING contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/TESTING's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/TESTING mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/TESTING change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/TESTING's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/TESTING."
+        ],
+        "proof": [
+          "Map interfaces/TESTING to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/TESTING node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Test evidence must be stored in the project's verification plan or the auditable session log."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/TESTING without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the test command is known and the evidence capture path is configured."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/TESTING compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query plugins/VERIFY for the invariant and proof check engine."
         ]
       }
     },
@@ -12848,6 +14957,117 @@
         "proceed_when": [
           "Proceed when the todo state accurately reflects reality and execution constraints are met."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/TODO_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes todo states, transitions, ownership, blockers, timestamps, evidence, and completion semantics.",
+        "Use the existing interfaces/TODO_SCHEMA decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/TODO_SCHEMA additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/TODO_SCHEMA?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/TODO_SCHEMA can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/TODO_SCHEMA contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Identify what concrete artifacts or test results are required to transition a task to 'Verified'."
+        },
+        {
+          "choice": "Evolve interfaces/TODO_SCHEMA additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/TODO_SCHEMA change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/TODO_SCHEMA's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/TODO_SCHEMA."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/TODO_SCHEMA contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/TODO_SCHEMA's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/TODO_SCHEMA mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/TODO_SCHEMA change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/TODO_SCHEMA's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/TODO_SCHEMA."
+        ],
+        "proof": [
+          "Map interfaces/TODO_SCHEMA to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/TODO_SCHEMA node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Agents must 'claim' a todo before modifying any repository files to ensure exclusive ownership."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/TODO_SCHEMA without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the todo state accurately reflects reality and execution constraints are met."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/TODO_SCHEMA compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/CONTROL_PLANE for operation sequencing."
+        ]
       }
     },
     "interfaces/jsonschema/internalization/InternalizationAttachResult.schema": {
@@ -12905,6 +15125,117 @@
         ],
         "proceed_when": [
           "Proceed when the payload structure guarantees validation success."
+        ]
+      },
+      "architect_notes": [
+        "Treat interfaces/jsonschema/internalization/InternalizationAttachResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
+        "Use the existing interfaces/jsonschema/internalization/InternalizationAttachResult.schema decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/jsonschema/internalization/InternalizationAttachResult.schema additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/jsonschema/internalization/InternalizationAttachResult.schema?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/jsonschema/internalization/InternalizationAttachResult.schema can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/jsonschema/internalization/InternalizationAttachResult.schema contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine exact field population and formatting required by the schema constraints."
+        },
+        {
+          "choice": "Evolve interfaces/jsonschema/internalization/InternalizationAttachResult.schema additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/jsonschema/internalization/InternalizationAttachResult.schema change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/jsonschema/internalization/InternalizationAttachResult.schema's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/jsonschema/internalization/InternalizationAttachResult.schema."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/jsonschema/internalization/InternalizationAttachResult.schema contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/jsonschema/internalization/InternalizationAttachResult.schema's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/jsonschema/internalization/InternalizationAttachResult.schema mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/jsonschema/internalization/InternalizationAttachResult.schema change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/jsonschema/internalization/InternalizationAttachResult.schema's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/jsonschema/internalization/InternalizationAttachResult.schema."
+        ],
+        "proof": [
+          "Map interfaces/jsonschema/internalization/InternalizationAttachResult.schema to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/jsonschema/internalization/InternalizationAttachResult.schema node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Outputs must pass Ajv strict validation before being transmitted."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/jsonschema/internalization/InternalizationAttachResult.schema without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the payload structure guarantees validation success."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/jsonschema/internalization/InternalizationAttachResult.schema compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/INTERNALIZATION_SCHEMA for the broader lifecycle contract."
         ]
       }
     },
@@ -12964,6 +15295,117 @@
         "proceed_when": [
           "Proceed when the payload structure guarantees validation success."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/jsonschema/internalization/InternalizationCreateResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
+        "Use the existing interfaces/jsonschema/internalization/InternalizationCreateResult.schema decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/jsonschema/internalization/InternalizationCreateResult.schema additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/jsonschema/internalization/InternalizationCreateResult.schema?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/jsonschema/internalization/InternalizationCreateResult.schema can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/jsonschema/internalization/InternalizationCreateResult.schema contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine exact field population and formatting required by the schema constraints."
+        },
+        {
+          "choice": "Evolve interfaces/jsonschema/internalization/InternalizationCreateResult.schema additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/jsonschema/internalization/InternalizationCreateResult.schema change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/jsonschema/internalization/InternalizationCreateResult.schema's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/jsonschema/internalization/InternalizationCreateResult.schema."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/jsonschema/internalization/InternalizationCreateResult.schema contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/jsonschema/internalization/InternalizationCreateResult.schema's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/jsonschema/internalization/InternalizationCreateResult.schema mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/jsonschema/internalization/InternalizationCreateResult.schema change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/jsonschema/internalization/InternalizationCreateResult.schema's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/jsonschema/internalization/InternalizationCreateResult.schema."
+        ],
+        "proof": [
+          "Map interfaces/jsonschema/internalization/InternalizationCreateResult.schema to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/jsonschema/internalization/InternalizationCreateResult.schema node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Outputs must pass Ajv strict validation before being transmitted."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/jsonschema/internalization/InternalizationCreateResult.schema without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the payload structure guarantees validation success."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/jsonschema/internalization/InternalizationCreateResult.schema compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/INTERNALIZATION_SCHEMA for the broader lifecycle contract."
+        ]
       }
     },
     "interfaces/jsonschema/internalization/InternalizationDetachResult.schema": {
@@ -13021,6 +15463,117 @@
         ],
         "proceed_when": [
           "Proceed when the payload structure guarantees validation success."
+        ]
+      },
+      "architect_notes": [
+        "Treat interfaces/jsonschema/internalization/InternalizationDetachResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
+        "Use the existing interfaces/jsonschema/internalization/InternalizationDetachResult.schema decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/jsonschema/internalization/InternalizationDetachResult.schema additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/jsonschema/internalization/InternalizationDetachResult.schema?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/jsonschema/internalization/InternalizationDetachResult.schema can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/jsonschema/internalization/InternalizationDetachResult.schema contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine exact field population and formatting required by the schema constraints."
+        },
+        {
+          "choice": "Evolve interfaces/jsonschema/internalization/InternalizationDetachResult.schema additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/jsonschema/internalization/InternalizationDetachResult.schema change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/jsonschema/internalization/InternalizationDetachResult.schema's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/jsonschema/internalization/InternalizationDetachResult.schema."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/jsonschema/internalization/InternalizationDetachResult.schema contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/jsonschema/internalization/InternalizationDetachResult.schema's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/jsonschema/internalization/InternalizationDetachResult.schema mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/jsonschema/internalization/InternalizationDetachResult.schema change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/jsonschema/internalization/InternalizationDetachResult.schema's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/jsonschema/internalization/InternalizationDetachResult.schema."
+        ],
+        "proof": [
+          "Map interfaces/jsonschema/internalization/InternalizationDetachResult.schema to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/jsonschema/internalization/InternalizationDetachResult.schema node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Outputs must pass Ajv strict validation before being transmitted."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/jsonschema/internalization/InternalizationDetachResult.schema without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the payload structure guarantees validation success."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/jsonschema/internalization/InternalizationDetachResult.schema compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/INTERNALIZATION_SCHEMA for the broader lifecycle contract."
         ]
       }
     },
@@ -13080,6 +15633,117 @@
         "proceed_when": [
           "Proceed when the payload structure guarantees validation success."
         ]
+      },
+      "architect_notes": [
+        "Treat interfaces/jsonschema/internalization/InternalizationInspectResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
+        "Use the existing interfaces/jsonschema/internalization/InternalizationInspectResult.schema decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/jsonschema/internalization/InternalizationInspectResult.schema additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/jsonschema/internalization/InternalizationInspectResult.schema?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/jsonschema/internalization/InternalizationInspectResult.schema can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/jsonschema/internalization/InternalizationInspectResult.schema contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine exact field population and formatting required by the schema constraints."
+        },
+        {
+          "choice": "Evolve interfaces/jsonschema/internalization/InternalizationInspectResult.schema additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/jsonschema/internalization/InternalizationInspectResult.schema change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/jsonschema/internalization/InternalizationInspectResult.schema's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/jsonschema/internalization/InternalizationInspectResult.schema."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/jsonschema/internalization/InternalizationInspectResult.schema contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/jsonschema/internalization/InternalizationInspectResult.schema's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/jsonschema/internalization/InternalizationInspectResult.schema mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/jsonschema/internalization/InternalizationInspectResult.schema change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/jsonschema/internalization/InternalizationInspectResult.schema's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/jsonschema/internalization/InternalizationInspectResult.schema."
+        ],
+        "proof": [
+          "Map interfaces/jsonschema/internalization/InternalizationInspectResult.schema to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/jsonschema/internalization/InternalizationInspectResult.schema node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Outputs must pass Ajv strict validation before being transmitted."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/jsonschema/internalization/InternalizationInspectResult.schema without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the payload structure guarantees validation success."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/jsonschema/internalization/InternalizationInspectResult.schema compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/INTERNALIZATION_SCHEMA for the broader lifecycle contract."
+        ]
       }
     },
     "interfaces/jsonschema/internalization/InternalizationManifest.schema": {
@@ -13137,6 +15801,117 @@
         ],
         "proceed_when": [
           "Proceed when the payload structure guarantees validation success."
+        ]
+      },
+      "architect_notes": [
+        "Treat interfaces/jsonschema/internalization/InternalizationManifest.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
+        "Use the existing interfaces/jsonschema/internalization/InternalizationManifest.schema decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
+        "Keep interfaces/jsonschema/internalization/InternalizationManifest.schema additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
+      ],
+      "init_questions": [
+        {
+          "id": "contract_owners",
+          "prompt": "Which producer, consumer, and state owner must agree before changing interfaces/jsonschema/internalization/InternalizationManifest.schema?",
+          "why": "Naming ownership prevents implementation convenience from silently redefining a shared machine contract.",
+          "answers": [
+            "inspect schema",
+            "query consumer",
+            "ask human",
+            "record assumption",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "evolution_proof",
+          "prompt": "What compatibility and proof evidence will show that interfaces/jsonschema/internalization/InternalizationManifest.schema can evolve safely?",
+          "why": "An interface decision is incomplete until a consumer-visible compatibility check can falsify it.",
+          "answers": [
+            "schema test",
+            "contract test",
+            "runtime check",
+            "spec refresh",
+            "blocked note"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Preserve the existing interfaces/jsonschema/internalization/InternalizationManifest.schema contract",
+          "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
+          "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine exact field population and formatting required by the schema constraints."
+        },
+        {
+          "choice": "Evolve interfaces/jsonschema/internalization/InternalizationManifest.schema additively",
+          "use_when": "A new capability is needed and it can be introduced through optional fields, versioned envelopes, or compatibility adapters.",
+          "avoid_when": "Avoid additive changes when consumers cannot distinguish the new form or when omission changes existing meaning.",
+          "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
+        },
+        {
+          "choice": "Defer incompatible interfaces/jsonschema/internalization/InternalizationManifest.schema change",
+          "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
+          "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
+          "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "compatibility versus expressiveness",
+          "option_a": "Preserve existing fields, defaults, omissions, and error meanings.",
+          "option_b": "Expose a richer contract that may require consumer migration.",
+          "guidance": "Prefer compatibility for existing consumers; choose expressiveness only when the new semantics are explicit, versioned, and proven."
+        },
+        {
+          "axis": "producer autonomy versus consumer safety",
+          "option_a": "Let the producer evolve its implementation behind the stable contract.",
+          "option_b": "Require shared schema and contract checks before the producer changes behavior.",
+          "guidance": "Prefer shared validation when the interface crosses process, agent, repository, or trust boundaries."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture interfaces/jsonschema/internalization/InternalizationManifest.schema's producer, consumer, state owner, lifecycle, compatibility rule, and first proof command before editing it.",
+          "Record the requested change, rejected alternatives, unresolved assumptions, and affected project specs for interfaces/jsonschema/internalization/InternalizationManifest.schema."
+        ],
+        "generate": [
+          "Generate only the schema, example, adapter, test, or spec note required to prove the selected interfaces/jsonschema/internalization/InternalizationManifest.schema contract decision.",
+          "Keep generated payloads deterministic and preserve existing fields, defaults, omissions, and error shapes unless migration is explicit."
+        ],
+        "defer": [
+          "Defer vendor, framework, deployment, or storage choices that do not belong to interfaces/jsonschema/internalization/InternalizationManifest.schema's contract boundary.",
+          "Defer breaking changes until affected consumers, compatibility windows, migration evidence, and rollback behavior are named."
+        ],
+        "proof": [
+          "Pair every interfaces/jsonschema/internalization/InternalizationManifest.schema mutation with schema validation, representative consumer coverage, and a recorded validation result.",
+          "If the proof surface cannot run, record the exact blocker and keep the interface claim unverified."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record how the interfaces/jsonschema/internalization/InternalizationManifest.schema change affects accepted scope, non-goals, assumptions, and consumer-visible behavior."
+        ],
+        "architecture": [
+          "Record interfaces/jsonschema/internalization/InternalizationManifest.schema's producer, consumer, state ownership, lifecycle, and runtime boundary when they change."
+        ],
+        "interfaces": [
+          "Record the schema, envelope, command, payload, omission rule, error shape, compatibility promise, and affected consumers for interfaces/jsonschema/internalization/InternalizationManifest.schema."
+        ],
+        "proof": [
+          "Map interfaces/jsonschema/internalization/InternalizationManifest.schema to deterministic schema, contract, runtime, and release evidence before claiming compatibility."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The interfaces/jsonschema/internalization/InternalizationManifest.schema node remains discoverable, preserves its structured doctrine fields, and validates against the constitution schema.",
+          "Static checks cover the contract rule: Outputs must pass Ajv strict validation before being transmitted."
+        ],
+        "runtime": [
+          "A representative producer and consumer can use interfaces/jsonschema/internalization/InternalizationManifest.schema without inventing payload shape or silently changing omission and error semantics.",
+          "Proceed when the node's current guidance is satisfied: Proceed when the payload structure guarantees validation success."
+        ],
+        "release": [
+          "Refresh living specs and record which interfaces/jsonschema/internalization/InternalizationManifest.schema compatibility claims are verified, assumed, deferred, or blocked.",
+          "Carry forward the next consultation when the boundary crosses another contract: Query interfaces/INTERNALIZATION_SCHEMA for the broader lifecycle contract."
         ]
       }
     },

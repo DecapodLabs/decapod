@@ -200,10 +200,10 @@ fn t004_version_command_works() {
 
     let (success, output) = run(&dir, &["system", "version"]);
     assert!(success, "version command should succeed, got:\n{output}");
-    // Output contains the version number (e.g., "0.12.1")
+    let expected = format!("v{}", env!("CARGO_PKG_VERSION"));
     assert!(
-        output.contains(env!("CARGO_PKG_VERSION")),
-        "expected version string in output:\n{output}"
+        output.lines().any(|line| line.trim() == expected),
+        "expected exact version line {expected:?} in output:\n{output}"
     );
 }
 
