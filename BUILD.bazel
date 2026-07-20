@@ -71,6 +71,7 @@ rust_test(
     name = "core_tests",
     srcs = ["tests/core/core.rs"],
     edition = "2024",
+    rustc_env_files = [":cargo_pkg_env"],
     rustc_env = {
         "CARGO_BIN_EXE_decapod": "./$(rootpath //:decapod)",
     },
@@ -89,6 +90,7 @@ rust_test(
         name = path[6:-3],  # strip "tests/" and ".rs"
         srcs = [path],
         edition = "2024",
+        rustc_env_files = [":cargo_pkg_env"],
         rustc_env = {
             "CARGO_BIN_EXE_decapod": "./$(rootpath //:decapod)",
         },
@@ -114,6 +116,7 @@ rust_test(
         name = "plugins_" + path[14:-3] + "_tests",  # e.g., plugins_todo_tests
         srcs = [path],
         edition = "2024",
+        rustc_env_files = [":cargo_pkg_env"],
         rustc_env = {
             "CARGO_BIN_EXE_decapod": "./$(rootpath //:decapod)",
         },

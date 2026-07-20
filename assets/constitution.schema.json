@@ -6,10 +6,11 @@
     "schema_version": "section-doctrine-v1",
     "uplifted_namespaces": [
       "architecture",
-      "methodology"
+      "methodology",
+      "interfaces"
     ],
-    "migration_strategy": "architecture and methodology nodes are migrated in place; other namespaces keep the compact node contract until explicitly uplifted",
-    "compatibility": "the node output shape remains stable for current consumers while uplifted namespaces gain required doctrine fields"
+    "migration_strategy": "architecture, methodology, and interfaces nodes are migrated in place; other namespaces keep the compact node contract until explicitly uplifted",
+    "compatibility": "the node output shape remains stable for current consumers while uplifted namespaces gain additive doctrine fields"
   },
   "type": "object",
   "required": [
@@ -77,6 +78,29 @@
             "properties": {
               "category": {
                 "const": "methodology"
+              }
+            },
+            "required": [
+              "category"
+            ]
+          },
+          "then": {
+            "required": [
+              "architect_notes",
+              "init_questions",
+              "decision_matrix",
+              "tradeoffs",
+              "scaffolding",
+              "spec_impacts",
+              "proof"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "interfaces"
               }
             },
             "required": [

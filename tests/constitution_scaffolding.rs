@@ -68,6 +68,34 @@ const ARCHITECTURE_DOCTRINE_FIELDS: &[&str] = &[
     "proof",
 ];
 
+const INTERFACE_NODES: &[&str] = &[
+    "interfaces/AGENT_CONTEXT_PACK",
+    "interfaces/ARCHITECTURE_FOUNDATIONS",
+    "interfaces/CLAIMS",
+    "interfaces/CONTROL_PLANE",
+    "interfaces/DEMANDS_SCHEMA",
+    "interfaces/DOC_RULES",
+    "interfaces/GLOSSARY",
+    "interfaces/INTERNALIZATION_SCHEMA",
+    "interfaces/KNOWLEDGE_SCHEMA",
+    "interfaces/KNOWLEDGE_STORE",
+    "interfaces/LCM",
+    "interfaces/MEMORY_INDEX",
+    "interfaces/MEMORY_SCHEMA",
+    "interfaces/PLAN_GOVERNED_EXECUTION",
+    "interfaces/PROCEDURAL_NORMS",
+    "interfaces/PROJECT_SPECS",
+    "interfaces/RISK_POLICY_GATE",
+    "interfaces/STORE_MODEL",
+    "interfaces/TESTING",
+    "interfaces/TODO_SCHEMA",
+    "interfaces/jsonschema/internalization/InternalizationAttachResult.schema",
+    "interfaces/jsonschema/internalization/InternalizationCreateResult.schema",
+    "interfaces/jsonschema/internalization/InternalizationDetachResult.schema",
+    "interfaces/jsonschema/internalization/InternalizationInspectResult.schema",
+    "interfaces/jsonschema/internalization/InternalizationManifest.schema",
+];
+
 const METHODOLOGY_NODES: &[&str] = &[
     "methodology/ARCHITECTURE",
     "methodology/CI_CD",
@@ -410,6 +438,66 @@ fn all_architecture_nodes_have_architect_grade_guidance() {
 }
 
 #[test]
+fn all_interface_nodes_have_architect_grade_contract_doctrine() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+
+    let actual_interface_count = nodes
+        .values()
+        .filter(|node| node["category"].as_str() == Some("interfaces"))
+        .count();
+    assert_eq!(
+        actual_interface_count,
+        INTERFACE_NODES.len(),
+        "INTERFACE_NODES test list must cover every interfaces/* node"
+    );
+
+    for node_id in INTERFACE_NODES {
+        let node = nodes
+            .get(*node_id)
+            .unwrap_or_else(|| panic!("missing interface node {node_id}"));
+        assert_eq!(
+            node["category"].as_str(),
+            Some("interfaces"),
+            "{node_id} must remain in the interfaces namespace"
+        );
+        assert_architect_grade_fields(node_id, node);
+        assert_non_empty_array(
+            &node["links"]["references"],
+            &format!("{node_id}.links.references"),
+        );
+
+        let sections = node["sections"].as_object().expect("sections object");
+        for section in [
+            "match",
+            "ambiguity",
+            "decisions",
+            "standards",
+            "failure_modes",
+            "proceed_when",
+        ] {
+            assert!(
+                sections
+                    .get(section)
+                    .and_then(|items| items.as_array())
+                    .is_some_and(|items| !items.is_empty()),
+                "{node_id}.{section} must preserve contract guidance"
+            );
+        }
+
+        assert!(
+            lookup.values().any(|entries| {
+                entries.as_array().is_some_and(|entries| {
+                    entries.iter().any(|entry| entry.as_str() == Some(node_id))
+                })
+            }),
+            "{node_id} must remain reachable through at least one lookup term"
+        );
+    }
+}
+
+#[test]
 fn all_methodology_nodes_have_architect_grade_delivery_doctrine() {
     let constitution = load_constitution_asset();
     let nodes = constitution["nodes"].as_object().expect("nodes object");
@@ -490,8 +578,8 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
     assert!(
         schema["x-doctrine_model"]["migration_strategy"]
             .as_str()
-            .is_some_and(|strategy| strategy.contains("architecture and methodology nodes")),
-        "schema must document in-place uplifted namespace migration"
+            .is_some_and(|strategy| strategy.contains("interfaces nodes")),
+        "schema must document in-place interfaces namespace migration"
     );
 
     let node_schema = &schema["definitions"]["node"];
@@ -511,6 +599,10 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         .iter()
         .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("methodology"))
         .expect("node schema must declare methodology doctrine conditional");
+    let interface_rule = rules
+        .iter()
+        .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("interfaces"))
+        .expect("node schema must declare interfaces doctrine conditional");
 
     let required = architecture_rule["then"]["required"]
         .as_array()
@@ -529,6 +621,16 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         assert!(
             required.iter().any(|value| value.as_str() == Some(field)),
             "methodology schema must require {field}"
+        );
+    }
+
+    let required = interface_rule["then"]["required"]
+        .as_array()
+        .expect("interfaces doctrine required fields");
+    for field in ARCHITECTURE_DOCTRINE_FIELDS {
+        assert!(
+            required.iter().any(|value| value.as_str() == Some(field)),
+            "interfaces schema must require {field}"
         );
     }
 
@@ -931,6 +1033,25 @@ fn embedded_constitution_preserves_architecture_architect_grade_fields() {
             }),
             "{node_id} must preserve doctrine decision guidance in embedded output"
         );
+    }
+}
+
+#[test]
+fn embedded_constitution_preserves_interface_contract_doctrine() {
+    for node_id in INTERFACE_NODES {
+        let output = Command::new(resolve_decapod_bin())
+            .args(["constitution", "get", node_id])
+            .output()
+            .expect("run decapod constitution get");
+        assert!(
+            output.status.success(),
+            "constitution get {node_id} failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let node: serde_json::Value =
+            serde_json::from_slice(&output.stdout).expect("constitution get json");
+        assert_architect_grade_fields(node_id, &node);
     }
 }
 
