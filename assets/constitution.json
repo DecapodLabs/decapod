@@ -15160,7 +15160,7 @@
       ],
       "decision_matrix": [
         {
-          "choice": "Preserve the existing interfaces/jsonschema/internalization/InternalizationAttachResult.schema contract",
+          "choice": "Preserve the existing AttachResult schema contract",
           "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
           "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
           "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine exact field population and formatting required by the schema constraints."
