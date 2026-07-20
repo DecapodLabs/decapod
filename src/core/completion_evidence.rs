@@ -111,7 +111,19 @@ pub struct PortableCompletionEvidence {
     pub capsule_artifact: FileDigest,
     #[serde(default)]
     pub proof_artifacts: Vec<FileDigest>,
+    /// Optional content custody for referenced artifacts. Digests alone are
+    /// evidence references; content is carried only when explicitly included.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub artifact_contents: Vec<PortableArtifactContent>,
     pub envelope_hash: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PortableArtifactContent {
+    pub digest: FileDigest,
+    /// Hex encoding keeps the envelope JSON-only and avoids an implicit
+    /// binary format or unbounded path-based extraction on import.
+    pub content_hex: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -123,6 +135,8 @@ pub struct PortableCompletionEvidenceVerification {
     pub local_decision: String,
     pub checks: Vec<EvidenceCheck>,
     pub unresolved_claims: Vec<UnresolvedClaim>,
+    pub decision_path: String,
+    pub custody_paths: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -184,12 +198,16 @@ impl PortableCompletionEvidence {
         let mut proof_artifacts = self.proof_artifacts.clone();
         proof_artifacts.sort();
         proof_artifacts.dedup();
+        let mut artifact_contents = self.artifact_contents.clone();
+        artifact_contents.sort();
+        artifact_contents.dedup();
         CanonicalPortableCompletionEvidence {
             schema_version: self.schema_version.clone(),
             source_repository: self.source_repository.clone(),
             record: self.record.clone(),
             capsule_artifact: self.capsule_artifact.clone(),
             proof_artifacts,
+            artifact_contents,
         }
     }
 
@@ -217,6 +235,8 @@ struct CanonicalPortableCompletionEvidence {
     record: CompletionEvidenceRecord,
     capsule_artifact: FileDigest,
     proof_artifacts: Vec<FileDigest>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    artifact_contents: Vec<PortableArtifactContent>,
 }
 
 pub fn default_record_path(
@@ -271,6 +291,19 @@ pub fn export_record(
         .collect::<Vec<_>>();
     proof_artifacts.sort();
     proof_artifacts.dedup();
+    let mut artifact_contents = Vec::new();
+    let mut custody_digests = vec![capsule_artifact.clone()];
+    custody_digests.extend(proof_artifacts.iter().cloned());
+    custody_digests.sort();
+    custody_digests.dedup();
+    for digest in custody_digests {
+        let bytes = fs::read(safe_reference_path(project_root, &digest.path)?)
+            .map_err(error::DecapodError::IoError)?;
+        artifact_contents.push(PortableArtifactContent {
+            digest,
+            content_hex: hex_encode(&bytes),
+        });
+    }
 
     let envelope = PortableCompletionEvidence {
         schema_version: COMPLETION_EVIDENCE_SCHEMA_VERSION.to_string(),
@@ -282,6 +315,7 @@ pub fn export_record(
         record,
         capsule_artifact,
         proof_artifacts,
+        artifact_contents,
         envelope_hash: String::new(),
     }
     .with_recomputed_hash()
@@ -328,7 +362,14 @@ pub fn import_record(
     fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
     let bytes = fs::read(input_path).map_err(error::DecapodError::IoError)?;
     fs::write(&destination, bytes).map_err(error::DecapodError::IoError)?;
-    let report = verify_portable_evidence(project_root, task_id, &envelope, &destination)?;
+    let custody_paths = write_artifact_custody(project_root, &envelope)?;
+    let mut report = verify_portable_evidence(project_root, task_id, &envelope, &destination)?;
+    report.custody_paths = custody_paths;
+    report.decision_path = format!(
+        "{IMPORTED_COMPLETION_EVIDENCE_DIR}/{}.decision.json",
+        envelope.envelope_hash
+    );
+    write_receiver_decision(project_root, &envelope, &report)?;
     Ok((destination, report))
 }
 
@@ -435,6 +476,38 @@ fn validate_portable_evidence(
     for artifact in &envelope.proof_artifacts {
         validate_relative_evidence_path(&artifact.path)?;
     }
+    let expected_custody = expected_artifacts
+        .iter()
+        .chain(std::iter::once(&envelope.capsule_artifact))
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    let mut actual_custody = BTreeSet::new();
+    for content in &envelope.artifact_contents {
+        if !expected_custody.contains(&content.digest) {
+            return Err(error::DecapodError::ValidationError(
+                "PORTABLE_COMPLETION_EVIDENCE_INVALID: artifact custody contains an unreferenced digest".to_string(),
+            ));
+        }
+        let bytes = hex_decode(&content.content_hex).ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "PORTABLE_COMPLETION_EVIDENCE_INVALID: artifact custody is not valid hex"
+                    .to_string(),
+            )
+        })?;
+        if hash_bytes(&bytes) != content.digest.sha256 || bytes.len() as u64 != content.digest.size
+        {
+            return Err(error::DecapodError::ValidationError(
+                "PORTABLE_COMPLETION_EVIDENCE_TAMPERED: artifact custody digest mismatch"
+                    .to_string(),
+            ));
+        }
+        actual_custody.insert(content.digest.clone());
+    }
+    if !envelope.artifact_contents.is_empty() && actual_custody != expected_custody {
+        return Err(error::DecapodError::ValidationError(
+            "PORTABLE_COMPLETION_EVIDENCE_INVALID: artifact custody is incomplete".to_string(),
+        ));
+    }
     Ok(())
 }
 
@@ -526,7 +599,67 @@ fn verify_portable_evidence(
         local_decision: local_decision.to_string(),
         checks,
         unresolved_claims: envelope.record.unresolved_claims.clone(),
+        decision_path: String::new(),
+        custody_paths: Vec::new(),
     })
+}
+
+fn write_artifact_custody(
+    project_root: &Path,
+    envelope: &PortableCompletionEvidence,
+) -> Result<Vec<String>, error::DecapodError> {
+    let base = project_root
+        .join(IMPORTED_COMPLETION_EVIDENCE_DIR)
+        .join(&envelope.envelope_hash)
+        .join("artifacts");
+    fs::create_dir_all(&base).map_err(error::DecapodError::IoError)?;
+    let mut paths = Vec::new();
+    for content in &envelope.artifact_contents {
+        let path = base.join(&content.digest.sha256["sha256:".len()..]);
+        let bytes = hex_decode(&content.content_hex).ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "portable completion evidence artifact custody is not valid hex".to_string(),
+            )
+        })?;
+        if path.exists() {
+            let existing = fs::read(&path).map_err(error::DecapodError::IoError)?;
+            if existing != bytes {
+                return Err(error::DecapodError::ValidationError(
+                    "portable completion evidence artifact custody is immutable".to_string(),
+                ));
+            }
+        } else {
+            fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+        }
+        paths.push(relative_path(project_root, &path)?);
+    }
+    Ok(paths)
+}
+
+fn write_receiver_decision(
+    project_root: &Path,
+    envelope: &PortableCompletionEvidence,
+    report: &PortableCompletionEvidenceVerification,
+) -> Result<(), error::DecapodError> {
+    let path = project_root
+        .join(IMPORTED_COMPLETION_EVIDENCE_DIR)
+        .join(format!("{}.decision.json", envelope.envelope_hash));
+    let bytes = serde_json::to_vec_pretty(report).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "portable completion evidence decision serialization failed: {e}"
+        ))
+    })?;
+    if path.exists() {
+        let existing = fs::read(&path).map_err(error::DecapodError::IoError)?;
+        if existing != bytes {
+            return Err(error::DecapodError::ValidationError(
+                "portable completion evidence receiver decision is immutable".to_string(),
+            ));
+        }
+    } else {
+        fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+    }
+    Ok(())
 }
 
 fn read_local_record(
@@ -1043,6 +1176,24 @@ fn hash_bytes(bytes: &[u8]) -> String {
     format!("sha256:{:x}", hasher.finalize())
 }
 
+fn hex_encode(bytes: &[u8]) -> String {
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        out.push_str(&format!("{byte:02x}"));
+    }
+    out
+}
+
+fn hex_decode(value: &str) -> Option<Vec<u8>> {
+    if !value.len().is_multiple_of(2) {
+        return None;
+    }
+    (0..value.len())
+        .step_by(2)
+        .map(|index| u8::from_str_radix(&value[index..index + 2], 16).ok())
+        .collect()
+}
+
 fn digest_reference(
     project_root: &Path,
     reference: &str,
@@ -1363,6 +1514,7 @@ mod tests {
                 size: 1,
             },
             proof_artifacts: Vec::new(),
+            artifact_contents: Vec::new(),
             envelope_hash: String::new(),
         }
         .with_recomputed_hash()
@@ -1457,8 +1609,14 @@ mod tests {
         let envelope = export_record(root, "task-1", &record_path, &portable_path)
             .expect("export portable evidence");
         assert_eq!(envelope.record.evidence_hash, record.evidence_hash);
+        assert_eq!(envelope.artifact_contents.len(), 2);
         let imported = read_portable_evidence(&portable_path).expect("read portable evidence");
         assert_eq!(imported.envelope_hash, envelope.envelope_hash);
+        let (_, report) = import_record(root, "task-1", &portable_path).expect("import evidence");
+        assert_eq!(report.local_decision, "rejected");
+        assert!(report.decision_path.ends_with(".decision.json"));
+        assert_eq!(report.custody_paths.len(), 2);
+        assert!(root.join(&report.decision_path).is_file());
 
         fs::write(&proof_path, "altered\n").expect("alter proof");
         let report = verify_record(root, "task-1", &record_path).expect("verify altered record");

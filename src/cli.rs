@@ -111,6 +111,21 @@ pub(crate) struct RpcCli {
     /// Read request from stdin instead of command line
     #[clap(long)]
     pub stdin: bool,
+    /// Serve the transport-neutral RPC profile over authenticated HTTP.
+    #[clap(long)]
+    pub http_server: bool,
+    /// HTTP bind address. Loopback is required unless --allow-remote is set.
+    #[clap(long, default_value = "127.0.0.1:7331")]
+    pub listen: String,
+    /// Bearer token for the optional HTTP transport. May also be supplied by DECAPOD_HTTP_TOKEN.
+    #[clap(long)]
+    pub auth_token: Option<String>,
+    /// Explicitly allow binding beyond loopback.
+    #[clap(long)]
+    pub allow_remote: bool,
+    /// Maximum HTTP request body size.
+    #[clap(long, default_value_t = 1_048_576)]
+    pub max_body_bytes: usize,
 }
 
 // ===== Grouped Command Structures =====
