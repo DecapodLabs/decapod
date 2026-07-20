@@ -3364,18 +3364,48 @@ struct IdentityVerificationPolicy {
     expected_scope: String,
     now_epoch_secs: u64,
     accepted_evidence_classes: Vec<IdentityEvidenceClass>,
+    trusted_authorities: Vec<String>,
+    trusted_verifiers: Vec<String>,
     require_authority: bool,
     require_verifier: bool,
 }
 
 impl IdentityVerificationPolicy {
     fn local_handshake(scope: &str, now_epoch_secs: u64) -> Self {
+        let mut policy = Self::configured(
+            scope,
+            now_epoch_secs,
+            vec![IdentityEvidenceClass::SelfDeclared],
+            Vec::new(),
+            Vec::new(),
+        );
+        policy.require_authority = false;
+        policy.require_verifier = false;
+        policy
+    }
+
+    /// Build a policy for an explicitly configured local trust boundary.
+    ///
+    /// Trust roots are represented by stable authority/verifier identifiers;
+    /// an assertion is not promoted merely because it supplies arbitrary
+    /// non-empty values for those fields. Cryptographic attestation remains a
+    /// separate transport concern, while this boundary makes the local
+    /// policy decision explicit and claim-specific.
+    fn configured(
+        scope: &str,
+        now_epoch_secs: u64,
+        accepted_evidence_classes: Vec<IdentityEvidenceClass>,
+        trusted_authorities: Vec<String>,
+        trusted_verifiers: Vec<String>,
+    ) -> Self {
         Self {
             expected_scope: scope.to_string(),
             now_epoch_secs,
-            accepted_evidence_classes: vec![IdentityEvidenceClass::SelfDeclared],
-            require_authority: false,
-            require_verifier: false,
+            accepted_evidence_classes,
+            trusted_authorities,
+            trusted_verifiers,
+            require_authority: true,
+            require_verifier: true,
         }
     }
 }
@@ -3417,11 +3447,33 @@ fn verify_identity_assertion(
     {
         return IdentityVerificationResult::Rejected;
     }
-    if policy.require_authority && assertion.authority.is_none() {
-        return IdentityVerificationResult::Indeterminate;
+    if policy.require_authority {
+        match assertion.authority.as_deref().map(str::trim) {
+            None | Some("") => return IdentityVerificationResult::Indeterminate,
+            Some(authority)
+                if !policy
+                    .trusted_authorities
+                    .iter()
+                    .any(|trusted| trusted.trim() == authority) =>
+            {
+                return IdentityVerificationResult::Rejected;
+            }
+            Some(_) => {}
+        }
     }
-    if policy.require_verifier && assertion.verifier.is_none() {
-        return IdentityVerificationResult::Indeterminate;
+    if policy.require_verifier {
+        match assertion.verifier.as_deref().map(str::trim) {
+            None | Some("") => return IdentityVerificationResult::Indeterminate,
+            Some(verifier)
+                if !policy
+                    .trusted_verifiers
+                    .iter()
+                    .any(|trusted| trusted.trim() == verifier) =>
+            {
+                return IdentityVerificationResult::Rejected;
+            }
+            Some(_) => {}
+        }
     }
     if assertion.verification_method.trim().is_empty() {
         return IdentityVerificationResult::Indeterminate;
@@ -3535,6 +3587,8 @@ mod handshake_identity_tests {
             expected_scope: "task-123".to_string(),
             now_epoch_secs: 42,
             accepted_evidence_classes: vec![IdentityEvidenceClass::RemotelyAuthenticated],
+            trusted_authorities: Vec::new(),
+            trusted_verifiers: Vec::new(),
             require_authority: true,
             require_verifier: true,
         };
@@ -3582,6 +3636,8 @@ mod handshake_identity_tests {
             expected_scope: "task-123".to_string(),
             now_epoch_secs: 42,
             accepted_evidence_classes: vec![IdentityEvidenceClass::LocallyObserved],
+            trusted_authorities: Vec::new(),
+            trusted_verifiers: Vec::new(),
             require_authority: false,
             require_verifier: false,
         };
@@ -3593,6 +3649,63 @@ mod handshake_identity_tests {
         assert_eq!(
             verify_identity_assertion(&assertions[1], &policy),
             IdentityVerificationResult::Unverified
+        );
+    }
+
+    #[test]
+    fn configured_policy_requires_matching_trust_authority_and_verifier() {
+        let mut assertion =
+            build_identity_assertions("agent/codex", None, "task-123", 42).remove(0);
+        assertion.evidence_class = IdentityEvidenceClass::RemotelyAuthenticated;
+        assertion.authority = Some("provider-authority".to_string());
+        assertion.verifier = Some("local-verifier-v1".to_string());
+        assertion.verification_method = "signed assertion".to_string();
+
+        let policy = IdentityVerificationPolicy::configured(
+            "task-123",
+            42,
+            vec![IdentityEvidenceClass::RemotelyAuthenticated],
+            vec!["provider-authority".to_string()],
+            vec!["local-verifier-v1".to_string()],
+        );
+        assert_eq!(
+            verify_identity_assertion(&assertion, &policy),
+            IdentityVerificationResult::Verified
+        );
+
+        assertion.authority = Some("attacker-controlled-authority".to_string());
+        assert_eq!(
+            verify_identity_assertion(&assertion, &policy),
+            IdentityVerificationResult::Rejected
+        );
+
+        assertion.authority = Some("provider-authority".to_string());
+        assertion.verifier = Some("unknown-verifier".to_string());
+        assert_eq!(
+            verify_identity_assertion(&assertion, &policy),
+            IdentityVerificationResult::Rejected
+        );
+    }
+
+    #[test]
+    fn configured_policy_does_not_promote_missing_trust_configuration() {
+        let mut assertion =
+            build_identity_assertions("agent/codex", None, "task-123", 42).remove(0);
+        assertion.evidence_class = IdentityEvidenceClass::HarnessAttested;
+        assertion.authority = Some("provider-authority".to_string());
+        assertion.verifier = Some("local-verifier-v1".to_string());
+        assertion.verification_method = "attested harness record".to_string();
+
+        let policy = IdentityVerificationPolicy::configured(
+            "task-123",
+            42,
+            vec![IdentityEvidenceClass::HarnessAttested],
+            Vec::new(),
+            Vec::new(),
+        );
+        assert_eq!(
+            verify_identity_assertion(&assertion, &policy),
+            IdentityVerificationResult::Rejected
         );
     }
 }
