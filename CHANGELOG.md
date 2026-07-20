@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.2](https://github.com/DecapodLabs/decapod/compare/v0.72.1...v0.72.2) - 2026-07-20
+
+### Fixed
+
+- make decapod init bulletproof (issues #928, #930)
+- make decapod init bulletproof (issues #928, #930)
+
 ## [0.72.1](https://github.com/DecapodLabs/decapod/compare/v0.72.0...v0.72.1) - 2026-07-20
 
 ### Other
