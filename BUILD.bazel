@@ -1,8 +1,17 @@
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
-load("@rules_rust//cargo:defs.bzl", "cargo_build_script")
+load(
+    "@rules_rust//cargo:defs.bzl",
+    "cargo_build_script",
+    "cargo_toml_env_vars",
+)
 load("@crates//:defs.bzl", "all_crate_deps")
 
 package(default_visibility = ["//visibility:public"])
+
+cargo_toml_env_vars(
+    name = "cargo_pkg_env",
+    src = "Cargo.toml",
+)
 
 cargo_build_script(
     name = "build_script",
@@ -29,11 +38,9 @@ rust_library(
     compile_data = glob(["src/**/*.sql"]),
     edition = "2024",
     crate_name = "decapod",
-    # Keep Bazel's release identity aligned with Cargo.toml. rules_rust does
-    # not synthesize Cargo's package environment variables automatically.
-    rustc_env = {
-        "CARGO_PKG_VERSION": "0.72.0",
-    },
+    # Keep Bazel's release identity aligned with Cargo.toml instead of
+    # duplicating the package version in this BUILD file.
+    rustc_env_files = [":cargo_pkg_env"],
     deps = [
         ":build_script",
     ] + all_crate_deps(normal = True),
