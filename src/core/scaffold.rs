@@ -1483,6 +1483,21 @@ fn write_file(
     Ok(FileAction::Created)
 }
 
+/// Graceful wrapper for write_file that never fails.
+/// Logs warnings on error and returns FileAction::Unchanged.
+fn try_write_file(opts: &ScaffoldOptions, rel_path: &str, content: &str) -> FileAction {
+    match write_file(opts, rel_path, content) {
+        Ok(action) => action,
+        Err(e) => {
+            eprintln!(
+                "warning: Failed to write '{}': {}. File will be unchanged.",
+                rel_path, e
+            );
+            FileAction::Unchanged
+        }
+    }
+}
+
 /// LegacyEntrypointContent holds the contents of backed-up agent entrypoint files.
 ///
 /// These contents should be returned to the agent so it can manually consolidate
@@ -1601,16 +1616,33 @@ pub fn scaffold_project_entrypoints(
     opts: &ScaffoldOptions,
 ) -> Result<ScaffoldSummary, error::DecapodError> {
     eprintln!("DEBUG: target_dir: {:?}", opts.target_dir);
+
+    // Ensure target_dir exists before any scaffolding operations
+    // This is critical - without it, all subsequent file operations will fail
+    if !opts.target_dir.exists() {
+        fs::create_dir_all(&opts.target_dir).map_err(|e| {
+            error::DecapodError::IoError(std::io::Error::other(
+                format!("Failed to create target directory '{}': {e}", opts.target_dir.display())
+            ))
+        })?;
+    }
+
     let data_dir_rel = ".decapod/data";
 
     // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
-    fs::create_dir_all(opts.target_dir.join(data_dir_rel)).map_err(error::DecapodError::IoError)?;
+    if let Err(e) = fs::create_dir_all(opts.target_dir.join(data_dir_rel)) {
+        eprintln!("warning: Failed to create .decapod/data directory: {e}");
+    }
 
     // Ensure Decapod-managed ignore/allowlist rules are present in the user's .gitignore.
     if !opts.dry_run {
-        remove_deprecated_gitignore_entries(&opts.target_dir)?;
+        if let Err(e) = remove_deprecated_gitignore_entries(&opts.target_dir) {
+            eprintln!("warning: Failed to clean deprecated gitignore entries: {e}");
+        }
         for rule in DECAPOD_GITIGNORE_RULES {
-            ensure_gitignore_entry(&opts.target_dir, rule)?;
+            if let Err(e) = ensure_gitignore_entry(&opts.target_dir, rule) {
+                eprintln!("warning: Failed to add gitignore entry '{rule}': {e}");
+            }
         }
     }
 
@@ -1635,7 +1667,7 @@ pub fn scaffold_project_entrypoints(
     for file in files_to_generate {
         let content =
             assets::get_template(file).unwrap_or_else(|| panic!("Missing template: {file}"));
-        match write_file(opts, file, &content)? {
+        match try_write_file(opts, file, &content) {
             FileAction::Created => ep_created += 1,
             FileAction::Unchanged => ep_unchanged += 1,
             FileAction::Preserved => ep_preserved += 1,
@@ -1646,7 +1678,7 @@ pub fn scaffold_project_entrypoints(
     let mut cfg_unchanged = 0usize;
     let mut cfg_preserved = 0usize;
 
-    match write_file(opts, ".decapod/README.md", &readme_md)? {
+    match try_write_file(opts, ".decapod/README.md", &readme_md) {
         FileAction::Created => cfg_created += 1,
         FileAction::Unchanged => cfg_unchanged += 1,
         FileAction::Preserved => cfg_preserved += 1,
@@ -1657,7 +1689,7 @@ pub fn scaffold_project_entrypoints(
     if override_path.exists() {
         cfg_preserved += 1;
     } else {
-        match write_file(opts, ".decapod/OVERRIDE.md", &override_md)? {
+        match try_write_file(opts, ".decapod/OVERRIDE.md", &override_md) {
             FileAction::Created => cfg_created += 1,
             FileAction::Unchanged => cfg_unchanged += 1,
             FileAction::Preserved => cfg_preserved += 1,
@@ -1678,7 +1710,7 @@ pub fn scaffold_project_entrypoints(
             let github_workflow_content = assets::get_template("decapod-validate.yml")
                 .expect("Missing template: decapod-validate.yml");
 
-            match write_file(opts, github_workflow_rel, &github_workflow_content)? {
+            match try_write_file(opts, github_workflow_rel, &github_workflow_content) {
                 FileAction::Created => ci_created += 1,
                 FileAction::Unchanged => ci_unchanged += 1,
                 FileAction::Preserved => ci_preserved += 1,
@@ -1692,13 +1724,19 @@ pub fn scaffold_project_entrypoints(
 
     // Generate .decapod/generated/Dockerfile from Rust-owned template component.
     let generated_dir = opts.target_dir.join(".decapod/generated");
-    fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
-    fs::create_dir_all(generated_dir.join("migrations")).map_err(error::DecapodError::IoError)?;
+    if let Err(e) = fs::create_dir_all(&generated_dir) {
+        eprintln!("warning: Failed to create {}: {e}", generated_dir.display());
+    }
+    if let Err(e) = fs::create_dir_all(generated_dir.join("migrations")) {
+        eprintln!("warning: Failed to create migrations dir: {e}");
+    }
     let dockerfile_path = generated_dir.join("Dockerfile");
     if !dockerfile_path.exists() {
         let dockerfile_content =
             crate::plugins::container::generated_dockerfile_for_repo(&opts.target_dir);
-        fs::write(&dockerfile_path, dockerfile_content).map_err(error::DecapodError::IoError)?;
+        if let Err(e) = fs::write(&dockerfile_path, dockerfile_content) {
+            eprintln!("warning: Failed to write Dockerfile: {e}");
+        }
     }
     let version_counter_path = generated_dir.join("version_counter.json");
     if !version_counter_path.exists() {
@@ -1710,32 +1748,44 @@ pub fn scaffold_project_entrypoints(
             "last_seen_version": env!("CARGO_PKG_VERSION"),
             "updated_at": now,
         });
-        let body = serde_json::to_string_pretty(&version_counter).map_err(|e| {
-            error::DecapodError::ValidationError(format!(
-                "Failed to serialize version counter: {e}"
-            ))
-        })?;
-        fs::write(version_counter_path, body).map_err(error::DecapodError::IoError)?;
+        if let Ok(body) = serde_json::to_string_pretty(&version_counter) {
+            if let Err(e) = fs::write(version_counter_path, body) {
+                eprintln!("warning: Failed to write version_counter.json: {e}");
+            }
+        }
     }
 
     let generated_policy_path = opts.target_dir.join(GENERATED_POLICY_REL_PATH);
     if !generated_policy_path.exists() {
-        let policy_body = default_policy_json_pretty()?;
-        if let Some(parent) = generated_policy_path.parent() {
-            fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+        if let Ok(policy_body) = default_policy_json_pretty() {
+            if let Some(parent) = generated_policy_path.parent() {
+                if let Err(e) = fs::create_dir_all(parent) {
+                    eprintln!("warning: Failed to create policy directory: {e}");
+                }
+            }
+            if let Err(e) = fs::write(&generated_policy_path, policy_body) {
+                eprintln!("warning: Failed to write policy JSON: {e}");
+            }
         }
-        fs::write(generated_policy_path, policy_body).map_err(error::DecapodError::IoError)?;
     }
 
     // Always create epistemic custody artifacts directory (core Decapod infrastructure)
     let custody_dir = opts.target_dir.join(".decapod/generated/artifacts/custody");
     if !custody_dir.exists() {
-        fs::create_dir_all(&custody_dir).map_err(error::DecapodError::IoError)?;
+        if let Err(e) = fs::create_dir_all(&custody_dir) {
+            eprintln!("warning: Failed to create custody directory: {e}");
+        }
     }
 
-    // Capability-driven scaffolding proposals
+    // Capability-driven scaffolding proposals (non-fatal if this fails)
     let scaffolding_proposals = if !opts.capabilities.is_empty() {
-        generate_scaffolding_proposals(&opts.capabilities, &opts.target_dir)?
+        match generate_scaffolding_proposals(&opts.capabilities, &opts.target_dir) {
+            Ok(proposals) => proposals,
+            Err(e) => {
+                eprintln!("warning: Failed to generate scaffolding proposals: {e}");
+                Vec::new()
+            }
+        }
     } else {
         Vec::new()
     };
@@ -1805,13 +1855,13 @@ pub fn scaffold_project_entrypoints(
                 } else {
                     preserved += 1;
                 }
-            } else {
-                match write_file(opts, rel_path, &content)? {
-                    FileAction::Created => created += 1,
-                    FileAction::Unchanged => unchanged += 1,
-                    FileAction::Preserved => preserved += 1,
+} else {
+                    match try_write_file(opts, rel_path, &content) {
+                        FileAction::Created => created += 1,
+                        FileAction::Unchanged => unchanged += 1,
+                        FileAction::Preserved => preserved += 1,
+                    }
                 }
-            }
 
             manifest_entries.push(ProjectSpecManifestEntry {
                 path: rel_path.to_string(),
@@ -1822,35 +1872,42 @@ pub fn scaffold_project_entrypoints(
         }
 
         if !opts.dry_run {
+            let repo_fingerprint = repo_signal_fingerprint(&opts.target_dir)
+                .unwrap_or_else(|_| "unknown".to_string());
+            let entrypoint_list = entrypoint_manifest_entries(&opts.target_dir)
+                .unwrap_or_else(|_| Vec::new());
+            let config_hash = if opts.target_dir.join(".decapod/config.toml").exists() {
+                config_input_hash(&opts.target_dir).unwrap_or_default()
+            } else {
+                String::new()
+            };
+            let spec_hash = if opts.target_dir.join(".decapod/config.toml").exists() {
+                spec_input_hash(&opts.target_dir).unwrap_or_default()
+            } else {
+                String::new()
+            };
+
             let manifest = ProjectSpecsManifest {
                 schema_version: LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA.to_string(),
                 template_version: PROJECT_SPEC_TEMPLATE_VERSION.to_string(),
                 generated_at: crate::core::time::now_epoch_z(),
-                repo_signal_fingerprint: repo_signal_fingerprint(&opts.target_dir)?,
+                repo_signal_fingerprint: repo_fingerprint,
                 declared_capabilities: opts.capabilities.clone(),
                 capability_definition_version: CAPABILITY_DEFINITION_VERSION.to_string(),
-                config_input_hash: if opts.target_dir.join(".decapod/config.toml").exists() {
-                    config_input_hash(&opts.target_dir)?
-                } else {
-                    String::new()
-                },
-                spec_input_hash: if opts.target_dir.join(".decapod/config.toml").exists() {
-                    spec_input_hash(&opts.target_dir)?
-                } else {
-                    String::new()
-                },
+                config_input_hash: config_hash,
+                spec_input_hash: spec_hash,
                 decapod_release: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
-                entrypoints: entrypoint_manifest_entries(&opts.target_dir)?,
+                entrypoints: entrypoint_list,
                 files: manifest_entries,
             };
             let manifest_path = opts.target_dir.join(LOCAL_PROJECT_SPECS_MANIFEST);
-            ensure_parent(&manifest_path)?;
-            let manifest_body = serde_json::to_string_pretty(&manifest).map_err(|e| {
-                error::DecapodError::ValidationError(format!(
-                    "Failed to serialize specs manifest: {e}"
-                ))
-            })?;
-            fs::write(manifest_path, manifest_body).map_err(error::DecapodError::IoError)?;
+            if let Err(e) = fs::create_dir_all(manifest_path.parent().unwrap_or(std::path::Path::new("/"))) {
+                eprintln!("warning: Failed to create specs directory: {e}");
+            } else if let Ok(manifest_body) = serde_json::to_string_pretty(&manifest) {
+                if let Err(e) = fs::write(&manifest_path, manifest_body) {
+                    eprintln!("warning: Failed to write specs manifest: {e}");
+                }
+            }
         }
         (created, unchanged, preserved)
     } else {

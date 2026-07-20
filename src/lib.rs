@@ -1326,6 +1326,10 @@ fn resolve_or_create_project_dir(
 }
 
 fn prompt_init_target_dir(current_dir: &Path) -> Result<PathBuf, error::DecapodError> {
+    // In non-interactive environments (no TTY), default to current directory to avoid hanging
+    if !io::stdin().is_terminal() {
+        return resolve_existing_init_dir(current_dir);
+    }
     if prompt_yes_no("Initialize the existing current directory?", true)? {
         return resolve_existing_init_dir(current_dir);
     }
