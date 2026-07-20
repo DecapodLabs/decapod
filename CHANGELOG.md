@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.1](https://github.com/DecapodLabs/decapod/compare/v0.72.0...v0.72.1) - 2026-07-20
+
+### Other
+
+- align living specs with v0.72.0 transport contracts
+
 ## [0.72.0](https://github.com/DecapodLabs/decapod/compare/v0.71.5...v0.72.0) - 2026-07-20
 
 ### Added
