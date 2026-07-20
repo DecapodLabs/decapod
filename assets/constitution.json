@@ -15172,7 +15172,7 @@
           "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
         },
         {
-          "choice": "Defer incompatible interfaces/jsonschema/internalization/InternalizationAttachResult.schema change",
+          "choice": "Defer incompatible schema change",
           "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
           "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
           "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
@@ -15329,7 +15329,7 @@
       ],
       "decision_matrix": [
         {
-          "choice": "Preserve the existing interfaces/jsonschema/internalization/InternalizationCreateResult.schema contract",
+          "choice": "Preserve the existing schema contract",
           "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
           "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
           "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine exact field population and formatting required by the schema constraints."
@@ -15341,7 +15341,7 @@
           "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
         },
         {
-          "choice": "Defer incompatible interfaces/jsonschema/internalization/InternalizationCreateResult.schema change",
+          "choice": "Defer incompatible schema change",
           "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
           "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
           "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
@@ -15498,7 +15498,7 @@
       ],
       "decision_matrix": [
         {
-          "choice": "Preserve the existing interfaces/jsonschema/internalization/InternalizationDetachResult.schema contract",
+          "choice": "Preserve the existing schema contract",
           "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
           "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
           "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine exact field population and formatting required by the schema constraints."
@@ -15510,7 +15510,7 @@
           "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
         },
         {
-          "choice": "Defer incompatible interfaces/jsonschema/internalization/InternalizationDetachResult.schema change",
+          "choice": "Defer incompatible schema change",
           "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
           "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
           "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
@@ -15667,7 +15667,7 @@
       ],
       "decision_matrix": [
         {
-          "choice": "Preserve the existing interfaces/jsonschema/internalization/InternalizationInspectResult.schema contract",
+          "choice": "Preserve the existing schema contract",
           "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
           "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
           "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine exact field population and formatting required by the schema constraints."
@@ -15679,7 +15679,7 @@
           "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
         },
         {
-          "choice": "Defer incompatible interfaces/jsonschema/internalization/InternalizationInspectResult.schema change",
+          "choice": "Defer incompatible schema change",
           "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
           "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
           "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
@@ -15836,7 +15836,7 @@
       ],
       "decision_matrix": [
         {
-          "choice": "Preserve the existing interfaces/jsonschema/internalization/InternalizationManifest.schema contract",
+          "choice": "Preserve the existing schema contract",
           "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
           "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
           "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Determine exact field population and formatting required by the schema constraints."
@@ -15848,7 +15848,7 @@
           "implications": "Update the schema, examples, consumer checks, and living specs together, then prove old and new forms remain deterministic."
         },
         {
-          "choice": "Defer incompatible interfaces/jsonschema/internalization/InternalizationManifest.schema change",
+          "choice": "Defer incompatible schema change",
           "use_when": "The proposed change alters required fields, ownership, lifecycle, error semantics, or a durable consumer promise.",
           "avoid_when": "Avoid deferral when a reversible additive change and its proof path are already clear.",
           "implications": "Open a migration decision with affected consumers, compatibility window, rollback path, and approval requirement before mutating the contract."
