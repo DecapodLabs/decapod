@@ -3327,6 +3327,12 @@ struct IdentityAssertion {
     issued_at_epoch_secs: u64,
     expires_at_epoch_secs: Option<u64>,
     revocation: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    nonce: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    binding_hash: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    signature: Option<String>,
     verification_method: String,
     verification_result: IdentityVerificationResult,
 }
@@ -3368,6 +3374,16 @@ struct IdentityVerificationPolicy {
     trusted_verifiers: Vec<String>,
     require_authority: bool,
     require_verifier: bool,
+    expected_binding_hash: Option<String>,
+    replayed_nonces: Vec<String>,
+    trusted_attestation_keys: Vec<TrustedAttestationKey>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct TrustedAttestationKey {
+    authority: String,
+    verifier: String,
+    key: String,
 }
 
 impl IdentityVerificationPolicy {
@@ -3381,6 +3397,9 @@ impl IdentityVerificationPolicy {
         );
         policy.require_authority = false;
         policy.require_verifier = false;
+        policy.expected_binding_hash = None;
+        policy.replayed_nonces = Vec::new();
+        policy.trusted_attestation_keys = Vec::new();
         policy
     }
 
@@ -3406,7 +3425,29 @@ impl IdentityVerificationPolicy {
             trusted_verifiers,
             require_authority: true,
             require_verifier: true,
+            expected_binding_hash: None,
+            replayed_nonces: Vec::new(),
+            trusted_attestation_keys: Vec::new(),
         }
+    }
+
+    #[allow(dead_code)]
+    fn with_attestation_key(
+        mut self,
+        authority: &str,
+        verifier: &str,
+        key: &str,
+        binding_hash: Option<&str>,
+        replayed_nonces: Vec<String>,
+    ) -> Self {
+        self.expected_binding_hash = binding_hash.map(str::to_string);
+        self.replayed_nonces = replayed_nonces;
+        self.trusted_attestation_keys.push(TrustedAttestationKey {
+            authority: authority.to_string(),
+            verifier: verifier.to_string(),
+            key: key.to_string(),
+        });
+        self
     }
 }
 
@@ -3479,7 +3520,79 @@ fn verify_identity_assertion(
         return IdentityVerificationResult::Indeterminate;
     }
 
+    if matches!(
+        assertion.evidence_class,
+        IdentityEvidenceClass::HarnessAttested
+            | IdentityEvidenceClass::RemotelyAuthenticated
+            | IdentityEvidenceClass::IndependentlyVerified
+    ) {
+        if let Some(expected_binding) = policy.expected_binding_hash.as_deref()
+            && assertion.binding_hash.as_deref() != Some(expected_binding)
+        {
+            return IdentityVerificationResult::Rejected;
+        }
+        let Some(nonce) = assertion
+            .nonce
+            .as_deref()
+            .filter(|value| !value.trim().is_empty())
+        else {
+            return IdentityVerificationResult::Indeterminate;
+        };
+        if policy
+            .replayed_nonces
+            .iter()
+            .any(|replayed| replayed == nonce)
+        {
+            return IdentityVerificationResult::Rejected;
+        }
+        let Some(signature) = assertion
+            .signature
+            .as_deref()
+            .filter(|value| !value.trim().is_empty())
+        else {
+            return IdentityVerificationResult::Indeterminate;
+        };
+        let Some(key) = policy.trusted_attestation_keys.iter().find(|trusted| {
+            assertion.authority.as_deref() == Some(trusted.authority.as_str())
+                && assertion.verifier.as_deref() == Some(trusted.verifier.as_str())
+        }) else {
+            return IdentityVerificationResult::Indeterminate;
+        };
+        let expected_signature = identity_attestation_digest(assertion, &key.key);
+        if signature != expected_signature {
+            return IdentityVerificationResult::Rejected;
+        }
+    }
+
     IdentityVerificationResult::Verified
+}
+
+fn identity_attestation_digest(assertion: &IdentityAssertion, key: &str) -> String {
+    let mut material = String::new();
+    material.push_str(key);
+    material.push('|');
+    material.push_str(&assertion.claim_kind);
+    material.push('|');
+    material.push_str(&assertion.subject_type);
+    material.push('|');
+    material.push_str(&assertion.asserted_value);
+    material.push('|');
+    material.push_str(&assertion.scope);
+    material.push('|');
+    material.push_str(&assertion.issued_at_epoch_secs.to_string());
+    material.push('|');
+    material.push_str(
+        assertion
+            .expires_at_epoch_secs
+            .map(|value| value.to_string())
+            .as_deref()
+            .unwrap_or(""),
+    );
+    material.push('|');
+    material.push_str(assertion.nonce.as_deref().unwrap_or(""));
+    material.push('|');
+    material.push_str(assertion.binding_hash.as_deref().unwrap_or(""));
+    format!("sha256:{}", hash_bytes_hex(material.as_bytes()))
 }
 
 fn build_identity_assertions(
@@ -3499,6 +3612,9 @@ fn build_identity_assertions(
         issued_at_epoch_secs,
         expires_at_epoch_secs: None,
         revocation: None,
+        nonce: None,
+        binding_hash: None,
+        signature: None,
         verification_method: "environment declaration".to_string(),
         verification_result: IdentityVerificationResult::Unverified,
     }];
@@ -3515,6 +3631,9 @@ fn build_identity_assertions(
             issued_at_epoch_secs,
             expires_at_epoch_secs: None,
             revocation: None,
+            nonce: None,
+            binding_hash: None,
+            signature: None,
             verification_method: "environment declaration".to_string(),
             verification_result: IdentityVerificationResult::Unverified,
         });
@@ -3527,7 +3646,7 @@ fn build_identity_assertions(
 mod handshake_identity_tests {
     use super::{
         IdentityEvidenceClass, IdentityVerificationPolicy, IdentityVerificationResult,
-        build_identity_assertions, verify_identity_assertion,
+        build_identity_assertions, identity_attestation_digest, verify_identity_assertion,
     };
 
     #[test]
@@ -3591,6 +3710,9 @@ mod handshake_identity_tests {
             trusted_verifiers: Vec::new(),
             require_authority: true,
             require_verifier: true,
+            expected_binding_hash: None,
+            replayed_nonces: Vec::new(),
+            trusted_attestation_keys: Vec::new(),
         };
 
         assert_eq!(
@@ -3640,6 +3762,9 @@ mod handshake_identity_tests {
             trusted_verifiers: Vec::new(),
             require_authority: false,
             require_verifier: false,
+            expected_binding_hash: None,
+            replayed_nonces: Vec::new(),
+            trusted_attestation_keys: Vec::new(),
         };
 
         assert_eq!(
@@ -3659,15 +3784,25 @@ mod handshake_identity_tests {
         assertion.evidence_class = IdentityEvidenceClass::RemotelyAuthenticated;
         assertion.authority = Some("provider-authority".to_string());
         assertion.verifier = Some("local-verifier-v1".to_string());
+        assertion.nonce = Some("nonce-1".to_string());
+        assertion.binding_hash = Some("sha256:binding".to_string());
         assertion.verification_method = "signed assertion".to_string();
 
-        let policy = IdentityVerificationPolicy::configured(
+        let mut policy = IdentityVerificationPolicy::configured(
             "task-123",
             42,
             vec![IdentityEvidenceClass::RemotelyAuthenticated],
             vec!["provider-authority".to_string()],
             vec!["local-verifier-v1".to_string()],
         );
+        policy = policy.with_attestation_key(
+            "provider-authority",
+            "local-verifier-v1",
+            "test-key",
+            Some("sha256:binding"),
+            Vec::new(),
+        );
+        assertion.signature = Some(identity_attestation_digest(&assertion, "test-key"));
         assert_eq!(
             verify_identity_assertion(&assertion, &policy),
             IdentityVerificationResult::Verified
@@ -3703,6 +3838,48 @@ mod handshake_identity_tests {
             Vec::new(),
             Vec::new(),
         );
+        assert_eq!(
+            verify_identity_assertion(&assertion, &policy),
+            IdentityVerificationResult::Rejected
+        );
+    }
+
+    #[test]
+    fn attestation_replay_and_forgery_fail_closed() {
+        let mut assertion =
+            build_identity_assertions("agent/codex", None, "task-123", 42).remove(0);
+        assertion.evidence_class = IdentityEvidenceClass::HarnessAttested;
+        assertion.authority = Some("harness-authority".to_string());
+        assertion.verifier = Some("repo-verifier".to_string());
+        assertion.nonce = Some("nonce-2".to_string());
+        assertion.binding_hash = Some("sha256:task-binding".to_string());
+        assertion.verification_method = "keyed attestation".to_string();
+        assertion.signature = Some(identity_attestation_digest(&assertion, "harness-key"));
+        let policy = IdentityVerificationPolicy::configured(
+            "task-123",
+            42,
+            vec![IdentityEvidenceClass::HarnessAttested],
+            vec!["harness-authority".to_string()],
+            vec!["repo-verifier".to_string()],
+        )
+        .with_attestation_key(
+            "harness-authority",
+            "repo-verifier",
+            "harness-key",
+            Some("sha256:task-binding"),
+            vec!["already-used".to_string()],
+        );
+        assert_eq!(
+            verify_identity_assertion(&assertion, &policy),
+            IdentityVerificationResult::Verified
+        );
+        let mut replay_policy = policy.clone();
+        replay_policy.replayed_nonces.push("nonce-2".to_string());
+        assert_eq!(
+            verify_identity_assertion(&assertion, &replay_policy),
+            IdentityVerificationResult::Rejected
+        );
+        assertion.asserted_value = "forged-agent".to_string();
         assert_eq!(
             verify_identity_assertion(&assertion, &policy),
             IdentityVerificationResult::Rejected
@@ -8686,6 +8863,27 @@ mod rpc_handlers {
 fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::DecapodError> {
     use crate::core::rpc::*;
 
+    if cli.http_server {
+        let token = cli
+            .auth_token
+            .or_else(|| std::env::var("DECAPOD_HTTP_TOKEN").ok())
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "authenticated HTTP transport requires --auth-token or DECAPOD_HTTP_TOKEN"
+                        .to_string(),
+                )
+            })?;
+        let root = project_root.to_path_buf();
+        return core::http_transport::serve(
+            &cli.listen,
+            &token,
+            cli.allow_remote,
+            cli.max_body_bytes,
+            move |body| http_rpc_handler(&root, body),
+        )
+        .map_err(error::DecapodError::IoError);
+    }
+
     let request: RpcRequest = if cli.stdin {
         let mut buffer = String::new();
         std::io::stdin()
@@ -8816,6 +9014,54 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
 
     println!("{}", serde_json::to_string_pretty(&response).unwrap());
     Ok(())
+}
+
+/// Execute HTTP requests through the exact local stdin RPC path. This keeps
+/// semantic envelopes, session checks, mandates, and repository authority in
+/// one implementation while making HTTP an explicitly opt-in adapter.
+fn http_rpc_handler(project_root: &Path, body: &[u8]) -> core::http_transport::HttpResponse {
+    let output = match std::process::Command::new(
+        std::env::current_exe().unwrap_or_else(|_| PathBuf::from("decapod")),
+    )
+    .current_dir(project_root)
+    .args(["rpc", "--stdin"])
+    .stdin(std::process::Stdio::piped())
+    .stdout(std::process::Stdio::piped())
+    .stderr(std::process::Stdio::piped())
+    .spawn()
+    {
+        Ok(mut child) => {
+            if let Some(mut stdin) = child.stdin.take() {
+                let _ = stdin.write_all(body);
+            }
+            child.wait_with_output()
+        }
+        Err(error) => Err(error),
+    };
+    match output {
+        Ok(output) if output.status.success() => {
+            core::http_transport::HttpResponse::json(200, output.stdout)
+        }
+        Ok(output) => {
+            let body = if output.stdout.is_empty() {
+                serde_json::json!({
+                    "success": false,
+                    "error": String::from_utf8_lossy(&output.stderr).trim()
+                })
+                .to_string()
+                .into_bytes()
+            } else {
+                output.stdout
+            };
+            core::http_transport::HttpResponse::json(400, body)
+        }
+        Err(error) => core::http_transport::HttpResponse::json(
+            500,
+            serde_json::json!({"success": false, "error": error.to_string()})
+                .to_string()
+                .into_bytes(),
+        ),
+    }
 }
 
 fn maybe_bind_capsule_to_workunit_state_ref(
