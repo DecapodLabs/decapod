@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.8](https://github.com/DecapodLabs/decapod/compare/v0.72.7...v0.72.8) - 2026-07-21
+
+### Other
+
+- Uplift plugin subsystem constitution doctrine
+
 ## [0.72.7](https://github.com/DecapodLabs/decapod/compare/v0.72.6...v0.72.7) - 2026-07-21
 
 ### Other
