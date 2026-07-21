@@ -99,7 +99,14 @@ flowchart LR
 | Broker audit log | `.decapod/data/broker.events.jsonl` | Audit |## Regression Guardrails
 - **Baseline references**: Validation report includes gate timings; P95 tracked per gate
 - **Statistical thresholds**: Validation must complete < 30s (P95)
-- **Rollback criteria**: Any blocking gate failure blocks promotion; `workspace prune --force` + git reset for workspace issues
+- **Rollback criteria**: Any blocking gate failure blocks promotion; `workspace prune --force` + git reset for workspace issues## Bounded Execution
+| Operation | Timeout | Failure Mode |
+|-----------|---------|--------------|
+| Validation | 30s | timeout or lock |
+| Unit test suite | Project-defined | non-zero exit |
+| Integration suite | Project-defined | non-zero exit |
+| Workspace ensure | 30s (no container) / 300s (container) | interlock |
+| Proof execution | Per proof (configurable) | gate failure |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -140,15 +147,6 @@ flowchart LR
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Bounded Execution
-| Operation | Timeout | Failure Mode |
-|-----------|---------|--------------|
-| Validation | 30s | timeout or lock |
-| Unit test suite | Project-defined | non-zero exit |
-| Integration suite | Project-defined | non-zero exit |
-| Workspace ensure | 30s (no container) / 300s (container) | interlock |
-| Proof execution | Per proof (configurable) | gate failure |
 
 ## Coverage Checklist
 - [ ] Unit tests cover critical branches

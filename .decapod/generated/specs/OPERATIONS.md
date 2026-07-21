@@ -145,7 +145,16 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 ### Log Redaction
 - `DECAPOD_SESSION_PASSWORD` never logged
 - `.decapod/data/` paths logged but contents not
-- Git tokens/credentials never in command args (use credential helper)
+- Git tokens/credentials never in command args (use credential helper)## Secrets Management
+
+| Secret | Source | Rotation | Consumer |
+|--------|--------|----------|----------|
+| `DECAPOD_SESSION_PASSWORD` | Per-agent env var | Per-session (acquire/release) | `session acquire`, broker auth |
+| Git credentials | SSH agent / git credential helper | Standard git | `VcsWrite` actions |
+| Container registry auth | `docker login` / config | Standard docker | `ContainerExec` build |
+| Cargo registry token | `CARGO_REGISTRY_TOKEN` | Standard cargo | `ProofExec` publish |
+
+**Policy**: No secrets in `.decapod/config.toml` (validated by `validate_project_config_toml` gate).
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -183,17 +192,6 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Secrets Management
-
-| Secret | Source | Rotation | Consumer |
-|--------|--------|----------|----------|
-| `DECAPOD_SESSION_PASSWORD` | Per-agent env var | Per-session (acquire/release) | `session acquire`, broker auth |
-| Git credentials | SSH agent / git credential helper | Standard git | `VcsWrite` actions |
-| Container registry auth | `docker login` / config | Standard docker | `ContainerExec` build |
-| Cargo registry token | `CARGO_REGISTRY_TOKEN` | Standard cargo | `ProofExec` publish |
-
-**Policy**: No secrets in `.decapod/config.toml` (validated by `validate_project_config_toml` gate).
 
 ## Security Testing
 
