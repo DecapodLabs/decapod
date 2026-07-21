@@ -106,55 +106,11 @@ flowchart LR
 | Unit test suite | Project-defined | non-zero exit |
 | Integration suite | Project-defined | non-zero exit |
 | Workspace ensure | 30s (no container) / 300s (container) | interlock |
-| Proof execution | Per proof (configurable) | gate failure |
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-## Background Processing Validation Overlay
-
-### Duplicate Delivery Tests
-- Same message delivered multiple times MUST produce same result
-- Idempotency key verification
-- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
-
-### Retry Tests
-- Configured retry/backoff policy verified
-- Configured retry bound or unbounded policy verified
-- Poison-work handling verified when the project declares it
-
-### Shutdown Tests
-- Graceful drain on signal
-- In-flight job completion or safe requeue
-- No data loss on forced termination
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Validation Overlay
-
-### Migration Proof Command
-- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
-- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
-
-### Migration Tests
-- All migrations MUST have integration tests
-- Rollback procedures MUST be tested
-- Data integrity checks post-migration
-
-### Persistence Integration Tests
-- Repository abstraction tested against real database
-- Transaction boundary tests
-- Concurrency conflict tests
-- Data integrity validation after recovery
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-## Coverage Checklist
+| Proof execution | Per proof (configurable) | gate failure |## Coverage Checklist
 - [ ] Unit tests cover critical branches
 - [ ] Integration tests cover key user flows
 - [ ] Failure-path tests cover retries/timeouts
-- [ ] Docs/diagram/changelog updates included
-
-## Gate Catalog (from validate.rs)
+- [ ] Docs/diagram/changelog updates included## Gate Catalog (from validate.rs)
 
 ### Store Gates
 | Gate | Description | Failure Mode |
@@ -291,9 +247,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 | `Workflow has validate job` | Runs `decapod validate` |
 | `Workflow has test job` | Runs `cargo test` |
 | `Workflow has clippy job` | Runs `cargo clippy -- -D warnings` |
-| `Workflow has fmt job` | Runs `cargo fmt --check` |
-
-## Validation Report Schema
+| `Workflow has fmt job` | Runs `cargo fmt --check` |## Validation Report Schema
 ```json
 {
   "status": "pass|fail",
@@ -314,7 +268,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e52b7e892d69e5331bfaddbb51d04dd7bac136e38e3ca8efbd6dd5079501a567`
+- Repository signal fingerprint: `e29fe54bfbfae334ed469b1273b023d8fd1ca8460c75f27fc0052ca170c35e46`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

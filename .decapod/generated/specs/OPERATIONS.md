@@ -154,7 +154,15 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 | Container registry auth | `docker login` / config | Standard docker | `ContainerExec` build |
 | Cargo registry token | `CARGO_REGISTRY_TOKEN` | Standard cargo | `ProofExec` publish |
 
-**Policy**: No secrets in `.decapod/config.toml` (validated by `validate_project_config_toml` gate).
+**Policy**: No secrets in `.decapod/config.toml` (validated by `validate_project_config_toml` gate).## Security Testing
+
+| Test Type | Cadence | Tooling |
+|-----------|---------|---------|
+| SAST | Every PR | `cargo clippy -- -D warnings`, `cargo deny` |
+| Dependency Scan | Every PR + Weekly | `cargo audit`, `cargo deny check` |
+| Container Scan | On image build | `docker scout` / `trivy` (optional) |
+| Config Validation | Every `validate` run | Schema + forbidden keys gate |
+| Fuzzing | Periodic | `cargo fuzz` (not yet configured) |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -192,16 +200,6 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Security Testing
-
-| Test Type | Cadence | Tooling |
-|-----------|---------|---------|
-| SAST | Every PR | `cargo clippy -- -D warnings`, `cargo deny` |
-| Dependency Scan | Every PR + Weekly | `cargo audit`, `cargo deny check` |
-| Container Scan | On image build | `docker scout` / `trivy` (optional) |
-| Config Validation | Every `validate` run | Schema + forbidden keys gate |
-| Fuzzing | Periodic | `cargo fuzz` (not yet configured) |
 
 ## Compliance and Audit
 
@@ -258,7 +256,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e52b7e892d69e5331bfaddbb51d04dd7bac136e38e3ca8efbd6dd5079501a567`
+- Repository signal fingerprint: `e29fe54bfbfae334ed469b1273b023d8fd1ca8460c75f27fc0052ca170c35e46`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
