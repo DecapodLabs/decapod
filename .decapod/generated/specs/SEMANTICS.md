@@ -85,7 +85,21 @@ stateDiagram-v2
     [*] --> Active: heartbeat
     Active --> Expired: no heartbeat > 30min
     Expired --> [*]: cleanup
-```
+```## Invariants
+
+| Invariant | Type | Validation |
+|-----------|------|------------|
+| No promoted change without proof | System | `workspace.publish` requires proof_manifest + artifact_manifest + workunit VERIFIED |
+| Canonical source-of-truth per entity | Data | Single store root per kind; `validate` checks no external `.db`/`.jsonl` |
+| Mutation events are replayable | Data | `todo rebuild` + `broker verify` round-trip; deterministic JSONL |
+| Workspace isolation enforced | System | `workspace.status` blocks protected branch + main repo work |
+| Context capsules deterministic | Data | `canonical_json_bytes` + SHA256; policy binding includes repo_revision |
+| Obligation status derived, never asserted | Data | `obligation verify` computes from deps/proofs/commit |
+| Session required for mutations | Auth | Broker rejects mutating ops without valid session |
+| Capability-gated external actions | Security | Every `git`/`docker`/`cargo` call declares capability |
+| No secrets in config.toml | Security | `validate` config gate rejects forbidden keys |
+| Specs manifest tracks template drift | Governance | `validate` specs gate fails on stale template_hash |
+| Ordered phase completion | Governance | Phase transitions reject out-of-order, concurrent, or incomplete execution |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -126,22 +140,6 @@ stateDiagram-v2
 - Recovery objectives MUST be selected for the project and recorded as proof obligations
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Invariants
-
-| Invariant | Type | Validation |
-|-----------|------|------------|
-| No promoted change without proof | System | `workspace.publish` requires proof_manifest + artifact_manifest + workunit VERIFIED |
-| Canonical source-of-truth per entity | Data | Single store root per kind; `validate` checks no external `.db`/`.jsonl` |
-| Mutation events are replayable | Data | `todo rebuild` + `broker verify` round-trip; deterministic JSONL |
-| Workspace isolation enforced | System | `workspace.status` blocks protected branch + main repo work |
-| Context capsules deterministic | Data | `canonical_json_bytes` + SHA256; policy binding includes repo_revision |
-| Obligation status derived, never asserted | Data | `obligation verify` computes from deps/proofs/commit |
-| Session required for mutations | Auth | Broker rejects mutating ops without valid session |
-| Capability-gated external actions | Security | Every `git`/`docker`/`cargo` call declares capability |
-| No secrets in config.toml | Security | `validate` config gate rejects forbidden keys |
-| Specs manifest tracks template drift | Governance | `validate` specs gate fails on stale template_hash |
-| Ordered phase completion | Governance | Phase transitions reject out-of-order, concurrent, or incomplete execution |
 
 ## Event Sourcing Schema
 
@@ -304,7 +302,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b4d094742c96fe993853e27ef3f1a2de1000f81fbaf202222ade966a9cc04daa`
+- Repository signal fingerprint: `3ecf7ce8b828c3114f4397b57999d376a0ac517e32aad03a278174d79633a22a`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
