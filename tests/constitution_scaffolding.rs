@@ -203,6 +203,88 @@ const METHODOLOGY_SPEC_IMPACT_FIELDS: &[&str] = &[
     "proof",
 ];
 
+const RESEARCH_NODES: &[&str] = &[
+    "research/ADAM_2014",
+    "research/ALEXNET_2012",
+    "research/ALPHAFOLD_2021",
+    "research/ALPHAGO_2016",
+    "research/BACKPROP_1986",
+    "research/BATCH_NORM_2015",
+    "research/BERT_2018",
+    "research/BIGTABLE_2006",
+    "research/BITCOIN_2008",
+    "research/BLOOM_FILTER_1970",
+    "research/BORG_2015",
+    "research/BROOKS_1986",
+    "research/BTREE_1972",
+    "research/CHORD_2001",
+    "research/CLIP_2021",
+    "research/CODD_1970",
+    "research/CONTAINERS_2007",
+    "research/COOK_1971",
+    "research/COT_2022",
+    "research/DIFFIE_HELLMAN_1976",
+    "research/DIFFUSION_2020",
+    "research/DIJKSTRA_1959",
+    "research/DQN_2013",
+    "research/DREMEL_2010",
+    "research/DROPOUT_2014",
+    "research/DYNAMO_2007",
+    "research/EBPF_1993",
+    "research/END_TO_END_1984",
+    "research/FLP_1985",
+    "research/GAN_2014",
+    "research/GFS_2003",
+    "research/GNN_2008",
+    "research/GPT3_2020",
+    "research/GRAY_1981",
+    "research/HOARE_1969",
+    "research/HYPERLOGLOG_2007",
+    "research/KAFKA_2011",
+    "research/L4_1995",
+    "research/LAMPORT_1978",
+    "research/LAMPSON_1983",
+    "research/LECUN_1998",
+    "research/LFS_1992",
+    "research/LISKOV_1974",
+    "research/LLAMA_2023",
+    "research/LORA_2021",
+    "research/LSM_TREE_1996",
+    "research/LSTM_1997",
+    "research/MAPREDUCE_2004",
+    "research/MCCULLOCH_PITTS_1943",
+    "research/MESI_1984",
+    "research/MILLWHEEL_2013",
+    "research/MINSKY_1961",
+    "research/PAXOS_1998",
+    "research/PERCEPTRONS_1958",
+    "research/RAFT_2014",
+    "research/RAID_1988",
+    "research/RDMA_2003",
+    "research/REDBLACK_TREE_1978",
+    "research/RESNET_2015",
+    "research/RLHF_2022",
+    "research/RSA_1978",
+    "research/SALTZER_SCHROEDER_1975",
+    "research/SHANNON_1948",
+    "research/SPANNER_2012",
+    "research/SPARK_2012",
+    "research/SPECTRE_MELTDOWN_2018",
+    "research/SVM_1995",
+    "research/TENSORFLOW_2016",
+    "research/THOMPSON_1984",
+    "research/TRANSFORMER_2017",
+    "research/TURING_1936",
+    "research/UNIX_1974",
+    "research/VIRTUAL_MEMORY_1962",
+    "research/VIT_2021",
+    "research/VON_NEUMANN_1945",
+    "research/WAIT_FREE_1991",
+    "research/WORD2VEC_2013",
+    "research/YOLO_2016",
+    "research/ZFS_2003",
+    "research/ZOOKEEPER_2010",
+];
 const CORE_NODES: &[&str] = &[
     "core/ARCHITECTURE",
     "core/DATA",
@@ -1045,6 +1127,162 @@ fn all_methodology_nodes_have_architect_grade_delivery_doctrine() {
 }
 
 #[test]
+fn all_research_nodes_have_foundational_knowledge_doctrine() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+
+    let actual_research_count = nodes
+        .keys()
+        .filter(|id| id.starts_with("research/"))
+        .count();
+    assert_eq!(
+        actual_research_count,
+        RESEARCH_NODES.len(),
+        "RESEARCH_NODES must cover every research/* node"
+    );
+
+    let core_refs = nodes["core/RESEARCH"]["links"]["references"]
+        .as_array()
+        .expect("core research references");
+    assert_eq!(
+        core_refs.len(),
+        RESEARCH_NODES.len(),
+        "core/RESEARCH must route to every research node"
+    );
+
+    let core_sections = nodes["core/RESEARCH"]["sections"]
+        .as_object()
+        .expect("core research sections");
+    for section in [
+        "match",
+        "decide",
+        "route",
+        "apply",
+        "loop_guards",
+        "proof_planning",
+    ] {
+        assert!(
+            core_sections
+                .get(section)
+                .and_then(|items| items.as_array())
+                .is_some_and(|items| !items.is_empty()),
+            "core/RESEARCH.{section} must preserve research routing and proof guidance"
+        );
+    }
+
+    for node_id in RESEARCH_NODES {
+        let node = nodes
+            .get(*node_id)
+            .unwrap_or_else(|| panic!("missing research node {node_id}"));
+        assert_eq!(
+            node["category"].as_str(),
+            Some("research"),
+            "{node_id} must remain in the research namespace"
+        );
+        assert_architect_grade_fields(node_id, node);
+
+        let doctrine = node["research_doctrine"]
+            .as_object()
+            .unwrap_or_else(|| panic!("{node_id}.research_doctrine must be an object"));
+        assert!(
+            doctrine["authors"]
+                .as_array()
+                .is_some_and(|items| !items.is_empty()),
+            "{node_id}.research_doctrine.authors must identify the source"
+        );
+        assert!(
+            doctrine["year"]
+                .as_i64()
+                .is_some_and(|year| (1900..=2100).contains(&year)),
+            "{node_id}.research_doctrine.year must be a plausible publication year"
+        );
+        for field in ["domain", "research_question", "contribution", "mechanism"] {
+            assert!(
+                doctrine[field]
+                    .as_str()
+                    .is_some_and(|text| !text.trim().is_empty()),
+                "{node_id}.research_doctrine.{field} must preserve context and mechanism"
+            );
+        }
+        for field in [
+            "engineering_translation",
+            "limitations",
+            "modern_parallels",
+            "misreadings",
+        ] {
+            assert!(
+                doctrine[field]
+                    .as_array()
+                    .is_some_and(|items| items.len() >= 3),
+                "{node_id}.research_doctrine.{field} must provide depth and transfer boundaries"
+            );
+        }
+        assert!(
+            doctrine["related_nodes"]
+                .as_array()
+                .is_some_and(|items| items.len() >= 3
+                    && items.iter().all(|item| {
+                        item.as_str()
+                            .is_some_and(|related| related.starts_with("research/"))
+                    })),
+            "{node_id}.research_doctrine.related_nodes must preserve research cross-links"
+        );
+        for retrieval_field in ["match", "avoid", "next_queries"] {
+            assert!(
+                doctrine["retrieval"][retrieval_field]
+                    .as_array()
+                    .is_some_and(|items| !items.is_empty()),
+                "{node_id}.research_doctrine.retrieval.{retrieval_field} must guide retrieval"
+            );
+        }
+
+        let sections = node["sections"]
+            .as_object()
+            .expect("research sections object");
+        for section in ["context", "concepts", "impact", "relevance"] {
+            assert!(
+                sections
+                    .get(section)
+                    .and_then(|items| items.as_array())
+                    .is_some_and(|items| !items.is_empty()),
+                "{node_id}.{section} must preserve the existing research context"
+            );
+        }
+        assert!(
+            node["links"]["references"]
+                .as_array()
+                .is_some_and(|refs| refs
+                    .iter()
+                    .any(|value| { value.as_str() == Some("methodology/RESEARCH") })),
+            "{node_id} must remain linked to methodology/RESEARCH"
+        );
+        assert!(
+            node["links"]["referenced_by"]
+                .as_array()
+                .is_some_and(|refs| refs
+                    .iter()
+                    .any(|value| { value.as_str() == Some("methodology/RESEARCH") })),
+            "{node_id} must remain reachable from methodology/RESEARCH"
+        );
+        assert!(
+            core_refs
+                .iter()
+                .any(|value| value.as_str() == Some(node_id)),
+            "core/RESEARCH must route to {node_id}"
+        );
+        assert!(
+            lookup.values().any(|entries| {
+                entries.as_array().is_some_and(|entries| {
+                    entries.iter().any(|entry| entry.as_str() == Some(node_id))
+                })
+            }),
+            "{node_id} must remain reachable through at least one lookup term"
+        );
+    }
+}
+
+#[test]
 fn schema_requires_doctrine_model_for_uplifted_namespaces() {
     let schema = load_constitution_schema();
 
@@ -1059,6 +1297,7 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
             .is_some_and(|strategy| {
                 strategy.contains("interfaces nodes")
                     && strategy.contains("docs")
+                    && strategy.contains("research")
                     && strategy.contains("data nodes")
                     && strategy.contains("metadata nodes")
                     && strategy.contains("plugins nodes")
@@ -1084,6 +1323,10 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         .iter()
         .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("docs"))
         .expect("node schema must declare docs doctrine conditional");
+    let research_rule = rules
+        .iter()
+        .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("research"))
+        .expect("node schema must declare research doctrine conditional");
     let required = docs_rule["then"]["required"]
         .as_array()
         .expect("docs doctrine required fields");
@@ -1091,6 +1334,19 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         assert!(
             required.iter().any(|value| value.as_str() == Some(field)),
             "docs schema must require {field}"
+        );
+    }
+    let required = research_rule["then"]["required"]
+        .as_array()
+        .expect("research doctrine required fields");
+    for field in ARCHITECTURE_DOCTRINE_FIELDS
+        .iter()
+        .copied()
+        .chain(std::iter::once("research_doctrine"))
+    {
+        assert!(
+            required.iter().any(|value| value.as_str() == Some(field)),
+            "research schema must require {field}"
         );
     }
     let methodology_rule = rules
@@ -1197,6 +1453,14 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
             "schema spec_impacts must allow methodology {field}"
         );
     }
+    assert!(
+        node_schema["properties"].get("research_doctrine").is_some(),
+        "node schema must expose the research doctrine field"
+    );
+    assert!(
+        schema["definitions"].get("research_doctrine").is_some(),
+        "schema must define the research doctrine contract"
+    );
 
     let base_required = node_schema["required"]
         .as_array()
