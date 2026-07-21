@@ -1951,6 +1951,24 @@ fn run_init_apply(
         scaffold_summary.ci_unchanged.to_string().bright_yellow(),
         scaffold_summary.ci_preserved.to_string().bright_white()
     );
+    if !scaffold_summary.tracked_runtime_paths.is_empty() {
+        println!(
+            "\n{}",
+            "TASK: Decapod runtime files are already tracked by Git. `.gitignore` now covers them, but it cannot remove files that were previously committed.".bright_yellow()
+        );
+        println!(
+            "{}",
+            "      Remove these exact paths from the index before committing the project:"
+                .bright_yellow()
+        );
+        for path in &scaffold_summary.tracked_runtime_paths {
+            println!("      - {path}");
+        }
+        println!(
+            "{}",
+            "      Use `git rm --cached -- <path>` for each path; keep the local runtime files if Decapod needs them.".bright_yellow()
+        );
+    }
     println!("  Backups: {}", backup_count.to_string().bright_magenta());
     println!(
         "  Diagram Notation: {}",
