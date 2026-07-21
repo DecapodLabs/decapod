@@ -146,7 +146,23 @@ stateDiagram-v2
 ### Attestation Events (`assurance_attestations.jsonl`)
 | Event Type | Payload | Trigger |
 |------------|---------|---------|
-| `attestation` | `{id, op, timestamp, input_hash, touched_paths[], interlock_code?, outcome}` | `assurance.evaluate` |
+| `attestation` | `{id, op, timestamp, input_hash, touched_paths[], interlock_code?, outcome}` | `assurance.evaluate` |## Replay Semantics
+
+### Todo Rebuild
+- **Order**: FIFO by `ts` (event log order)
+- **Conflict Resolution**: Last-write-wins per task ID (events are append-only)
+- **Snapshot Cadence**: None (full rebuild from genesis on demand)
+- **Determinism Proof**: `todo rebuild` produces byte-identical `todo.db` from same `todo.events.jsonl`
+
+### Broker Verify
+- **Order**: FIFO by event sequence
+- **Conflict Detection**: Divergence = pending mutations at crash (detected via `verify_replay`)
+- **Resolution**: Manual reconciliation; `broker verify` reports gaps
+
+### Obligation Graph
+- **Order**: Topological (dependencies before dependents)
+- **Conflict**: Cycles detected at add-time (`detect_cycle`)
+- **Resolution**: Reject add; human must restructure
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -187,24 +203,6 @@ stateDiagram-v2
 - Recovery objectives MUST be selected for the project and recorded as proof obligations
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Replay Semantics
-
-### Todo Rebuild
-- **Order**: FIFO by `ts` (event log order)
-- **Conflict Resolution**: Last-write-wins per task ID (events are append-only)
-- **Snapshot Cadence**: None (full rebuild from genesis on demand)
-- **Determinism Proof**: `todo rebuild` produces byte-identical `todo.db` from same `todo.events.jsonl`
-
-### Broker Verify
-- **Order**: FIFO by event sequence
-- **Conflict Detection**: Divergence = pending mutations at crash (detected via `verify_replay`)
-- **Resolution**: Manual reconciliation; `broker verify` reports gaps
-
-### Obligation Graph
-- **Order**: Topological (dependencies before dependents)
-- **Conflict**: Cycles detected at add-time (`detect_cycle`)
-- **Resolution**: Reject add; human must restructure
 
 ## Error Code Semantics
 
@@ -300,7 +298,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `589d4c94282c84867b589a9040f8577cc26df5f3ed04b7fadd544abae3990cb6`
+- Repository signal fingerprint: `481537107777a7d60cd662a91c399b96d71c78a8aa30287e0bed64151ca207f9`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
