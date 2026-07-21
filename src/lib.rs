@@ -2675,13 +2675,25 @@ fn legacy_project_sessions_dir(project_root: &Path) -> PathBuf {
         .join("sessions")
 }
 
-fn sessions_dir(project_root: &Path) -> PathBuf {
-    machine_project_sessions_dir(project_root)
-        .unwrap_or_else(|_| legacy_project_sessions_dir(project_root))
+fn session_storage_dirs(project_root: &Path) -> Vec<PathBuf> {
+    let mut dirs = Vec::with_capacity(2);
+    if let Ok(machine_dir) = machine_project_sessions_dir(project_root) {
+        dirs.push(machine_dir);
+    }
+
+    let workspace_dir = legacy_project_sessions_dir(project_root);
+    if !dirs.iter().any(|dir| dir == &workspace_dir) {
+        dirs.push(workspace_dir);
+    }
+    dirs
 }
 
-fn session_file_for_agent(project_root: &Path, agent_id: &str) -> PathBuf {
-    sessions_dir(project_root).join(format!("{}.json", sanitize_agent_component(agent_id)))
+fn session_file_candidates(project_root: &Path, agent_id: &str) -> Vec<PathBuf> {
+    let file_name = format!("{}.json", sanitize_agent_component(agent_id));
+    session_storage_dirs(project_root)
+        .into_iter()
+        .map(|dir| dir.join(&file_name))
+        .collect()
 }
 
 fn awareness_dir(project_root: &Path) -> PathBuf {
@@ -2725,14 +2737,34 @@ fn read_agent_session(
     project_root: &Path,
     agent_id: &str,
 ) -> Result<Option<AgentSessionRecord>, error::DecapodError> {
-    let path = session_file_for_agent(project_root, agent_id);
-    if !path.exists() {
-        return Ok(None);
+    let mut last_error = None;
+    let mut saw_missing_candidate = false;
+    for path in session_file_candidates(project_root, agent_id) {
+        let raw = match fs::read_to_string(&path) {
+            Ok(raw) => raw,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                saw_missing_candidate = true;
+                continue;
+            }
+            Err(error) => {
+                last_error = Some(error::DecapodError::IoError(error));
+                continue;
+            }
+        };
+        match serde_json::from_str(&raw) {
+            Ok(rec) => return Ok(Some(rec)),
+            Err(error) => {
+                last_error = Some(error::DecapodError::SessionError(format!(
+                    "invalid session file: {error}"
+                )));
+            }
+        }
     }
-    let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
-    let rec: AgentSessionRecord = serde_json::from_str(&raw)
-        .map_err(|e| error::DecapodError::SessionError(format!("invalid session file: {e}")))?;
-    Ok(Some(rec))
+
+    if !saw_missing_candidate && let Some(error) = last_error {
+        return Err(error);
+    }
+    Ok(None)
 }
 
 fn atomic_write_file(path: &Path, body: &str) -> Result<(), error::DecapodError> {
@@ -2776,13 +2808,27 @@ fn write_agent_session(
     project_root: &Path,
     rec: &AgentSessionRecord,
 ) -> Result<(), error::DecapodError> {
-    let dir = sessions_dir(project_root);
-    fs::create_dir_all(&dir).map_err(error::DecapodError::IoError)?;
-    let path = session_file_for_agent(project_root, &rec.agent_id);
     let body = serde_json::to_string_pretty(rec)
         .map_err(|e| error::DecapodError::SessionError(format!("session encode error: {e}")))?;
-    atomic_write_file(&path, &body)?;
-    Ok(())
+    let paths = session_file_candidates(project_root, &rec.agent_id);
+    let mut last_error = None;
+    for (index, path) in paths.iter().enumerate() {
+        match atomic_write_file(path, &body) {
+            Ok(()) => {
+                if index > 0 {
+                    eprintln!(
+                        "session: machine-local storage unavailable; using workspace-local session state"
+                    );
+                }
+                return Ok(());
+            }
+            Err(error) => last_error = Some(error),
+        }
+    }
+
+    Err(last_error.unwrap_or_else(|| {
+        error::DecapodError::SessionError("no session storage location available".to_string())
+    }))
 }
 
 fn clear_agent_awareness(project_root: &Path, agent_id: &str) -> Result<(), error::DecapodError> {
@@ -2914,35 +2960,40 @@ fn cleanup_expired_sessions(
     project_root: &Path,
     store_root: &Path,
 ) -> Result<Vec<String>, error::DecapodError> {
-    let dir = sessions_dir(project_root);
-    if !dir.exists() {
-        return Ok(Vec::new());
-    }
     let now = now_epoch_secs();
     let mut expired_agents = Vec::new();
-    for entry in fs::read_dir(&dir).map_err(error::DecapodError::IoError)? {
-        let entry = entry.map_err(error::DecapodError::IoError)?;
-        let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("json") {
-            continue;
-        }
-        let raw = match fs::read_to_string(&path) {
-            Ok(v) => v,
-            Err(_) => {
-                let _ = fs::remove_file(&path);
+    for dir in session_storage_dirs(project_root) {
+        let entries = match fs::read_dir(&dir) {
+            Ok(entries) => entries,
+            Err(_) => continue,
+        };
+        for entry in entries {
+            let entry = match entry {
+                Ok(entry) => entry,
+                Err(_) => continue,
+            };
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) != Some("json") {
                 continue;
             }
-        };
-        let rec: AgentSessionRecord = match serde_json::from_str(&raw) {
-            Ok(v) => v,
-            Err(_) => {
+            let raw = match fs::read_to_string(&path) {
+                Ok(v) => v,
+                Err(_) => {
+                    let _ = fs::remove_file(&path);
+                    continue;
+                }
+            };
+            let rec: AgentSessionRecord = match serde_json::from_str(&raw) {
+                Ok(v) => v,
+                Err(_) => {
+                    let _ = fs::remove_file(&path);
+                    continue;
+                }
+            };
+            if rec.expires_at_epoch_secs <= now {
                 let _ = fs::remove_file(&path);
-                continue;
+                expired_agents.push(rec.agent_id);
             }
-        };
-        if rec.expires_at_epoch_secs <= now {
-            let _ = fs::remove_file(&path);
-            expired_agents.push(rec.agent_id);
         }
     }
 
@@ -2971,7 +3022,7 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
     };
 
     if session.expires_at_epoch_secs <= now_epoch_secs() {
-        let _ = fs::remove_file(session_file_for_agent(&project_root, &agent_id));
+        let _ = remove_agent_session_files(&project_root, &agent_id);
         let _ = todo::cleanup_stale_agent_assignments(
             &store_root,
             std::slice::from_ref(&agent_id),
@@ -3009,6 +3060,25 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
         return auto_acquire_session(&project_root, &agent_id);
     }
     Ok(())
+}
+
+fn remove_agent_session_files(
+    project_root: &Path,
+    agent_id: &str,
+) -> Result<bool, error::DecapodError> {
+    let mut removed = false;
+    let mut last_error = None;
+    for path in session_file_candidates(project_root, agent_id) {
+        match fs::remove_file(&path) {
+            Ok(()) => removed = true,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => last_error = Some(error::DecapodError::IoError(error)),
+        }
+    }
+    if let Some(error) = last_error {
+        return Err(error);
+    }
+    Ok(removed)
 }
 
 fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error::DecapodError> {
@@ -3270,9 +3340,7 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
         }
         SessionCommand::Release => {
             let agent_id = current_agent_id();
-            let session_path = session_file_for_agent(&project_root, &agent_id);
-            if session_path.exists() {
-                std::fs::remove_file(&session_path).map_err(error::DecapodError::IoError)?;
+            if remove_agent_session_files(&project_root, &agent_id)? {
                 clear_agent_awareness(&project_root, &agent_id)?;
                 let _ = todo::cleanup_stale_agent_assignments(
                     &store_root,
