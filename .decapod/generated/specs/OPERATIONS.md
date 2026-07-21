@@ -5,7 +5,19 @@ Operational ownership follows the declared surfaces: session/authentication and 
 - [ ] SLOs defined for validation latency and workspace creation
 - [ ] Runbooks linked for validation failures and workspace interlocks
 - [ ] Rollback plan: `decapod workspace prune --force` + git reset
-- [ ] Capacity guardrails: workspace disk quota, SQLite connection limits
+- [ ] Capacity guardrails: workspace disk quota, SQLite connection limits## Deployment Model
+
+**Local-first CLI tool** — No server deployment. Decapod is distributed as:
+- Cargo-installable binary (`cargo install decapod`)
+- Prebuilt binaries via `cargo-dist` (GitHub Releases): linux-x86_64, linux-aarch64, macos-x86_64, macos-aarch64
+- Runs entirely in user's repository context
+- State stored in `.decapod/` within each repository
+
+**Runtime Requirements:**
+- Git 2.30+ (worktree support)
+- Rust 1.96+ (for building from source)
+- Docker/Podman (optional, for container workspaces)
+- SQLite 3.35+ (bundled via rusqlite)
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -43,20 +55,6 @@ Operational ownership follows the declared surfaces: session/authentication and 
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Deployment Model
-
-**Local-first CLI tool** — No server deployment. Decapod is distributed as:
-- Cargo-installable binary (`cargo install decapod`)
-- Prebuilt binaries via `cargo-dist` (GitHub Releases): linux-x86_64, linux-aarch64, macos-x86_64, macos-aarch64
-- Runs entirely in user's repository context
-- State stored in `.decapod/` within each repository
-
-**Runtime Requirements:**
-- Git 2.30+ (worktree support)
-- Rust 1.96+ (for building from source)
-- Docker/Podman (optional, for container workspaces)
-- SQLite 3.35+ (bundled via rusqlite)
 
 ## Service Level Objectives
 
@@ -276,7 +274,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e7da5369d966ae4d12e0392afe8fb4a36394fbdfadb1aac1703792de88263225`
+- Repository signal fingerprint: `b4d094742c96fe993853e27ef3f1a2de1000f81fbaf202222ade966a9cc04daa`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

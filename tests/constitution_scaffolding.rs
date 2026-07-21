@@ -136,6 +136,19 @@ const PLUGIN_NODES: &[&str] = &[
     "plugins/WATCHER",
 ];
 
+const SPEC_NODES: &[&str] = &[
+    "specs/AMENDMENTS",
+    "specs/DB_BROKER_QUEUE",
+    "specs/GIT",
+    "specs/INTENT",
+    "specs/SECURITY",
+    "specs/SYSTEM",
+    "specs/engineering/FRONTEND_BACKEND_E2E",
+    "specs/evaluations/JUDGE_CONTRACT",
+    "specs/evaluations/VARIANCE_EVALS",
+    "specs/skills/SKILL_GOVERNANCE",
+];
+
 const METHODOLOGY_NODES: &[&str] = &[
     "methodology/ARCHITECTURE",
     "methodology/CI_CD",
@@ -787,6 +800,99 @@ fn all_plugin_nodes_have_architect_grade_subsystem_doctrine() {
 }
 
 #[test]
+fn all_spec_nodes_have_architect_grade_specification_doctrine() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+
+    let actual_spec_count = nodes
+        .values()
+        .filter(|node| node["category"].as_str() == Some("specs"))
+        .count();
+    assert_eq!(
+        actual_spec_count,
+        SPEC_NODES.len(),
+        "SPEC_NODES test list must cover every specs/* node"
+    );
+
+    let core_refs = nodes["core/SPECS"]["links"]["references"]
+        .as_array()
+        .expect("core specs references");
+
+    for node_id in SPEC_NODES {
+        let node = nodes
+            .get(*node_id)
+            .unwrap_or_else(|| panic!("missing spec node {node_id}"));
+        assert_eq!(
+            node["category"].as_str(),
+            Some("specs"),
+            "{node_id} must remain in the specs namespace"
+        );
+        assert_architect_grade_fields(node_id, node);
+        assert_non_empty_array(
+            &node["links"]["references"],
+            &format!("{node_id}.links.references"),
+        );
+        assert!(
+            node["links"]["references"]
+                .as_array()
+                .is_some_and(|refs| refs
+                    .iter()
+                    .any(|value| value.as_str() == Some("core/SPECS"))),
+            "{node_id} must link to core/SPECS"
+        );
+        assert!(
+            node["links"]["references"].as_array().is_some_and(|refs| {
+                refs.iter()
+                    .any(|value| value.as_str() == Some("interfaces/PROJECT_SPECS"))
+            }),
+            "{node_id} must link to the project-spec contract"
+        );
+        assert!(
+            node["links"]["referenced_by"]
+                .as_array()
+                .is_some_and(|refs| refs
+                    .iter()
+                    .any(|value| value.as_str() == Some("core/SPECS"))),
+            "{node_id} must be reachable from core/SPECS"
+        );
+        assert!(
+            core_refs
+                .iter()
+                .any(|value| value.as_str() == Some(node_id)),
+            "core/SPECS must route to {node_id}"
+        );
+
+        let sections = node["sections"].as_object().expect("sections object");
+        for section in [
+            "match",
+            "ambiguity",
+            "decisions",
+            "standards",
+            "failure_modes",
+            "proceed_when",
+        ] {
+            assert!(
+                sections
+                    .get(section)
+                    .and_then(|items| items.as_array())
+                    .is_some_and(|items| !items.is_empty()),
+                "{node_id}.{section} must preserve specification guidance"
+            );
+        }
+
+        assert!(
+            lookup.values().any(|entries| {
+                entries.as_array().is_some_and(|entries| {
+                    entries.iter().any(|entry| entry.as_str() == Some(node_id))
+                })
+            }),
+            "{node_id} must remain reachable through at least one lookup term"
+        );
+    }
+}
+
+#[test]
 fn all_methodology_nodes_have_architect_grade_delivery_doctrine() {
     let constitution = load_constitution_asset();
     let nodes = constitution["nodes"].as_object().expect("nodes object");
@@ -872,8 +978,9 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
                     && strategy.contains("data nodes")
                     && strategy.contains("metadata nodes")
                     && strategy.contains("plugins nodes")
+                    && strategy.contains("specs nodes")
             }),
-        "schema must document in-place interfaces, data, metadata, and plugins namespace migration"
+        "schema must document in-place interfaces, data, metadata, plugins, and specs namespace migration"
     );
 
     let node_schema = &schema["definitions"]["node"];
@@ -909,6 +1016,10 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         .iter()
         .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("plugins"))
         .expect("node schema must declare plugin doctrine conditional");
+    let spec_rule = rules
+        .iter()
+        .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("specs"))
+        .expect("node schema must declare specs doctrine conditional");
 
     let required = architecture_rule["then"]["required"]
         .as_array()
@@ -967,6 +1078,16 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         assert!(
             required.iter().any(|value| value.as_str() == Some(field)),
             "plugin schema must require {field}"
+        );
+    }
+
+    let required = spec_rule["then"]["required"]
+        .as_array()
+        .expect("spec doctrine required fields");
+    for field in ARCHITECTURE_DOCTRINE_FIELDS {
+        assert!(
+            required.iter().any(|value| value.as_str() == Some(field)),
+            "spec schema must require {field}"
         );
     }
 
@@ -1464,6 +1585,33 @@ fn embedded_constitution_preserves_plugin_doctrine() {
                     .iter()
                     .any(|value| value.as_str() == Some("core/PLUGINS"))),
             "{node_id} must preserve plugin routing in embedded output"
+        );
+    }
+}
+
+#[test]
+fn embedded_constitution_preserves_spec_doctrine() {
+    for node_id in SPEC_NODES {
+        let output = Command::new(resolve_decapod_bin())
+            .args(["constitution", "get", node_id])
+            .output()
+            .expect("run decapod constitution get");
+        assert!(
+            output.status.success(),
+            "constitution get {node_id} failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let node: serde_json::Value =
+            serde_json::from_slice(&output.stdout).expect("constitution get json");
+        assert_architect_grade_fields(node_id, &node);
+        assert!(
+            node["links"]["references"]
+                .as_array()
+                .is_some_and(|refs| refs
+                    .iter()
+                    .any(|value| value.as_str() == Some("core/SPECS"))),
+            "{node_id} must preserve spec routing in embedded output"
         );
     }
 }

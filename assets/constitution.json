@@ -24323,6 +24323,144 @@
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Describes binding authority, mutation risk, compatibility, and execution obligations for AMENDMENTS.",
+      "architect_notes": [
+        "AMENDMENTS is a binding specification for constitutional changes, binding authority, and compatibility migration; it must state what is authoritative, what may change, and which artifact records the decision.",
+        "Keep AMENDMENTS distinct from implementation preference: a spec owns the contract and acceptance condition, while adjacent architecture, interface, and operations doctrine own concrete realization.",
+        "Treat AMENDMENTS drift as a proof failure. A change is incomplete when code, generated specs, or review evidence no longer agree with the amendment records contract."
+      ]
+,
+      "init_questions": [
+        {
+          "id": "contract_truth",
+          "prompt": "What must be true for AMENDMENTS, and which human or governance authority can change that requirement?",
+          "why": "Naming the binding truth and authority prevents a local implementation choice from silently rewriting the authority, compatibility, and rollback contract.",
+          "answers": [
+            "required invariant",
+            "human preference",
+            "non-goal",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "compatibility_proof",
+          "prompt": "Which prior behavior, consumer, generated spec, or proof artifact must remain compatible with this AMENDMENTS change?",
+          "why": "Compatibility is a decision, not an assumption; the affected evidence must be named before an amendment or migration ships.",
+          "answers": [
+            "existing consumer",
+            "generated spec",
+            "migration",
+            "runtime test",
+            "release review"
+          ]
+        }
+      ]
+,
+      "decision_matrix": [
+        {
+          "choice": "Amend the existing specification",
+          "use_when": "The requested behavior changes the constitutional changes, binding authority, and compatibility migration contract while preserving its stable identity and ownership.",
+          "avoid_when": "The change would make existing consumers interpret the same identifier differently without a migration or compatibility note.",
+          "implications": "Update amendment records, affected specs, acceptance evidence, and compatibility notes together; preserve the existing node identity."
+        },
+        {
+          "choice": "Add a narrower specification",
+          "use_when": "The requirement has a distinct owner, lifecycle, authority, or compatibility boundary that should not broaden an existing contract.",
+          "avoid_when": "The split only duplicates terminology and would make retrieval or proof ambiguous.",
+          "implications": "Link the new node to its parent and adjacent interface or methodology contract, then define ownership and proof independently."
+        },
+        {
+          "choice": "Defer pending clarification or evidence",
+          "use_when": "Authority, compatibility impact, migration behavior, or acceptance evidence is not proven.",
+          "avoid_when": "The change is local, reversible, and its existing contract and proof surface are unambiguous.",
+          "implications": "Record the unresolved question and blocked proof; do not turn an assumption into binding doctrine by omission."
+        }
+      ]
+,
+      "tradeoffs": [
+        {
+          "axis": "stability versus precision",
+          "option_a": "Preserve a stable contract and add a compatible extension.",
+          "option_b": "Make the contract precise even when consumers must migrate.",
+          "guidance": "Choose based on AMENDMENTS risk and consumer impact; record why compatibility or deliberate breakage is the safer contract."
+        },
+        {
+          "axis": "local autonomy versus binding authority",
+          "option_a": "Allow implementation discretion inside explicit acceptance boundaries.",
+          "option_b": "Require an amendment or human gate for authority-changing behavior.",
+          "guidance": "Keep AMENDMENTS binding where it protects authority, compatibility, and rollback; leave only reversible realization choices to implementation agents."
+        }
+      ]
+,
+      "scaffolding": {
+        "capture": [
+          "Capture the AMENDMENTS owner, binding statements, non-goals, assumptions, affected consumers, and amendment records acceptance evidence.",
+          "Capture the compatibility, amendment, migration, and drift-recovery decision before generating implementation scaffolding."
+        ],
+        "generate": [
+          "Generate the minimal AMENDMENTS update, affected living-spec entries, acceptance checklist, and proof-plan reference.",
+          "Generate explicit placeholders for unresolved requirements rather than silently choosing authority, security, or compatibility behavior."
+        ],
+        "defer": [
+          "Defer authority, compatibility, and rollback decisions to the owning constitution or interface node and do not duplicate its authority here.",
+          "Defer release or migration claims until old and new behavior have executable compatibility evidence."
+        ],
+        "proof": [
+          "Record the test, schema, command output, review artifact, or generated-spec hash that proves the AMENDMENTS contract.",
+          "Record any intentional compatibility break, deferred risk, stale consumer, or environment limitation as visible evidence."
+        ]
+      }
+,
+      "spec_impacts": {
+        "intent": [
+          "State when AMENDMENTS is in scope, including required outcomes, constraints, assumptions, non-goals, and human acceptance.",
+          "Preserve uncertainty about amendment records or authority until the responsible human or binding node resolves it."
+        ],
+        "architecture": [
+          "Document how AMENDMENTS changes state ownership, lifecycle, boundaries, deployment shape, or migration responsibilities.",
+          "Link architectural consequences to the narrower interface, data, security, or methodology contract that owns the decision."
+        ],
+        "interfaces": [
+          "Name the commands, RPC payloads, schemas, generated files, and compatibility semantics affected by AMENDMENTS.",
+          "Preserve omission, error, version, and migration behavior for consumers of the specified contract."
+        ],
+        "operations": [
+          "Describe how operators inspect, apply, migrate, roll back, and recover the AMENDMENTS contract without hidden mutation.",
+          "Record bounded commands, evidence locations, and stop conditions for drift or compatibility failures."
+        ],
+        "security": [
+          "State how AMENDMENTS protects authority, trust, secrets, external input, and mutation boundaries.",
+          "Treat claims and generated content as untrusted until the owning security and verification contracts accept them."
+        ],
+        "validation": [
+          "Add checks that detect AMENDMENTS drift across source, generated specs, schemas, tests, and acceptance evidence.",
+          "Make missing compatibility or proof evidence a visible validation failure or explicit deferred blocker."
+        ],
+        "semantics": [
+          "Define stable meanings for required, optional, absent, stale, rejected, migrated, and incompatible AMENDMENTS states.",
+          "Preserve deterministic identifiers and error semantics so contract changes remain explainable."
+        ],
+        "proof": [
+          "Tie AMENDMENTS completion to executable evidence for amendment records, not to the existence of descriptive specification text alone.",
+          "Record the exact proof command, artifact, receipt, or test that a later agent can replay."
+        ]
+      }
+,
+      "proof": {
+        "static": [
+          "The AMENDMENTS node is reachable through spec lookup and cross-linked to its parent and adjacent contract nodes.",
+          "Schema and tests preserve structured AMENDMENTS doctrine and reject regression to a compact summary."
+        ],
+        "runtime": [
+          "A representative AMENDMENTS change produces bounded behavior consistent with its amendment records contract and failure semantics.",
+          "A stale, incompatible, unauthorized, or underspecified AMENDMENTS path produces visible recovery guidance instead of silent success."
+        ],
+        "release": [
+          "Generated living specs and release artifacts are refreshed when AMENDMENTS changes authority, compatibility, interfaces, or proof expectations.",
+          "Release evidence records version compatibility, migration status, and any intentionally deferred AMENDMENTS risk."
+        ]
+      }
+,
       "terms": [
         "controlled",
         "amendments",
@@ -24338,10 +24476,13 @@
       ],
       "links": {
         "references": [
-          "core/DEMANDS"
+          "core/DEMANDS",
+          "core/SPECS",
+          "interfaces/PROJECT_SPECS"
         ],
         "referenced_by": [
-          "core/DEMANDS"
+          "core/DEMANDS",
+          "core/SPECS"
         ]
       },
       "sections": {
@@ -24381,6 +24522,144 @@
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Describes binding authority, mutation risk, compatibility, and execution obligations for DB BROKER QUEUE.",
+      "architect_notes": [
+        "DB_BROKER_QUEUE is a binding specification for database broker queue semantics, claims, retries, and persistence; it must state what is authoritative, what may change, and which artifact records the decision.",
+        "Keep DB_BROKER_QUEUE distinct from implementation preference: a spec owns the contract and acceptance condition, while adjacent architecture, interface, and operations doctrine own concrete realization.",
+        "Treat DB_BROKER_QUEUE drift as a proof failure. A change is incomplete when code, generated specs, or review evidence no longer agree with the broker queue contracts contract."
+      ]
+,
+      "init_questions": [
+        {
+          "id": "contract_truth",
+          "prompt": "What must be true for DB_BROKER_QUEUE, and which human or governance authority can change that requirement?",
+          "why": "Naming the binding truth and authority prevents a local implementation choice from silently rewriting the ownership, retry, and migration contract.",
+          "answers": [
+            "required invariant",
+            "human preference",
+            "non-goal",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "compatibility_proof",
+          "prompt": "Which prior behavior, consumer, generated spec, or proof artifact must remain compatible with this DB_BROKER_QUEUE change?",
+          "why": "Compatibility is a decision, not an assumption; the affected evidence must be named before an amendment or migration ships.",
+          "answers": [
+            "existing consumer",
+            "generated spec",
+            "migration",
+            "runtime test",
+            "release review"
+          ]
+        }
+      ]
+,
+      "decision_matrix": [
+        {
+          "choice": "Amend the existing specification",
+          "use_when": "The requested behavior changes the database broker queue semantics, claims, retries, and persistence contract while preserving its stable identity and ownership.",
+          "avoid_when": "The change would make existing consumers interpret the same identifier differently without a migration or compatibility note.",
+          "implications": "Update broker queue contracts, affected specs, acceptance evidence, and compatibility notes together; preserve the existing node identity."
+        },
+        {
+          "choice": "Add a narrower specification",
+          "use_when": "The requirement has a distinct owner, lifecycle, authority, or compatibility boundary that should not broaden an existing contract.",
+          "avoid_when": "The split only duplicates terminology and would make retrieval or proof ambiguous.",
+          "implications": "Link the new node to its parent and adjacent interface or methodology contract, then define ownership and proof independently."
+        },
+        {
+          "choice": "Defer pending clarification or evidence",
+          "use_when": "Authority, compatibility impact, migration behavior, or acceptance evidence is not proven.",
+          "avoid_when": "The change is local, reversible, and its existing contract and proof surface are unambiguous.",
+          "implications": "Record the unresolved question and blocked proof; do not turn an assumption into binding doctrine by omission."
+        }
+      ]
+,
+      "tradeoffs": [
+        {
+          "axis": "stability versus precision",
+          "option_a": "Preserve a stable contract and add a compatible extension.",
+          "option_b": "Make the contract precise even when consumers must migrate.",
+          "guidance": "Choose based on DB_BROKER_QUEUE risk and consumer impact; record why compatibility or deliberate breakage is the safer contract."
+        },
+        {
+          "axis": "local autonomy versus binding authority",
+          "option_a": "Allow implementation discretion inside explicit acceptance boundaries.",
+          "option_b": "Require an amendment or human gate for authority-changing behavior.",
+          "guidance": "Keep DB_BROKER_QUEUE binding where it protects ownership, retry, and migration; leave only reversible realization choices to implementation agents."
+        }
+      ]
+,
+      "scaffolding": {
+        "capture": [
+          "Capture the DB_BROKER_QUEUE owner, binding statements, non-goals, assumptions, affected consumers, and broker queue contracts acceptance evidence.",
+          "Capture the compatibility, amendment, migration, and drift-recovery decision before generating implementation scaffolding."
+        ],
+        "generate": [
+          "Generate the minimal DB_BROKER_QUEUE update, affected living-spec entries, acceptance checklist, and proof-plan reference.",
+          "Generate explicit placeholders for unresolved requirements rather than silently choosing authority, security, or compatibility behavior."
+        ],
+        "defer": [
+          "Defer ownership, retry, and migration decisions to the owning constitution or interface node and do not duplicate its authority here.",
+          "Defer release or migration claims until old and new behavior have executable compatibility evidence."
+        ],
+        "proof": [
+          "Record the test, schema, command output, review artifact, or generated-spec hash that proves the DB_BROKER_QUEUE contract.",
+          "Record any intentional compatibility break, deferred risk, stale consumer, or environment limitation as visible evidence."
+        ]
+      }
+,
+      "spec_impacts": {
+        "intent": [
+          "State when DB_BROKER_QUEUE is in scope, including required outcomes, constraints, assumptions, non-goals, and human acceptance.",
+          "Preserve uncertainty about broker queue contracts or authority until the responsible human or binding node resolves it."
+        ],
+        "architecture": [
+          "Document how DB_BROKER_QUEUE changes state ownership, lifecycle, boundaries, deployment shape, or migration responsibilities.",
+          "Link architectural consequences to the narrower interface, data, security, or methodology contract that owns the decision."
+        ],
+        "interfaces": [
+          "Name the commands, RPC payloads, schemas, generated files, and compatibility semantics affected by DB_BROKER_QUEUE.",
+          "Preserve omission, error, version, and migration behavior for consumers of the specified contract."
+        ],
+        "operations": [
+          "Describe how operators inspect, apply, migrate, roll back, and recover the DB_BROKER_QUEUE contract without hidden mutation.",
+          "Record bounded commands, evidence locations, and stop conditions for drift or compatibility failures."
+        ],
+        "security": [
+          "State how DB_BROKER_QUEUE protects authority, trust, secrets, external input, and mutation boundaries.",
+          "Treat claims and generated content as untrusted until the owning security and verification contracts accept them."
+        ],
+        "validation": [
+          "Add checks that detect DB_BROKER_QUEUE drift across source, generated specs, schemas, tests, and acceptance evidence.",
+          "Make missing compatibility or proof evidence a visible validation failure or explicit deferred blocker."
+        ],
+        "semantics": [
+          "Define stable meanings for required, optional, absent, stale, rejected, migrated, and incompatible DB_BROKER_QUEUE states.",
+          "Preserve deterministic identifiers and error semantics so contract changes remain explainable."
+        ],
+        "proof": [
+          "Tie DB_BROKER_QUEUE completion to executable evidence for broker queue contracts, not to the existence of descriptive specification text alone.",
+          "Record the exact proof command, artifact, receipt, or test that a later agent can replay."
+        ]
+      }
+,
+      "proof": {
+        "static": [
+          "The DB_BROKER_QUEUE node is reachable through spec lookup and cross-linked to its parent and adjacent contract nodes.",
+          "Schema and tests preserve structured DB_BROKER_QUEUE doctrine and reject regression to a compact summary."
+        ],
+        "runtime": [
+          "A representative DB_BROKER_QUEUE change produces bounded behavior consistent with its broker queue contracts contract and failure semantics.",
+          "A stale, incompatible, unauthorized, or underspecified DB_BROKER_QUEUE path produces visible recovery guidance instead of silent success."
+        ],
+        "release": [
+          "Generated living specs and release artifacts are refreshed when DB_BROKER_QUEUE changes authority, compatibility, interfaces, or proof expectations.",
+          "Release evidence records version compatibility, migration status, and any intentionally deferred DB_BROKER_QUEUE risk."
+        ]
+      }
+,
       "terms": [
         "ordering",
         "database",
@@ -24397,12 +24676,15 @@
       ],
       "links": {
         "references": [
-          "core/DEMANDS"
+          "core/DEMANDS",
+          "core/SPECS",
+          "interfaces/PROJECT_SPECS"
         ],
         "referenced_by": [
-          "data/DATABASE",
-          "core/DEMANDS",
-          "docs/MIGRATIONS"
+        "data/DATABASE",
+        "core/DEMANDS",
+        "docs/MIGRATIONS",
+        "core/SPECS"
         ]
       },
       "sections": {
@@ -24442,6 +24724,144 @@
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Describes binding authority, mutation risk, compatibility, and execution obligations for GIT.",
+      "architect_notes": [
+        "GIT is a binding specification for branch, worktree, commit, rebase, and publication behavior; it must state what is authoritative, what may change, and which artifact records the decision.",
+        "Keep GIT distinct from implementation preference: a spec owns the contract and acceptance condition, while adjacent architecture, interface, and operations doctrine own concrete realization.",
+        "Treat GIT drift as a proof failure. A change is incomplete when code, generated specs, or review evidence no longer agree with the git workflow contracts contract."
+      ]
+,
+      "init_questions": [
+        {
+          "id": "contract_truth",
+          "prompt": "What must be true for GIT, and which human or governance authority can change that requirement?",
+          "why": "Naming the binding truth and authority prevents a local implementation choice from silently rewriting the branch custody and publication contract.",
+          "answers": [
+            "required invariant",
+            "human preference",
+            "non-goal",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "compatibility_proof",
+          "prompt": "Which prior behavior, consumer, generated spec, or proof artifact must remain compatible with this GIT change?",
+          "why": "Compatibility is a decision, not an assumption; the affected evidence must be named before an amendment or migration ships.",
+          "answers": [
+            "existing consumer",
+            "generated spec",
+            "migration",
+            "runtime test",
+            "release review"
+          ]
+        }
+      ]
+,
+      "decision_matrix": [
+        {
+          "choice": "Amend the existing specification",
+          "use_when": "The requested behavior changes the branch, worktree, commit, rebase, and publication behavior contract while preserving its stable identity and ownership.",
+          "avoid_when": "The change would make existing consumers interpret the same identifier differently without a migration or compatibility note.",
+          "implications": "Update git workflow contracts, affected specs, acceptance evidence, and compatibility notes together; preserve the existing node identity."
+        },
+        {
+          "choice": "Add a narrower specification",
+          "use_when": "The requirement has a distinct owner, lifecycle, authority, or compatibility boundary that should not broaden an existing contract.",
+          "avoid_when": "The split only duplicates terminology and would make retrieval or proof ambiguous.",
+          "implications": "Link the new node to its parent and adjacent interface or methodology contract, then define ownership and proof independently."
+        },
+        {
+          "choice": "Defer pending clarification or evidence",
+          "use_when": "Authority, compatibility impact, migration behavior, or acceptance evidence is not proven.",
+          "avoid_when": "The change is local, reversible, and its existing contract and proof surface are unambiguous.",
+          "implications": "Record the unresolved question and blocked proof; do not turn an assumption into binding doctrine by omission."
+        }
+      ]
+,
+      "tradeoffs": [
+        {
+          "axis": "stability versus precision",
+          "option_a": "Preserve a stable contract and add a compatible extension.",
+          "option_b": "Make the contract precise even when consumers must migrate.",
+          "guidance": "Choose based on GIT risk and consumer impact; record why compatibility or deliberate breakage is the safer contract."
+        },
+        {
+          "axis": "local autonomy versus binding authority",
+          "option_a": "Allow implementation discretion inside explicit acceptance boundaries.",
+          "option_b": "Require an amendment or human gate for authority-changing behavior.",
+          "guidance": "Keep GIT binding where it protects branch custody and publication; leave only reversible realization choices to implementation agents."
+        }
+      ]
+,
+      "scaffolding": {
+        "capture": [
+          "Capture the GIT owner, binding statements, non-goals, assumptions, affected consumers, and git workflow contracts acceptance evidence.",
+          "Capture the compatibility, amendment, migration, and drift-recovery decision before generating implementation scaffolding."
+        ],
+        "generate": [
+          "Generate the minimal GIT update, affected living-spec entries, acceptance checklist, and proof-plan reference.",
+          "Generate explicit placeholders for unresolved requirements rather than silently choosing authority, security, or compatibility behavior."
+        ],
+        "defer": [
+          "Defer branch custody and publication decisions to the owning constitution or interface node and do not duplicate its authority here.",
+          "Defer release or migration claims until old and new behavior have executable compatibility evidence."
+        ],
+        "proof": [
+          "Record the test, schema, command output, review artifact, or generated-spec hash that proves the GIT contract.",
+          "Record any intentional compatibility break, deferred risk, stale consumer, or environment limitation as visible evidence."
+        ]
+      }
+,
+      "spec_impacts": {
+        "intent": [
+          "State when GIT is in scope, including required outcomes, constraints, assumptions, non-goals, and human acceptance.",
+          "Preserve uncertainty about git workflow contracts or authority until the responsible human or binding node resolves it."
+        ],
+        "architecture": [
+          "Document how GIT changes state ownership, lifecycle, boundaries, deployment shape, or migration responsibilities.",
+          "Link architectural consequences to the narrower interface, data, security, or methodology contract that owns the decision."
+        ],
+        "interfaces": [
+          "Name the commands, RPC payloads, schemas, generated files, and compatibility semantics affected by GIT.",
+          "Preserve omission, error, version, and migration behavior for consumers of the specified contract."
+        ],
+        "operations": [
+          "Describe how operators inspect, apply, migrate, roll back, and recover the GIT contract without hidden mutation.",
+          "Record bounded commands, evidence locations, and stop conditions for drift or compatibility failures."
+        ],
+        "security": [
+          "State how GIT protects authority, trust, secrets, external input, and mutation boundaries.",
+          "Treat claims and generated content as untrusted until the owning security and verification contracts accept them."
+        ],
+        "validation": [
+          "Add checks that detect GIT drift across source, generated specs, schemas, tests, and acceptance evidence.",
+          "Make missing compatibility or proof evidence a visible validation failure or explicit deferred blocker."
+        ],
+        "semantics": [
+          "Define stable meanings for required, optional, absent, stale, rejected, migrated, and incompatible GIT states.",
+          "Preserve deterministic identifiers and error semantics so contract changes remain explainable."
+        ],
+        "proof": [
+          "Tie GIT completion to executable evidence for git workflow contracts, not to the existence of descriptive specification text alone.",
+          "Record the exact proof command, artifact, receipt, or test that a later agent can replay."
+        ]
+      }
+,
+      "proof": {
+        "static": [
+          "The GIT node is reachable through spec lookup and cross-linked to its parent and adjacent contract nodes.",
+          "Schema and tests preserve structured GIT doctrine and reject regression to a compact summary."
+        ],
+        "runtime": [
+          "A representative GIT change produces bounded behavior consistent with its git workflow contracts contract and failure semantics.",
+          "A stale, incompatible, unauthorized, or underspecified GIT path produces visible recovery guidance instead of silent success."
+        ],
+        "release": [
+          "Generated living specs and release artifacts are refreshed when GIT changes authority, compatibility, interfaces, or proof expectations.",
+          "Release evidence records version compatibility, migration status, and any intentionally deferred GIT risk."
+        ]
+      }
+,
       "terms": [
         "worktrees",
         "promotion",
@@ -24458,12 +24878,15 @@
       ],
       "links": {
         "references": [
-          "core/DEMANDS"
+          "core/DEMANDS",
+          "core/SPECS",
+          "interfaces/PROJECT_SPECS"
         ],
         "referenced_by": [
-          "architecture/CI_CD_PIPELINES",
-          "core/DEMANDS",
-          "docs/RELEASE_PROCESS"
+        "architecture/CI_CD_PIPELINES",
+        "core/DEMANDS",
+        "docs/RELEASE_PROCESS",
+        "core/SPECS"
         ]
       },
       "sections": {
@@ -24503,6 +24926,144 @@
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "This domain covers raw human intent, explicit constraints, assumptions, acceptance criteria, mutation authority, and drift recovery.",
+      "architect_notes": [
+        "INTENT is a binding specification for raw human intent, constraints, assumptions, acceptance criteria, and drift recovery; it must state what is authoritative, what may change, and which artifact records the decision.",
+        "Keep INTENT distinct from implementation preference: a spec owns the contract and acceptance condition, while adjacent architecture, interface, and operations doctrine own concrete realization.",
+        "Treat INTENT drift as a proof failure. A change is incomplete when code, generated specs, or review evidence no longer agree with the intent records contract."
+      ]
+,
+      "init_questions": [
+        {
+          "id": "contract_truth",
+          "prompt": "What must be true for INTENT, and which human or governance authority can change that requirement?",
+          "why": "Naming the binding truth and authority prevents a local implementation choice from silently rewriting the human authority and requirement drift contract.",
+          "answers": [
+            "required invariant",
+            "human preference",
+            "non-goal",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "compatibility_proof",
+          "prompt": "Which prior behavior, consumer, generated spec, or proof artifact must remain compatible with this INTENT change?",
+          "why": "Compatibility is a decision, not an assumption; the affected evidence must be named before an amendment or migration ships.",
+          "answers": [
+            "existing consumer",
+            "generated spec",
+            "migration",
+            "runtime test",
+            "release review"
+          ]
+        }
+      ]
+,
+      "decision_matrix": [
+        {
+          "choice": "Amend the existing specification",
+          "use_when": "The requested behavior changes the raw human intent, constraints, assumptions, acceptance criteria, and drift recovery contract while preserving its stable identity and ownership.",
+          "avoid_when": "The change would make existing consumers interpret the same identifier differently without a migration or compatibility note.",
+          "implications": "Update intent records, affected specs, acceptance evidence, and compatibility notes together; preserve the existing node identity."
+        },
+        {
+          "choice": "Add a narrower specification",
+          "use_when": "The requirement has a distinct owner, lifecycle, authority, or compatibility boundary that should not broaden an existing contract.",
+          "avoid_when": "The split only duplicates terminology and would make retrieval or proof ambiguous.",
+          "implications": "Link the new node to its parent and adjacent interface or methodology contract, then define ownership and proof independently."
+        },
+        {
+          "choice": "Defer pending clarification or evidence",
+          "use_when": "Authority, compatibility impact, migration behavior, or acceptance evidence is not proven.",
+          "avoid_when": "The change is local, reversible, and its existing contract and proof surface are unambiguous.",
+          "implications": "Record the unresolved question and blocked proof; do not turn an assumption into binding doctrine by omission."
+        }
+      ]
+,
+      "tradeoffs": [
+        {
+          "axis": "stability versus precision",
+          "option_a": "Preserve a stable contract and add a compatible extension.",
+          "option_b": "Make the contract precise even when consumers must migrate.",
+          "guidance": "Choose based on INTENT risk and consumer impact; record why compatibility or deliberate breakage is the safer contract."
+        },
+        {
+          "axis": "local autonomy versus binding authority",
+          "option_a": "Allow implementation discretion inside explicit acceptance boundaries.",
+          "option_b": "Require an amendment or human gate for authority-changing behavior.",
+          "guidance": "Keep INTENT binding where it protects human authority and requirement drift; leave only reversible realization choices to implementation agents."
+        }
+      ]
+,
+      "scaffolding": {
+        "capture": [
+          "Capture the INTENT owner, binding statements, non-goals, assumptions, affected consumers, and intent records acceptance evidence.",
+          "Capture the compatibility, amendment, migration, and drift-recovery decision before generating implementation scaffolding."
+        ],
+        "generate": [
+          "Generate the minimal INTENT update, affected living-spec entries, acceptance checklist, and proof-plan reference.",
+          "Generate explicit placeholders for unresolved requirements rather than silently choosing authority, security, or compatibility behavior."
+        ],
+        "defer": [
+          "Defer human authority and requirement drift decisions to the owning constitution or interface node and do not duplicate its authority here.",
+          "Defer release or migration claims until old and new behavior have executable compatibility evidence."
+        ],
+        "proof": [
+          "Record the test, schema, command output, review artifact, or generated-spec hash that proves the INTENT contract.",
+          "Record any intentional compatibility break, deferred risk, stale consumer, or environment limitation as visible evidence."
+        ]
+      }
+,
+      "spec_impacts": {
+        "intent": [
+          "State when INTENT is in scope, including required outcomes, constraints, assumptions, non-goals, and human acceptance.",
+          "Preserve uncertainty about intent records or authority until the responsible human or binding node resolves it."
+        ],
+        "architecture": [
+          "Document how INTENT changes state ownership, lifecycle, boundaries, deployment shape, or migration responsibilities.",
+          "Link architectural consequences to the narrower interface, data, security, or methodology contract that owns the decision."
+        ],
+        "interfaces": [
+          "Name the commands, RPC payloads, schemas, generated files, and compatibility semantics affected by INTENT.",
+          "Preserve omission, error, version, and migration behavior for consumers of the specified contract."
+        ],
+        "operations": [
+          "Describe how operators inspect, apply, migrate, roll back, and recover the INTENT contract without hidden mutation.",
+          "Record bounded commands, evidence locations, and stop conditions for drift or compatibility failures."
+        ],
+        "security": [
+          "State how INTENT protects authority, trust, secrets, external input, and mutation boundaries.",
+          "Treat claims and generated content as untrusted until the owning security and verification contracts accept them."
+        ],
+        "validation": [
+          "Add checks that detect INTENT drift across source, generated specs, schemas, tests, and acceptance evidence.",
+          "Make missing compatibility or proof evidence a visible validation failure or explicit deferred blocker."
+        ],
+        "semantics": [
+          "Define stable meanings for required, optional, absent, stale, rejected, migrated, and incompatible INTENT states.",
+          "Preserve deterministic identifiers and error semantics so contract changes remain explainable."
+        ],
+        "proof": [
+          "Tie INTENT completion to executable evidence for intent records, not to the existence of descriptive specification text alone.",
+          "Record the exact proof command, artifact, receipt, or test that a later agent can replay."
+        ]
+      }
+,
+      "proof": {
+        "static": [
+          "The INTENT node is reachable through spec lookup and cross-linked to its parent and adjacent contract nodes.",
+          "Schema and tests preserve structured INTENT doctrine and reject regression to a compact summary."
+        ],
+        "runtime": [
+          "A representative INTENT change produces bounded behavior consistent with its intent records contract and failure semantics.",
+          "A stale, incompatible, unauthorized, or underspecified INTENT path produces visible recovery guidance instead of silent success."
+        ],
+        "release": [
+          "Generated living specs and release artifacts are refreshed when INTENT changes authority, compatibility, interfaces, or proof expectations.",
+          "Release evidence records version compatibility, migration status, and any intentionally deferred INTENT risk."
+        ]
+      }
+,
       "terms": [
         "capture",
         "constraints",
@@ -24518,16 +25079,18 @@
         "authority"
       ],
       "links": {
-        "references": [
-          "core/DECAPOD",
-          "core/DEMANDS",
-          "interfaces/PROJECT_SPECS",
-          "plugins/DECIDE",
-          "specs/SYSTEM"
+      "references": [
+        "core/DECAPOD",
+        "core/DEMANDS",
+        "interfaces/PROJECT_SPECS",
+        "plugins/DECIDE",
+        "specs/SYSTEM",
+        "core/SPECS"
         ],
         "referenced_by": [
-          "core/DEMANDS",
-          "specs/SYSTEM"
+        "core/DEMANDS",
+        "specs/SYSTEM",
+        "core/SPECS"
         ]
       },
       "sections": {
@@ -24572,6 +25135,144 @@
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Describes binding authority, mutation risk, compatibility, and execution obligations for SECURITY.",
+      "architect_notes": [
+        "SECURITY is a binding specification for security posture, threat boundaries, secrets, trust, and session risk; it must state what is authoritative, what may change, and which artifact records the decision.",
+        "Keep SECURITY distinct from implementation preference: a spec owns the contract and acceptance condition, while adjacent architecture, interface, and operations doctrine own concrete realization.",
+        "Treat SECURITY drift as a proof failure. A change is incomplete when code, generated specs, or review evidence no longer agree with the security constraints contract."
+      ]
+,
+      "init_questions": [
+        {
+          "id": "contract_truth",
+          "prompt": "What must be true for SECURITY, and which human or governance authority can change that requirement?",
+          "why": "Naming the binding truth and authority prevents a local implementation choice from silently rewriting the threat models, secrets, and authorization contract.",
+          "answers": [
+            "required invariant",
+            "human preference",
+            "non-goal",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "compatibility_proof",
+          "prompt": "Which prior behavior, consumer, generated spec, or proof artifact must remain compatible with this SECURITY change?",
+          "why": "Compatibility is a decision, not an assumption; the affected evidence must be named before an amendment or migration ships.",
+          "answers": [
+            "existing consumer",
+            "generated spec",
+            "migration",
+            "runtime test",
+            "release review"
+          ]
+        }
+      ]
+,
+      "decision_matrix": [
+        {
+          "choice": "Amend the existing specification",
+          "use_when": "The requested behavior changes the security posture, threat boundaries, secrets, trust, and session risk contract while preserving its stable identity and ownership.",
+          "avoid_when": "The change would make existing consumers interpret the same identifier differently without a migration or compatibility note.",
+          "implications": "Update security constraints, affected specs, acceptance evidence, and compatibility notes together; preserve the existing node identity."
+        },
+        {
+          "choice": "Add a narrower specification",
+          "use_when": "The requirement has a distinct owner, lifecycle, authority, or compatibility boundary that should not broaden an existing contract.",
+          "avoid_when": "The split only duplicates terminology and would make retrieval or proof ambiguous.",
+          "implications": "Link the new node to its parent and adjacent interface or methodology contract, then define ownership and proof independently."
+        },
+        {
+          "choice": "Defer pending clarification or evidence",
+          "use_when": "Authority, compatibility impact, migration behavior, or acceptance evidence is not proven.",
+          "avoid_when": "The change is local, reversible, and its existing contract and proof surface are unambiguous.",
+          "implications": "Record the unresolved question and blocked proof; do not turn an assumption into binding doctrine by omission."
+        }
+      ]
+,
+      "tradeoffs": [
+        {
+          "axis": "stability versus precision",
+          "option_a": "Preserve a stable contract and add a compatible extension.",
+          "option_b": "Make the contract precise even when consumers must migrate.",
+          "guidance": "Choose based on SECURITY risk and consumer impact; record why compatibility or deliberate breakage is the safer contract."
+        },
+        {
+          "axis": "local autonomy versus binding authority",
+          "option_a": "Allow implementation discretion inside explicit acceptance boundaries.",
+          "option_b": "Require an amendment or human gate for authority-changing behavior.",
+          "guidance": "Keep SECURITY binding where it protects threat models, secrets, and authorization; leave only reversible realization choices to implementation agents."
+        }
+      ]
+,
+      "scaffolding": {
+        "capture": [
+          "Capture the SECURITY owner, binding statements, non-goals, assumptions, affected consumers, and security constraints acceptance evidence.",
+          "Capture the compatibility, amendment, migration, and drift-recovery decision before generating implementation scaffolding."
+        ],
+        "generate": [
+          "Generate the minimal SECURITY update, affected living-spec entries, acceptance checklist, and proof-plan reference.",
+          "Generate explicit placeholders for unresolved requirements rather than silently choosing authority, security, or compatibility behavior."
+        ],
+        "defer": [
+          "Defer threat models, secrets, and authorization decisions to the owning constitution or interface node and do not duplicate its authority here.",
+          "Defer release or migration claims until old and new behavior have executable compatibility evidence."
+        ],
+        "proof": [
+          "Record the test, schema, command output, review artifact, or generated-spec hash that proves the SECURITY contract.",
+          "Record any intentional compatibility break, deferred risk, stale consumer, or environment limitation as visible evidence."
+        ]
+      }
+,
+      "spec_impacts": {
+        "intent": [
+          "State when SECURITY is in scope, including required outcomes, constraints, assumptions, non-goals, and human acceptance.",
+          "Preserve uncertainty about security constraints or authority until the responsible human or binding node resolves it."
+        ],
+        "architecture": [
+          "Document how SECURITY changes state ownership, lifecycle, boundaries, deployment shape, or migration responsibilities.",
+          "Link architectural consequences to the narrower interface, data, security, or methodology contract that owns the decision."
+        ],
+        "interfaces": [
+          "Name the commands, RPC payloads, schemas, generated files, and compatibility semantics affected by SECURITY.",
+          "Preserve omission, error, version, and migration behavior for consumers of the specified contract."
+        ],
+        "operations": [
+          "Describe how operators inspect, apply, migrate, roll back, and recover the SECURITY contract without hidden mutation.",
+          "Record bounded commands, evidence locations, and stop conditions for drift or compatibility failures."
+        ],
+        "security": [
+          "State how SECURITY protects authority, trust, secrets, external input, and mutation boundaries.",
+          "Treat claims and generated content as untrusted until the owning security and verification contracts accept them."
+        ],
+        "validation": [
+          "Add checks that detect SECURITY drift across source, generated specs, schemas, tests, and acceptance evidence.",
+          "Make missing compatibility or proof evidence a visible validation failure or explicit deferred blocker."
+        ],
+        "semantics": [
+          "Define stable meanings for required, optional, absent, stale, rejected, migrated, and incompatible SECURITY states.",
+          "Preserve deterministic identifiers and error semantics so contract changes remain explainable."
+        ],
+        "proof": [
+          "Tie SECURITY completion to executable evidence for security constraints, not to the existence of descriptive specification text alone.",
+          "Record the exact proof command, artifact, receipt, or test that a later agent can replay."
+        ]
+      }
+,
+      "proof": {
+        "static": [
+          "The SECURITY node is reachable through spec lookup and cross-linked to its parent and adjacent contract nodes.",
+          "Schema and tests preserve structured SECURITY doctrine and reject regression to a compact summary."
+        ],
+        "runtime": [
+          "A representative SECURITY change produces bounded behavior consistent with its security constraints contract and failure semantics.",
+          "A stale, incompatible, unauthorized, or underspecified SECURITY path produces visible recovery guidance instead of silent success."
+        ],
+        "release": [
+          "Generated living specs and release artifacts are refreshed when SECURITY changes authority, compatibility, interfaces, or proof expectations.",
+          "Release evidence records version compatibility, migration status, and any intentionally deferred SECURITY risk."
+        ]
+      }
+,
       "terms": [
         "modeling",
         "privilege",
@@ -24589,18 +25290,21 @@
         "abuse"
       ],
       "links": {
-        "references": [
-          "architecture/AUTH",
-          "architecture/ENCRYPTION",
-          "architecture/SECRETS",
-          "core/DEMANDS",
-          "docs/SECURITY_THREAT_MODEL"
+      "references": [
+        "architecture/AUTH",
+        "architecture/ENCRYPTION",
+        "architecture/SECRETS",
+        "core/DEMANDS",
+        "docs/SECURITY_THREAT_MODEL",
+        "core/SPECS",
+        "interfaces/PROJECT_SPECS"
         ],
         "referenced_by": [
-          "architecture/AUTH",
-          "architecture/SECURITY",
-          "core/DEMANDS",
-          "docs/SECURITY_THREAT_MODEL"
+        "architecture/AUTH",
+        "architecture/SECURITY",
+        "core/DEMANDS",
+        "docs/SECURITY_THREAT_MODEL",
+        "core/SPECS"
         ]
       },
       "sections": {
@@ -24640,6 +25344,144 @@
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Describes binding authority, mutation risk, compatibility, and execution obligations for SYSTEM.",
+      "architect_notes": [
+        "SYSTEM is a binding specification for system boundaries, authority hierarchy, lifecycle, and control-plane behavior; it must state what is authoritative, what may change, and which artifact records the decision.",
+        "Keep SYSTEM distinct from implementation preference: a spec owns the contract and acceptance condition, while adjacent architecture, interface, and operations doctrine own concrete realization.",
+        "Treat SYSTEM drift as a proof failure. A change is incomplete when code, generated specs, or review evidence no longer agree with the system contracts contract."
+      ]
+,
+      "init_questions": [
+        {
+          "id": "contract_truth",
+          "prompt": "What must be true for SYSTEM, and which human or governance authority can change that requirement?",
+          "why": "Naming the binding truth and authority prevents a local implementation choice from silently rewriting the state ownership and control-plane authority contract.",
+          "answers": [
+            "required invariant",
+            "human preference",
+            "non-goal",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "compatibility_proof",
+          "prompt": "Which prior behavior, consumer, generated spec, or proof artifact must remain compatible with this SYSTEM change?",
+          "why": "Compatibility is a decision, not an assumption; the affected evidence must be named before an amendment or migration ships.",
+          "answers": [
+            "existing consumer",
+            "generated spec",
+            "migration",
+            "runtime test",
+            "release review"
+          ]
+        }
+      ]
+,
+      "decision_matrix": [
+        {
+          "choice": "Amend the existing specification",
+          "use_when": "The requested behavior changes the system boundaries, authority hierarchy, lifecycle, and control-plane behavior contract while preserving its stable identity and ownership.",
+          "avoid_when": "The change would make existing consumers interpret the same identifier differently without a migration or compatibility note.",
+          "implications": "Update system contracts, affected specs, acceptance evidence, and compatibility notes together; preserve the existing node identity."
+        },
+        {
+          "choice": "Add a narrower specification",
+          "use_when": "The requirement has a distinct owner, lifecycle, authority, or compatibility boundary that should not broaden an existing contract.",
+          "avoid_when": "The split only duplicates terminology and would make retrieval or proof ambiguous.",
+          "implications": "Link the new node to its parent and adjacent interface or methodology contract, then define ownership and proof independently."
+        },
+        {
+          "choice": "Defer pending clarification or evidence",
+          "use_when": "Authority, compatibility impact, migration behavior, or acceptance evidence is not proven.",
+          "avoid_when": "The change is local, reversible, and its existing contract and proof surface are unambiguous.",
+          "implications": "Record the unresolved question and blocked proof; do not turn an assumption into binding doctrine by omission."
+        }
+      ]
+,
+      "tradeoffs": [
+        {
+          "axis": "stability versus precision",
+          "option_a": "Preserve a stable contract and add a compatible extension.",
+          "option_b": "Make the contract precise even when consumers must migrate.",
+          "guidance": "Choose based on SYSTEM risk and consumer impact; record why compatibility or deliberate breakage is the safer contract."
+        },
+        {
+          "axis": "local autonomy versus binding authority",
+          "option_a": "Allow implementation discretion inside explicit acceptance boundaries.",
+          "option_b": "Require an amendment or human gate for authority-changing behavior.",
+          "guidance": "Keep SYSTEM binding where it protects state ownership and control-plane authority; leave only reversible realization choices to implementation agents."
+        }
+      ]
+,
+      "scaffolding": {
+        "capture": [
+          "Capture the SYSTEM owner, binding statements, non-goals, assumptions, affected consumers, and system contracts acceptance evidence.",
+          "Capture the compatibility, amendment, migration, and drift-recovery decision before generating implementation scaffolding."
+        ],
+        "generate": [
+          "Generate the minimal SYSTEM update, affected living-spec entries, acceptance checklist, and proof-plan reference.",
+          "Generate explicit placeholders for unresolved requirements rather than silently choosing authority, security, or compatibility behavior."
+        ],
+        "defer": [
+          "Defer state ownership and control-plane authority decisions to the owning constitution or interface node and do not duplicate its authority here.",
+          "Defer release or migration claims until old and new behavior have executable compatibility evidence."
+        ],
+        "proof": [
+          "Record the test, schema, command output, review artifact, or generated-spec hash that proves the SYSTEM contract.",
+          "Record any intentional compatibility break, deferred risk, stale consumer, or environment limitation as visible evidence."
+        ]
+      }
+,
+      "spec_impacts": {
+        "intent": [
+          "State when SYSTEM is in scope, including required outcomes, constraints, assumptions, non-goals, and human acceptance.",
+          "Preserve uncertainty about system contracts or authority until the responsible human or binding node resolves it."
+        ],
+        "architecture": [
+          "Document how SYSTEM changes state ownership, lifecycle, boundaries, deployment shape, or migration responsibilities.",
+          "Link architectural consequences to the narrower interface, data, security, or methodology contract that owns the decision."
+        ],
+        "interfaces": [
+          "Name the commands, RPC payloads, schemas, generated files, and compatibility semantics affected by SYSTEM.",
+          "Preserve omission, error, version, and migration behavior for consumers of the specified contract."
+        ],
+        "operations": [
+          "Describe how operators inspect, apply, migrate, roll back, and recover the SYSTEM contract without hidden mutation.",
+          "Record bounded commands, evidence locations, and stop conditions for drift or compatibility failures."
+        ],
+        "security": [
+          "State how SYSTEM protects authority, trust, secrets, external input, and mutation boundaries.",
+          "Treat claims and generated content as untrusted until the owning security and verification contracts accept them."
+        ],
+        "validation": [
+          "Add checks that detect SYSTEM drift across source, generated specs, schemas, tests, and acceptance evidence.",
+          "Make missing compatibility or proof evidence a visible validation failure or explicit deferred blocker."
+        ],
+        "semantics": [
+          "Define stable meanings for required, optional, absent, stale, rejected, migrated, and incompatible SYSTEM states.",
+          "Preserve deterministic identifiers and error semantics so contract changes remain explainable."
+        ],
+        "proof": [
+          "Tie SYSTEM completion to executable evidence for system contracts, not to the existence of descriptive specification text alone.",
+          "Record the exact proof command, artifact, receipt, or test that a later agent can replay."
+        ]
+      }
+,
+      "proof": {
+        "static": [
+          "The SYSTEM node is reachable through spec lookup and cross-linked to its parent and adjacent contract nodes.",
+          "Schema and tests preserve structured SYSTEM doctrine and reject regression to a compact summary."
+        ],
+        "runtime": [
+          "A representative SYSTEM change produces bounded behavior consistent with its system contracts contract and failure semantics.",
+          "A stale, incompatible, unauthorized, or underspecified SYSTEM path produces visible recovery guidance instead of silent success."
+        ],
+        "release": [
+          "Generated living specs and release artifacts are refreshed when SYSTEM changes authority, compatibility, interfaces, or proof expectations.",
+          "Release evidence records version compatibility, migration status, and any intentionally deferred SYSTEM risk."
+        ]
+      }
+,
       "terms": [
         "level",
         "invariants",
@@ -24654,19 +25496,22 @@
         "semantics"
       ],
       "links": {
-        "references": [
-          "core/DECAPOD",
-          "core/DEMANDS",
-          "interfaces/CLAIMS",
-          "interfaces/CONTROL_PLANE",
-          "specs/INTENT"
+      "references": [
+        "core/DECAPOD",
+        "core/DEMANDS",
+        "interfaces/CLAIMS",
+        "interfaces/CONTROL_PLANE",
+        "specs/INTENT",
+        "core/SPECS",
+        "interfaces/PROJECT_SPECS"
         ],
         "referenced_by": [
           "core/DEMANDS",
-          "docs/ARCHITECTURE_OVERVIEW",
-          "docs/README",
-          "plugins/VERIFY",
-          "specs/INTENT"
+        "docs/ARCHITECTURE_OVERVIEW",
+        "docs/README",
+        "plugins/VERIFY",
+        "specs/INTENT",
+        "core/SPECS"
         ]
       },
       "sections": {
@@ -24706,6 +25551,144 @@
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Describes binding authority, mutation risk, compatibility, and execution obligations for FRONTEND BACKEND E2E.",
+      "architect_notes": [
+        "FRONTEND_BACKEND_E2E is a binding specification for end-to-end frontend/backend behavior across user-visible and service boundaries; it must state what is authoritative, what may change, and which artifact records the decision.",
+        "Keep FRONTEND_BACKEND_E2E distinct from implementation preference: a spec owns the contract and acceptance condition, while adjacent architecture, interface, and operations doctrine own concrete realization.",
+        "Treat FRONTEND_BACKEND_E2E drift as a proof failure. A change is incomplete when code, generated specs, or review evidence no longer agree with the E2E acceptance contracts contract."
+      ]
+,
+      "init_questions": [
+        {
+          "id": "contract_truth",
+          "prompt": "What must be true for FRONTEND_BACKEND_E2E, and which human or governance authority can change that requirement?",
+          "why": "Naming the binding truth and authority prevents a local implementation choice from silently rewriting the cross-boundary behavior and test evidence contract.",
+          "answers": [
+            "required invariant",
+            "human preference",
+            "non-goal",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "compatibility_proof",
+          "prompt": "Which prior behavior, consumer, generated spec, or proof artifact must remain compatible with this FRONTEND_BACKEND_E2E change?",
+          "why": "Compatibility is a decision, not an assumption; the affected evidence must be named before an amendment or migration ships.",
+          "answers": [
+            "existing consumer",
+            "generated spec",
+            "migration",
+            "runtime test",
+            "release review"
+          ]
+        }
+      ]
+,
+      "decision_matrix": [
+        {
+          "choice": "Amend the existing specification",
+          "use_when": "The requested behavior changes the end-to-end frontend/backend behavior across user-visible and service boundaries contract while preserving its stable identity and ownership.",
+          "avoid_when": "The change would make existing consumers interpret the same identifier differently without a migration or compatibility note.",
+          "implications": "Update E2E acceptance contracts, affected specs, acceptance evidence, and compatibility notes together; preserve the existing node identity."
+        },
+        {
+          "choice": "Add a narrower specification",
+          "use_when": "The requirement has a distinct owner, lifecycle, authority, or compatibility boundary that should not broaden an existing contract.",
+          "avoid_when": "The split only duplicates terminology and would make retrieval or proof ambiguous.",
+          "implications": "Link the new node to its parent and adjacent interface or methodology contract, then define ownership and proof independently."
+        },
+        {
+          "choice": "Defer pending clarification or evidence",
+          "use_when": "Authority, compatibility impact, migration behavior, or acceptance evidence is not proven.",
+          "avoid_when": "The change is local, reversible, and its existing contract and proof surface are unambiguous.",
+          "implications": "Record the unresolved question and blocked proof; do not turn an assumption into binding doctrine by omission."
+        }
+      ]
+,
+      "tradeoffs": [
+        {
+          "axis": "stability versus precision",
+          "option_a": "Preserve a stable contract and add a compatible extension.",
+          "option_b": "Make the contract precise even when consumers must migrate.",
+          "guidance": "Choose based on FRONTEND_BACKEND_E2E risk and consumer impact; record why compatibility or deliberate breakage is the safer contract."
+        },
+        {
+          "axis": "local autonomy versus binding authority",
+          "option_a": "Allow implementation discretion inside explicit acceptance boundaries.",
+          "option_b": "Require an amendment or human gate for authority-changing behavior.",
+          "guidance": "Keep FRONTEND_BACKEND_E2E binding where it protects cross-boundary behavior and test evidence; leave only reversible realization choices to implementation agents."
+        }
+      ]
+,
+      "scaffolding": {
+        "capture": [
+          "Capture the FRONTEND_BACKEND_E2E owner, binding statements, non-goals, assumptions, affected consumers, and E2E acceptance contracts acceptance evidence.",
+          "Capture the compatibility, amendment, migration, and drift-recovery decision before generating implementation scaffolding."
+        ],
+        "generate": [
+          "Generate the minimal FRONTEND_BACKEND_E2E update, affected living-spec entries, acceptance checklist, and proof-plan reference.",
+          "Generate explicit placeholders for unresolved requirements rather than silently choosing authority, security, or compatibility behavior."
+        ],
+        "defer": [
+          "Defer cross-boundary behavior and test evidence decisions to the owning constitution or interface node and do not duplicate its authority here.",
+          "Defer release or migration claims until old and new behavior have executable compatibility evidence."
+        ],
+        "proof": [
+          "Record the test, schema, command output, review artifact, or generated-spec hash that proves the FRONTEND_BACKEND_E2E contract.",
+          "Record any intentional compatibility break, deferred risk, stale consumer, or environment limitation as visible evidence."
+        ]
+      }
+,
+      "spec_impacts": {
+        "intent": [
+          "State when FRONTEND_BACKEND_E2E is in scope, including required outcomes, constraints, assumptions, non-goals, and human acceptance.",
+          "Preserve uncertainty about E2E acceptance contracts or authority until the responsible human or binding node resolves it."
+        ],
+        "architecture": [
+          "Document how FRONTEND_BACKEND_E2E changes state ownership, lifecycle, boundaries, deployment shape, or migration responsibilities.",
+          "Link architectural consequences to the narrower interface, data, security, or methodology contract that owns the decision."
+        ],
+        "interfaces": [
+          "Name the commands, RPC payloads, schemas, generated files, and compatibility semantics affected by FRONTEND_BACKEND_E2E.",
+          "Preserve omission, error, version, and migration behavior for consumers of the specified contract."
+        ],
+        "operations": [
+          "Describe how operators inspect, apply, migrate, roll back, and recover the FRONTEND_BACKEND_E2E contract without hidden mutation.",
+          "Record bounded commands, evidence locations, and stop conditions for drift or compatibility failures."
+        ],
+        "security": [
+          "State how FRONTEND_BACKEND_E2E protects authority, trust, secrets, external input, and mutation boundaries.",
+          "Treat claims and generated content as untrusted until the owning security and verification contracts accept them."
+        ],
+        "validation": [
+          "Add checks that detect FRONTEND_BACKEND_E2E drift across source, generated specs, schemas, tests, and acceptance evidence.",
+          "Make missing compatibility or proof evidence a visible validation failure or explicit deferred blocker."
+        ],
+        "semantics": [
+          "Define stable meanings for required, optional, absent, stale, rejected, migrated, and incompatible FRONTEND_BACKEND_E2E states.",
+          "Preserve deterministic identifiers and error semantics so contract changes remain explainable."
+        ],
+        "proof": [
+          "Tie FRONTEND_BACKEND_E2E completion to executable evidence for E2E acceptance contracts, not to the existence of descriptive specification text alone.",
+          "Record the exact proof command, artifact, receipt, or test that a later agent can replay."
+        ]
+      }
+,
+      "proof": {
+        "static": [
+          "The FRONTEND_BACKEND_E2E node is reachable through spec lookup and cross-linked to its parent and adjacent contract nodes.",
+          "Schema and tests preserve structured FRONTEND_BACKEND_E2E doctrine and reject regression to a compact summary."
+        ],
+        "runtime": [
+          "A representative FRONTEND_BACKEND_E2E change produces bounded behavior consistent with its E2E acceptance contracts contract and failure semantics.",
+          "A stale, incompatible, unauthorized, or underspecified FRONTEND_BACKEND_E2E path produces visible recovery guidance instead of silent success."
+        ],
+        "release": [
+          "Generated living specs and release artifacts are refreshed when FRONTEND_BACKEND_E2E changes authority, compatibility, interfaces, or proof expectations.",
+          "Release evidence records version compatibility, migration status, and any intentionally deferred FRONTEND_BACKEND_E2E risk."
+        ]
+      }
+,
       "terms": [
         "interaction",
         "proof",
@@ -24720,10 +25703,13 @@
       ],
       "links": {
         "references": [
-          "core/DEMANDS"
+          "core/DEMANDS",
+          "core/SPECS",
+          "interfaces/PROJECT_SPECS"
         ],
         "referenced_by": [
-          "core/DEMANDS"
+          "core/DEMANDS",
+          "core/SPECS"
         ]
       },
       "sections": {
@@ -24763,6 +25749,144 @@
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Describes binding authority, mutation risk, compatibility, and execution obligations for JUDGE CONTRACT.",
+      "architect_notes": [
+        "JUDGE_CONTRACT is a binding specification for judge inputs, outputs, rubric authority, and evaluation reproducibility; it must state what is authoritative, what may change, and which artifact records the decision.",
+        "Keep JUDGE_CONTRACT distinct from implementation preference: a spec owns the contract and acceptance condition, while adjacent architecture, interface, and operations doctrine own concrete realization.",
+        "Treat JUDGE_CONTRACT drift as a proof failure. A change is incomplete when code, generated specs, or review evidence no longer agree with the judge contracts contract."
+      ]
+,
+      "init_questions": [
+        {
+          "id": "contract_truth",
+          "prompt": "What must be true for JUDGE_CONTRACT, and which human or governance authority can change that requirement?",
+          "why": "Naming the binding truth and authority prevents a local implementation choice from silently rewriting the rubric authority and reproducibility contract.",
+          "answers": [
+            "required invariant",
+            "human preference",
+            "non-goal",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "compatibility_proof",
+          "prompt": "Which prior behavior, consumer, generated spec, or proof artifact must remain compatible with this JUDGE_CONTRACT change?",
+          "why": "Compatibility is a decision, not an assumption; the affected evidence must be named before an amendment or migration ships.",
+          "answers": [
+            "existing consumer",
+            "generated spec",
+            "migration",
+            "runtime test",
+            "release review"
+          ]
+        }
+      ]
+,
+      "decision_matrix": [
+        {
+          "choice": "Amend the existing specification",
+          "use_when": "The requested behavior changes the judge inputs, outputs, rubric authority, and evaluation reproducibility contract while preserving its stable identity and ownership.",
+          "avoid_when": "The change would make existing consumers interpret the same identifier differently without a migration or compatibility note.",
+          "implications": "Update judge contracts, affected specs, acceptance evidence, and compatibility notes together; preserve the existing node identity."
+        },
+        {
+          "choice": "Add a narrower specification",
+          "use_when": "The requirement has a distinct owner, lifecycle, authority, or compatibility boundary that should not broaden an existing contract.",
+          "avoid_when": "The split only duplicates terminology and would make retrieval or proof ambiguous.",
+          "implications": "Link the new node to its parent and adjacent interface or methodology contract, then define ownership and proof independently."
+        },
+        {
+          "choice": "Defer pending clarification or evidence",
+          "use_when": "Authority, compatibility impact, migration behavior, or acceptance evidence is not proven.",
+          "avoid_when": "The change is local, reversible, and its existing contract and proof surface are unambiguous.",
+          "implications": "Record the unresolved question and blocked proof; do not turn an assumption into binding doctrine by omission."
+        }
+      ]
+,
+      "tradeoffs": [
+        {
+          "axis": "stability versus precision",
+          "option_a": "Preserve a stable contract and add a compatible extension.",
+          "option_b": "Make the contract precise even when consumers must migrate.",
+          "guidance": "Choose based on JUDGE_CONTRACT risk and consumer impact; record why compatibility or deliberate breakage is the safer contract."
+        },
+        {
+          "axis": "local autonomy versus binding authority",
+          "option_a": "Allow implementation discretion inside explicit acceptance boundaries.",
+          "option_b": "Require an amendment or human gate for authority-changing behavior.",
+          "guidance": "Keep JUDGE_CONTRACT binding where it protects rubric authority and reproducibility; leave only reversible realization choices to implementation agents."
+        }
+      ]
+,
+      "scaffolding": {
+        "capture": [
+          "Capture the JUDGE_CONTRACT owner, binding statements, non-goals, assumptions, affected consumers, and judge contracts acceptance evidence.",
+          "Capture the compatibility, amendment, migration, and drift-recovery decision before generating implementation scaffolding."
+        ],
+        "generate": [
+          "Generate the minimal JUDGE_CONTRACT update, affected living-spec entries, acceptance checklist, and proof-plan reference.",
+          "Generate explicit placeholders for unresolved requirements rather than silently choosing authority, security, or compatibility behavior."
+        ],
+        "defer": [
+          "Defer rubric authority and reproducibility decisions to the owning constitution or interface node and do not duplicate its authority here.",
+          "Defer release or migration claims until old and new behavior have executable compatibility evidence."
+        ],
+        "proof": [
+          "Record the test, schema, command output, review artifact, or generated-spec hash that proves the JUDGE_CONTRACT contract.",
+          "Record any intentional compatibility break, deferred risk, stale consumer, or environment limitation as visible evidence."
+        ]
+      }
+,
+      "spec_impacts": {
+        "intent": [
+          "State when JUDGE_CONTRACT is in scope, including required outcomes, constraints, assumptions, non-goals, and human acceptance.",
+          "Preserve uncertainty about judge contracts or authority until the responsible human or binding node resolves it."
+        ],
+        "architecture": [
+          "Document how JUDGE_CONTRACT changes state ownership, lifecycle, boundaries, deployment shape, or migration responsibilities.",
+          "Link architectural consequences to the narrower interface, data, security, or methodology contract that owns the decision."
+        ],
+        "interfaces": [
+          "Name the commands, RPC payloads, schemas, generated files, and compatibility semantics affected by JUDGE_CONTRACT.",
+          "Preserve omission, error, version, and migration behavior for consumers of the specified contract."
+        ],
+        "operations": [
+          "Describe how operators inspect, apply, migrate, roll back, and recover the JUDGE_CONTRACT contract without hidden mutation.",
+          "Record bounded commands, evidence locations, and stop conditions for drift or compatibility failures."
+        ],
+        "security": [
+          "State how JUDGE_CONTRACT protects authority, trust, secrets, external input, and mutation boundaries.",
+          "Treat claims and generated content as untrusted until the owning security and verification contracts accept them."
+        ],
+        "validation": [
+          "Add checks that detect JUDGE_CONTRACT drift across source, generated specs, schemas, tests, and acceptance evidence.",
+          "Make missing compatibility or proof evidence a visible validation failure or explicit deferred blocker."
+        ],
+        "semantics": [
+          "Define stable meanings for required, optional, absent, stale, rejected, migrated, and incompatible JUDGE_CONTRACT states.",
+          "Preserve deterministic identifiers and error semantics so contract changes remain explainable."
+        ],
+        "proof": [
+          "Tie JUDGE_CONTRACT completion to executable evidence for judge contracts, not to the existence of descriptive specification text alone.",
+          "Record the exact proof command, artifact, receipt, or test that a later agent can replay."
+        ]
+      }
+,
+      "proof": {
+        "static": [
+          "The JUDGE_CONTRACT node is reachable through spec lookup and cross-linked to its parent and adjacent contract nodes.",
+          "Schema and tests preserve structured JUDGE_CONTRACT doctrine and reject regression to a compact summary."
+        ],
+        "runtime": [
+          "A representative JUDGE_CONTRACT change produces bounded behavior consistent with its judge contracts contract and failure semantics.",
+          "A stale, incompatible, unauthorized, or underspecified JUDGE_CONTRACT path produces visible recovery guidance instead of silent success."
+        ],
+        "release": [
+          "Generated living specs and release artifacts are refreshed when JUDGE_CONTRACT changes authority, compatibility, interfaces, or proof expectations.",
+          "Release evidence records version compatibility, migration status, and any intentionally deferred JUDGE_CONTRACT risk."
+        ]
+      }
+,
       "terms": [
         "evaluation",
         "contract",
@@ -24778,11 +25902,14 @@
       ],
       "links": {
         "references": [
-          "core/DEMANDS"
+          "core/DEMANDS",
+          "core/SPECS",
+          "interfaces/PROJECT_SPECS"
         ],
         "referenced_by": [
-          "core/DEMANDS",
-          "docs/EVAL_TRANSLATION_MAP"
+        "core/DEMANDS",
+        "docs/EVAL_TRANSLATION_MAP",
+        "core/SPECS"
         ]
       },
       "sections": {
@@ -24822,6 +25949,144 @@
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Describes binding authority, mutation risk, compatibility, and execution obligations for VARIANCE EVALS.",
+      "architect_notes": [
+        "VARIANCE_EVALS is a binding specification for variance-aware evaluation aggregates, thresholds, and promotion decisions; it must state what is authoritative, what may change, and which artifact records the decision.",
+        "Keep VARIANCE_EVALS distinct from implementation preference: a spec owns the contract and acceptance condition, while adjacent architecture, interface, and operations doctrine own concrete realization.",
+        "Treat VARIANCE_EVALS drift as a proof failure. A change is incomplete when code, generated specs, or review evidence no longer agree with the variance evaluation records contract."
+      ]
+,
+      "init_questions": [
+        {
+          "id": "contract_truth",
+          "prompt": "What must be true for VARIANCE_EVALS, and which human or governance authority can change that requirement?",
+          "why": "Naming the binding truth and authority prevents a local implementation choice from silently rewriting the statistical confidence and promotion authority contract.",
+          "answers": [
+            "required invariant",
+            "human preference",
+            "non-goal",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "compatibility_proof",
+          "prompt": "Which prior behavior, consumer, generated spec, or proof artifact must remain compatible with this VARIANCE_EVALS change?",
+          "why": "Compatibility is a decision, not an assumption; the affected evidence must be named before an amendment or migration ships.",
+          "answers": [
+            "existing consumer",
+            "generated spec",
+            "migration",
+            "runtime test",
+            "release review"
+          ]
+        }
+      ]
+,
+      "decision_matrix": [
+        {
+          "choice": "Amend the existing specification",
+          "use_when": "The requested behavior changes the variance-aware evaluation aggregates, thresholds, and promotion decisions contract while preserving its stable identity and ownership.",
+          "avoid_when": "The change would make existing consumers interpret the same identifier differently without a migration or compatibility note.",
+          "implications": "Update variance evaluation records, affected specs, acceptance evidence, and compatibility notes together; preserve the existing node identity."
+        },
+        {
+          "choice": "Add a narrower specification",
+          "use_when": "The requirement has a distinct owner, lifecycle, authority, or compatibility boundary that should not broaden an existing contract.",
+          "avoid_when": "The split only duplicates terminology and would make retrieval or proof ambiguous.",
+          "implications": "Link the new node to its parent and adjacent interface or methodology contract, then define ownership and proof independently."
+        },
+        {
+          "choice": "Defer pending clarification or evidence",
+          "use_when": "Authority, compatibility impact, migration behavior, or acceptance evidence is not proven.",
+          "avoid_when": "The change is local, reversible, and its existing contract and proof surface are unambiguous.",
+          "implications": "Record the unresolved question and blocked proof; do not turn an assumption into binding doctrine by omission."
+        }
+      ]
+,
+      "tradeoffs": [
+        {
+          "axis": "stability versus precision",
+          "option_a": "Preserve a stable contract and add a compatible extension.",
+          "option_b": "Make the contract precise even when consumers must migrate.",
+          "guidance": "Choose based on VARIANCE_EVALS risk and consumer impact; record why compatibility or deliberate breakage is the safer contract."
+        },
+        {
+          "axis": "local autonomy versus binding authority",
+          "option_a": "Allow implementation discretion inside explicit acceptance boundaries.",
+          "option_b": "Require an amendment or human gate for authority-changing behavior.",
+          "guidance": "Keep VARIANCE_EVALS binding where it protects statistical confidence and promotion authority; leave only reversible realization choices to implementation agents."
+        }
+      ]
+,
+      "scaffolding": {
+        "capture": [
+          "Capture the VARIANCE_EVALS owner, binding statements, non-goals, assumptions, affected consumers, and variance evaluation records acceptance evidence.",
+          "Capture the compatibility, amendment, migration, and drift-recovery decision before generating implementation scaffolding."
+        ],
+        "generate": [
+          "Generate the minimal VARIANCE_EVALS update, affected living-spec entries, acceptance checklist, and proof-plan reference.",
+          "Generate explicit placeholders for unresolved requirements rather than silently choosing authority, security, or compatibility behavior."
+        ],
+        "defer": [
+          "Defer statistical confidence and promotion authority decisions to the owning constitution or interface node and do not duplicate its authority here.",
+          "Defer release or migration claims until old and new behavior have executable compatibility evidence."
+        ],
+        "proof": [
+          "Record the test, schema, command output, review artifact, or generated-spec hash that proves the VARIANCE_EVALS contract.",
+          "Record any intentional compatibility break, deferred risk, stale consumer, or environment limitation as visible evidence."
+        ]
+      }
+,
+      "spec_impacts": {
+        "intent": [
+          "State when VARIANCE_EVALS is in scope, including required outcomes, constraints, assumptions, non-goals, and human acceptance.",
+          "Preserve uncertainty about variance evaluation records or authority until the responsible human or binding node resolves it."
+        ],
+        "architecture": [
+          "Document how VARIANCE_EVALS changes state ownership, lifecycle, boundaries, deployment shape, or migration responsibilities.",
+          "Link architectural consequences to the narrower interface, data, security, or methodology contract that owns the decision."
+        ],
+        "interfaces": [
+          "Name the commands, RPC payloads, schemas, generated files, and compatibility semantics affected by VARIANCE_EVALS.",
+          "Preserve omission, error, version, and migration behavior for consumers of the specified contract."
+        ],
+        "operations": [
+          "Describe how operators inspect, apply, migrate, roll back, and recover the VARIANCE_EVALS contract without hidden mutation.",
+          "Record bounded commands, evidence locations, and stop conditions for drift or compatibility failures."
+        ],
+        "security": [
+          "State how VARIANCE_EVALS protects authority, trust, secrets, external input, and mutation boundaries.",
+          "Treat claims and generated content as untrusted until the owning security and verification contracts accept them."
+        ],
+        "validation": [
+          "Add checks that detect VARIANCE_EVALS drift across source, generated specs, schemas, tests, and acceptance evidence.",
+          "Make missing compatibility or proof evidence a visible validation failure or explicit deferred blocker."
+        ],
+        "semantics": [
+          "Define stable meanings for required, optional, absent, stale, rejected, migrated, and incompatible VARIANCE_EVALS states.",
+          "Preserve deterministic identifiers and error semantics so contract changes remain explainable."
+        ],
+        "proof": [
+          "Tie VARIANCE_EVALS completion to executable evidence for variance evaluation records, not to the existence of descriptive specification text alone.",
+          "Record the exact proof command, artifact, receipt, or test that a later agent can replay."
+        ]
+      }
+,
+      "proof": {
+        "static": [
+          "The VARIANCE_EVALS node is reachable through spec lookup and cross-linked to its parent and adjacent contract nodes.",
+          "Schema and tests preserve structured VARIANCE_EVALS doctrine and reject regression to a compact summary."
+        ],
+        "runtime": [
+          "A representative VARIANCE_EVALS change produces bounded behavior consistent with its variance evaluation records contract and failure semantics.",
+          "A stale, incompatible, unauthorized, or underspecified VARIANCE_EVALS path produces visible recovery guidance instead of silent success."
+        ],
+        "release": [
+          "Generated living specs and release artifacts are refreshed when VARIANCE_EVALS changes authority, compatibility, interfaces, or proof expectations.",
+          "Release evidence records version compatibility, migration status, and any intentionally deferred VARIANCE_EVALS risk."
+        ]
+      }
+,
       "terms": [
         "evaluation",
         "confidence",
@@ -24837,11 +26102,14 @@
       ],
       "links": {
         "references": [
-          "core/DEMANDS"
+          "core/DEMANDS",
+          "core/SPECS",
+          "interfaces/PROJECT_SPECS"
         ],
         "referenced_by": [
-          "core/DEMANDS",
-          "docs/EVAL_TRANSLATION_MAP"
+        "core/DEMANDS",
+        "docs/EVAL_TRANSLATION_MAP",
+        "core/SPECS"
         ]
       },
       "sections": {
@@ -24881,6 +26149,144 @@
       "authority": "doctrine",
       "binding": "advisory",
       "summary": "Describes binding authority, mutation risk, compatibility, and execution obligations for SKILL GOVERNANCE.",
+      "architect_notes": [
+        "SKILL_GOVERNANCE is a binding specification for skill selection, lifecycle, authority, retrieval, and proof obligations; it must state what is authoritative, what may change, and which artifact records the decision.",
+        "Keep SKILL_GOVERNANCE distinct from implementation preference: a spec owns the contract and acceptance condition, while adjacent architecture, interface, and operations doctrine own concrete realization.",
+        "Treat SKILL_GOVERNANCE drift as a proof failure. A change is incomplete when code, generated specs, or review evidence no longer agree with the skill governance contracts contract."
+      ]
+,
+      "init_questions": [
+        {
+          "id": "contract_truth",
+          "prompt": "What must be true for SKILL_GOVERNANCE, and which human or governance authority can change that requirement?",
+          "why": "Naming the binding truth and authority prevents a local implementation choice from silently rewriting the retrieval scope and execution authority contract.",
+          "answers": [
+            "required invariant",
+            "human preference",
+            "non-goal",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "compatibility_proof",
+          "prompt": "Which prior behavior, consumer, generated spec, or proof artifact must remain compatible with this SKILL_GOVERNANCE change?",
+          "why": "Compatibility is a decision, not an assumption; the affected evidence must be named before an amendment or migration ships.",
+          "answers": [
+            "existing consumer",
+            "generated spec",
+            "migration",
+            "runtime test",
+            "release review"
+          ]
+        }
+      ]
+,
+      "decision_matrix": [
+        {
+          "choice": "Amend the existing specification",
+          "use_when": "The requested behavior changes the skill selection, lifecycle, authority, retrieval, and proof obligations contract while preserving its stable identity and ownership.",
+          "avoid_when": "The change would make existing consumers interpret the same identifier differently without a migration or compatibility note.",
+          "implications": "Update skill governance contracts, affected specs, acceptance evidence, and compatibility notes together; preserve the existing node identity."
+        },
+        {
+          "choice": "Add a narrower specification",
+          "use_when": "The requirement has a distinct owner, lifecycle, authority, or compatibility boundary that should not broaden an existing contract.",
+          "avoid_when": "The split only duplicates terminology and would make retrieval or proof ambiguous.",
+          "implications": "Link the new node to its parent and adjacent interface or methodology contract, then define ownership and proof independently."
+        },
+        {
+          "choice": "Defer pending clarification or evidence",
+          "use_when": "Authority, compatibility impact, migration behavior, or acceptance evidence is not proven.",
+          "avoid_when": "The change is local, reversible, and its existing contract and proof surface are unambiguous.",
+          "implications": "Record the unresolved question and blocked proof; do not turn an assumption into binding doctrine by omission."
+        }
+      ]
+,
+      "tradeoffs": [
+        {
+          "axis": "stability versus precision",
+          "option_a": "Preserve a stable contract and add a compatible extension.",
+          "option_b": "Make the contract precise even when consumers must migrate.",
+          "guidance": "Choose based on SKILL_GOVERNANCE risk and consumer impact; record why compatibility or deliberate breakage is the safer contract."
+        },
+        {
+          "axis": "local autonomy versus binding authority",
+          "option_a": "Allow implementation discretion inside explicit acceptance boundaries.",
+          "option_b": "Require an amendment or human gate for authority-changing behavior.",
+          "guidance": "Keep SKILL_GOVERNANCE binding where it protects retrieval scope and execution authority; leave only reversible realization choices to implementation agents."
+        }
+      ]
+,
+      "scaffolding": {
+        "capture": [
+          "Capture the SKILL_GOVERNANCE owner, binding statements, non-goals, assumptions, affected consumers, and skill governance contracts acceptance evidence.",
+          "Capture the compatibility, amendment, migration, and drift-recovery decision before generating implementation scaffolding."
+        ],
+        "generate": [
+          "Generate the minimal SKILL_GOVERNANCE update, affected living-spec entries, acceptance checklist, and proof-plan reference.",
+          "Generate explicit placeholders for unresolved requirements rather than silently choosing authority, security, or compatibility behavior."
+        ],
+        "defer": [
+          "Defer retrieval scope and execution authority decisions to the owning constitution or interface node and do not duplicate its authority here.",
+          "Defer release or migration claims until old and new behavior have executable compatibility evidence."
+        ],
+        "proof": [
+          "Record the test, schema, command output, review artifact, or generated-spec hash that proves the SKILL_GOVERNANCE contract.",
+          "Record any intentional compatibility break, deferred risk, stale consumer, or environment limitation as visible evidence."
+        ]
+      }
+,
+      "spec_impacts": {
+        "intent": [
+          "State when SKILL_GOVERNANCE is in scope, including required outcomes, constraints, assumptions, non-goals, and human acceptance.",
+          "Preserve uncertainty about skill governance contracts or authority until the responsible human or binding node resolves it."
+        ],
+        "architecture": [
+          "Document how SKILL_GOVERNANCE changes state ownership, lifecycle, boundaries, deployment shape, or migration responsibilities.",
+          "Link architectural consequences to the narrower interface, data, security, or methodology contract that owns the decision."
+        ],
+        "interfaces": [
+          "Name the commands, RPC payloads, schemas, generated files, and compatibility semantics affected by SKILL_GOVERNANCE.",
+          "Preserve omission, error, version, and migration behavior for consumers of the specified contract."
+        ],
+        "operations": [
+          "Describe how operators inspect, apply, migrate, roll back, and recover the SKILL_GOVERNANCE contract without hidden mutation.",
+          "Record bounded commands, evidence locations, and stop conditions for drift or compatibility failures."
+        ],
+        "security": [
+          "State how SKILL_GOVERNANCE protects authority, trust, secrets, external input, and mutation boundaries.",
+          "Treat claims and generated content as untrusted until the owning security and verification contracts accept them."
+        ],
+        "validation": [
+          "Add checks that detect SKILL_GOVERNANCE drift across source, generated specs, schemas, tests, and acceptance evidence.",
+          "Make missing compatibility or proof evidence a visible validation failure or explicit deferred blocker."
+        ],
+        "semantics": [
+          "Define stable meanings for required, optional, absent, stale, rejected, migrated, and incompatible SKILL_GOVERNANCE states.",
+          "Preserve deterministic identifiers and error semantics so contract changes remain explainable."
+        ],
+        "proof": [
+          "Tie SKILL_GOVERNANCE completion to executable evidence for skill governance contracts, not to the existence of descriptive specification text alone.",
+          "Record the exact proof command, artifact, receipt, or test that a later agent can replay."
+        ]
+      }
+,
+      "proof": {
+        "static": [
+          "The SKILL_GOVERNANCE node is reachable through spec lookup and cross-linked to its parent and adjacent contract nodes.",
+          "Schema and tests preserve structured SKILL_GOVERNANCE doctrine and reject regression to a compact summary."
+        ],
+        "runtime": [
+          "A representative SKILL_GOVERNANCE change produces bounded behavior consistent with its skill governance contracts contract and failure semantics.",
+          "A stale, incompatible, unauthorized, or underspecified SKILL_GOVERNANCE path produces visible recovery guidance instead of silent success."
+        ],
+        "release": [
+          "Generated living specs and release artifacts are refreshed when SKILL_GOVERNANCE changes authority, compatibility, interfaces, or proof expectations.",
+          "Release evidence records version compatibility, migration status, and any intentionally deferred SKILL_GOVERNANCE risk."
+        ]
+      }
+,
       "terms": [
         "skill",
         "governance",
@@ -24893,12 +26299,15 @@
         "versioning"
       ],
       "links": {
-        "references": [
-          "core/DEMANDS"
+      "references": [
+        "core/DEMANDS",
+        "core/SPECS",
+        "interfaces/PROJECT_SPECS"
         ],
         "referenced_by": [
-          "core/DEMANDS",
-          "docs/SKILL_TRANSLATION_MAP"
+        "core/DEMANDS",
+        "docs/SKILL_TRANSLATION_MAP",
+        "core/SPECS"
         ]
       },
       "sections": {
