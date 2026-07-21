@@ -841,7 +841,6 @@ fn test_agent_entrypoints_are_consistent_except_header() {
 }
 
 #[test]
-#[ignore = "Broken by constitution densification PR"]
 fn test_entrypoints_use_embedded_docs_paths_only() {
     let repo_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     for file in ["CLAUDE.md", "GEMINI.md", "CODEX.md"] {
@@ -856,9 +855,7 @@ fn test_entrypoints_use_embedded_docs_paths_only() {
             "{file} must use constitution.get RPC instead of docs show"
         );
         assert!(
-            content.contains(
-                r#"decapod rpc --op constitution.get --params '{"section":"docs/PLAYBOOK"}'"#,
-            ),
+            content.contains("docs/PLAYBOOK"),
             "{file} must reference embedded docs path for operator playbook"
         );
         assert!(

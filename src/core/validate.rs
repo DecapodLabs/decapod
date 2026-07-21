@@ -105,33 +105,12 @@ pub struct ProjectionFinding {
     pub remediation: String,
 }
 
-fn canonical_or_self(path: &Path) -> PathBuf {
-    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
-}
-
-fn path_contains_decapod_workspaces(path: &Path) -> bool {
-    let mut saw_decapod = false;
-    for component in path.components() {
-        let value = component.as_os_str().to_string_lossy();
-        if saw_decapod && value == "workspaces" {
-            return true;
-        }
-        saw_decapod = value == ".decapod";
+fn is_decapod_isolated_worktree(_main_root: &Path, repo_root: &Path) -> bool {
+    if let Ok(status) = crate::core::workspace::get_workspace_status(repo_root) {
+        status.can_work
+    } else {
+        false
     }
-    false
-}
-
-fn is_decapod_isolated_worktree(main_root: &Path, repo_root: &Path) -> bool {
-    if !crate::core::workspace::is_worktree(repo_root).unwrap_or(false) {
-        return false;
-    }
-
-    let owner_root = crate::core::workspace::get_main_repo_root(repo_root)
-        .unwrap_or_else(|_| main_root.to_path_buf());
-    let workspaces_path = canonical_or_self(&owner_root.join(".decapod").join("workspaces"));
-    let repo_root = canonical_or_self(repo_root);
-
-    repo_root.starts_with(workspaces_path) || path_contains_decapod_workspaces(&repo_root)
 }
 
 /// Spawn a validation gate in a rayon scope with timing and error capture.
@@ -6168,8 +6147,7 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
 mod tests {
     use super::{
         SurfaceKind, ValidationContext, is_allowed_non_code_path, is_decapod_isolated_worktree,
-        is_non_code_path, path_contains_decapod_workspaces, strip_git_quotes,
-        validate_git_workspace_context,
+        is_non_code_path, strip_git_quotes, validate_git_workspace_context,
     };
     use super::{is_protected_git_branch, parse_ahead_behind_counts};
     use std::fs;
@@ -6317,19 +6295,6 @@ mod tests {
         assert!(failures.iter().any(|failure| {
             failure.contains("workspace_context_mismatch") && failure.contains("not Decapod-owned")
         }));
-    }
-
-    #[test]
-    fn decapod_workspaces_path_detection_requires_adjacent_segments() {
-        assert!(path_contains_decapod_workspaces(std::path::Path::new(
-            "/repo/.decapod/workspaces/agent-task"
-        )));
-        assert!(!path_contains_decapod_workspaces(std::path::Path::new(
-            "/repo/.decapod/generated/workspaces/agent-task"
-        )));
-        assert!(!path_contains_decapod_workspaces(std::path::Path::new(
-            "/repo/decapod/workspaces/agent-task"
-        )));
     }
 
     // --- is_allowed_non_code_path ---

@@ -196,6 +196,9 @@ pub fn hash_text(text: &str) -> String {
 }
 
 pub fn config_input_hash(project_root: &Path) -> Result<String, error::DecapodError> {
+    if !project_root.join(".decapod/config.toml").exists() {
+        return Ok(String::new());
+    }
     let config = crate::cli::DecapodProjectConfig::load(project_root)?;
     let canonical = serde_json::to_vec(&config).map_err(|e| {
         error::DecapodError::ValidationError(format!("Failed to canonicalize config.toml: {e}"))

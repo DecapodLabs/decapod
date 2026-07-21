@@ -21,4 +21,3 @@ When working with multiple agents or complex dependency chains, filesystem isola
 ## Managing the Workspace Pool
 
 Use `decapod workspace status` to view the health and ownership of all active workspaces. Decapod handles the complex plumbing of mapping these directories to specific agents and tasks, so you don't have to.
-

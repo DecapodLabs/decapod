@@ -2595,8 +2595,11 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         |conn| {
             ensure_schema(conn)?;
 
-        let similar_active_task =
-            find_similar_active_task(conn, title, description, &effective_tags, &primary_owner)?;
+        let similar_active_task = if scope == "workspace" {
+            None
+        } else {
+            find_similar_active_task(conn, title, description, &effective_tags, &primary_owner)?
+        };
         if let Some(similar) = similar_active_task.as_ref() {
             append_fuzzy_assignment_labels(&mut effective_tags, similar);
             let comment = format!(
@@ -3804,8 +3807,8 @@ fn list_agent_expertise(
         let expertise: Vec<serde_json::Value> = match (agent_filter, category_filter) {
             (Some(agent), Some(category)) => {
                 let mut stmt = conn.prepare(
-                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at 
-                     FROM agent_expertise 
+                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at
+                     FROM agent_expertise
                      WHERE agent_id = ? AND category = ?
                      ORDER BY agent_id, category",
                 )?;
@@ -3823,8 +3826,8 @@ fn list_agent_expertise(
             }
             (Some(agent), None) => {
                 let mut stmt = conn.prepare(
-                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at 
-                     FROM agent_expertise 
+                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at
+                     FROM agent_expertise
                      WHERE agent_id = ?
                      ORDER BY agent_id, category",
                 )?;
@@ -3842,8 +3845,8 @@ fn list_agent_expertise(
             }
             (None, Some(category)) => {
                 let mut stmt = conn.prepare(
-                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at 
-                     FROM agent_expertise 
+                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at
+                     FROM agent_expertise
                      WHERE category = ?
                      ORDER BY agent_id, category",
                 )?;
@@ -3861,8 +3864,8 @@ fn list_agent_expertise(
             }
             (None, None) => {
                 let mut stmt = conn.prepare(
-                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at 
-                     FROM agent_expertise 
+                    "SELECT agent_id, category, expertise_level, claimed_at, updated_at
+                     FROM agent_expertise
                      ORDER BY agent_id, category",
                 )?;
                 stmt.query_map([], |row| {

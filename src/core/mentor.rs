@@ -427,8 +427,8 @@ impl MentorEngine {
         let conn = rusqlite::Connection::open(&db_path)?;
 
         let mut stmt = conn.prepare(
-            "SELECT id, title, node_type, tags FROM nodes 
-                 WHERE status = 'active' 
+            "SELECT id, title, node_type, tags FROM nodes
+                 WHERE status = 'active'
                  AND (node_type = 'decision' OR node_type = 'commitment')
                  ORDER BY created_at DESC
                  LIMIT 20",
@@ -476,7 +476,7 @@ impl MentorEngine {
         let conn = rusqlite::Connection::open(&db_path)?;
 
         let mut stmt = conn.prepare(
-            "SELECT id, title, status, category FROM todos 
+            "SELECT id, title, status, category FROM todos
                  WHERE status IN ('open', 'claimed', 'in_progress')
                  ORDER BY priority DESC, created_at DESC
                  LIMIT 20",

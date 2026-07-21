@@ -7244,6 +7244,9 @@ fn run_workspace_command(
                 false,
             )?;
             if report.fail_count > 0 {
+                for failure in &report.failures {
+                    eprintln!("Publish validation failure: {failure}");
+                }
                 return Err(error::DecapodError::ValidationError(format!(
                     "{} test(s) failed before workspace publish.",
                     report.fail_count

@@ -392,9 +392,9 @@ pub fn find_node_by_source(
         |conn| {
             let node_id: Option<String> = conn
                 .query_row(
-                    "SELECT n.id FROM nodes n 
-             JOIN sources s ON n.id = s.node_id 
-             WHERE s.source = ?1 
+                    "SELECT n.id FROM nodes n
+             JOIN sources s ON n.id = s.node_id
+             WHERE s.source = ?1
              LIMIT 1",
                     params![source_pattern],
                     |row| row.get(0),

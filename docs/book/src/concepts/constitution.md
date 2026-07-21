@@ -23,4 +23,3 @@ This high-signal, low-noise approach ensures that agents remain oriented without
 ## Enforcement
 
 The constitution is not merely "guidance"—it is enforced. `decapod validate` checks the repository state against the normative claims made in the constitution. If a change violates a constitutional rule, it cannot be promoted to `main` (see [Proof & Validation](proof.md)).
-

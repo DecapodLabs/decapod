@@ -868,6 +868,11 @@ pub fn apply_capability_overlays(
             }
         }
     }
+
+    while content.contains("\n\n\n") {
+        content = content.replace("\n\n\n", "\n\n");
+    }
+
     content
 }
 

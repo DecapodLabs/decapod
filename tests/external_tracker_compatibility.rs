@@ -4,7 +4,7 @@ use tempfile::TempDir;
 
 fn setup_repo(dir: &std::path::Path) {
     Command::new("git")
-        .args(["init", "-q"])
+        .args(["init", "-q", "-b", "master"])
         .current_dir(dir)
         .status()
         .expect("git init");
