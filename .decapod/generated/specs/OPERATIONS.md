@@ -17,7 +17,16 @@ Operational ownership follows the declared surfaces: session/authentication and 
 - Git 2.30+ (worktree support)
 - Rust 1.96+ (for building from source)
 - Docker/Podman (optional, for container workspaces)
-- SQLite 3.35+ (bundled via rusqlite)
+- SQLite 3.35+ (bundled via rusqlite)## Service Level Objectives
+
+| SLI | SLO Target | Measurement Window | Notes |
+|-----|------------|-------------------|-------|
+| Validate latency (P95) | < 30s | Per invocation | Bounded by `INV-BOUNDED-VALIDATE` |
+| Workspace creation (P95) | < 30s | Per invocation | Excludes container build |
+| Workspace creation + container (P95) | < 300s | Per invocation | Docker build time variable |
+| Validation gate pass rate | 100% blocking gates | Per promotion | Zero tolerance for blocking gate failures |
+| SQLite lock contention retry | < 5 retries | Per connection | Exponential backoff + jitter |
+| Capabilities discovery | < 500ms | Per call | Includes crates.io version check |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -55,17 +64,6 @@ Operational ownership follows the declared surfaces: session/authentication and 
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Service Level Objectives
-
-| SLI | SLO Target | Measurement Window | Notes |
-|-----|------------|-------------------|-------|
-| Validate latency (P95) | < 30s | Per invocation | Bounded by `INV-BOUNDED-VALIDATE` |
-| Workspace creation (P95) | < 30s | Per invocation | Excludes container build |
-| Workspace creation + container (P95) | < 300s | Per invocation | Docker build time variable |
-| Validation gate pass rate | 100% blocking gates | Per promotion | Zero tolerance for blocking gate failures |
-| SQLite lock contention retry | < 5 retries | Per connection | Exponential backoff + jitter |
-| Capabilities discovery | < 500ms | Per call | Includes crates.io version check |
 
 ## Monitoring
 
@@ -274,7 +272,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b4d094742c96fe993853e27ef3f1a2de1000f81fbaf202222ade966a9cc04daa`
+- Repository signal fingerprint: `481537107777a7d60cd662a91c399b96d71c78a8aa30287e0bed64151ca207f9`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

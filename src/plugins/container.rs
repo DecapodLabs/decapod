@@ -978,8 +978,12 @@ fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
          ARG DECAPOD_IMAGE={decapod_image}\n\
          FROM $DECAPOD_IMAGE\n\
          ARG DECAPOD_VERSION={decapod_version}\n\
+         ARG DECAPOD_WORKSPACE_PATH=unknown\n\
          ARG DECAPOD_USE_LOCAL_BINARY=0\n\
          LABEL org.opencontainers.image.base.name=\"$DECAPOD_IMAGE\"\n\
+         LABEL org.opencontainers.image.source=\"https://github.com/DecapodLabs/decapod\"\n\
+         LABEL org.decapod.managed=\"workspace\"\n\
+         LABEL org.decapod.workspace.path=\"$DECAPOD_WORKSPACE_PATH\"\n\
          LABEL org.decapod.version=\"$DECAPOD_VERSION\"\n\
          RUN if command -v apk >/dev/null 2>&1; then \\\n\
                  apk add --no-cache {apk_pkg_line}; \\\n\
@@ -1697,6 +1701,9 @@ mod tests {
         )));
         assert!(content.contains("FROM $DECAPOD_IMAGE"));
         assert!(content.contains("ARG DECAPOD_USE_LOCAL_BINARY=0"));
+        assert!(content.contains("ARG DECAPOD_WORKSPACE_PATH=unknown"));
+        assert!(content.contains("LABEL org.decapod.managed=\"workspace\""));
+        assert!(content.contains("LABEL org.decapod.workspace.path=\"$DECAPOD_WORKSPACE_PATH\""));
         assert!(content.contains("git"));
         assert!(content.contains("openssh-client"));
         assert!(content.contains("coreutils"));

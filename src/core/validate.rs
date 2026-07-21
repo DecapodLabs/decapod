@@ -5942,6 +5942,13 @@ pub fn run_validation(
             s,
             timings,
             ctx,
+            "validate_stale_workspaces",
+            validate_stale_workspaces(ctx, main_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
             "validate_git_protected_branch",
             validate_git_protected_branch(ctx, working_root)
         );
@@ -6141,6 +6148,63 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
             "validation needs attention".bright_yellow().bold()
         );
     }
+}
+
+fn validate_stale_workspaces(
+    ctx: &ValidationContext,
+    main_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Stale Workspaces Cleanup Gate");
+
+    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        skip(
+            "Skipped stale workspaces cleanup (DECAPOD_VALIDATE_SKIP_GIT_GATES set)",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    use crate::core::{container_runtime, workspace};
+    match workspace::prune_workspaces(main_root, false) {
+        Ok(pruned) => {
+            if pruned.is_empty() {
+                pass("No stale workspaces found to clean up", ctx);
+            } else {
+                let list: Vec<String> = pruned
+                    .iter()
+                    .map(|pw| format!("{} ({})", pw.path, pw.reason))
+                    .collect();
+                pass(
+                    &format!("Successfully pruned stale workspaces: {}", list.join(", ")),
+                    ctx,
+                );
+            }
+        }
+        Err(e) => {
+            warn(&format!("Failed to prune stale workspaces: {e}"), ctx);
+        }
+    }
+
+    if container_runtime::container_runtime_available() {
+        match container_runtime::prune_decapod_images() {
+            Ok(report) => pass(
+                &format!(
+                    "Decapod image retention verified: removed {} stale image tags and pruned {} labelled layer sets",
+                    report.removed_images.len(),
+                    report.pruned_layer_sets
+                ),
+                ctx,
+            ),
+            Err(e) => warn(&format!("Failed to prune stale Decapod images: {e}"), ctx),
+        }
+    } else {
+        skip(
+            "Skipped Decapod image cleanup because no container runtime is available",
+            ctx,
+        );
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
