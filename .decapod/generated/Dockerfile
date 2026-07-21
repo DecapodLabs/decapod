@@ -7,6 +7,8 @@ FROM $DECAPOD_IMAGE
 ARG DECAPOD_VERSION=0.72.9
 ARG DECAPOD_USE_LOCAL_BINARY=0
 LABEL org.opencontainers.image.base.name="$DECAPOD_IMAGE"
+LABEL org.opencontainers.image.source="https://github.com/DecapodLabs/decapod"
+LABEL org.decapod.managed="workspace"
 LABEL org.decapod.version="$DECAPOD_VERSION"
 RUN if command -v apk >/dev/null 2>&1; then \
 apk add --no-cache bash ca-certificates cargo coreutils curl git openssh-client rust sqlite-libs; \
