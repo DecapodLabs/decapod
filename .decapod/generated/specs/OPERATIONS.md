@@ -97,7 +97,23 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 ### Post-Mortem
 - `decapod trace flight-recorder transcript --output postmortem.md`
 - Correlate attestations (`.decapod/generated/assurance_attestations.jsonl`)
-- Review validation report (`.decapod/generated/artifacts/provenance/validation_report.json`)
+- Review validation report (`.decapod/generated/artifacts/provenance/validation_report.json`)## Rollout Strategy
+
+**Binary releases via cargo-dist:**
+- Tagged releases: `v0.x.y` → GitHub Release with binaries
+- `cargo install decapod` pulls from crates.io
+- Auto-update check in `decapod capabilities` (crates.io API, cached 24h)
+
+**Config/Schema Migrations:**
+- `schema_version` in `.decapod/config.toml` (validated at startup)
+- `TODO_SCHEMA_VERSION` + additive migrations in `todo::ensure_schema`
+- `POLICY_SCHEMA_VERSION` for capsule policy
+- `decapod constitution migrate` for embedded constitution graph
+
+**Rollback:**
+- Binary: `cargo install decapod@<prev-version>` or download prior release
+- Workspace: `decapod workspace prune --force` + `git worktree remove`
+- Config: Manual edit `.decapod/config.toml` (schema_version backwards compatible)
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -135,24 +151,6 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Rollout Strategy
-
-**Binary releases via cargo-dist:**
-- Tagged releases: `v0.x.y` → GitHub Release with binaries
-- `cargo install decapod` pulls from crates.io
-- Auto-update check in `decapod capabilities` (crates.io API, cached 24h)
-
-**Config/Schema Migrations:**
-- `schema_version` in `.decapod/config.toml` (validated at startup)
-- `TODO_SCHEMA_VERSION` + additive migrations in `todo::ensure_schema`
-- `POLICY_SCHEMA_VERSION` for capsule policy
-- `decapod constitution migrate` for embedded constitution graph
-
-**Rollback:**
-- Binary: `cargo install decapod@<prev-version>` or download prior release
-- Workspace: `decapod workspace prune --force` + `git worktree remove`
-- Config: Manual edit `.decapod/config.toml` (schema_version backwards compatible)
 
 ## Capacity Planning
 
@@ -266,7 +264,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `03887afc79f7c6e3712ce77dde727f9df044f2389285346046bf938de7353c1d`
+- Repository signal fingerprint: `f82026e06f071878e2fae1cdddd4d04c799ce65a6a9f06645a6180875a6f5a99`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
