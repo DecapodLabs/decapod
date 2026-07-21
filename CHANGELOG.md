@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.11](https://github.com/DecapodLabs/decapod/compare/v0.72.10...v0.72.11) - 2026-07-21
+
+### Added
+
+- uplift constitution documentation doctrine
+
+### Other
+
+- format constitution doctrine assertions
+- align governed release metadata with v0.72.10
+
 ## [0.72.10](https://github.com/DecapodLabs/decapod/compare/v0.72.9...v0.72.10) - 2026-07-21
 
 ### Fixed
