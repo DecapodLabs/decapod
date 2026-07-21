@@ -7,6 +7,7 @@
     "uplifted_namespaces": [
       "architecture",
       "docs",
+      "research",
       "methodology",
       "interfaces",
       "data",
@@ -14,7 +15,7 @@
       "plugins",
       "specs"
     ],
-    "migration_strategy": "architecture, docs, methodology, interfaces nodes, data nodes, metadata nodes, plugins nodes, and specs nodes are migrated in place; other namespaces keep the compact node contract until explicitly uplifted",
+    "migration_strategy": "architecture, docs, research, methodology, interfaces nodes, data nodes, metadata nodes, plugins nodes, and specs nodes are migrated in place; other namespaces keep the compact node contract until explicitly uplifted",
     "compatibility": "the node output shape remains stable for current consumers while uplifted namespaces gain additive doctrine fields"
   },
   "type": "object",
@@ -121,6 +122,30 @@
               "scaffolding",
               "spec_impacts",
               "proof"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "research"
+              }
+            },
+            "required": [
+              "category"
+            ]
+          },
+          "then": {
+            "required": [
+              "architect_notes",
+              "init_questions",
+              "decision_matrix",
+              "tradeoffs",
+              "scaffolding",
+              "spec_impacts",
+              "proof",
+              "research_doctrine"
             ]
           }
         },
@@ -361,6 +386,9 @@
         },
         "proof": {
           "$ref": "#/definitions/proof"
+        },
+        "research_doctrine": {
+          "$ref": "#/definitions/research_doctrine"
         }
       }
     },
@@ -532,6 +560,103 @@
         },
         "release": {
           "$ref": "#/definitions/text_list"
+        }
+      }
+    },
+    "research_doctrine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authors",
+        "year",
+        "domain",
+        "research_question",
+        "contribution",
+        "mechanism",
+        "engineering_translation",
+        "limitations",
+        "modern_parallels",
+        "misreadings",
+        "related_nodes",
+        "retrieval"
+      ],
+      "properties": {
+        "authors": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 24,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          }
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 1900,
+          "maximum": 2100
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 96
+        },
+        "research_question": {
+          "type": "string",
+          "minLength": 40,
+          "maxLength": 640
+        },
+        "contribution": {
+          "type": "string",
+          "minLength": 40,
+          "maxLength": 640
+        },
+        "mechanism": {
+          "type": "string",
+          "minLength": 40,
+          "maxLength": 640
+        },
+        "engineering_translation": {
+          "$ref": "#/definitions/text_list"
+        },
+        "limitations": {
+          "$ref": "#/definitions/text_list"
+        },
+        "modern_parallels": {
+          "$ref": "#/definitions/text_list"
+        },
+        "misreadings": {
+          "$ref": "#/definitions/text_list"
+        },
+        "related_nodes": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^research/[a-zA-Z0-9_./-]+$"
+          }
+        },
+        "retrieval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "match",
+            "avoid",
+            "next_queries"
+          ],
+          "properties": {
+            "match": {
+              "$ref": "#/definitions/text_list"
+            },
+            "avoid": {
+              "$ref": "#/definitions/text_list"
+            },
+            "next_queries": {
+              "$ref": "#/definitions/text_list"
+            }
+          }
         }
       }
     },
