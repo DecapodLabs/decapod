@@ -99,49 +99,7 @@ stateDiagram-v2
 | Capability-gated external actions | Security | Every `git`/`docker`/`cargo` call declares capability |
 | No secrets in config.toml | Security | `validate` config gate rejects forbidden keys |
 | Specs manifest tracks template drift | Governance | `validate` specs gate fails on stale template_hash |
-| Ordered phase completion | Governance | Phase transitions reject out-of-order, concurrent, or incomplete execution |
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-## Background Processing Semantics Overlay
-
-### Retry Semantics
-- Retry and backoff behavior MUST be selected and documented for each work class
-- Poison-work handling MUST be selected and documented for each work class
-- Retry MUST preserve the declared side-effect and idempotency semantics
-
-### Idempotency
-- Each job MUST declare whether it is idempotent, transactional, compensating, or otherwise duplicate-safe
-- Deduplication or compensation mechanisms are project decisions and require proof
-- Duplicate execution MUST follow the job's declared duplicate-handling semantics
-
-### Poison Message Handling
-- Messages failing after max retries go to dead letter queue
-- DLQ MUST be monitored and alerted
-- Manual replay capability for DLQ messages
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Semantics Overlay
-
-### Transaction Semantics
-- All multi-entity operations MUST be atomic
-- Read-after-write consistency within transaction boundaries
-- Eventual consistency windows MUST be documented
-
-### Migration Semantics
-- Schema migrations MUST be backward-compatible
-- Migration rollback procedures MUST be documented
-- Data integrity checks post-migration
-
-### Recovery Semantics
-- Point-in-time recovery capability
-- Recovery objectives MUST be selected for the project and recorded as proof obligations
-- Recovery test cadence MUST be selected for the project and recorded as a proof obligation
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-## Event Sourcing Schema
+| Ordered phase completion | Governance | Phase transitions reject out-of-order, concurrent, or incomplete execution |## Event Sourcing Schema
 
 ### Common Event Fields
 | Field | Type | Description |
@@ -189,6 +147,46 @@ stateDiagram-v2
 | Event Type | Payload | Trigger |
 |------------|---------|---------|
 | `attestation` | `{id, op, timestamp, input_hash, touched_paths[], interlock_code?, outcome}` | `assurance.evaluate` |
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+## Background Processing Semantics Overlay
+
+### Retry Semantics
+- Retry and backoff behavior MUST be selected and documented for each work class
+- Poison-work handling MUST be selected and documented for each work class
+- Retry MUST preserve the declared side-effect and idempotency semantics
+
+### Idempotency
+- Each job MUST declare whether it is idempotent, transactional, compensating, or otherwise duplicate-safe
+- Deduplication or compensation mechanisms are project decisions and require proof
+- Duplicate execution MUST follow the job's declared duplicate-handling semantics
+
+### Poison Message Handling
+- Messages failing after max retries go to dead letter queue
+- DLQ MUST be monitored and alerted
+- Manual replay capability for DLQ messages
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Semantics Overlay
+
+### Transaction Semantics
+- All multi-entity operations MUST be atomic
+- Read-after-write consistency within transaction boundaries
+- Eventual consistency windows MUST be documented
+
+### Migration Semantics
+- Schema migrations MUST be backward-compatible
+- Migration rollback procedures MUST be documented
+- Data integrity checks post-migration
+
+### Recovery Semantics
+- Point-in-time recovery capability
+- Recovery objectives MUST be selected for the project and recorded as proof obligations
+- Recovery test cadence MUST be selected for the project and recorded as a proof obligation
+<!-- decapod:capability-overlay:persistent-state:end -->
 
 ## Replay Semantics
 
@@ -302,7 +300,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ed85be1e423b8c1464fa499098d9a0cc1f60b68739b3b2f7c6feec5753514f49`
+- Repository signal fingerprint: `589d4c94282c84867b589a9040f8577cc26df5f3ed04b7fadd544abae3990cb6`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
