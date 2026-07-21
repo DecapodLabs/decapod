@@ -1280,6 +1280,23 @@ fn prompt_line_default(prompt: &str, default_value: &str) -> Result<String, erro
     )
 }
 
+fn prompt_csv_default(
+    prompt: &str,
+    default_value: &str,
+) -> Result<Vec<String>, error::DecapodError> {
+    let raw = prompt_text_field(
+        prompt,
+        "Enter comma-separated values, or press Enter to keep the inferred value.",
+        default_value,
+    )?;
+    Ok(raw
+        .split(',')
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(ToString::to_string)
+        .collect())
+}
+
 fn prompt_yes_no(prompt: &str, default_yes: bool) -> Result<bool, error::DecapodError> {
     use crate::core::ansi::AnsiExt;
     let suffix = if default_yes { "[Y/n]" } else { "[y/N]" };
@@ -1438,6 +1455,20 @@ fn init_with_from_config(
         detected_surfaces: config.repo.detected_surfaces.clone(),
         declared_capabilities: config.repo.capabilities.clone(),
         container_workspaces: config.repo.container_workspaces,
+        protected_paths: config.governance.protected_paths.clone(),
+        approval_categories: config.governance.approval_categories.clone(),
+        isolation_mode: Some(config.custody.isolation),
+        tracker_provider: (config.tracker.provider != "decapod")
+            .then(|| config.tracker.provider.clone()),
+        tracker_project: config.tracker.project.clone(),
+        tracker_url: config.tracker.url.clone(),
+        declared_context_sources: config.context.declared_sources.clone(),
+        proof_commands: config
+            .proof
+            .commands
+            .iter()
+            .map(|proof| format!("{}={}", proof.name, proof.command))
+            .collect(),
         mode: if config.cloud.as_ref().map(|c| c.enabled).unwrap_or(false)
             || config.repo.mode == crate::cli::BackendType::Cloud
         {
@@ -1454,6 +1485,13 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
     let cloud_enabled =
         init.mode == crate::cli::BackendType::Cloud || repo.mode == crate::cli::BackendType::Cloud;
     let mut repo = repo;
+    let external_tracker = repo.external_tracker;
+    let tracker_is_external = external_tracker
+        || init
+            .tracker_provider
+            .as_deref()
+            .is_some_and(|provider| provider != "decapod");
+    repo.external_tracker = tracker_is_external;
     // #688 adds the cloud opt-in boundary only. Fresh init config must keep
     // local storage canonical until a later sync feature explicitly changes it.
     repo.mode = crate::cli::BackendType::Local;
@@ -1472,6 +1510,32 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
     if init.all || init.cdx_ep || no_entrypoint_flags {
         entrypoints.push("CODEX.md".to_string());
     }
+    let protected_paths = canonical_repo_relative_paths(&init.protected_paths)
+        .unwrap_or_else(|_| init.protected_paths.clone());
+    let declared_context_sources = canonical_repo_relative_paths(&init.declared_context_sources)
+        .unwrap_or_else(|_| init.declared_context_sources.clone());
+    let mut proof_commands: Vec<_> = init
+        .proof_commands
+        .iter()
+        .enumerate()
+        .map(|(index, value)| {
+            let (name, command) = value.split_once('=').unwrap_or(("", ""));
+            proof::ProofDef {
+                name: name.trim().to_string(),
+                command: command.trim().to_string(),
+                args: Vec::new(),
+                description: format!("Guided init proof command {}", index + 1),
+                required: true,
+            }
+        })
+        .collect();
+    proof_commands.sort_by(|left, right| left.name.cmp(&right.name));
+    let mut approval_categories = if init.approval_categories.is_empty() {
+        vec!["destructive_operations".to_string()]
+    } else {
+        init.approval_categories.clone()
+    };
+    approval_categories.sort();
     DecapodProjectConfig {
         schema_version: "1.0.0".to_string(),
         init: InitConfigSection {
@@ -1481,6 +1545,35 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             entrypoints,
         },
         repo,
+        governance: GovernanceConfig {
+            protected_paths,
+            approval_categories,
+        },
+        proof: proof::ProjectProofConfig {
+            commands: proof_commands,
+        },
+        custody: CustodyConfig {
+            isolation: init.isolation_mode.unwrap_or(if init.container_workspaces {
+                IsolationMode::Container
+            } else {
+                IsolationMode::Worktree
+            }),
+        },
+        tracker: TrackerConfig {
+            provider: init.tracker_provider.clone().unwrap_or_else(|| {
+                if external_tracker {
+                    "external"
+                } else {
+                    "decapod"
+                }
+                .to_string()
+            }),
+            project: init.tracker_project.clone(),
+            url: init.tracker_url.clone(),
+        },
+        context: DeclaredContextConfig {
+            declared_sources: declared_context_sources,
+        },
         cloud: if cloud_enabled {
             Some(crate::cli::CloudConfigSection {
                 enabled: true,
@@ -1595,6 +1688,55 @@ fn enrich_repo_context_interactive(
         true,
     )?;
     repo.container_workspaces = enable_container_workspaces;
+
+    let protected_default = init.protected_paths.join(",");
+    init.protected_paths =
+        canonical_repo_relative_paths(&prompt_csv_default("Protected paths", &protected_default)?)
+            .map_err(error::DecapodError::ValidationError)?;
+
+    let approval_default = if init.approval_categories.is_empty() {
+        "destructive_operations".to_string()
+    } else {
+        init.approval_categories.join(",")
+    };
+    init.approval_categories = prompt_csv_default("Approval categories", &approval_default)?;
+
+    let proof_default = init.proof_commands.join(",");
+    init.proof_commands = prompt_csv_default("Proof commands", &proof_default)?;
+
+    if repo.external_tracker {
+        let provider = init
+            .tracker_provider
+            .clone()
+            .unwrap_or_else(|| "external".to_string());
+        init.tracker_provider = Some(prompt_line_default("External tracker provider", &provider)?);
+        let project = init.tracker_project.clone().unwrap_or_default();
+        let project = prompt_line_default("External tracker project (optional)", &project)?;
+        init.tracker_project = (!project.trim().is_empty()).then_some(project);
+        let url = init.tracker_url.clone().unwrap_or_default();
+        let url = prompt_line_default("External tracker URL (optional)", &url)?;
+        init.tracker_url = (!url.trim().is_empty()).then_some(url);
+    } else {
+        init.tracker_provider = None;
+        init.tracker_project = None;
+        init.tracker_url = None;
+    }
+
+    let context_default = if init.declared_context_sources.is_empty() {
+        "AGENTS.md".to_string()
+    } else {
+        init.declared_context_sources.join(",")
+    };
+    init.declared_context_sources = canonical_repo_relative_paths(&prompt_csv_default(
+        "Declared context sources",
+        &context_default,
+    )?)
+    .map_err(error::DecapodError::ValidationError)?;
+    init.isolation_mode = Some(if repo.container_workspaces {
+        IsolationMode::Container
+    } else {
+        IsolationMode::Worktree
+    });
 
     println!();
     println!("Enable Decapod Cloud? [experimental, account required]");
@@ -1809,6 +1951,24 @@ fn run_init_apply(
         scaffold_summary.ci_unchanged.to_string().bright_yellow(),
         scaffold_summary.ci_preserved.to_string().bright_white()
     );
+    if !scaffold_summary.tracked_runtime_paths.is_empty() {
+        println!(
+            "\n{}",
+            "TASK: Decapod runtime files are already tracked by Git. `.gitignore` now covers them, but it cannot remove files that were previously committed.".bright_yellow()
+        );
+        println!(
+            "{}",
+            "      Remove these exact paths from the index before committing the project:"
+                .bright_yellow()
+        );
+        for path in &scaffold_summary.tracked_runtime_paths {
+            println!("      - {path}");
+        }
+        println!(
+            "{}",
+            "      Use `git rm --cached -- <path>` for each path; keep the local runtime files if Decapod needs them.".bright_yellow()
+        );
+    }
     println!("  Backups: {}", backup_count.to_string().bright_magenta());
     println!(
         "  Diagram Notation: {}",
@@ -1947,6 +2107,31 @@ pub fn run() -> Result<(), error::DecapodError> {
                         if !init_group.declared_capabilities.is_empty() {
                             with.declared_capabilities = init_group.declared_capabilities.clone();
                         }
+                        if !init_group.protected_paths.is_empty() {
+                            with.protected_paths = init_group.protected_paths.clone();
+                        }
+                        if !init_group.approval_categories.is_empty() {
+                            with.approval_categories = init_group.approval_categories.clone();
+                        }
+                        if init_group.isolation_mode.is_some() {
+                            with.isolation_mode = init_group.isolation_mode;
+                        }
+                        if init_group.tracker_provider.is_some() {
+                            with.tracker_provider = init_group.tracker_provider.clone();
+                        }
+                        if init_group.tracker_project.is_some() {
+                            with.tracker_project = init_group.tracker_project.clone();
+                        }
+                        if init_group.tracker_url.is_some() {
+                            with.tracker_url = init_group.tracker_url.clone();
+                        }
+                        if !init_group.declared_context_sources.is_empty() {
+                            with.declared_context_sources =
+                                init_group.declared_context_sources.clone();
+                        }
+                        if !init_group.proof_commands.is_empty() {
+                            with.proof_commands = init_group.proof_commands.clone();
+                        }
                         with
                     } else {
                         let diagram_style = if io::stdin().is_terminal() && !init_group.proof {
@@ -1977,6 +2162,14 @@ pub fn run() -> Result<(), error::DecapodError> {
                             detected_surfaces: init_group.detected_surfaces.clone(),
                             declared_capabilities: init_group.declared_capabilities.clone(),
                             container_workspaces: init_group.container_workspaces,
+                            protected_paths: init_group.protected_paths.clone(),
+                            approval_categories: init_group.approval_categories.clone(),
+                            isolation_mode: init_group.isolation_mode,
+                            tracker_provider: init_group.tracker_provider.clone(),
+                            tracker_project: init_group.tracker_project.clone(),
+                            tracker_url: init_group.tracker_url.clone(),
+                            declared_context_sources: init_group.declared_context_sources.clone(),
+                            proof_commands: init_group.proof_commands.clone(),
                             mode: init_group.mode.clone(),
                             git: init_group.git,
                             no_git: init_group.no_git,
@@ -6045,7 +6238,7 @@ fn run_govern_command(
                     .map_err(error::DecapodError::IoError)?;
                 let diff_bytes = diff_output.stdout.len() as u64;
 
-                let mut config = gatekeeper::GatekeeperConfig::default();
+                let mut config = gatekeeper::GatekeeperConfig::from_repo_config(repo_root);
                 if let Some(max) = max_diff_bytes {
                     config.max_diff_bytes = max;
                 }

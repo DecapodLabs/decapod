@@ -1244,6 +1244,11 @@ fn validate_project_config_toml(
     let value: toml::Value = toml::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!("Invalid .decapod/config.toml syntax: {e}"))
     })?;
+    let typed_config: crate::cli::DecapodProjectConfig = toml::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "Unsupported or malformed guided init config in .decapod/config.toml: {e}"
+        ))
+    })?;
     let schema_version = value
         .get("schema_version")
         .and_then(|v| v.as_str())
@@ -1383,6 +1388,134 @@ fn validate_project_config_toml(
                 );
             }
         }
+    }
+
+    match crate::cli::canonical_repo_relative_paths(&typed_config.governance.protected_paths) {
+        Ok(canonical) if canonical == typed_config.governance.protected_paths => pass(
+            "Guided init protected paths are canonical and repository-relative",
+            ctx,
+        ),
+        Ok(_) => fail(
+            "Guided init protected paths must be deterministically sorted and canonical",
+            ctx,
+        ),
+        Err(message) => fail(
+            &format!("Invalid guided init protected path: {message}"),
+            ctx,
+        ),
+    }
+
+    const APPROVAL_CATEGORIES: &[&str] = &["destructive_operations", "policy_changes"];
+    let unsupported_categories: Vec<_> = typed_config
+        .governance
+        .approval_categories
+        .iter()
+        .filter(|category| !APPROVAL_CATEGORIES.contains(&category.as_str()))
+        .collect();
+    let categories_are_canonical = typed_config
+        .governance
+        .approval_categories
+        .windows(2)
+        .all(|pair| pair[0] < pair[1]);
+    if unsupported_categories.is_empty() && categories_are_canonical {
+        pass("Guided init approval categories have policy consumers", ctx);
+    } else {
+        fail(
+            &format!(
+                "Unsupported or non-canonical guided init approval categories: {unsupported_categories:?}"
+            ),
+            ctx,
+        );
+    }
+
+    let isolation = value
+        .get("custody")
+        .and_then(|table| table.get("isolation"))
+        .and_then(|value| value.as_str())
+        .unwrap_or(if typed_config.repo.container_workspaces {
+            "container"
+        } else {
+            "worktree"
+        });
+    if isolation == "container" && !typed_config.repo.container_workspaces {
+        pass(
+            "Guided init custody isolation is disabled by the legacy repo.container_workspaces=false opt-out",
+            ctx,
+        );
+    } else if matches!(isolation, "container" | "worktree") {
+        pass(
+            "Guided init custody isolation is supported and coherent",
+            ctx,
+        );
+    } else {
+        fail(
+            "Guided init custody.isolation must be either 'container' or 'worktree'",
+            ctx,
+        );
+    }
+
+    let proof_names: Vec<_> = typed_config
+        .proof
+        .commands
+        .iter()
+        .map(|proof| proof.name.trim())
+        .collect();
+    let proof_commands_valid = typed_config
+        .proof
+        .commands
+        .iter()
+        .all(|proof| !proof.name.trim().is_empty() && !proof.command.trim().is_empty());
+    let proof_names_unique = proof_names.windows(2).all(|pair| pair[0] < pair[1]);
+    if proof_commands_valid && proof_names_unique {
+        pass(
+            "Guided init proof commands are non-empty, unique, and deterministic",
+            ctx,
+        );
+    } else {
+        fail(
+            "Guided init proof commands must have non-empty sorted unique names and commands",
+            ctx,
+        );
+    }
+
+    let tracker_provider = typed_config.tracker.provider.trim();
+    let tracker_coherent = !tracker_provider.is_empty()
+        && (typed_config.repo.external_tracker == (tracker_provider != "decapod"));
+    if tracker_coherent {
+        pass(
+            "Guided init tracker metadata is coherent and non-secret",
+            ctx,
+        );
+    } else {
+        fail(
+            "Guided init tracker metadata must agree with repo.external_tracker and include a provider",
+            ctx,
+        );
+    }
+
+    match crate::cli::canonical_repo_relative_paths(&typed_config.context.declared_sources) {
+        Ok(canonical) if canonical == typed_config.context.declared_sources => {
+            let missing: Vec<_> = canonical
+                .iter()
+                .filter(|source| !repo_root.join(source).exists())
+                .collect();
+            if missing.is_empty() {
+                pass("Guided init context sources are declared and present", ctx);
+            } else {
+                fail(
+                    &format!("Guided init context sources are missing: {missing:?}"),
+                    ctx,
+                );
+            }
+        }
+        Ok(_) => fail(
+            "Guided init context sources must be deterministically sorted and canonical",
+            ctx,
+        ),
+        Err(message) => fail(
+            &format!("Invalid guided init context source: {message}"),
+            ctx,
+        ),
     }
     Ok(())
 }
@@ -5446,7 +5579,7 @@ fn validate_gatekeeper_gate(
         return Ok(());
     }
 
-    let config = crate::core::gatekeeper::GatekeeperConfig::default();
+    let config = crate::core::gatekeeper::GatekeeperConfig::from_repo_config(working_root);
     let result = crate::core::gatekeeper::run_gatekeeper(working_root, &staged_paths, 0, &config)?;
 
     if result.passed {

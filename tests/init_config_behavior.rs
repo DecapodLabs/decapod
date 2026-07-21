@@ -874,3 +874,87 @@ fn init_supports_and_preserves_declared_capabilities() {
         String::from_utf8_lossy(&out.stderr)
     );
 }
+
+#[test]
+fn init_persists_guided_governance_and_reuses_it_on_refresh() {
+    let tmp = tempdir().expect("tempdir");
+    fs::write(tmp.path().join("README.md"), "# project\n").expect("write readme");
+
+    let out = run_decapod(
+        tmp.path(),
+        &[
+            "init",
+            "with",
+            "--protected-path",
+            "README.md",
+            "--approval-category",
+            "policy_changes",
+            "--isolation-mode",
+            "worktree",
+            "--tracker-provider",
+            "beads",
+            "--tracker-project",
+            "project-1",
+            "--tracker-url",
+            "https://tracker.invalid/project-1",
+            "--declared-context-source",
+            "README.md",
+            "--proof-command",
+            "lint=cargo test --lib",
+            "--force",
+        ],
+    );
+    assert!(
+        out.status.success(),
+        "guided init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let config_path = tmp.path().join(".decapod/config.toml");
+    let config = fs::read_to_string(&config_path).expect("read config");
+    assert!(config.contains("[governance]"));
+    assert!(config.contains("protected_paths = [\"README.md\"]"));
+    assert!(config.contains("approval_categories = [\"policy_changes\"]"));
+    assert!(config.contains("isolation = \"worktree\""));
+    assert!(config.contains("provider = \"beads\""));
+    assert!(config.contains("declared_sources = [\"README.md\"]"));
+    assert!(config.contains("name = \"lint\""));
+
+    let refresh = run_decapod(tmp.path(), &["init", "--force"]);
+    assert!(
+        refresh.status.success(),
+        "guided init refresh failed: {}",
+        String::from_utf8_lossy(&refresh.stderr)
+    );
+    let refreshed = fs::read_to_string(config_path).expect("read refreshed config");
+    assert!(refreshed.contains("provider = \"beads\""));
+    assert!(refreshed.contains("name = \"lint\""));
+    assert!(refreshed.contains("declared_sources = [\"README.md\"]"));
+}
+
+#[test]
+fn init_validation_rejects_traversal_in_guided_paths() {
+    let tmp = tempdir().expect("tempdir");
+    let out = run_decapod(
+        tmp.path(),
+        &["init", "with", "--protected-path", "../outside", "--force"],
+    );
+    assert!(
+        out.status.success(),
+        "init should preserve noninteractive behavior"
+    );
+
+    let validate = run_decapod(tmp.path(), &["validate"]);
+    assert!(
+        !validate.status.success(),
+        "validate must reject traversal paths: {}",
+        String::from_utf8_lossy(&validate.stdout)
+    );
+    assert!(
+        String::from_utf8_lossy(&validate.stdout).contains("protected path")
+            || String::from_utf8_lossy(&validate.stderr).contains("protected path"),
+        "stdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&validate.stdout),
+        String::from_utf8_lossy(&validate.stderr)
+    );
+}

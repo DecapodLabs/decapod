@@ -22,6 +22,7 @@ use crate::core::project_specs::{
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 /// Scaffolding operation configuration.
 ///
@@ -66,6 +67,9 @@ pub struct ScaffoldSummary {
     pub ci_created: usize,
     pub ci_unchanged: usize,
     pub ci_preserved: usize,
+    /// Runtime files already tracked by Git despite the managed ignore rules.
+    /// These require an agent task because `.gitignore` cannot untrack them.
+    pub tracked_runtime_paths: Vec<String>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -1395,6 +1399,39 @@ fn ensure_gitignore_entry(target_dir: &Path, entry: &str) -> Result<(), error::D
     Ok(())
 }
 
+/// Return Decapod runtime files already tracked by Git.
+///
+/// Adding `.gitignore` rules only affects untracked files. Existing projects
+/// can have committed state under `.decapod/data`, so init must surface the
+/// exact paths for the agent to remove from the index deliberately. The
+/// promotion ledger is an intentional allowlist and is excluded.
+fn tracked_runtime_data_paths(target_dir: &Path) -> Vec<String> {
+    let Ok(output) = Command::new("git")
+        .arg("-C")
+        .arg(target_dir)
+        .args(["ls-files", "--cached", "--", ".decapod/data"])
+        .output()
+    else {
+        return Vec::new();
+    };
+
+    if !output.status.success() {
+        return Vec::new();
+    }
+
+    let mut paths = String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .filter(|path| {
+            path.starts_with(".decapod/data/")
+                && *path != ".decapod/data/knowledge.promotions.jsonl"
+        })
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+    paths.sort();
+    paths.dedup();
+    paths
+}
+
 fn remove_deprecated_gitignore_entries(target_dir: &Path) -> Result<(), error::DecapodError> {
     let gitignore_path = target_dir.join(".gitignore");
     let Ok(content) = fs::read_to_string(&gitignore_path) else {
@@ -1648,6 +1685,8 @@ pub fn scaffold_project_entrypoints(
             }
         }
     }
+
+    let tracked_runtime_paths = tracked_runtime_data_paths(&opts.target_dir);
 
     // Determine which agent files to generate
     // If --all flag is set, force generate all five regardless of existing state
@@ -1980,6 +2019,7 @@ pub fn scaffold_project_entrypoints(
         ci_created,
         ci_unchanged,
         ci_preserved,
+        tracked_runtime_paths,
     })
 }
 

@@ -2,9 +2,9 @@
 # Path: .decapod/generated/Dockerfile
 # Managed seed: Decapod maintains the image/version header; agents may
 # mutate project-specific packages and commands in workspace branches.
-ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.72.16
+ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.72.17
 FROM $DECAPOD_IMAGE
-ARG DECAPOD_VERSION=0.72.16
+ARG DECAPOD_VERSION=0.72.17
 ARG DECAPOD_WORKSPACE_PATH=unknown
 ARG DECAPOD_USE_LOCAL_BINARY=0
 LABEL org.opencontainers.image.base.name="$DECAPOD_IMAGE"

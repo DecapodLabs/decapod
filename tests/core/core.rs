@@ -731,6 +731,9 @@ fn scaffold_store_and_docs_cli_behaviors() {
         specs_seed: None,
         capabilities: vec![],
     };
+    fs::create_dir_all(&live_target).expect("create live target");
+    fs::write(live_target.join(".gitignore"), "target/\n")
+        .expect("seed existing project gitignore");
     scaffold_project_entrypoints(&live_opts).expect("live scaffold");
     assert!(live_target.join("AGENTS.md").exists());
     assert!(live_target.join(".decapod/OVERRIDE.md").exists());
@@ -759,6 +762,36 @@ fn scaffold_store_and_docs_cli_behaviors() {
         gitignore.contains("!.decapod/data/knowledge.promotions.jsonl"),
         "decapod init must allowlist knowledge promotion ledger in .gitignore"
     );
+    assert!(
+        gitignore.lines().any(|line| line.trim() == "target/"),
+        "decapod init must preserve existing gitignore rules"
+    );
+
+    // Existing projects may already have committed runtime state. Verify init
+    // reports exact paths because adding .gitignore rules cannot untrack them.
+    init_git_repo(&live_target);
+    fs::create_dir_all(live_target.join(".decapod/data")).expect("create runtime data");
+    fs::write(live_target.join(".decapod/data/todo.db"), "runtime\n")
+        .expect("write tracked runtime data");
+    let add_runtime = Command::new("git")
+        .current_dir(&live_target)
+        .args(["add", "-f", ".decapod/data/todo.db"])
+        .output()
+        .expect("git add runtime data");
+    assert!(add_runtime.status.success());
+    let tracked_runtime = scaffold_project_entrypoints(&live_opts)
+        .expect("refresh scaffold with tracked runtime data")
+        .tracked_runtime_paths;
+    assert_eq!(tracked_runtime, vec![".decapod/data/todo.db"]);
+    fs::write(live_target.join(".decapod/data/untracked.db"), "runtime\n")
+        .expect("write untracked runtime data");
+    let ignored = Command::new("git")
+        .current_dir(&live_target)
+        .args(["check-ignore", "--quiet", ".decapod/data/untracked.db"])
+        .status()
+        .expect("git check-ignore runtime data");
+    assert!(ignored.success(), "fresh runtime data must be ignored");
+
     let generated_dockerfile = live_target.join(".decapod/generated/Dockerfile");
     assert!(
         generated_dockerfile.exists(),

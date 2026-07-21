@@ -531,6 +531,36 @@ fn risk_zone_for_operation(op_name: &str) -> &'static str {
     "control.mutate"
 }
 
+fn configured_approval_categories(root: &Path) -> Result<Vec<String>, error::DecapodError> {
+    let main_root =
+        crate::core::workspace::get_main_repo_root(root).unwrap_or_else(|_| root.to_path_buf());
+    let config_path = main_root.join(".decapod").join("config.toml");
+    if !config_path.exists() {
+        return Ok(Vec::new());
+    }
+    let config = crate::cli::DecapodProjectConfig::load(&main_root)
+        .map_err(|e| error::DecapodError::Config(format!("Unable to load approval policy: {e}")))?;
+    Ok(config.governance.approval_categories)
+}
+
+fn configured_approval_required(categories: &[String], op_name: &str) -> bool {
+    categories.iter().any(|category| match category.as_str() {
+        "destructive_operations" => {
+            !op_name.contains("_internal")
+                && !op_name.ends_with(".register")
+                && (op_name.contains("archive")
+                    || op_name.contains("delete")
+                    || op_name.contains("purge")
+                    || op_name.contains("rebuild")
+                    || op_name.contains("supersede")
+                    || op_name.contains("dispute")
+                    || op_name.contains("deprecate"))
+        }
+        "policy_changes" => op_name.starts_with("policy."),
+        _ => false,
+    })
+}
+
 fn zone_policy_from_todo(
     root: &Path,
     zone_name: &str,
@@ -598,6 +628,21 @@ pub fn enforce_broker_mutation_policy(
 
     let risk = risk_level_for_operation(op_name);
     let zone_name = risk_zone_for_operation(op_name);
+    let configured_categories = configured_approval_categories(root)?;
+    let approval_required = !configured_categories.is_empty()
+        && configured_approval_required(&configured_categories, op_name);
+    if approval_required {
+        initialize_policy_db(root)?;
+        let store = Store {
+            kind: crate::core::store::StoreKind::Repo,
+            root: root.to_path_buf(),
+        };
+        if !check_approval(&store, zone_name, None, "global")? {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Policy gate denied for '{op_name}': configured approval category requires human approval"
+            )));
+        }
+    }
     if let Some((zone_trust, zone_requires_approval)) = zone_policy_from_todo(root, zone_name)? {
         if trust_level_to_int(&actor_trust) < trust_level_to_int(&zone_trust) {
             return Err(error::DecapodError::ValidationError(format!(
