@@ -202,46 +202,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 3. **Validation Gates**: Self-checking quality bar with auto-remediable errors
 4. **Workspace Isolation**: Git worktrees + containers prevent environment corruption
 5. **Capsule Lineage**: Policy hash + repo revision binding prevents context drift
-6. **Attestation Trail**: Every interlock decision recorded with hash + touched paths
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-## Background Processing Operations Overlay
-
-### Queue Visibility
-- Queue depth, processing rate, and latency MUST be monitored
-- Dead letter queue MUST be visible and alerted
-- Worker health and processing rate metrics required
-
-### Shutdown Behavior
-- Graceful shutdown: stop accepting new work, finish current job
-- Drain behavior and timeout MUST be selected for the deployment
-- Termination and requeue behavior MUST be selected and proven for the deployment
-
-### Worker Health
-- Worker liveness and readiness probes
-- Queue depth alerts for backpressure detection
-- Processing latency percentiles (p50, p95, p99)
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Operations Overlay
-
-### Backup & Recovery
-- Backup scope, schedule, retention, and restore evidence MUST be selected for the project
-- Recovery point objectives MUST be explicit project decisions, not assumed values
-- Recovery time objectives MUST be explicit project decisions, not assumed values
-- Restore verification cadence MUST be recorded with the operational proof plan
-
-### Migration Operations
-- All schema changes via migration files
-- Migration rollback procedures documented
-- Zero-downtime migration strategy for production
-- Migration health checks and rollback triggers
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-## Security Practices
+6. **Attestation Trail**: Every interlock decision recorded with hash + touched paths## Security Practices
 - **Least Privilege**: Agents claim todo exclusively; containers run unprivileged; capabilities minimal
 - **Input Validation**: All CLI args validated by clap; RPC params by serde + custom gates; config.toml schema enforced
 - **Secure Storage**: No secrets in config.toml; session passwords in env only; event logs append-only
