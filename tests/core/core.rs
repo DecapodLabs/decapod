@@ -51,6 +51,12 @@ fn assets_docs_and_templates_resolve() {
 fn scaffold_specs_are_fresh_project_only() {
     let tmp = tempdir().unwrap();
     let root = tmp.path();
+    fs::create_dir_all(root.join(".decapod")).expect("create project config dir");
+    fs::write(
+        root.join(".decapod/config.toml"),
+        "schema_version = \"1.0.0\"\n\n[init]\nspecs = true\ndiagram_style = \"mermaid\"\nentrypoints = []\n\n[repo]\nproduct_name = \"fixture\"\n",
+    )
+    .expect("write project config");
     fs::create_dir_all(root.join(".decapod/generated/specs")).expect("create specs dir");
 
     let initial_seed = SpecsSeed {

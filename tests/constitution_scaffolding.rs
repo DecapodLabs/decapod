@@ -96,6 +96,14 @@ const INTERFACE_NODES: &[&str] = &[
     "interfaces/jsonschema/internalization/InternalizationManifest.schema",
 ];
 
+const DATA_NODES: &[&str] = &[
+    "data/CACHING",
+    "data/DATABASE",
+    "data/DATA_ENGINEERING",
+    "data/PIPELINES",
+    "data/POSTGRESQL",
+];
+
 const METHODOLOGY_NODES: &[&str] = &[
     "methodology/ARCHITECTURE",
     "methodology/CI_CD",
@@ -498,6 +506,82 @@ fn all_interface_nodes_have_architect_grade_contract_doctrine() {
 }
 
 #[test]
+fn all_data_nodes_have_architect_grade_persistence_and_pipeline_doctrine() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+
+    let actual_data_count = nodes
+        .values()
+        .filter(|node| node["category"].as_str() == Some("data"))
+        .count();
+    assert_eq!(
+        actual_data_count,
+        DATA_NODES.len(),
+        "DATA_NODES test list must cover every data/* node"
+    );
+
+    let core_refs = nodes["core/DATA"]["links"]["references"]
+        .as_array()
+        .expect("core data references");
+
+    for node_id in DATA_NODES {
+        let node = nodes
+            .get(*node_id)
+            .unwrap_or_else(|| panic!("missing data node {node_id}"));
+        assert_eq!(
+            node["category"].as_str(),
+            Some("data"),
+            "{node_id} must remain in the data namespace"
+        );
+        assert_architect_grade_fields(node_id, node);
+        assert_non_empty_array(
+            &node["links"]["references"],
+            &format!("{node_id}.links.references"),
+        );
+        assert!(
+            node["links"]["referenced_by"]
+                .as_array()
+                .is_some_and(|refs| refs.iter().any(|value| value.as_str() == Some("core/DATA"))),
+            "{node_id} must be reachable from core/DATA"
+        );
+        assert!(
+            core_refs
+                .iter()
+                .any(|value| value.as_str() == Some(node_id)),
+            "core/DATA must route to {node_id}"
+        );
+
+        let sections = node["sections"].as_object().expect("sections object");
+        for section in [
+            "match",
+            "ambiguity",
+            "decisions",
+            "standards",
+            "failure_modes",
+            "proceed_when",
+        ] {
+            assert!(
+                sections
+                    .get(section)
+                    .and_then(|items| items.as_array())
+                    .is_some_and(|items| !items.is_empty()),
+                "{node_id}.{section} must preserve data guidance"
+            );
+        }
+
+        assert!(
+            lookup.values().any(|entries| {
+                entries.as_array().is_some_and(|entries| {
+                    entries.iter().any(|entry| entry.as_str() == Some(node_id))
+                })
+            }),
+            "{node_id} must remain reachable through at least one lookup term"
+        );
+    }
+}
+
+#[test]
 fn all_methodology_nodes_have_architect_grade_delivery_doctrine() {
     let constitution = load_constitution_asset();
     let nodes = constitution["nodes"].as_object().expect("nodes object");
@@ -578,8 +662,10 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
     assert!(
         schema["x-doctrine_model"]["migration_strategy"]
             .as_str()
-            .is_some_and(|strategy| strategy.contains("interfaces nodes")),
-        "schema must document in-place interfaces namespace migration"
+            .is_some_and(|strategy| {
+                strategy.contains("interfaces nodes") && strategy.contains("data nodes")
+            }),
+        "schema must document in-place interfaces and data namespace migration"
     );
 
     let node_schema = &schema["definitions"]["node"];
@@ -603,6 +689,10 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         .iter()
         .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("interfaces"))
         .expect("node schema must declare interfaces doctrine conditional");
+    let data_rule = rules
+        .iter()
+        .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("data"))
+        .expect("node schema must declare data doctrine conditional");
 
     let required = architecture_rule["then"]["required"]
         .as_array()
@@ -631,6 +721,16 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         assert!(
             required.iter().any(|value| value.as_str() == Some(field)),
             "interfaces schema must require {field}"
+        );
+    }
+
+    let required = data_rule["then"]["required"]
+        .as_array()
+        .expect("data doctrine required fields");
+    for field in ARCHITECTURE_DOCTRINE_FIELDS {
+        assert!(
+            required.iter().any(|value| value.as_str() == Some(field)),
+            "data schema must require {field}"
         );
     }
 
@@ -1052,6 +1152,31 @@ fn embedded_constitution_preserves_interface_contract_doctrine() {
         let node: serde_json::Value =
             serde_json::from_slice(&output.stdout).expect("constitution get json");
         assert_architect_grade_fields(node_id, &node);
+    }
+}
+
+#[test]
+fn embedded_constitution_preserves_data_doctrine() {
+    for node_id in DATA_NODES {
+        let output = Command::new(resolve_decapod_bin())
+            .args(["constitution", "get", node_id])
+            .output()
+            .expect("run decapod constitution get");
+        assert!(
+            output.status.success(),
+            "constitution get {node_id} failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let node: serde_json::Value =
+            serde_json::from_slice(&output.stdout).expect("constitution get json");
+        assert_architect_grade_fields(node_id, &node);
+        assert!(
+            node["links"]["references"]
+                .as_array()
+                .is_some_and(|refs| !refs.is_empty()),
+            "{node_id} must preserve data cross-links in embedded output"
+        );
     }
 }
 

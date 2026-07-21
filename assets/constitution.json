@@ -3393,7 +3393,8 @@
         ],
         "referenced_by": [
           "data/DATABASE",
-          "core/ENGINEERING_EXCELLENCE"
+          "core/ENGINEERING_EXCELLENCE",
+          "core/DATA"
         ]
       },
       "sections": {
@@ -3428,6 +3429,121 @@
         ],
         "proceed_when": [
           "Proceed when invalidation logic is explicit and the fallback path to the database is tested."
+        ]
+      },
+      "architect_notes": [
+        "Treat data/CACHING as doctrine for ephemeral acceleration around a named source of truth; every cache decision must state freshness, invalidation ownership, and the safe miss path.",
+        "A cache is an availability and latency tradeoff, not a second database. Make stale tolerance and outage behavior explicit before generating a client, key scheme, or invalidation worker.",
+        "Architect-grade caching guidance connects key design, stampede control, observability, and recovery to the backing data contract and to a measurable proof surface."
+      ],
+      "init_questions": [
+        {
+          "id": "freshness_boundary",
+          "prompt": "What is the source of truth, and how stale may a returned value be for each user-visible operation?",
+          "why": "Freshness is a product and correctness constraint; without it, TTL and invalidation choices cannot be evaluated safely.",
+          "answers": [
+            "strongly consistent",
+            "bounded stale",
+            "best effort",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "outage_behavior",
+          "prompt": "What must happen when the cache is unavailable, empty, or under stampede pressure?",
+          "why": "The fallback path determines whether a cache outage becomes a database outage, a stale response, or a visible failure.",
+          "answers": [
+            "read backing store",
+            "serve stale",
+            "fail closed",
+            "shed load",
+            "run proof"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Cache-aside with explicit invalidation",
+          "use_when": "Reads dominate and the application can name the backing store and invalidation event.",
+          "avoid_when": "A write must be observed atomically by every cache consumer with no stale window.",
+          "implications": "Document key ownership, event ordering, miss behavior, TTL jitter, and the fallback proof in architecture and interface specs."
+        },
+        {
+          "choice": "Write-through cache",
+          "use_when": "The cache layer owns writes and can commit the source of truth under one tested contract.",
+          "avoid_when": "The cache provider cannot provide the required transaction, durability, or rollback semantics.",
+          "implications": "Treat the write path as a persistence interface and prove partial failure, retry, and recovery behavior against the source of truth."
+        },
+        {
+          "choice": "Explicit stale or fail-closed policy",
+          "use_when": "A cache outage or stale read changes safety, authorization, money, or user-visible correctness.",
+          "avoid_when": "The value is disposable and the caller already owns a bounded fallback policy.",
+          "implications": "Record the policy per operation rather than applying one global cache default, then test outage and stampede behavior."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "freshness versus latency",
+          "option_a": "Use short TTLs and active invalidation for fresher reads.",
+          "option_b": "Use longer TTLs and stale reads for lower backing-store load.",
+          "guidance": "Choose from the operation's stated stale tolerance and measure hit rate, freshness violations, and fallback load together."
+        },
+        {
+          "axis": "availability versus source-of-truth load",
+          "option_a": "Serve stale or coalesce misses during cache degradation.",
+          "option_b": "Fail or shed load to protect the backing store.",
+          "guidance": "Prefer the policy that preserves the highest-priority invariant, and make the degraded path observable and reversible."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture the backing source of truth, key namespace, freshness budget, invalidation owner, outage policy, and expected cache metrics.",
+          "Record the cache contract in project specs before generating a client, worker, migration, or deployment resource."
+        ],
+        "generate": [
+          "Generate the smallest cache adapter, key policy, invalidation hook, and fallback test needed by the selected operation.",
+          "Generate TTL jitter, request coalescing, circuit breaking, and hit/miss metrics only when the workload or proof plan requires them."
+        ],
+        "defer": [
+          "Defer a cache provider, multi-tier topology, write-behind queue, and global invalidation bus until source-of-truth and freshness requirements justify them.",
+          "Do not generate cache persistence or treat cached values as durable records without an explicit data/DATABASE decision."
+        ],
+        "proof": [
+          "Exercise cache hit, miss, invalidation, expiry, backing-store fallback, provider outage, and concurrent miss behavior.",
+          "Measure freshness, hit rate, latency, eviction, and fallback load for the chosen policy or record the unmeasured gap explicitly."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record which user or operator outcome permits caching, the acceptable stale window, and the non-goals that keep the cache from becoming a source of truth.",
+          "Preserve unanswered freshness and outage questions instead of turning a performance request into an implied consistency requirement."
+        ],
+        "architecture": [
+          "Record source-of-truth ownership, cache placement, invalidation flow, failure domains, resource bounds, and adjacent data/PIPELINES or architecture/PERFORMANCE decisions.",
+          "Link the architecture decision to data/CACHING so a later agent can revise freshness, eviction, or outage policy with context."
+        ],
+        "interfaces": [
+          "Record cache key formats, invalidation events, stale/error responses, and any public freshness headers or control-plane payloads as compatibility surfaces.",
+          "Keep cache internals behind an explicit adapter; do not expose provider-specific behavior as an accidental application contract."
+        ],
+        "proof": [
+          "Map the chosen cache policy to deterministic tests for miss fallback, invalidation, stampede protection, and outage behavior.",
+          "Validation evidence must identify the command, test, metric, or explicit deferral that proves cache behavior is bounded."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node remains discoverable through data lookup terms and links to the database and pipeline doctrines.",
+          "Structured caching guidance survives schema validation and embedded constitution lookup."
+        ],
+        "runtime": [
+          "A representative task can select a cache strategy, ask for freshness, or record an explicit outage-policy deferral from data/CACHING.",
+          "Runtime tests exercise the cache adapter and backing-store fallback without requiring a daemon to remain running."
+        ],
+        "release": [
+          "Release evidence names freshness, invalidation, provider, and recovery assumptions that remain unverified.",
+          "Generated specs are refreshed when cache behavior changes state ownership, interfaces, operations, or proof expectations."
         ]
       }
     },
@@ -6188,7 +6304,8 @@
           "data/CACHING",
           "data/DATABASE",
           "core/ENGINEERING_EXCELLENCE",
-          "docs/MIGRATIONS"
+          "docs/MIGRATIONS",
+          "core/DATA"
         ]
       },
       "sections": {
@@ -6223,6 +6340,121 @@
         ],
         "proceed_when": [
           "Proceed when data lineage is tracked and privacy boundaries are explicitly maintained."
+        ]
+      },
+      "architect_notes": [
+        "Treat data/PIPELINES as doctrine for moving owned data across bounded stages; every pipeline must name its source, sink, lineage, replay unit, and deletion obligations.",
+        "Batch and streaming are delivery choices under correctness, latency, cost, and recovery constraints. Idempotency and checkpoint ownership matter more than the orchestration brand.",
+        "Architect-grade pipeline guidance keeps operational and analytical workloads separate while making schema evolution, quality gates, privacy, retention, and replay inspectable."
+      ],
+      "init_questions": [
+        {
+          "id": "pipeline_owner",
+          "prompt": "Who owns each source, transformation, output contract, and decision to replay or delete pipeline data?",
+          "why": "Named ownership prevents orphaned stages, unsafe retries, and privacy or retention decisions from being inferred by tooling.",
+          "answers": [
+            "single team",
+            "multiple teams",
+            "external owner",
+            "ask human",
+            "record gap"
+          ]
+        },
+        {
+          "id": "delivery_semantics",
+          "prompt": "Does the consumer need periodic completeness, bounded latency, or both, and what duplicate or late-data behavior is acceptable?",
+          "why": "Delivery semantics determine batch or stream shape, checkpoints, deduplication, windows, and the proof needed for recovery.",
+          "answers": [
+            "batch completeness",
+            "low latency",
+            "hybrid",
+            "exactly once not proven",
+            "defer explicitly"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Idempotent batch pipeline",
+          "use_when": "The workload values complete periodic results and can tolerate bounded processing delay.",
+          "avoid_when": "The product requires reaction within a latency budget that batch windows cannot meet.",
+          "implications": "Define a replay partition, watermark, output replacement rule, quality gate, and retention behavior in specs and tests."
+        },
+        {
+          "choice": "Checkpointed streaming pipeline",
+          "use_when": "Consumers need low-latency events and the system can own offsets, late data, and replay boundaries.",
+          "avoid_when": "The source cannot provide stable ordering or the team cannot operate the failure and backfill path.",
+          "implications": "Specify event identity, checkpoint ownership, deduplication, windowing, dead-letter handling, and a bounded replay proof."
+        },
+        {
+          "choice": "Contract-first schema evolution",
+          "use_when": "Multiple producers or consumers share a pipeline boundary or analytical dataset.",
+          "avoid_when": "The data is private to one stage and can be migrated atomically with its sole consumer.",
+          "implications": "Define compatibility, versioning, validation, ownership, and deprecation windows before changing fields or semantics."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "latency versus completeness",
+          "option_a": "Stream early with explicit late-data correction.",
+          "option_b": "Batch after a completeness watermark.",
+          "guidance": "Choose the path that matches the consumer promise and make correction, replay, and incomplete-data states visible."
+        },
+        {
+          "axis": "flexibility versus governed schemas",
+          "option_a": "Accept schema-on-read variation for exploratory consumers.",
+          "option_b": "Enforce schema-on-write at shared ingestion boundaries.",
+          "guidance": "Use stronger contracts where downstream correctness, privacy, or replay depends on stable meaning; isolate exploration from operational interfaces."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture source and sink owners, data classification, lineage, delivery semantics, replay unit, quality checks, retention, and deletion policy.",
+          "Record whether the pipeline serves OLTP, OLAP, or a deliberate boundary between them before selecting storage or orchestration."
+        ],
+        "generate": [
+          "Generate an idempotent stage boundary, schema fixture, quality checks, lineage record, and replay command for the smallest supported flow.",
+          "Generate checkpoints, deduplication, late-data handling, or backfill tooling only when the selected delivery semantics require them."
+        ],
+        "defer": [
+          "Defer orchestration vendors, warehouse topology, streaming infrastructure, and broad data platforms until ownership, workload, and recovery facts are known.",
+          "Do not move PII into analytical storage or loosen schemas without an explicit privacy, retention, and compatibility decision."
+        ],
+        "proof": [
+          "Replay the same input twice and prove idempotent output, then exercise malformed, duplicate, late, partial, and deleted records.",
+          "Verify lineage, schema compatibility, quality failures, retention deletion, and recovery from a failed stage with deterministic evidence."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record the user or operator outcome, freshness promise, analytical or operational purpose, data owner, and explicit non-goals for the pipeline.",
+          "Preserve unresolved privacy, retention, completeness, and replay questions rather than inventing a delivery guarantee."
+        ],
+        "architecture": [
+          "Record stage ownership, source and sink boundaries, OLTP/OLAP separation, checkpoint or batch partition ownership, and failure recovery topology.",
+          "Link schema evolution and lifecycle choices to data/DATABASE, data/DATA_ENGINEERING, and any architecture/EVENT_DRIVEN doctrine consulted."
+        ],
+        "interfaces": [
+          "Record event or batch schemas, versioning rules, quality failure contracts, lineage metadata, replay commands, and consumer compatibility promises.",
+          "Treat producer and consumer boundaries as explicit interfaces; do not hide transformations or deletion behavior inside orchestration configuration."
+        ],
+        "proof": [
+          "Map the pipeline to replay, idempotency, quality, privacy, schema-evolution, and retention tests or explicit deferred proof gates.",
+          "Validation evidence must identify the command, fixture, artifact, or review record that proves lineage and recovery claims."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node remains discoverable through data lookup terms and cross-links to database, caching, and data-engineering doctrine.",
+          "Structured pipeline guidance survives schema validation and embedded constitution lookup."
+        ],
+        "runtime": [
+          "A representative task can choose batch, streaming, or a contract-first boundary and name the resulting proof surface from data/PIPELINES.",
+          "Runtime proof replays a representative input and makes duplicate, late, malformed, and partial-data behavior observable."
+        ],
+        "release": [
+          "Release evidence names owner, lineage, privacy, retention, compatibility, and recovery assumptions that remain unverified.",
+          "Generated specs are refreshed when pipeline changes alter state ownership, data contracts, operations, security, or validation."
         ]
       }
     },
@@ -6266,7 +6498,8 @@
           "core/ENGINEERING_EXCELLENCE",
           "docs/MIGRATIONS",
           "core/SCAFFOLDING",
-          "data/POSTGRESQL"
+          "data/POSTGRESQL",
+          "core/DATA"
         ]
       },
       "sections": {
@@ -6302,6 +6535,121 @@
         "proceed_when": [
           "Proceed when the migration is reversible and query performance impact is analyzed."
         ]
+      },
+      "architect_notes": [
+        "Treat data/DATABASE as the owner of durable state semantics: schema ownership, migration safety, constraints, transactions, query behavior, backup, restore, and data-loss risk.",
+        "A database change is a compatibility and recovery change even when the application diff is small. Name the migration owner, rollout order, rollback or roll-forward path, and retention boundary first.",
+        "Architect-grade database guidance turns consistency, performance, and recovery claims into inspectable schemas, migrations, queries, fixtures, and proof commands rather than ORM defaults."
+      ],
+      "init_questions": [
+        {
+          "id": "state_owner",
+          "prompt": "Which component owns this durable state, its schema, its migrations, and the invariant that must survive restart?",
+          "why": "A designated state owner prevents competing writers, accidental schema authority, and recovery steps that cannot be reconstructed.",
+          "answers": [
+            "this service",
+            "shared service",
+            "external owner",
+            "ask human",
+            "record gap"
+          ]
+        },
+        {
+          "id": "migration_recovery",
+          "prompt": "How will the change roll forward, recover from partial application, restore data, and retire old schema versions?",
+          "why": "Migration safety depends on operational recovery and compatibility windows, not only whether the new SQL parses.",
+          "answers": [
+            "expand contract",
+            "transactional",
+            "roll forward",
+            "restore backup",
+            "defer explicitly"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Expand-contract migration",
+          "use_when": "A live reader or writer must coexist with a changed schema or a large table needs a staged rollout.",
+          "avoid_when": "The store is disposable and can be recreated atomically with no compatibility or recovery obligation.",
+          "implications": "Add compatible columns or tables, dual-read or dual-write only when justified, backfill, switch ownership, and prove cleanup and rollback."
+        },
+        {
+          "choice": "Database-enforced invariant",
+          "use_when": "Uniqueness, referential integrity, valid ranges, or atomic state transitions must survive multiple callers.",
+          "avoid_when": "The rule is a transient presentation concern that cannot be represented durably in the store.",
+          "implications": "Use constraints and transactions as the durable contract, map violations to an explicit interface error, and test concurrent behavior."
+        },
+        {
+          "choice": "Evidence-led indexing",
+          "use_when": "A measured query path has a latency or workload requirement and the access pattern is stable enough to optimize.",
+          "avoid_when": "The index is speculative, duplicates an existing path, or its write and storage cost is unmeasured.",
+          "implications": "Record query evidence, migration cost, selectivity, rollback, and post-release monitoring before adding or removing an index."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "consistency versus availability",
+          "option_a": "Use stronger transactions and constraints for authoritative writes.",
+          "option_b": "Accept eventual reads or asynchronous repair for higher availability.",
+          "guidance": "Choose per invariant and operation; do not let an availability preference silently weaken a data-integrity contract."
+        },
+        {
+          "axis": "read performance versus write cost",
+          "option_a": "Add targeted indexes, denormalization, or read models.",
+          "option_b": "Keep the write schema lean and optimize queries or pagination first.",
+          "guidance": "Use query plans and workload evidence, then include index build, storage, write amplification, and rollback in the proof plan."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture state ownership, schema authority, invariants, transaction boundaries, consistency requirements, retention, backup, restore, and migration ownership.",
+          "Record the query or workload evidence that justifies indexes, pagination, denormalization, isolation, or replication choices."
+        ],
+        "generate": [
+          "Generate version-controlled migrations, constraints, seed fixtures, a repository boundary, and a deterministic migration or rollback proof command.",
+          "Generate query plans, pagination, concurrency tests, backup fixtures, or restore checks only where the selected risk requires them."
+        ],
+        "defer": [
+          "Defer sharding, replication topology, ORM replacement, vendor-specific extensions, and irreversible data movement until scale and recovery evidence justify them.",
+          "Do not call a destructive migration reversible when the old data shape or a tested restore path is not retained."
+        ],
+        "proof": [
+          "Apply migrations to a clean store and a representative prior snapshot, exercise rollback or roll-forward recovery, and verify constraints and data counts.",
+          "Measure representative query plans, pagination, concurrency, backup, restore, and retention behavior or record the bounded proof gap."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record the durable state, user-visible correctness promise, retention or deletion requirement, and non-goals for the database change.",
+          "Preserve unresolved ownership, consistency, performance, backup, and recovery questions instead of inferring them from a model or migration tool."
+        ],
+        "architecture": [
+          "Record state ownership, storage boundary, transaction and consistency model, migration rollout, query workload, backup, restore, and retention posture.",
+          "Link concrete engine choices to data/POSTGRESQL or another engine doctrine, and link pipeline or cache consumers to data/PIPELINES and data/CACHING."
+        ],
+        "interfaces": [
+          "Record database schemas, migration versions, constraint errors, repository boundaries, pagination contracts, and compatibility windows that other components consume.",
+          "Keep generated ORM metadata subordinate to the version-controlled schema and migration contract."
+        ],
+        "proof": [
+          "Map the migration and persistence decision to schema, clean-apply, upgrade, recovery, query, concurrency, backup, and restore evidence.",
+          "Validation evidence must identify the command, fixture, database artifact, or explicit blocker supporting each data-loss and rollback claim."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node remains discoverable through data lookup terms and cross-links to caching, pipelines, migrations, and the PostgreSQL doctrine.",
+          "Structured database guidance survives schema validation and embedded constitution lookup."
+        ],
+        "runtime": [
+          "A representative task can select a migration, invariant, or indexing path and name its recovery proof from data/DATABASE.",
+          "Runtime proof applies the schema to a clean and prior state, then exercises the changed invariant and recovery path."
+        ],
+        "release": [
+          "Release evidence names state owner, migration compatibility, backup, restore, retention, and performance assumptions that remain unverified.",
+          "Generated specs are refreshed when database changes alter state ownership, interfaces, operations, security, semantics, or validation."
+        ]
       }
     },
     "data/POSTGRESQL": {
@@ -6335,7 +6683,8 @@
         "referenced_by": [
           "core/SCAFFOLDING",
           "core/ARCHITECTURE",
-          "data/DATABASE"
+          "data/DATABASE",
+          "core/DATA"
         ]
       },
       "sections": {
@@ -6349,6 +6698,10 @@
         ],
         "ambiguity": [
           "Stop if ownership of migrations, seed data, connection configuration, backup expectations, or local test database strategy is unknown."
+        ],
+        "decisions": [
+          "Choose migration-first, ORM-assisted, or SQL-first access only after naming schema ownership and the required proof path.",
+          "Choose pooling, isolation, indexing, and extension posture from workload evidence and recovery constraints rather than framework defaults."
         ],
         "standards": [
           "Generate reversible migrations when the migration tool supports them.",
@@ -21219,6 +21572,8 @@
           "data/DATABASE",
           "data/CACHING",
           "data/PIPELINES",
+          "data/POSTGRESQL",
+          "data/DATA_ENGINEERING",
           "architecture/DISTRIBUTED_SYSTEMS"
         ],
         "referenced_by": [
@@ -21236,6 +21591,8 @@
           "databases, tables, schema, queries -> data/DATABASE.",
           "redis, memcached, ephemeral state -> data/CACHING.",
           "ETL, streaming, data lineage -> data/PIPELINES.",
+          "PostgreSQL, SQL migrations, connection pools -> data/POSTGRESQL.",
+          "warehouses, lineage, quality, retention, analytical data -> data/DATA_ENGINEERING.",
           "partitions, consistency, consensus -> architecture/DISTRIBUTED_SYSTEMS."
         ],
         "apply": [
@@ -21401,7 +21758,8 @@
         ],
         "referenced_by": [
           "core/ENGINEERING_EXCELLENCE",
-          "data/PIPELINES"
+          "data/PIPELINES",
+          "core/DATA"
         ]
       },
       "sections": {
@@ -21434,6 +21792,121 @@
         ],
         "proceed_when": [
           "Proceed when the data lineage is tracked and quality checks are instrumented."
+        ]
+      },
+      "architect_notes": [
+        "Treat data/DATA_ENGINEERING as doctrine for governed analytical movement: lineage, quality, privacy, retention, ownership, and separation from operational workloads are first-class architecture decisions.",
+        "A pipeline is a recoverable data product, not merely a DAG. Its schema, quality gates, replay boundary, and deletion behavior must be inspectable by the next maintainer.",
+        "Architect-grade data-engineering guidance chooses the smallest reliable boundary and makes analytical correctness, privacy, and operational recovery measurable before platform expansion."
+      ],
+      "init_questions": [
+        {
+          "id": "data_product_owner",
+          "prompt": "Who is accountable for the meaning, quality, privacy classification, retention, and consumer contract of this data product?",
+          "why": "Data ownership is required to resolve schema changes, quality failures, deletion requests, and disagreements about correctness.",
+          "answers": [
+            "producer team",
+            "consumer team",
+            "shared steward",
+            "external owner",
+            "ask human"
+          ]
+        },
+        {
+          "id": "analytical_boundary",
+          "prompt": "Which data must remain operational, which may enter analytical storage, and what masking or tokenization is required?",
+          "why": "The OLTP and OLAP boundary controls privacy exposure, workload isolation, retention, and the shape of quality proof.",
+          "answers": [
+            "operational only",
+            "analytical copy",
+            "masked analytical copy",
+            "unknown classification",
+            "defer explicitly"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Governed analytical copy",
+          "use_when": "Consumers need analytical workloads without competing with the operational source of truth.",
+          "avoid_when": "The copy would duplicate sensitive data without an owner, retention policy, lineage, or consumer need.",
+          "implications": "Define transformation ownership, masking, freshness, quality thresholds, deletion propagation, and the source-to-report lineage."
+        },
+        {
+          "choice": "Quality gates at stage boundaries",
+          "use_when": "A malformed schema, null, range, uniqueness, or business-rule failure could corrupt downstream decisions.",
+          "avoid_when": "The stage is exploratory and its consumers explicitly accept unvalidated data.",
+          "implications": "Make failed records, quarantine, alerting, retry, and promotion behavior explicit; do not silently drop evidence."
+        },
+        {
+          "choice": "Replayable transformation contract",
+          "use_when": "Historical correction, backfill, audit, or recovery requires rebuilding outputs from retained inputs.",
+          "avoid_when": "Inputs are intentionally ephemeral and no downstream result is retained as authoritative.",
+          "implications": "Version transformation logic, retain the replay unit and lineage, and prove deterministic or explicitly reconciled output."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "analytical flexibility versus governance",
+          "option_a": "Permit schema-on-read exploration over isolated data.",
+          "option_b": "Enforce curated schema, quality, and ownership at publication.",
+          "guidance": "Keep experimentation away from trusted operational or published analytical contracts, then promote only reviewed meanings."
+        },
+        {
+          "axis": "retention value versus privacy and cost",
+          "option_a": "Retain inputs for audit, replay, and historical analysis.",
+          "option_b": "Delete or minimize data after the stated business and legal need.",
+          "guidance": "Choose a documented retention schedule with deletion propagation, access controls, storage cost, and recovery consequences."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture the data product owner, source, consumers, classification, lineage, freshness, quality thresholds, retention, deletion, and analytical/operational boundary.",
+          "Record the replay unit, transformation versioning, quarantine behavior, and escalation owner before generating platform-specific pipeline resources."
+        ],
+        "generate": [
+          "Generate a small transformation contract, lineage record, quality fixture, privacy test, retention check, and replay command for the first data product.",
+          "Generate separate analytical storage or orchestration resources only when workload isolation and ownership evidence require them."
+        ],
+        "defer": [
+          "Defer data lake, warehouse, streaming platform, catalog, and governance-vendor choices until the data product boundary and proof needs are known.",
+          "Do not copy PII or PHI into analytical environments, or retain raw inputs indefinitely, without an explicit classification and deletion decision."
+        ],
+        "proof": [
+          "Trace a representative record from source through transformations to a consumer, including lineage, quality failure, masking, and deletion behavior.",
+          "Replay retained inputs after a transformation change and verify outputs, ownership, freshness, and privacy evidence remain explainable."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record the data product outcome, consumers, analytical or operational purpose, classification, retention requirement, and explicit non-goals.",
+          "Preserve unresolved owner, privacy, quality, lineage, and recovery questions instead of treating a data platform request as a complete requirement."
+        ],
+        "architecture": [
+          "Record source and analytical boundaries, workload isolation, transformation ownership, lineage, replay, retention, deletion, and quality-gate placement.",
+          "Link transactional source decisions to data/DATABASE and stage delivery decisions to data/PIPELINES so ownership does not split silently."
+        ],
+        "interfaces": [
+          "Record published schemas, lineage identifiers, quality failure contracts, masking guarantees, freshness promises, retention signals, and replay commands.",
+          "Keep data catalog or orchestration metadata from becoming an implicit source of truth; the durable contract belongs in versioned specs and schemas."
+        ],
+        "proof": [
+          "Map the data product to lineage, quality, privacy, retention, replay, and consumer-contract evidence before claiming it is production-ready.",
+          "Validation evidence must identify the fixture, transformation, command, report, or explicit blocker supporting each governance claim."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The node remains discoverable through data lookup terms and cross-links to pipeline and database doctrine.",
+          "Structured data-engineering guidance survives schema validation and embedded constitution lookup."
+        ],
+        "runtime": [
+          "A representative task can select an analytical boundary, quality gate, or replay contract and name its proof surface from data/DATA_ENGINEERING.",
+          "Runtime proof traces a record through the pipeline and exercises a quality failure, masking, deletion, or replay path."
+        ],
+        "release": [
+          "Release evidence names ownership, classification, retention, lineage, freshness, and recovery assumptions that remain unverified.",
+          "Generated specs are refreshed when data-engineering changes alter state ownership, interfaces, operations, security, semantics, or validation."
         ]
       }
     },
