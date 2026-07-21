@@ -188,7 +188,21 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 ### Exception Process
 1. Document exception in `OVERRIDE.md` with justification
 2. `decapod validate` will warn on override drift
-3. Review at each promotion gate
+3. Review at each promotion gate## Pre-Promotion Security Checklist
+- [ ] Threat model reviewed for changed surfaces (new CLI commands, RPC ops)
+- [ ] Auth/authz tests pass (`session`, `workspace`, `capability` gates)
+- [ ] Dependency vulnerability scan clean (`cargo audit`)
+- [ ] No unresolved critical/high findings from `cargo audit`
+- [ ] Config.toml validates (no forbidden secrets, schema current)
+- [ ] Capsule policy `repo_revision` matches HEAD
+- [ ] WorkUnit manifests `VERIFIED` with proof artifacts attached
+- [ ] Provenance manifests present for `workspace publish`## Strongest Operational Primitives
+1. **Deterministic Rebuild**: `todo::rebuild_db_from_events` proves store integrity
+2. **Flight Recorder**: Read-only timeline from all event logs
+3. **Validation Gates**: Self-checking quality bar with auto-remediable errors
+4. **Workspace Isolation**: Git worktrees + containers prevent environment corruption
+5. **Capsule Lineage**: Policy hash + repo revision binding prevents context drift
+6. **Attestation Trail**: Every interlock decision recorded with hash + touched paths
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -227,24 +241,6 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
 
-## Pre-Promotion Security Checklist
-- [ ] Threat model reviewed for changed surfaces (new CLI commands, RPC ops)
-- [ ] Auth/authz tests pass (`session`, `workspace`, `capability` gates)
-- [ ] Dependency vulnerability scan clean (`cargo audit`)
-- [ ] No unresolved critical/high findings from `cargo audit`
-- [ ] Config.toml validates (no forbidden secrets, schema current)
-- [ ] Capsule policy `repo_revision` matches HEAD
-- [ ] WorkUnit manifests `VERIFIED` with proof artifacts attached
-- [ ] Provenance manifests present for `workspace publish`
-
-## Strongest Operational Primitives
-1. **Deterministic Rebuild**: `todo::rebuild_db_from_events` proves store integrity
-2. **Flight Recorder**: Read-only timeline from all event logs
-3. **Validation Gates**: Self-checking quality bar with auto-remediable errors
-4. **Workspace Isolation**: Git worktrees + containers prevent environment corruption
-5. **Capsule Lineage**: Policy hash + repo revision binding prevents context drift
-6. **Attestation Trail**: Every interlock decision recorded with hash + touched paths
-
 ## Security Practices
 - **Least Privilege**: Agents claim todo exclusively; containers run unprivileged; capabilities minimal
 - **Input Validation**: All CLI args validated by clap; RPC params by serde + custom gates; config.toml schema enforced
@@ -254,7 +250,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `336fe4b382d8d0b6ca90712c17be972163d09aa42be30cba74058797e5e55e4d`
+- Repository signal fingerprint: `106447c277179f04f494a093a267c82788618720a8e3e3b702cd92fc2beb55f7`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

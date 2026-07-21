@@ -55,7 +55,7 @@ Run `decapod validate --refresh-specs` to regenerate scaffold sections from curr
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `336fe4b382d8d0b6ca90712c17be972163d09aa42be30cba74058797e5e55e4d`
+- Repository signal fingerprint: `106447c277179f04f494a093a267c82788618720a8e3e3b702cd92fc2beb55f7`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
