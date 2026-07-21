@@ -316,7 +316,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f82026e06f071878e2fae1cdddd4d04c799ce65a6a9f06645a6180875a6f5a99`
+- Repository signal fingerprint: `e52b7e892d69e5331bfaddbb51d04dd7bac136e38e3ca8efbd6dd5079501a567`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
