@@ -360,3 +360,79 @@ fn test_workspace_prune_unmerged_prevention() {
             .any(|p| p.path == wt_f_path.to_string_lossy() && p.reason == "task_completed")
     );
 }
+
+#[test]
+fn test_validate_stale_workspaces_cleanup() {
+    let tmp = tempdir().expect("tempdir");
+    let main_root = tmp.path().join("main_repo");
+    fs::create_dir_all(&main_root).expect("create main_repo");
+
+    git_init(&main_root);
+    git_commit(&main_root, "init");
+
+    let store_root = main_root.join(".decapod").join("data");
+    fs::create_dir_all(&store_root).expect("create data dir");
+    initialize_todo_db(&store_root).expect("init todo db");
+
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: store_root.clone(),
+    };
+
+    let task_res = add_task(
+        &store_root,
+        &TodoCommand::Add {
+            title: "Task Prunable".to_string(),
+            description: "".to_string(),
+            tags: "".to_string(),
+            owner: "test-agent".to_string(),
+            due: None,
+            r#ref: "".to_string(),
+            scope: "".to_string(),
+            dir: Some(main_root.to_string_lossy().to_string()),
+            priority: "medium".to_string(),
+            depends_on: "".to_string(),
+            blocks: "".to_string(),
+            parent: None,
+            one_shot: 0,
+        },
+    )
+    .expect("add task");
+    let id = task_res.get("id").unwrap().as_str().unwrap();
+
+    let db_path = decapod::core::todo::todo_db_path(&store_root);
+    let conn = rusqlite::Connection::open(&db_path).expect("open db");
+    conn.execute("UPDATE tasks SET hash = 'hashprune' WHERE id = ?", [id])
+        .expect("update hash");
+
+    claim_task(&store_root, id, "test-agent", ClaimMode::Exclusive).expect("claim task");
+    update_status(&store, id, "done", "task.done", serde_json::json!({})).expect("done task");
+
+    let workspaces_dir = main_root.join(".decapod").join("workspaces");
+    fs::create_dir_all(&workspaces_dir).expect("create workspaces dir");
+
+    let wt_path = workspaces_dir.join("test-agent-todo-hashprune-todo");
+    let wt_branch = "agent/test-agent/todo-hashprune";
+    run_git_cmd(
+        &main_root,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            &wt_branch,
+            wt_path.to_str().unwrap(),
+        ],
+    );
+
+    assert!(wt_path.exists());
+
+    // Run validation to trigger auto-prune
+    let _report =
+        decapod::core::validate::run_validation(&store, &main_root, &wt_path, true, false, false)
+            .expect("validate run");
+
+    assert!(
+        !wt_path.exists(),
+        "Stale workspace must have been pruned by validation"
+    );
+}
