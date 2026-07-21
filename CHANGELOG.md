@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.5](https://github.com/DecapodLabs/decapod/compare/v0.72.4...v0.72.5) - 2026-07-21
+
+### Other
+
+- Fix specs refresh test fixture
+- Uplift data constitution doctrine
+
 ## [0.72.4](https://github.com/DecapodLabs/decapod/compare/v0.72.3...v0.72.4) - 2026-07-20
 
 ### Other
