@@ -5213,6 +5213,36 @@ fn validate_tooling_gate(
     Ok(())
 }
 
+fn validate_root_dockerfile_seed_detection(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Root Dockerfile Boundary Gate");
+
+    let dockerfile_path = repo_root.join("Dockerfile");
+    if !dockerfile_path.exists() {
+        skip(
+            "No root Dockerfile present; the Decapod workspace Dockerfile is not an application Dockerfile",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let content = fs::read_to_string(&dockerfile_path).map_err(error::DecapodError::IoError)?;
+    if crate::core::mentor::is_decapod_workspace_dockerfile(&content) {
+        fail(
+            "Root Dockerfile contains Decapod workspace image markers. `.decapod/generated/Dockerfile` is Decapod's internal workspace container; the root Dockerfile must package the project application or microservice according to human intent. Remove `org.decapod.managed=\"workspace\"` and `ARG DECAPOD_IMAGE=` from the root Dockerfile or move workspace-container configuration under `.decapod/generated/Dockerfile`.",
+            ctx,
+        );
+    } else {
+        pass(
+            "Root Dockerfile is scoped to project application packaging",
+            ctx,
+        );
+    }
+    Ok(())
+}
+
 fn cargo_subcommand_available(subcommand: &str) -> bool {
     std::process::Command::new("cargo")
         .arg(subcommand)
@@ -5970,6 +6000,13 @@ pub fn run_validation(
             s,
             timings,
             ctx,
+            "validate_root_dockerfile_seed_detection",
+            validate_root_dockerfile_seed_detection(ctx, working_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
             "validate_state_commit_gate",
             validate_state_commit_gate(ctx, working_root)
         );
@@ -6212,6 +6249,7 @@ mod tests {
     use super::{
         SurfaceKind, ValidationContext, is_allowed_non_code_path, is_decapod_isolated_worktree,
         is_non_code_path, strip_git_quotes, validate_git_workspace_context,
+        validate_root_dockerfile_seed_detection,
     };
     use super::{is_protected_git_branch, parse_ahead_behind_counts};
     use std::fs;
@@ -6248,6 +6286,25 @@ mod tests {
             .current_dir(dir)
             .output()
             .expect("git commit");
+    }
+
+    #[test]
+    fn test_validate_root_dockerfile_seed_detection() {
+        let tmp = tempdir().expect("temporary repository");
+        fs::write(
+            tmp.path().join("Dockerfile"),
+            "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.72.13\nFROM $DECAPOD_IMAGE\nLABEL org.decapod.managed=\"workspace\"\n",
+        )
+        .expect("write root Dockerfile");
+
+        let ctx = ValidationContext::new();
+        validate_root_dockerfile_seed_detection(&ctx, tmp.path())
+            .expect("root Dockerfile validation should complete");
+
+        assert_eq!(ctx.fail_count.load(Ordering::Relaxed), 1);
+        assert!(ctx.fails.lock().unwrap().iter().any(|failure| {
+            failure.contains("Root Dockerfile contains Decapod workspace image markers")
+        }));
     }
 
     fn decapod_worktree_fixture() -> (tempfile::TempDir, std::path::PathBuf, std::path::PathBuf) {
