@@ -1,3 +1,6 @@
-fn main() -> Result<(), decapod::core::error::DecapodError> {
-    decapod::run()
+fn main() {
+    if let Err(error) = decapod::run() {
+        eprintln!("{error}");
+        std::process::exit(1);
+    }
 }
