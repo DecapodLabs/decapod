@@ -138,12 +138,10 @@ jobs:
         include:
           - variant: glibc
             tag_suffix: ""
-            latest_tag: latest
             build_image: rust:1.96.1-slim-bookworm
             runtime_image: debian:bookworm-slim
           - variant: musl
             tag_suffix: "-alpine"
-            latest_tag: latest-alpine
             build_image: rust:1.96.1-alpine
             runtime_image: alpine:3.20
     steps:
@@ -167,8 +165,6 @@ jobs:
           images: ghcr.io/decapodlabs/decapod
           tags: |
             type=raw,value=${{ github.ref_name }}${{ matrix.tag_suffix }}
-            type=raw,value=sha-${{ steps.commit.outputs.sha_short }}${{ matrix.tag_suffix }}
-            type=raw,value=${{ matrix.latest_tag }},enable=${{ !contains(github.ref_name, '-') }}
       - name: Build and push Decapod image
         uses: docker/build-push-action@v6
         with:

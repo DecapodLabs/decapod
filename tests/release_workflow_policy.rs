@@ -45,16 +45,18 @@ fn release_workflow_publishes_decapod_ghcr_image() {
         "release workflow should compute the preferred 7-character commit SHA"
     );
     assert!(
-        workflow.contains("type=raw,value=sha-${{ steps.commit.outputs.sha_short }}"),
-        "release workflow should publish a short-SHA image tag"
+        workflow.contains("type=raw,value=${{ github.ref_name }}${{ matrix.tag_suffix }}"),
+        "release workflow should publish the version-matching workspace image tag"
     );
     assert!(
-        workflow.contains("type=raw,value=${{ github.ref_name }}${{ matrix.tag_suffix }}")
-            && workflow.contains(
-                "type=raw,value=sha-${{ steps.commit.outputs.sha_short }}${{ matrix.tag_suffix }}"
-            )
-            && workflow.contains("latest-alpine"),
-        "release workflow should publish glibc and alpine Decapod image variants"
+        !workflow.contains("type=raw,value=sha-")
+            && !workflow.contains("latest_tag:")
+            && !workflow.contains("type=raw,value=${{ matrix.latest_tag }}"),
+        "release workflow should not retain SHA or floating workspace image tags"
+    );
+    assert!(
+        workflow.contains("tag_suffix: \"\"") && workflow.contains("tag_suffix: \"-alpine\""),
+        "release workflow should publish glibc and alpine Decapod workspace image variants"
     );
     assert!(
         workflow.contains("file: Dockerfile.workspace"),
