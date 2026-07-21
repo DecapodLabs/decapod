@@ -5943,7 +5943,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_stale_workspaces",
-            validate_stale_workspaces(ctx, main_root)
+            validate_stale_workspaces(ctx, working_root)
         );
         gate!(
             s,
@@ -6152,7 +6152,7 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
 
 fn validate_stale_workspaces(
     ctx: &ValidationContext,
-    main_root: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Stale Workspaces Cleanup Gate");
 
@@ -6165,7 +6165,7 @@ fn validate_stale_workspaces(
     }
 
     use crate::core::{container_runtime, workspace};
-    match workspace::prune_workspaces(main_root, false) {
+    match workspace::prune_workspaces(working_root, false) {
         Ok(pruned) => {
             if pruned.is_empty() {
                 pass("No stale workspaces found to clean up", ctx);
