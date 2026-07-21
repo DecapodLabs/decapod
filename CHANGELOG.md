@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.10](https://github.com/DecapodLabs/decapod/compare/v0.72.9...v0.72.10) - 2026-07-21
+
+### Fixed
+
+- prune stale Decapod image versions
+- add stale workspaces cleanup gate during validation
+
+### Other
+
+- Use GHCR version authority for workspace images
+- Reclaim stale Decapod container images and layers
+- Refresh Decapod 0.72.9 release metadata
+- Pin workspace image tags to release versions
+
 ## [0.72.9](https://github.com/DecapodLabs/decapod/compare/v0.72.8...v0.72.9) - 2026-07-21
 
 ### Other
