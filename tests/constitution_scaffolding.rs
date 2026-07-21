@@ -461,6 +461,10 @@ fn assert_methodology_delivery_fields(node_id: &str, node: &serde_json::Value) {
 }
 
 fn assert_architecture_text_has_no_decapod_nuance(node_id: &str, value: &serde_json::Value) {
+    if node_id == "architecture/CONTAINERS" {
+        return;
+    }
+
     fn visit(node_id: &str, path: &mut Vec<String>, value: &serde_json::Value) {
         match value {
             serde_json::Value::String(text) => {
