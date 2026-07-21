@@ -419,7 +419,7 @@ fn test_validate_stale_workspaces_cleanup() {
             "worktree",
             "add",
             "-b",
-            &wt_branch,
+            wt_branch,
             wt_path.to_str().unwrap(),
         ],
     );

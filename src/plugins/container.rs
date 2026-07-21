@@ -980,6 +980,8 @@ fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
          ARG DECAPOD_VERSION={decapod_version}\n\
          ARG DECAPOD_USE_LOCAL_BINARY=0\n\
          LABEL org.opencontainers.image.base.name=\"$DECAPOD_IMAGE\"\n\
+         LABEL org.opencontainers.image.source=\"https://github.com/DecapodLabs/decapod\"\n\
+         LABEL org.decapod.managed=\"workspace\"\n\
          LABEL org.decapod.version=\"$DECAPOD_VERSION\"\n\
          RUN if command -v apk >/dev/null 2>&1; then \\\n\
                  apk add --no-cache {apk_pkg_line}; \\\n\

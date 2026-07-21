@@ -6164,7 +6164,7 @@ fn validate_stale_workspaces(
         return Ok(());
     }
 
-    use crate::core::workspace;
+    use crate::core::{container_runtime, workspace};
     match workspace::prune_workspaces(main_root, false) {
         Ok(pruned) => {
             if pruned.is_empty() {
@@ -6183,6 +6183,25 @@ fn validate_stale_workspaces(
         Err(e) => {
             warn(&format!("Failed to prune stale workspaces: {e}"), ctx);
         }
+    }
+
+    if container_runtime::container_runtime_available() {
+        match container_runtime::prune_decapod_images() {
+            Ok(report) => pass(
+                &format!(
+                    "Decapod image retention verified: removed {} stale image tags and pruned {} labelled layer sets",
+                    report.removed_images.len(),
+                    report.pruned_layer_sets
+                ),
+                ctx,
+            ),
+            Err(e) => warn(&format!("Failed to prune stale Decapod images: {e}"), ctx),
+        }
+    } else {
+        skip(
+            "Skipped Decapod image cleanup because no container runtime is available",
+            ctx,
+        );
     }
 
     Ok(())

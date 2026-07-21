@@ -9,7 +9,19 @@ Decapod's validation suite (`src/core/validate.rs`) enforces methodology complia
 - **Auto-Remediable Errors**: Structured error codes with `agent_action` and `user_note` for self-correction
 - **Bounded Execution**: `INV-BOUNDED-VALIDATE` — validation terminates within 30s
 - **Spec Refresh**: `--refresh-specs` regenerates stale scaffold templates
-- **Dual Store Modes**: `user` (blank slate) and `repo` (dogfood backlog)
+- **Dual Store Modes**: `user` (blank slate) and `repo` (dogfood backlog)## Generated Spec Refresh Gates
+Decapod keeps generated specs synchronized at governance pressure points. When repository surfaces change, validation either fails with a concrete refresh instruction or, when explicitly requested, regenerates spec files and updates the manifest fingerprint.
+
+### Refresh-Capable Paths
+- `decapod validate --refresh-specs`
+- `decapod rpc --op specs.refresh`
+- Initialization/scaffold refresh paths that regenerate `.decapod/generated/specs/*.md`
+
+### Refresh Output Requirements
+- Preserve hand-maintained epistemic custody fields where possible
+- Blend repo context into existing canonical spec files
+- Update `.decapod/generated/specs/.manifest.json` after writing files
+- Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -50,20 +62,6 @@ Decapod's validation suite (`src/core/validate.rs`) enforces methodology complia
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Generated Spec Refresh Gates
-Decapod keeps generated specs synchronized at governance pressure points. When repository surfaces change, validation either fails with a concrete refresh instruction or, when explicitly requested, regenerates spec files and updates the manifest fingerprint.
-
-### Refresh-Capable Paths
-- `decapod validate --refresh-specs`
-- `decapod rpc --op specs.refresh`
-- Initialization/scaffold refresh paths that regenerate `.decapod/generated/specs/*.md`
-
-### Refresh Output Requirements
-- Preserve hand-maintained epistemic custody fields where possible
-- Blend repo context into existing canonical spec files
-- Update `.decapod/generated/specs/.manifest.json` after writing files
-- Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set
 
 ## Release-Bound Agent Entrypoint Integrity
 The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and compiled binary SHA-256; `.decapod/generated/specs/.manifest.json` records the same release identity plus `template_hash` and `content_hash` entries for `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md`. Default validation independently checks the compiled release contract, declared metadata, canonical payload, regular-file type, and manifest synchronization. Regeneration must be explicit through the installed Decapod release.
@@ -332,7 +330,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3ecf7ce8b828c3114f4397b57999d376a0ac517e32aad03a278174d79633a22a`
+- Repository signal fingerprint: `ed85be1e423b8c1464fa499098d9a0cc1f60b68739b3b2f7c6feec5753514f49`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -572,11 +572,7 @@ pub fn ensure_workspace(
     // 2. Ensure container (if requested)
     if config.use_container {
         crate::plugins::container::prepare_generated_container_profile(&worktree_path)?;
-        let image_tag = format!(
-            "localhost/decapod-workspace:{}-{}",
-            sanitize_agent_id(agent_id),
-            branch.replace('/', "-")
-        );
+        let image_tag = workspace_image_tag(&worktree_path);
         build_workspace_image(&worktree_path, &image_tag)?;
 
         // Return blocker telling agent to enter container
@@ -1799,6 +1795,11 @@ pub fn prune_workspaces(
         }
 
         if is_stale {
+            if container_runtime::container_runtime_available() {
+                let image_tag = workspace_image_tag(&dir_path);
+                container_runtime::remove_image(&image_tag)?;
+            }
+
             // Attempt to remove git worktree if registered
             if matching_wt.is_some() {
                 let mut args = vec!["worktree", "remove"];
@@ -1829,6 +1830,21 @@ pub fn prune_workspaces(
     let _ = prune_stale_worktree_config(repo_root);
 
     Ok(pruned)
+}
+
+fn workspace_image_tag(workspace_path: &Path) -> String {
+    let workspace_name = workspace_path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .map(sanitize_agent_id)
+        .filter(|name| !name.is_empty())
+        .unwrap_or_else(|| "workspace".to_string());
+    format!(
+        "{}:{}-{}",
+        container_runtime::DECAPOD_WORKSPACE_IMAGE_REPOSITORY,
+        container_runtime::current_decapod_version_tag(),
+        workspace_name
+    )
 }
 
 #[cfg(test)]
