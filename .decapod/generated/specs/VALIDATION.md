@@ -35,6 +35,14 @@ flowchart TD
     V --> P{All blocking gates pass?}
     P -->|No| F4[Fail: promotion blocked]
     P -->|Yes| E[Emit promotion evidence]
+```## Promotion Flow
+```mermaid
+flowchart LR
+    A[Plan] --> B[Implement]
+    B --> C[Test]
+    C --> D[Validate]
+    D --> E[Assemble Evidence]
+    E --> F[Promote]
 ```
 
 <!-- decapod:capability-overlay:background-processing:start -->
@@ -76,16 +84,6 @@ flowchart TD
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Promotion Flow
-```mermaid
-flowchart LR
-    A[Plan] --> B[Implement]
-    B --> C[Test]
-    C --> D[Validate]
-    D --> E[Assemble Evidence]
-    E --> F[Promote]
-```
 
 ## Proof Surfaces
 - `decapod validate` (primary)

@@ -67,7 +67,37 @@ Operational ownership follows the declared surfaces: session/authentication and 
 # Full governance loop smoke test
 decapod init --force --dry-run --dir /tmp/smoke-test
 cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decapod todo claim --id <id> && decapod workspace ensure && decapod validate
-```
+```## Incident Response
+
+### Detection
+- Validation gate failures (CI or local `decapod validate`)
+- Workspace interlock errors (agent receives `INTERLOCK` in RPC response)
+- Flight recorder gaps (missing event sources)
+
+### Triage
+1. Run `decapod system doctor` — identifies environment issues
+2. Run `decapod trace flight-recorder timeline --limit 50` — recent governance events
+3. Check `decapod capabilities` — version, config, docker status
+
+### Mitigation
+| Incident | Mitigation |
+|----------|------------|
+| Protected branch with local mods | `git stash` → `decapod workspace ensure` |
+| SQLite locked | `decapod workspace prune` → retry |
+| Specs out of sync | `decapod validate --refresh-specs` |
+| Capsule policy drift | `decapod govern capsule query --write` |
+| Session expired | `decapod session acquire` |
+| Container build fails | `decapod workspace ensure` (no `--container`) |
+
+### Communication
+- Local tool: human reads terminal output
+- CI: GitHub Actions annotations on validation failure
+- Multi-agent: `decapod data broker audit` shows all agent actions
+
+### Post-Mortem
+- `decapod trace flight-recorder transcript --output postmortem.md`
+- Correlate attestations (`.decapod/generated/assurance_attestations.jsonl`)
+- Review validation report (`.decapod/generated/artifacts/provenance/validation_report.json`)
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -105,38 +135,6 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Incident Response
-
-### Detection
-- Validation gate failures (CI or local `decapod validate`)
-- Workspace interlock errors (agent receives `INTERLOCK` in RPC response)
-- Flight recorder gaps (missing event sources)
-
-### Triage
-1. Run `decapod system doctor` — identifies environment issues
-2. Run `decapod trace flight-recorder timeline --limit 50` — recent governance events
-3. Check `decapod capabilities` — version, config, docker status
-
-### Mitigation
-| Incident | Mitigation |
-|----------|------------|
-| Protected branch with local mods | `git stash` → `decapod workspace ensure` |
-| SQLite locked | `decapod workspace prune` → retry |
-| Specs out of sync | `decapod validate --refresh-specs` |
-| Capsule policy drift | `decapod govern capsule query --write` |
-| Session expired | `decapod session acquire` |
-| Container build fails | `decapod workspace ensure` (no `--container`) |
-
-### Communication
-- Local tool: human reads terminal output
-- CI: GitHub Actions annotations on validation failure
-- Multi-agent: `decapod data broker audit` shows all agent actions
-
-### Post-Mortem
-- `decapod trace flight-recorder transcript --output postmortem.md`
-- Correlate attestations (`.decapod/generated/assurance_attestations.jsonl`)
-- Review validation report (`.decapod/generated/artifacts/provenance/validation_report.json`)
 
 ## Rollout Strategy
 
