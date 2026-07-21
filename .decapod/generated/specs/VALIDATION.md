@@ -43,7 +43,15 @@ flowchart LR
     C --> D[Validate]
     D --> E[Assemble Evidence]
     E --> F[Promote]
-```
+```## Proof Surfaces
+- `decapod validate` (primary)
+- Required test commands:
+  - `cargo test --locked`
+  - `cargo clippy -- -D warnings`
+  - `cargo fmt --check`
+- Required integration/e2e commands:
+  - `decapod qa verify` (proof replay + drift check)
+  - `decapod workspace publish` (provenance gates)
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -84,16 +92,6 @@ flowchart LR
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Proof Surfaces
-- `decapod validate` (primary)
-- Required test commands:
-  - `cargo test --locked`
-  - `cargo clippy -- -D warnings`
-  - `cargo fmt --check`
-- Required integration/e2e commands:
-  - `decapod qa verify` (proof replay + drift check)
-  - `decapod workspace publish` (provenance gates)
 
 ## Promotion Gates
 
@@ -324,7 +322,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `03887afc79f7c6e3712ce77dde727f9df044f2389285346046bf938de7353c1d`
+- Repository signal fingerprint: `f82026e06f071878e2fae1cdddd4d04c799ce65a6a9f06645a6180875a6f5a99`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
