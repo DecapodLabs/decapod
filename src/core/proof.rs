@@ -21,6 +21,18 @@ pub struct ProofDef {
     pub required: bool,
 }
 
+/// Project-level proof declarations stored in `.decapod/config.toml`.
+///
+/// The legacy `.decapod/proofs.toml` registry remains supported; this typed
+/// projection lets guided init capture proof intent without creating a second
+/// execution engine.
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct ProjectProofConfig {
+    #[serde(default)]
+    pub commands: Vec<ProofDef>,
+}
+
 /// Result of running a single proof
 #[derive(Debug, Clone, Serialize)]
 pub struct ProofResult {
@@ -130,6 +142,22 @@ pub fn load_proof_config(decapod_dir: &Path) -> Result<ProofConfig, DecapodError
             let config: ProofConfig = toml::from_str(&content)
                 .map_err(|e| DecapodError::ValidationError(e.to_string()))?;
             return Ok(config);
+        }
+    }
+
+    let project_config_path = if decapod_dir.join(".decapod").exists() {
+        decapod_dir.join(".decapod").join("config.toml")
+    } else {
+        decapod_dir.join("config.toml")
+    };
+    if project_config_path.exists() {
+        let content = fs::read_to_string(&project_config_path).map_err(DecapodError::IoError)?;
+        let config: crate::cli::DecapodProjectConfig = toml::from_str(&content)
+            .map_err(|e| DecapodError::ValidationError(format!("Invalid project config: {e}")))?;
+        if !config.proof.commands.is_empty() {
+            return Ok(ProofConfig {
+                proof: config.proof.commands,
+            });
         }
     }
 
@@ -338,4 +366,42 @@ pub fn schema() -> serde_json::Value {
         "events": ["proof.run"],
         "storage": ["proof.events.jsonl"]
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[test]
+    fn project_config_proof_commands_feed_legacy_registry_loader() {
+        let tmp = tempdir().expect("tempdir");
+        let decapod_dir = tmp.path().join(".decapod");
+        fs::create_dir_all(&decapod_dir).expect("create decapod dir");
+        fs::write(
+            decapod_dir.join("config.toml"),
+            r#"schema_version = "1.0.0"
+
+[init]
+diagram_style = "ascii"
+entrypoints = []
+
+[repo]
+
+[proof]
+[[proof.commands]]
+name = "lint"
+command = "cargo"
+args = ["test", "--lib"]
+required = true
+"#,
+        )
+        .expect("write config");
+
+        let config = load_proof_config(tmp.path()).expect("load proof config");
+        assert_eq!(config.proof.len(), 1);
+        assert_eq!(config.proof[0].name, "lint");
+        assert_eq!(config.proof[0].args, vec!["test", "--lib"]);
+    }
 }

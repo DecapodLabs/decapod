@@ -27,13 +27,28 @@ pub struct ContextManager {
 impl ContextManager {
     pub fn new(root: &Path) -> Result<Self, error::DecapodError> {
         let config_path = root.join("CONTEXT.json");
-        let config = if config_path.exists() {
+        let mut config = if config_path.exists() {
             let content = fs::read_to_string(config_path).map_err(error::DecapodError::IoError)?;
             serde_json::from_str(&content)
                 .map_err(|e| error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=CONTEXT_CONFIG_PARSE severity=transient auto_remediable=true audience=agent agent_action=\"verify the CONTEXT.json syntax and schema\" user_note=\"Context configuration parse error; the agent should correct the JSON format.\"\n{e}")))?
         } else {
             Self::default_config()
         };
+
+        // Guided init declarations are additive inputs to the existing context
+        // profile. They do not replace CONTEXT.json or create a second authority.
+        let project_config_path = root.join(".decapod").join("config.toml");
+        if project_config_path.exists()
+            && let Ok(project) = crate::cli::DecapodProjectConfig::load(root)
+            && let Some(main) = config.profiles.get_mut("main")
+        {
+            for source in project.context.declared_sources {
+                if !main.required_files.contains(&source) {
+                    main.required_files.push(source);
+                }
+            }
+            main.required_files.sort();
+        }
 
         Ok(Self {
             root: root.to_path_buf(),

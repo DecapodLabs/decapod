@@ -19,6 +19,8 @@ pub struct GatekeeperConfig {
     pub allow_paths: Vec<String>,
     /// Paths that are blocked
     pub block_paths: Vec<String>,
+    /// Repository-relative paths that require a protected-path finding
+    pub protected_paths: Vec<String>,
     /// Enable secret scanning
     pub scan_secrets: bool,
     /// Enable dangerous pattern detection
@@ -36,6 +38,7 @@ impl Default for GatekeeperConfig {
                 "**/secrets/**".to_string(),
                 "**/.credentials".to_string(),
             ],
+            protected_paths: Vec::new(),
             scan_secrets: true,
             scan_dangerous_patterns: true,
         }
@@ -64,6 +67,7 @@ pub enum ViolationKind {
     DiffTooLarge,
     SecretDetected,
     DangerousPattern,
+    ProtectedPath,
 }
 
 impl std::fmt::Display for ViolationKind {
@@ -73,6 +77,7 @@ impl std::fmt::Display for ViolationKind {
             Self::DiffTooLarge => write!(f, "Diff too large"),
             Self::SecretDetected => write!(f, "Secret detected"),
             Self::DangerousPattern => write!(f, "Dangerous pattern"),
+            Self::ProtectedPath => write!(f, "Protected path"),
         }
     }
 }
@@ -103,6 +108,17 @@ pub fn run_gatekeeper(
     for path in paths {
         let path_str = path.to_string_lossy();
 
+        for pattern in &config.protected_paths {
+            if glob_match(pattern, &path_str) {
+                violations.push(Violation {
+                    kind: ViolationKind::ProtectedPath,
+                    path: path.clone(),
+                    line: None,
+                    message: format!("Path is protected by guided init policy: {pattern}"),
+                });
+            }
+        }
+
         // Check blocklist first
         for pattern in &config.block_paths {
             if glob_match(pattern, &path_str) {
@@ -128,6 +144,16 @@ pub fn run_gatekeeper(
 
     let passed = violations.is_empty();
     Ok(GateResult { passed, violations })
+}
+
+impl GatekeeperConfig {
+    pub fn from_repo_config(repo_root: &Path) -> Self {
+        let mut config = Self::default();
+        if let Ok(project) = crate::cli::DecapodProjectConfig::load(repo_root) {
+            config.protected_paths = project.governance.protected_paths;
+        }
+        config
+    }
 }
 
 /// Scan files for secrets
@@ -278,6 +304,7 @@ fn glob_match(pattern: &str, text: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn test_glob_match() {
@@ -324,5 +351,25 @@ mod tests {
         assert!(config.scan_secrets);
         assert!(config.scan_dangerous_patterns);
         assert!(!config.block_paths.is_empty());
+    }
+
+    #[test]
+    fn protected_paths_produce_typed_findings() {
+        let tmp = tempdir().expect("tempdir");
+        std::fs::write(tmp.path().join("README.md"), "safe\n").expect("write fixture");
+        let config = GatekeeperConfig {
+            protected_paths: vec!["README.md".to_string()],
+            ..GatekeeperConfig::default()
+        };
+
+        let result = run_gatekeeper(tmp.path(), &[PathBuf::from("README.md")], 0, &config)
+            .expect("run gatekeeper");
+        assert!(!result.passed);
+        assert!(
+            result
+                .violations
+                .iter()
+                .any(|violation| violation.kind == ViolationKind::ProtectedPath)
+        );
     }
 }

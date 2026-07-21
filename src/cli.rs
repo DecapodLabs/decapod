@@ -11,7 +11,7 @@ use crate::plugins::{
 
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Component, Path, PathBuf};
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -210,6 +210,30 @@ pub(crate) struct InitGroupCli {
     /// in this repository.
     #[clap(long = "no-container-workspaces", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub container_workspaces: bool,
+    /// Protect repository-relative paths from agent mutations (repeatable/comma-separated).
+    #[clap(long = "protected-path", value_delimiter = ',')]
+    pub protected_paths: Vec<String>,
+    /// Approval classifier names to enable (repeatable/comma-separated).
+    #[clap(long = "approval-category", value_delimiter = ',')]
+    pub approval_categories: Vec<String>,
+    /// Configure the local isolation mode: worktree or container.
+    #[clap(long, value_enum)]
+    pub isolation_mode: Option<IsolationMode>,
+    /// External tracker provider metadata (for example, beads).
+    #[clap(long)]
+    pub tracker_provider: Option<String>,
+    /// External tracker project metadata (non-secret).
+    #[clap(long)]
+    pub tracker_project: Option<String>,
+    /// External tracker URL metadata (non-secret).
+    #[clap(long)]
+    pub tracker_url: Option<String>,
+    /// Repository-relative context source (repeatable/comma-separated).
+    #[clap(long = "declared-context-source", value_delimiter = ',')]
+    pub declared_context_sources: Vec<String>,
+    /// Proof command in `name=command` form (repeatable/comma-separated).
+    #[clap(long = "proof-command", value_delimiter = ',')]
+    pub proof_commands: Vec<String>,
     /// Init storage boundary: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud mode records non-secret Decapod Cloud intent in `.decapod/config.toml`.
@@ -315,6 +339,30 @@ pub(crate) struct InitWithCli {
     /// in this repository.
     #[clap(long = "no-container-workspaces", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub container_workspaces: bool,
+    /// Protect repository-relative paths from agent mutations (repeatable/comma-separated).
+    #[clap(long = "protected-path", value_delimiter = ',')]
+    pub protected_paths: Vec<String>,
+    /// Approval classifier names to enable (repeatable/comma-separated).
+    #[clap(long = "approval-category", value_delimiter = ',')]
+    pub approval_categories: Vec<String>,
+    /// Configure the local isolation mode: worktree or container.
+    #[clap(long, value_enum)]
+    pub isolation_mode: Option<IsolationMode>,
+    /// External tracker provider metadata (for example, beads).
+    #[clap(long)]
+    pub tracker_provider: Option<String>,
+    /// External tracker project metadata (non-secret).
+    #[clap(long)]
+    pub tracker_project: Option<String>,
+    /// External tracker URL metadata (non-secret).
+    #[clap(long)]
+    pub tracker_url: Option<String>,
+    /// Repository-relative context source (repeatable/comma-separated).
+    #[clap(long = "declared-context-source", value_delimiter = ',')]
+    pub declared_context_sources: Vec<String>,
+    /// Proof command in `name=command` form (repeatable/comma-separated).
+    #[clap(long = "proof-command", value_delimiter = ',')]
+    pub proof_commands: Vec<String>,
     /// Init storage boundary: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud mode records non-secret Decapod Cloud intent in `.decapod/config.toml`.
@@ -341,6 +389,16 @@ pub struct DecapodProjectConfig {
     pub schema_version: String,
     pub init: InitConfigSection,
     pub repo: RepoContext,
+    #[serde(default)]
+    pub governance: GovernanceConfig,
+    #[serde(default)]
+    pub proof: crate::core::proof::ProjectProofConfig,
+    #[serde(default)]
+    pub custody: CustodyConfig,
+    #[serde(default)]
+    pub tracker: TrackerConfig,
+    #[serde(default)]
+    pub context: DeclaredContextConfig,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cloud: Option<CloudConfigSection>,
 }
@@ -365,6 +423,104 @@ pub enum BackendType {
     #[default]
     Local,
     Cloud,
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq, clap::ValueEnum)]
+#[serde(rename_all = "lowercase")]
+pub enum IsolationMode {
+    Worktree,
+    #[default]
+    Container,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct GovernanceConfig {
+    #[serde(default)]
+    pub protected_paths: Vec<String>,
+    #[serde(default)]
+    pub approval_categories: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct CustodyConfig {
+    #[serde(default)]
+    pub isolation: IsolationMode,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TrackerConfig {
+    #[serde(default = "default_tracker_provider")]
+    pub provider: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub project: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+}
+
+fn default_tracker_provider() -> String {
+    "decapod".to_string()
+}
+
+impl Default for TrackerConfig {
+    fn default() -> Self {
+        Self {
+            provider: default_tracker_provider(),
+            project: None,
+            url: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct DeclaredContextConfig {
+    #[serde(default)]
+    pub declared_sources: Vec<String>,
+}
+
+/// Canonicalize a repository-relative path used by governance configuration.
+/// Absolute paths and traversal are rejected before any consumer sees them.
+pub fn canonical_repo_relative_path(raw: &str) -> Result<String, String> {
+    let normalized = raw.trim().replace('\\', "/");
+    if normalized.is_empty() {
+        return Err("path must not be empty".to_string());
+    }
+    let path = Path::new(&normalized);
+    if path.is_absolute() {
+        return Err(format!("path must be repository-relative: {raw}"));
+    }
+    let mut parts = Vec::new();
+    for component in path.components() {
+        match component {
+            Component::CurDir => {}
+            Component::Normal(part) => parts.push(part.to_string_lossy().to_string()),
+            Component::ParentDir | Component::RootDir | Component::Prefix(_) => {
+                return Err(format!("path must not escape the repository: {raw}"));
+            }
+        }
+    }
+    if parts.is_empty() {
+        return Err(format!(
+            "path must name a repository file or directory: {raw}"
+        ));
+    }
+    Ok(parts.join("/"))
+}
+
+pub fn canonical_repo_relative_paths(raw: &[String]) -> Result<Vec<String>, String> {
+    let mut paths = raw
+        .iter()
+        .map(|path| canonical_repo_relative_path(path))
+        .collect::<Result<Vec<_>, _>>()?;
+    paths.sort();
+    for pair in paths.windows(2) {
+        if pair[0] == pair[1] {
+            return Err(format!("duplicate repository-relative path: {}", pair[0]));
+        }
+    }
+    Ok(paths)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -497,6 +653,11 @@ impl Default for DecapodProjectConfig {
                 ],
             },
             repo: RepoContext::default(),
+            governance: GovernanceConfig::default(),
+            proof: crate::core::proof::ProjectProofConfig::default(),
+            custody: CustodyConfig::default(),
+            tracker: TrackerConfig::default(),
+            context: DeclaredContextConfig::default(),
             cloud: None,
         }
     }
