@@ -22,7 +22,20 @@ Decapod keeps generated specs synchronized at governance pressure points. When r
 - Blend repo context into existing canonical spec files
 - Update `.decapod/generated/specs/.manifest.json` after writing files
 - Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set## Release-Bound Agent Entrypoint Integrity
-The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and compiled binary SHA-256; `.decapod/generated/specs/.manifest.json` records the same release identity plus `template_hash` and `content_hash` entries for `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md`. Default validation independently checks the compiled release contract, declared metadata, canonical payload, regular-file type, and manifest synchronization. Regeneration must be explicit through the installed Decapod release.
+The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and compiled binary SHA-256; `.decapod/generated/specs/.manifest.json` records the same release identity plus `template_hash` and `content_hash` entries for `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md`. Default validation independently checks the compiled release contract, declared metadata, canonical payload, regular-file type, and manifest synchronization. Regeneration must be explicit through the installed Decapod release.## Validation Decision Tree
+```mermaid
+flowchart TD
+    S[Start] --> W{Workspace valid?}
+    W -->|No| F1[Fail: workspace gate]
+    W -->|Yes| T{Tests pass?}
+    T -->|No| F2[Fail: test gate]
+    T -->|Yes| D{Docs + diagrams + changelog updated?}
+    D -->|No| F3[Fail: docs gate]
+    D -->|Yes| V[Run decapod validate]
+    V --> P{All blocking gates pass?}
+    P -->|No| F4[Fail: promotion blocked]
+    P -->|Yes| E[Emit promotion evidence]
+```
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -63,21 +76,6 @@ The four generated agent entrypoints are release-bound projections of the instal
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Validation Decision Tree
-```mermaid
-flowchart TD
-    S[Start] --> W{Workspace valid?}
-    W -->|No| F1[Fail: workspace gate]
-    W -->|Yes| T{Tests pass?}
-    T -->|No| F2[Fail: test gate]
-    T -->|Yes| D{Docs + diagrams + changelog updated?}
-    D -->|No| F3[Fail: docs gate]
-    D -->|Yes| V[Run decapod validate]
-    V --> P{All blocking gates pass?}
-    P -->|No| F4[Fail: promotion blocked]
-    P -->|Yes| E[Emit promotion evidence]
-```
 
 ## Promotion Flow
 ```mermaid
@@ -328,7 +326,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `75c769e66f817ade819bd8dd4cfaa1f3d9f94c216ecca63044dad5fa0f498546`
+- Repository signal fingerprint: `03887afc79f7c6e3712ce77dde727f9df044f2389285346046bf938de7353c1d`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

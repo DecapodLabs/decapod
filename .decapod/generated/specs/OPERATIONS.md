@@ -44,7 +44,30 @@ Operational ownership follows the declared surfaces: session/authentication and 
 | Workspace creation fails > 3x | Warning | Check git/docker availability; run `decapod system doctor` |
 | SQLite `DatabaseLocked` > 5 retries | Warning | Check concurrent agents; run `decapod workspace prune` |
 | Capsule policy lineage mismatch | Critical | Block publish; re-run `decapod govern capsule query --write` |
-| Specs manifest out of sync | Warning | Run `decapod validate --refresh-specs` |
+| Specs manifest out of sync | Warning | Run `decapod validate --refresh-specs` |## Health Checks
+
+### Liveness
+- `decapod system doctor` — Preflight checks (git, docker, config, store health)
+- `decapod capabilities` — Binary functional + version check
+- `decapod validate --store user` — Blank-slate store validation
+
+### Readiness
+- `decapod workspace status` — Can work in current directory?
+- `decapod session status` — Valid session token?
+- `decapod validate --store repo` — Repo store healthy?
+
+### Dependency Health
+- Git: `git rev-parse --is-inside-work-tree`
+- Docker: `docker version` / `podman version`
+- Crates.io: `curl https://crates.io/api/v1/crates/decapod` (cached 24h)
+- Store: `storage_health_preflight` (fs type, writability, tmpdir)
+
+### Synthetic Transaction
+```bash
+# Full governance loop smoke test
+decapod init --force --dry-run --dir /tmp/smoke-test
+cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decapod todo claim --id <id> && decapod workspace ensure && decapod validate
+```
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -82,31 +105,6 @@ Operational ownership follows the declared surfaces: session/authentication and 
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Health Checks
-
-### Liveness
-- `decapod system doctor` — Preflight checks (git, docker, config, store health)
-- `decapod capabilities` — Binary functional + version check
-- `decapod validate --store user` — Blank-slate store validation
-
-### Readiness
-- `decapod workspace status` — Can work in current directory?
-- `decapod session status` — Valid session token?
-- `decapod validate --store repo` — Repo store healthy?
-
-### Dependency Health
-- Git: `git rev-parse --is-inside-work-tree`
-- Docker: `docker version` / `podman version`
-- Crates.io: `curl https://crates.io/api/v1/crates/decapod` (cached 24h)
-- Store: `storage_health_preflight` (fs type, writability, tmpdir)
-
-### Synthetic Transaction
-```bash
-# Full governance loop smoke test
-decapod init --force --dry-run --dir /tmp/smoke-test
-cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decapod todo claim --id <id> && decapod workspace ensure && decapod validate
-```
 
 ## Incident Response
 
@@ -270,7 +268,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `75c769e66f817ade819bd8dd4cfaa1f3d9f94c216ecca63044dad5fa0f498546`
+- Repository signal fingerprint: `03887afc79f7c6e3712ce77dde727f9df044f2389285346046bf938de7353c1d`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
