@@ -1817,6 +1817,11 @@ pub fn scaffold_project_entrypoints(
         let existing_manifest = read_specs_manifest(&opts.target_dir).ok().flatten();
 
         let seed = opts.specs_seed.as_ref();
+        let current_config_hash = if opts.target_dir.join(".decapod/config.toml").exists() {
+            config_input_hash(&opts.target_dir).unwrap_or_default()
+        } else {
+            String::new()
+        };
         let mut specs_files: Vec<(&str, String)> = Vec::new();
         for spec in LOCAL_PROJECT_SPECS {
             let Some(mut content) =
@@ -1852,6 +1857,9 @@ pub fn scaffold_project_entrypoints(
                 let manifest_entry = existing_manifest
                     .as_ref()
                     .and_then(|m| m.files.iter().find(|f| f.path == rel_path));
+                let scaffold_inputs_changed = existing_manifest
+                    .as_ref()
+                    .is_some_and(|manifest| manifest.config_input_hash != current_config_hash);
                 let reconciled_existing = reconcile_capability_overlays(
                     rel_path,
                     existing_str.clone(),
@@ -1871,17 +1879,18 @@ pub fn scaffold_project_entrypoints(
                         // human edit after the first run refreshed the
                         // manifest.
                         .map(|e| {
-                            existing_hash == e.content_hash && e.content_hash == e.template_hash
+                            existing_hash == e.content_hash
+                                && (e.content_hash == e.template_hash || scaffold_inputs_changed)
                         })
                         .unwrap_or(false);
 
                 // Living specs are project-owned contracts. `--force` may repair
                 // missing scaffold files or update untouched files, but must not replace authored content.
                 if opts.force && (is_untouched || capability_update_needed) {
-                    let desired_content = if capability_update_needed {
-                        reconciled_existing
-                    } else {
+                    let desired_content = if is_untouched {
                         content.clone()
+                    } else {
+                        reconciled_existing
                     };
                     match write_file(opts, rel_path, &desired_content)? {
                         FileAction::Created => created += 1,

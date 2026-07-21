@@ -203,7 +203,12 @@ pub fn config_input_hash(project_root: &Path) -> Result<String, error::DecapodEr
     let canonical = serde_json::to_vec(&config).map_err(|e| {
         error::DecapodError::ValidationError(format!("Failed to canonicalize config.toml: {e}"))
     })?;
-    Ok(hash_text(&String::from_utf8_lossy(&canonical)))
+    let override_content =
+        fs::read_to_string(project_root.join(".decapod/OVERRIDE.md")).unwrap_or_default();
+    let mut input = String::from_utf8_lossy(&canonical).into_owned();
+    input.push_str("\n-- OVERRIDE.md --\n");
+    input.push_str(&override_content);
+    Ok(hash_text(&input))
 }
 
 pub fn spec_input_hash(project_root: &Path) -> Result<String, error::DecapodError> {
