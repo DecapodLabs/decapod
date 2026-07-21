@@ -1173,6 +1173,18 @@ impl MentorEngine {
     }
 }
 
+/// Convert obligations to RPC blockers (for contradictions)
+pub fn contradictions_to_blockers(contradictions: &[Contradiction]) -> Vec<Blocker> {
+    contradictions
+        .iter()
+        .map(|c| Blocker {
+            kind: BlockerKind::Conflict,
+            message: c.description.clone(),
+            resolve_hint: c.resolution_hint.clone(),
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::{MentorEngine, is_decapod_workspace_dockerfile};
@@ -1207,16 +1219,4 @@ mod tests {
             &fs::read_to_string(dockerfile).unwrap()
         ));
     }
-}
-
-/// Convert obligations to RPC blockers (for contradictions)
-pub fn contradictions_to_blockers(contradictions: &[Contradiction]) -> Vec<Blocker> {
-    contradictions
-        .iter()
-        .map(|c| Blocker {
-            kind: BlockerKind::Conflict,
-            message: c.description.clone(),
-            resolve_hint: c.resolution_hint.clone(),
-        })
-        .collect()
 }
