@@ -5,7 +5,9 @@
 //! - Embedded methodology documents
 
 use crate::core::assets;
-use crate::core::capabilities::{CapabilityRegistry, apply_capability_overlays};
+use crate::core::capabilities::{
+    CapabilityRegistry, apply_capability_overlays, reconcile_capability_overlays,
+};
 use crate::core::capsule_policy::{GENERATED_POLICY_REL_PATH, default_policy_json_pretty};
 use crate::core::error;
 use crate::core::project_specs::{
@@ -1850,6 +1852,12 @@ pub fn scaffold_project_entrypoints(
                 let manifest_entry = existing_manifest
                     .as_ref()
                     .and_then(|m| m.files.iter().find(|f| f.path == rel_path));
+                let reconciled_existing = reconcile_capability_overlays(
+                    rel_path,
+                    existing_str.clone(),
+                    &opts.capabilities,
+                );
+                let capability_update_needed = reconciled_existing != existing_str;
 
                 // A spec file is untouched if its current content hash matches the new template hash,
                 // the content matches, or it matches the content hash recorded in the existing manifest.
@@ -1869,13 +1877,18 @@ pub fn scaffold_project_entrypoints(
 
                 // Living specs are project-owned contracts. `--force` may repair
                 // missing scaffold files or update untouched files, but must not replace authored content.
-                if opts.force && is_untouched {
-                    match write_file(opts, rel_path, &content)? {
+                if opts.force && (is_untouched || capability_update_needed) {
+                    let desired_content = if capability_update_needed {
+                        reconciled_existing
+                    } else {
+                        content.clone()
+                    };
+                    match write_file(opts, rel_path, &desired_content)? {
                         FileAction::Created => created += 1,
                         FileAction::Unchanged => unchanged += 1,
                         FileAction::Preserved => preserved += 1,
                     }
-                    final_content_hash = hash_text(&content);
+                    final_content_hash = hash_text(&desired_content);
                 } else {
                     final_content_hash = existing_hash.clone();
                     if existing_hash == hash_text(&content) {
