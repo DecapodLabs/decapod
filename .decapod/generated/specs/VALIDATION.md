@@ -1,6 +1,15 @@
 # Validation## Capability Proof Requirements
 
-When `persistent-state` is declared, validation executes the human-governed `[repo.migration_validation]` command from `.decapod/config.toml`. The command defines its arguments, repository-relative working directory, timeout, expected exit code, and bounded evidence output. A non-empty migration file or recognized migration layout never satisfies this gate independently. Missing configuration, startup failure, timeout, unexpected exit status, or evidence-recording failure blocks validation.
+When `persistent-state` is declared, validation executes the human-governed `[repo.migration_validation]` command from `.decapod/config.toml`. The command defines its arguments, repository-relative working directory, timeout, expected exit code, and bounded evidence output. A non-empty migration file or recognized migration layout never satisfies this gate independently. Missing configuration, startup failure, timeout, unexpected exit status, or evidence-recording failure blocks validation.## Validation Philosophy
+> Validation is a release gate, not documentation theater.## Validation Harness
+Decapod's validation suite (`src/core/validate.rs`) enforces methodology compliance through deterministic, bounded gates.
+
+### Key Features
+- **Automated Gates**: 20+ validation gates covering workspace, store, schema, entrypoints, specs, health, generated artifacts
+- **Auto-Remediable Errors**: Structured error codes with `agent_action` and `user_note` for self-correction
+- **Bounded Execution**: `INV-BOUNDED-VALIDATE` — validation terminates within 30s
+- **Spec Refresh**: `--refresh-specs` regenerates stale scaffold templates
+- **Dual Store Modes**: `user` (blank slate) and `repo` (dogfood backlog)
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -41,19 +50,6 @@ When `persistent-state` is declared, validation executes the human-governed `[re
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Validation Philosophy
-> Validation is a release gate, not documentation theater.
-
-## Validation Harness
-Decapod's validation suite (`src/core/validate.rs`) enforces methodology compliance through deterministic, bounded gates.
-
-### Key Features
-- **Automated Gates**: 20+ validation gates covering workspace, store, schema, entrypoints, specs, health, generated artifacts
-- **Auto-Remediable Errors**: Structured error codes with `agent_action` and `user_note` for self-correction
-- **Bounded Execution**: `INV-BOUNDED-VALIDATE` — validation terminates within 30s
-- **Spec Refresh**: `--refresh-specs` regenerates stale scaffold templates
-- **Dual Store Modes**: `user` (blank slate) and `repo` (dogfood backlog)
 
 ## Generated Spec Refresh Gates
 Decapod keeps generated specs synchronized at governance pressure points. When repository surfaces change, validation either fails with a concrete refresh instruction or, when explicitly requested, regenerates spec files and updates the manifest fingerprint.
@@ -336,7 +332,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e7da5369d966ae4d12e0392afe8fb4a36394fbdfadb1aac1703792de88263225`
+- Repository signal fingerprint: `b4d094742c96fe993853e27ef3f1a2de1000f81fbaf202222ade966a9cc04daa`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
