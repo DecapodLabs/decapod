@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.13](https://github.com/DecapodLabs/decapod/compare/v0.72.12...v0.72.13) - 2026-07-21
+
+### Added
+
+- apply envelope adherence to interface nodes
+- enforce v2 interfaces constitution doctrine
+
+### Other
+
+- keep interface constitution version neutral
+- refresh v0.72.12 governance fingerprints
+- design aggressive interfaces v2 contract
+
 ## [0.72.12](https://github.com/DecapodLabs/decapod/compare/v0.72.11...v0.72.12) - 2026-07-21
 
 ### Added
