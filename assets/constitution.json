@@ -16283,9 +16283,14 @@
         "invocation"
       ],
       "links": {
-        "references": [],
+        "references": [
+          "specs/skills/SKILL_GOVERNANCE",
+          "metadata/skills/AGENT_DECAPOD_INTERFACE",
+          "interfaces/KNOWLEDGE_SCHEMA"
+        ],
         "referenced_by": [
-          "docs/SKILL_TRANSLATION_MAP"
+          "docs/SKILL_TRANSLATION_MAP",
+          "core/METADATA"
         ]
       },
       "sections": {
@@ -16315,6 +16320,121 @@
         "proceed_when": [
           "Proceed when the skill bundle is correctly categorized and dependencies are resolved."
         ]
+      },
+      "architect_notes": [
+        "Treat metadata/skills/BUNDLE as a discovery and dependency contract, not as permission to load every skill in a category. A bundle owns its purpose, membership, prerequisites, authority, and lifecycle.",
+        "Bundle metadata should remain stable enough for retrieval while versioning the dependency and invocation assumptions that can change agent behavior.",
+        "Architect-grade bundle guidance makes selection, dependency resolution, and proof of relevance explicit so a focused task does not inherit unrelated context or hidden mutations."
+      ],
+      "init_questions": [
+        {
+          "id": "bundle_boundary",
+          "prompt": "What capability family does this bundle own, and which skills are intentionally outside its retrieval boundary?",
+          "why": "A named boundary prevents god bundles and makes future lookup behavior predictable for agents and reviewers.",
+          "answers": [
+            "one capability family",
+            "cross-cutting workflow",
+            "migration bundle",
+            "ask human",
+            "defer explicitly"
+          ]
+        },
+        {
+          "id": "dependency_proof",
+          "prompt": "Which prerequisites, versions, authority rules, and compatibility checks must pass before the bundle can be invoked?",
+          "why": "Dependencies are part of bundle correctness; missing or circular prerequisites can produce unsafe or incomplete agent behavior.",
+          "answers": [
+            "manifest check",
+            "schema check",
+            "skill lookup",
+            "human approval",
+            "run proof"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Extend an existing bundle",
+          "use_when": "The new skill serves the existing capability family and shares its lifecycle, authority, and dependency contract.",
+          "avoid_when": "The skill changes risk, ownership, invocation order, or retrieval scope enough to surprise current consumers.",
+          "implications": "Update the manifest, lookup terms, dependency proof, and affected specs together; preserve the existing bundle's stable identifiers."
+        },
+        {
+          "choice": "Create a focused bundle",
+          "use_when": "The skill group has a distinct user outcome, owner, authority boundary, or dependency graph.",
+          "avoid_when": "The split only reflects naming preference and would duplicate retrieval context or lifecycle rules.",
+          "implications": "Define purpose, members, prerequisites, exclusions, version policy, and a proof that selection avoids irrelevant skills."
+        },
+        {
+          "choice": "Defer bundle invocation",
+          "use_when": "Membership, dependency version, authority, or required capability is not verified.",
+          "avoid_when": "The bundle is already explicit, bounded, and has a deterministic local proof path.",
+          "implications": "Record the missing metadata and stop selection rather than treating labels or descriptions as execution authority."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "bundle breadth versus retrieval precision",
+          "option_a": "Group related skills for convenient discovery.",
+          "option_b": "Keep bundles narrow and compose them explicitly.",
+          "guidance": "Prefer the smallest bundle that changes the next action; compose only when the dependency and proof path are visible."
+        },
+        {
+          "axis": "stable identifiers versus evolving membership",
+          "option_a": "Preserve bundle identity while versioning membership.",
+          "option_b": "Create a new bundle when membership semantics change.",
+          "guidance": "Use compatibility and authority impact, not file count, to decide whether a bundle can evolve in place."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture the bundle owner, purpose, member skills, exclusions, dependency graph, authority tier, version policy, and invocation trigger.",
+          "Record the lookup terms and proof artifact that demonstrate the bundle is relevant to the intended task."
+        ],
+        "generate": [
+          "Generate a manifest with stable identity, purpose, members, prerequisites, compatibility notes, and deterministic lookup terms.",
+          "Generate dependency and selection tests before adding optional skills, automatic composition, or broad retrieval aliases."
+        ],
+        "defer": [
+          "Defer automatic bundle composition, transitive loading, and provider-specific metadata until ownership and dependency semantics are proven.",
+          "Do not let a bundle manifest authorize control-plane mutations, network access, or high-risk actions."
+        ],
+        "proof": [
+          "Resolve the bundle from representative queries and prove required members, exclusions, dependency order, and missing-prerequisite behavior.",
+          "Repeat lookup and manifest compilation from a clean workspace to prove stable output and detect stale references."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record the user outcome and capability family that justify the bundle, along with explicit non-goals for unrelated skills or workflows.",
+          "Preserve unresolved membership and dependency questions rather than inferring a broad bundle from similar names."
+        ],
+        "architecture": [
+          "Record bundle ownership, retrieval boundary, lifecycle, dependency graph, authority tier, and version compatibility.",
+          "Link bundle architecture to the concrete skill and control-plane or governance doctrine that owns invocation behavior."
+        ],
+        "interfaces": [
+          "Record manifest fields, bundle identifiers, member references, dependency versions, lookup terms, and selection outputs as compatibility surfaces.",
+          "Keep descriptive metadata separate from interfaces that grant authority or mutate Decapod state."
+        ],
+        "proof": [
+          "Map bundle selection and dependency handling to manifest, lookup, schema, and clean-replay evidence.",
+          "Validation must expose broken references, cycles, missing prerequisites, or unstable bundle output."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The bundle remains discoverable through metadata lookup terms and links to skill governance and relevant interfaces.",
+          "Structured bundle doctrine survives schema validation and embedded constitution lookup."
+        ],
+        "runtime": [
+          "A representative task can select, reject, or defer a bundle using explicit purpose and dependency evidence.",
+          "Runtime selection does not load unrelated context or bypass the control-plane authority boundary."
+        ],
+        "release": [
+          "Release evidence names bundle ownership, member versions, dependency assumptions, and stale-reference checks.",
+          "Generated specs are refreshed when bundle metadata changes retrieval, interfaces, authority, operations, or validation behavior."
+        ]
       }
     },
     "metadata/skills/AGENT_DECAPOD_INTERFACE": {
@@ -16332,8 +16452,14 @@
         "control plane"
       ],
       "links": {
-        "references": [],
-        "referenced_by": []
+        "references": [
+          "interfaces/CONTROL_PLANE",
+          "interfaces/AGENT_CONTEXT_PACK",
+          "specs/skills/SKILL_GOVERNANCE"
+        ],
+        "referenced_by": [
+          "core/METADATA"
+        ]
       },
       "sections": {
         "match": [
@@ -16362,6 +16488,121 @@
         "proceed_when": [
           "Proceed when the interface skill is semantically linked to the correct CLI/RPC surface."
         ]
+      },
+      "architect_notes": [
+        "Treat metadata/skills/AGENT_DECAPOD_INTERFACE as descriptive guidance for how an agent discovers and respects Decapod CLI, RPC, receipts, context packs, and state boundaries; it does not replace the machine contract.",
+        "Interface metadata must preserve provenance to the command or schema it describes and must distinguish retrieval hints from authority, authentication, or proof claims.",
+        "Architect-grade interface metadata makes sequencing, payload interpretation, failure recovery, and control-plane custody discoverable without encouraging agents to bypass Decapod."
+      ],
+      "init_questions": [
+        {
+          "id": "interface_authority",
+          "prompt": "Which canonical command, RPC operation, schema, or receipt field does this metadata describe, and who owns that contract?",
+          "why": "An explicit authority source prevents stale skill cards from becoming an accidental replacement for executable interface contracts.",
+          "answers": [
+            "CLI contract",
+            "RPC schema",
+            "receipt or proof",
+            "context pack",
+            "ask human"
+          ]
+        },
+        {
+          "id": "failure_recovery",
+          "prompt": "What should an agent do when the described command is unavailable, rejects the payload, or returns a governance interlock?",
+          "why": "Metadata is useful only when it carries the safe next action and does not turn an error into permission to guess.",
+          "answers": [
+            "follow error recovery",
+            "query schema",
+            "stop for human",
+            "record blocker",
+            "run proof"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Link metadata to an existing contract",
+          "use_when": "The command, RPC operation, schema, or receipt surface already exists and the metadata improves discovery or interpretation.",
+          "avoid_when": "The metadata would introduce fields, sequencing, or guarantees absent from the canonical contract.",
+          "implications": "Record the exact authority reference, supported version, failure recovery, and proof that the card remains aligned."
+        },
+        {
+          "choice": "Add a new interface metadata card",
+          "use_when": "A stable interface exists but agents cannot find or safely interpret it from current retrieval terms.",
+          "avoid_when": "The underlying interface is still ambiguous, experimental, or owned by an unreviewed external artifact.",
+          "implications": "Define scope, provenance, non-guarantees, compatible payload examples, and the adjacent interface doctrine before publication."
+        },
+        {
+          "choice": "Stop on authority mismatch",
+          "use_when": "The card conflicts with the current CLI/RPC schema, claims proof it cannot produce, or omits a required custody boundary.",
+          "avoid_when": "The difference is only a documented, versioned presentation alias with unchanged semantics.",
+          "implications": "Prefer the executable contract, record the drift, and do not infer a workaround from metadata alone."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "discoverability versus contract duplication",
+          "option_a": "Add rich metadata and examples for agent retrieval.",
+          "option_b": "Keep metadata thin and defer to the canonical schema.",
+          "guidance": "Add enough context to choose and recover safely, but keep payload and authority truth in the command contracts and schemas."
+        },
+        {
+          "axis": "automation versus custody",
+          "option_a": "Let metadata suggest a next Decapod operation.",
+          "option_b": "Require explicit proof and session/permission checks before mutation.",
+          "guidance": "Metadata may route and explain; it must never imply that a suggested mutation is authorized or verified."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture the canonical interface reference, supported release, payload or receipt shape, authority owner, failure modes, and safe recovery path.",
+          "Record which agent-facing lookup terms are needed and which claims the metadata intentionally does not make."
+        ],
+        "generate": [
+          "Generate a metadata card linked to the command contract, schema, or embedded doctrine with examples that remain semantically subordinate to it.",
+          "Generate alignment tests for operation names, schema references, receipt fields, and documented recovery guidance."
+        ],
+        "defer": [
+          "Defer metadata for undocumented, experimental, provider-authenticated, or high-risk behavior until the underlying contract and proof surface exist.",
+          "Do not generate alternate RPC protocols, authentication claims, or hidden state writes from an interface card."
+        ],
+        "proof": [
+          "Resolve the card from representative agent queries and compare its references and examples with the canonical command/schema output.",
+          "Exercise a valid call and a typed failure or interlock to prove the metadata leads to safe recovery rather than guesswork."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record the agent outcome the metadata supports and the non-goals that keep it from changing Decapod behavior or authority.",
+          "Preserve uncertainty about contract ownership, release compatibility, and proof instead of turning an interface hint into a guarantee."
+        ],
+        "architecture": [
+          "Record the owning CLI/RPC boundary, schema source, context-pack role, lifecycle, and failure recovery path.",
+          "Link interface metadata to interfaces/CONTROL_PLANE and the relevant specs or constitution node that owns semantics."
+        ],
+        "interfaces": [
+          "Record operation identifiers, payload schemas, receipt fields, compatibility notes, and error/interlock mappings that agents must treat as contracts.",
+          "State clearly which values are claims, which are command output, and which are verified proof artifacts."
+        ],
+        "proof": [
+          "Map metadata alignment to schema validation, command help or RPC output, typed failure, and embedded lookup evidence.",
+          "Validation should expose stale references or authority claims that cannot be traced to the current interface contract."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The card remains discoverable through metadata lookup terms and linked to the canonical control-plane and context-pack contracts.",
+          "Structured interface metadata survives schema validation and embedded constitution lookup."
+        ],
+        "runtime": [
+          "A representative agent can use the card to select a valid Decapod operation and recover from a typed failure without bypassing custody.",
+          "Runtime proof distinguishes metadata guidance from the executable command and its returned receipt."
+        ],
+        "release": [
+          "Release evidence names the supported Decapod version, contract owner, stale-reference checks, and unverified interface claims.",
+          "Generated specs are refreshed when interface metadata changes commands, schemas, authority, operations, or validation behavior."
+        ]
       }
     },
     "metadata/skills/HUMAN_AGENT_UX": {
@@ -16379,8 +16620,14 @@
         "safety"
       ],
       "links": {
-        "references": [],
-        "referenced_by": []
+        "references": [
+          "metadata/skills/INTENT_REFINEMENT",
+          "interfaces/PROJECT_SPECS",
+          "core/DECAPOD"
+        ],
+        "referenced_by": [
+          "core/METADATA"
+        ]
       },
       "sections": {
         "match": [
@@ -16409,6 +16656,121 @@
         "proceed_when": [
           "Proceed when the UX skill facilitates clear intent capture and safe, humble interaction."
         ]
+      },
+      "architect_notes": [
+        "Treat metadata/skills/HUMAN_AGENT_UX as a safety and alignment descriptor: it should tell agents when to clarify, report progress, preserve uncertainty, and respect human authority.",
+        "Good UX metadata makes the stop conditions visible rather than optimizing for conversational smoothness. It must not conceal risk, fabricate confidence, or turn a preference into a binding requirement.",
+        "Architect-grade UX guidance connects clarification triggers, feedback cadence, accessibility, and escalation to intent, interface, security, and proof surfaces."
+      ],
+      "init_questions": [
+        {
+          "id": "clarification_trigger",
+          "prompt": "What missing fact, risk, authority choice, or acceptance criterion requires the agent to stop and ask the human?",
+          "why": "A UX skill is safe only when its threshold for clarification is concrete enough to prevent silent assumption drift.",
+          "answers": [
+            "material ambiguity",
+            "safety risk",
+            "authority choice",
+            "acceptance gap",
+            "no clarification needed"
+          ]
+        },
+        {
+          "id": "feedback_contract",
+          "prompt": "What progress, evidence, uncertainty, and next decision must remain visible to the human during the workflow?",
+          "why": "Feedback is part of custody; users need enough context to correct direction before an irreversible action or failed proof.",
+          "answers": [
+            "milestones",
+            "blocking risks",
+            "proof status",
+            "decision request",
+            "ask human"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Clarify before mutation",
+          "use_when": "The missing intent, authority, safety constraint, accessibility need, or acceptance criterion could change the result materially.",
+          "avoid_when": "The next step is reversible, bounded, and its assumption can be verified without changing user-visible scope.",
+          "implications": "Ask one focused question, preserve the unresolved state in the appropriate spec or issue, and wait before crossing the boundary."
+        },
+        {
+          "choice": "Proceed with visible assumptions",
+          "use_when": "The work is local and reversible, the user outcome is clear, and the proof plan can quickly falsify the assumption.",
+          "avoid_when": "The assumption affects safety, authority, durable data, public compatibility, or a costly operating decision.",
+          "implications": "State the assumption, communicate the next checkpoint, and tie completion to evidence rather than conversational confidence."
+        },
+        {
+          "choice": "Escalate a conflicting UX signal",
+          "use_when": "Speed, convenience, or tone conflicts with safety, accessibility, human authority, or truthful uncertainty.",
+          "avoid_when": "The difference is a reversible presentation preference with no impact on comprehension or custody.",
+          "implications": "Prefer the safety and clarity constraint, record the tradeoff, and ask the human when the priority cannot be inferred."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "interaction speed versus informed custody",
+          "option_a": "Minimize questions and move quickly through reversible work.",
+          "option_b": "Pause for clarification and make assumptions visible.",
+          "guidance": "Use speed only while the next action is reversible; surface questions when a wrong assumption would alter outcome, authority, or proof."
+        },
+        {
+          "axis": "concise feedback versus sufficient context",
+          "option_a": "Provide short status updates focused on the next action.",
+          "option_b": "Include risks, evidence, and decisions needed for correction.",
+          "guidance": "Prefer concise updates that still preserve uncertainty, blockers, ownership, and the evidence needed for a human to redirect work."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture user outcome, clarification threshold, accessibility or safety constraints, feedback cadence, decision owner, and escalation path.",
+          "Record the first human-visible checkpoint and the evidence that will let the user correct direction before completion."
+        ],
+        "generate": [
+          "Generate focused questions, acceptance prompts, progress checkpoints, accessible labels, and proof summaries only where the workflow needs them.",
+          "Generate a human-facing decision record when UX metadata changes authority, scope, safety, or an irreversible operation."
+        ],
+        "defer": [
+          "Defer autonomous action, silent intent expansion, irreversible mutation, and tone optimization when material ambiguity or safety risk remains.",
+          "Do not generate a UX layer that suppresses technical errors, uncertainty, accessibility requirements, or human escalation."
+        ],
+        "proof": [
+          "Exercise an ambiguous request, a clear reversible request, and a material-risk request to prove the metadata chooses ask, proceed, or stop correctly.",
+          "Review feedback for visible assumptions, blockers, proof status, and decision ownership rather than fluency alone."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record user outcomes, acceptance criteria, clarification decisions, non-goals, and unresolved questions surfaced by the UX metadata.",
+          "Preserve the human's authority and uncertainty instead of rewriting a vague request into fabricated certainty."
+        ],
+        "architecture": [
+          "Record interaction boundaries, human decision ownership, feedback checkpoints, accessibility requirements, escalation paths, and safety constraints.",
+          "Link UX decisions to metadata/skills/INTENT_REFINEMENT and the interface or security doctrine that owns the affected boundary."
+        ],
+        "interfaces": [
+          "Record prompts, status shapes, error explanations, accessibility labels, decision requests, and user-visible acceptance signals as interface contracts.",
+          "Do not let conversational metadata silently change a CLI, RPC, or public response contract."
+        ],
+        "proof": [
+          "Map UX metadata to representative clarification, proceed, escalation, accessibility, and evidence-visibility checks.",
+          "Validation should expose hidden assumptions, suppressed blockers, or feedback that cannot identify the next human decision."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The UX card remains discoverable through metadata lookup terms and links to intent refinement and project-spec contracts.",
+          "Structured human-agent UX doctrine survives schema validation and embedded constitution lookup."
+        ],
+        "runtime": [
+          "A representative task can choose clarification, visible-assumption progress, or escalation from metadata/HUMAN_AGENT_UX.",
+          "Runtime interaction preserves uncertainty and presents proof status without leaving a background process or hidden mutation."
+        ],
+        "release": [
+          "Release evidence names accessibility, safety, authority, feedback, and clarification claims that remain unverified.",
+          "Generated specs are refreshed when UX metadata changes intent, interfaces, security, operations, or validation expectations."
+        ]
       }
     },
     "metadata/skills/INTENT_REFINEMENT": {
@@ -16426,8 +16788,14 @@
         "constraints"
       ],
       "links": {
-        "references": [],
-        "referenced_by": []
+        "references": [
+          "specs/INTENT",
+          "metadata/skills/HUMAN_AGENT_UX",
+          "core/DEMANDS"
+        ],
+        "referenced_by": [
+          "core/METADATA"
+        ]
       },
       "sections": {
         "match": [
@@ -16455,6 +16823,121 @@
         ],
         "proceed_when": [
           "Proceed when raw intent is distilled into a structured set of outcomes and constraints."
+        ]
+      },
+      "architect_notes": [
+        "Treat metadata/skills/INTENT_REFINEMENT as a boundary between raw language and governed work: it extracts outcomes, constraints, non-goals, owners, and acceptance evidence without pretending to choose domain architecture prematurely.",
+        "Refinement should reduce ambiguity while preserving uncertainty. A refined intent is not complete until the human can recognize the outcome and the proof plan can falsify the interpretation.",
+        "Architect-grade intent metadata routes the next question or constitution node, names what must not be inferred, and leaves a durable trail in specs or task state."
+      ],
+      "init_questions": [
+        {
+          "id": "desired_outcome",
+          "prompt": "What observable user or operator outcome should be true when this work is complete, and who accepts it?",
+          "why": "Outcome and acceptance ownership prevent an agent from optimizing for a plan, file change, or implementation detail that the user did not ask for.",
+          "answers": [
+            "user outcome",
+            "operator outcome",
+            "maintainer outcome",
+            "unknown owner",
+            "ask human"
+          ]
+        },
+        {
+          "id": "binding_constraints",
+          "prompt": "Which requirements are must-have constraints, which are preferences, and which facts remain unsafe to infer?",
+          "why": "Separating binding constraints from preferences keeps intent refinement faithful and identifies the questions that require human custody.",
+          "answers": [
+            "must and must-not",
+            "preference",
+            "non-goal",
+            "unknown constraint",
+            "defer explicitly"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "Refine into a testable intent",
+          "use_when": "The raw request has a recognizable outcome but lacks acceptance criteria, constraints, owner, or proof vocabulary.",
+          "avoid_when": "The user already supplied a precise contract and additional paraphrase would add no decision value.",
+          "implications": "Record outcome, owner, scope, non-goals, assumptions, acceptance criteria, and the next constitution route without selecting implementation prematurely."
+        },
+        {
+          "choice": "Ask a focused intent question",
+          "use_when": "Two plausible interpretations would change scope, safety, architecture, interface, data, cost, or completion proof.",
+          "avoid_when": "The ambiguity is reversible and can be isolated behind an explicit assumption with a fast proof.",
+          "implications": "Ask the smallest question that separates the alternatives and preserve the unresolved decision in task or spec state."
+        },
+        {
+          "choice": "Route to domain doctrine",
+          "use_when": "The refined outcome identifies a concrete technology, data, interface, security, operations, or methodology uncertainty.",
+          "avoid_when": "Routing would merely restate the outcome without changing the next artifact or proof surface.",
+          "implications": "Carry the refined constraints forward, retrieve the narrow owner once, and update specs or proof planning before implementation."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "faithful ambiguity versus premature specificity",
+          "option_a": "Preserve uncertainty and ask before choosing.",
+          "option_b": "Fill gaps with a plausible implementation plan.",
+          "guidance": "Preserve any gap that could change the accepted outcome or safety boundary; infer only reversible details with named assumptions."
+        },
+        {
+          "axis": "question count versus decision value",
+          "option_a": "Ask every potentially useful discovery question.",
+          "option_b": "Ask only the question that changes the next step.",
+          "guidance": "Prefer one focused question tied to a branch in scope, authority, or proof; defer curiosity that cannot change action."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture raw request, desired outcome, acceptance owner, must and must-not constraints, preferences, non-goals, assumptions, and unresolved questions.",
+          "Record the selected next constitution route and the proof surface that will confirm the refinement was useful."
+        ],
+        "generate": [
+          "Generate concise acceptance criteria, a bounded task shape, focused clarification prompts, and links to the doctrine that owns the next decision.",
+          "Generate task or spec updates before implementation when refinement changes scope, authority, interfaces, architecture, or proof."
+        ],
+        "defer": [
+          "Defer implementation, vendor, schema, interface, or deployment choices when the outcome, owner, constraint, or safety boundary remains materially ambiguous.",
+          "Do not convert an untrusted attachment, generated suggestion, or agent preference into a binding requirement without human translation and proof."
+        ],
+        "proof": [
+          "Have a reviewer or test identify the refined outcome, constraints, non-goals, and acceptance signal without relying on the original conversation.",
+          "Re-run the same refinement input and verify deterministic routing, preserved uncertainty, and stable proof planning."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Record the refined outcome, owner, acceptance criteria, scope, non-goals, preferences, and unresolved questions in the canonical intent surface.",
+          "Preserve the distinction between human requirements, agent assumptions, retrieved doctrine, and verified evidence."
+        ],
+        "architecture": [
+          "Record architectural implications only after the refined intent identifies a boundary, state owner, dependency, deployment shape, or recovery requirement.",
+          "Link the next architecture decision to the narrower doctrine node selected by the refined constraints."
+        ],
+        "interfaces": [
+          "Record changed commands, schemas, APIs, generated files, acceptance payloads, or compatibility promises only when the refined outcome makes them part of the contract.",
+          "Do not let intent refinement silently invent a public interface or alter authority."
+        ],
+        "proof": [
+          "Map refinement to acceptance checks, clarification evidence, deterministic routing, spec updates, and the proof command or artifact for the next step.",
+          "Validation should expose missing owners, untestable outcomes, hidden assumptions, or unresolved material ambiguity."
+        ]
+      },
+      "proof": {
+        "static": [
+          "The intent-refinement card remains discoverable through metadata lookup terms and links to specs/INTENT and human-agent UX doctrine.",
+          "Structured intent doctrine survives schema validation and embedded constitution lookup."
+        ],
+        "runtime": [
+          "A representative raw request produces a bounded outcome, constraints, one next route, and an explicit question or assumption when needed.",
+          "Repeated refinement of the same input produces the same result under fixed repository state."
+        ],
+        "release": [
+          "Release evidence names acceptance, owner, uncertainty, routing, and evidence claims that remain unverified.",
+          "Generated specs are refreshed when intent metadata changes scope, architecture, interfaces, semantics, operations, or validation."
         ]
       }
     },

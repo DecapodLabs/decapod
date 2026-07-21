@@ -1,4 +1,6 @@
-# Validation
+# Validation## Capability Proof Requirements
+
+When `persistent-state` is declared, validation executes the human-governed `[repo.migration_validation]` command from `.decapod/config.toml`. The command defines its arguments, repository-relative working directory, timeout, expected exit code, and bounded evidence output. A non-empty migration file or recognized migration layout never satisfies this gate independently. Missing configuration, startup failure, timeout, unexpected exit status, or evidence-recording failure blocks validation.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -39,10 +41,6 @@
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Capability Proof Requirements
-
-When `persistent-state` is declared, validation executes the human-governed `[repo.migration_validation]` command from `.decapod/config.toml`. The command defines its arguments, repository-relative working directory, timeout, expected exit code, and bounded evidence output. A non-empty migration file or recognized migration layout never satisfies this gate independently. Missing configuration, startup failure, timeout, unexpected exit status, or evidence-recording failure blocks validation.
 
 ## Validation Philosophy
 > Validation is a release gate, not documentation theater.
@@ -338,7 +336,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `28cd9ff0be0f7e489448c616bd79bd32f020e520263d0e2fcb9ff84f8d9ae419`
+- Repository signal fingerprint: `2aa6c07afeb2e903cff814160381f19abfc23dd967053e6c5438419749e6d02c`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
