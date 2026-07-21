@@ -6,6 +6,7 @@
     "docs/architecture/interfaces-v2-contract.schema.json"
   ],
   "state_refs": [
+    ".decapod/generated/context/bugs_01ky1njgd4mdem0e.json",
     "branch:agent/unknown/bugs_01ky1njgd4mdem0e-issue-938",
     "pr:#957"
   ],

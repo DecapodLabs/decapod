@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.1.0",
+  "topic": "canonical interfaces contract envelope adherence and proof",
+  "scope": "interfaces",
+  "task_id": "bugs_01ky1njgd4mdem0e",
+  "workunit_id": "bugs_01ky1njgd4mdem0e",
+  "sources": [
+    {
+      "path": "interfaces/DEMANDS_SCHEMA",
+      "section": "concepts"
+    },
+    {
+      "path": "interfaces/TESTING",
+      "section": "concepts"
+    },
+    {
+      "path": "interfaces/CLAIMS",
+      "section": "interfaces/CLAIMS"
+    },
+    {
+      "path": "interfaces/PROJECT_SPECS",
+      "section": "concepts"
+    }
+  ],
+  "snippets": [
+    {
+      "source_path": "interfaces/DEMANDS_SCHEMA",
+      "text": "## concepts\n\nConstraint Types: 'Must' (blocking), 'Must-Not' (forbidden), 'Prefer' (weighted optimization).\nPriority and Scope: The level of enforcement and the specific subsystems or workflows a demand constrains.\nDurability: Distinguishing between session-local preferences and persistent project-wide demands.\nConflict Handling: Rules for reconciling contradictory demands using the specs/INTENT authority."
+    },
+    {
+      "source_path": "interfaces/TESTING",
+      "text": "## concepts\n\nValidation Gate: A task cannot be marked done without decapod validate passing successfully.\nSafety Check Sequences: Run decapod capabilities, decapod docs ingest, and decapod validate regularly to verify system state.\nExpected Command: The exact shell command or script used to execute a specific test or gate.\nEvidence Capture: The structured logs, receipts, or artifacts that prove a test result and status.\nValidation Mapping: Linking test results to truth labels ('verified', 'failing', 'stale') and claims.\nRemediation: Mapping specific failure codes to automated fix paths or manual recovery steps."
+    },
+    {
+      "source_path": "interfaces/CLAIMS",
+      "text": "# interfaces/CLAIMS\n**Authority:** doctrine\n**Layer:** interfaces\n**Binding:** advisory\n\nDescribes claim type, evidence, verification status, stale claim risk, and mapping claims to proof."
+    },
+    {
+      "source_path": "interfaces/PROJECT_SPECS",
+      "text": "## concepts\n\nLiving Specs: Treat files under .decapod/generated/specs/* as dynamic contracts. Review and update INTENT.md, ARCHITECTURE.md, and INTERFACES.md to align specs with intent.\nProject Configuration: Read .decapod/config.toml as user-editable project context and update it when project scope changes.\nAcceptance Criteria: Falsifiable, testable conditions that define the success of a feature or task.\nRequirement Boundaries: The specific code paths, files, and subsystems that the spec governs.\nProof Targets: The exact test or verification script required to prove the spec is satisfied.\nSpec Drift: Detecting DELTAs where implementation has diverged from the documented intent."
+    }
+  ],
+  "capabilities": [
+    "agent-helper",
+    "authentication",
+    "authorization",
+    "background-processing",
+    "control-plane",
+    "event-driven",
+    "external-integrations",
+    "governance-kernel",
+    "persistent-state",
+    "scheduled-jobs"
+  ],
+  "policy": {
+    "risk_tier": "medium",
+    "policy_hash": "4be692d786ecc3514b98ed3228e133501360531cdcb4ef77fe3b3a111c9e38cb",
+    "policy_version": "jit-capsule-policy-v1",
+    "policy_path": ".decapod/generated/policy/context_capsule_policy.json",
+    "repo_revision": "72d3a1800f65b983341af63875490f85dc9a6c6d"
+  },
+  "capsule_hash": "9f4f7a06b7231aa969ab0f5092bd5f999b0228c8357d53546286c1a71e7bf40e",
+  "repo_signal_fingerprint": "f82026e06f071878e2fae1cdddd4d04c799ce65a6a9f06645a6180875a6f5a99",
+  "config_input_hash": "86ca124c86e16b80818f711d91c2d6a117527d7549483bb3760bbae4c9029549",
+  "spec_input_hash": "11ab51a300ffb6686efc1c9b55f307142424664f6b607aaadefddb6dee0f9b27"
+}
