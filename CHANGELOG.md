@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.12](https://github.com/DecapodLabs/decapod/compare/v0.72.11...v0.72.12) - 2026-07-21
+
+### Added
+
+- uplift constitution research doctrine
+
+### Other
+
+- refresh v0.72.11 entrypoint fingerprints
+
 ## [0.72.11](https://github.com/DecapodLabs/decapod/compare/v0.72.10...v0.72.11) - 2026-07-21
 
 ### Added
