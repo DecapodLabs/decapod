@@ -84,7 +84,19 @@ flowchart LR
 | Coverage regression | Coverage drops below target | 48h |
 | Non-blocking perf drift | P95 validation > 25s | 72h |
 | Spec template stale | `template_version` < current | Next promotion |
-| Untouched scaffold specs | `template_hash` == `content_hash` | Before implementation |
+| Untouched scaffold specs | `template_hash` == `content_hash` | Before implementation |## Evidence Artifacts
+| Artifact | Path | Required For |
+|----------|------|--------------|
+| Validation report | `.decapod/generated/artifacts/provenance/validation_report.json` | Promotion |
+| Proof manifest | `.decapod/generated/artifacts/provenance/proof_manifest.json` | Promotion |
+| Artifact manifest | `.decapod/generated/artifacts/provenance/artifact_manifest.json` | Promotion |
+| Completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | Reproducible completion review |
+| Imported completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | Untrusted external evidence inspection |
+| Test logs | CI artifact store | Promotion |
+| Architecture diagram | `ARCHITECTURE.md` (in specs) | Promotion |
+| Changelog entry | `CHANGELOG.md` | Promotion |
+| Flight recorder transcript | `decapod trace flight-recorder transcript` | Post-mortem |
+| Broker audit log | `.decapod/data/broker.events.jsonl` | Audit |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -125,20 +137,6 @@ flowchart LR
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Evidence Artifacts
-| Artifact | Path | Required For |
-|----------|------|--------------|
-| Validation report | `.decapod/generated/artifacts/provenance/validation_report.json` | Promotion |
-| Proof manifest | `.decapod/generated/artifacts/provenance/proof_manifest.json` | Promotion |
-| Artifact manifest | `.decapod/generated/artifacts/provenance/artifact_manifest.json` | Promotion |
-| Completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | Reproducible completion review |
-| Imported completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | Untrusted external evidence inspection |
-| Test logs | CI artifact store | Promotion |
-| Architecture diagram | `ARCHITECTURE.md` (in specs) | Promotion |
-| Changelog entry | `CHANGELOG.md` | Promotion |
-| Flight recorder transcript | `decapod trace flight-recorder transcript` | Post-mortem |
-| Broker audit log | `.decapod/data/broker.events.jsonl` | Audit |
 
 ## Regression Guardrails
 - **Baseline references**: Validation report includes gate timings; P95 tracked per gate

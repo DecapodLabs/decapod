@@ -104,7 +104,7 @@ fn aggressive_interface_design_carries_the_migration_inventory_and_boundary() {
 }
 
 #[test]
-fn core_interfaces_constitution_requires_v2_adherence() {
+fn core_interfaces_constitution_requires_envelope_adherence() {
     let constitution: Value =
         serde_json::from_str(CONSTITUTION).expect("constitution is valid JSON");
     let router = &constitution["nodes"]["core/INTERFACES"];
@@ -133,13 +133,17 @@ fn core_interfaces_constitution_requires_v2_adherence() {
 
     let doctrine = serde_json::to_string(router).expect("router can be serialized");
     for marker in [
-        "v2 interface contract envelope",
+        "canonical interface contract envelope",
         "command, entity, event, artifact, or schema",
         "temporary adapter window",
         "rollback trigger",
         "typed outcome/failure",
-        "deprecated v1 adapters",
+        "deprecated adapters",
     ] {
         assert!(doctrine.contains(marker), "core/INTERFACES omits {marker}");
     }
+    assert!(
+        !doctrine.contains("v2") && !doctrine.contains("V2"),
+        "constitution router must describe the contract, not its version label"
+    );
 }
