@@ -1,0 +1,48 @@
+{
+  "task_id": "bugs_01ky1njgd4mdem0e",
+  "intent_ref": "docs/architecture/interfaces-v2-restructure.md",
+  "spec_refs": [
+    ".decapod/generated/specs/INTERFACES.md",
+    "docs/architecture/interfaces-v2-contract.schema.json"
+  ],
+  "state_refs": [
+    ".decapod/generated/context/bugs_01ky1njgd4mdem0e.json",
+    "branch:agent/unknown/bugs_01ky1njgd4mdem0e-issue-938",
+    "pr:#957"
+  ],
+  "proof_plan": [
+    "clippy",
+    "constitution-json",
+    "format",
+    "interfaces-v2-tests",
+    "spec-refresh"
+  ],
+  "proof_results": [
+    {
+      "gate": "clippy",
+      "status": "pass",
+      "artifact_ref": "tests/interfaces_v2_design.rs"
+    },
+    {
+      "gate": "constitution-json",
+      "status": "pass",
+      "artifact_ref": "assets/constitution.json"
+    },
+    {
+      "gate": "format",
+      "status": "pass",
+      "artifact_ref": "tests/interfaces_v2_design.rs"
+    },
+    {
+      "gate": "interfaces-v2-tests",
+      "status": "pass",
+      "artifact_ref": "tests/interfaces_v2_design.rs"
+    },
+    {
+      "gate": "spec-refresh",
+      "status": "pass",
+      "artifact_ref": ".decapod/generated/specs/INTERFACES.md"
+    }
+  ],
+  "status": "VERIFIED"
+}

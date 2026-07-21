@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://decapod.dev/schemas/interfaces/contract-envelope-2.0.0.json",
+  "title": "DecapodInterfaceContractEnvelopeV2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_id",
+    "contract_version",
+    "kind",
+    "operation",
+    "request_id",
+    "correlation_id",
+    "producer",
+    "consumer",
+    "scope",
+    "lifecycle",
+    "outcome",
+    "proof"
+  ],
+  "properties": {
+    "contract_id": {
+      "type": "string",
+      "pattern": "^decapod\\.[a-z0-9][a-z0-9._-]*$"
+    },
+    "contract_version": {
+      "const": "2.0.0"
+    },
+    "kind": {
+      "enum": ["command", "entity", "event", "artifact", "schema"]
+    },
+    "operation": {
+      "$ref": "#/$defs/operation"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "producer": {
+      "$ref": "#/$defs/participant"
+    },
+    "consumer": {
+      "$ref": "#/$defs/participant"
+    },
+    "scope": {
+      "$ref": "#/$defs/scope"
+    },
+    "lifecycle": {
+      "$ref": "#/$defs/lifecycle"
+    },
+    "outcome": {
+      "$ref": "#/$defs/outcome"
+    },
+    "proof": {
+      "$ref": "#/$defs/proof"
+    }
+  },
+  "$defs": {
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "phase"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "phase": {
+          "enum": ["request", "response", "event"]
+        }
+      }
+    },
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "version", "role"],
+      "properties": {
+        "component": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": ["caller", "producer", "state_owner", "validator", "observer"]
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority"],
+      "properties": {
+        "repo_id": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string"
+        },
+        "authority": {
+          "enum": ["repo-local", "session-local", "global"]
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "transition", "occurred_at"],
+      "properties": {
+        "state": {
+          "enum": [
+            "proposed",
+            "requested",
+            "accepted",
+            "active",
+            "succeeded",
+            "failed",
+            "blocked",
+            "superseded",
+            "deprecated",
+            "revoked"
+          ]
+        },
+        "transition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "predecessor": {
+          "type": "string"
+        },
+        "supersedes": {
+          "type": "string"
+        }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "result", "error"],
+      "properties": {
+        "status": {
+          "enum": ["accepted", "succeeded", "failed", "blocked"]
+        },
+        "result": {},
+        "error": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/error"
+            }
+          ]
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "retryable", "category"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]+$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "category": {
+          "enum": [
+            "validation",
+            "authorization",
+            "conflict",
+            "not_found",
+            "expired",
+            "blocked",
+            "internal",
+            "migration"
+          ]
+        },
+        "field_path": {
+          "type": "string"
+        },
+        "details": {},
+        "next_operations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_ref", "input_hash", "output_hash", "evidence"],
+      "properties": {
+        "schema_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input_hash": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "output_hash": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "ref"],
+            "properties": {
+              "kind": {
+                "enum": ["file", "command", "test", "commit", "event"]
+              },
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hash": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

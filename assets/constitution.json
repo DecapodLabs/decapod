@@ -918,26 +918,31 @@
       },
       "sections": {
         "match": [
-          "Use when work changes a command surface, response envelope, JSON schema, state store, claim, context pack, or machine-readable contract.",
-          "Use when the agent needs exact structure rather than prose guidance."
+        "Use when work changes a command surface, response envelope, JSON schema, state store, claim, context pack, or machine-readable contract.",
+          "Use when the agent needs exact structure rather than prose guidance.",
+          "Use the canonical interface contract envelope when the work crosses an interfaces/* boundary: contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer, scope, lifecycle, outcome, typed failure, and proof."
         ],
         "decide": [
-          "Identify producer, consumer, mutation target, compatibility requirement, and validation surface before changing an interface.",
-          "Treat schemas and response envelopes as contracts; defaults, omissions, field names, and error shapes affect downstream agents."
+        "Identify producer, consumer, mutation target, compatibility requirement, and validation surface before changing an interface.",
+          "Treat schemas and response envelopes as contracts; defaults, omissions, field names, and error shapes affect downstream agents.",
+          "Classify the contract as command, entity, event, artifact, or schema, then name its state owner and the consumer-visible lifecycle transitions before implementation."
         ],
         "route": [
           "control sequence or agent operation order -> interfaces/CONTROL_PLANE.",
           "state ownership or user-vs-repo mutation -> interfaces/STORE_MODEL.",
           "proof claim, promise, or enforcement status -> interfaces/CLAIMS and interfaces/TESTING.",
-          "context pack, internalization, memory, knowledge, todo, or demand shape -> matching schema interface node."
+          "context pack, internalization, memory, knowledge, todo, or demand shape -> matching schema interface node.",
+          "Any narrower interfaces/* node -> carry the canonical envelope fields and route back to this node for compatibility, migration, rollback, and proof decisions."
         ],
         "apply": [
           "Preserve backward compatibility unless the change is explicitly versioned, deprecated, or gated by an amendment path.",
-          "Schema edits require examples, validation, and a named consumer impact."
+          "Schema edits require examples, validation, and a named consumer impact.",
+          "For the aggressive path, allow a deliberate breaking boundary only when the contract version, temporary adapter window, deprecation signal, rollback trigger, and removal proof are recorded."
         ],
         "avoid": [
           "Do not infer interface semantics from implementation convenience when a schema or contract node exists.",
-          "Do not create duplicate authority by describing the same machine contract in multiple places."
+          "Do not create duplicate authority by describing the same machine contract in multiple places.",
+          "Do not retain operation-specific envelope or failure implementations beside the canonical envelope after the migration window."
         ],
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
@@ -953,6 +958,7 @@
       "architect_notes": [
         "Treat `core/INTERFACES` as the interface router for schemas, envelopes, control-plane payloads, store models, project specs, claims, and compatibility rules; it should reduce uncertainty before implementation rather than justify work already chosen.",
         "The correct next hop is the interface node that owns the producer, consumer, schema, and compatibility lifecycle; if that hop does not affect an artifact, spec, interface, or proof gate, keep the context local and do not route again.",
+        "Every interfaces/* contract is envelope-adherent: its producer, consumer, state owner, scope, lifecycle, outcome, failure taxonomy, and proof surface are explicit even when the concrete payload is domain-specific.",
         "Routing quality is measured by fewer ambiguous assumptions, not by retrieving more constitution nodes."
       ],
       "init_questions": [
@@ -1046,25 +1052,30 @@
         ],
         "interfaces": [
           "Record public commands, schemas, scaffolded files, data contracts, or control-plane payloads that become compatibility surfaces.",
-          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility."
+          "Do not let core routing create implicit interfaces; route to interface doctrine before declaring compatibility.",
+          "Record the contract_id, contract_version, kind, producer/consumer ownership, lifecycle, failure categories, and proof references for each changed interfaces/* surface."
         ],
         "proof": [
           "A consumer can validate the schema or example and incompatible changes are called out explicitly.",
-          "Validation should fail or produce a visible blocker when the selected route lacks evidence."
+          "Validation should fail or produce a visible blocker when the selected route lacks evidence.",
+          "The canonical envelope schema, deterministic serialization, representative consumer translations, rollback behavior, and adapter-removal evidence are the proof gates for the aggressive interfaces path."
         ]
       },
       "proof": {
         "static": [
           "The node is discoverable through lookup terms and linked from the relevant core or section router.",
-          "Structured fields survive embedding and are returned by `decapod constitution get`."
+          "Structured fields survive embedding and are returned by `decapod constitution get`.",
+          "The canonical envelope schema is present, strict, versioned, and referenced by the living interface design."
         ],
         "runtime": [
           "A representative agent task can use the node to choose one next action without re-entering a router loop.",
-          "Proof planning names the command, schema, project spec, or artifact that will validate the next step."
+          "Proof planning names the command, schema, project spec, or artifact that will validate the next step.",
+          "A representative envelope validates producer/consumer ownership, lifecycle transition, typed outcome/failure, scope, and proof without an operation-specific response branch."
         ],
         "release": [
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
-          "Issue or PR evidence states that untrusted external attachments were not executed or imported."
+          "Issue or PR evidence states that untrusted external attachments were not executed or imported.",
+          "Release evidence identifies the contract version and proves that deprecated adapters are removed or remain within the recorded migration window."
         ]
       }
     },
@@ -13245,7 +13256,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/AGENT_CONTEXT_PACK as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes retrieved snippets, task scope, authority ordering, bounded context, and agent pre-inference consumption.",
+        "Treat interfaces/AGENT_CONTEXT_PACK as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes retrieved snippets, task scope, authority ordering, bounded context, and agent pre-inference consumption.",
         "Use the existing interfaces/AGENT_CONTEXT_PACK decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/AGENT_CONTEXT_PACK additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -13408,7 +13419,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/ARCHITECTURE_FOUNDATIONS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes foundational architecture vocabulary: boundary, state, interface, runtime, deployment, and data flow.",
+        "Treat interfaces/ARCHITECTURE_FOUNDATIONS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes foundational architecture vocabulary: boundary, state, interface, runtime, deployment, and data flow.",
         "Use the existing interfaces/ARCHITECTURE_FOUNDATIONS decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/ARCHITECTURE_FOUNDATIONS additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -13586,7 +13597,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/CLAIMS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes claim type, evidence, verification status, stale claim risk, and mapping claims to proof.",
+        "Treat interfaces/CLAIMS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes claim type, evidence, verification status, stale claim risk, and mapping claims to proof.",
         "Use the existing interfaces/CLAIMS decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/CLAIMS additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -13763,7 +13774,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/CONTROL_PLANE as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes operation sequencing, receipts, allowed next operations, and mutation boundaries.",
+        "Treat interfaces/CONTROL_PLANE as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes operation sequencing, receipts, allowed next operations, and mutation boundaries.",
         "Use the existing interfaces/CONTROL_PLANE decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/CONTROL_PLANE additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -13926,7 +13937,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/DEMANDS_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes how human constraints become structured demands: must, must-not, priority, and durability.",
+        "Treat interfaces/DEMANDS_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes how human constraints become structured demands: must, must-not, priority, and durability.",
         "Use the existing interfaces/DEMANDS_SCHEMA decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/DEMANDS_SCHEMA additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -14090,7 +14101,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/DOC_RULES as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes machine-readable documentation rules: canonical vs generated, boundaries, and drift handling.",
+        "Treat interfaces/DOC_RULES as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes machine-readable documentation rules: canonical vs generated, boundaries, and drift handling.",
         "Use the existing interfaces/DOC_RULES decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/DOC_RULES additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -14253,7 +14264,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/GLOSSARY as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes vocabulary governance: canonical terms, aliases, ambiguity reduction, and retrieval support.",
+        "Treat interfaces/GLOSSARY as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes vocabulary governance: canonical terms, aliases, ambiguity reduction, and retrieval support.",
         "Use the existing interfaces/GLOSSARY decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/GLOSSARY additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -14416,7 +14427,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/INTERNALIZATION_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes the lifecycle of attaching, inspecting, and validating external knowledge into Decapod-governed state.",
+        "Treat interfaces/INTERNALIZATION_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes the lifecycle of attaching, inspecting, and validating external knowledge into Decapod-governed state.",
         "Use the existing interfaces/INTERNALIZATION_SCHEMA decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/INTERNALIZATION_SCHEMA additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -14581,7 +14592,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/KNOWLEDGE_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes knowledge object shape: source, provenance, authority, summary, and retrieval tags.",
+        "Treat interfaces/KNOWLEDGE_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes knowledge object shape: source, provenance, authority, summary, and retrieval tags.",
         "Use the existing interfaces/KNOWLEDGE_SCHEMA decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/KNOWLEDGE_SCHEMA additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -14746,7 +14757,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/KNOWLEDGE_STORE as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes persistent knowledge storage: indexing, update/delete semantics, and retrieval safety.",
+        "Treat interfaces/KNOWLEDGE_STORE as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes persistent knowledge storage: indexing, update/delete semantics, and retrieval safety.",
         "Use the existing interfaces/KNOWLEDGE_STORE decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/KNOWLEDGE_STORE additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -14910,7 +14921,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/LCM as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes lossless context management: summary DAGs, deterministic compaction, and transfer boundaries.",
+        "Treat interfaces/LCM as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes lossless context management: summary DAGs, deterministic compaction, and transfer boundaries.",
         "Use the existing interfaces/LCM decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/LCM additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -15073,7 +15084,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/MEMORY_INDEX as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes memory retrieval index: addressing, categorization, relevance, and search tiers.",
+        "Treat interfaces/MEMORY_INDEX as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes memory retrieval index: addressing, categorization, relevance, and search tiers.",
         "Use the existing interfaces/MEMORY_INDEX decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/MEMORY_INDEX additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -15236,7 +15247,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/MEMORY_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes durable memory record shape: subject, claim, provenance, scope, and status.",
+        "Treat interfaces/MEMORY_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes durable memory record shape: subject, claim, provenance, scope, and status.",
         "Use the existing interfaces/MEMORY_SCHEMA decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/MEMORY_SCHEMA additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -15399,7 +15410,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/PLAN_GOVERNED_EXECUTION as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes structured execution plans: steps, checkpoints, allowed mutations, and rollback.",
+        "Treat interfaces/PLAN_GOVERNED_EXECUTION as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes structured execution plans: steps, checkpoints, allowed mutations, and rollback.",
         "Use the existing interfaces/PLAN_GOVERNED_EXECUTION decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/PLAN_GOVERNED_EXECUTION additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -15565,7 +15576,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/PROCEDURAL_NORMS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes agent procedural conduct: call Decapod early, ask when blocked, and preserve evidence.",
+        "Treat interfaces/PROCEDURAL_NORMS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes agent procedural conduct: call Decapod early, ask when blocked, and preserve evidence.",
         "Use the existing interfaces/PROCEDURAL_NORMS decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/PROCEDURAL_NORMS additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -15732,7 +15743,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/PROJECT_SPECS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes generated project specs: intent, acceptance criteria, boundaries, and spec drift.",
+        "Treat interfaces/PROJECT_SPECS as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes generated project specs: intent, acceptance criteria, boundaries, and spec drift.",
         "Use the existing interfaces/PROJECT_SPECS decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/PROJECT_SPECS additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -15905,7 +15916,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/RISK_POLICY_GATE as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes risk classification, approval gates, blocked changes, policy outputs, and escalation.",
+        "Treat interfaces/RISK_POLICY_GATE as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes risk classification, approval gates, blocked changes, policy outputs, and escalation.",
         "Use the existing interfaces/RISK_POLICY_GATE decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/RISK_POLICY_GATE additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -16078,7 +16089,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/STORE_MODEL as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes local repo state, user state, created artifacts, operational DB state, sync boundaries, and direct mutation risks.",
+        "Treat interfaces/STORE_MODEL as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes local repo state, user state, created artifacts, operational DB state, sync boundaries, and direct mutation risks.",
         "Use the existing interfaces/STORE_MODEL decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/STORE_MODEL additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -16247,7 +16258,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/TESTING as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes testing interface: expected command, evidence capture, and validation status.",
+        "Treat interfaces/TESTING as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes testing interface: expected command, evidence capture, and validation status.",
         "Use the existing interfaces/TESTING decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/TESTING additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -16419,7 +16430,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/TODO_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Describes todo states, transitions, ownership, blockers, timestamps, evidence, and completion semantics.",
+        "Treat interfaces/TODO_SCHEMA as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Describes todo states, transitions, ownership, blockers, timestamps, evidence, and completion semantics.",
         "Use the existing interfaces/TODO_SCHEMA decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/TODO_SCHEMA additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -16588,7 +16599,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/jsonschema/internalization/InternalizationAttachResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
+        "Treat interfaces/jsonschema/internalization/InternalizationAttachResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
         "Use the existing interfaces/jsonschema/internalization/InternalizationAttachResult.schema decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/jsonschema/internalization/InternalizationAttachResult.schema additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -16757,7 +16768,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/jsonschema/internalization/InternalizationCreateResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
+        "Treat interfaces/jsonschema/internalization/InternalizationCreateResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
         "Use the existing interfaces/jsonschema/internalization/InternalizationCreateResult.schema decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/jsonschema/internalization/InternalizationCreateResult.schema additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -16926,7 +16937,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/jsonschema/internalization/InternalizationDetachResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
+        "Treat interfaces/jsonschema/internalization/InternalizationDetachResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
         "Use the existing interfaces/jsonschema/internalization/InternalizationDetachResult.schema decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/jsonschema/internalization/InternalizationDetachResult.schema additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -17095,7 +17106,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/jsonschema/internalization/InternalizationInspectResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
+        "Treat interfaces/jsonschema/internalization/InternalizationInspectResult.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
         "Use the existing interfaces/jsonschema/internalization/InternalizationInspectResult.schema decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/jsonschema/internalization/InternalizationInspectResult.schema additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],
@@ -17264,7 +17275,7 @@
         ]
       },
       "architect_notes": [
-        "Treat interfaces/jsonschema/internalization/InternalizationManifest.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
+        "Treat interfaces/jsonschema/internalization/InternalizationManifest.schema as contract doctrine for a producer, consumer, lifecycle, compatibility boundary, and proof surface. Every contract carries contract identity/version, kind, operation phase, request/correlation IDs, producer/consumer ownership, scope, lifecycle, outcome, typed failure, and proof. Current scope: Internalization schema surface governing strict serialization, purpose, producers, and validation constraints.",
         "Use the existing interfaces/jsonschema/internalization/InternalizationManifest.schema decisions and standards to name the state owner, required fields, omission behavior, and consumer impact before changing an interface.",
         "Keep interfaces/jsonschema/internalization/InternalizationManifest.schema additive and backward-compatible by default; make any incompatible evolution explicit, versioned, and paired with migration evidence."
       ],

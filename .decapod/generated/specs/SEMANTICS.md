@@ -227,49 +227,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 1. **Blocking Gates**: All must pass for promotion
 2. **Auto-Remediable**: Errors include `agent_action` for self-correction
 3. **Specs Sync**: Template drift = fail (or `--refresh-specs` to acknowledge)
-4. **Config Schema**: `schema_version=1.0.0` required; forbidden keys rejected
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-## Background Processing Semantics Overlay
-
-### Retry Semantics
-- Retry and backoff behavior MUST be selected and documented for each work class
-- Poison-work handling MUST be selected and documented for each work class
-- Retry MUST preserve the declared side-effect and idempotency semantics
-
-### Idempotency
-- Each job MUST declare whether it is idempotent, transactional, compensating, or otherwise duplicate-safe
-- Deduplication or compensation mechanisms are project decisions and require proof
-- Duplicate execution MUST follow the job's declared duplicate-handling semantics
-
-### Poison Message Handling
-- Messages failing after max retries go to dead letter queue
-- DLQ MUST be monitored and alerted
-- Manual replay capability for DLQ messages
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Semantics Overlay
-
-### Transaction Semantics
-- All multi-entity operations MUST be atomic
-- Read-after-write consistency within transaction boundaries
-- Eventual consistency windows MUST be documented
-
-### Migration Semantics
-- Schema migrations MUST be backward-compatible
-- Migration rollback procedures MUST be documented
-- Data integrity checks post-migration
-
-### Recovery Semantics
-- Point-in-time recovery capability
-- Recovery objectives MUST be selected for the project and recorded as proof obligations
-- Recovery test cadence MUST be selected for the project and recorded as a proof obligation
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-## Idempotency Contracts
+4. **Config Schema**: `schema_version=1.0.0` required; forbidden keys rejected## Idempotency Contracts
 
 | Operation | Idempotency Key | Duplicate Behavior |
 |-----------|-----------------|-------------------|
@@ -282,9 +240,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 | `proof run` | `run_id` (ULID) | New run each invocation |
 | `session acquire` | `agent_id` (from password) | Returns existing token |
 | `data knowledge add` | `id` (ULID) | Fails if ID exists |
-| `broker mutation` | `op+entity+id` | Append-only event log |
-
-## Language Note
+| `broker mutation` | `op+entity+id` | Append-only event log |## Language Note
 - Primary language: Rust (edition 2024, rust-version 1.96.1)
 - Schema definitions: Rust structs + serde + SQL DDL in `schemas.rs`
 - CLI: Clap 4 derive
@@ -294,7 +250,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `03887afc79f7c6e3712ce77dde727f9df044f2389285346046bf938de7353c1d`
+- Repository signal fingerprint: `f82026e06f071878e2fae1cdddd4d04c799ce65a6a9f06645a6180875a6f5a99`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

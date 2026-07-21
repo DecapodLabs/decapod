@@ -43,7 +43,63 @@ flowchart LR
     C --> D[Validate]
     D --> E[Assemble Evidence]
     E --> F[Promote]
-```
+```## Proof Surfaces
+- `decapod validate` (primary)
+- Required test commands:
+  - `cargo test --locked`
+  - `cargo clippy -- -D warnings`
+  - `cargo fmt --check`
+- Required integration/e2e commands:
+  - `decapod qa verify` (proof replay + drift check)
+  - `decapod workspace publish` (provenance gates)## Promotion Gates
+
+### Plan Phase Governance Gate
+| Check | Failure Mode |
+|-------|--------------|
+| Phase IDs are unique and non-empty | Fail |
+| Phases enter and complete in declaration order | Fail |
+| Only one phase is active at a time | Fail |
+| Entry and exit gates pass before transition | Fail |
+| Phase-bearing plans cannot bypass incomplete phases to `DONE` | Fail |
+| Required artifact gates exist at transition time | Fail |
+
+### Blocking Gates (Must Pass)
+| Gate | Command | Evidence |
+|------|---------|----------|
+| Architecture + interface drift check | `decapod validate` | Gate output + validation report |
+| Tests pass | `cargo test --locked` | CI + local logs |
+| Lint clean | `cargo clippy -- -D warnings` | CI output |
+| Format clean | `cargo fmt --check` | CI output |
+| Docs + changelog current | `decapod validate` (docs gates) | PR diff |
+| Security critical checks | `cargo audit` + `cargo deny check` | Scanner reports |
+| Workspace isolation | `decapod workspace status` | WorkspaceStatus.can_work = true |
+| Session auth | `decapod session status` | Valid session token |
+| Specs manifest sync | `decapod validate` (specs gate) | `.manifest.json` fingerprints match |
+| Capsule policy lineage | `decapod govern capsule query --write` | Policy hash binds to HEAD |
+| Completion evidence integrity | `decapod qa verify completion <ID>` | Canonical record, artifact, epoch, and receiver-local checks |
+
+### Warning Gates (Non-Blocking, SLA Tracked)
+| Gate | Trigger | Follow-up SLA |
+|------|---------|---------------|
+| Coverage regression | Coverage drops below target | 48h |
+| Non-blocking perf drift | P95 validation > 25s | 72h |
+| Spec template stale | `template_version` < current | Next promotion |
+| Untouched scaffold specs | `template_hash` == `content_hash` | Before implementation |## Evidence Artifacts
+| Artifact | Path | Required For |
+|----------|------|--------------|
+| Validation report | `.decapod/generated/artifacts/provenance/validation_report.json` | Promotion |
+| Proof manifest | `.decapod/generated/artifacts/provenance/proof_manifest.json` | Promotion |
+| Artifact manifest | `.decapod/generated/artifacts/provenance/artifact_manifest.json` | Promotion |
+| Completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | Reproducible completion review |
+| Imported completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | Untrusted external evidence inspection |
+| Test logs | CI artifact store | Promotion |
+| Architecture diagram | `ARCHITECTURE.md` (in specs) | Promotion |
+| Changelog entry | `CHANGELOG.md` | Promotion |
+| Flight recorder transcript | `decapod trace flight-recorder transcript` | Post-mortem |
+| Broker audit log | `.decapod/data/broker.events.jsonl` | Audit |## Regression Guardrails
+- **Baseline references**: Validation report includes gate timings; P95 tracked per gate
+- **Statistical thresholds**: Validation must complete < 30s (P95)
+- **Rollback criteria**: Any blocking gate failure blocks promotion; `workspace prune --force` + git reset for workspace issues
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -84,70 +140,6 @@ flowchart LR
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Proof Surfaces
-- `decapod validate` (primary)
-- Required test commands:
-  - `cargo test --locked`
-  - `cargo clippy -- -D warnings`
-  - `cargo fmt --check`
-- Required integration/e2e commands:
-  - `decapod qa verify` (proof replay + drift check)
-  - `decapod workspace publish` (provenance gates)
-
-## Promotion Gates
-
-### Plan Phase Governance Gate
-| Check | Failure Mode |
-|-------|--------------|
-| Phase IDs are unique and non-empty | Fail |
-| Phases enter and complete in declaration order | Fail |
-| Only one phase is active at a time | Fail |
-| Entry and exit gates pass before transition | Fail |
-| Phase-bearing plans cannot bypass incomplete phases to `DONE` | Fail |
-| Required artifact gates exist at transition time | Fail |
-
-### Blocking Gates (Must Pass)
-| Gate | Command | Evidence |
-|------|---------|----------|
-| Architecture + interface drift check | `decapod validate` | Gate output + validation report |
-| Tests pass | `cargo test --locked` | CI + local logs |
-| Lint clean | `cargo clippy -- -D warnings` | CI output |
-| Format clean | `cargo fmt --check` | CI output |
-| Docs + changelog current | `decapod validate` (docs gates) | PR diff |
-| Security critical checks | `cargo audit` + `cargo deny check` | Scanner reports |
-| Workspace isolation | `decapod workspace status` | WorkspaceStatus.can_work = true |
-| Session auth | `decapod session status` | Valid session token |
-| Specs manifest sync | `decapod validate` (specs gate) | `.manifest.json` fingerprints match |
-| Capsule policy lineage | `decapod govern capsule query --write` | Policy hash binds to HEAD |
-| Completion evidence integrity | `decapod qa verify completion <ID>` | Canonical record, artifact, epoch, and receiver-local checks |
-
-### Warning Gates (Non-Blocking, SLA Tracked)
-| Gate | Trigger | Follow-up SLA |
-|------|---------|---------------|
-| Coverage regression | Coverage drops below target | 48h |
-| Non-blocking perf drift | P95 validation > 25s | 72h |
-| Spec template stale | `template_version` < current | Next promotion |
-| Untouched scaffold specs | `template_hash` == `content_hash` | Before implementation |
-
-## Evidence Artifacts
-| Artifact | Path | Required For |
-|----------|------|--------------|
-| Validation report | `.decapod/generated/artifacts/provenance/validation_report.json` | Promotion |
-| Proof manifest | `.decapod/generated/artifacts/provenance/proof_manifest.json` | Promotion |
-| Artifact manifest | `.decapod/generated/artifacts/provenance/artifact_manifest.json` | Promotion |
-| Completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | Reproducible completion review |
-| Imported completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | Untrusted external evidence inspection |
-| Test logs | CI artifact store | Promotion |
-| Architecture diagram | `ARCHITECTURE.md` (in specs) | Promotion |
-| Changelog entry | `CHANGELOG.md` | Promotion |
-| Flight recorder transcript | `decapod trace flight-recorder transcript` | Post-mortem |
-| Broker audit log | `.decapod/data/broker.events.jsonl` | Audit |
-
-## Regression Guardrails
-- **Baseline references**: Validation report includes gate timings; P95 tracked per gate
-- **Statistical thresholds**: Validation must complete < 30s (P95)
-- **Rollback criteria**: Any blocking gate failure blocks promotion; `workspace prune --force` + git reset for workspace issues
 
 ## Bounded Execution
 | Operation | Timeout | Failure Mode |
@@ -324,7 +316,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `03887afc79f7c6e3712ce77dde727f9df044f2389285346046bf938de7353c1d`
+- Repository signal fingerprint: `f82026e06f071878e2fae1cdddd4d04c799ce65a6a9f06645a6180875a6f5a99`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -97,7 +97,55 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 ### Post-Mortem
 - `decapod trace flight-recorder transcript --output postmortem.md`
 - Correlate attestations (`.decapod/generated/assurance_attestations.jsonl`)
-- Review validation report (`.decapod/generated/artifacts/provenance/validation_report.json`)
+- Review validation report (`.decapod/generated/artifacts/provenance/validation_report.json`)## Rollout Strategy
+
+**Binary releases via cargo-dist:**
+- Tagged releases: `v0.x.y` → GitHub Release with binaries
+- `cargo install decapod` pulls from crates.io
+- Auto-update check in `decapod capabilities` (crates.io API, cached 24h)
+
+**Config/Schema Migrations:**
+- `schema_version` in `.decapod/config.toml` (validated at startup)
+- `TODO_SCHEMA_VERSION` + additive migrations in `todo::ensure_schema`
+- `POLICY_SCHEMA_VERSION` for capsule policy
+- `decapod constitution migrate` for embedded constitution graph
+
+**Rollback:**
+- Binary: `cargo install decapod@<prev-version>` or download prior release
+- Workspace: `decapod workspace prune --force` + `git worktree remove`
+- Config: Manual edit `.decapod/config.toml` (schema_version backwards compatible)## Capacity Planning
+
+### Resource Limits
+| Resource | Limit | Enforcement |
+|----------|-------|-------------|
+| SQLite connections | 1 writer + N readers (pool) | `db_pool` with busy_timeout |
+| Workspace disk | Unbounded (user disk) | `decapod workspace prune` |
+| Event log size | Unbounded | Manual archive via `decapod data archive` |
+| Container memory | Host default | Docker `--memory` flag (not yet exposed) |
+| Token budget (capsule) | Risk-tier max (4/6/12/20) | `CapsulePolicyBinding` enforcement |
+
+### Scaling Triggers
+- Multiple concurrent agents → container workspaces mandatory
+- Large repos → `decapod validate` uses read-only DB connections
+- Many todos → pagination in `todo list` (not yet implemented)## Logging
+
+### Structured Logging (Internal)
+- `tracing` + `tracing-subscriber` with JSON output
+- Correlation IDs: `event_id` (ULID) per operation
+- Session IDs: `session_id` from `session.acquire`
+- Workspace IDs: git branch name (agent/todo_hash-timestamp)
+
+### Audit Logs (Immutable)
+- `broker.events.jsonl` — All mutations (The Thin Waist)
+- `todo.events.jsonl` — Task lifecycle
+- `proof.events.jsonl` — Proof execution
+- `assurance_attestations.jsonl` — Interlock decisions
+- `federation.events.jsonl` — Knowledge graph mutations
+
+### Log Redaction
+- `DECAPOD_SESSION_PASSWORD` never logged
+- `.decapod/data/` paths logged but contents not
+- Git tokens/credentials never in command args (use credential helper)
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -135,60 +183,6 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Rollout Strategy
-
-**Binary releases via cargo-dist:**
-- Tagged releases: `v0.x.y` → GitHub Release with binaries
-- `cargo install decapod` pulls from crates.io
-- Auto-update check in `decapod capabilities` (crates.io API, cached 24h)
-
-**Config/Schema Migrations:**
-- `schema_version` in `.decapod/config.toml` (validated at startup)
-- `TODO_SCHEMA_VERSION` + additive migrations in `todo::ensure_schema`
-- `POLICY_SCHEMA_VERSION` for capsule policy
-- `decapod constitution migrate` for embedded constitution graph
-
-**Rollback:**
-- Binary: `cargo install decapod@<prev-version>` or download prior release
-- Workspace: `decapod workspace prune --force` + `git worktree remove`
-- Config: Manual edit `.decapod/config.toml` (schema_version backwards compatible)
-
-## Capacity Planning
-
-### Resource Limits
-| Resource | Limit | Enforcement |
-|----------|-------|-------------|
-| SQLite connections | 1 writer + N readers (pool) | `db_pool` with busy_timeout |
-| Workspace disk | Unbounded (user disk) | `decapod workspace prune` |
-| Event log size | Unbounded | Manual archive via `decapod data archive` |
-| Container memory | Host default | Docker `--memory` flag (not yet exposed) |
-| Token budget (capsule) | Risk-tier max (4/6/12/20) | `CapsulePolicyBinding` enforcement |
-
-### Scaling Triggers
-- Multiple concurrent agents → container workspaces mandatory
-- Large repos → `decapod validate` uses read-only DB connections
-- Many todos → pagination in `todo list` (not yet implemented)
-
-## Logging
-
-### Structured Logging (Internal)
-- `tracing` + `tracing-subscriber` with JSON output
-- Correlation IDs: `event_id` (ULID) per operation
-- Session IDs: `session_id` from `session.acquire`
-- Workspace IDs: git branch name (agent/todo_hash-timestamp)
-
-### Audit Logs (Immutable)
-- `broker.events.jsonl` — All mutations (The Thin Waist)
-- `todo.events.jsonl` — Task lifecycle
-- `proof.events.jsonl` — Proof execution
-- `assurance_attestations.jsonl` — Interlock decisions
-- `federation.events.jsonl` — Knowledge graph mutations
-
-### Log Redaction
-- `DECAPOD_SESSION_PASSWORD` never logged
-- `.decapod/data/` paths logged but contents not
-- Git tokens/credentials never in command args (use credential helper)
 
 ## Secrets Management
 
@@ -266,7 +260,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `03887afc79f7c6e3712ce77dde727f9df044f2389285346046bf938de7353c1d`
+- Repository signal fingerprint: `f82026e06f071878e2fae1cdddd4d04c799ce65a6a9f06645a6180875a6f5a99`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
