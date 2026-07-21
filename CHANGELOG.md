@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.16](https://github.com/DecapodLabs/decapod/compare/v0.72.15...v0.72.16) - 2026-07-21
+
+### Fixed
+
+- fall back when machine session storage is unavailable
+
+### Other
+
+- allow container boundary doctrine
+
 ## [0.72.15](https://github.com/DecapodLabs/decapod/compare/v0.72.14...v0.72.15) - 2026-07-21
 
 ### Fixed
