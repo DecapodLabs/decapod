@@ -9570,6 +9570,8 @@ fn run_infer_orientation(
 
     let intent_lower = packet.user_goal.to_lowercase();
 
+    apply_container_orientation_constraints(&mut packet, &intent_lower);
+
     // Heuristics for precision
     if intent_lower.contains("fix") || intent_lower.contains("bug") {
         packet
@@ -9647,6 +9649,23 @@ fn run_infer_orientation(
     }
 
     Ok(())
+}
+
+fn apply_container_orientation_constraints(
+    packet: &mut crate::core::rpc::OrientationPacket,
+    intent_lower: &str,
+) {
+    if intent_lower.contains("docker") || intent_lower.contains("dockerfile") {
+        packet
+            .relevant_areas
+            .push("architecture/CONTAINERS".to_string());
+        packet.constraints.push(
+            "Keep the Decapod workspace container under .decapod/generated/Dockerfile; a root Dockerfile must package the project application or microservice according to human intent.".to_string(),
+        );
+        packet.proof_required.push(
+            "Validate that any root Dockerfile contains application packaging rather than Decapod workspace seed markers.".to_string(),
+        );
+    }
 }
 
 fn run_infer_validate(cli: InferValidateCli) -> Result<(), error::DecapodError> {
@@ -10050,5 +10069,41 @@ mod init_prompt_tests {
         assert!(!branch_contains_todo_ticket_id(
             "agent/unknown/some-feature-branch"
         ));
+    }
+
+    #[test]
+    fn dockerfile_orientation_separates_workspace_and_application_containers() {
+        let mut packet = crate::core::rpc::OrientationPacket {
+            user_goal: "Dockerfile packaging".to_string(),
+            task_id: None,
+            constraints: vec![],
+            allowed_scope: vec![],
+            forbidden_scope: vec![],
+            relevant_areas: vec![],
+            proof_required: vec![],
+            known_unknowns: vec![],
+            decision_gates: vec![],
+            next_action: String::new(),
+        };
+
+        apply_container_orientation_constraints(&mut packet, "dockerfile packaging");
+
+        assert!(
+            packet
+                .relevant_areas
+                .contains(&"architecture/CONTAINERS".to_string())
+        );
+        assert!(
+            packet
+                .constraints
+                .iter()
+                .any(|constraint| constraint.contains("root Dockerfile must package"))
+        );
+        assert!(
+            packet
+                .proof_required
+                .iter()
+                .any(|proof| proof.contains("root Dockerfile"))
+        );
     }
 }

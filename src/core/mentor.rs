@@ -155,6 +155,15 @@ pub struct MentorEngine {
     repo_root: PathBuf,
 }
 
+/// Return whether a Dockerfile contains Decapod's managed workspace image
+/// markers rather than application packaging instructions.
+pub(crate) fn is_decapod_workspace_dockerfile(content: &str) -> bool {
+    content.contains(r#"org.decapod.managed="workspace""#)
+        || content
+            .lines()
+            .any(|line| line.trim_start().starts_with("ARG DECAPOD_IMAGE="))
+}
+
 impl MentorEngine {
     /// Create a new mentor engine
     pub fn new(repo_root: &Path) -> Self {
@@ -1049,12 +1058,22 @@ impl MentorEngine {
                 found_dockerfile = true;
                 let content = std::fs::read_to_string(path).unwrap_or_default();
                 let hash = self.compute_hash(&content);
+                let is_root = path == &dockerfile_paths[0];
+                let is_workspace_seed = is_root && is_decapod_workspace_dockerfile(&content);
 
                 obligations.push(Obligation {
                     kind: ObligationKind::Container,
                     ref_path: path.to_string_lossy().to_string(),
-                    title: "Dockerfile exists - Containerization Required".to_string(),
-                    why_short: "Silicon Valley hygiene: All work must be containerized".to_string(),
+                    title: if is_workspace_seed {
+                        "Root Dockerfile is a Decapod workspace seed - application packaging required".to_string()
+                    } else {
+                        "Dockerfile exists - Containerization Required".to_string()
+                    },
+                    why_short: if is_workspace_seed {
+                        ".decapod/generated/Dockerfile is Decapod's internal workspace container; the root Dockerfile must package the project application or microservice according to human intent.".to_string()
+                    } else {
+                        "Silicon Valley hygiene: validate that the Dockerfile packages the project application or microservice according to human intent.".to_string()
+                    },
                     evidence: Evidence {
                         source: "workspace".to_string(),
                         id: path
@@ -1065,7 +1084,7 @@ impl MentorEngine {
                         hash: Some(hash),
                         timestamp: None,
                     },
-                    relevance_score: 0.95,
+                    relevance_score: if is_workspace_seed { 1.0 } else { 0.95 },
                 });
                 break;
             }
@@ -1076,8 +1095,8 @@ impl MentorEngine {
             obligations.push(Obligation {
                 kind: ObligationKind::Container,
                 ref_path: "Dockerfile".to_string(),
-                title: "No Dockerfile - Containerization Required".to_string(),
-                why_short: "Silicon Valley hygiene: Create Dockerfile before proceeding"
+                title: "No application Dockerfile - Containerization Required".to_string(),
+                why_short: ".decapod/generated/Dockerfile is Decapod's internal workspace container; create a root Dockerfile that packages the project application or microservice according to human intent."
                     .to_string(),
                 evidence: Evidence {
                     source: "workspace".to_string(),
@@ -1151,6 +1170,42 @@ impl MentorEngine {
         }
 
         false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{MentorEngine, is_decapod_workspace_dockerfile};
+    use std::fs;
+
+    #[test]
+    fn test_container_candidates_decapod_seed_in_root() {
+        let root = tempfile::tempdir().expect("temporary repository");
+        let dockerfile = root.path().join("Dockerfile");
+        fs::write(
+            &dockerfile,
+            "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.72.13\nFROM $DECAPOD_IMAGE\nLABEL org.decapod.managed=\"workspace\"\n",
+        )
+        .expect("write root Dockerfile");
+
+        let obligations = MentorEngine::new(root.path())
+            .get_container_candidates()
+            .expect("compute container obligations");
+        let obligation = obligations
+            .iter()
+            .find(|obligation| obligation.ref_path == dockerfile.to_string_lossy())
+            .expect("root Dockerfile obligation");
+
+        assert_eq!(obligation.relevance_score, 1.0);
+        assert!(obligation.title.contains("Decapod workspace seed"));
+        assert!(
+            obligation
+                .why_short
+                .contains("internal workspace container")
+        );
+        assert!(is_decapod_workspace_dockerfile(
+            &fs::read_to_string(dockerfile).unwrap()
+        ));
     }
 }
 
