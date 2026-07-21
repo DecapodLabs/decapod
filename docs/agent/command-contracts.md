@@ -58,7 +58,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **State Transition:** Creates git worktrees/containers.
 
 ## `decapod rpc`
-- **Intent:** Structured JSON-RPC interface for agents
+- **Intent:** Decapod-specific structured RPC interface for agents
 
 ## `decapod release`
 - **Intent:** Release lifecycle checks and guards

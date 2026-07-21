@@ -164,8 +164,7 @@ fn add_and_claim_task(
 }
 
 #[test]
-#[ignore = "Broken by constitution densification PR"]
-fn test_mandatory_todo_enforcement() {
+fn test_agent_init_and_todo_claim_lifecycle() {
     let (_tmp, dir, password) = setup_workspace();
     let agent_id = "test-agent-enforce";
 
@@ -176,23 +175,11 @@ fn test_mandatory_todo_enforcement() {
     });
 
     let res = run_rpc(&dir, request.clone(), agent_id);
-    // It should FAIL because of mandatory todo
+    // Orientation is allowed before a task is claimed; workspace mutation is
+    // the boundary that requires a claimed task.
     assert!(
-        !res["success"].as_bool().unwrap(),
-        "agent.init should fail when no tasks exist"
-    );
-
-    // Check error message
-    let error = res["error"]["message"].as_str().unwrap();
-    assert!(
-        error.contains("Mandate Violation"),
-        "Error should be mandate violation"
-    );
-
-    let hint = res["blocked_by"][0]["resolve_hint"].as_str().unwrap();
-    assert!(
-        hint.contains("create and claim a `todo`"),
-        "Hint should mention todo"
+        res["success"].as_bool().unwrap(),
+        "agent.init should succeed before task claim"
     );
 
     // 2. Add a task for this agent
@@ -285,13 +272,6 @@ fn test_mandatory_todo_enforcement() {
 
 #[test]
 fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
-    unsafe {
-        std::env::remove_var("DECAPOD_TASK_ID");
-        std::env::remove_var("DECAPOD_EXTERNAL_TASK_ID");
-        std::env::remove_var("BD_TASK_ID");
-        std::env::remove_var("BEADS_TASK_ID");
-    }
-
     let (_tmp, dir, password) = setup_workspace();
     let agent_id = "test-agent-enforce";
 
@@ -300,6 +280,10 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", agent_id)
         .env("DECAPOD_SESSION_PASSWORD", &password)
+        .env("DECAPOD_TASK_ID", "")
+        .env("DECAPOD_EXTERNAL_TASK_ID", "")
+        .env("BD_TASK_ID", "")
+        .env("BEADS_TASK_ID", "")
         .output()
         .expect("workspace ensure");
     assert!(
@@ -315,6 +299,10 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", agent_id)
         .env("DECAPOD_SESSION_PASSWORD", &password)
+        .env("DECAPOD_TASK_ID", "")
+        .env("DECAPOD_EXTERNAL_TASK_ID", "")
+        .env("BD_TASK_ID", "")
+        .env("BEADS_TASK_ID", "")
         .output()
         .expect("todo list");
     assert!(
@@ -378,6 +366,10 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", agent_id)
         .env("DECAPOD_SESSION_PASSWORD", &password)
+        .env("DECAPOD_TASK_ID", "")
+        .env("DECAPOD_EXTERNAL_TASK_ID", "")
+        .env("BD_TASK_ID", "")
+        .env("BEADS_TASK_ID", "")
         .output()
         .expect("workspace ensure");
     assert!(

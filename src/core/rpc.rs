@@ -1,6 +1,6 @@
 //! Decapod RPC Interface
 //!
-//! This module implements the agent-native JSON-RPC interface for Decapod.
+//! This module implements Decapod's agent-native structured RPC interface.
 //! Agents communicate with Decapod via structured JSON messages over stdin/stdout.
 //!
 //! # Standard Response Envelope

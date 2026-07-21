@@ -227,14 +227,16 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
     }
 
     let intent_path = target_dir.join(core::project_specs::LOCAL_PROJECT_SPECS_INTENT);
-    if intent_path.exists()
+    if ctx.product_summary.is_none()
+        && intent_path.exists()
         && let Ok(intent) = fs::read_to_string(intent_path)
         && let Some(summary) = core::project_specs::first_markdown_content_line(&intent)
     {
         ctx.product_summary = Some(summary);
     }
     let architecture_path = target_dir.join(core::project_specs::LOCAL_PROJECT_SPECS_ARCHITECTURE);
-    if architecture_path.exists()
+    if ctx.architecture_direction.is_none()
+        && architecture_path.exists()
         && let Ok(arch) = fs::read_to_string(architecture_path)
         && let Some(direction) = core::project_specs::first_markdown_content_line(&arch)
     {

@@ -145,7 +145,24 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 ### Log Redaction
 - `DECAPOD_SESSION_PASSWORD` never logged
 - `.decapod/data/` paths logged but contents not
-- Git tokens/credentials never in command args (use credential helper)
+- Git tokens/credentials never in command args (use credential helper)## Secrets Management
+
+| Secret | Source | Rotation | Consumer |
+|--------|--------|----------|----------|
+| `DECAPOD_SESSION_PASSWORD` | Per-agent env var | Per-session (acquire/release) | `session acquire`, broker auth |
+| Git credentials | SSH agent / git credential helper | Standard git | `VcsWrite` actions |
+| Container registry auth | `docker login` / config | Standard docker | `ContainerExec` build |
+| Cargo registry token | `CARGO_REGISTRY_TOKEN` | Standard cargo | `ProofExec` publish |
+
+**Policy**: No secrets in `.decapod/config.toml` (validated by `validate_project_config_toml` gate).## Security Testing
+
+| Test Type | Cadence | Tooling |
+|-----------|---------|---------|
+| SAST | Every PR | `cargo clippy -- -D warnings`, `cargo deny` |
+| Dependency Scan | Every PR + Weekly | `cargo audit`, `cargo deny check` |
+| Container Scan | On image build | `docker scout` / `trivy` (optional) |
+| Config Validation | Every `validate` run | Schema + forbidden keys gate |
+| Fuzzing | Periodic | `cargo fuzz` (not yet configured) |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -183,27 +200,6 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Secrets Management
-
-| Secret | Source | Rotation | Consumer |
-|--------|--------|----------|----------|
-| `DECAPOD_SESSION_PASSWORD` | Per-agent env var | Per-session (acquire/release) | `session acquire`, broker auth |
-| Git credentials | SSH agent / git credential helper | Standard git | `VcsWrite` actions |
-| Container registry auth | `docker login` / config | Standard docker | `ContainerExec` build |
-| Cargo registry token | `CARGO_REGISTRY_TOKEN` | Standard cargo | `ProofExec` publish |
-
-**Policy**: No secrets in `.decapod/config.toml` (validated by `validate_project_config_toml` gate).
-
-## Security Testing
-
-| Test Type | Cadence | Tooling |
-|-----------|---------|---------|
-| SAST | Every PR | `cargo clippy -- -D warnings`, `cargo deny` |
-| Dependency Scan | Every PR + Weekly | `cargo audit`, `cargo deny check` |
-| Container Scan | On image build | `docker scout` / `trivy` (optional) |
-| Config Validation | Every `validate` run | Schema + forbidden keys gate |
-| Fuzzing | Periodic | `cargo fuzz` (not yet configured) |
 
 ## Compliance and Audit
 
@@ -260,7 +256,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f82026e06f071878e2fae1cdddd4d04c799ce65a6a9f06645a6180875a6f5a99`
+- Repository signal fingerprint: `e29fe54bfbfae334ed469b1273b023d8fd1ca8460c75f27fc0052ca170c35e46`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

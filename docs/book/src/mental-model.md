@@ -9,7 +9,7 @@ The practical output of that kernel is durable project state. `.decapod/` preser
 In an operating system, the kernel manages hardware resources and provides a stable API for user-space applications. Decapod performs a similar role for the repository:
 
 - **Resources:** Decapod manages git worktrees, containers, and the state of work units (Todos).
-- **API:** Agents call Decapod via a structured CLI or JSON-RPC interface to request resources or validate their state.
+- **API:** Agents call Decapod via a structured CLI or Decapod-specific RPC interface to request resources or validate their state.
 - **Isolation:** Decapod ensures that processes (agents) don't interfere with each other or the system's "main memory" (the root repository branch).
 - **State:** Decapod records the governed trail of the work in the repository so another agent, reviewer, or CI run can resume or audit without depending on the original transcript.
 

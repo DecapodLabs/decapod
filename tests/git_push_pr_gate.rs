@@ -89,6 +89,21 @@ fn setup_repo_with_branch(branch: &str) -> (TempDir, PathBuf, String) {
         .expect("git worktree add");
     assert!(worktree.status.success(), "git worktree add failed");
 
+    let branch_check = Command::new("git")
+        .current_dir(&worktree_dir)
+        .args(["rev-parse", "--abbrev-ref", "HEAD"])
+        .output()
+        .expect("resolve worktree branch");
+    assert!(
+        branch_check.status.success(),
+        "resolve worktree branch failed"
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&branch_check.stdout).trim(),
+        branch,
+        "worktree setup must leave validation on the requested working branch"
+    );
+
     let acquire = run_decapod(
         &worktree_dir,
         &["session", "acquire"],

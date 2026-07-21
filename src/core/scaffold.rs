@@ -5,7 +5,9 @@
 //! - Embedded methodology documents
 
 use crate::core::assets;
-use crate::core::capabilities::{CapabilityRegistry, apply_capability_overlays};
+use crate::core::capabilities::{
+    CapabilityRegistry, apply_capability_overlays, reconcile_capability_overlays,
+};
 use crate::core::capsule_policy::{GENERATED_POLICY_REL_PATH, default_policy_json_pretty};
 use crate::core::error;
 use crate::core::project_specs::{
@@ -1815,6 +1817,11 @@ pub fn scaffold_project_entrypoints(
         let existing_manifest = read_specs_manifest(&opts.target_dir).ok().flatten();
 
         let seed = opts.specs_seed.as_ref();
+        let current_config_hash = if opts.target_dir.join(".decapod/config.toml").exists() {
+            config_input_hash(&opts.target_dir).unwrap_or_default()
+        } else {
+            String::new()
+        };
         let mut specs_files: Vec<(&str, String)> = Vec::new();
         for spec in LOCAL_PROJECT_SPECS {
             let Some(mut content) =
@@ -1850,24 +1857,47 @@ pub fn scaffold_project_entrypoints(
                 let manifest_entry = existing_manifest
                     .as_ref()
                     .and_then(|m| m.files.iter().find(|f| f.path == rel_path));
+                let scaffold_inputs_changed = existing_manifest
+                    .as_ref()
+                    .is_some_and(|manifest| manifest.config_input_hash != current_config_hash);
+                let reconciled_existing = reconcile_capability_overlays(
+                    rel_path,
+                    existing_str.clone(),
+                    &opts.capabilities,
+                );
+                let capability_update_needed = reconciled_existing != existing_str;
 
                 // A spec file is untouched if its current content hash matches the new template hash,
                 // the content matches, or it matches the content hash recorded in the existing manifest.
                 let is_untouched = existing_hash == template_hash
                     || existing_str == content
                     || manifest_entry
-                        .map(|e| existing_hash == e.content_hash)
+                        // A manifest records authored content too.  Only use
+                        // it as evidence of an untouched scaffold when the
+                        // recorded content was itself the prior template;
+                        // otherwise a second --force run would overwrite a
+                        // human edit after the first run refreshed the
+                        // manifest.
+                        .map(|e| {
+                            existing_hash == e.content_hash
+                                && (e.content_hash == e.template_hash || scaffold_inputs_changed)
+                        })
                         .unwrap_or(false);
 
                 // Living specs are project-owned contracts. `--force` may repair
                 // missing scaffold files or update untouched files, but must not replace authored content.
-                if opts.force && is_untouched {
-                    match write_file(opts, rel_path, &content)? {
+                if opts.force && (is_untouched || capability_update_needed) {
+                    let desired_content = if is_untouched {
+                        content.clone()
+                    } else {
+                        reconciled_existing
+                    };
+                    match write_file(opts, rel_path, &desired_content)? {
                         FileAction::Created => created += 1,
                         FileAction::Unchanged => unchanged += 1,
                         FileAction::Preserved => preserved += 1,
                     }
-                    final_content_hash = hash_text(&content);
+                    final_content_hash = hash_text(&desired_content);
                 } else {
                     final_content_hash = existing_hash.clone();
                     if existing_hash == hash_text(&content) {

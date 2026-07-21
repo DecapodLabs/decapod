@@ -48,6 +48,7 @@
       "text": "## 6. Validate Doctrine (Proof Currency)\n\nAgents should treat proof as the control plane's currency:\n\n- if validation exists, run it\n- if validation doesn't exist, add the smallest validation gate that prevents drift\n- if something is claimed in docs, validation should be able to detect it\n\nThis is how the repo avoids \"doc reality\" diverging from \"code reality.\"\n\nValidate taxonomy (intended):"
     }
   ],
+  "capabilities": [],
   "policy": {
     "risk_tier": "",
     "policy_hash": "",
@@ -56,5 +57,7 @@
     "repo_revision": ""
   },
   "capsule_hash": "4dfb9cae4e1da9d21f109037982d1e2244accf747da5c029605ab1ae50f2f237",
-  "repo_signal_fingerprint": ""
+  "repo_signal_fingerprint": "",
+  "config_input_hash": "",
+  "spec_input_hash": ""
 }

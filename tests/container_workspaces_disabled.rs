@@ -335,9 +335,14 @@ fn test_e2e_validate_container_sequences_never_fire_when_disabled() {
     let stderr = String::from_utf8_lossy(&out.stderr);
     let stdout = String::from_utf8_lossy(&out.stdout);
 
+    // Validation may mention best-effort stale-image cleanup in a warning even
+    // when no container workspace sequence is requested. Assert on execution
+    // markers instead of the broad word "container" so this remains stable
+    // when cleanup diagnostics change.
     assert!(
-        !stderr.contains("container") && !stdout.contains("container"),
-        "container sequences should never fire when container_workspaces disabled. stderr: {stderr}, stdout: {stdout}"
+        !stderr.contains("container_workspace_required")
+            && !stdout.contains("container_workspace_required"),
+        "container workspace validation should not be required when disabled. stderr: {stderr}, stdout: {stdout}"
     );
 
     assert!(

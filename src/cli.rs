@@ -1125,7 +1125,7 @@ pub(crate) enum Command {
     #[clap(name = "workspace", visible_alias = "w")]
     Workspace(WorkspaceCli),
 
-    /// Structured JSON-RPC interface for agents
+    /// Decapod-specific structured RPC interface for agents
     #[clap(name = "rpc")]
     Rpc(RpcCli),
 
