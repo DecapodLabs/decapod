@@ -793,7 +793,7 @@ pub fn get_prompts_for_context(
     let prompts = broker.with_conn(&db_path, "decapod", None, "aptitude.prompt.get", |conn| {
         let query = format!(
             "SELECT id, context, prompt_text, priority, active, usage_count, last_shown_at, created_at, updated_at
-             FROM agent_prompts 
+             FROM agent_prompts
              WHERE active = 1 AND (context = ?1 OR context = 'global')
              ORDER BY priority DESC, usage_count ASC
              LIMIT {}",

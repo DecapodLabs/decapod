@@ -1812,6 +1812,7 @@ pub fn scaffold_project_entrypoints(
         let mut unchanged = 0usize;
         let mut preserved = 0usize;
         let mut manifest_entries: Vec<ProjectSpecManifestEntry> = Vec::new();
+        let existing_manifest = read_specs_manifest(&opts.target_dir).ok().flatten();
 
         let seed = opts.specs_seed.as_ref();
         let mut specs_files: Vec<(&str, String)> = Vec::new();
@@ -1845,15 +1846,35 @@ pub fn scaffold_project_entrypoints(
 
             let mut final_content_hash = hash_text(&content);
             if let Some(existing_str) = existing_content {
+                let existing_hash = hash_text(&existing_str);
+                let manifest_entry = existing_manifest
+                    .as_ref()
+                    .and_then(|m| m.files.iter().find(|f| f.path == rel_path));
+
+                // A spec file is untouched if its current content hash matches the new template hash,
+                // the content matches, or it matches the content hash recorded in the existing manifest.
+                let is_untouched = existing_hash == template_hash
+                    || existing_str == content
+                    || manifest_entry
+                        .map(|e| existing_hash == e.content_hash)
+                        .unwrap_or(false);
+
                 // Living specs are project-owned contracts. `--force` may repair
-                // missing scaffold files, but must not replace authored content
-                // with a fresh scaffold; use the specs refresh path for a
-                // deliberate re-evaluation.
-                final_content_hash = hash_text(&existing_str);
-                if final_content_hash == hash_text(&content) {
-                    unchanged += 1;
+                // missing scaffold files or update untouched files, but must not replace authored content.
+                if opts.force && is_untouched {
+                    match write_file(opts, rel_path, &content)? {
+                        FileAction::Created => created += 1,
+                        FileAction::Unchanged => unchanged += 1,
+                        FileAction::Preserved => preserved += 1,
+                    }
+                    final_content_hash = hash_text(&content);
                 } else {
-                    preserved += 1;
+                    final_content_hash = existing_hash.clone();
+                    if existing_hash == hash_text(&content) {
+                        unchanged += 1;
+                    } else {
+                        preserved += 1;
+                    }
                 }
             } else {
                 match try_write_file(opts, rel_path, &content) {

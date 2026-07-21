@@ -282,7 +282,7 @@ jobs:
           set -euo pipefail
           CHANGED="${{ steps.changed.outputs.changed }}"
           echo "Changed files: $CHANGED"
-          
+
           case "${{ matrix.target }}" in
             core)
               if echo "$CHANGED" | grep -qE 'src/core/(todo|validate|workspace|workunit|obligation|docs|capsule|rpc|migration|gateway)'; then

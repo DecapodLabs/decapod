@@ -1,29 +1,6 @@
 # Validation
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <!-- decapod:capability-overlay:background-processing:start -->
-
 
 ## Background Processing Validation Overlay
 
@@ -43,10 +20,7 @@
 - No data loss on forced termination
 <!-- decapod:capability-overlay:background-processing:end -->
 
-
-
 <!-- decapod:capability-overlay:persistent-state:start -->
-
 
 ## Persistent State Validation Overlay
 
@@ -364,7 +338,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `555c5e42edbc62d8edeffe6443a5c5a18c3b3fd640acd6387515a37d7a415a63`
+- Repository signal fingerprint: `28cd9ff0be0f7e489448c616bd79bd32f020e520263d0e2fcb9ff84f8d9ae419`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

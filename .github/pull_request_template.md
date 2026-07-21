@@ -13,9 +13,9 @@
 ## How to test (required)
 <!-- Paste exact commands + expected output. -->
 Commands run:
-- 
+-
 Expected result:
-- 
+-
 
 ## Risk / blast radius (required)
 <!-- What could break, where, and how badly. -->

@@ -482,7 +482,7 @@ pub fn get_dependencies(
 
     broker.with_conn(&db_path, "decapod", None, "obligation.get_deps", |conn| {
         let mut stmt = conn.prepare(
-            "SELECT o.id, o.intent_ref, o.risk_tier, o.required_proofs, o.state_commit_root, o.status, o.created_at, o.updated_at, o.metadata 
+            "SELECT o.id, o.intent_ref, o.risk_tier, o.required_proofs, o.state_commit_root, o.status, o.created_at, o.updated_at, o.metadata
              FROM obligations o
              JOIN obligation_edges e ON o.id = e.to_id
              WHERE e.from_id = ?1"

@@ -25,4 +25,3 @@ Defines project-specific policy and metadata.
 ## Project Overrides
 
 For deep behavioral changes, use `.decapod/OVERRIDE.md` (see [Config Overrides](concepts/overrides.md)). This allows you to override specific directives in the embedded Decapod constitution (see [Repository Constitution](concepts/constitution.md)) without modifying the Decapod binary itself.
-

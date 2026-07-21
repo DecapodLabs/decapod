@@ -285,6 +285,13 @@ fn test_mandatory_todo_enforcement() {
 
 #[test]
 fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
+    unsafe {
+        std::env::remove_var("DECAPOD_TASK_ID");
+        std::env::remove_var("DECAPOD_EXTERNAL_TASK_ID");
+        std::env::remove_var("BD_TASK_ID");
+        std::env::remove_var("BEADS_TASK_ID");
+    }
+
     let (_tmp, dir, password) = setup_workspace();
     let agent_id = "test-agent-enforce";
 

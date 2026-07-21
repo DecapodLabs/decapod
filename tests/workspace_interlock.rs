@@ -51,12 +51,17 @@ fn workspace_ensure_blocks_on_protected_branch_with_local_mods() {
         .expect("workspace ensure");
 
     assert!(
-        !out.status.success(),
-        "workspace ensure should block for protected+dirty checkout"
+        out.status.success(),
+        "workspace ensure should return success status with JSON response"
     );
-    let stderr = String::from_utf8_lossy(&out.stderr);
+    let stdout_str = String::from_utf8_lossy(&out.stdout);
+    let val: serde_json::Value = serde_json::from_str(&stdout_str).expect("parse JSON");
+    assert_eq!(val["status"], "pending");
+    let blockers = val["blockers"].as_array().expect("blockers array");
+    let has_dirty_blocker = blockers.iter().any(|b| b["kind"] == "workspace_required");
     assert!(
-        stderr.contains("WORKSPACE_INTERLOCK_DIRTY_PROTECTED"),
-        "unexpected stderr: {stderr}"
+        has_dirty_blocker,
+        "expected workspace_required blocker in {:?}",
+        blockers
     );
 }

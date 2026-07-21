@@ -10,16 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-        
+
       - name: Build Decapod
         run: cargo build --release
-        
+
       - name: Generate Docs
         run: ./target/release/decapod docs build
-        
+
       - name: Check for drift
         id: drift
         run: |
@@ -28,7 +28,7 @@ jobs:
           else
             echo "drift=false" >> $GITHUB_OUTPUT
           fi
-          
+
       - name: Create Pull Request
         if: steps.drift.outputs.drift == 'true'
         uses: peter-evans/create-pull-request@v6

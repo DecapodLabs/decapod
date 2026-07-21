@@ -19,4 +19,3 @@ While execution is isolated, context is shared. Agents use `decapod data memory`
 - **Frequent Heartbeats:** Agents should run `decapod todo heartbeat` (see [CLI Reference](../reference/cli.md)) to signal they are still active.
 - **Explicit Handoffs:** Use `decapod todo handoff` to transfer a task (and its current uncommitted state) between agents.
 - **Centralized Validation:** Always run `decapod validate` before publishing to ensure your changes haven't introduced regressions against the latest state of the root repository (see [Proof & Validation](../concepts/proof.md)).
-
