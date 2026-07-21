@@ -1645,6 +1645,7 @@ pub fn prune_workspaces(
     };
 
     let mut pruned = Vec::new();
+    let process_dir = std::env::current_dir().ok();
 
     // 3) Iterate over the directory entries under .decapod/workspaces/
     for entry in std::fs::read_dir(&workspaces_dir).map_err(DecapodError::IoError)? {
@@ -1654,10 +1655,12 @@ pub fn prune_workspaces(
             continue;
         }
 
-        // Safety Safeguard: Do not prune if repo_root is inside or equal to dir_path.
+        // Safety safeguard: never prune the workspace containing the process cwd.
         let normalized_dir = normalize_path_for_compare(&dir_path);
-        let normalized_repo = normalize_path_for_compare(repo_root);
-        if normalized_repo == normalized_dir || repo_root.starts_with(&dir_path) {
+        let process_is_inside_candidate = process_dir
+            .as_ref()
+            .is_some_and(|current| current.starts_with(&dir_path));
+        if process_is_inside_candidate {
             continue;
         }
 
