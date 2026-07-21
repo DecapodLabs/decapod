@@ -26,7 +26,25 @@ Operational ownership follows the declared surfaces: session/authentication and 
 | Workspace creation + container (P95) | < 300s | Per invocation | Docker build time variable |
 | Validation gate pass rate | 100% blocking gates | Per promotion | Zero tolerance for blocking gate failures |
 | SQLite lock contention retry | < 5 retries | Per connection | Exponential backoff + jitter |
-| Capabilities discovery | < 500ms | Per call | Includes crates.io version check |
+| Capabilities discovery | < 500ms | Per call | Includes crates.io version check |## Monitoring
+
+### Key Signals (Self-Observability via Flight Recorder)
+| Signal | Source | Query |
+|--------|--------|-------|
+| Validation duration | `decapod trace flight-recorder timeline` | `validation` events |
+| Workspace interlocks | `decapod trace flight-recorder timeline` | `interlock.code` = `workspace_required` |
+| Proof execution | `decapod qa verify` / `proof.events.jsonl` | `proof.run` events |
+| Todo claim conflicts | `todo.events.jsonl` | `task.claim` with conflict |
+| Session acquisition | `session.acquire` | broker events |
+
+### Alerting (Human-Visible)
+| Condition | Severity | Action |
+|-----------|----------|--------|
+| `decapod validate` fails blocking gates | Critical | Block promotion; inspect validation report |
+| Workspace creation fails > 3x | Warning | Check git/docker availability; run `decapod system doctor` |
+| SQLite `DatabaseLocked` > 5 retries | Warning | Check concurrent agents; run `decapod workspace prune` |
+| Capsule policy lineage mismatch | Critical | Block publish; re-run `decapod govern capsule query --write` |
+| Specs manifest out of sync | Warning | Run `decapod validate --refresh-specs` |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -64,26 +82,6 @@ Operational ownership follows the declared surfaces: session/authentication and 
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Monitoring
-
-### Key Signals (Self-Observability via Flight Recorder)
-| Signal | Source | Query |
-|--------|--------|-------|
-| Validation duration | `decapod trace flight-recorder timeline` | `validation` events |
-| Workspace interlocks | `decapod trace flight-recorder timeline` | `interlock.code` = `workspace_required` |
-| Proof execution | `decapod qa verify` / `proof.events.jsonl` | `proof.run` events |
-| Todo claim conflicts | `todo.events.jsonl` | `task.claim` with conflict |
-| Session acquisition | `session.acquire` | broker events |
-
-### Alerting (Human-Visible)
-| Condition | Severity | Action |
-|-----------|----------|--------|
-| `decapod validate` fails blocking gates | Critical | Block promotion; inspect validation report |
-| Workspace creation fails > 3x | Warning | Check git/docker availability; run `decapod system doctor` |
-| SQLite `DatabaseLocked` > 5 retries | Warning | Check concurrent agents; run `decapod workspace prune` |
-| Capsule policy lineage mismatch | Critical | Block publish; re-run `decapod govern capsule query --write` |
-| Specs manifest out of sync | Warning | Run `decapod validate --refresh-specs` |
 
 ## Health Checks
 
@@ -272,7 +270,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `481537107777a7d60cd662a91c399b96d71c78a8aa30287e0bed64151ca207f9`
+- Repository signal fingerprint: `75c769e66f817ade819bd8dd4cfaa1f3d9f94c216ecca63044dad5fa0f498546`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

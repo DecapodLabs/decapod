@@ -162,49 +162,7 @@ stateDiagram-v2
 ### Obligation Graph
 - **Order**: Topological (dependencies before dependents)
 - **Conflict**: Cycles detected at add-time (`detect_cycle`)
-- **Resolution**: Reject add; human must restructure
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-## Background Processing Semantics Overlay
-
-### Retry Semantics
-- Retry and backoff behavior MUST be selected and documented for each work class
-- Poison-work handling MUST be selected and documented for each work class
-- Retry MUST preserve the declared side-effect and idempotency semantics
-
-### Idempotency
-- Each job MUST declare whether it is idempotent, transactional, compensating, or otherwise duplicate-safe
-- Deduplication or compensation mechanisms are project decisions and require proof
-- Duplicate execution MUST follow the job's declared duplicate-handling semantics
-
-### Poison Message Handling
-- Messages failing after max retries go to dead letter queue
-- DLQ MUST be monitored and alerted
-- Manual replay capability for DLQ messages
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Semantics Overlay
-
-### Transaction Semantics
-- All multi-entity operations MUST be atomic
-- Read-after-write consistency within transaction boundaries
-- Eventual consistency windows MUST be documented
-
-### Migration Semantics
-- Schema migrations MUST be backward-compatible
-- Migration rollback procedures MUST be documented
-- Data integrity checks post-migration
-
-### Recovery Semantics
-- Point-in-time recovery capability
-- Recovery objectives MUST be selected for the project and recorded as proof obligations
-- Recovery test cadence MUST be selected for the project and recorded as a proof obligation
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-## Error Code Semantics
+- **Resolution**: Reject add; human must restructure## Error Code Semantics
 
 ### Namespace
 `DECAPOD_ERROR` prefix for all structured errors.
@@ -220,9 +178,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 | `WORKSPACE_*` | No | Blocked | `workspace.ensure` |
 | `SESSION_*` | No | Blocked | `session.acquire` |
 | `VALIDATION_*` | No | Blocked | Fix + re-validate |
-| `STORAGE_*` | Yes (5x) | Read-only | Check disk/perms |
-
-## Domain Rules
+| `STORAGE_*` | Yes (5x) | Read-only | Check disk/perms |## Domain Rules
 
 ### Workspace Rules
 1. **Protected Branch Block**: `main`, `master`, `production`, `stable`, `release/*`, `hotfix/*` — no work allowed
@@ -273,6 +229,46 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 3. **Specs Sync**: Template drift = fail (or `--refresh-specs` to acknowledge)
 4. **Config Schema**: `schema_version=1.0.0` required; forbidden keys rejected
 
+<!-- decapod:capability-overlay:background-processing:start -->
+
+## Background Processing Semantics Overlay
+
+### Retry Semantics
+- Retry and backoff behavior MUST be selected and documented for each work class
+- Poison-work handling MUST be selected and documented for each work class
+- Retry MUST preserve the declared side-effect and idempotency semantics
+
+### Idempotency
+- Each job MUST declare whether it is idempotent, transactional, compensating, or otherwise duplicate-safe
+- Deduplication or compensation mechanisms are project decisions and require proof
+- Duplicate execution MUST follow the job's declared duplicate-handling semantics
+
+### Poison Message Handling
+- Messages failing after max retries go to dead letter queue
+- DLQ MUST be monitored and alerted
+- Manual replay capability for DLQ messages
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Semantics Overlay
+
+### Transaction Semantics
+- All multi-entity operations MUST be atomic
+- Read-after-write consistency within transaction boundaries
+- Eventual consistency windows MUST be documented
+
+### Migration Semantics
+- Schema migrations MUST be backward-compatible
+- Migration rollback procedures MUST be documented
+- Data integrity checks post-migration
+
+### Recovery Semantics
+- Point-in-time recovery capability
+- Recovery objectives MUST be selected for the project and recorded as proof obligations
+- Recovery test cadence MUST be selected for the project and recorded as a proof obligation
+<!-- decapod:capability-overlay:persistent-state:end -->
+
 ## Idempotency Contracts
 
 | Operation | Idempotency Key | Duplicate Behavior |
@@ -298,7 +294,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `481537107777a7d60cd662a91c399b96d71c78a8aa30287e0bed64151ca207f9`
+- Repository signal fingerprint: `75c769e66f817ade819bd8dd4cfaa1f3d9f94c216ecca63044dad5fa0f498546`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
