@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.73.0](https://github.com/DecapodLabs/decapod/compare/v0.72.17...v0.73.0) - 2026-07-21
+
+### Added
+
+- complete guided init governance configuration
+
+### Fixed
+
+- surface tracked decapod runtime files
+
+### Other
+
+- refresh v0.72.17 release fingerprints
+- autogenerate/sync command contracts
+
 ## [0.72.17](https://github.com/DecapodLabs/decapod/compare/v0.72.16...v0.72.17) - 2026-07-21
 
 ### Other
