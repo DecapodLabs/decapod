@@ -398,6 +398,10 @@ Preserve the chain between intent, context, assumptions, action, and proof.
 3. **Evidence-Based Claims**: Claims of completion must be tied to measured evidence.
 4. **Clarification Trigger**: Stop if a critical assumption cannot be proven.
 
+## Run-Level Trajectory and Proof
+Record a local artifact under `.decapod/governance/trajectories/`: initialize with intent/boundaries/scope, record inspected/modified files, commands/tool calls, checks, evidence, assumptions, and shortcut signals, then inspect with `decapod govern trajectory status --run-id <run-id>`.
+Use `decapod govern trajectory init --run-id <run-id> --original-intent "..." --derived-intent "..." --boundary "..." --scope "..."` and `decapod govern trajectory record --run-id <run-id> --inspected-file <path> --check "name=status"`.
+Completion claims never prove completion: `passed`, `failed`, `partial`, `unavailable`, and `no_checks_run` remain distinct, and no checks means an `unsupported` completion verdict.
 ## Invariants (Normative)
 - **INV-DAEMONLESS**: Decapod MUST NOT leave background processes running.
 - **INV-BOUNDED-VALIDATE**: `decapod validate` MUST terminate within bounded time.

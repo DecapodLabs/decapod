@@ -6273,6 +6273,9 @@ fn run_govern_command(
         GovernCommand::Workunit(workunit_cli) => {
             run_workunit_command(workunit_cli, project_store, workspace_root)?
         }
+        GovernCommand::Trajectory(trajectory_cli) => {
+            run_trajectory_command(trajectory_cli, workspace_root)?
+        }
         GovernCommand::Capsule(capsule_cli) => {
             run_capsule_command(capsule_cli, project_store, workspace_root)?
         }
@@ -6423,6 +6426,102 @@ fn run_workunit_command(
         }
     }
 
+    Ok(())
+}
+
+fn run_trajectory_command(
+    trajectory_cli: TrajectoryCli,
+    workspace_root: &Path,
+) -> Result<(), error::DecapodError> {
+    match trajectory_cli.command {
+        TrajectoryCommand::Init {
+            run_id,
+            task_id,
+            original_intent,
+            derived_intent,
+            active_boundaries,
+            repo_scope,
+        } => {
+            let artifact = core::trajectory::init_trajectory(
+                workspace_root,
+                &run_id,
+                task_id,
+                original_intent,
+                derived_intent,
+                active_boundaries,
+                repo_scope,
+            )?;
+            let path = core::trajectory::trajectory_path(workspace_root, &run_id)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "status": "ok",
+                    "marker": "TRAJECTORY_INITIALIZED",
+                    "path": path,
+                    "trajectory": artifact,
+                }))
+                .unwrap()
+            );
+        }
+        TrajectoryCommand::Record {
+            run_id,
+            active_boundaries,
+            repo_scope,
+            inspected_files,
+            modified_files,
+            declared_commands,
+            tool_calls,
+            checks,
+            evidence,
+            shortcut_risk_signals,
+            unresolved_assumptions,
+            completion_claim,
+        } => {
+            let checks = checks
+                .iter()
+                .map(|spec| core::trajectory::parse_check_spec(spec))
+                .collect::<Result<Vec<_>, _>>()?;
+            let artifact = core::trajectory::record_trajectory(
+                workspace_root,
+                &run_id,
+                core::trajectory::TrajectoryUpdate {
+                    active_boundaries,
+                    repo_scope,
+                    inspected_files,
+                    modified_files,
+                    declared_commands,
+                    tool_calls,
+                    checks,
+                    evidence,
+                    shortcut_risk_signals,
+                    unresolved_assumptions,
+                    completion_claim,
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&artifact).unwrap());
+        }
+        TrajectoryCommand::Get { run_id } => {
+            let artifact = core::trajectory::load_trajectory(workspace_root, &run_id)?;
+            println!("{}", serde_json::to_string_pretty(&artifact).unwrap());
+        }
+        TrajectoryCommand::Status { run_id } => {
+            let artifact = core::trajectory::load_trajectory(workspace_root, &run_id)?;
+            let path = core::trajectory::trajectory_path(workspace_root, &run_id)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&serde_json::json!({
+                    "status": "ok",
+                    "run_id": artifact.run_id,
+                    "proof_status": artifact.proof_status,
+                    "verdicts": artifact.verdicts,
+                    "completion_claim": artifact.completion_claim,
+                    "artifact_hash": artifact.artifact_hash,
+                    "path": path,
+                }))
+                .unwrap()
+            );
+        }
+    }
     Ok(())
 }
 

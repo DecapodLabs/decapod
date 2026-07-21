@@ -747,6 +747,9 @@ pub(crate) enum GovernCommand {
     /// Work unit manifest artifacts (intent/spec/state/proof chain)
     Workunit(WorkunitCli),
 
+    /// Inspectable local-first agent run trajectory artifacts
+    Trajectory(TrajectoryCli),
+
     /// Deterministic context capsule query over embedded constitution docs
     Capsule(CapsuleCli),
 
@@ -932,6 +935,69 @@ pub(crate) enum PlanCommand {
 pub(crate) struct WorkunitCli {
     #[clap(subcommand)]
     pub command: WorkunitCommand,
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct TrajectoryCli {
+    #[clap(subcommand)]
+    pub command: TrajectoryCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum TrajectoryCommand {
+    /// Create a trajectory artifact for an agent run
+    Init {
+        #[clap(long)]
+        run_id: String,
+        #[clap(long)]
+        task_id: Option<String>,
+        #[clap(long)]
+        original_intent: String,
+        #[clap(long)]
+        derived_intent: String,
+        #[clap(long = "boundary")]
+        active_boundaries: Vec<String>,
+        #[clap(long = "scope")]
+        repo_scope: Vec<String>,
+    },
+    /// Record inspected files, actions, checks, assumptions, and completion claims
+    Record {
+        #[clap(long)]
+        run_id: String,
+        #[clap(long = "boundary")]
+        active_boundaries: Vec<String>,
+        #[clap(long = "scope")]
+        repo_scope: Vec<String>,
+        #[clap(long = "inspected-file")]
+        inspected_files: Vec<String>,
+        #[clap(long = "modified-file")]
+        modified_files: Vec<String>,
+        #[clap(long = "command")]
+        declared_commands: Vec<String>,
+        #[clap(long = "tool-call")]
+        tool_calls: Vec<String>,
+        /// Check in name=status form: passed, failed, partial, or unavailable
+        #[clap(long = "check")]
+        checks: Vec<String>,
+        #[clap(long = "evidence")]
+        evidence: Vec<String>,
+        #[clap(long = "shortcut-signal")]
+        shortcut_risk_signals: Vec<String>,
+        #[clap(long = "assumption")]
+        unresolved_assumptions: Vec<String>,
+        #[clap(long)]
+        completion_claim: Option<String>,
+    },
+    /// Inspect a trajectory artifact and its computed proof/verdict status
+    Get {
+        #[clap(long)]
+        run_id: String,
+    },
+    /// Show compact trajectory proof status
+    Status {
+        #[clap(long)]
+        run_id: String,
+    },
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]

@@ -323,6 +323,33 @@ fn validate_fails_on_invalid_workunit_manifest_if_present() {
 }
 
 #[test]
+fn validate_fails_on_invalid_trajectory_artifact_if_present() {
+    let (_tmp, dir, password) = setup_repo();
+    let trajectories = dir.join(".decapod").join("governance").join("trajectories");
+    fs::create_dir_all(&trajectories).expect("create trajectory directory");
+    fs::write(trajectories.join("run_BAD.json"), "{not-json").expect("write malformed trajectory");
+
+    let validate = run_decapod(
+        &dir,
+        &["validate", "--format", "json"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !validate.status.success(),
+        "validate should fail for malformed trajectory artifact"
+    );
+    let stderr = combined_output(&validate);
+    assert!(
+        stderr.contains("invalid trajectory artifact"),
+        "expected trajectory artifact parse failure in stderr, got:\n{stderr}"
+    );
+}
+
+#[test]
 fn validate_fails_on_verified_workunit_missing_passing_proofs() {
     let (_tmp, dir, password) = setup_repo();
     let workunits = dir.join(".decapod").join("governance").join("workunits");

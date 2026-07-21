@@ -49,6 +49,7 @@ pub mod store;
 pub mod time;
 pub mod todo;
 pub mod trace;
+pub mod trajectory;
 pub mod ulid;
 pub mod validate;
 pub mod validation_epoch;
