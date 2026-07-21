@@ -104,6 +104,13 @@ const DATA_NODES: &[&str] = &[
     "data/POSTGRESQL",
 ];
 
+const METADATA_NODES: &[&str] = &[
+    "metadata/skills/AGENT_DECAPOD_INTERFACE",
+    "metadata/skills/BUNDLE",
+    "metadata/skills/HUMAN_AGENT_UX",
+    "metadata/skills/INTENT_REFINEMENT",
+];
+
 const METHODOLOGY_NODES: &[&str] = &[
     "methodology/ARCHITECTURE",
     "methodology/CI_CD",
@@ -582,6 +589,84 @@ fn all_data_nodes_have_architect_grade_persistence_and_pipeline_doctrine() {
 }
 
 #[test]
+fn all_metadata_nodes_have_architect_grade_skill_and_ux_doctrine() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+
+    let actual_metadata_count = nodes
+        .values()
+        .filter(|node| node["category"].as_str() == Some("metadata"))
+        .count();
+    assert_eq!(
+        actual_metadata_count,
+        METADATA_NODES.len(),
+        "METADATA_NODES test list must cover every metadata/* node"
+    );
+
+    let core_refs = nodes["core/METADATA"]["links"]["references"]
+        .as_array()
+        .expect("core metadata references");
+
+    for node_id in METADATA_NODES {
+        let node = nodes
+            .get(*node_id)
+            .unwrap_or_else(|| panic!("missing metadata node {node_id}"));
+        assert_eq!(
+            node["category"].as_str(),
+            Some("metadata"),
+            "{node_id} must remain in the metadata namespace"
+        );
+        assert_architect_grade_fields(node_id, node);
+        assert_non_empty_array(
+            &node["links"]["references"],
+            &format!("{node_id}.links.references"),
+        );
+        assert!(
+            node["links"]["referenced_by"]
+                .as_array()
+                .is_some_and(|refs| refs
+                    .iter()
+                    .any(|value| value.as_str() == Some("core/METADATA"))),
+            "{node_id} must be reachable from core/METADATA"
+        );
+        assert!(
+            core_refs
+                .iter()
+                .any(|value| value.as_str() == Some(node_id)),
+            "core/METADATA must route to {node_id}"
+        );
+
+        let sections = node["sections"].as_object().expect("sections object");
+        for section in [
+            "match",
+            "ambiguity",
+            "decisions",
+            "standards",
+            "failure_modes",
+            "proceed_when",
+        ] {
+            assert!(
+                sections
+                    .get(section)
+                    .and_then(|items| items.as_array())
+                    .is_some_and(|items| !items.is_empty()),
+                "{node_id}.{section} must preserve metadata guidance"
+            );
+        }
+
+        assert!(
+            lookup.values().any(|entries| {
+                entries.as_array().is_some_and(|entries| {
+                    entries.iter().any(|entry| entry.as_str() == Some(node_id))
+                })
+            }),
+            "{node_id} must remain reachable through at least one lookup term"
+        );
+    }
+}
+
+#[test]
 fn all_methodology_nodes_have_architect_grade_delivery_doctrine() {
     let constitution = load_constitution_asset();
     let nodes = constitution["nodes"].as_object().expect("nodes object");
@@ -663,9 +748,11 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         schema["x-doctrine_model"]["migration_strategy"]
             .as_str()
             .is_some_and(|strategy| {
-                strategy.contains("interfaces nodes") && strategy.contains("data nodes")
+                strategy.contains("interfaces nodes")
+                    && strategy.contains("data nodes")
+                    && strategy.contains("metadata nodes")
             }),
-        "schema must document in-place interfaces and data namespace migration"
+        "schema must document in-place interfaces, data, and metadata namespace migration"
     );
 
     let node_schema = &schema["definitions"]["node"];
@@ -693,6 +780,10 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         .iter()
         .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("data"))
         .expect("node schema must declare data doctrine conditional");
+    let metadata_rule = rules
+        .iter()
+        .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("metadata"))
+        .expect("node schema must declare metadata doctrine conditional");
 
     let required = architecture_rule["then"]["required"]
         .as_array()
@@ -731,6 +822,16 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         assert!(
             required.iter().any(|value| value.as_str() == Some(field)),
             "data schema must require {field}"
+        );
+    }
+
+    let required = metadata_rule["then"]["required"]
+        .as_array()
+        .expect("metadata doctrine required fields");
+    for field in ARCHITECTURE_DOCTRINE_FIELDS {
+        assert!(
+            required.iter().any(|value| value.as_str() == Some(field)),
+            "metadata schema must require {field}"
         );
     }
 
@@ -1176,6 +1277,31 @@ fn embedded_constitution_preserves_data_doctrine() {
                 .as_array()
                 .is_some_and(|refs| !refs.is_empty()),
             "{node_id} must preserve data cross-links in embedded output"
+        );
+    }
+}
+
+#[test]
+fn embedded_constitution_preserves_metadata_doctrine() {
+    for node_id in METADATA_NODES {
+        let output = Command::new(resolve_decapod_bin())
+            .args(["constitution", "get", node_id])
+            .output()
+            .expect("run decapod constitution get");
+        assert!(
+            output.status.success(),
+            "constitution get {node_id} failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let node: serde_json::Value =
+            serde_json::from_slice(&output.stdout).expect("constitution get json");
+        assert_architect_grade_fields(node_id, &node);
+        assert!(
+            node["links"]["references"]
+                .as_array()
+                .is_some_and(|refs| !refs.is_empty()),
+            "{node_id} must preserve metadata cross-links in embedded output"
         );
     }
 }

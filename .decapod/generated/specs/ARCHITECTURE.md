@@ -394,7 +394,7 @@ Verification and artifact emission:
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `28cd9ff0be0f7e489448c616bd79bd32f020e520263d0e2fcb9ff84f8d9ae419`
+- Repository signal fingerprint: `2aa6c07afeb2e903cff814160381f19abfc23dd967053e6c5438419749e6d02c`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
