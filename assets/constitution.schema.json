@@ -9,9 +9,10 @@
       "methodology",
       "interfaces",
       "data",
-      "metadata"
+      "metadata",
+      "plugins"
     ],
-    "migration_strategy": "architecture, methodology, interfaces nodes, data nodes, and metadata nodes are migrated in place; other namespaces keep the compact node contract until explicitly uplifted",
+    "migration_strategy": "architecture, methodology, interfaces nodes, data nodes, metadata nodes, and plugins nodes are migrated in place; other namespaces keep the compact node contract until explicitly uplifted",
     "compatibility": "the node output shape remains stable for current consumers while uplifted namespaces gain additive doctrine fields"
   },
   "type": "object",
@@ -149,6 +150,29 @@
             "properties": {
               "category": {
                 "const": "metadata"
+              }
+            },
+            "required": [
+              "category"
+            ]
+          },
+          "then": {
+            "required": [
+              "architect_notes",
+              "init_questions",
+              "decision_matrix",
+              "tradeoffs",
+              "scaffolding",
+              "spec_impacts",
+              "proof"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "plugins"
               }
             },
             "required": [

@@ -111,6 +111,31 @@ const METADATA_NODES: &[&str] = &[
     "metadata/skills/INTENT_REFINEMENT",
 ];
 
+const PLUGIN_NODES: &[&str] = &[
+    "plugins/APTITUDE",
+    "plugins/ARCHIVE",
+    "plugins/AUDIT",
+    "plugins/AUTOUPDATE",
+    "plugins/CONTAINER",
+    "plugins/CONTEXT",
+    "plugins/CRON",
+    "plugins/DB_BROKER",
+    "plugins/DECIDE",
+    "plugins/EMERGENCY_PROTOCOL",
+    "plugins/FEDERATION",
+    "plugins/FEEDBACK",
+    "plugins/HEALTH",
+    "plugins/HEARTBEAT",
+    "plugins/KNOWLEDGE",
+    "plugins/MANIFEST",
+    "plugins/POLICY",
+    "plugins/REFLEX",
+    "plugins/TODO",
+    "plugins/TRUST",
+    "plugins/VERIFY",
+    "plugins/WATCHER",
+];
+
 const METHODOLOGY_NODES: &[&str] = &[
     "methodology/ARCHITECTURE",
     "methodology/CI_CD",
@@ -482,7 +507,6 @@ fn all_interface_nodes_have_architect_grade_contract_doctrine() {
             &node["links"]["references"],
             &format!("{node_id}.links.references"),
         );
-
         let sections = node["sections"].as_object().expect("sections object");
         for section in [
             "match",
@@ -667,6 +691,102 @@ fn all_metadata_nodes_have_architect_grade_skill_and_ux_doctrine() {
 }
 
 #[test]
+fn all_plugin_nodes_have_architect_grade_subsystem_doctrine() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+
+    let actual_plugin_count = nodes
+        .values()
+        .filter(|node| node["category"].as_str() == Some("plugins"))
+        .count();
+    assert_eq!(
+        actual_plugin_count,
+        PLUGIN_NODES.len(),
+        "PLUGIN_NODES test list must cover every plugins/* node"
+    );
+
+    let core_refs = nodes["core/PLUGINS"]["links"]["references"]
+        .as_array()
+        .expect("core plugin references");
+
+    for node_id in PLUGIN_NODES {
+        let node = nodes
+            .get(*node_id)
+            .unwrap_or_else(|| panic!("missing plugin node {node_id}"));
+        assert_eq!(
+            node["category"].as_str(),
+            Some("plugins"),
+            "{node_id} must remain in the plugins namespace"
+        );
+        assert_architect_grade_fields(node_id, node);
+        assert_non_empty_array(
+            &node["links"]["references"],
+            &format!("{node_id}.links.references"),
+        );
+        assert!(
+            node["links"]["references"]
+                .as_array()
+                .is_some_and(|refs| refs
+                    .iter()
+                    .any(|value| value.as_str() == Some("interfaces/CONTROL_PLANE"))),
+            "{node_id} must link plugin metadata to the control-plane contract"
+        );
+        assert!(
+            node["links"]["referenced_by"]
+                .as_array()
+                .is_some_and(|refs| refs
+                    .iter()
+                    .any(|value| value.as_str() == Some("core/PLUGINS"))),
+            "{node_id} must be reachable from core/PLUGINS"
+        );
+        assert!(
+            core_refs
+                .iter()
+                .any(|value| value.as_str() == Some(node_id)),
+            "core/PLUGINS must route to {node_id}"
+        );
+
+        let sections = node["sections"].as_object().expect("sections object");
+        for section in [
+            "match",
+            "ambiguity",
+            "decisions",
+            "standards",
+            "failure_modes",
+            "proceed_when",
+        ] {
+            assert!(
+                sections
+                    .get(section)
+                    .and_then(|items| items.as_array())
+                    .is_some_and(|items| !items.is_empty()),
+                "{node_id}.{section} must preserve subsystem guidance"
+            );
+        }
+
+        assert!(
+            node["architect_notes"].as_array().is_some_and(|notes| {
+                notes.iter().any(|note| {
+                    note.as_str().is_some_and(|text| {
+                        text.contains(node_id.strip_prefix("plugins/").unwrap())
+                    })
+                })
+            }),
+            "{node_id} architect notes must identify the owned plugin"
+        );
+        assert!(
+            lookup.values().any(|entries| {
+                entries.as_array().is_some_and(|entries| {
+                    entries.iter().any(|entry| entry.as_str() == Some(node_id))
+                })
+            }),
+            "{node_id} must remain reachable through at least one lookup term"
+        );
+    }
+}
+
+#[test]
 fn all_methodology_nodes_have_architect_grade_delivery_doctrine() {
     let constitution = load_constitution_asset();
     let nodes = constitution["nodes"].as_object().expect("nodes object");
@@ -751,8 +871,9 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
                 strategy.contains("interfaces nodes")
                     && strategy.contains("data nodes")
                     && strategy.contains("metadata nodes")
+                    && strategy.contains("plugins nodes")
             }),
-        "schema must document in-place interfaces, data, and metadata namespace migration"
+        "schema must document in-place interfaces, data, metadata, and plugins namespace migration"
     );
 
     let node_schema = &schema["definitions"]["node"];
@@ -784,6 +905,10 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         .iter()
         .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("metadata"))
         .expect("node schema must declare metadata doctrine conditional");
+    let plugin_rule = rules
+        .iter()
+        .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("plugins"))
+        .expect("node schema must declare plugin doctrine conditional");
 
     let required = architecture_rule["then"]["required"]
         .as_array()
@@ -832,6 +957,16 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         assert!(
             required.iter().any(|value| value.as_str() == Some(field)),
             "metadata schema must require {field}"
+        );
+    }
+
+    let required = plugin_rule["then"]["required"]
+        .as_array()
+        .expect("plugin doctrine required fields");
+    for field in ARCHITECTURE_DOCTRINE_FIELDS {
+        assert!(
+            required.iter().any(|value| value.as_str() == Some(field)),
+            "plugin schema must require {field}"
         );
     }
 
@@ -1302,6 +1437,33 @@ fn embedded_constitution_preserves_metadata_doctrine() {
                 .as_array()
                 .is_some_and(|refs| !refs.is_empty()),
             "{node_id} must preserve metadata cross-links in embedded output"
+        );
+    }
+}
+
+#[test]
+fn embedded_constitution_preserves_plugin_doctrine() {
+    for node_id in PLUGIN_NODES {
+        let output = Command::new(resolve_decapod_bin())
+            .args(["constitution", "get", node_id])
+            .output()
+            .expect("run decapod constitution get");
+        assert!(
+            output.status.success(),
+            "constitution get {node_id} failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+
+        let node: serde_json::Value =
+            serde_json::from_slice(&output.stdout).expect("constitution get json");
+        assert_architect_grade_fields(node_id, &node);
+        assert!(
+            node["links"]["referenced_by"]
+                .as_array()
+                .is_some_and(|refs| refs
+                    .iter()
+                    .any(|value| value.as_str() == Some("core/PLUGINS"))),
+            "{node_id} must preserve plugin routing in embedded output"
         );
     }
 }

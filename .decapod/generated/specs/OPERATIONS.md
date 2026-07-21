@@ -1,6 +1,11 @@
 # Operations## Capability Operations
 
-Operational ownership follows the declared surfaces: session/authentication and policy/authorization protect mutations; SQLite/JSONL state and migrations require executable proof; workflow and scheduled jobs require bounded execution and failure visibility; Git/Cargo/container integrations remain explicit external actions; and CLI/JSON-RPC contracts remain machine-facing compatibility surfaces. Capability declarations must not be used as a substitute for command-level evidence.
+Operational ownership follows the declared surfaces: session/authentication and policy/authorization protect mutations; SQLite/JSONL state and migrations require executable proof; workflow and scheduled jobs require bounded execution and failure visibility; Git/Cargo/container integrations remain explicit external actions; and CLI/JSON-RPC contracts remain machine-facing compatibility surfaces. Capability declarations must not be used as a substitute for command-level evidence.## Operational Readiness Checklist
+- [ ] On-call ownership defined (local development tool — typically self-serve)
+- [ ] SLOs defined for validation latency and workspace creation
+- [ ] Runbooks linked for validation failures and workspace interlocks
+- [ ] Rollback plan: `decapod workspace prune --force` + git reset
+- [ ] Capacity guardrails: workspace disk quota, SQLite connection limits
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -38,13 +43,6 @@ Operational ownership follows the declared surfaces: session/authentication and 
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Operational Readiness Checklist
-- [ ] On-call ownership defined (local development tool — typically self-serve)
-- [ ] SLOs defined for validation latency and workspace creation
-- [ ] Runbooks linked for validation failures and workspace interlocks
-- [ ] Rollback plan: `decapod workspace prune --force` + git reset
-- [ ] Capacity guardrails: workspace disk quota, SQLite connection limits
 
 ## Deployment Model
 
@@ -278,7 +276,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2aa6c07afeb2e903cff814160381f19abfc23dd967053e6c5438419749e6d02c`
+- Repository signal fingerprint: `e7da5369d966ae4d12e0392afe8fb4a36394fbdfadb1aac1703792de88263225`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
