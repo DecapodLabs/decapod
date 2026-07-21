@@ -538,7 +538,9 @@ fn all_docs_nodes_have_architect_grade_documentation_doctrine() {
         assert!(
             node["links"]["referenced_by"]
                 .as_array()
-                .is_some_and(|entries| entries.iter().any(|entry| entry.as_str() == Some("core/DOCS"))),
+                .is_some_and(|entries| entries
+                    .iter()
+                    .any(|entry| entry.as_str() == Some("core/DOCS"))),
             "{node_id} must be routed from core/DOCS"
         );
 
