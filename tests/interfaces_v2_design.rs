@@ -2,6 +2,7 @@ use serde_json::Value;
 
 const DESIGN: &str = include_str!("../docs/architecture/interfaces-v2-restructure.md");
 const SCHEMA: &str = include_str!("../docs/architecture/interfaces-v2-contract.schema.json");
+const CONSTITUTION: &str = include_str!("../assets/constitution.json");
 
 #[test]
 fn aggressive_interface_design_schema_is_strict_and_versioned() {
@@ -99,5 +100,46 @@ fn aggressive_interface_design_carries_the_migration_inventory_and_boundary() {
         "does not implement the knowledge subsystem",
     ] {
         assert!(DESIGN.contains(marker), "design is missing {marker}");
+    }
+}
+
+#[test]
+fn core_interfaces_constitution_requires_v2_adherence() {
+    let constitution: Value =
+        serde_json::from_str(CONSTITUTION).expect("constitution is valid JSON");
+    let router = &constitution["nodes"]["core/INTERFACES"];
+    assert!(router.is_object(), "core/INTERFACES router exists");
+
+    let references = router["links"]["references"]
+        .as_array()
+        .expect("interface router references are an array");
+    assert_eq!(
+        references.len(),
+        25,
+        "all current interfaces/* nodes remain routed"
+    );
+
+    let sections = &router["sections"];
+    for section in [
+        "match",
+        "decide",
+        "route",
+        "apply",
+        "avoid",
+        "proof_planning",
+    ] {
+        assert!(sections[section].is_array(), "missing {section} doctrine");
+    }
+
+    let doctrine = serde_json::to_string(router).expect("router can be serialized");
+    for marker in [
+        "v2 interface contract envelope",
+        "command, entity, event, artifact, or schema",
+        "temporary adapter window",
+        "rollback trigger",
+        "typed outcome/failure",
+        "deprecated v1 adapters",
+    ] {
+        assert!(doctrine.contains(marker), "core/INTERFACES omits {marker}");
     }
 }

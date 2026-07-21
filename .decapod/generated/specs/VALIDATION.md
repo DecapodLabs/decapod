@@ -51,7 +51,40 @@ flowchart LR
   - `cargo fmt --check`
 - Required integration/e2e commands:
   - `decapod qa verify` (proof replay + drift check)
-  - `decapod workspace publish` (provenance gates)
+  - `decapod workspace publish` (provenance gates)## Promotion Gates
+
+### Plan Phase Governance Gate
+| Check | Failure Mode |
+|-------|--------------|
+| Phase IDs are unique and non-empty | Fail |
+| Phases enter and complete in declaration order | Fail |
+| Only one phase is active at a time | Fail |
+| Entry and exit gates pass before transition | Fail |
+| Phase-bearing plans cannot bypass incomplete phases to `DONE` | Fail |
+| Required artifact gates exist at transition time | Fail |
+
+### Blocking Gates (Must Pass)
+| Gate | Command | Evidence |
+|------|---------|----------|
+| Architecture + interface drift check | `decapod validate` | Gate output + validation report |
+| Tests pass | `cargo test --locked` | CI + local logs |
+| Lint clean | `cargo clippy -- -D warnings` | CI output |
+| Format clean | `cargo fmt --check` | CI output |
+| Docs + changelog current | `decapod validate` (docs gates) | PR diff |
+| Security critical checks | `cargo audit` + `cargo deny check` | Scanner reports |
+| Workspace isolation | `decapod workspace status` | WorkspaceStatus.can_work = true |
+| Session auth | `decapod session status` | Valid session token |
+| Specs manifest sync | `decapod validate` (specs gate) | `.manifest.json` fingerprints match |
+| Capsule policy lineage | `decapod govern capsule query --write` | Policy hash binds to HEAD |
+| Completion evidence integrity | `decapod qa verify completion <ID>` | Canonical record, artifact, epoch, and receiver-local checks |
+
+### Warning Gates (Non-Blocking, SLA Tracked)
+| Gate | Trigger | Follow-up SLA |
+|------|---------|---------------|
+| Coverage regression | Coverage drops below target | 48h |
+| Non-blocking perf drift | P95 validation > 25s | 72h |
+| Spec template stale | `template_version` < current | Next promotion |
+| Untouched scaffold specs | `template_hash` == `content_hash` | Before implementation |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -92,41 +125,6 @@ flowchart LR
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Promotion Gates
-
-### Plan Phase Governance Gate
-| Check | Failure Mode |
-|-------|--------------|
-| Phase IDs are unique and non-empty | Fail |
-| Phases enter and complete in declaration order | Fail |
-| Only one phase is active at a time | Fail |
-| Entry and exit gates pass before transition | Fail |
-| Phase-bearing plans cannot bypass incomplete phases to `DONE` | Fail |
-| Required artifact gates exist at transition time | Fail |
-
-### Blocking Gates (Must Pass)
-| Gate | Command | Evidence |
-|------|---------|----------|
-| Architecture + interface drift check | `decapod validate` | Gate output + validation report |
-| Tests pass | `cargo test --locked` | CI + local logs |
-| Lint clean | `cargo clippy -- -D warnings` | CI output |
-| Format clean | `cargo fmt --check` | CI output |
-| Docs + changelog current | `decapod validate` (docs gates) | PR diff |
-| Security critical checks | `cargo audit` + `cargo deny check` | Scanner reports |
-| Workspace isolation | `decapod workspace status` | WorkspaceStatus.can_work = true |
-| Session auth | `decapod session status` | Valid session token |
-| Specs manifest sync | `decapod validate` (specs gate) | `.manifest.json` fingerprints match |
-| Capsule policy lineage | `decapod govern capsule query --write` | Policy hash binds to HEAD |
-| Completion evidence integrity | `decapod qa verify completion <ID>` | Canonical record, artifact, epoch, and receiver-local checks |
-
-### Warning Gates (Non-Blocking, SLA Tracked)
-| Gate | Trigger | Follow-up SLA |
-|------|---------|---------------|
-| Coverage regression | Coverage drops below target | 48h |
-| Non-blocking perf drift | P95 validation > 25s | 72h |
-| Spec template stale | `template_version` < current | Next promotion |
-| Untouched scaffold specs | `template_hash` == `content_hash` | Before implementation |
 
 ## Evidence Artifacts
 | Artifact | Path | Required For |
