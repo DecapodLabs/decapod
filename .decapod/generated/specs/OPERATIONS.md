@@ -113,7 +113,21 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 **Rollback:**
 - Binary: `cargo install decapod@<prev-version>` or download prior release
 - Workspace: `decapod workspace prune --force` + `git worktree remove`
-- Config: Manual edit `.decapod/config.toml` (schema_version backwards compatible)
+- Config: Manual edit `.decapod/config.toml` (schema_version backwards compatible)## Capacity Planning
+
+### Resource Limits
+| Resource | Limit | Enforcement |
+|----------|-------|-------------|
+| SQLite connections | 1 writer + N readers (pool) | `db_pool` with busy_timeout |
+| Workspace disk | Unbounded (user disk) | `decapod workspace prune` |
+| Event log size | Unbounded | Manual archive via `decapod data archive` |
+| Container memory | Host default | Docker `--memory` flag (not yet exposed) |
+| Token budget (capsule) | Risk-tier max (4/6/12/20) | `CapsulePolicyBinding` enforcement |
+
+### Scaling Triggers
+- Multiple concurrent agents → container workspaces mandatory
+- Large repos → `decapod validate` uses read-only DB connections
+- Many todos → pagination in `todo list` (not yet implemented)
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -151,22 +165,6 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Capacity Planning
-
-### Resource Limits
-| Resource | Limit | Enforcement |
-|----------|-------|-------------|
-| SQLite connections | 1 writer + N readers (pool) | `db_pool` with busy_timeout |
-| Workspace disk | Unbounded (user disk) | `decapod workspace prune` |
-| Event log size | Unbounded | Manual archive via `decapod data archive` |
-| Container memory | Host default | Docker `--memory` flag (not yet exposed) |
-| Token budget (capsule) | Risk-tier max (4/6/12/20) | `CapsulePolicyBinding` enforcement |
-
-### Scaling Triggers
-- Multiple concurrent agents → container workspaces mandatory
-- Large repos → `decapod validate` uses read-only DB connections
-- Many todos → pagination in `todo list` (not yet implemented)
 
 ## Logging
 
