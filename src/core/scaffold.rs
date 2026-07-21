@@ -1856,7 +1856,15 @@ pub fn scaffold_project_entrypoints(
                 let is_untouched = existing_hash == template_hash
                     || existing_str == content
                     || manifest_entry
-                        .map(|e| existing_hash == e.content_hash)
+                        // A manifest records authored content too.  Only use
+                        // it as evidence of an untouched scaffold when the
+                        // recorded content was itself the prior template;
+                        // otherwise a second --force run would overwrite a
+                        // human edit after the first run refreshed the
+                        // manifest.
+                        .map(|e| {
+                            existing_hash == e.content_hash && e.content_hash == e.template_hash
+                        })
                         .unwrap_or(false);
 
                 // Living specs are project-owned contracts. `--force` may repair

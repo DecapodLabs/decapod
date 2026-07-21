@@ -830,6 +830,18 @@ fn scaffold_store_and_docs_cli_behaviors() {
     };
     scaffold_project_entrypoints(&force_opts).expect("force scaffold");
 
+    let intent_path = live_target.join(".decapod/generated/specs/INTENT.md");
+    let mut authored_intent = fs::read_to_string(&intent_path).expect("read generated intent");
+    authored_intent.push_str("\n## Human Decision\n\nPreserve this authored contract.\n");
+    fs::write(&intent_path, authored_intent).expect("author intent");
+    scaffold_project_entrypoints(&force_opts).expect("force scaffold preserves authored intent");
+    scaffold_project_entrypoints(&force_opts).expect("repeated force scaffold preserves intent");
+    let preserved_intent = fs::read_to_string(&intent_path).expect("read preserved intent");
+    assert!(
+        preserved_intent.contains("Preserve this authored contract."),
+        "repeated --force scaffolding must not overwrite authored living-spec content"
+    );
+
     let mermaid_target = tmp.path().join("mermaid");
     let mermaid_opts = ScaffoldOptions {
         target_dir: mermaid_target.clone(),

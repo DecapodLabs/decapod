@@ -212,6 +212,24 @@ fn test_agent_docs_accessible() {
 }
 
 #[test]
+fn test_agent_docs_short_names_are_accessible_after_fresh_init() {
+    let (_tmp, dir) = setup_repo();
+
+    for short_name in ["api-index", "command-contracts", "payload-examples"] {
+        let docs = run_decapod(dir, &["docs", "show", short_name]);
+        assert!(
+            docs.status.success(),
+            "docs show {short_name} should resolve the embedded agent document: {}",
+            String::from_utf8_lossy(&docs.stderr)
+        );
+        assert!(
+            String::from_utf8_lossy(&docs.stdout).len() > 50,
+            "docs show {short_name} should return the embedded document"
+        );
+    }
+}
+
+#[test]
 fn test_session_required_for_mutation() {
     let (_tmp, dir) = setup_repo();
 

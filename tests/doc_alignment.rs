@@ -108,3 +108,35 @@ fn test_mcp_docs_match_current_adapter_boundary() {
     assert!(agent_mcp.contains("does not authenticate a model provider"));
     assert!(!agent_first.contains("By supporting the **Model Context Protocol (MCP)**"));
 }
+
+#[test]
+fn test_public_docs_do_not_overclaim_protocol_or_identity_boundaries() {
+    let docs = [
+        "docs/agent/command-contracts.md",
+        "docs/agent/payload-examples.md",
+        "docs/agent/mcp.md",
+        "docs/book/src/concepts/agent-first.md",
+        "docs/book/src/concepts/mcp.md",
+        "docs/book/src/mental-model.md",
+    ];
+
+    for path in docs {
+        let content = fs::read_to_string(path).expect("read public documentation");
+        assert!(
+            !content.contains("Structured JSON-RPC interface")
+                && !content.contains("JSON-RPC payloads")
+                && !content.contains("structured CLI or JSON-RPC interface"),
+            "{path} must describe Decapod's structured RPC boundary without claiming JSON-RPC 2.0"
+        );
+    }
+
+    let agent_mcp = fs::read_to_string("docs/agent/mcp.md").expect("read agent MCP docs");
+    for issue in [870, 871, 872, 873, 874, 876] {
+        assert!(
+            agent_mcp.contains(&format!("github.com/DecapodLabs/decapod/issues/{issue}")),
+            "agent MCP documentation must link future boundary issue #{issue}"
+        );
+    }
+    assert!(agent_mcp.contains("does not authenticate a model provider"));
+    assert!(agent_mcp.contains("does not currently implement an MCP server"));
+}
