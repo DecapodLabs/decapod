@@ -11388,7 +11388,107 @@
           "specs/SYSTEM"
         ],
         "referenced_by": [
-          "docs/README"
+          "docs/README",
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node is the architecture explanation boundary: name component ownership, authority sources, and proof surfaces before describing behavior.",
+        "Use this surface to reconcile repo-native state with generated outputs without treating rendered documentation as the system of record."
+      ],
+      "init_questions": [
+        {
+          "id": "audience_and_boundary",
+          "prompt": "Which reader needs this explanation and which authority boundary must the explanation make explicit?",
+          "why": "A system overview that omits audience or ownership invites agents to infer the wrong source of truth.",
+          "answers": [
+            "operator",
+            "agent",
+            "maintainer"
+          ]
+        },
+        {
+          "id": "proof_surface",
+          "prompt": "Which executable or repository evidence proves each architectural relationship described here?",
+          "why": "Architecture claims remain trustworthy only when every important relationship has a current proof surface.",
+          "answers": [
+            "tests",
+            "validation",
+            "runtime"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "authority map",
+          "use_when": "The explanation must distinguish constitutional authority, project specifications, and generated artifacts.",
+          "avoid_when": "The document only needs a narrow command reference with no ownership or lifecycle context.",
+          "implications": "Readers can locate the canonical source and understand which outputs may be regenerated rather than edited."
+        },
+        {
+          "choice": "component flow",
+          "use_when": "The question concerns how the daemonless binary, repository state, and plugins interact during one operation.",
+          "avoid_when": "A diagram would hide a disputed boundary that has not been verified against the implementation.",
+          "implications": "The flow must label inputs, transitions, receipts, and the proof that closes the transition."
+        },
+        {
+          "choice": "deep-dive route",
+          "use_when": "A high-level explanation reaches a boundary owned by another constitution node or interface contract.",
+          "avoid_when": "The route would merely duplicate a second document without adding a decision or ownership cue.",
+          "implications": "Cross-links preserve bounded context and prevent architecture prose from becoming a parallel specification."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "overview versus detail",
+          "option_a": "Keep the overview concise and route implementation detail to authoritative nodes.",
+          "option_b": "Inline every component detail so the page can stand alone.",
+          "guidance": "Prefer concise ownership and proof cues; inline detail only when omitting it would change an architectural decision."
+        },
+        {
+          "axis": "canonical versus generated",
+          "option_a": "Describe repository authority and generated artifacts as separate layers.",
+          "option_b": "Treat generated output as the easiest source to explain and maintain.",
+          "guidance": "Prefer canonical sources because generated output can be refreshed, stale, or intentionally replaced."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture audience, component owners, authority sources, boundaries, and the proof expected for each architectural claim."
+        ],
+        "generate": [
+          "Generate diagrams or navigation only from verified links and current source-of-truth mappings."
+        ],
+        "defer": [
+          "Defer unresolved topology claims and mark the missing owner or evidence instead of filling the gap with inference."
+        ],
+        "proof": [
+          "Proof must connect the overview to repository files, tests, validation output, or a reproducible runtime transition."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Clarify whether the requested change alters the system boundary, an owned component, or only explanatory navigation."
+        ],
+        "architecture": [
+          "Record changed ownership, authority flow, lifecycle transitions, and daemonless assumptions in the architecture spec."
+        ],
+        "interfaces": [
+          "Route each described operation to its concrete CLI, RPC, plugin, or repository interface contract."
+        ],
+        "proof": [
+          "Add proof obligations for every new boundary, diagram edge, generated artifact claim, and source-of-truth assertion."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof checks links, ownership labels, source-of-truth references, and generated-versus-canonical distinctions."
+        ],
+        "runtime": [
+          "Runtime proof exercises the described daemonless transition and confirms its receipt or observable repository result."
+        ],
+        "release": [
+          "Release proof confirms the overview matches the shipped version and does not claim capabilities absent from validation."
         ]
       },
       "sections": {
@@ -11450,7 +11550,108 @@
           "plugins/HEARTBEAT",
           "plugins/VERIFY"
         ],
-        "referenced_by": []
+        "referenced_by": [
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node documents executable control-plane behavior, so command contracts, preconditions, receipts, and recovery paths are first-class doctrine.",
+        "Keep examples subordinate to the binary's actual interface; a plausible payload that cannot be executed is a documentation defect."
+      ],
+      "init_questions": [
+        {
+          "id": "operation_contract",
+          "prompt": "Which exact operation, precondition, envelope, receipt, and allowed next action does the reader need?",
+          "why": "Control-plane documentation is safe only when the full state transition is explicit rather than implied by prose.",
+          "answers": [
+            "CLI",
+            "RPC",
+            "recovery"
+          ]
+        },
+        {
+          "id": "versioned_behavior",
+          "prompt": "Which binary version and proof output establish that the documented contract is current?",
+          "why": "Interface behavior can change across releases, and stale examples can cause destructive or unrecoverable agent actions.",
+          "answers": [
+            "release",
+            "test",
+            "validation"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "command reference",
+          "use_when": "A human or agent needs exact flags, preconditions, output fields, and bounded recovery for one operation.",
+          "avoid_when": "The document would describe an architectural decision without an executable interface consequence.",
+          "implications": "Every command claim must be checked against help output, command contracts, or a focused integration test."
+        },
+        {
+          "choice": "RPC envelope",
+          "use_when": "The operation is consumed programmatically and its request, response, receipt, and next action must be machine-readable.",
+          "avoid_when": "A free-form narrative would conceal required fields or authority checks.",
+          "implications": "The envelope must preserve error semantics and make session, workspace, and proof preconditions visible."
+        },
+        {
+          "choice": "recovery route",
+          "use_when": "An operation can fail after a state mutation or can leave the agent needing a safe next action.",
+          "avoid_when": "The failure is merely a documentation typo with no state or authority consequence.",
+          "implications": "Recovery must name the bounded command, expected receipt, and escalation point rather than suggesting retries blindly."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "precision versus brevity",
+          "option_a": "Include complete payload and recovery details for deterministic execution.",
+          "option_b": "Summarize the operation to keep the page short.",
+          "guidance": "Prefer complete details for mutating operations; summarize only when a canonical contract is directly linked."
+        },
+        {
+          "axis": "stable versus implementation detail",
+          "option_a": "Document stable fields and observable semantics.",
+          "option_b": "Document internal functions and incidental output formatting.",
+          "guidance": "Prefer stable observable contracts so documentation survives refactors without hiding proof requirements."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture operation names, required session and workspace state, request fields, response fields, receipts, errors, and next actions."
+        ],
+        "generate": [
+          "Generate examples from command contracts or tests so documented envelopes remain synchronized with the executable interface."
+        ],
+        "defer": [
+          "Defer undocumented behavior and route the gap to the owning interface instead of inventing a recovery path."
+        ],
+        "proof": [
+          "Proof must execute representative read and mutation operations and compare the observed envelope with the documented contract."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "State the user-visible transition and the safe outcome expected from the documented operation."
+        ],
+        "architecture": [
+          "Record the control-plane boundary, authority checks, state transitions, and daemonless execution model affected by the contract."
+        ],
+        "interfaces": [
+          "Update CLI or RPC schemas, command contracts, payload examples, error semantics, and allowed-next-action rules."
+        ],
+        "proof": [
+          "Add contract tests or validation evidence that exercises preconditions, success receipts, failure envelopes, and recovery."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof compares documented fields and operation names with embedded command contracts and interface schemas."
+        ],
+        "runtime": [
+          "Runtime proof invokes representative operations in an isolated workspace and records bounded receipts and error recovery."
+        ],
+        "release": [
+          "Release proof checks versioned examples and confirms published documentation matches the binary shipped with the release."
+        ]
       },
       "sections": {
         "match": [
@@ -11503,7 +11704,98 @@
           "specs/evaluations/JUDGE_CONTRACT",
           "specs/evaluations/VARIANCE_EVALS"
         ],
-        "referenced_by": []
+        "referenced_by": [
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node is the translation boundary between qualitative evaluation intent and deterministic checks that can produce evidence.",
+        "Keep rubric language, judge behavior, variance tolerance, and proof signals distinct so a score cannot conceal an unproven failure mode."
+      ],
+      "init_questions": [
+        {
+          "id": "rubric_claim",
+          "prompt": "Which user intent, risk, or quality claim does each evaluation dimension actually measure?",
+          "why": "A rubric without a stated claim can optimize a proxy while leaving the intended behavior unverified."
+        },
+        {
+          "id": "pass_boundary",
+          "prompt": "What observable threshold and variance policy distinguish an acceptable result from a failure?",
+          "why": "Agents need a reproducible pass boundary rather than an evaluator-dependent interpretation of success."
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "binary gate",
+          "use_when": "The claim has a crisp safety, contract, or release threshold that must not be averaged away.",
+          "avoid_when": "The behavior has multiple independent quality dimensions that require separate diagnosis.",
+          "implications": "A single failed gate blocks the claim and must identify the failing evidence rather than only lowering a score."
+        },
+        {
+          "choice": "weighted rubric",
+          "use_when": "Several observable dimensions jointly describe quality and their relative importance is explicitly justified.",
+          "avoid_when": "A critical security or correctness property could be masked by strong scores elsewhere.",
+          "implications": "Weights, floors, and critical-dimension overrides become part of the judge contract and proof plan."
+        },
+        {
+          "choice": "variance report",
+          "use_when": "Repeated evaluation can vary because of sampling, external state, or a nondeterministic evaluator.",
+          "avoid_when": "The underlying check is deterministic and a single run provides complete evidence.",
+          "implications": "The report must preserve run count, distribution, tolerance, and the decision rule used to accept variance."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "coverage versus determinism",
+          "option_a": "Use broad evaluator coverage with explicit variance measurement.",
+          "option_b": "Use narrow deterministic checks with less behavioral coverage.",
+          "guidance": "Keep deterministic gates for critical claims and use broader evaluation only when its uncertainty is measured and visible."
+        },
+        {
+          "axis": "score versus evidence",
+          "option_a": "Report the underlying examples and proof signals with the score.",
+          "option_b": "Publish only an aggregate score for easy comparison.",
+          "guidance": "Prefer evidence-bearing reports because an aggregate score cannot explain or reproduce a failed claim."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture the claim, risk, rubric dimensions, judge inputs, pass thresholds, variance policy, and evidence owner before implementation."
+        ],
+        "generate": [
+          "Generate judge fixtures and evaluation reports from the declared rubric and contract rather than from undocumented evaluator behavior."
+        ],
+        "defer": [
+          "Defer claims whose pass boundary or evidence source is unclear and record the missing decision as a proof gap."
+        ],
+        "proof": [
+          "Proof must show that the evaluation decision follows the declared rubric, threshold, variance policy, and failure semantics."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Tie every evaluation dimension to a user-visible intent or explicit risk so the test does not become an orphaned metric."
+        ],
+        "architecture": [
+          "Record evaluator boundaries, data sources, sampling assumptions, and the components whose behavior is being measured."
+        ],
+        "interfaces": [
+          "Specify judge inputs, result envelopes, threshold fields, variance fields, and failure codes consumed by evaluation tooling."
+        ],
+        "proof": [
+          "Plan reproducible fixtures, repeated-run evidence where needed, and a trace from each rubric dimension to a proof artifact."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof verifies every rubric dimension maps to a claim, risk, threshold, judge contract, and declared evidence source."
+        ],
+        "runtime": [
+          "Runtime proof executes the evaluator against representative fixtures and records both decision output and variance evidence."
+        ],
+        "release": [
+          "Release proof preserves the evaluation contract and reports changed thresholds or judge behavior as compatibility-impacting changes."
+        ]
       },
       "sections": {
         "match": [
@@ -11566,7 +11858,97 @@
           "plugins/VERIFY"
         ],
         "referenced_by": [
-          "docs/NEGLECTED_ASPECTS_LEDGER"
+          "docs/NEGLECTED_ASPECTS_LEDGER",
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node turns governance review into an evidence-backed maturity assessment with explicit drift, dependency, and remediation order.",
+        "An audit is useful only when it compares authority to implementation and leaves a bounded next action for every material gap."
+      ],
+      "init_questions": [
+        {
+          "id": "audit_scope",
+          "prompt": "Which authority surfaces, implementation areas, claims, and proof artifacts are inside this audit boundary?",
+          "why": "An unbounded audit produces a narrative inventory instead of a decision-ready finding set."
+        },
+        {
+          "id": "remediation_order",
+          "prompt": "Which finding has the highest impact, weakest proof, or shortest trigger-to-harm path?",
+          "why": "Remediation order must reflect risk and dependency rather than the order in which findings were discovered."
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "fix now",
+          "use_when": "A gap affects safety, authority, data integrity, or a claim that the current release presents as real.",
+          "avoid_when": "The finding is understood, bounded, and cannot be safely addressed without a prerequisite decision.",
+          "implications": "The audit must identify the owner, acceptance proof, and validation gate that closes the finding."
+        },
+        {
+          "choice": "record gap",
+          "use_when": "The limitation is real, visible, and safe to defer with an owner, trigger, and explicit claim boundary.",
+          "avoid_when": "The entry would hide an active failure behind a vague future-work label.",
+          "implications": "The ledger entry must preserve residual risk and cannot be counted as proof of completion."
+        },
+        {
+          "choice": "escalate",
+          "use_when": "Findings conflict across authority sources or require a decision outside the auditor's authority.",
+          "avoid_when": "The auditor can resolve the discrepancy from current repository evidence and command contracts.",
+          "implications": "Escalation must preserve contradictory evidence, the blocked decision, and the safe interim posture."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "breadth versus depth",
+          "option_a": "Audit many surfaces for coarse maturity and obvious drift.",
+          "option_b": "Trace fewer surfaces from claim through implementation to proof.",
+          "guidance": "Use breadth for inventory, then spend depth on high-risk or high-authority findings before claiming maturity."
+        },
+        {
+          "axis": "status versus evidence",
+          "option_a": "Use concise maturity labels for navigation.",
+          "option_b": "Keep the evidence chain visible even when labels are sufficient for triage.",
+          "guidance": "Prefer labels as indexes only; the audit record must retain evidence, uncertainty, owner, and next action."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture scope, authority source, implementation status, claim level, evidence, risk, owner, dependency, and remediation trigger."
+        ],
+        "generate": [
+          "Generate audit findings from repository and validation evidence with stable identifiers that can become bounded work items."
+        ],
+        "defer": [
+          "Defer only findings with explicit residual risk, owner, trigger, expiry or review date, and a statement of what remains unproven."
+        ],
+        "proof": [
+          "Proof must reproduce the finding and demonstrate that a remediation changes the observed authority, implementation, or validation signal."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "State whether the audit is checking a user promise, a governance invariant, a release claim, or a bounded capability."
+        ],
+        "architecture": [
+          "Record affected subsystem owners, dependency order, authority drift, and the boundary at which the finding appears."
+        ],
+        "interfaces": [
+          "Define finding identifiers, maturity labels, evidence links, owner fields, risk fields, and remediation state transitions."
+        ],
+        "proof": [
+          "Plan direct reproduction, validation gates, and closure evidence for every finding before labeling it remediated."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof checks that every audit finding names authority, implementation status, evidence, risk, owner, and next action."
+        ],
+        "runtime": [
+          "Runtime proof reproduces high-risk findings and confirms the proposed remediation changes the measured behavior or proof surface."
+        ],
+        "release": [
+          "Release proof reports unresolved findings and verifies that release claims exclude capabilities whose audit evidence remains insufficient."
         ]
       },
       "sections": {
@@ -11621,7 +12003,98 @@
           "core/ENGINEERING_EXCELLENCE",
           "docs/RELEASE_PROCESS"
         ],
-        "referenced_by": []
+        "referenced_by": [
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node defines stewardship responsibilities for review, release, deprecation, emergency response, and protection of authority surfaces.",
+        "Maintainer guidance must preserve accountability without turning an individual maintainer's preference into an undocumented exception."
+      ],
+      "init_questions": [
+        {
+          "id": "ownership_path",
+          "prompt": "Who owns the change, who reviews the authority impact, and who can approve an exception or emergency action?",
+          "why": "Clear ownership prevents risky changes from being treated as orphaned maintenance or informal consensus."
+        },
+        {
+          "id": "lifecycle_state",
+          "prompt": "Which review, release, deprecation, or emergency lifecycle state does this maintainer action advance?",
+          "why": "Lifecycle state determines required evidence, communication, rollback readiness, and protected-branch behavior."
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "normal review",
+          "use_when": "The change fits existing authority, ownership, release gates, and compatibility expectations.",
+          "avoid_when": "The change bypasses a gate, changes trust boundaries, or has an unresolved emergency impact.",
+          "implications": "The normal review record must retain rationale, proof, reviewers, and any generated artifact refresh."
+        },
+        {
+          "choice": "exception",
+          "use_when": "A bounded deviation is necessary and its risk, owner, expiry, and compensating proof are explicit.",
+          "avoid_when": "The exception merely makes an inconvenient requirement disappear or has no accountable approver.",
+          "implications": "Exceptions remain visible, time-bounded, and subject to follow-up rather than becoming a new default."
+        },
+        {
+          "choice": "emergency halt",
+          "use_when": "Continuing normal mutation could worsen a security, integrity, or authority failure.",
+          "avoid_when": "The issue is a routine defect that can be safely handled by the standard workflow.",
+          "implications": "Halt actions preserve evidence, narrow authority, communicate status, and define the conditions for resumption."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "speed versus stewardship",
+          "option_a": "Move quickly through a bounded, evidence-backed review path.",
+          "option_b": "Reduce review depth to minimize time to merge or release.",
+          "guidance": "Prefer bounded speed with explicit proof; never trade away authority or safety evidence merely to reduce queue time."
+        },
+        {
+          "axis": "local judgment versus doctrine",
+          "option_a": "Use maintainer judgment within documented authority and escalation boundaries.",
+          "option_b": "Allow undocumented local conventions to decide exceptional behavior.",
+          "guidance": "Prefer documented doctrine because future maintainers and agents must be able to reconstruct the decision."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture owner, reviewer, lifecycle state, authority impact, exception status, rollback path, communication needs, and proof gates."
+        ],
+        "generate": [
+          "Generate review and release records from the declared change scope, affected specs, validation output, and signed artifact metadata."
+        ],
+        "defer": [
+          "Defer changes that lack ownership, safe rollback, or required proof, and record the exact gate that remains open."
+        ],
+        "proof": [
+          "Proof must show review accountability, passed gates, preserved authority, and a documented exception or emergency trail when applicable."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "Clarify the maintainer outcome, affected users or agents, and whether the action changes policy or only executes existing policy."
+        ],
+        "architecture": [
+          "Record ownership, protected surfaces, lifecycle transitions, and emergency boundaries affected by the maintenance action."
+        ],
+        "interfaces": [
+          "Update contributor, review, release, deprecation, and emergency interfaces when their required fields or transitions change."
+        ],
+        "proof": [
+          "Define reviewer evidence, validation output, signed publication artifacts, rollback evidence, and exception expiry checks."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof checks ownership, review records, protected-branch rules, version metadata, and exception expiry fields."
+        ],
+        "runtime": [
+          "Runtime proof exercises release, deprecation, or emergency procedures in an isolated environment when behavior changes."
+        ],
+        "release": [
+          "Release proof verifies gates, changelog communication, artifact provenance, rollback readiness, and maintainer sign-off."
+        ]
       },
       "sections": {
         "match": [
@@ -11685,7 +12158,97 @@
         ],
         "referenced_by": [
           "data/DATABASE",
-          "docs/README"
+          "docs/README",
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node is the change-safety boundary for schema, interface, and data evolution across compatibility windows and rollback paths.",
+        "Migration prose must identify the state transition, reader and writer versions, irreversible steps, and evidence that makes the transition safe."
+      ],
+      "init_questions": [
+        {
+          "id": "compatibility_window",
+          "prompt": "Which old and new readers, writers, schemas, or clients must coexist during the migration window?",
+          "why": "Compatibility assumptions determine ordering, rollout safety, and whether a one-step change is possible."
+        },
+        {
+          "id": "rollback_boundary",
+          "prompt": "Which steps are reversible, which data transforms are lossy, and what is the tested recovery boundary?",
+          "why": "A rollback claim is unsafe when irreversible transformations or restore evidence are left implicit."
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "expand and contract",
+          "use_when": "Readers and writers must overlap while a schema or interface evolves without a coordinated outage.",
+          "avoid_when": "The change is isolated, fully coordinated, and a simpler atomic replacement has stronger proof.",
+          "implications": "The migration carries temporary compatibility fields and requires proof for both the overlap and cleanup phases."
+        },
+        {
+          "choice": "maintenance window",
+          "use_when": "The transition cannot safely overlap and downtime is bounded, communicated, and operationally acceptable.",
+          "avoid_when": "Availability or rollback requirements make an outage unacceptable or the lock scope is unmeasured.",
+          "implications": "The runbook must include quiescence, backup, timing, health checks, and a tested restore or abort path."
+        },
+        {
+          "choice": "defer destructive step",
+          "use_when": "A cleanup or lossy transform is not required for the current capability and its safety evidence is incomplete.",
+          "avoid_when": "Leaving the old state creates an active security, integrity, or capacity hazard.",
+          "implications": "The deferred step needs an owner, trigger, expiry, and explicit compatibility cost instead of silent accumulation."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "availability versus simplicity",
+          "option_a": "Use staged compatibility to preserve availability.",
+          "option_b": "Use one coordinated cutover with a shorter implementation path.",
+          "guidance": "Choose staged rollout when overlap risk is lower than outage risk; choose cutover only with stronger rollback and timing proof."
+        },
+        {
+          "axis": "reversibility versus cleanup",
+          "option_a": "Retain old fields or representations until confidence and restore evidence exist.",
+          "option_b": "Remove legacy state immediately to reduce long-term complexity.",
+          "guidance": "Prefer reversibility across the compatibility window and make cleanup a separately provable transition."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture versions, dependencies, ordering, data ownership, compatibility window, backup, rollback boundary, and validation gates."
+        ],
+        "generate": [
+          "Generate migration plans, forward and rollback commands, compatibility fixtures, and release notes from the declared transition."
+        ],
+        "defer": [
+          "Defer irreversible cleanup when it is not required for the current capability and record the cost and resumption trigger."
+        ],
+        "proof": [
+          "Proof must cover upgrade, mixed-version behavior, failure interruption, rollback or restore, and post-migration invariants."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "State the user-visible capability or compatibility promise that motivates the migration and what remains unchanged."
+        ],
+        "architecture": [
+          "Record data ownership, version overlap, ordering constraints, irreversible transforms, and operational dependencies."
+        ],
+        "interfaces": [
+          "Update schema, API, queue, storage, and command contracts with old/new behavior and compatibility requirements."
+        ],
+        "proof": [
+          "Plan fixtures and drills for forward migration, mixed versions, interruption, rollback, restore, and invariant checks."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof checks migration ordering, version assumptions, idempotency, rollback definitions, and data-loss disclosures."
+        ],
+        "runtime": [
+          "Runtime proof runs the migration against representative state, interrupts it safely, and verifies rollback or restore behavior."
+        ],
+        "release": [
+          "Release proof confirms compatibility notes, migration artifacts, backups, rollout gates, and rollback instructions ship together."
         ]
       },
       "sections": {
@@ -11739,7 +12302,98 @@
           "docs/GOVERNANCE_AUDIT",
           "interfaces/RISK_POLICY_GATE"
         ],
-        "referenced_by": []
+        "referenced_by": [
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node is a custody record for acknowledged gaps, not a graveyard that turns unresolved risk into an implicit acceptance.",
+        "Every deferred aspect needs an owner, trigger, residual-risk statement, and proof boundary so later work can resume without reconstructing intent."
+      ],
+      "init_questions": [
+        {
+          "id": "defer_reason",
+          "prompt": "Why is this aspect deferred, what dependency blocks it, and what safe claim boundary remains in force?",
+          "why": "A precise deferral preserves the reasoning that made postponement safer than an immediate change."
+        },
+        {
+          "id": "resume_trigger",
+          "prompt": "Which owner, event, risk threshold, expiry, or dependency completion requires this aspect to resume?",
+          "why": "Without a resumption trigger, deferred work becomes invisible and cannot be governed as a live risk."
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "fix immediately",
+          "use_when": "The gap invalidates a safety, integrity, authority, or explicitly shipped capability claim.",
+          "avoid_when": "Immediate work would create greater unbounded risk than a clearly recorded short deferral.",
+          "implications": "The ledger should point to the active remediation and preserve the proof needed to close the gap."
+        },
+        {
+          "choice": "defer with controls",
+          "use_when": "The gap is bounded, visible, owned, and safe under a stated interim restriction or mitigation.",
+          "avoid_when": "The entry has no owner, expiry, trigger, residual-risk statement, or mitigation evidence.",
+          "implications": "The current system must not claim the deferred capability, and the entry remains part of audit scope."
+        },
+        {
+          "choice": "escalate risk",
+          "use_when": "The residual risk exceeds local authority or conflicts with a binding policy or release decision.",
+          "avoid_when": "The issue is an ordinary bounded task with a clear owner and safe interim posture.",
+          "implications": "Escalation preserves evidence and freezes the unsafe transition until an authorized decision is recorded."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "visibility versus noise",
+          "option_a": "Record every material deferred aspect with structured ownership and proof state.",
+          "option_b": "Record only high-severity gaps to keep the ledger short.",
+          "guidance": "Prefer structured visibility; use severity and lifecycle fields to prioritize rather than silently dropping lower-risk gaps."
+        },
+        {
+          "axis": "interim mitigation versus completion",
+          "option_a": "Use a mitigation while preserving the incomplete claim boundary.",
+          "option_b": "Treat the mitigation as equivalent to the missing capability.",
+          "guidance": "A mitigation can reduce risk but cannot be counted as proof that the deferred capability is complete."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture gap description, affected authority, severity, owner, dependency, mitigation, residual risk, trigger, expiry, and proof gap."
+        ],
+        "generate": [
+          "Generate bounded issue or todo records from ledger entries without losing the original risk and evidence context."
+        ],
+        "defer": [
+          "Defer only when the entry states what remains unsafe, what is permitted now, and what event resumes the work."
+        ],
+        "proof": [
+          "Proof must show the gap is reproducible, the interim controls hold, and closure evidence removes or changes the ledger entry."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "State whether the gap affects a user promise, an internal invariant, a release claim, or an optional future capability."
+        ],
+        "architecture": [
+          "Record affected boundaries, dependencies, mitigations, ownership, and the unsafe transition that remains unimplemented."
+        ],
+        "interfaces": [
+          "Define ledger fields and lifecycle transitions so agents can distinguish open, mitigated, escalated, and closed gaps."
+        ],
+        "proof": [
+          "Plan reproduction and closure evidence before declaring the risk resolved or removing the ledger entry."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof checks that each ledger entry names severity, owner, trigger, residual risk, mitigation, and missing evidence."
+        ],
+        "runtime": [
+          "Runtime proof verifies interim controls and reproduces the failure or limitation that justified the entry."
+        ],
+        "release": [
+          "Release proof includes unresolved ledger entries in claim review and verifies that closed entries have current closure evidence."
+        ]
       },
       "sections": {
         "match": [
@@ -11798,7 +12452,98 @@
           "plugins/HEALTH",
           "plugins/VERIFY"
         ],
-        "referenced_by": []
+        "referenced_by": [
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node turns operational knowledge into bounded, repeatable actions with preconditions, expected evidence, recovery, and escalation.",
+        "A playbook is an executable interface for an operator under pressure; narrative intent alone is not operational proof."
+      ],
+      "init_questions": [
+        {
+          "id": "trigger_and_scope",
+          "prompt": "What observable symptom triggers this playbook, and what systems, state, and authority are inside its scope?",
+          "why": "A precise trigger and scope prevent operators from applying a recovery sequence to the wrong failure or workspace."
+        },
+        {
+          "id": "success_and_escalation",
+          "prompt": "What output proves recovery, and exactly when must the operator stop and escalate instead of retrying?",
+          "why": "Recovery without a success signal or stop condition can deepen an incident while appearing methodical."
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "read-only diagnosis",
+          "use_when": "The failure state is uncertain and evidence can be gathered without mutating protected or user-owned state.",
+          "avoid_when": "A known active hazard requires an immediate containment action authorized by the procedure.",
+          "implications": "The playbook should gather bounded evidence and preserve it before recommending a mutation."
+        },
+        {
+          "choice": "safe recovery",
+          "use_when": "The preconditions, mutation scope, expected result, and rollback or abort path are tested and explicit.",
+          "avoid_when": "The command would rely on hidden state, broad deletion, or an unverified assumption about ownership.",
+          "implications": "Each step needs exact command syntax, expected output, and a next step for both success and failure."
+        },
+        {
+          "choice": "escalate",
+          "use_when": "Evidence contradicts the playbook, authority is unclear, or the next action could cause irreversible harm.",
+          "avoid_when": "The current step has a documented bounded recovery and its proof signal is present.",
+          "implications": "Escalation preserves collected evidence and leaves the system in the safest documented posture."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "speed versus safety",
+          "option_a": "Use short, tested recovery sequences with explicit stop conditions.",
+          "option_b": "Add broad exploratory commands to maximize the chance of finding a fix quickly.",
+          "guidance": "Prefer bounded one-shot actions; exploratory commands belong in diagnosis and must not silently mutate state."
+        },
+        {
+          "axis": "operator detail versus maintainability",
+          "option_a": "Include exact commands and expected outputs for each consequential step.",
+          "option_b": "Keep the playbook abstract and rely on operator experience.",
+          "guidance": "Prefer executable detail for safety-critical steps and route stable semantics to canonical contracts."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture trigger, scope, preconditions, commands, expected output, state impact, recovery, escalation, and evidence retention."
+        ],
+        "generate": [
+          "Generate runbook examples from tested command contracts and current runtime behavior, including bounded time expectations."
+        ],
+        "defer": [
+          "Defer undocumented or unsafe steps and route them to the owning interface rather than adding speculative operator instructions."
+        ],
+        "proof": [
+          "Proof must execute the playbook in an isolated environment and verify both success signals and failure escalation behavior."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "State the operator outcome and the failure class the playbook is authorized to address."
+        ],
+        "architecture": [
+          "Record affected state owners, daemonless execution assumptions, authority boundaries, and dependencies between recovery steps."
+        ],
+        "interfaces": [
+          "Keep commands, flags, receipts, error shapes, and escalation contacts aligned with current control-plane contracts."
+        ],
+        "proof": [
+          "Define test fixtures, expected outputs, bounded execution time, safe aborts, and post-recovery health checks."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof checks command syntax, preconditions, ownership scope, expected outputs, and explicit stop or escalation rules."
+        ],
+        "runtime": [
+          "Runtime proof runs the diagnosis and recovery sequence against representative failure state without leaving background processes."
+        ],
+        "release": [
+          "Release proof confirms the playbook matches the shipped command contracts and records any changed recovery semantics."
+        ]
       },
       "sections": {
         "match": [
@@ -11864,7 +12609,98 @@
           "interfaces/CONTROL_PLANE",
           "specs/SYSTEM"
         ],
-        "referenced_by": []
+        "referenced_by": [
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node is the public orientation contract: it establishes what the repository is, how to start, how to verify success, and what is not yet claimed.",
+        "Keep human-facing adoption guidance distinct from agent instructions while preserving direct routes to deeper architecture, security, and release doctrine."
+      ],
+      "init_questions": [
+        {
+          "id": "first_success",
+          "prompt": "What is the shortest supported path from a clean checkout to a verifiable first success for the intended reader?",
+          "why": "A README that explains concepts without a current proof path cannot orient a new user reliably."
+        },
+        {
+          "id": "current_boundary",
+          "prompt": "Which capabilities are real today, which require governance or environment prerequisites, and which remain roadmap intent?",
+          "why": "Explicit current boundaries prevent aspirational language from becoming an accidental product or security claim."
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "quickstart",
+          "use_when": "A new reader needs a minimal install, initialization, first operation, and validation path.",
+          "avoid_when": "The details are environment-specific or too broad to remain current in a public landing page.",
+          "implications": "The quickstart must be copy-pasteable, bounded, and tied to a proof signal that can be recognized by the reader."
+        },
+        {
+          "choice": "deep link",
+          "use_when": "A concept affects architecture, security, migrations, release, or agent governance beyond the README's scope.",
+          "avoid_when": "The link would replace a missing basic explanation or send readers to an unstable implementation detail.",
+          "implications": "The README remains navigable while authoritative detail stays in the owning documentation node."
+        },
+        {
+          "choice": "roadmap boundary",
+          "use_when": "A capability is planned, experimental, environment-dependent, or not covered by current proof.",
+          "avoid_when": "The capability is already shipped and validated, where roadmap wording would understate current behavior.",
+          "implications": "The wording must distinguish current behavior, prerequisites, and future intent without weakening accurate proof claims."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "approachability versus completeness",
+          "option_a": "Keep the landing page short and route to focused documents.",
+          "option_b": "Inline all operational, architectural, and governance detail.",
+          "guidance": "Prefer approachability with strong routes; the README should answer orientation questions, not duplicate the documentation graph."
+        },
+        {
+          "axis": "marketing versus evidence",
+          "option_a": "Use precise claims tied to current proof and explicit non-goals.",
+          "option_b": "Use broad aspirational language to maximize perceived capability.",
+          "guidance": "Prefer evidence-bounded claims because public documentation is part of the trust and adoption surface."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture intended audience, supported environment, install path, first proof, current capabilities, non-goals, and deep-link owners."
+        ],
+        "generate": [
+          "Generate quickstart snippets and version references from tested commands and release metadata rather than handwritten guesses."
+        ],
+        "defer": [
+          "Defer unverified feature claims to a clearly labeled roadmap or issue without presenting them as current behavior."
+        ],
+        "proof": [
+          "Proof must run the documented first-success path from a clean environment and verify every current capability claim it highlights."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "State the audience, adoption outcome, and honest capability boundary the public entry point must communicate."
+        ],
+        "architecture": [
+          "Keep architecture summaries aligned with current component ownership, daemonless operation, and source-of-truth boundaries."
+        ],
+        "interfaces": [
+          "Keep install, init, validation, and quickstart commands aligned with current CLI contracts and supported release versions."
+        ],
+        "proof": [
+          "Track a clean-checkout proof path, link verification, and evidence for every capability or non-goal stated on the page."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof checks links, command examples, version references, current-versus-roadmap labels, and non-goal consistency."
+        ],
+        "runtime": [
+          "Runtime proof follows the quickstart from a clean checkout and confirms the stated first-success output."
+        ],
+        "release": [
+          "Release proof reviews README claims against the shipped version, generated artifacts, release notes, and validation results."
+        ]
       },
       "sections": {
         "match": [
@@ -11920,7 +12756,97 @@
         ],
         "referenced_by": [
           "docs/MAINTAINERS",
-          "docs/README"
+          "docs/README",
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node is the publication boundary where version, source changes, generated artifacts, validation evidence, communication, and rollback become one release claim.",
+        "A release process must make readiness observable and must not let a green code test conceal stale specs, missing fingerprints, or an unverified rollback path."
+      ],
+      "init_questions": [
+        {
+          "id": "release_scope",
+          "prompt": "Which user-visible, interface, schema, security, documentation, and operational changes are included in this release?",
+          "why": "Release scope determines compatibility impact, required artifacts, reviewers, communication, and proof depth."
+        },
+        {
+          "id": "readiness_and_rollback",
+          "prompt": "Which gates prove readiness, and what exact artifact or procedure returns users to the prior stable version?",
+          "why": "Publication is unsafe when readiness is inferred from partial tests or rollback is described without execution evidence."
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "ship",
+          "use_when": "Required validation, generated artifacts, version metadata, communication, and rollback evidence are all current and green.",
+          "avoid_when": "Any critical proof is stale, absent, contradictory, or masked by an unrelated passing check.",
+          "implications": "The release record must identify the exact commit, artifacts, gates, provenance, and public change summary."
+        },
+        {
+          "choice": "hold",
+          "use_when": "A required gate, migration, security review, fingerprint, or rollback check is unresolved but the release can wait safely.",
+          "avoid_when": "The hold is used to avoid a known active incident that requires an emergency halt or containment path.",
+          "implications": "The hold records the missing proof, owner, decision deadline, and criteria for resuming publication."
+        },
+        {
+          "choice": "rollback",
+          "use_when": "Post-publication evidence shows a release violates a critical contract or creates unacceptable risk.",
+          "avoid_when": "The issue is a non-critical documentation correction with no user or authority impact.",
+          "implications": "Rollback must preserve incident evidence, communicate impact, and leave a tested path toward a corrected release."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "release speed versus evidence",
+          "option_a": "Wait for complete, current proof across code, generated output, and runtime behavior.",
+          "option_b": "Publish while non-critical evidence remains inferred or stale.",
+          "guidance": "Prefer evidence completeness for interface, security, migration, and provenance changes; never infer critical readiness."
+        },
+        {
+          "axis": "automation versus judgment",
+          "option_a": "Automate deterministic gates and preserve human decisions for bounded exceptions.",
+          "option_b": "Treat a green pipeline as sufficient release judgment.",
+          "guidance": "Automation proves declared checks, not undeclared intent; retain review for scope, risk, and exception decisions."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture version, commits, changes, generated artifacts, fingerprints, gates, migration notes, security review, rollback, and communication."
+        ],
+        "generate": [
+          "Generate release notes, manifests, provenance, and versioned artifacts from the exact release source and passed validation output."
+        ],
+        "defer": [
+          "Defer publication when critical evidence is stale or missing and record the gate, owner, and safe next action."
+        ],
+        "proof": [
+          "Proof must cover pre-release validation, artifact identity, published behavior, post-release checks, and rollback readiness."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "State the release promise, compatibility expectation, audience impact, and explicit exclusions for the version."
+        ],
+        "architecture": [
+          "Record changed boundaries, dependency versions, generated artifacts, deployment surfaces, and rollback topology."
+        ],
+        "interfaces": [
+          "Update versioned command, API, schema, manifest, fingerprint, and publication contracts affected by the release."
+        ],
+        "proof": [
+          "Define gate ownership, evidence retention, post-release verification, rollback drill or proof, and corrected-release criteria."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof checks version consistency, fingerprints, generated specs, manifests, changelog scope, and signed artifact provenance."
+        ],
+        "runtime": [
+          "Runtime proof validates the released artifact, its first operation, health or validation result, and bounded rollback path."
+        ],
+        "release": [
+          "Release proof records all gates, publication outputs, post-release checks, communication, and any accepted residual risk."
         ]
       },
       "sections": {
@@ -11989,7 +12915,97 @@
           "architecture/SECURITY",
           "docs/PLAYBOOK",
           "docs/README",
-          "specs/SECURITY"
+          "specs/SECURITY",
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node is the security reasoning boundary: identify protected assets, actors, trust boundaries, abuse paths, mitigations, and residual risk.",
+        "Threat-model prose must connect every important mitigation to an architectural or operational control and a way to validate that control."
+      ],
+      "init_questions": [
+        {
+          "id": "assets_and_actors",
+          "prompt": "Which assets require protection, which actors can influence them, and what authority does each actor possess?",
+          "why": "Threats cannot be prioritized accurately when assets, actors, or their reachable authority remain implicit."
+        },
+        {
+          "id": "mitigation_evidence",
+          "prompt": "Which concrete control mitigates each abuse case, and what proof demonstrates that the control is effective?",
+          "why": "A list of mitigations without evidence can create false confidence while leaving the actual abuse path open."
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "prevent",
+          "use_when": "A control can remove an abuse path or enforce a trust boundary before untrusted input reaches protected state.",
+          "avoid_when": "The proposed control only detects the event after irreversible harm or cannot be enforced at the boundary.",
+          "implications": "Prevention requires explicit authority checks, input boundaries, and proof that bypass paths are not silently available."
+        },
+        {
+          "choice": "detect and contain",
+          "use_when": "Prevention is incomplete but monitoring, audit, or a bounded halt can limit impact and preserve evidence.",
+          "avoid_when": "Detection is treated as a substitute for a feasible preventive control on a critical path.",
+          "implications": "The model must state detection latency, containment authority, evidence retention, and residual risk."
+        },
+        {
+          "choice": "accept residual risk",
+          "use_when": "The remaining risk is understood, bounded, explicitly owned, and proportionate to the current capability.",
+          "avoid_when": "The risk is unknown, unowned, or hidden by generic language about future mitigation.",
+          "implications": "Acceptance includes scope, expiry or review trigger, compensating controls, and a statement of what is not protected."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "security depth versus usability",
+          "option_a": "Enforce stronger boundaries and additional proof at sensitive operations.",
+          "option_b": "Reduce friction by allowing broader authority or implicit trust.",
+          "guidance": "Prefer explicit boundaries for sensitive state; document usability cost and provide safe recovery rather than silent bypasses."
+        },
+        {
+          "axis": "detection versus prevention",
+          "option_a": "Prevent abuse at the trust boundary where feasible.",
+          "option_b": "Rely on audit and response after the event.",
+          "guidance": "Use detection as defense in depth and preserve it when prevention is incomplete, never as proof that prevention exists."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture assets, actors, trust boundaries, abuse cases, controls, bypasses, detection, containment, residual risk, and owners."
+        ],
+        "generate": [
+          "Generate threat cases and security proof fixtures from concrete trust boundaries, inputs, authority transitions, and failure modes."
+        ],
+        "defer": [
+          "Defer only residual risk that is explicit, accepted by the proper authority, bounded by compensating controls, and reviewable."
+        ],
+        "proof": [
+          "Proof must test critical controls, exercise representative abuse paths, verify containment, and preserve evidence for residual risk review."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "State the protected outcome, trust assumptions, security non-goals, and risk tolerance for the capability under review."
+        ],
+        "architecture": [
+          "Record assets, actors, trust boundaries, authority transitions, secrets, storage, network paths, and containment ownership."
+        ],
+        "interfaces": [
+          "Specify authentication, authorization, input validation, audit, error, receipt, and emergency control behavior at each boundary."
+        ],
+        "proof": [
+          "Plan static analysis, negative tests, abuse-case exercises, audit evidence, containment checks, and residual-risk review."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof maps assets and abuse cases to controls, trust boundaries, authority checks, secrets handling, and residual-risk owners."
+        ],
+        "runtime": [
+          "Runtime proof exercises representative unauthorized, malformed, replayed, and failure inputs and verifies bounded containment."
+        ],
+        "release": [
+          "Release proof confirms threat-model scope, security gates, changed trust boundaries, accepted residual risk, and incident readiness."
         ]
       },
       "sections": {
@@ -12043,7 +13059,98 @@
           "metadata/skills/BUNDLE",
           "specs/skills/SKILL_GOVERNANCE"
         ],
-        "referenced_by": []
+        "referenced_by": [
+          "core/DOCS"
+        ]
+      },
+      "architect_notes": [
+        "This node maps reusable skill concepts to governed capability metadata, invocation boundaries, authority, outputs, and proof custody.",
+        "Translation must preserve the distinction between a skill's descriptive guidance and the executable control-plane interface it is allowed to call."
+      ],
+      "init_questions": [
+        {
+          "id": "capability_boundary",
+          "prompt": "What intent triggers the skill, what tools or authority may it use, and what work is explicitly outside its boundary?",
+          "why": "A broad skill trigger or vague tool allowance can create context pollution and unauthorized mutations."
+        },
+        {
+          "id": "output_and_proof",
+          "prompt": "What output, provenance, and proof artifact must the skill return so another agent can safely consume it?",
+          "why": "Translation is incomplete when a capability is callable but its result cannot be interpreted or verified."
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "portable skill",
+          "use_when": "The capability can remain reusable across repositories with explicit inputs, outputs, authority, and proof expectations.",
+          "avoid_when": "The behavior depends on repository-specific state or protected policy that cannot be expressed in portable metadata.",
+          "implications": "Portability requires versioned metadata and a clear handoff into the repository's governed interface."
+        },
+        {
+          "choice": "repository plugin",
+          "use_when": "The capability owns local state, lifecycle, or policy and must execute inside the repository control plane.",
+          "avoid_when": "The implementation is generic and would gain no authority or proof from local coupling.",
+          "implications": "The plugin must expose bounded operations, ownership, receipts, and validation surfaces rather than hidden side effects."
+        },
+        {
+          "choice": "advisory guidance",
+          "use_when": "The concept informs planning or interpretation but does not itself need mutation authority.",
+          "avoid_when": "Agents would mistake prose for an executable guarantee or skip the owning interface contract.",
+          "implications": "Advisory text must route to the actual capability and state the proof required before acting on it."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "reuse versus local fidelity",
+          "option_a": "Keep skill metadata portable and pass repository context through an explicit contract.",
+          "option_b": "Embed repository assumptions directly in the reusable skill.",
+          "guidance": "Prefer explicit context handoff because it keeps reuse honest and prevents hidden repository authority in shared skills."
+        },
+        {
+          "axis": "convenience versus custody",
+          "option_a": "Return provenance, evidence, and bounded outputs with every consequential skill result.",
+          "option_b": "Return concise conclusions without the evidence chain.",
+          "guidance": "Prefer custody-bearing outputs whenever the result influences mutation, publication, security, or another agent's decision."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Capture trigger, audience, inputs, authority, tools, output schema, provenance, proof obligations, and escalation boundary."
+        ],
+        "generate": [
+          "Generate skill metadata, context packs, invocation examples, and proof fixtures from the declared capability contract."
+        ],
+        "defer": [
+          "Defer skill activation when trigger, authority, output semantics, or proof custody is ambiguous rather than broadening the toolset."
+        ],
+        "proof": [
+          "Proof must show correct routing, bounded tool use, preserved provenance, expected outputs, and safe behavior at authority boundaries."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "State the user or agent intent the skill serves and the decisions it may inform without silently expanding scope."
+        ],
+        "architecture": [
+          "Record whether the capability is portable, plugin-owned, or advisory and where its context and authority originate."
+        ],
+        "interfaces": [
+          "Specify triggers, context fields, tool permissions, result envelopes, provenance, errors, and handoff semantics."
+        ],
+        "proof": [
+          "Plan routing tests, permission checks, fixture outputs, provenance assertions, and negative cases for unsupported activation."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Static proof checks metadata completeness, trigger boundaries, allowed tools, output schema, provenance fields, and owning links."
+        ],
+        "runtime": [
+          "Runtime proof invokes the skill with representative context and verifies bounded behavior, output custody, and refusal paths."
+        ],
+        "release": [
+          "Release proof verifies skill version metadata, compatibility with the control-plane contract, and published proof artifacts."
+        ]
       },
       "sections": {
         "match": [

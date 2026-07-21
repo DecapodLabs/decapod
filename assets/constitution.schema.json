@@ -6,6 +6,7 @@
     "schema_version": "section-doctrine-v1",
     "uplifted_namespaces": [
       "architecture",
+      "docs",
       "methodology",
       "interfaces",
       "data",
@@ -13,7 +14,7 @@
       "plugins",
       "specs"
     ],
-    "migration_strategy": "architecture, methodology, interfaces nodes, data nodes, metadata nodes, plugins nodes, and specs nodes are migrated in place; other namespaces keep the compact node contract until explicitly uplifted",
+    "migration_strategy": "architecture, docs, methodology, interfaces nodes, data nodes, metadata nodes, plugins nodes, and specs nodes are migrated in place; other namespaces keep the compact node contract until explicitly uplifted",
     "compatibility": "the node output shape remains stable for current consumers while uplifted namespaces gain additive doctrine fields"
   },
   "type": "object",
@@ -82,6 +83,29 @@
             "properties": {
               "category": {
                 "const": "methodology"
+              }
+            },
+            "required": [
+              "category"
+            ]
+          },
+          "then": {
+            "required": [
+              "architect_notes",
+              "init_questions",
+              "decision_matrix",
+              "tradeoffs",
+              "scaffolding",
+              "spec_impacts",
+              "proof"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "docs"
               }
             },
             "required": [

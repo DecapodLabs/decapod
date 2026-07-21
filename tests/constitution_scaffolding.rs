@@ -58,6 +58,21 @@ const ARCHITECTURE_NODES: &[&str] = &[
     "architecture/WEB",
 ];
 
+const DOCS_NODES: &[&str] = &[
+    "docs/ARCHITECTURE_OVERVIEW",
+    "docs/CONTROL_PLANE_API",
+    "docs/EVAL_TRANSLATION_MAP",
+    "docs/GOVERNANCE_AUDIT",
+    "docs/MAINTAINERS",
+    "docs/MIGRATIONS",
+    "docs/NEGLECTED_ASPECTS_LEDGER",
+    "docs/PLAYBOOK",
+    "docs/README",
+    "docs/RELEASE_PROCESS",
+    "docs/SECURITY_THREAT_MODEL",
+    "docs/SKILL_TRANSLATION_MAP",
+];
+
 const ARCHITECTURE_DOCTRINE_FIELDS: &[&str] = &[
     "architect_notes",
     "init_questions",
@@ -487,6 +502,72 @@ fn all_architecture_nodes_have_architect_grade_guidance() {
                 "{node_id}.{section} must preserve retrieval, stop, risk, and proceed guidance"
             );
         }
+    }
+}
+
+#[test]
+fn all_docs_nodes_have_architect_grade_documentation_doctrine() {
+    let constitution = load_constitution_asset();
+    let nodes = constitution["nodes"].as_object().expect("nodes object");
+    let lookup = constitution["lookup"].as_object().expect("lookup object");
+
+    let actual_docs_count = nodes
+        .values()
+        .filter(|node| node["category"].as_str() == Some("docs"))
+        .count();
+    assert_eq!(
+        actual_docs_count,
+        DOCS_NODES.len(),
+        "DOCS_NODES test list must cover every docs/* node"
+    );
+
+    for node_id in DOCS_NODES {
+        let node = nodes
+            .get(*node_id)
+            .unwrap_or_else(|| panic!("missing docs node {node_id}"));
+        assert_eq!(
+            node["category"].as_str(),
+            Some("docs"),
+            "{node_id} must remain in the docs namespace"
+        );
+        assert_architect_grade_fields(node_id, node);
+        assert_non_empty_array(
+            &node["links"]["references"],
+            &format!("{node_id}.links.references"),
+        );
+        assert!(
+            node["links"]["referenced_by"]
+                .as_array()
+                .is_some_and(|entries| entries.iter().any(|entry| entry.as_str() == Some("core/DOCS"))),
+            "{node_id} must be routed from core/DOCS"
+        );
+
+        let sections = node["sections"].as_object().expect("sections object");
+        for section in [
+            "match",
+            "ambiguity",
+            "decisions",
+            "standards",
+            "failure_modes",
+            "proceed_when",
+        ] {
+            assert!(
+                sections
+                    .get(section)
+                    .and_then(|items| items.as_array())
+                    .is_some_and(|items| !items.is_empty()),
+                "{node_id}.{section} must preserve documentation doctrine"
+            );
+        }
+
+        assert!(
+            lookup.values().any(|entries| {
+                entries.as_array().is_some_and(|entries| {
+                    entries.iter().any(|entry| entry.as_str() == Some(node_id))
+                })
+            }),
+            "{node_id} must remain reachable through at least one lookup term"
+        );
     }
 }
 
@@ -975,6 +1056,7 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
             .as_str()
             .is_some_and(|strategy| {
                 strategy.contains("interfaces nodes")
+                    && strategy.contains("docs")
                     && strategy.contains("data nodes")
                     && strategy.contains("metadata nodes")
                     && strategy.contains("plugins nodes")
@@ -996,6 +1078,19 @@ fn schema_requires_doctrine_model_for_uplifted_namespaces() {
         Some("architecture"),
         "conditional must target architecture nodes"
     );
+    let docs_rule = rules
+        .iter()
+        .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("docs"))
+        .expect("node schema must declare docs doctrine conditional");
+    let required = docs_rule["then"]["required"]
+        .as_array()
+        .expect("docs doctrine required fields");
+    for field in ARCHITECTURE_DOCTRINE_FIELDS {
+        assert!(
+            required.iter().any(|value| value.as_str() == Some(field)),
+            "docs schema must require {field}"
+        );
+    }
     let methodology_rule = rules
         .iter()
         .find(|rule| rule["if"]["properties"]["category"]["const"].as_str() == Some("methodology"))
