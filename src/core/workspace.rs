@@ -572,7 +572,7 @@ pub fn ensure_workspace(
     // 2. Ensure container (if requested)
     if config.use_container {
         crate::plugins::container::prepare_generated_container_profile(&worktree_path)?;
-        let image_tag = workspace_image_tag(&worktree_path);
+        let image_tag = workspace_image_tag(agent_id, branch);
         build_workspace_image(&worktree_path, &image_tag)?;
 
         // Return blocker telling agent to enter container
@@ -725,7 +725,12 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
         .arg("-t")
         .arg(image_tag)
         .arg("-f")
-        .arg(dockerfile_path.to_str().unwrap_or("Dockerfile"));
+        .arg(dockerfile_path.to_str().unwrap_or("Dockerfile"))
+        .arg("--build-arg")
+        .arg(format!(
+            "DECAPOD_WORKSPACE_PATH={}",
+            workspace_path.display()
+        ));
     if env_bool("DECAPOD_CONTAINER_LOCAL_BINARY_FALLBACK", false) {
         build
             .arg("--build-arg")
@@ -1796,8 +1801,7 @@ pub fn prune_workspaces(
 
         if is_stale {
             if container_runtime::container_runtime_available() {
-                let image_tag = workspace_image_tag(&dir_path);
-                container_runtime::remove_image(&image_tag)?;
+                let _ = container_runtime::remove_workspace_images_for_path(&dir_path);
             }
 
             // Attempt to remove git worktree if registered
@@ -1832,18 +1836,12 @@ pub fn prune_workspaces(
     Ok(pruned)
 }
 
-fn workspace_image_tag(workspace_path: &Path) -> String {
-    let workspace_name = workspace_path
-        .file_name()
-        .and_then(|name| name.to_str())
-        .map(sanitize_agent_id)
-        .filter(|name| !name.is_empty())
-        .unwrap_or_else(|| "workspace".to_string());
+fn workspace_image_tag(agent_id: &str, branch: &str) -> String {
     format!(
         "{}:{}-{}",
         container_runtime::DECAPOD_WORKSPACE_IMAGE_REPOSITORY,
-        container_runtime::current_decapod_version_tag(),
-        workspace_name
+        sanitize_agent_id(agent_id),
+        branch.replace('/', "-")
     )
 }
 

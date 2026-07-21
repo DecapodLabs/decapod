@@ -40,7 +40,6 @@ pub fn is_current_decapod_image(repository: &str, tag: &str, version_tag: &str) 
         DECAPOD_RELEASE_IMAGE_REPOSITORY => {
             tag == version_tag || tag == format!("{version_tag}-alpine")
         }
-        DECAPOD_WORKSPACE_IMAGE_REPOSITORY => tag.starts_with(&format!("{version_tag}-")),
         _ => false,
     }
 }
@@ -75,7 +74,7 @@ pub fn prune_decapod_images() -> Result<ImagePruneReport, error::DecapodError> {
         let Some(tag) = fields.next() else {
             continue;
         };
-        if !is_decapod_image_repository(repository)
+        if repository != DECAPOD_RELEASE_IMAGE_REPOSITORY
             || tag == "<none>"
             || is_current_decapod_image(repository, tag, &version_tag)
         {
@@ -142,12 +141,37 @@ pub fn remove_image(image_ref: &str) -> Result<bool, error::DecapodError> {
         String::from_utf8_lossy(&removed.stderr).trim()
     )))
 }
+pub fn remove_workspace_images_for_path(
+    workspace_path: &Path,
+) -> Result<usize, error::DecapodError> {
+    let runtime = find_container_runtime()?;
+    let label = format!(
+        "label=org.decapod.workspace.path={}",
+        workspace_path.display()
+    );
+    let listed = Command::new(&runtime)
+        .args(["image", "ls", "--quiet", "--filter", &label])
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+    if !listed.status.success() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "Failed to list workspace images for {}: {}",
+            workspace_path.display(),
+            String::from_utf8_lossy(&listed.stderr).trim()
+        )));
+    }
 
-fn is_decapod_image_repository(repository: &str) -> bool {
-    matches!(
-        repository,
-        DECAPOD_RELEASE_IMAGE_REPOSITORY | DECAPOD_WORKSPACE_IMAGE_REPOSITORY
-    )
+    let mut removed = 0;
+    for image_id in String::from_utf8_lossy(&listed.stdout)
+        .lines()
+        .map(str::trim)
+        .filter(|id| !id.is_empty())
+    {
+        if remove_image(image_id)? {
+            removed += 1;
+        }
+    }
+    Ok(removed)
 }
 
 fn command_present(cmd: &str) -> bool {
@@ -197,11 +221,6 @@ mod tests {
             "v0.72.9-alpine",
             "v0.72.9"
         ));
-        assert!(is_current_decapod_image(
-            DECAPOD_WORKSPACE_IMAGE_REPOSITORY,
-            "v0.72.9-agent-unknown-task",
-            "v0.72.9"
-        ));
         assert!(!is_current_decapod_image(
             DECAPOD_RELEASE_IMAGE_REPOSITORY,
             "latest",
@@ -210,11 +229,6 @@ mod tests {
         assert!(!is_current_decapod_image(
             DECAPOD_RELEASE_IMAGE_REPOSITORY,
             "v0.72.8",
-            "v0.72.9"
-        ));
-        assert!(!is_current_decapod_image(
-            DECAPOD_WORKSPACE_IMAGE_REPOSITORY,
-            "agent-unknown-old-task",
             "v0.72.9"
         ));
         assert!(!is_current_decapod_image(
