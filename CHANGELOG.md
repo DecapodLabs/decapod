@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.14](https://github.com/DecapodLabs/decapod/compare/v0.72.13...v0.72.14) - 2026-07-21
+
+### Fixed
+
+- protect the actual validation cwd during pruning
+- preserve authored specs while refreshing inputs
+- reconcile capability markers during force scaffold
+- preserve active worktree during validation cleanup
+- complete PR 940 issue follow-up
+
+### Other
+
+- narrow disabled container sequence assertion
+
 ## [0.72.13](https://github.com/DecapodLabs/decapod/compare/v0.72.12...v0.72.13) - 2026-07-21
 
 ### Added
