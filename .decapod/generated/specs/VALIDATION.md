@@ -96,7 +96,10 @@ flowchart LR
 | Architecture diagram | `ARCHITECTURE.md` (in specs) | Promotion |
 | Changelog entry | `CHANGELOG.md` | Promotion |
 | Flight recorder transcript | `decapod trace flight-recorder transcript` | Post-mortem |
-| Broker audit log | `.decapod/data/broker.events.jsonl` | Audit |
+| Broker audit log | `.decapod/data/broker.events.jsonl` | Audit |## Regression Guardrails
+- **Baseline references**: Validation report includes gate timings; P95 tracked per gate
+- **Statistical thresholds**: Validation must complete < 30s (P95)
+- **Rollback criteria**: Any blocking gate failure blocks promotion; `workspace prune --force` + git reset for workspace issues
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -137,11 +140,6 @@ flowchart LR
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Regression Guardrails
-- **Baseline references**: Validation report includes gate timings; P95 tracked per gate
-- **Statistical thresholds**: Validation must complete < 30s (P95)
-- **Rollback criteria**: Any blocking gate failure blocks promotion; `workspace prune --force` + git reset for workspace issues
 
 ## Bounded Execution
 | Operation | Timeout | Failure Mode |

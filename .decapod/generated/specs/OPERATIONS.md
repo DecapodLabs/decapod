@@ -127,7 +127,25 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 ### Scaling Triggers
 - Multiple concurrent agents → container workspaces mandatory
 - Large repos → `decapod validate` uses read-only DB connections
-- Many todos → pagination in `todo list` (not yet implemented)
+- Many todos → pagination in `todo list` (not yet implemented)## Logging
+
+### Structured Logging (Internal)
+- `tracing` + `tracing-subscriber` with JSON output
+- Correlation IDs: `event_id` (ULID) per operation
+- Session IDs: `session_id` from `session.acquire`
+- Workspace IDs: git branch name (agent/todo_hash-timestamp)
+
+### Audit Logs (Immutable)
+- `broker.events.jsonl` — All mutations (The Thin Waist)
+- `todo.events.jsonl` — Task lifecycle
+- `proof.events.jsonl` — Proof execution
+- `assurance_attestations.jsonl` — Interlock decisions
+- `federation.events.jsonl` — Knowledge graph mutations
+
+### Log Redaction
+- `DECAPOD_SESSION_PASSWORD` never logged
+- `.decapod/data/` paths logged but contents not
+- Git tokens/credentials never in command args (use credential helper)
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -165,26 +183,6 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Logging
-
-### Structured Logging (Internal)
-- `tracing` + `tracing-subscriber` with JSON output
-- Correlation IDs: `event_id` (ULID) per operation
-- Session IDs: `session_id` from `session.acquire`
-- Workspace IDs: git branch name (agent/todo_hash-timestamp)
-
-### Audit Logs (Immutable)
-- `broker.events.jsonl` — All mutations (The Thin Waist)
-- `todo.events.jsonl` — Task lifecycle
-- `proof.events.jsonl` — Proof execution
-- `assurance_attestations.jsonl` — Interlock decisions
-- `federation.events.jsonl` — Knowledge graph mutations
-
-### Log Redaction
-- `DECAPOD_SESSION_PASSWORD` never logged
-- `.decapod/data/` paths logged but contents not
-- Git tokens/credentials never in command args (use credential helper)
 
 ## Secrets Management
 

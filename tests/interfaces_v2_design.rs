@@ -147,3 +147,35 @@ fn core_interfaces_constitution_requires_envelope_adherence() {
         "constitution router must describe the contract, not its version label"
     );
 }
+
+#[test]
+fn every_interfaces_node_declares_canonical_envelope_adherence() {
+    let constitution: Value =
+        serde_json::from_str(CONSTITUTION).expect("constitution is valid JSON");
+    let nodes = constitution["nodes"]
+        .as_object()
+        .expect("constitution nodes are an object");
+    let interface_nodes: Vec<_> = nodes
+        .iter()
+        .filter(|(id, _)| id.starts_with("interfaces/"))
+        .collect();
+    assert_eq!(
+        interface_nodes.len(),
+        25,
+        "all current interface nodes are covered"
+    );
+
+    for (id, node) in interface_nodes {
+        let doctrine = serde_json::to_string(&node["architect_notes"])
+            .expect("architect notes can be serialized");
+        assert!(
+            doctrine.contains("Every contract carries contract identity/version")
+                || doctrine.contains("canonical envelope"),
+            "{id} does not declare canonical envelope adherence"
+        );
+        assert!(
+            !doctrine.contains("v2") && !doctrine.contains("V2"),
+            "{id} names a version label"
+        );
+    }
+}
