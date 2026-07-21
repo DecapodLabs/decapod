@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.72.15](https://github.com/DecapodLabs/decapod/compare/v0.72.14...v0.72.15) - 2026-07-21
+
+### Fixed
+
+- satisfy clippy test module ordering
+- enforce application Dockerfile boundaries
+
+### Other
+
+- refresh v0.72.14 entrypoint fingerprints
+
 ## [0.72.14](https://github.com/DecapodLabs/decapod/compare/v0.72.13...v0.72.14) - 2026-07-21
 
 ### Fixed
