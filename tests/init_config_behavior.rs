@@ -1,6 +1,6 @@
 use std::fs;
 use std::process::Command;
-use tempfile::tempdir;
+use tempfile::{NamedTempFile, tempdir};
 
 fn run_decapod(dir: &std::path::Path, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_decapod"))
@@ -238,6 +238,66 @@ fn session_acquire_uses_machine_local_config_not_repo_session_file() {
         }
     }
     assert!(found_session, "machine-local agent session file missing");
+}
+
+#[test]
+fn session_acquire_falls_back_to_workspace_when_machine_config_is_unusable() {
+    let tmp = tempdir().expect("tempdir");
+    let config_blocker = NamedTempFile::new().expect("config blocker");
+    let out = run_decapod(tmp.path(), &["init", "with", "--force"]);
+    assert!(
+        out.status.success(),
+        "decapod init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let acquire = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["session", "acquire"])
+        .current_dir(tmp.path())
+        .env("XDG_CONFIG_HOME", config_blocker.path())
+        .env("DECAPOD_AGENT_ID", "workspace-fallback-agent")
+        .output()
+        .expect("session acquire");
+    assert!(
+        acquire.status.success(),
+        "session acquire failed: {}",
+        String::from_utf8_lossy(&acquire.stderr)
+    );
+    assert!(
+        String::from_utf8_lossy(&acquire.stderr).contains("workspace-local session state"),
+        "fallback diagnostic missing: {}",
+        String::from_utf8_lossy(&acquire.stderr)
+    );
+
+    let fallback_session = tmp
+        .path()
+        .join(".decapod/generated/sessions/workspace-fallback-agent.json");
+    assert!(
+        fallback_session.is_file(),
+        "workspace-local session file missing"
+    );
+    assert!(
+        !config_blocker.path().join("decapod").exists(),
+        "unusable machine config path should not be replaced"
+    );
+
+    let status = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["session", "status"])
+        .current_dir(tmp.path())
+        .env("XDG_CONFIG_HOME", config_blocker.path())
+        .env("DECAPOD_AGENT_ID", "workspace-fallback-agent")
+        .output()
+        .expect("session status");
+    assert!(
+        status.status.success(),
+        "session status failed: {}",
+        String::from_utf8_lossy(&status.stderr)
+    );
+    assert!(
+        String::from_utf8_lossy(&status.stdout).contains("Session active"),
+        "fallback session was not readable: {}",
+        String::from_utf8_lossy(&status.stdout)
+    );
 }
 
 #[test]

@@ -202,46 +202,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 3. **Validation Gates**: Self-checking quality bar with auto-remediable errors
 4. **Workspace Isolation**: Git worktrees + containers prevent environment corruption
 5. **Capsule Lineage**: Policy hash + repo revision binding prevents context drift
-6. **Attestation Trail**: Every interlock decision recorded with hash + touched paths
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-## Background Processing Operations Overlay
-
-### Queue Visibility
-- Queue depth, processing rate, and latency MUST be monitored
-- Dead letter queue MUST be visible and alerted
-- Worker health and processing rate metrics required
-
-### Shutdown Behavior
-- Graceful shutdown: stop accepting new work, finish current job
-- Drain behavior and timeout MUST be selected for the deployment
-- Termination and requeue behavior MUST be selected and proven for the deployment
-
-### Worker Health
-- Worker liveness and readiness probes
-- Queue depth alerts for backpressure detection
-- Processing latency percentiles (p50, p95, p99)
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Operations Overlay
-
-### Backup & Recovery
-- Backup scope, schedule, retention, and restore evidence MUST be selected for the project
-- Recovery point objectives MUST be explicit project decisions, not assumed values
-- Recovery time objectives MUST be explicit project decisions, not assumed values
-- Restore verification cadence MUST be recorded with the operational proof plan
-
-### Migration Operations
-- All schema changes via migration files
-- Migration rollback procedures documented
-- Zero-downtime migration strategy for production
-- Migration health checks and rollback triggers
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-## Security Practices
+6. **Attestation Trail**: Every interlock decision recorded with hash + touched paths## Security Practices
 - **Least Privilege**: Agents claim todo exclusively; containers run unprivileged; capabilities minimal
 - **Input Validation**: All CLI args validated by clap; RPC params by serde + custom gates; config.toml schema enforced
 - **Secure Storage**: No secrets in config.toml; session passwords in env only; event logs append-only
@@ -250,7 +211,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `106447c277179f04f494a093a267c82788618720a8e3e3b702cd92fc2beb55f7`
+- Repository signal fingerprint: `52fd70d3357fa57a754bcc5b8c1c444d15371443528d47f1032f72e0f848218a`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
