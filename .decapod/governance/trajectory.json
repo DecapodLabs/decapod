@@ -16,7 +16,21 @@
   ],
   "inspected_files": [],
   "modified_files": [
+    ".decapod/generated/specs/.manifest.json",
+    ".decapod/generated/specs/ARCHITECTURE.md",
+    ".decapod/generated/specs/INTENT.md",
+    ".decapod/generated/specs/INTERFACES.md",
+    ".decapod/generated/specs/OPERATIONS.md",
+    ".decapod/generated/specs/README.md",
+    ".decapod/generated/specs/SECURITY.md",
+    ".decapod/generated/specs/SEMANTICS.md",
+    ".decapod/generated/specs/VALIDATION.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODEX.md",
+    "GEMINI.md",
     "src/cli.rs",
+    "src/core/assets.rs",
     "src/core/trajectory.rs",
     "src/core/validate.rs",
     "src/lib.rs",
@@ -24,17 +38,24 @@
     "tests/validate_optional_artifact_gates.rs"
   ],
   "declared_commands": [
+    "cargo build --bin decapod",
     "cargo clippy --all-targets -- -D warnings",
     "cargo fmt --all",
     "cargo test --lib trajectory",
     "cargo test --test trajectory_cli",
     "cargo test --test validate_optional_artifact_gates validate_fails_on_invalid_trajectory_artifact_if_present",
-    "decapod validate --format json"
+    "decapod validate --format json",
+    "target/debug/decapod init --proof",
+    "target/debug/decapod rpc --op specs.refresh"
   ],
   "tool_calls": [
     "decapod rpc --op specs.refresh"
   ],
   "checks": [
+    {
+      "name": "cargo_build",
+      "status": "passed"
+    },
     {
       "name": "cargo_clippy",
       "status": "passed"
@@ -46,6 +67,14 @@
     {
       "name": "decapod_validate",
       "status": "failed"
+    },
+    {
+      "name": "entrypoint_regeneration",
+      "status": "passed"
+    },
+    {
+      "name": "specs_refresh",
+      "status": "passed"
     },
     {
       "name": "trajectory_cli",
@@ -61,6 +90,8 @@
     }
   ],
   "evidence": [
+    "entrypoint fingerprints regenerated from embedded contract",
+    "entrypoint release refs bumped to 0.73.3",
     "git history is the historical trajectory store; no per-run directory is authoritative",
     "single cookie path: .decapod/governance/trajectory.json",
     "src/core/trajectory.rs",
@@ -72,6 +103,7 @@
   "unresolved_assumptions": [
     "Generated release/fingerprint churn from specs.refresh is not part of this feature slice",
     "Git merge history is the reverse-lookup mechanism for prior trajectory cookies",
+    "Release-bound entrypoint metadata is refreshed with the current Decapod binary release; no new product version is invented in this PR",
     "The broader Houseboat issue programs remain open; this PR is a bounded progress slice for Issues #857 and #860"
   ],
   "proof_status": "failed",
@@ -81,5 +113,5 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:4041ed9c1b1c34052b31f722dbba48e55a47b52219b925c3559984467bcbfca4"
+  "artifact_hash": "sha256:bed284687aa06835014dc2050f8e57c74dcdde9cc0653bf5806f87a8f3e14fd8"
 }
