@@ -25,6 +25,7 @@
     "src/core/trajectory.rs"
   ],
   "modified_files": [
+    "src/core/entrypoint_integrity.rs",
     "src/core/mod.rs",
     "src/core/todo.rs",
     "src/core/work_claim.rs"
@@ -58,6 +59,7 @@
   ],
   "evidence": [
     "Issue #685 trajectory prerequisite is implemented on master; #686 is now addressed with a compatibility projection over todo.db and todo.events.jsonl.",
+    "cargo test --all-targets: 179 tests/targets passed; existing workspace_prune_regression::test_validate_stale_workspaces_cleanup remains the sole baseline failure with SQLite error no such table nodes.",
     "decapod v0.76.0 validate --store user --refresh-specs --format json: status=ok, pass_count=170, fail_count=0, drift_findings=[], temporary_artifacts_cleaned=2"
   ],
   "shortcut_risk_signals": [],
@@ -70,5 +72,5 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:6c3e79f098673d6e24d0ba399fa895667ff5fffd56e3a6af51a34a00b988c92f"
+  "artifact_hash": "sha256:e570b7722a7c82a9dd3515fcd0c11f39ba19a0ee6d530d0385834de6871b990e"
 }
