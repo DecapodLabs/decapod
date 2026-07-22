@@ -25,7 +25,7 @@ These files are the project-local contract for humans and agents.
 - `.decapod/generated/policy/context_capsule_policy.json`: repo-native JIT context policy contract.
 - `.decapod/generated/artifacts/provenance/`: promotion manifests and convergence checklist.
 - `.decapod/generated/artifacts/custody/`: epistemic custody artifacts (assumptions, contradictions, deferred questions).
-- `.decapod/governance/trajectories/`: local-first run trajectory artifacts with intent, scope, actions, checks, and proof verdicts.
+- `.decapod/governance/trajectory.json`: current local-first trajectory cookie with intent, scope, actions, checks, and proof verdicts; Git history is the historical store.
 - `.decapod/generated/artifacts/inventory/`: deterministic release inventory.
 - `.decapod/generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
@@ -56,7 +56,7 @@ Run `decapod validate --refresh-specs` to regenerate scaffold sections from curr
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `259ca51ae8db07091f6cd1d14325ed07e4e21b19c68edd808c170610ad01137c`
+- Repository signal fingerprint: `a49bf87219aa3ca6743a96657b47ecba55a29b88ab0224260d103efe1fb417b3`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (91 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

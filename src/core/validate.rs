@@ -2188,8 +2188,7 @@ fn validate_trajectory_artifacts_if_present(
 ) -> Result<(), error::DecapodError> {
     info("Agent Trajectory Artifact Gate");
 
-    let trajectories_dir = repo_root.join(trajectory::TRAJECTORY_DIR);
-    if !trajectories_dir.exists() {
+    if !trajectory::trajectory_cookie_path(repo_root).exists() {
         skip(
             "No trajectory artifacts found; skipping trajectory artifact gate",
             ctx,
@@ -2197,34 +2196,10 @@ fn validate_trajectory_artifacts_if_present(
         return Ok(());
     }
 
-    let mut files = 0usize;
-    for entry in fs::read_dir(&trajectories_dir).map_err(error::DecapodError::IoError)? {
-        let entry = entry.map_err(error::DecapodError::IoError)?;
-        let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("json") {
-            continue;
-        }
-        files += 1;
-        let run_id = path
-            .file_stem()
-            .and_then(|stem| stem.to_str())
-            .ok_or_else(|| {
-                error::DecapodError::ValidationError(format!(
-                    "trajectory artifact has an invalid filename: {}",
-                    path.display()
-                ))
-            })?;
-        let artifact = trajectory::load_trajectory(repo_root, run_id)?;
-        if artifact.run_id != run_id {
-            return Err(error::DecapodError::ValidationError(format!(
-                "trajectory artifact run_id '{}' does not match filename '{}'",
-                artifact.run_id, run_id
-            )));
-        }
-    }
+    trajectory::load_trajectory_cookie(repo_root)?;
 
     pass(
-        &format!("Trajectory artifact schema check passed for {files} file(s)"),
+        "Trajectory cookie schema check passed for trajectory.json",
         ctx,
     );
     Ok(())

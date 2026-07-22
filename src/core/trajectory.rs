@@ -13,7 +13,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 pub const TRAJECTORY_SCHEMA_VERSION: &str = "1.0.0";
-pub const TRAJECTORY_DIR: &str = ".decapod/governance/trajectories";
+pub const TRAJECTORY_PATH: &str = ".decapod/governance/trajectory.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]
@@ -50,6 +50,15 @@ pub enum TrajectoryVerdict {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum TrajectoryMotionState {
+    Active,
+    Blocked,
+    Waiting,
+    Completed,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct TrajectoryVerdicts {
     pub intent_alignment: TrajectoryVerdict,
     pub boundary_discipline: TrajectoryVerdict,
@@ -65,6 +74,14 @@ pub struct TrajectoryArtifact {
     pub task_id: Option<String>,
     pub original_intent: String,
     pub derived_intent: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub destination: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub current_phase: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub next_transitions: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub blockers: Vec<String>,
     pub active_boundaries: Vec<String>,
     pub repo_scope: Vec<String>,
     pub inspected_files: Vec<String>,
@@ -84,6 +101,11 @@ pub struct TrajectoryArtifact {
 
 #[derive(Debug, Default)]
 pub struct TrajectoryUpdate {
+    pub destination: Option<String>,
+    pub current_phase: Option<String>,
+    pub next_transitions: Vec<String>,
+    pub blockers: Vec<String>,
+    pub clear_blockers: bool,
     pub active_boundaries: Vec<String>,
     pub repo_scope: Vec<String>,
     pub inspected_files: Vec<String>,
@@ -107,6 +129,8 @@ impl TrajectoryArtifact {
             &mut out.modified_files,
             &mut out.declared_commands,
             &mut out.tool_calls,
+            &mut out.next_transitions,
+            &mut out.blockers,
             &mut out.evidence,
             &mut out.shortcut_risk_signals,
             &mut out.unresolved_assumptions,
@@ -139,11 +163,26 @@ impl TrajectoryArtifact {
     }
 }
 
+pub fn motion_state(artifact: &TrajectoryArtifact) -> TrajectoryMotionState {
+    if !artifact.blockers.is_empty() {
+        return TrajectoryMotionState::Blocked;
+    }
+    if artifact.completion_claim.is_some() {
+        return match artifact.proof_status {
+            TrajectoryProofStatus::Passed => TrajectoryMotionState::Completed,
+            _ => TrajectoryMotionState::Waiting,
+        };
+    }
+    TrajectoryMotionState::Active
+}
+
 pub fn trajectory_path(project_root: &Path, run_id: &str) -> Result<PathBuf, error::DecapodError> {
     validate_run_id(run_id)?;
-    Ok(project_root
-        .join(TRAJECTORY_DIR)
-        .join(format!("{run_id}.json")))
+    Ok(trajectory_cookie_path(project_root))
+}
+
+pub fn trajectory_cookie_path(project_root: &Path) -> PathBuf {
+    project_root.join(TRAJECTORY_PATH)
 }
 
 pub fn validate_run_id(run_id: &str) -> Result<(), error::DecapodError> {
@@ -159,16 +198,36 @@ pub fn validate_run_id(run_id: &str) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
+pub struct TrajectoryInit {
+    pub run_id: String,
+    pub task_id: Option<String>,
+    pub original_intent: String,
+    pub derived_intent: String,
+    pub active_boundaries: Vec<String>,
+    pub repo_scope: Vec<String>,
+    pub destination: Option<String>,
+    pub current_phase: Option<String>,
+    pub next_transitions: Vec<String>,
+    pub blockers: Vec<String>,
+}
+
 pub fn init_trajectory(
     project_root: &Path,
-    run_id: &str,
-    task_id: Option<String>,
-    original_intent: String,
-    derived_intent: String,
-    active_boundaries: Vec<String>,
-    repo_scope: Vec<String>,
+    input: TrajectoryInit,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
-    let path = trajectory_path(project_root, run_id)?;
+    let TrajectoryInit {
+        run_id,
+        task_id,
+        original_intent,
+        derived_intent,
+        active_boundaries,
+        repo_scope,
+        destination,
+        current_phase,
+        next_transitions,
+        blockers,
+    } = input;
+    let path = trajectory_path(project_root, &run_id)?;
     if path.exists() {
         return Err(error::DecapodError::ValidationError(format!(
             "trajectory '{run_id}' already exists"
@@ -186,6 +245,10 @@ pub fn init_trajectory(
         task_id,
         original_intent,
         derived_intent,
+        destination,
+        current_phase,
+        next_transitions,
+        blockers,
         active_boundaries,
         repo_scope,
         inspected_files: Vec::new(),
@@ -253,6 +316,23 @@ pub fn load_trajectory(
     Ok(artifact)
 }
 
+pub fn load_trajectory_cookie(
+    project_root: &Path,
+) -> Result<Option<TrajectoryArtifact>, error::DecapodError> {
+    let path = trajectory_cookie_path(project_root);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+    let artifact: TrajectoryArtifact = serde_json::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "invalid trajectory artifact {}: {e}",
+            path.display()
+        ))
+    })?;
+    load_trajectory(project_root, &artifact.run_id).map(Some)
+}
+
 pub fn write_trajectory(
     project_root: &Path,
     artifact: &TrajectoryArtifact,
@@ -282,6 +362,17 @@ pub fn record_trajectory(
     update: TrajectoryUpdate,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
     let mut artifact = load_trajectory(project_root, run_id)?;
+    if update.destination.is_some() {
+        artifact.destination = update.destination;
+    }
+    if update.current_phase.is_some() {
+        artifact.current_phase = update.current_phase;
+    }
+    artifact.next_transitions.extend(update.next_transitions);
+    if update.clear_blockers {
+        artifact.blockers.clear();
+    }
+    artifact.blockers.extend(update.blockers);
     artifact.active_boundaries.extend(update.active_boundaries);
     artifact.repo_scope.extend(update.repo_scope);
     artifact.inspected_files.extend(update.inspected_files);
@@ -413,12 +504,18 @@ mod tests {
         let temp = tempdir().unwrap();
         let artifact = init_trajectory(
             temp.path(),
-            "run_1",
-            Some("task_1".to_string()),
-            "original intent".to_string(),
-            "derived intent".to_string(),
-            vec!["src/**".to_string()],
-            vec!["src/lib.rs".to_string()],
+            TrajectoryInit {
+                run_id: "run_1".to_string(),
+                task_id: Some("task_1".to_string()),
+                original_intent: "original intent".to_string(),
+                derived_intent: "derived intent".to_string(),
+                active_boundaries: vec!["src/**".to_string()],
+                repo_scope: vec!["src/lib.rs".to_string()],
+                destination: None,
+                current_phase: None,
+                next_transitions: Vec::new(),
+                blockers: Vec::new(),
+            },
         )
         .unwrap();
 
@@ -435,12 +532,18 @@ mod tests {
         let temp = tempdir().unwrap();
         init_trajectory(
             temp.path(),
-            "run_2",
-            None,
-            "original".to_string(),
-            "derived".to_string(),
-            vec!["src/**".to_string()],
-            vec!["src/lib.rs".to_string()],
+            TrajectoryInit {
+                run_id: "run_2".to_string(),
+                task_id: None,
+                original_intent: "original".to_string(),
+                derived_intent: "derived".to_string(),
+                active_boundaries: vec!["src/**".to_string()],
+                repo_scope: vec!["src/lib.rs".to_string()],
+                destination: None,
+                current_phase: None,
+                next_transitions: Vec::new(),
+                blockers: Vec::new(),
+            },
         )
         .unwrap();
 
@@ -484,12 +587,18 @@ mod tests {
         let temp = tempdir().unwrap();
         init_trajectory(
             temp.path(),
-            "run_3",
-            None,
-            "original".to_string(),
-            "derived".to_string(),
-            vec!["src/**".to_string()],
-            vec!["src/lib.rs".to_string()],
+            TrajectoryInit {
+                run_id: "run_3".to_string(),
+                task_id: None,
+                original_intent: "original".to_string(),
+                derived_intent: "derived".to_string(),
+                active_boundaries: vec!["src/**".to_string()],
+                repo_scope: vec!["src/lib.rs".to_string()],
+                destination: None,
+                current_phase: None,
+                next_transitions: Vec::new(),
+                blockers: Vec::new(),
+            },
         )
         .unwrap();
         let artifact = record_trajectory(
@@ -518,5 +627,48 @@ mod tests {
             TrajectoryCheckStatus::Passed
         );
         assert!(parse_check_spec("cargo test=maybe").is_err());
+    }
+
+    #[test]
+    fn motion_context_is_recorded_and_state_stays_proof_backed() {
+        let temp = tempdir().unwrap();
+        init_trajectory(
+            temp.path(),
+            TrajectoryInit {
+                run_id: "run_motion".to_string(),
+                task_id: None,
+                original_intent: "original".to_string(),
+                derived_intent: "derived".to_string(),
+                active_boundaries: vec!["src/**".to_string()],
+                repo_scope: vec!["src/lib.rs".to_string()],
+                destination: Some("published PR".to_string()),
+                current_phase: Some("implementation".to_string()),
+                next_transitions: vec!["validate".to_string(), "publish".to_string()],
+                blockers: vec!["awaiting CI".to_string()],
+            },
+        )
+        .unwrap();
+        let blocked = load_trajectory(temp.path(), "run_motion").unwrap();
+        assert_eq!(motion_state(&blocked), TrajectoryMotionState::Blocked);
+
+        let completed = record_trajectory(
+            temp.path(),
+            "run_motion",
+            TrajectoryUpdate {
+                blockers: Vec::new(),
+                clear_blockers: true,
+                checks: vec![TrajectoryCheck {
+                    name: "validate".to_string(),
+                    status: TrajectoryCheckStatus::Passed,
+                }],
+                completion_claim: Some("complete".to_string()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert_eq!(motion_state(&completed), TrajectoryMotionState::Completed);
+        assert_eq!(completed.destination.as_deref(), Some("published PR"));
+        assert_eq!(completed.current_phase.as_deref(), Some("implementation"));
+        assert_eq!(completed.next_transitions, vec!["publish", "validate"]);
     }
 }

@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.73.2 -->
-<!-- decapod-fingerprint: 39ec0738ab08b721c71957e6e54394163860179e72eb232bb7c8bc4351217f52 -->
+<!-- decapod-release: 0.73.3 -->
+<!-- decapod-fingerprint: 860b43272d9969b04db56053085c099ca4c6db9b3bfc66b0a305773b05b3df54 -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
@@ -87,7 +87,7 @@ Preserve the chain between intent, context, assumptions, action, and proof.
 4. **Clarification Trigger**: Stop if a critical assumption cannot be proven.
 
 ## Run-Level Trajectory and Proof
-Record a local artifact under `.decapod/governance/trajectories/`: initialize with intent/boundaries/scope, record inspected/modified files, commands/tool calls, checks, evidence, assumptions, and shortcut signals, then inspect with `decapod govern trajectory status --run-id <run-id>`.
+Record the current run cookie at `.decapod/governance/trajectory.json`: initialize with intent/boundaries/scope, record inspected/modified files, commands/tool calls, checks, evidence, assumptions, and shortcut signals, then inspect with `decapod govern trajectory status --run-id <run-id>`. Git merge history is the historical trajectory store.
 Use `decapod govern trajectory init --run-id <run-id> --original-intent "..." --derived-intent "..." --boundary "..." --scope "..."` and `decapod govern trajectory record --run-id <run-id> --inspected-file <path> --check "name=status"`.
 Completion claims never prove completion: `passed`, `failed`, `partial`, `unavailable`, and `no_checks_run` remain distinct, and no checks means an `unsupported` completion verdict.
 ## Invariants (Normative)

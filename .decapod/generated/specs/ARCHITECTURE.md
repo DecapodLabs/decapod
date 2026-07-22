@@ -349,7 +349,7 @@ Verification and artifact emission:
 | knowledge.db | Repo store | `data knowledge add/search/promote` |
 | lcm.db | Repo store | `data context ingest/summarize` |
 | WorkUnit manifests | `.decapod/governance/workunits/` | `govern workunit.*` |
-| Trajectory artifacts | `.decapod/governance/trajectories/` | `govern trajectory.*` |
+| Trajectory cookie | `.decapod/governance/trajectory.json` | `govern trajectory.*`; Git history stores prior cookies |
 | Plan artifact | `.decapod/governance/plan.json` | `govern plan.*` |
 | Context capsules | `.decapod/generated/context/` | `infer.*`, `govern capsule.*` |
 | Capsule policy | `.decapod/generated/policy/` or override | `init`, `scaffold` |
@@ -397,7 +397,7 @@ Verification and artifact emission:
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `259ca51ae8db07091f6cd1d14325ed07e4e21b19c68edd808c170610ad01137c`
+- Repository signal fingerprint: `a49bf87219aa3ca6743a96657b47ecba55a29b88ab0224260d103efe1fb417b3`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (91 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -325,9 +325,9 @@ fn validate_fails_on_invalid_workunit_manifest_if_present() {
 #[test]
 fn validate_fails_on_invalid_trajectory_artifact_if_present() {
     let (_tmp, dir, password) = setup_repo();
-    let trajectories = dir.join(".decapod").join("governance").join("trajectories");
-    fs::create_dir_all(&trajectories).expect("create trajectory directory");
-    fs::write(trajectories.join("run_BAD.json"), "{not-json").expect("write malformed trajectory");
+    let governance = dir.join(".decapod").join("governance");
+    fs::create_dir_all(&governance).expect("create governance directory");
+    fs::write(governance.join("trajectory.json"), "{not-json").expect("write malformed trajectory");
 
     let validate = run_decapod(
         &dir,
