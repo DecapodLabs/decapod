@@ -4427,24 +4427,6 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     if !rpc_golden_req.exists() || !rpc_golden_res.exists() {
         failures.push("RPC golden vectors missing under tests/golden/rpc/v1".to_string());
     }
-    if !artifact_manifest.exists() {
-        failures.push(
-            "artifact provenance manifest missing: .decapod/generated/artifacts/provenance/artifact_manifest.json"
-                .to_string(),
-        );
-    }
-    if !proof_manifest.exists() {
-        failures.push(
-            "proof provenance manifest missing: .decapod/generated/artifacts/provenance/proof_manifest.json"
-                .to_string(),
-        );
-    }
-    if !intent_convergence_manifest.exists() {
-        failures.push(
-            "intent convergence manifest missing: .decapod/generated/artifacts/provenance/intent_convergence_checklist.json"
-                .to_string(),
-        );
-    }
     if artifact_manifest.exists() && proof_manifest.exists() && intent_convergence_manifest.exists()
     {
         match stamp_release_policy_lineage(
@@ -4523,8 +4505,8 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
                 "migrations.doc",
                 "cargo.lock.present",
                 "rpc.golden_vectors.present",
-                "provenance.manifests.verified",
-                "intent_convergence.manifest.verified",
+                "provenance.manifests.verified_if_present",
+                "intent_convergence.manifest.verified_if_present",
                 "schema_interface.changelog.policy"
             ]
         })
@@ -4579,10 +4561,16 @@ fn run_release_lineage_sync(project_root: &Path) -> Result<(), error::DecapodErr
         missing.push(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
     }
     if !missing.is_empty() {
-        return Err(error::DecapodError::ValidationError(format!(
-            "release.lineage_sync missing required provenance manifests: {}",
-            missing.join(", ")
-        )));
+        println!(
+            "{}",
+            serde_json::json!({
+                "cmd": "release.lineage_sync",
+                "status": "skipped",
+                "reason": "runtime provenance manifests are absent; trajectory.json is the canonical promotion record",
+                "missing": missing,
+            })
+        );
+        return Ok(());
     }
 
     let lineage = stamp_release_policy_lineage(
@@ -5058,70 +5046,6 @@ fn validate_intent_convergence_manifest(
         }
     }
     Ok(lineage)
-}
-
-/// Projection-only provenance validation. Release validation owns the three
-/// manifest schemas; this adapter adds the identity binding required when a
-/// repository contains completed task state.
-pub(crate) fn validate_projection_provenance(
-    project_root: &Path,
-    expected_epoch: &str,
-) -> Vec<String> {
-    let base = project_root.join(".decapod/generated/artifacts/provenance");
-    let manifests = [
-        (
-            "artifact_manifest.json",
-            validate_artifact_manifest(project_root, &base.join("artifact_manifest.json")),
-        ),
-        (
-            "proof_manifest.json",
-            validate_proof_manifest(project_root, &base.join("proof_manifest.json")),
-        ),
-        (
-            "intent_convergence_checklist.json",
-            validate_intent_convergence_manifest(
-                project_root,
-                &base.join("intent_convergence_checklist.json"),
-            ),
-        ),
-    ];
-    let mut errors = Vec::new();
-    for (name, validation) in manifests {
-        let path = base.join(name);
-        if let Err(error) = validation {
-            errors.push(format!("{name}: {error}"));
-            continue;
-        }
-        let raw = match fs::read_to_string(&path) {
-            Ok(raw) => raw,
-            Err(error) => {
-                errors.push(format!("{name}: cannot read validated manifest: {error}"));
-                continue;
-            }
-        };
-        let value: serde_json::Value = match serde_json::from_str(&raw) {
-            Ok(value) => value,
-            Err(error) => {
-                errors.push(format!("{name}: invalid JSON: {error}"));
-                continue;
-            }
-        };
-        for field in ["task_id", "session_id", "validation_epoch"] {
-            let present = value
-                .get(field)
-                .and_then(|v| v.as_str())
-                .is_some_and(|v| !v.is_empty());
-            if !present {
-                errors.push(format!("{name}: missing non-empty {field}"));
-            }
-        }
-        if value.get("validation_epoch").and_then(|v| v.as_str()) != Some(expected_epoch) {
-            errors.push(format!(
-                "{name}: validation_epoch does not match active epoch {expected_epoch}"
-            ));
-        }
-    }
-    errors
 }
 
 fn build_release_inventory(project_root: &Path) -> Result<serde_json::Value, error::DecapodError> {
@@ -6099,10 +6023,46 @@ fn run_validation_bounded(
     match result {
         Ok(mut report) if report.fail_count == 0 => {
             report.temporary_artifacts_cleaned = validate::cleanup_validation_temp_paths()?;
+            write_validation_receipt(workspace_root, &report)?;
             Ok(report)
         }
         other => other,
     }
+}
+
+fn write_validation_receipt(
+    project_root: &Path,
+    report: &validate::ValidationReport,
+) -> Result<PathBuf, error::DecapodError> {
+    let git_revision = std::process::Command::new("git")
+        .current_dir(project_root)
+        .args(["rev-parse", "HEAD"])
+        .output()
+        .ok()
+        .filter(|output| output.status.success())
+        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+        .filter(|revision| !revision.is_empty())
+        .unwrap_or_else(|| "UNRESOLVED".to_string());
+    let repo_signal_fingerprint = core::project_specs::repo_signal_fingerprint(project_root)
+        .unwrap_or_else(|_| "unavailable".to_string());
+    let trajectory = core::trajectory::load_trajectory_cookie(project_root)?;
+    let receipt = validate::build_validation_receipt(
+        report,
+        git_revision,
+        repo_signal_fingerprint,
+        trajectory.as_ref(),
+    )?;
+    let path = project_root.join(validate::VALIDATION_RECEIPT_PATH);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(error::DecapodError::IoError)?;
+    }
+    let bytes = serde_json::to_vec_pretty(&receipt).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "validation receipt serialization failed: {e}"
+        ))
+    })?;
+    fs::write(&path, bytes).map_err(error::DecapodError::IoError)?;
+    Ok(path)
 }
 
 fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {
@@ -6484,6 +6444,7 @@ fn run_trajectory_command(
         }
         TrajectoryCommand::Record {
             run_id,
+            task_id,
             destination,
             current_phase,
             next_transitions,
@@ -6509,6 +6470,7 @@ fn run_trajectory_command(
                 workspace_root,
                 &run_id,
                 core::trajectory::TrajectoryUpdate {
+                    task_id,
                     destination,
                     current_phase,
                     next_transitions,

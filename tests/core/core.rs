@@ -751,8 +751,20 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must keep validation epoch receipts ignored as volatile local state"
     );
     assert!(
-        gitignore.contains("!.decapod/generated/context/*.json"),
-        "decapod init must allowlist generated context capsule artifacts in .gitignore"
+        !gitignore.contains("!.decapod/generated/context/"),
+        "decapod init must not allowlist generated context capsule artifacts"
+    );
+    assert!(
+        !gitignore.contains("!.decapod/generated/policy/"),
+        "decapod init must not allowlist generated policy artifacts"
+    );
+    assert!(
+        !gitignore.contains("!.decapod/generated/artifacts/"),
+        "decapod init must not allowlist generated artifact sprawl"
+    );
+    assert!(
+        gitignore.contains(".decapod/governance/workunits/"),
+        "decapod init must keep workunit manifests in ignored current-run state"
     );
     assert!(
         gitignore.contains("!.decapod/generated/specs/*.md"),

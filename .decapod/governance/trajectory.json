@@ -1,73 +1,80 @@
 {
   "schema_version": "1.0.0",
-  "run_id": "run_houseboat_drift_0740_final",
-  "original_intent": "Advance Houseboat issues in one PR from the assumed PR #976 baseline, with v0.74.0-governed metadata and a unified drift report.",
-  "derived_intent": "Classify existing projection-consistency findings deterministically, refresh v0.74.0 fingerprints/version refs, retain one trajectory cookie, and remove the legacy trajectory directory.",
-  "destination": "single PR for Houseboat #854 progress",
+  "run_id": "run_houseboat_sprawl_0750",
+  "task_id": "code_01ky5eebkhm8e5z2",
+  "original_intent": "Collapse Houseboat generated-state sprawl into one tracked trajectory cookie while preserving runtime proof capabilities.",
+  "derived_intent": "Remove tracked context, policy, provenance, custody, and historical workunit projections; bind publication to trajectory.json; refresh all v0.75.0 fingerprints and version refs.",
+  "destination": "single PR #980",
   "current_phase": "published",
   "next_transitions": [
+    "merge PR #980",
     "monitor PR #978 checks",
-    "publish single PR"
+    "monitor PR #980 checks",
+    "run v0.75.0 validation",
+    "update related Houseboat issues"
   ],
   "active_boundaries": [
-    "src/**, tests/**, governed release metadata, and the canonical trajectory cookie"
+    ".decapod/governance/trajectory.json",
+    "src/**"
   ],
   "repo_scope": [
-    "Houseboat issue #854 with non-overlapping release and trajectory hygiene from #976"
+    "Houseboat issue #854",
+    "Houseboat issue #857",
+    "Houseboat issues #853, #854, #857, and #860"
   ],
   "inspected_files": [
-    ".decapod/generated/specs/.manifest.json",
-    ".decapod/governance/plan.json",
+    ".decapod/generated/specs/ARCHITECTURE.md",
+    ".decapod/generated/specs/INTERFACES.md",
+    ".decapod/generated/specs/SECURITY.md",
+    ".decapod/generated/specs/SEMANTICS.md",
+    ".decapod/generated/specs/VALIDATION.md",
     ".decapod/governance/trajectory.json",
-    "src/core/error.rs",
-    "src/core/plan_governance.rs",
-    "src/core/trajectory.rs",
+    ".decapod/governance/validation.json",
+    ".gitignore",
     "src/core/validate.rs",
-    "src/plan_governance.rs",
-    "tests/projection_consistency.rs"
+    "src/core/workspace.rs"
   ],
   "modified_files": [
     ".decapod/generated/Dockerfile",
     ".decapod/generated/specs/.manifest.json",
     ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
+    ".gitignore",
     "AGENTS.md",
     "CLAUDE.md",
     "CODEX.md",
     "Cargo.lock",
     "Cargo.toml",
     "GEMINI.md",
-    "src/core/completion_evidence.rs",
+    "src/cli.rs",
+    "src/core/capsule_policy.rs",
     "src/core/entrypoint_integrity.rs",
-    "src/core/error.rs",
-    "src/core/mod.rs",
+    "src/core/scaffold.rs",
     "src/core/trajectory.rs",
     "src/core/validate.rs",
-    "src/lib.rs",
-    "src/plan_governance.rs",
-    "tests/projection_consistency.rs",
-    "tests/substrate_integrity.rs",
-    "tests/validate_termination.rs"
+    "src/core/workspace.rs",
+    "src/lib.rs"
   ],
   "declared_commands": [
+    "Decapod v0.75.0 validate",
     "cargo clippy --all-targets -- -D warnings",
-    "cargo test --lib core::trajectory::tests",
-    "cargo test --test plan_governed_execution --test substrate_integrity --test projection_consistency --test trajectory_cli --test validate_termination",
-    "cargo test --test projection_consistency",
-    "cargo test --test trajectory_cli",
-    "decapod v0.74.0 init --proof",
-    "decapod v0.74.0 rpc --op specs.refresh",
-    "decapod v0.74.0 validate --store user --format json",
-    "decapod v0.74.0 validate --store user --refresh-specs --format json",
-    "gh pr create #978",
-    "git push -u origin agent/unknown/code_01ky5eebkhm8e5z2-houseboat-drift"
+    "cargo fmt --all",
+    "cargo test --all-targets",
+    "cargo test --test workunit_publish_gate --test validate_optional_artifact_gates --test projection_consistency --test trajectory_cli --test validate_termination",
+    "decapod v0.75.0 rpc --op specs.refresh"
   ],
   "tool_calls": [
-    "decapod v0.74.0 govern trajectory init",
-    "decapod v0.74.0 govern trajectory status",
-    "gh issue comment #854",
-    "gh issue comment #857"
+    "gh issue comment #853 corrected progress",
+    "gh issue comment #854 corrected progress",
+    "gh issue comment #857 corrected progress",
+    "gh issue comment #860 corrected progress",
+    "gh pr create #980"
   ],
   "checks": [
+    {
+      "name": "cargo_all_targets",
+      "status": "partial"
+    },
     {
       "name": "cargo_clippy",
       "status": "passed"
@@ -77,120 +84,61 @@
       "status": "passed"
     },
     {
-      "name": "cargo_test_all_targets",
-      "status": "partial"
-    },
-    {
-      "name": "entrypoint_manifest_sha",
+      "name": "generated_runtime_boundary",
       "status": "passed"
     },
     {
-      "name": "issue_854_progress_comment",
+      "name": "targeted_regressions",
       "status": "passed"
     },
     {
-      "name": "issue_857_progress_comment",
+      "name": "targeted_tests",
       "status": "passed"
     },
     {
-      "name": "legacy_directory_removal",
+      "name": "targeted_tests_final",
       "status": "passed"
     },
     {
-      "name": "plan_gate_marker",
+      "name": "v075_fingerprint_refs",
       "status": "passed"
     },
     {
-      "name": "plan_governance_consolidation",
+      "name": "v075_source_validate",
       "status": "passed"
     },
     {
-      "name": "pr_978_published",
+      "name": "v075_source_validate_final",
       "status": "passed"
     },
     {
-      "name": "projection_consistency",
+      "name": "validation_receipt",
       "status": "passed"
     },
     {
-      "name": "substrate_integrity",
-      "status": "passed"
-    },
-    {
-      "name": "todo_completed",
-      "status": "passed"
-    },
-    {
-      "name": "trajectory_cli",
-      "status": "passed"
-    },
-    {
-      "name": "trajectory_cookie_replacement",
-      "status": "passed"
-    },
-    {
-      "name": "v074_fingerprint_refs",
-      "status": "passed"
-    },
-    {
-      "name": "v074_release_binary",
-      "status": "passed"
-    },
-    {
-      "name": "v074_release_validate",
-      "status": "passed"
-    },
-    {
-      "name": "v074_source_cleanup_count",
-      "status": "passed"
-    },
-    {
-      "name": "v074_source_validate",
-      "status": "passed"
-    },
-    {
-      "name": "v074_trajectory_cookie",
-      "status": "passed"
-    },
-    {
-      "name": "v074_validate_repo_store",
-      "status": "partial"
-    },
-    {
-      "name": "v074_validate_user_store",
-      "status": "passed"
-    },
-    {
-      "name": "validation_temp_cleanup",
+      "name": "validation_receipt_final",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Cleanup is scoped to validation-owned temporary directories; arbitrary /tmp entries are not scanned or deleted",
-    "Decapod todo code_01ky5eebkhm8e5z2 was completed with validated artifact src/core/validate.rs.",
-    "Decapod v0.74.0 validate --store user --format json passed with 169 gates and zero failures",
-    "Decapod v0.74.0 validation epoch evaluator_identity=decapod-validate@0.74.0",
-    "Exact released v0.74.0 validation passed 169 gates with zero failures and the refreshed manifest/fingerprint refs.",
-    "Generated entrypoints, Dockerfile, Cargo package, lockfile, and specs manifest carry v0.74.0 refs",
-    "Issue #854 and #857 received progress summaries with the PR URL.",
-    "Only the canonical trajectory cookie remains tracked for current trajectory state",
-    "PR #978 is published from the dedicated worktree and refs the bounded Houseboat #854/#857 progress slice.",
-    "Plan CLI, validation, and completion evidence now share src/plan_governance.rs; the duplicate core implementation was removed.",
-    "Released v0.74.0 validator reported 169 gates and zero failures",
-    "Repository-store validation is partial until assumed PR #976 merge updates protected-main authority and stale preexisting state",
-    "Source-built v0.74.0 validation passed 169 gates with zero failures, zero drift findings, and temporary_artifacts_cleaned=2.",
-    "Source-built v0.74.0 validator reported temporary_artifacts_cleaned=2 and zero failures",
-    "The canonical trajectory cookie is current, hashed, and free of legacy directory references",
-    "The checked-in plan.json remains a current approval/phase contract for backward compatibility; trajectory.json remains the single run cookie and git merge history remains historical storage.",
-    "v0.74.0 entrypoint SHAs are checked against the compiled release manifest"
+    "Corrected progress summaries were posted to Houseboat issues #853, #854, #857, and #860.",
+    "Final source-built Decapod v0.75.0 validation passed with 170 gates, zero failures, zero drift findings, and two temporary artifacts cleaned.",
+    "Final v0.75.0 targeted regression suites passed: validate_termination, validate_optional_artifact_gates, and workunit_publish_gate.",
+    "Full cargo test all-targets passed through the changed suites; the baseline workspace_prune_regression stale-workspace cleanup test remains failing with no such table: nodes and was not changed.",
+    "Git history is the historical record for prior trajectory cookies.",
+    "PR #980 is the single follow-on PR from merged master for the remaining Houseboat receipt and generated-state cleanup.",
+    "Publication gate now uses task-bound trajectory.json and no longer requires workunit manifests or provenance manifests.",
+    "Source-built Decapod v0.75.0 validation passed 170 gates with zero failures, zero drift findings, and temporary_artifacts_cleaned=2.",
+    "The per-commit validation receipt is stored at .decapod/governance/validation.json and binds the v0.75.0 epoch, repository fingerprint, and trajectory hash.",
+    "Tracked generated context, policy, provenance, custody, and historical workunit files removed.",
+    "Validation receipt is now bound to implementation commit e6b0218 and the current trajectory hash.",
+    "v0.75.0 entrypoints and generated specs manifest carry refreshed fingerprints and version refs."
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
-    "Full repository-store validation will be rerun after the assumed baseline merge",
-    "Long-term convergence should migrate the plan contract into trajectory.json in a dedicated compatibility change; this PR does not silently remove the plan approval gate.",
-    "PR #976 merges before this PR is integrated"
+    "The unrelated workspace_prune_regression failure remains outside this PR scope; changed receipt, trajectory, context-RPC, scaffold, and validation suites pass."
   ],
-  "completion_claim": "PR #978 is published with issue progress summaries; CI monitoring remains the only next transition.",
+  "completion_claim": "PR #980 contains the durable governance receipt and generated-state sprawl cleanup; final v0.75.0 validation passed and the current receipt is tracked under decapod governance.",
   "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
@@ -198,5 +146,5 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:14fef29816f687df1eb764b1a8a9fe01c4b1cf893dde8ea4201d99854e5f91fe"
+  "artifact_hash": "sha256:192c3edc926e99c982bcc74518595294d086f05f12709e378e4242ef01e9af10"
 }

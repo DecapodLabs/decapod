@@ -2,7 +2,7 @@ use decapod::core::capsule_policy::CapsulePolicyBinding;
 use decapod::core::context_capsule::{
     ContextCapsuleSnippet, ContextCapsuleSource, DeterministicContextCapsule, write_context_capsule,
 };
-use decapod::core::{workspace, workunit};
+use decapod::core::{trajectory, workspace, workunit};
 use tempfile::tempdir;
 
 fn write_manifest(
@@ -168,4 +168,40 @@ fn publish_gate_fails_when_verified_task_capsule_state_ref_missing() {
         msg.contains("WORKUNIT_CAPSULE_POLICY_LINEAGE_STATE_REF_MISSING"),
         "unexpected error message: {msg}"
     );
+}
+
+#[test]
+fn trajectory_gate_replaces_workunit_requirement_for_publication() {
+    let dir = tempdir().expect("tempdir");
+    trajectory::init_trajectory(
+        dir.path(),
+        trajectory::TrajectoryInit {
+            run_id: "run_publish".to_string(),
+            task_id: Some("test_000005".to_string()),
+            original_intent: "publish a governed change".to_string(),
+            derived_intent: "bind publication to the trajectory cookie".to_string(),
+            active_boundaries: vec!["src/**".to_string()],
+            repo_scope: vec!["src/lib.rs".to_string()],
+            destination: Some("single PR".to_string()),
+            current_phase: Some("proof".to_string()),
+            next_transitions: vec!["publish".to_string()],
+            blockers: vec![],
+        },
+    )
+    .expect("initialize trajectory");
+    trajectory::record_trajectory(
+        dir.path(),
+        "run_publish",
+        trajectory::TrajectoryUpdate {
+            checks: vec![trajectory::TrajectoryCheck {
+                name: "validate".to_string(),
+                status: trajectory::TrajectoryCheckStatus::Passed,
+            }],
+            ..Default::default()
+        },
+    )
+    .expect("record trajectory proof");
+
+    workspace::verify_trajectory_gate_for_publish(dir.path(), "agent/codex/test_000005")
+        .expect("trajectory-bound branch should pass without a workunit manifest");
 }

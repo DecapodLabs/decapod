@@ -214,13 +214,14 @@ Response envelope (`RpcResponse`):
 |------|--------|---------|
 | `.decapod/data/*.db` | Decapod CLI (single-writer per store) | Decapod CLI, validation (read-only) |
 | `.decapod/data/*.jsonl` | Decapod CLI (append-only) | Decapod CLI, flight-recorder, rebuild |
-| `.decapod/generated/context/*.json` | `capsule.query --write` | WorkUnit lineage, publish gate |
+| `.decapod/generated/context/*.json` | `capsule.query --write` | Current-run context only; ignored by Git |
 | `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | `qa verify completion <ID> --write` | Completion verifier, promotion review |
 | `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | `qa verify completion <ID> --import` | Structural inspection and receiver-local decision |
-| `.decapod/generated/policy/context_capsule_policy.json` | `init` / scaffold | Capsule query resolution |
+| `.decapod/generated/policy/context_capsule_policy.json` | `init` / scaffold | Current-run capsule query resolution; ignored by Git |
 | `.decapod/generated/specs/*.md` | `init --force` / `rpc specs.refresh` | Validation, agents |
-| `.decapod/generated/artifacts/provenance/*.json` | `workspace publish` / `validate` | Promotion, CI |
-| `.decapod/governance/trajectory.json` | `govern trajectory` / `validate` | Current run custody and proof review; historical states are recovered from Git |
+| `.decapod/generated/artifacts/provenance/*.json` | `workspace publish` / `validate` | Current-run diagnostics/evidence; ignored by Git |
+| `.decapod/governance/trajectory.json` | `govern trajectory` / `validate` | Tracked current-run custody and proof review; historical states are recovered from Git |
+| `.decapod/governance/validation.json` | `validate` | Tracked current successful validation receipt; overwritten per commit and historically recoverable from Git |
 
 ## Error Taxonomy
 
@@ -407,7 +408,7 @@ Agents declare needed capabilities via `assurance.evaluate` params; interlocks b
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `44b511a6e58ef8569601d28c18aa5f1f3db58d99d04ead0fc15c040ddcc76952`
+- Repository signal fingerprint: `1bdcda1c8ecde09ac0ec5b9596bb74965fb5785588d852c57f2646fa5f68787e`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

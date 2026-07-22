@@ -282,6 +282,25 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         format!("decapod-validate@{}", env!("CARGO_PKG_VERSION"))
     );
 
+    let validation_receipt = dir.join(".decapod/governance/validation.json");
+    assert!(
+        validation_receipt.exists(),
+        "successful validation should overwrite the per-commit validation receipt"
+    );
+    let receipt: Value = serde_json::from_str(
+        &fs::read_to_string(&validation_receipt).expect("read validation receipt"),
+    )
+    .expect("parse validation receipt");
+    assert_eq!(receipt["kind"], "validation_receipt");
+    assert_eq!(receipt["decapod_release"], env!("CARGO_PKG_VERSION"));
+    assert_eq!(receipt["status"], "ok");
+    assert!(
+        receipt["receipt_hash"]
+            .as_str()
+            .unwrap_or("")
+            .starts_with("sha256:")
+    );
+
     let receipt_path = dir.join(".decapod/generated/validation-epoch.json");
     assert!(
         !receipt_path.exists(),
