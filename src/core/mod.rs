@@ -19,6 +19,7 @@ pub mod container_runtime;
 pub mod context_bundle;
 pub mod context_capsule;
 pub mod coplayer;
+pub mod custody;
 pub mod db;
 pub mod docs;
 pub mod docs_cli;

@@ -144,6 +144,9 @@ pub struct TrajectoryLoop {
     pub proof_refs: Vec<String>,
     pub mutation_proposal: TrajectoryMutationProposal,
     pub status: TrajectoryLoopStatus,
+    /// Optional link into the append-only intent custody ledger.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub custody_event_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -182,6 +185,13 @@ pub struct TrajectoryArtifact {
     pub proof_status: TrajectoryProofStatus,
     pub verdicts: TrajectoryVerdicts,
     pub artifact_hash: String,
+    /// Durable intent custody embedded in the existing trajectory envelope.
+    /// The trajectory remains evidence; this state owns lifecycle authority.
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::custody::CustodyState::is_empty"
+    )]
+    pub custody: crate::core::custody::CustodyState,
 }
 
 #[derive(Debug, Default)]
@@ -350,10 +360,22 @@ pub fn init_trajectory(
         ));
     }
 
+    let effective_intent_id = intent_id.unwrap_or_else(|| format!("intent:{run_id}"));
+    let custody = crate::core::custody::bootstrap_intent(
+        &effective_intent_id,
+        original_intent.clone(),
+        derived_intent.clone(),
+        active_boundaries.clone(),
+        repo_scope.clone(),
+    )
+    .map_err(|e| {
+        error::DecapodError::ValidationError(format!("failed to initialize intent custody: {e}"))
+    })?;
+
     let artifact = TrajectoryArtifact {
         schema_version: TRAJECTORY_SCHEMA_VERSION.to_string(),
         run_id: run_id.to_string(),
-        intent_id: Some(intent_id.unwrap_or_else(|| format!("intent:{run_id}"))),
+        intent_id: Some(effective_intent_id),
         task_id,
         original_intent,
         derived_intent,
@@ -381,6 +403,7 @@ pub fn init_trajectory(
             completion_proof: TrajectoryVerdict::Unsupported,
         },
         artifact_hash: String::new(),
+        custody,
     };
     write_trajectory(project_root, &artifact)
 }
@@ -483,6 +506,47 @@ pub fn record_trajectory(
     update: TrajectoryUpdate,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
     let mut artifact = load_trajectory(project_root, run_id)?;
+    let loop_count = update.loops.len();
+    let generic_step = if loop_count == 0
+        && (!update.declared_commands.is_empty()
+            || !update.tool_calls.is_empty()
+            || !update.inspected_files.is_empty()
+            || !update.modified_files.is_empty()
+            || !update.checks.is_empty()
+            || !update.evidence.is_empty()
+            || !update.shortcut_risk_signals.is_empty()
+            || !update.unresolved_assumptions.is_empty())
+    {
+        Some(crate::core::custody::TrajectoryStepInput {
+            action: update
+                .current_phase
+                .clone()
+                .unwrap_or_else(|| "trajectory.record".to_string()),
+            tool: update.tool_calls.first().cloned(),
+            command: update.declared_commands.first().cloned(),
+            scope: artifact.repo_scope.clone(),
+            observations: update
+                .inspected_files
+                .iter()
+                .chain(update.modified_files.iter())
+                .chain(update.evidence.iter())
+                .cloned()
+                .collect(),
+            proof_refs: update
+                .checks
+                .iter()
+                .map(|check| check.name.clone())
+                .collect(),
+            validation_findings: update
+                .shortcut_risk_signals
+                .iter()
+                .chain(update.unresolved_assumptions.iter())
+                .cloned()
+                .collect(),
+        })
+    } else {
+        None
+    };
     if update.task_id.is_some() {
         artifact.task_id = update.task_id;
     }
@@ -504,10 +568,57 @@ pub fn record_trajectory(
     artifact.declared_commands.extend(update.declared_commands);
     artifact.tool_calls.extend(update.tool_calls);
     for loop_record in update.loops {
+        let mut loop_record = loop_record;
+        let input = crate::core::custody::TrajectoryStepInput {
+            action: format!("loop:{}:{}", loop_record.loop_id, loop_record.attempt),
+            tool: loop_record.tool_calls.first().cloned(),
+            scope: artifact.repo_scope.clone(),
+            observations: loop_record.observations.clone(),
+            proof_refs: loop_record.proof_refs.clone(),
+            validation_findings: if loop_record.feedback.is_empty() {
+                Vec::new()
+            } else {
+                vec![loop_record.feedback.clone()]
+            },
+            ..Default::default()
+        };
+        let (custody, event_id) = crate::core::custody::append_trajectory_step(
+            artifact.custody.clone(),
+            &artifact.run_id,
+            artifact
+                .intent_id
+                .as_deref()
+                .unwrap_or(&format!("intent:{}", artifact.run_id)),
+            input,
+        )
+        .map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "failed to append trajectory custody step: {e}"
+            ))
+        })?;
+        artifact.custody = custody;
+        loop_record.custody_event_id = Some(event_id);
         artifact.loops.retain(|existing| {
             existing.loop_id != loop_record.loop_id || existing.attempt != loop_record.attempt
         });
         artifact.loops.push(loop_record);
+    }
+    if let Some(input) = generic_step {
+        let (custody, _) = crate::core::custody::append_trajectory_step(
+            artifact.custody.clone(),
+            &artifact.run_id,
+            artifact
+                .intent_id
+                .as_deref()
+                .unwrap_or(&format!("intent:{}", artifact.run_id)),
+            input,
+        )
+        .map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "failed to append trajectory custody step: {e}"
+            ))
+        })?;
+        artifact.custody = custody;
     }
     for check in &update.checks {
         artifact
@@ -969,6 +1080,7 @@ mod tests {
             proof_refs: proof_refs.into_iter().map(str::to_string).collect(),
             mutation_proposal,
             status,
+            custody_event_id: None,
         }
     }
 
@@ -1146,6 +1258,64 @@ mod tests {
             error
                 .to_string()
                 .contains("requires at least one proof reference")
+        );
+    }
+
+    #[test]
+    fn trajectory_execution_carries_intent_custody_across_records() {
+        let temp = tempdir().unwrap();
+        let intent_id = "intent:custody-flow";
+        init_trajectory(
+            temp.path(),
+            TrajectoryInit {
+                run_id: "run_custody".to_string(),
+                task_id: Some("task_custody".to_string()),
+                intent_id: Some(intent_id.to_string()),
+                original_intent: "preserve the human request exactly".to_string(),
+                derived_intent: "record one bounded execution step".to_string(),
+                active_boundaries: vec!["src/**".to_string()],
+                repo_scope: vec!["src/core/trajectory.rs".to_string()],
+                destination: None,
+                current_phase: Some("refinement".to_string()),
+                next_transitions: vec!["approve".to_string()],
+                blockers: Vec::new(),
+            },
+        )
+        .unwrap();
+
+        let artifact = record_trajectory(
+            temp.path(),
+            "run_custody",
+            TrajectoryUpdate {
+                loops: vec![loop_record(
+                    "run_custody",
+                    intent_id,
+                    "custody-step",
+                    TrajectoryLoopType::Agent,
+                    1,
+                    TrajectoryGraderResult::Skipped,
+                    "",
+                    Vec::new(),
+                    TrajectoryMutationProposal::None,
+                    TrajectoryLoopStatus::Open,
+                )],
+                ..Default::default()
+            },
+        )
+        .unwrap();
+
+        let record = &artifact.custody.intents[intent_id];
+        assert_eq!(record.raw_intent, "preserve the human request exactly");
+        assert_eq!(record.status, crate::core::custody::IntentStatus::Refined);
+        assert_eq!(artifact.custody.events.len(), 3);
+        assert_eq!(artifact.custody.trajectories["run_custody"].steps.len(), 1);
+        assert_eq!(
+            artifact.loops[0].custody_event_id.as_deref(),
+            Some(artifact.custody.events[2].event_id.as_str())
+        );
+        assert_eq!(
+            load_trajectory(temp.path(), "run_custody").unwrap(),
+            artifact
         );
     }
 }
