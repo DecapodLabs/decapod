@@ -69,6 +69,14 @@ fn trajectory_cli_records_scope_actions_checks_and_verdicts() {
             "preserve intent",
             "--derived-intent",
             "implement bounded change",
+            "--destination",
+            "published PR",
+            "--phase",
+            "implementation",
+            "--next-transition",
+            "validate",
+            "--blocker",
+            "awaiting proof",
             "--boundary",
             "src/**",
             "--scope",
@@ -78,6 +86,8 @@ fn trajectory_cli_records_scope_actions_checks_and_verdicts() {
     );
     let init_json = json(&init, "trajectory init");
     assert_eq!(init_json["marker"], "TRAJECTORY_INITIALIZED");
+    assert_eq!(init_json["trajectory"]["destination"], "published PR");
+    assert_eq!(init_json["trajectory"]["current_phase"], "implementation");
 
     let record = run_decapod(
         &root,
@@ -87,6 +97,9 @@ fn trajectory_cli_records_scope_actions_checks_and_verdicts() {
             "record",
             "--run-id",
             "run_cli_1",
+            "--blocker",
+            "awaiting proof",
+            "--clear-blockers",
             "--inspected-file",
             "src/lib.rs",
             "--modified-file",
@@ -119,10 +132,9 @@ fn trajectory_cli_records_scope_actions_checks_and_verdicts() {
     );
     let status_json = json(&status, "trajectory status");
     assert_eq!(status_json["proof_status"], "passed");
-    assert!(
-        root.join(".decapod/governance/trajectories/run_cli_1.json")
-            .exists()
-    );
+    assert_eq!(status_json["motion_state"], "blocked");
+    assert_eq!(status_json["blockers"][0], "awaiting proof");
+    assert!(root.join(".decapod/governance/trajectory.json").exists());
 }
 
 #[test]

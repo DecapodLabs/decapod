@@ -6440,17 +6440,27 @@ fn run_trajectory_command(
             task_id,
             original_intent,
             derived_intent,
+            destination,
+            current_phase,
+            next_transitions,
+            blockers,
             active_boundaries,
             repo_scope,
         } => {
             let artifact = core::trajectory::init_trajectory(
                 workspace_root,
-                &run_id,
-                task_id,
-                original_intent,
-                derived_intent,
-                active_boundaries,
-                repo_scope,
+                core::trajectory::TrajectoryInit {
+                    run_id: run_id.clone(),
+                    task_id,
+                    original_intent,
+                    derived_intent,
+                    active_boundaries,
+                    repo_scope,
+                    destination,
+                    current_phase,
+                    next_transitions,
+                    blockers,
+                },
             )?;
             let path = core::trajectory::trajectory_path(workspace_root, &run_id)?;
             println!(
@@ -6466,6 +6476,11 @@ fn run_trajectory_command(
         }
         TrajectoryCommand::Record {
             run_id,
+            destination,
+            current_phase,
+            next_transitions,
+            blockers,
+            clear_blockers,
             active_boundaries,
             repo_scope,
             inspected_files,
@@ -6486,6 +6501,11 @@ fn run_trajectory_command(
                 workspace_root,
                 &run_id,
                 core::trajectory::TrajectoryUpdate {
+                    destination,
+                    current_phase,
+                    next_transitions,
+                    blockers,
+                    clear_blockers,
                     active_boundaries,
                     repo_scope,
                     inspected_files,
@@ -6513,6 +6533,11 @@ fn run_trajectory_command(
                 serde_json::to_string_pretty(&serde_json::json!({
                     "status": "ok",
                     "run_id": artifact.run_id,
+                    "motion_state": core::trajectory::motion_state(&artifact),
+                    "destination": artifact.destination,
+                    "current_phase": artifact.current_phase,
+                    "next_transitions": artifact.next_transitions,
+                    "blockers": artifact.blockers,
                     "proof_status": artifact.proof_status,
                     "verdicts": artifact.verdicts,
                     "completion_claim": artifact.completion_claim,

@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "run_houseboat_trajectory_status",
+  "task_id": "feat_01ky5c74ep1pbghf",
+  "original_intent": "Complete a bounded Houseboat trajectory and observability slice in one PR",
+  "derived_intent": "Extend existing trajectory artifacts with explicit motion context and deterministic status output",
+  "active_boundaries": [
+    "src/**",
+    "tests/**"
+  ],
+  "repo_scope": [
+    "src/cli.rs",
+    "src/core/trajectory.rs",
+    "src/lib.rs",
+    "tests/trajectory_cli.rs"
+  ],
+  "inspected_files": [],
+  "modified_files": [
+    "src/cli.rs",
+    "src/core/trajectory.rs",
+    "src/core/validate.rs",
+    "src/lib.rs",
+    "tests/trajectory_cli.rs",
+    "tests/validate_optional_artifact_gates.rs"
+  ],
+  "declared_commands": [
+    "cargo clippy --all-targets -- -D warnings",
+    "cargo fmt --all",
+    "cargo test --lib trajectory",
+    "cargo test --test trajectory_cli",
+    "cargo test --test validate_optional_artifact_gates validate_fails_on_invalid_trajectory_artifact_if_present",
+    "decapod validate --format json"
+  ],
+  "tool_calls": [
+    "decapod rpc --op specs.refresh"
+  ],
+  "checks": [
+    {
+      "name": "cargo_clippy",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_fmt",
+      "status": "passed"
+    },
+    {
+      "name": "decapod_validate",
+      "status": "failed"
+    },
+    {
+      "name": "trajectory_cli",
+      "status": "passed"
+    },
+    {
+      "name": "trajectory_cookie_validation",
+      "status": "passed"
+    },
+    {
+      "name": "trajectory_unit",
+      "status": "passed"
+    }
+  ],
+  "evidence": [
+    "git history is the historical trajectory store; no per-run directory is authoritative",
+    "single cookie path: .decapod/governance/trajectory.json",
+    "src/core/trajectory.rs",
+    "tests/trajectory_cli.rs",
+    "validation blockers: container_workspace_required; claimed_todos_unverified",
+    "validation: container_workspace_required; claimed_todos_unverified; dirty_tree_before_commit"
+  ],
+  "shortcut_risk_signals": [],
+  "unresolved_assumptions": [
+    "Generated release/fingerprint churn from specs.refresh is not part of this feature slice",
+    "Git merge history is the reverse-lookup mechanism for prior trajectory cookies",
+    "The broader Houseboat issue programs remain open; this PR is a bounded progress slice for Issues #857 and #860"
+  ],
+  "proof_status": "failed",
+  "verdicts": {
+    "intent_alignment": "supported",
+    "boundary_discipline": "supported",
+    "shortcut_risk": "supported",
+    "completion_proof": "unsupported"
+  },
+  "artifact_hash": "sha256:4041ed9c1b1c34052b31f722dbba48e55a47b52219b925c3559984467bcbfca4"
+}

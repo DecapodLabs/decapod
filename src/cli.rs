@@ -955,6 +955,14 @@ pub(crate) enum TrajectoryCommand {
         original_intent: String,
         #[clap(long)]
         derived_intent: String,
+        #[clap(long)]
+        destination: Option<String>,
+        #[clap(long = "phase")]
+        current_phase: Option<String>,
+        #[clap(long = "next-transition")]
+        next_transitions: Vec<String>,
+        #[clap(long = "blocker")]
+        blockers: Vec<String>,
         #[clap(long = "boundary")]
         active_boundaries: Vec<String>,
         #[clap(long = "scope")]
@@ -964,6 +972,16 @@ pub(crate) enum TrajectoryCommand {
     Record {
         #[clap(long)]
         run_id: String,
+        #[clap(long)]
+        destination: Option<String>,
+        #[clap(long = "phase")]
+        current_phase: Option<String>,
+        #[clap(long = "next-transition")]
+        next_transitions: Vec<String>,
+        #[clap(long = "blocker")]
+        blockers: Vec<String>,
+        #[clap(long, default_value_t = false)]
+        clear_blockers: bool,
         #[clap(long = "boundary")]
         active_boundaries: Vec<String>,
         #[clap(long = "scope")]
