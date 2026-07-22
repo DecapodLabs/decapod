@@ -6406,6 +6406,7 @@ fn run_trajectory_command(
         TrajectoryCommand::Init {
             run_id,
             task_id,
+            intent_id,
             original_intent,
             derived_intent,
             destination,
@@ -6420,6 +6421,7 @@ fn run_trajectory_command(
                 core::trajectory::TrajectoryInit {
                     run_id: run_id.clone(),
                     task_id,
+                    intent_id,
                     original_intent,
                     derived_intent,
                     active_boundaries,
@@ -6456,12 +6458,17 @@ fn run_trajectory_command(
             modified_files,
             declared_commands,
             tool_calls,
+            loops,
             checks,
             evidence,
             shortcut_risk_signals,
             unresolved_assumptions,
             completion_claim,
         } => {
+            let loops = loops
+                .iter()
+                .map(|spec| core::trajectory::parse_loop_json(spec))
+                .collect::<Result<Vec<_>, _>>()?;
             let checks = checks
                 .iter()
                 .map(|spec| core::trajectory::parse_check_spec(spec))
@@ -6482,6 +6489,7 @@ fn run_trajectory_command(
                     modified_files,
                     declared_commands,
                     tool_calls,
+                    loops,
                     checks,
                     evidence,
                     shortcut_risk_signals,
@@ -6511,6 +6519,8 @@ fn run_trajectory_command(
                     "proof_status": artifact.proof_status,
                     "verdicts": artifact.verdicts,
                     "completion_claim": artifact.completion_claim,
+                    "loop_count": artifact.loops.len(),
+                    "loops": artifact.loops,
                     "artifact_hash": artifact.artifact_hash,
                     "path": path,
                 }))

@@ -220,6 +220,70 @@ fn trajectory_cli_rejects_unknown_check_status() {
 }
 
 #[test]
+fn trajectory_cli_records_typed_loop_attempts_and_proof_refs() {
+    let (_temp, root, password) = setup_repo();
+    let env_password = Some(password.as_str());
+    let init = run_decapod(
+        &root,
+        &[
+            "govern",
+            "trajectory",
+            "init",
+            "--run-id",
+            "run_cli_loops",
+            "--intent-id",
+            "intent:cli-request",
+            "--original-intent",
+            "preserve intent",
+            "--derived-intent",
+            "record governed loops",
+            "--boundary",
+            "src/**",
+            "--scope",
+            "src/lib.rs",
+        ],
+        env_password,
+    );
+    json(&init, "trajectory loop init");
+
+    let failed = r#"{"intent_id":"intent:cli-request","trajectory_id":"run_cli_loops","loop_id":"verify","loop_type":"verification","attempt":1,"trigger":"grader","tool_calls":["cargo test"],"observations":["failed assertion"],"grader_result":"fail","feedback":"rerun the bounded check","proof_refs":[],"mutation_proposal":"none","status":"retrying"}"#;
+    let passed = r#"{"intent_id":"intent:cli-request","trajectory_id":"run_cli_loops","loop_id":"verify","loop_type":"verification","attempt":2,"trigger":"grader","tool_calls":["cargo test"],"observations":["all assertions passed"],"grader_result":"pass","feedback":"","proof_refs":["check:cargo-test"],"mutation_proposal":"none","status":"passed"}"#;
+    let record = run_decapod(
+        &root,
+        &[
+            "govern",
+            "trajectory",
+            "record",
+            "--run-id",
+            "run_cli_loops",
+            "--loop-json",
+            failed,
+            "--loop-json",
+            passed,
+        ],
+        env_password,
+    );
+    let record_json = json(&record, "trajectory loop record");
+    assert_eq!(record_json["loops"].as_array().unwrap().len(), 2);
+    assert_eq!(record_json["loops"][0]["attempt"], 1);
+    assert_eq!(record_json["loops"][1]["proof_refs"][0], "check:cargo-test");
+
+    let status = run_decapod(
+        &root,
+        &[
+            "govern",
+            "trajectory",
+            "status",
+            "--run-id",
+            "run_cli_loops",
+        ],
+        env_password,
+    );
+    let status_json = json(&status, "trajectory loop status");
+    assert_eq!(status_json["loop_count"], 2);
+}
+
+#[test]
 fn generated_agent_guidance_mentions_trajectory_proof() {
     let (_temp, root, password) = setup_repo();
     let _ = password;
