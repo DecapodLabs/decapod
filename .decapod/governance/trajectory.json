@@ -6,7 +6,7 @@
   "original_intent": "Assess and solve GitHub Issue #685 if its trajectory model remains worth pursuing.",
   "derived_intent": "Add a bounded repo-native loop trajectory model with retry feedback, proof references, event triggers, and proposal-only improvement records.",
   "destination": "single PR",
-  "current_phase": "implementation",
+  "current_phase": "proof",
   "next_transitions": [
     "publish",
     "validate"
@@ -41,7 +41,8 @@
   ],
   "tool_calls": [
     "decapod rpc --op specs.refresh",
-    "gh issue view 685"
+    "gh issue view 685",
+    "target/debug/decapod validate --store user --refresh-specs --format json"
   ],
   "loops": [
     {
@@ -122,8 +123,18 @@
       "status": "open"
     }
   ],
-  "checks": [],
+  "checks": [
+    {
+      "name": "cargo test --lib core::trajectory",
+      "status": "passed"
+    },
+    {
+      "name": "cargo test --test trajectory_cli",
+      "status": "passed"
+    }
+  ],
   "evidence": [
+    "focused trajectory tests passed",
     "test:core::trajectory",
     "test:trajectory_cli"
   ],
@@ -131,12 +142,12 @@
   "unresolved_assumptions": [
     "The existing local-first cookie remains the authority and Git history remains the historical store."
   ],
-  "proof_status": "no_checks_run",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:f5e000446ee15ea9f1e57894b10530ff97fd20e3011a3d3c1b864b61f22cc093"
+  "artifact_hash": "sha256:010341b7691472f710ced0dd7556a08898bb8844f738c3295620ba5dee020acd"
 }
