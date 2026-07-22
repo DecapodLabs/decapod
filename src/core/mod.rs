@@ -52,5 +52,6 @@ pub mod trajectory;
 pub mod ulid;
 pub mod validate;
 pub mod validation_epoch;
+pub mod work_claim;
 pub mod workspace;
 pub mod workunit;

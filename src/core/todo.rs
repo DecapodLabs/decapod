@@ -3,6 +3,7 @@ use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::schemas; // Import the new schemas module
 use crate::core::store::Store;
+use crate::core::work_claim;
 use crate::plugins::aptitude;
 use crate::plugins::container;
 use crate::plugins::federation;
@@ -33,6 +34,12 @@ enum OutputFormat {
 pub enum ClaimMode {
     Exclusive,
     Shared,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct WorkClaimVerification {
+    pub last_verified_status: Option<String>,
+    pub verification_artifacts: Option<JsonValue>,
 }
 
 #[derive(Parser, Debug)]
@@ -162,6 +169,11 @@ pub enum TodoCommand {
     },
     /// Read claim status for a task (cache-first).
     ClaimStatus {
+        #[clap(long)]
+        id: String,
+    },
+    /// Project a TODO into the governed work-claim model.
+    WorkClaim {
         #[clap(long)]
         id: String,
     },
@@ -4000,6 +4012,65 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
     })
 }
 
+fn get_work_claim_verification(
+    root: &Path,
+    id: &str,
+) -> Result<WorkClaimVerification, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    if broker.is_cloud() {
+        return Err(crate::core::cloud_backend::unavailable_error());
+    }
+    let db_path = todo_db_path(root);
+    broker.with_conn(&db_path, "decapod", None, "todo.work-claim", |conn| {
+        ensure_schema(conn)?;
+        let row: Option<(Option<String>, Option<String>)> = conn
+            .query_row(
+                "SELECT last_verified_status, verification_artifacts
+                 FROM task_verification WHERE todo_id = ?1",
+                rusqlite::params![id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(error::DecapodError::RusqliteError)?;
+        let Some((last_verified_status, artifacts)) = row else {
+            return Ok(WorkClaimVerification::default());
+        };
+        let verification_artifacts = artifacts
+            .as_deref()
+            .filter(|raw| !raw.trim().is_empty())
+            .and_then(|raw| serde_json::from_str(raw).ok());
+        Ok(WorkClaimVerification {
+            last_verified_status,
+            verification_artifacts,
+        })
+    })
+}
+
+pub fn get_work_claim(
+    root: &Path,
+    id: &str,
+) -> Result<Option<work_claim::WorkClaim>, error::DecapodError> {
+    let Some(task) = get_task(root, id)? else {
+        return Ok(None);
+    };
+    let verification = get_work_claim_verification(root, id)?;
+    let trajectory_id = std::env::current_dir()
+        .ok()
+        .and_then(|dir| crate::core::store::find_decapod_project_root(&dir).ok())
+        .and_then(|project_root| {
+            crate::core::trajectory::load_trajectory_cookie(&project_root).ok()
+        })
+        .flatten()
+        .and_then(|trajectory| {
+            (trajectory.task_id.as_deref() == Some(id)).then_some(trajectory.run_id)
+        });
+    Ok(Some(work_claim::from_todo(
+        &task,
+        &verification,
+        trajectory_id,
+    )))
+}
+
 pub fn list_tasks(
     root: &Path,
     status: Option<String>,
@@ -4606,7 +4677,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
 pub fn schema() -> serde_json::Value {
     serde_json::json!({
         "name": "todo",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "description": "Manage TODO tasks",
         "commands": [
             { "name": "add", "parameters": ["title", "tags", "owner", "due", "ref", "dir", "priority", "depends_on", "blocks", "parent"] },
@@ -4619,6 +4690,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "edit", "parameters": ["id", "title", "description", "owner", "category"] },
             { "name": "claim", "parameters": ["id", "agent", "mode"] },
             { "name": "claim-status", "parameters": ["id"] },
+            { "name": "work-claim", "parameters": ["id"] },
             { "name": "release", "parameters": ["id"] },
             { "name": "categories", "parameters": [] },
             { "name": "register-agent", "parameters": ["agent", "category"] },
@@ -4645,7 +4717,25 @@ pub fn schema() -> serde_json::Value {
         "dependency_tables": [
             "task_dependencies(task_id, depends_on_task_id, created_at)"
         ],
-        "storage": ["todo.db", "todo.events.jsonl"]
+        "storage": ["todo.db", "todo.events.jsonl"],
+        "work_claim_projection": {
+            "source_of_truth": ["todo.db", "todo.events.jsonl"],
+            "claim_id": "todo:<todo_id>",
+            "intent_id": "intent:todo:<todo_id>",
+            "attempt": "1 until a trajectory binds a retry",
+            "ownership": {
+                "agent": "todo task owner",
+                "branch": "workspace subsystem",
+                "worktree": "workspace subsystem",
+                "conflict": "exclusive todo claim; shared claims remain explicit"
+            },
+            "proof": {
+                "refs": "verification proof-plan output hashes and file-artifact hashes",
+                "passed_done": "complete",
+                "failed_done": "blocked"
+            },
+            "cloud_boundary": "sync the projection only after local todo and trajectory authority are established"
+        }
     })
 }
 
@@ -4838,6 +4928,16 @@ pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodErr
             out
         }
         TodoCommand::ClaimStatus { id } => claim_status(root, id)?,
+        TodoCommand::WorkClaim { id } => {
+            let claim = get_work_claim(root, id)?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.work-claim",
+                "status": if claim.is_some() { "ok" } else { "not_found" },
+                "root": root.to_string_lossy(),
+                "item": claim,
+            })
+        }
         TodoCommand::Release { id } => release_task(root, id)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,
         TodoCommand::Categories => {
