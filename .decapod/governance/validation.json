@@ -2,25 +2,25 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.75.0",
-  "git_revision": "fa4d8dc49441dff17afed0b52515bfb0a19d1810",
+  "git_revision": "e6b0218975d67bc27f94360f0a7e29f0ef087ace",
   "repo_signal_fingerprint": "1bdcda1c8ecde09ac0ec5b9596bb74965fb5785588d852c57f2646fa5f68787e",
   "trajectory_run_id": "run_houseboat_sprawl_0750",
-  "trajectory_artifact_hash": "sha256:24b4b75f4c225c99f8ab498333a4cebe548a77a0d506f7ebd3ff79ff2da6d693",
+  "trajectory_artifact_hash": "sha256:192c3edc926e99c982bcc74518595294d086f05f12709e378e4242ef01e9af10",
   "validation_epoch": {
     "schema_version": "1.0.0",
-    "epoch_id": "ve_6d0bc303d09d7c8a",
+    "epoch_id": "ve_4f947ba6dcd52690",
     "evaluator_identity": "decapod-validate@0.75.0",
     "evaluator_set_hash": "sha256:64b449286755924c66826e2cfec17f872ae86eb5d4c27f3b48fe9de32f30d675",
     "constitution_version": "embedded-docs@0.75.0",
-    "constitution_hash": "sha256:5ba35e341824ff62401b8b104fac1832dfb9ca49779bd337e7e7cf856e50af0f",
+    "constitution_hash": "sha256:43dcafd2ec80996146a9aa1c4df829d16995e82be6731b0e9eb4a431a6cae245",
     "validation_profile": "default",
     "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f",
     "proof_rubric": "decapod-validate/current-proof-v1",
     "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-    "generated_specs_manifest_hash": "sha256:f3286d43a7ab8bf7eb795fccca342847a73176071c4dd94771dcb51c6774b297",
+    "generated_specs_manifest_hash": "sha256:280b3b4a00ae8074d99afe9d9e4b48b3a3e3a8c1255e8cc72a3dad144754d9fb",
     "generated_specs_fingerprint": "1bdcda1c8ecde09ac0ec5b9596bb74965fb5785588d852c57f2646fa5f68787e",
     "material_hashes": {
-      "constitution:core/DECAPOD": "sha256:5ba35e341824ff62401b8b104fac1832dfb9ca49779bd337e7e7cf856e50af0f",
+      "constitution:core/DECAPOD": "sha256:43dcafd2ec80996146a9aa1c4df829d16995e82be6731b0e9eb4a431a6cae245",
       "generated_spec:.decapod/generated/specs/ARCHITECTURE.md": "sha256:b532602a44fc1c017ec2b0b0cb5e18422ce182eb1e6383b09b932f3c2ba79e99",
       "generated_spec:.decapod/generated/specs/INTENT.md": "sha256:c71711f52b094012a99ca00944475041e73be6b0a270ee23a5b465b1f7e4340a",
       "generated_spec:.decapod/generated/specs/INTERFACES.md": "sha256:2220c80f94c72e84e302865fae2c53afccb4294180829ee0a9921ad66498428c",
@@ -30,7 +30,7 @@
       "generated_spec:.decapod/generated/specs/SEMANTICS.md": "sha256:188c54f9bb1d51b58e8dc825d58d11f17108d0020c4c7dcb131b7db44f8efa64",
       "generated_spec:.decapod/generated/specs/VALIDATION.md": "sha256:fee6ae16f7011f845d5f25efb9caa069fc9406e44740ac27be87e16b34e636ca",
       "generated_specs_fingerprint": "1bdcda1c8ecde09ac0ec5b9596bb74965fb5785588d852c57f2646fa5f68787e",
-      "generated_specs_manifest": "sha256:f3286d43a7ab8bf7eb795fccca342847a73176071c4dd94771dcb51c6774b297",
+      "generated_specs_manifest": "sha256:280b3b4a00ae8074d99afe9d9e4b48b3a3e3a8c1255e8cc72a3dad144754d9fb",
       "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
       "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
     }
@@ -39,8 +39,8 @@
   "pass_count": 170,
   "fail_count": 0,
   "warn_count": 3,
-  "elapsed_ms": 716,
+  "elapsed_ms": 1503,
   "drift_findings": [],
   "temporary_artifacts_cleaned": 2,
-  "receipt_hash": "sha256:9b46cae4983f629256b0b609bf025c178f52d178fabd5d9438577390ad4914ac"
+  "receipt_hash": "sha256:de3c612da8de1e2f9f9d87fb8ed33c983a9a3d220ff09bbe79d806d059c082f5"
 }

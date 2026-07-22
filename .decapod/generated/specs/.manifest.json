@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
   "template_version": "scaffold-v3",
-  "generated_at": "1784750685Z",
+  "generated_at": "1784751677Z",
   "repo_signal_fingerprint": "1bdcda1c8ecde09ac0ec5b9596bb74965fb5785588d852c57f2646fa5f68787e",
   "declared_capabilities": [
     "agent-helper",
@@ -60,7 +60,7 @@
     },
     {
       "path": ".decapod/generated/specs/ARCHITECTURE.md",
-      "template_hash": "f81224214db72e367670029174b0b69cf21ea2240d14ba936257324f2a9449d7",
+      "template_hash": "58f2abf6f6e0c3da62bc0850e71e12abd76c5064c793701c7b9330036713b163",
       "content_hash": "b532602a44fc1c017ec2b0b0cb5e18422ce182eb1e6383b09b932f3c2ba79e99",
       "fingerprint": ""
     },
