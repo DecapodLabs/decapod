@@ -6391,17 +6391,37 @@ fn validate_stale_workspaces(
     }
 
     use crate::core::{container_runtime, workspace};
-    match workspace::prune_workspaces(working_root, false) {
-        Ok(pruned) => {
-            if pruned.is_empty() {
+    match workspace::prune_workspaces_report(working_root, false) {
+        Ok(report) => {
+            if report.pruned.is_empty() && report.skipped.is_empty() {
                 pass("No stale workspaces found to clean up", ctx);
-            } else {
-                let list: Vec<String> = pruned
+            } else if !report.pruned.is_empty() {
+                let list: Vec<String> = report
+                    .pruned
                     .iter()
                     .map(|pw| format!("{} ({})", pw.path, pw.reason))
                     .collect();
                 pass(
                     &format!("Successfully pruned stale workspaces: {}", list.join(", ")),
+                    ctx,
+                );
+            }
+            if !report.skipped.is_empty() {
+                let list: Vec<String> = report
+                    .skipped
+                    .iter()
+                    .map(|workspace| {
+                        format!(
+                            "{} ({}: {})",
+                            workspace.path, workspace.reason, workspace.detail
+                        )
+                    })
+                    .collect();
+                warn(
+                    &format!(
+                        "Stale workspaces preserved for explicit review: {}",
+                        list.join(", ")
+                    ),
                     ctx,
                 );
             }

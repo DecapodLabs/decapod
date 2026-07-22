@@ -1567,8 +1567,26 @@ pub fn get_allowed_ops(status: &WorkspaceStatus) -> Vec<AllowedOp> {
 pub struct PrunedWorkspace {
     /// Absolute path of the pruned workspace
     pub path: String,
-    /// Reason for pruning: not_registered, branch_deleted, no_matching_task, task_completed, no_active_claim
+    /// Reason for pruning: branch_deleted, no_matching_task, task_completed, no_active_claim, not_registered
     pub reason: String,
+}
+
+/// Workspace that was identified as stale but intentionally preserved.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SkippedWorkspace {
+    /// Absolute path of the preserved workspace.
+    pub path: String,
+    /// Why automatic cleanup was skipped.
+    pub reason: String,
+    /// Actionable explanation for the operator or agent.
+    pub detail: String,
+}
+
+/// Result of a stale workspace cleanup pass.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct WorkspacePruneReport {
+    pub pruned: Vec<PrunedWorkspace>,
+    pub skipped: Vec<SkippedWorkspace>,
 }
 
 /// Prune stale/unused agent workspaces
@@ -1576,10 +1594,21 @@ pub fn prune_workspaces(
     repo_root: &Path,
     force: bool,
 ) -> Result<Vec<PrunedWorkspace>, DecapodError> {
+    Ok(prune_workspaces_report(repo_root, force)?.pruned)
+}
+
+/// Prune stale/unused agent workspaces and report candidates preserved by safety gates.
+pub fn prune_workspaces_report(
+    repo_root: &Path,
+    force: bool,
+) -> Result<WorkspacePruneReport, DecapodError> {
     let main_repo = get_main_repo_root(repo_root)?;
     let workspaces_dir = main_repo.join(".decapod").join("workspaces");
     if !workspaces_dir.is_dir() {
-        return Ok(vec![]);
+        return Ok(WorkspacePruneReport {
+            pruned: vec![],
+            skipped: vec![],
+        });
     }
 
     // 1) Parse all current git worktrees
@@ -1645,6 +1674,7 @@ pub fn prune_workspaces(
     };
 
     let mut pruned = Vec::new();
+    let mut skipped = Vec::new();
     let process_dir = std::env::current_dir().ok();
 
     // 3) Iterate over the directory entries under .decapod/workspaces/
@@ -1803,8 +1833,37 @@ pub fn prune_workspaces(
         }
 
         if is_stale {
-            if container_runtime::container_runtime_available() {
-                let _ = container_runtime::remove_workspace_images_for_path(&dir_path);
+            if !force {
+                if matching_wt.is_none() {
+                    skipped.push(SkippedWorkspace {
+                        path: dir_path.to_string_lossy().to_string(),
+                        reason: "unregistered_workspace".to_string(),
+                        detail: "workspace directory is not registered with git; inspect it and rerun with --force only after preserving any needed files".to_string(),
+                    });
+                    continue;
+                }
+
+                match worktree_is_dirty(&dir_path) {
+                    Ok(true) => {
+                        skipped.push(SkippedWorkspace {
+                            path: dir_path.to_string_lossy().to_string(),
+                            reason: "dirty_workspace".to_string(),
+                            detail: "workspace contains tracked or untracked changes; preserve or review them before rerunning with --force".to_string(),
+                        });
+                        continue;
+                    }
+                    Ok(false) => {}
+                    Err(error) => {
+                        skipped.push(SkippedWorkspace {
+                            path: dir_path.to_string_lossy().to_string(),
+                            reason: "workspace_status_unavailable".to_string(),
+                            detail: format!(
+                                "could not establish that the workspace is clean: {error}; rerun after inspection or use --force deliberately"
+                            ),
+                        });
+                        continue;
+                    }
+                }
             }
 
             // Attempt to remove git worktree if registered
@@ -1815,10 +1874,39 @@ pub fn prune_workspaces(
                 }
                 args.push(dir_path.to_str().unwrap_or("."));
 
-                let _ = Command::new("git")
+                let remove_output = Command::new("git")
                     .args(["-C", main_repo.to_str().unwrap_or(".")])
                     .args(&args)
                     .output();
+                match remove_output {
+                    Ok(output) if output.status.success() || force => {}
+                    Ok(output) => {
+                        skipped.push(SkippedWorkspace {
+                            path: dir_path.to_string_lossy().to_string(),
+                            reason: "git_remove_failed".to_string(),
+                            detail: format!(
+                                "git refused worktree removal: {}; no files were deleted",
+                                String::from_utf8_lossy(&output.stderr).trim()
+                            ),
+                        });
+                        continue;
+                    }
+                    Err(error) if !force => {
+                        skipped.push(SkippedWorkspace {
+                            path: dir_path.to_string_lossy().to_string(),
+                            reason: "git_remove_failed".to_string(),
+                            detail: format!(
+                                "could not invoke git for worktree removal: {error}; no files were deleted"
+                            ),
+                        });
+                        continue;
+                    }
+                    Err(_) => {}
+                }
+            }
+
+            if container_runtime::container_runtime_available() {
+                let _ = container_runtime::remove_workspace_images_for_path(&dir_path);
             }
 
             // Fallback: forcefully remove from disk if it still exists
@@ -1836,7 +1924,27 @@ pub fn prune_workspaces(
     // Call prune_stale_worktree_config to scrub .git/config entries
     let _ = prune_stale_worktree_config(repo_root);
 
-    Ok(pruned)
+    Ok(WorkspacePruneReport { pruned, skipped })
+}
+
+fn worktree_is_dirty(path: &Path) -> Result<bool, DecapodError> {
+    let output = Command::new("git")
+        .args([
+            "-C",
+            path.to_str().unwrap_or("."),
+            "status",
+            "--porcelain=1",
+            "--untracked-files=all",
+        ])
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(DecapodError::ValidationError(format!(
+            "git status failed: {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+    Ok(!output.stdout.is_empty())
 }
 
 fn workspace_image_tag(agent_id: &str, branch: &str) -> String {

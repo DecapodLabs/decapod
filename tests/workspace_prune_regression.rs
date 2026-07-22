@@ -362,6 +362,113 @@ fn test_workspace_prune_unmerged_prevention() {
 }
 
 #[test]
+fn test_workspace_prune_non_force_preserves_dirty_and_unregistered_data() {
+    let tmp = tempdir().expect("tempdir");
+    let main_root = tmp.path().join("main_repo");
+    fs::create_dir_all(&main_root).expect("create main_repo");
+
+    git_init(&main_root);
+    git_commit(&main_root, "init");
+
+    let store_root = main_root.join(".decapod").join("data");
+    fs::create_dir_all(&store_root).expect("create data dir");
+    initialize_todo_db(&store_root).expect("init todo db");
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: store_root.clone(),
+    };
+
+    let task = add_task(
+        &store_root,
+        &TodoCommand::Add {
+            title: "Dirty stale workspace".to_string(),
+            description: "".to_string(),
+            tags: "".to_string(),
+            owner: "test-agent".to_string(),
+            due: None,
+            r#ref: "".to_string(),
+            scope: "".to_string(),
+            dir: Some(main_root.to_string_lossy().to_string()),
+            priority: "medium".to_string(),
+            depends_on: "".to_string(),
+            blocks: "".to_string(),
+            parent: None,
+            one_shot: 0,
+        },
+    )
+    .expect("add task");
+    let task_id = task.get("id").unwrap().as_str().unwrap();
+    let db_path = decapod::core::todo::todo_db_path(&store_root);
+    let conn = rusqlite::Connection::open(&db_path).expect("open todo db");
+    conn.execute(
+        "UPDATE tasks SET hash = 'hashdirty' WHERE id = ?",
+        [task_id],
+    )
+    .expect("update task hash");
+    claim_task(&store_root, task_id, "test-agent", ClaimMode::Exclusive).expect("claim task");
+    update_status(&store, task_id, "done", "task.done", serde_json::json!({}))
+        .expect("complete task");
+
+    let workspaces_dir = main_root.join(".decapod").join("workspaces");
+    fs::create_dir_all(&workspaces_dir).expect("create workspaces dir");
+    let dirty_path = workspaces_dir.join("test-agent-todo-hashdirty-dirty");
+    run_git_cmd(
+        &main_root,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "agent/test-agent/todo-hashdirty",
+            dirty_path.to_str().unwrap(),
+        ],
+    );
+    fs::write(dirty_path.join("uncommitted.txt"), "preserve me").expect("write uncommitted change");
+
+    let orphan_path = workspaces_dir.join("orphaned-houseboat-workspace");
+    fs::create_dir_all(&orphan_path).expect("create orphan workspace");
+    fs::write(orphan_path.join("evidence.txt"), "inspect me").expect("write orphan evidence");
+
+    let report =
+        workspace::prune_workspaces_report(&main_root, false).expect("non-force prune report");
+    assert!(dirty_path.exists(), "dirty workspace must be preserved");
+    assert!(orphan_path.exists(), "orphan workspace must be preserved");
+    assert!(report.pruned.is_empty());
+    assert!(
+        report
+            .skipped
+            .iter()
+            .any(|workspace| workspace.path == dirty_path.to_string_lossy()
+                && workspace.reason == "dirty_workspace")
+    );
+    assert!(
+        report
+            .skipped
+            .iter()
+            .any(|workspace| workspace.path == orphan_path.to_string_lossy()
+                && workspace.reason == "unregistered_workspace")
+    );
+
+    let forced = workspace::prune_workspaces_report(&main_root, true).expect("force prune report");
+    assert!(!dirty_path.exists(), "force must remove the stale worktree");
+    assert!(
+        !orphan_path.exists(),
+        "force must remove the orphan workspace"
+    );
+    assert!(
+        forced
+            .pruned
+            .iter()
+            .any(|workspace| workspace.path == dirty_path.to_string_lossy())
+    );
+    assert!(
+        forced
+            .pruned
+            .iter()
+            .any(|workspace| workspace.path == orphan_path.to_string_lossy())
+    );
+}
+
+#[test]
 fn test_validate_stale_workspaces_cleanup() {
     let tmp = tempdir().expect("tempdir");
     let main_root = tmp.path().join("main_repo");
