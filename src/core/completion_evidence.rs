@@ -1,8 +1,8 @@
 use crate::core::context_capsule::DeterministicContextCapsule;
 use crate::core::error;
-use crate::core::plan_governance;
 use crate::core::validation_epoch::active_validation_epoch;
 use crate::core::workunit::{self, WorkUnitStatus};
+use crate::plan_governance;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;

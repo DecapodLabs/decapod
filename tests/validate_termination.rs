@@ -74,6 +74,46 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
 }
 
 #[test]
+fn successful_validation_cleans_only_its_temporary_artifacts() {
+    let (_tmp, dir, password) = setup_repo();
+    let unowned = std::env::temp_dir().join(format!(
+        "decapod_validate_user_unowned_{}",
+        std::process::id()
+    ));
+    fs::create_dir_all(&unowned).expect("create unowned validation-shaped temp directory");
+    let validate = run_decapod(
+        &dir,
+        &["validate", "--store", "user", "--format", "json"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        validate.status.success(),
+        "user validation should pass: {}",
+        String::from_utf8_lossy(&validate.stderr)
+    );
+
+    let payload: Value = serde_json::from_slice(&validate.stdout).expect("validation JSON");
+    assert_eq!(payload["report"]["status"], "ok");
+    assert!(
+        payload["report"]["temporary_artifacts_cleaned"]
+            .as_u64()
+            .unwrap_or_default()
+            >= 2,
+        "successful validation should report cleanup of its user-store temp dirs: {payload}"
+    );
+
+    assert!(
+        unowned.exists(),
+        "validation must not remove an unowned temp directory"
+    );
+    fs::remove_dir_all(unowned).expect("remove test sentinel");
+}
+
+#[test]
 fn validate_terminates_with_typed_error_under_db_contention() {
     let (_tmp, dir, password) = setup_repo();
     let db_path = dir.join(".decapod").join("data").join("todo.db");
@@ -395,6 +435,18 @@ fn validate_clears_stale_container_override_when_runtime_is_available() {
         .args(["+x", fake_docker.to_str().expect("fake docker path")])
         .status()
         .expect("chmod fake docker");
+    assert!(chmod.success(), "chmod should succeed");
+
+    let fake_podman = fake_bin.join("podman");
+    fs::write(
+        &fake_podman,
+        "#!/bin/sh\nif [ \"$1\" = \"info\" ]; then exit 0; fi\nexit 0\n",
+    )
+    .expect("write fake podman");
+    let chmod = Command::new("chmod")
+        .args(["+x", fake_podman.to_str().expect("fake podman path")])
+        .status()
+        .expect("chmod fake podman");
     assert!(chmod.success(), "chmod should succeed");
 
     let path = std::env::var("PATH").unwrap_or_default();

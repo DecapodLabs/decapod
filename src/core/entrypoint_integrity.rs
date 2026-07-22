@@ -24,25 +24,25 @@ pub struct EntrypointExpectation {
     pub fingerprint: &'static str,
 }
 
-// These values are the v0.71.1 release manifest. Keep them immutable for the
+// These values are the v0.74.0 release manifest. Keep them immutable for the
 // lifetime of that release; a later release must update them deliberately and
 // regenerate the four root entrypoints through Decapod.
 pub const EXPECTED_ENTRYPOINTS: [EntrypointExpectation; 4] = [
     EntrypointExpectation {
         surface: "AGENTS.md",
-        fingerprint: "9690a85584326deda839209a9ffb414555a5b0bfbe0060832490d6fa4f6e5f64",
+        fingerprint: "c1b00722602429c9327dbc62d7a07b9b6d18e87122425a6bd163fe8eeb74777b",
     },
     EntrypointExpectation {
         surface: "CLAUDE.md",
-        fingerprint: "317be132fde7331f829619c1ecdd1be1b87a87fd03ab9922deb3547f01ca7023",
+        fingerprint: "ea4c853f956e7ef0e2107961cc5d9cfbc3f4d91924515464eb9153bb73e251c0",
     },
     EntrypointExpectation {
         surface: "GEMINI.md",
-        fingerprint: "14e8af4076b495de19ce8b0b6ea56ba604d8903f15e0a44bb3e2414f5b7c2733",
+        fingerprint: "c394125fe27fbf42549fb84176e7e915624868ad7cc8280f17b1117aa9f06355",
     },
     EntrypointExpectation {
         surface: "CODEX.md",
-        fingerprint: "332e0389236df58d42470e51127bf5a32ed01acd90ee1f8283c9dc32724fbee7",
+        fingerprint: "e12f91cbe81e9e0df221a532ab0f28794f2d176d004591f535f3948e7638d526",
     },
 ];
 
@@ -352,6 +352,15 @@ mod tests {
                 fingerprint_for_payload(surface, RELEASE_VERSION, &payload),
                 expected_fingerprint(surface).expect("compiled fingerprint"),
                 "compiled release manifest drifted from canonical {surface}"
+            );
+            let manifest_entry = EXPECTED_ENTRYPOINTS
+                .iter()
+                .find(|entry| entry.surface == surface)
+                .expect("release manifest entry");
+            assert_eq!(
+                manifest_entry.fingerprint,
+                expected_fingerprint(surface).expect("computed fingerprint"),
+                "release manifest SHA drifted from computed {surface}"
             );
         }
     }

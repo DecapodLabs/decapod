@@ -90,9 +90,16 @@ fn test_decapod_uses_config_toml_for_validation() {
         !out.status.success(),
         "Validate should fail with corrupted config.toml"
     );
+    let combined = format!(
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
     assert!(
-        String::from_utf8_lossy(&out.stdout).contains("fail="),
-        "Should report failure in stdout"
+        combined.contains("fail=")
+            || combined.contains("Invalid .decapod/config.toml schema")
+            || combined.contains("Failed to parse config.toml"),
+        "Should report the config failure: {combined}"
     );
 
     // 3. Restore config.toml but change schema version
