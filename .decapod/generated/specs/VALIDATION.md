@@ -87,11 +87,12 @@ flowchart LR
 | Untouched scaffold specs | `template_hash` == `content_hash` | Before implementation |## Evidence Artifacts
 | Artifact | Path | Required For |
 |----------|------|--------------|
-| Validation report | `.decapod/generated/artifacts/provenance/validation_report.json` | Promotion |
-| Proof manifest | `.decapod/generated/artifacts/provenance/proof_manifest.json` | Promotion |
-| Artifact manifest | `.decapod/generated/artifacts/provenance/artifact_manifest.json` | Promotion |
+| Validation report | `.decapod/generated/artifacts/provenance/validation_report.json` | Current-run diagnostics; ignored by Git |
+| Proof manifest | `.decapod/generated/artifacts/provenance/proof_manifest.json` | Current-run diagnostics; ignored by Git |
+| Artifact manifest | `.decapod/generated/artifacts/provenance/artifact_manifest.json` | Current-run diagnostics; ignored by Git |
 | Completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | Reproducible completion review |
 | Trajectory cookie | `.decapod/governance/trajectory.json` | Current run custody schema, hash, and computed proof status; Git history preserves prior cookies |
+| Validation receipt | `.decapod/governance/validation.json` | Tracked successful per-commit validation value; overwritten after validation and preserved in Git history |
 | Imported completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | Untrusted external evidence inspection |
 | Test logs | CI artifact store | Promotion |
 | Architecture diagram | `ARCHITECTURE.md` (in specs) | Promotion |
@@ -200,12 +201,9 @@ Whitelisted tracked paths:
 - `.decapod/generated/Dockerfile`
 - `.decapod/data/knowledge.promotions.jsonl`
 - `.decapod/generated/specs/.manifest` / `.manifest.json`
-- `.decapod/generated/policy/context_capsule_policy.json`
-- `.decapod/generated/artifacts/provenance/kcr_trend.jsonl`
-- `.decapod/generated/context/*.json`
-- `.decapod/generated/artifacts/provenance/*.json`
 - `.decapod/generated/specs/*.md`
-- `.decapod/generated/artifacts/custody/*.md`
+- `.decapod/governance/validation.json`
+- `.decapod/governance/trajectory.json`
 
 ### Project Config Gate
 | Check | Failure Mode |
@@ -269,7 +267,7 @@ No legacy `globex` or `codex` namespace references in repo text sources
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `44b511a6e58ef8569601d28c18aa5f1f3db58d99d04ead0fc15c040ddcc76952`
+- Repository signal fingerprint: `1bdcda1c8ecde09ac0ec5b9596bb74965fb5785588d852c57f2646fa5f68787e`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

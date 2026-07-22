@@ -973,6 +973,8 @@ pub(crate) enum TrajectoryCommand {
         #[clap(long)]
         run_id: String,
         #[clap(long)]
+        task_id: Option<String>,
+        #[clap(long)]
         destination: Option<String>,
         #[clap(long = "phase")]
         current_phase: Option<String>,

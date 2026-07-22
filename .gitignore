@@ -37,25 +37,22 @@ dev/
 !.decapod/data/knowledge.promotions.jsonl
 .decapod/.stfolder
 .decapod/workspaces
-# Generated runtime outputs are non-canonical; allowlist only governed artifacts.
+# Generated runtime outputs are non-canonical. Git history plus the trajectory
+# cookie are the durable governance record; these paths are current-run state.
 .decapod/generated/*
-# Allowlist deterministic generated artifact used as container build baseline.
+.decapod/generated/context/
+.decapod/generated/policy/
+.decapod/generated/artifacts/
+# Keep only the deterministic container build baseline and living specs tracked.
 !.decapod/data/
 !.decapod/data/knowledge.promotions.jsonl
 !.decapod/generated/Dockerfile
-!.decapod/generated/context/
-!.decapod/generated/context/*.json
-!.decapod/generated/policy/
-!.decapod/generated/policy/context_capsule_policy.json
-!.decapod/generated/artifacts/
-!.decapod/generated/artifacts/provenance/
-!.decapod/generated/artifacts/provenance/*.json
-!.decapod/generated/artifacts/provenance/kcr_trend.jsonl
-!.decapod/generated/artifacts/custody/
-!.decapod/generated/artifacts/custody/*.md
 !.decapod/generated/specs/
 !.decapod/generated/specs/*.md
 !.decapod/generated/specs/.manifest.json
+# Durable governance cookies under `.decapod/governance/` are tracked; workunit
+# manifests remain ignored current-run execution state.
+.decapod/governance/workunits/
 # Allowlist skills - imported skill cards for reproducibility
 !.decapod/skills/
 

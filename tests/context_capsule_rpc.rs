@@ -81,6 +81,18 @@ fn setup_repo() -> (TempDir, std::path::PathBuf) {
         "validate failed: {}",
         String::from_utf8_lossy(&validate.stderr)
     );
+    let receipt_add = run_git(&dir, &["add", ".decapod/governance/validation.json"]);
+    assert!(
+        receipt_add.status.success(),
+        "git add validation receipt failed: {}",
+        String::from_utf8_lossy(&receipt_add.stderr)
+    );
+    let receipt_commit = run_git(&dir, &["commit", "-m", "record validation receipt"]);
+    assert!(
+        receipt_commit.status.success(),
+        "validation receipt commit failed: {}",
+        String::from_utf8_lossy(&receipt_commit.stderr)
+    );
     let docs_ingest = run_decapod(&dir, &["docs", "ingest"]);
     assert!(
         docs_ingest.status.success(),

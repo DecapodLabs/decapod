@@ -10,6 +10,7 @@ use crate::core::db;
 use crate::core::error::DecapodError;
 use crate::core::rpc::{AllowedOp, Blocker, BlockerKind};
 use crate::core::todo;
+use crate::core::trajectory;
 use crate::core::workunit::{self, WorkUnitStatus};
 use crate::plugins::eval;
 use fancy_regex::Regex;
@@ -1355,17 +1356,7 @@ pub fn publish_workspace(
             status.git.current_branch
         )));
     }
-    let artifact_manifest =
-        repo_root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json");
-    let proof_manifest =
-        repo_root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
-    if !artifact_manifest.exists() || !proof_manifest.exists() {
-        return Err(DecapodError::ValidationError(
-            "Cannot publish: provenance manifests are required for promotion. Missing `.decapod/generated/artifacts/provenance/artifact_manifest.json` and/or `.decapod/generated/artifacts/provenance/proof_manifest.json`."
-                .to_string(),
-        ));
-    }
-    verify_workunit_gate_for_publish(repo_root, &status.git.current_branch)?;
+    verify_trajectory_gate_for_publish(repo_root, &status.git.current_branch)?;
     eval::verify_eval_gate_for_publish(&repo_root.join(".decapod").join("data"))?;
 
     // Resolve the actual network remote before committing. Decapod-created
@@ -1538,6 +1529,59 @@ pub fn verify_workunit_gate_for_publish(
     }
 
     Ok(())
+}
+
+/// Verify the durable publication binding for a task-owned branch.
+///
+/// Workunit manifests and context capsules remain useful local execution
+/// material, but the checked-in trajectory cookie is the only promotion
+/// record. Git history then provides the durable sequence of prior cookies.
+pub fn verify_trajectory_gate_for_publish(
+    repo_root: &Path,
+    branch: &str,
+) -> Result<(), DecapodError> {
+    let task_ids = extract_task_ids_from_branch(branch);
+    if task_ids.is_empty() {
+        return Ok(());
+    }
+
+    let trajectory = trajectory::load_trajectory_cookie(repo_root)?.ok_or_else(|| {
+        DecapodError::ValidationError(format!(
+            "Cannot publish: missing trajectory cookie at {}.",
+            trajectory::trajectory_cookie_path(repo_root).display()
+        ))
+    })?;
+
+    if !trajectory.blockers.is_empty() {
+        return Err(DecapodError::ValidationError(format!(
+            "Cannot publish: trajectory '{}' has blockers: {}.",
+            trajectory.run_id,
+            trajectory.blockers.join("; ")
+        )));
+    }
+
+    for task_id in task_ids {
+        if trajectory.task_id.as_deref() != Some(task_id.as_str()) {
+            return Err(DecapodError::ValidationError(format!(
+                "Cannot publish: trajectory '{}' is bound to task {:?}, expected '{}'.",
+                trajectory.run_id, trajectory.task_id, task_id
+            )));
+        }
+    }
+
+    match trajectory.proof_status {
+        trajectory::TrajectoryProofStatus::Failed
+        | trajectory::TrajectoryProofStatus::NoChecksRun
+        | trajectory::TrajectoryProofStatus::Unavailable => {
+            Err(DecapodError::ValidationError(format!(
+                "Cannot publish: trajectory '{}' has insufficient proof status {:?}.",
+                trajectory.run_id, trajectory.proof_status
+            )))
+        }
+        trajectory::TrajectoryProofStatus::Passed | trajectory::TrajectoryProofStatus::Partial => {
+            Ok(())
+        }
+    }
 }
 
 pub fn get_allowed_ops(status: &WorkspaceStatus) -> Vec<AllowedOp> {

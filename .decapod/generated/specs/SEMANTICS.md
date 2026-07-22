@@ -89,7 +89,8 @@ stateDiagram-v2
 
 | Invariant | Type | Validation |
 |-----------|------|------------|
-| No promoted change without proof | System | `workspace.publish` requires proof_manifest + artifact_manifest + workunit VERIFIED |
+| No promoted change without proof | System | `workspace.publish` requires a task-bound trajectory cookie with non-failed proof status |
+| Validation receipt is current | System | Successful `validate` overwrites `.decapod/governance/validation.json` with the current commit, evaluator, epoch, and repo fingerprint |
 | Canonical source-of-truth per entity | Data | Single store root per kind; `validate` checks no external `.db`/`.jsonl` |
 | Mutation events are replayable | Data | `todo rebuild` + `broker verify` round-trip; deterministic JSONL |
 | Workspace isolation enforced | System | `workspace.status` blocks protected branch + main repo work |
@@ -250,7 +251,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `44b511a6e58ef8569601d28c18aa5f1f3db58d99d04ead0fc15c040ddcc76952`
+- Repository signal fingerprint: `1bdcda1c8ecde09ac0ec5b9596bb74965fb5785588d852c57f2646fa5f68787e`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

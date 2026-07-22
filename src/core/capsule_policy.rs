@@ -128,11 +128,21 @@ fn resolve_policy_path(project_root: &Path) -> Option<PathBuf> {
 pub fn load_policy_contract(
     project_root: &Path,
 ) -> Result<(CapsulePolicyContract, PathBuf), error::DecapodError> {
-    let path = resolve_policy_path(project_root).ok_or_else(|| {
-        error::DecapodError::ValidationError(format!(
-            "CAPSULE_POLICY_MISSING: expected {OVERRIDE_POLICY_REL_PATH} or {GENERATED_POLICY_REL_PATH}"
-        ))
-    })?;
+    let path = match resolve_policy_path(project_root) {
+        Some(path) => path,
+        None => {
+            // The generated policy is a reproducible runtime cache, not a
+            // repository authority. Materialize the embedded default only
+            // when a capsule operation needs it; a durable override remains
+            // available at `.decapod/policy/`.
+            ensure_generated_policy_contract(project_root)?;
+            resolve_policy_path(project_root).ok_or_else(|| {
+                error::DecapodError::ValidationError(format!(
+                    "CAPSULE_POLICY_MISSING: expected {OVERRIDE_POLICY_REL_PATH} or {GENERATED_POLICY_REL_PATH}"
+                ))
+            })?
+        }
+    };
     let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
     let parsed: CapsulePolicyContract = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!("CAPSULE_POLICY_INVALID: {e}"))

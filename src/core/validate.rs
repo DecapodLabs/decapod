@@ -246,6 +246,96 @@ pub struct ValidationReport {
     pub gate_timings: Vec<ValidationGateTiming>,
 }
 
+pub const VALIDATION_RECEIPT_PATH: &str = ".decapod/governance/validation.json";
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ValidationReceipt {
+    pub schema_version: String,
+    pub kind: String,
+    pub decapod_release: String,
+    pub git_revision: String,
+    pub repo_signal_fingerprint: String,
+    pub trajectory_run_id: Option<String>,
+    pub trajectory_artifact_hash: Option<String>,
+    pub validation_epoch: ValidationEpochMetadata,
+    pub status: String,
+    pub pass_count: u32,
+    pub fail_count: u32,
+    pub warn_count: u32,
+    pub elapsed_ms: u64,
+    pub drift_findings: Vec<DriftFinding>,
+    pub temporary_artifacts_cleaned: u32,
+    pub receipt_hash: String,
+}
+
+impl ValidationReceipt {
+    pub fn canonical_json_bytes(&self) -> Result<Vec<u8>, error::DecapodError> {
+        let mut unsigned = self.clone();
+        unsigned.receipt_hash.clear();
+        serde_json::to_vec(&unsigned).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "validation receipt serialization failed: {e}"
+            ))
+        })
+    }
+
+    pub fn with_recomputed_hash(&self) -> Result<Self, error::DecapodError> {
+        let mut receipt = self.clone();
+        let mut hasher = Sha256::new();
+        hasher.update(receipt.canonical_json_bytes()?);
+        receipt.receipt_hash = format!("sha256:{:x}", hasher.finalize());
+        Ok(receipt)
+    }
+
+    pub fn validate_integrity(&self) -> Result<(), error::DecapodError> {
+        if self.schema_version != "1.0.0" || self.kind != "validation_receipt" {
+            return Err(error::DecapodError::ValidationError(
+                "validation receipt schema or kind is invalid".to_string(),
+            ));
+        }
+        let expected = self.with_recomputed_hash()?.receipt_hash;
+        if self.receipt_hash != expected {
+            return Err(error::DecapodError::ValidationError(format!(
+                "validation receipt hash mismatch: expected {expected}, found {}",
+                self.receipt_hash
+            )));
+        }
+        if self.status != "ok" || self.fail_count != 0 {
+            return Err(error::DecapodError::ValidationError(
+                "validation receipt must represent a successful validation".to_string(),
+            ));
+        }
+        Ok(())
+    }
+}
+
+pub fn build_validation_receipt(
+    report: &ValidationReport,
+    git_revision: String,
+    repo_signal_fingerprint: String,
+    trajectory: Option<&trajectory::TrajectoryArtifact>,
+) -> Result<ValidationReceipt, error::DecapodError> {
+    ValidationReceipt {
+        schema_version: "1.0.0".to_string(),
+        kind: "validation_receipt".to_string(),
+        decapod_release: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
+        git_revision,
+        repo_signal_fingerprint,
+        trajectory_run_id: trajectory.map(|item| item.run_id.clone()),
+        trajectory_artifact_hash: trajectory.map(|item| item.artifact_hash.clone()),
+        validation_epoch: report.validation_epoch.clone(),
+        status: report.status.clone(),
+        pass_count: report.pass_count,
+        fail_count: report.fail_count,
+        warn_count: report.warn_count,
+        elapsed_ms: report.elapsed_ms,
+        drift_findings: report.drift_findings.clone(),
+        temporary_artifacts_cleaned: report.temporary_artifacts_cleaned,
+        receipt_hash: String::new(),
+    }
+    .with_recomputed_hash()
+}
+
 static VALIDATION_TEMP_PATHS: OnceLock<Mutex<Vec<PathBuf>>> = OnceLock::new();
 
 fn validation_temp_paths() -> &'static Mutex<Vec<PathBuf>> {
@@ -1299,8 +1389,7 @@ fn validate_generated_artifact_whitelist(
         ".decapod/data/knowledge.promotions.jsonl",
         ".decapod/generated/specs/.manifest",
         ".decapod/generated/specs/.manifest.json",
-        ".decapod/generated/policy/context_capsule_policy.json",
-        ".decapod/generated/artifacts/provenance/kcr_trend.jsonl",
+        VALIDATION_RECEIPT_PATH,
     ];
     let mut offenders = Vec::new();
     for line in String::from_utf8_lossy(&output.stdout).lines() {
@@ -1309,25 +1398,10 @@ fn validate_generated_artifact_whitelist(
             continue;
         }
         let is_allowed_exact = allowed_tracked.iter().any(|allowed| allowed == &path);
-        let is_allowed_context_json = path.starts_with(".decapod/generated/context/")
-            && path.ends_with(".json")
-            && !path.contains("/../");
-        let is_allowed_provenance_json = path
-            .starts_with(".decapod/generated/artifacts/provenance/")
-            && path.ends_with(".json")
-            && !path.contains("/../");
         let is_allowed_specs_md = path.starts_with(".decapod/generated/specs/")
             && path.ends_with(".md")
             && !path.contains("/../");
-        let is_allowed_custody_md = path.starts_with(".decapod/generated/artifacts/custody/")
-            && path.ends_with(".md")
-            && !path.contains("/../");
-        if !is_allowed_exact
-            && !is_allowed_context_json
-            && !is_allowed_provenance_json
-            && !is_allowed_specs_md
-            && !is_allowed_custody_md
-        {
+        if !is_allowed_exact && !is_allowed_specs_md {
             offenders.push(path.to_string());
         }
     }
@@ -2323,6 +2397,31 @@ fn validate_trajectory_artifacts_if_present(
         "Trajectory cookie schema check passed for trajectory.json",
         ctx,
     );
+    Ok(())
+}
+
+fn validate_validation_receipt_if_present(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Per-Commit Validation Receipt Gate");
+    let path = repo_root.join(VALIDATION_RECEIPT_PATH);
+    if !path.exists() {
+        skip(
+            "No validation receipt found; skipping receipt integrity gate",
+            ctx,
+        );
+        return Ok(());
+    }
+    let raw = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+    let receipt: ValidationReceipt = serde_json::from_str(&raw).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "invalid validation receipt {}: {e}",
+            path.display()
+        ))
+    })?;
+    receipt.validate_integrity()?;
+    pass("Per-commit validation receipt hash is valid", ctx);
     Ok(())
 }
 
@@ -4460,39 +4559,24 @@ fn validate_projection_consistency(
             .map_err(error::DecapodError::RusqliteError)?;
 
         if done_count > 0 {
-            let proof_dir = main_root
-                .join(".decapod")
-                .join("generated")
-                .join("artifacts")
-                .join("provenance");
-            let artifact_manifest = proof_dir.join("artifact_manifest.json");
-            let proof_manifest = proof_dir.join("proof_manifest.json");
-            let intent_checklist = proof_dir.join("intent_convergence_checklist.json");
-
-            let has_artifact = artifact_manifest.exists();
-            let has_proof = proof_manifest.exists();
-            let has_intent = intent_checklist.exists();
-
-            if !(has_artifact && has_proof && has_intent) {
-                findings.push(ProjectionFinding {
-                    surface: ".decapod/generated/artifacts/provenance/".to_string(),
+            match trajectory::load_trajectory_cookie(main_root) {
+                Ok(Some(_)) => {}
+                Ok(None) => findings.push(ProjectionFinding {
+                    surface: trajectory::TRAJECTORY_PATH.to_string(),
                     kind: SurfaceKind::Evidence,
-                    expected: "artifact_manifest.json, proof_manifest.json, and intent_convergence_checklist.json must exist when tasks are done".to_string(),
-                    observed: format!("missing: artifact={has_artifact}, proof={has_proof}, intent={has_intent}"),
-                    remediation: "Run `decapod todo done --validated --artifact <path>` or `decapod qa verify capture` to generate proof artifacts".to_string(),
-                });
-            }
-            if has_artifact && has_proof && has_intent {
-                let epoch = active_validation_epoch(main_root)?;
-                for message in crate::validate_projection_provenance(main_root, &epoch.epoch_id) {
-                    findings.push(ProjectionFinding {
-                        surface: ".decapod/generated/artifacts/provenance/".to_string(),
-                        kind: SurfaceKind::Evidence,
-                        expected: "schema-valid provenance bound to one task, session, and active validation epoch".to_string(),
-                        observed: message,
-                        remediation: "Regenerate provenance using the current validated task/session/epoch".to_string(),
-                    });
-                }
+                    expected: "completed task state must have one durable trajectory cookie"
+                        .to_string(),
+                    observed: "trajectory cookie missing".to_string(),
+                    remediation: "Record the current run with `decapod govern trajectory record`"
+                        .to_string(),
+                }),
+                Err(error) => findings.push(ProjectionFinding {
+                    surface: trajectory::TRAJECTORY_PATH.to_string(),
+                    kind: SurfaceKind::Evidence,
+                    expected: "trajectory cookie must be schema-valid and hash-valid".to_string(),
+                    observed: error.to_string(),
+                    remediation: "Rewrite the cookie through the trajectory CLI".to_string(),
+                }),
             }
         }
     }
@@ -5069,17 +5153,17 @@ fn validate_git_push_pr_gate(
             ),
             ctx,
         );
-        match workspace::verify_workunit_gate_for_publish(repo_root, &current_branch) {
+        match workspace::verify_trajectory_gate_for_publish(repo_root, &current_branch) {
             Ok(()) => pass(
                 &format!(
-                    "Workspace branch '{}' has a verified workunit trajectory for PR review.",
+                    "Workspace branch '{}' has a verified trajectory cookie for PR review.",
                     current_branch
                 ),
                 ctx,
             ),
             Err(err) => fail(
                 &format!(
-                    "PR_TRAJECTORY_MISSING: branch '{}' has an open PR but no verified workunit trajectory: {}",
+                    "PR_TRAJECTORY_MISSING: branch '{}' has an open PR but no verified trajectory cookie: {}",
                     current_branch, err
                 ),
                 ctx,
@@ -6089,6 +6173,13 @@ pub fn run_validation(
             ctx,
             "validate_trajectory_artifacts_if_present",
             validate_trajectory_artifacts_if_present(ctx, main_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_validation_receipt_if_present",
+            validate_validation_receipt_if_present(ctx, working_root)
         );
         gate!(
             s,

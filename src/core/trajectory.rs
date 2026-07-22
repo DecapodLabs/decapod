@@ -101,6 +101,7 @@ pub struct TrajectoryArtifact {
 
 #[derive(Debug, Default)]
 pub struct TrajectoryUpdate {
+    pub task_id: Option<String>,
     pub destination: Option<String>,
     pub current_phase: Option<String>,
     pub next_transitions: Vec<String>,
@@ -369,6 +370,9 @@ pub fn record_trajectory(
     update: TrajectoryUpdate,
 ) -> Result<TrajectoryArtifact, error::DecapodError> {
     let mut artifact = load_trajectory(project_root, run_id)?;
+    if update.task_id.is_some() {
+        artifact.task_id = update.task_id;
+    }
     if update.destination.is_some() {
         artifact.destination = update.destination;
     }

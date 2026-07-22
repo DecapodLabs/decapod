@@ -348,11 +348,12 @@ Verification and artifact emission:
 | automation.db | Repo store | `auto cron/reflex` |
 | knowledge.db | Repo store | `data knowledge add/search/promote` |
 | lcm.db | Repo store | `data context ingest/summarize` |
-| WorkUnit manifests | `.decapod/governance/workunits/` | `govern workunit.*` |
-| Trajectory cookie | `.decapod/governance/trajectory.json` | `govern trajectory.*`; Git history stores prior cookies |
+| WorkUnit manifests | `.decapod/governance/workunits/` (ignored current-run state) | `govern workunit.*` |
+| Trajectory cookie | `.decapod/governance/trajectory.json` (tracked) | `govern trajectory.*`; Git history stores prior cookies |
+| Validation receipt | `.decapod/governance/validation.json` (tracked, overwritten) | `validate`; Git history stores per-commit validation receipts |
 | Plan artifact | `.decapod/governance/plan.json` | `govern plan.*` |
-| Context capsules | `.decapod/generated/context/` | `infer.*`, `govern capsule.*` |
-| Capsule policy | `.decapod/generated/policy/` or override | `init`, `scaffold` |
+| Context capsules | `.decapod/generated/context/` (ignored current-run state) | `infer.*`, `govern capsule.*` |
+| Capsule policy | `.decapod/generated/policy/` (ignored cache) or `.decapod/policy/` override | `init`, `scaffold` |
 
 ### Schema Evolution + Migration Policy
 - **Schema versioning**: Per-bin `meta.schema_version` + centralized `schemas.rs` constants
@@ -397,7 +398,7 @@ Verification and artifact emission:
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `44b511a6e58ef8569601d28c18aa5f1f3db58d99d04ead0fc15c040ddcc76952`
+- Repository signal fingerprint: `1bdcda1c8ecde09ac0ec5b9596bb74965fb5785588d852c57f2646fa5f68787e`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
