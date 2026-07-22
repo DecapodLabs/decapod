@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "kind": "validation_receipt",
   "decapod_release": "0.76.0",
-  "git_revision": "4a7e73160dfe8ed23af5758f322613def115f1ba",
+  "git_revision": "5fb4f126222f58b7dab276815276f0bcf002e922",
   "repo_signal_fingerprint": "b7f1dcb3bd0f3f28a4b8c0ba334965c8f4195147650cfe978ddf3c7639bbd31d",
   "trajectory_run_id": "bugs_01ky5t1t5drxd2q4",
   "trajectory_artifact_hash": "sha256:e570b7722a7c82a9dd3515fcd0c11f39ba19a0ee6d530d0385834de6871b990e",
@@ -36,11 +36,11 @@
     }
   },
   "status": "ok",
-  "pass_count": 170,
+  "pass_count": 196,
   "fail_count": 0,
   "warn_count": 3,
-  "elapsed_ms": 884,
+  "elapsed_ms": 43092,
   "drift_findings": [],
-  "temporary_artifacts_cleaned": 2,
-  "receipt_hash": "sha256:cebcb95f7e07af90527311c8d55ef4febfc86c351494b39f1ad58b83d9e9b1ca"
+  "temporary_artifacts_cleaned": 1,
+  "receipt_hash": "sha256:c5ff5757526f188b5a11528acde4a78c86ddd6058c04103ffd2edeb6f5e521f5"
 }
