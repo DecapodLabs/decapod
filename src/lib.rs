@@ -7627,12 +7627,13 @@ fn run_workspace_command(
             );
         }
         WorkspaceCommand::Prune { force } => {
-            let pruned = workspace::prune_workspaces(project_root, force)?;
+            let report = workspace::prune_workspaces_report(project_root, force)?;
             println!(
                 "{}",
                 serde_json::json!({
                     "status": "ok",
-                    "pruned": pruned,
+                    "pruned": report.pruned,
+                    "skipped": report.skipped,
                 })
             );
         }
