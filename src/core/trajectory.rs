@@ -555,13 +555,13 @@ pub fn validate_loops(artifact: &TrajectoryArtifact) -> Result<(), error::Decapo
                 loop_record.loop_id, loop_record.trajectory_id, artifact.run_id
             )));
         }
-        if let Some(intent_id) = artifact.intent_id.as_deref() {
-            if loop_record.intent_id != intent_id {
-                return Err(error::DecapodError::ValidationError(format!(
-                    "trajectory loop '{}' crosses intent boundary: expected '{}', found '{}'",
-                    loop_record.loop_id, intent_id, loop_record.intent_id
-                )));
-            }
+        if let Some(intent_id) = artifact.intent_id.as_deref()
+            && loop_record.intent_id != intent_id
+        {
+            return Err(error::DecapodError::ValidationError(format!(
+                "trajectory loop '{}' crosses intent boundary: expected '{}', found '{}'",
+                loop_record.loop_id, intent_id, loop_record.intent_id
+            )));
         }
         if loop_record.attempt == 0 {
             return Err(error::DecapodError::ValidationError(format!(
@@ -941,6 +941,7 @@ mod tests {
         assert_eq!(completed.next_transitions, vec!["publish", "validate"]);
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn loop_record(
         run_id: &str,
         intent_id: &str,
