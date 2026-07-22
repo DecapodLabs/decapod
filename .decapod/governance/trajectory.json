@@ -4,8 +4,9 @@
   "original_intent": "Advance Houseboat issues in one PR from the assumed PR #976 baseline, with v0.74.0-governed metadata and a unified drift report.",
   "derived_intent": "Classify existing projection-consistency findings deterministically, refresh v0.74.0 fingerprints/version refs, retain one trajectory cookie, and remove the legacy trajectory directory.",
   "destination": "single PR for Houseboat #854 progress",
-  "current_phase": "ready_for_review",
+  "current_phase": "published",
   "next_transitions": [
+    "monitor PR #978 checks",
     "publish single PR"
   ],
   "active_boundaries": [
@@ -56,11 +57,15 @@
     "decapod v0.74.0 init --proof",
     "decapod v0.74.0 rpc --op specs.refresh",
     "decapod v0.74.0 validate --store user --format json",
-    "decapod v0.74.0 validate --store user --refresh-specs --format json"
+    "decapod v0.74.0 validate --store user --refresh-specs --format json",
+    "gh pr create #978",
+    "git push -u origin agent/unknown/code_01ky5eebkhm8e5z2-houseboat-drift"
   ],
   "tool_calls": [
     "decapod v0.74.0 govern trajectory init",
-    "decapod v0.74.0 govern trajectory status"
+    "decapod v0.74.0 govern trajectory status",
+    "gh issue comment #854",
+    "gh issue comment #857"
   ],
   "checks": [
     {
@@ -80,6 +85,14 @@
       "status": "passed"
     },
     {
+      "name": "issue_854_progress_comment",
+      "status": "passed"
+    },
+    {
+      "name": "issue_857_progress_comment",
+      "status": "passed"
+    },
+    {
       "name": "legacy_directory_removal",
       "status": "passed"
     },
@@ -92,11 +105,19 @@
       "status": "passed"
     },
     {
+      "name": "pr_978_published",
+      "status": "passed"
+    },
+    {
       "name": "projection_consistency",
       "status": "passed"
     },
     {
       "name": "substrate_integrity",
+      "status": "passed"
+    },
+    {
+      "name": "todo_completed",
       "status": "passed"
     },
     {
@@ -146,11 +167,14 @@
   ],
   "evidence": [
     "Cleanup is scoped to validation-owned temporary directories; arbitrary /tmp entries are not scanned or deleted",
+    "Decapod todo code_01ky5eebkhm8e5z2 was completed with validated artifact src/core/validate.rs.",
     "Decapod v0.74.0 validate --store user --format json passed with 169 gates and zero failures",
     "Decapod v0.74.0 validation epoch evaluator_identity=decapod-validate@0.74.0",
     "Exact released v0.74.0 validation passed 169 gates with zero failures and the refreshed manifest/fingerprint refs.",
     "Generated entrypoints, Dockerfile, Cargo package, lockfile, and specs manifest carry v0.74.0 refs",
+    "Issue #854 and #857 received progress summaries with the PR URL.",
     "Only the canonical trajectory cookie remains tracked for current trajectory state",
+    "PR #978 is published from the dedicated worktree and refs the bounded Houseboat #854/#857 progress slice.",
     "Plan CLI, validation, and completion evidence now share src/plan_governance.rs; the duplicate core implementation was removed.",
     "Released v0.74.0 validator reported 169 gates and zero failures",
     "Repository-store validation is partial until assumed PR #976 merge updates protected-main authority and stale preexisting state",
@@ -166,7 +190,7 @@
     "Long-term convergence should migrate the plan contract into trajectory.json in a dedicated compatibility change; this PR does not silently remove the plan approval gate.",
     "PR #976 merges before this PR is integrated"
   ],
-  "completion_claim": "Houseboat drift reporting, validation temp cleanup, v0.74 governance refresh, single-cookie trajectory replacement, and plan-governance consolidation are ready for one PR; repo-store caveat remains explicit.",
+  "completion_claim": "PR #978 is published with issue progress summaries; CI monitoring remains the only next transition.",
   "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
@@ -174,5 +198,5 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:8db8f199d594d364be1e3131b302e7bc1893a97f0e92391d0398bef60679cb7c"
+  "artifact_hash": "sha256:14fef29816f687df1eb764b1a8a9fe01c4b1cf893dde8ea4201d99854e5f91fe"
 }
