@@ -16,6 +16,7 @@ Generated interface specs include:
 - JSONL event log formats (one per subsystem)
 - Context Capsule schema with policy binding
 - WorkUnit / Plan / Obligation manifest schemas
+- Agent trajectory artifact schema with computed proof status and run-level verdicts
 - Capabilities report schema for agent discovery
 
 ## CLI / RPC Contracts
@@ -47,6 +48,10 @@ Generated interface specs include:
 | `decapod govern plan check-execute` | Verify plan ready for execution | `--todo-id` | Plan / Error |
 | `decapod govern workunit init` | Create workunit manifest | `--task-id`, `--intent-ref` | WorkUnitManifest |
 | `decapod govern workunit transition` | Transition workunit status | `--task-id`, `--to` | WorkUnitManifest |
+| `decapod govern trajectory init` | Create inspectable run trajectory | `--run-id`, `--original-intent`, `--derived-intent`, `--boundary`, `--scope` | TrajectoryArtifact |
+| `decapod govern trajectory record` | Record run actions, checks, assumptions, and claims | `--run-id`, `--inspected-file`, `--modified-file`, `--command`, `--check` | TrajectoryArtifact |
+| `decapod govern trajectory get` | Inspect the complete run trajectory artifact | `--run-id` | TrajectoryArtifact |
+| `decapod govern trajectory status` | Show computed trajectory proof and verdicts | `--run-id` | TrajectoryStatus |
 | `decapod govern capsule query` | Deterministic context capsule | `--topic`, `--scope`, `--limit`, `--risk-tier`, `--write` | DeterministicContextCapsule |
 | `decapod obligation add` | Add obligation node | `--intent`, `--risk`, `--depends-on`, `--proofs` | ObligationNode |
 | `decapod obligation verify` | Derive obligation status | `--id` | ObligationValidationResult |
@@ -215,6 +220,7 @@ Response envelope (`RpcResponse`):
 | `.decapod/generated/policy/context_capsule_policy.json` | `init` / scaffold | Capsule query resolution |
 | `.decapod/generated/specs/*.md` | `init --force` / `rpc specs.refresh` | Validation, agents |
 | `.decapod/generated/artifacts/provenance/*.json` | `workspace publish` / `validate` | Promotion, CI |
+| `.decapod/governance/trajectories/*.json` | `govern trajectory` / `validate` | Run custody and proof review |
 
 ## Error Taxonomy
 
@@ -401,7 +407,7 @@ Agents declare needed capabilities via `assurance.evaluate` params; interlocks b
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `893a77c64a44b2fdf92d555ab857170c2c0f0a9e6a6716419e57e35a3a6ad07a`
-- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
+- Repository signal fingerprint: `1955f6e6d4c17dbc083d13b1242d492103176f4b7d93cb1810cc3a6552be5054`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (91 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

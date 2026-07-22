@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.72.17 -->
-<!-- decapod-fingerprint: 2593eca977e8714aea6c25d26324eedb8d14f6701e8cb01ea6f823724c15a36b -->
+<!-- decapod-release: 0.73.0 -->
+<!-- decapod-fingerprint: 4790634a1c27c7813fc06ca3dd514d80c8a87cee0475d16de7648049feb23499 -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
@@ -86,6 +86,10 @@ Preserve the chain between intent, context, assumptions, action, and proof.
 3. **Evidence-Based Claims**: Claims of completion must be tied to measured evidence.
 4. **Clarification Trigger**: Stop if a critical assumption cannot be proven.
 
+## Run-Level Trajectory and Proof
+Record a local artifact under `.decapod/governance/trajectories/`: initialize with intent/boundaries/scope, record inspected/modified files, commands/tool calls, checks, evidence, assumptions, and shortcut signals, then inspect with `decapod govern trajectory status --run-id <run-id>`.
+Use `decapod govern trajectory init --run-id <run-id> --original-intent "..." --derived-intent "..." --boundary "..." --scope "..."` and `decapod govern trajectory record --run-id <run-id> --inspected-file <path> --check "name=status"`.
+Completion claims never prove completion: `passed`, `failed`, `partial`, `unavailable`, and `no_checks_run` remain distinct, and no checks means an `unsupported` completion verdict.
 ## Invariants (Normative)
 - **INV-DAEMONLESS**: Decapod MUST NOT leave background processes running.
 - **INV-BOUNDED-VALIDATE**: `decapod validate` MUST terminate within bounded time.

@@ -19,6 +19,7 @@ use crate::core::project_specs::{
 };
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
+use crate::core::trajectory;
 use crate::core::validation_epoch::{ValidationEpochMetadata, active_validation_epoch};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::plan_governance;
@@ -2176,6 +2177,54 @@ fn validate_workunit_manifests_if_present(
 
     pass(
         &format!("Workunit manifest schema check passed for {files} file(s)"),
+        ctx,
+    );
+    Ok(())
+}
+
+fn validate_trajectory_artifacts_if_present(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Agent Trajectory Artifact Gate");
+
+    let trajectories_dir = repo_root.join(trajectory::TRAJECTORY_DIR);
+    if !trajectories_dir.exists() {
+        skip(
+            "No trajectory artifacts found; skipping trajectory artifact gate",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    let mut files = 0usize;
+    for entry in fs::read_dir(&trajectories_dir).map_err(error::DecapodError::IoError)? {
+        let entry = entry.map_err(error::DecapodError::IoError)?;
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("json") {
+            continue;
+        }
+        files += 1;
+        let run_id = path
+            .file_stem()
+            .and_then(|stem| stem.to_str())
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(format!(
+                    "trajectory artifact has an invalid filename: {}",
+                    path.display()
+                ))
+            })?;
+        let artifact = trajectory::load_trajectory(repo_root, run_id)?;
+        if artifact.run_id != run_id {
+            return Err(error::DecapodError::ValidationError(format!(
+                "trajectory artifact run_id '{}' does not match filename '{}'",
+                artifact.run_id, run_id
+            )));
+        }
+    }
+
+    pass(
+        &format!("Trajectory artifact schema check passed for {files} file(s)"),
         ctx,
     );
     Ok(())
@@ -5932,6 +5981,13 @@ pub fn run_validation(
             ctx,
             "validate_workunit_manifests_if_present",
             validate_workunit_manifests_if_present(ctx, main_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_trajectory_artifacts_if_present",
+            validate_trajectory_artifacts_if_present(ctx, main_root)
         );
         gate!(
             s,

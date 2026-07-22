@@ -68,6 +68,7 @@ src/
 │   ├── todo.rs             # Task tracking + event sourcing + agent coordination
 │   ├── plan_governance.rs  # Governed Plan (Draft→Approved→Executing→Done)
 │   ├── workunit.rs         # WorkUnit manifests (intent/spec/state/proof)
+│   ├── trajectory.rs       # Run-level intent, scope, actions, checks, and proof verdicts
 │   ├── obligation.rs       # Obligation graph (derived status, deps, proofs)
 │   ├── context_capsule.rs  # Deterministic capsules + policy binding
 │   ├── capsule_policy.rs   # Risk-tiered token budgets, repo-revision binding
@@ -148,6 +149,7 @@ flowchart TD
 | `Todo` + events | `core/todo.rs` | Task CRUD, claims, event sourcing, deterministic rebuild |
 | `GovernedPlan` | `src/plan_governance.rs` | State machine with scope constraints, ordered phases, and proof gates |
 | `WorkUnitManifest` | `core/workunit.rs` | Intent/spec/state/proof chain with canonical hashing |
+| `TrajectoryArtifact` | `core/trajectory.rs` | Local-first run custody artifact with canonical hashing and computed proof/verdict status |
 | `ObligationNode` | `core/obligation.rs` | Dependency graph, derived status, proof gating |
 | `DeterministicContextCapsule` | `core/context_capsule.rs` | Immutable sources + snippets, SHA256 hash, policy binding |
 | `CapsulePolicyBinding` | `core/capsule_policy.rs` | Risk tiers, scope allowlists, repo-revision binding |
@@ -347,6 +349,7 @@ Verification and artifact emission:
 | knowledge.db | Repo store | `data knowledge add/search/promote` |
 | lcm.db | Repo store | `data context ingest/summarize` |
 | WorkUnit manifests | `.decapod/governance/workunits/` | `govern workunit.*` |
+| Trajectory artifacts | `.decapod/governance/trajectories/` | `govern trajectory.*` |
 | Plan artifact | `.decapod/governance/plan.json` | `govern plan.*` |
 | Context capsules | `.decapod/generated/context/` | `infer.*`, `govern capsule.*` |
 | Capsule policy | `.decapod/generated/policy/` or override | `init`, `scaffold` |
@@ -394,7 +397,7 @@ Verification and artifact emission:
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `893a77c64a44b2fdf92d555ab857170c2c0f0a9e6a6716419e57e35a3a6ad07a`
-- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (90 files), `tests/` (4 files)
+- Repository signal fingerprint: `1955f6e6d4c17dbc083d13b1242d492103176f4b7d93cb1810cc3a6552be5054`
+- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (91 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
