@@ -2228,8 +2228,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                     );
                     prompt_yes_no("Initialize Git repository for this project?", true)?
                 } else {
-                    // Non-interactive: do not automatically initialize git unless explicitly requested via --git
-                    false
+                    // Non-interactive init follows the same safe default as the prompt:
+                    // initialize Git unless the caller explicitly opted out with --no-git.
+                    true
                 };
 
                 if opt_in {

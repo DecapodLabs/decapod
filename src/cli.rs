@@ -240,10 +240,10 @@ pub(crate) struct InitGroupCli {
     /// It does not perform login, provisioning, or sync during init.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub mode: BackendType,
-    /// Explicitly opt into local Git repository initialization.
+    /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
-    /// Explicitly decline local Git repository initialization.
+    /// Skip local Git repository initialization.
     #[clap(long = "no-git", action = clap::ArgAction::SetTrue)]
     pub no_git: bool,
 }
@@ -369,10 +369,10 @@ pub(crate) struct InitWithCli {
     /// It does not perform login, provisioning, or sync during init.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub mode: BackendType,
-    /// Explicitly opt into local Git repository initialization.
+    /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
-    /// Explicitly decline local Git repository initialization.
+    /// Skip local Git repository initialization.
     #[clap(long = "no-git", action = clap::ArgAction::SetTrue)]
     pub no_git: bool,
 }
