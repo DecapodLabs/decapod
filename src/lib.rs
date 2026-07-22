@@ -5732,6 +5732,7 @@ fn run_validate_command(
                 crate::core::ulid::new_ulid()
             ));
             std::fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
+            validate::register_validation_temp_path(tmp_root.clone());
             Store {
                 kind: StoreKind::User,
                 root: tmp_root,
@@ -6087,14 +6088,21 @@ fn run_validation_bounded(
             "VALIDATE_TIMEOUT_OR_LOCK: validate worker disconnected unexpectedly.".to_string(),
         )),
     };
-    result.map_err(|err| {
+    let result = result.map_err(|err| {
         attach_validate_diagnostic_if_enabled(
             err,
             workspace_root,
             started.elapsed().as_millis() as u64,
             timeout_secs,
         )
-    })
+    });
+    match result {
+        Ok(mut report) if report.fail_count == 0 => {
+            report.temporary_artifacts_cleaned = validate::cleanup_validation_temp_paths()?;
+            Ok(report)
+        }
+        other => other,
+    }
 }
 
 fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {

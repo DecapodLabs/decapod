@@ -257,6 +257,28 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
     assert!(finding.contains("observed: stale fingerprint"));
     assert!(finding.contains("remediation"));
     assert!(finding.contains("Regenerate context capsule"));
+
+    let drift_findings = payload["report"]["drift_findings"]
+        .as_array()
+        .expect("typed drift findings array");
+    let context_drift = drift_findings.iter().find(|finding| {
+        finding["surface"]
+            .as_str()
+            .is_some_and(|surface| surface.contains(".decapod/generated/context/"))
+    });
+    assert!(
+        context_drift.is_some(),
+        "expected typed context drift finding"
+    );
+    let context_drift = context_drift.unwrap();
+    assert_eq!(context_drift["class"], "evidence");
+    assert_eq!(context_drift["severity"], "blocking");
+    assert!(
+        context_drift["remediation"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("Regenerate context capsule")
+    );
 }
 
 #[test]

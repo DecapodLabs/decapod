@@ -229,9 +229,16 @@ pub fn init_trajectory(
     } = input;
     let path = trajectory_path(project_root, &run_id)?;
     if path.exists() {
-        return Err(error::DecapodError::ValidationError(format!(
-            "trajectory '{run_id}' already exists"
-        )));
+        let existing = load_trajectory_cookie(project_root)?.ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "trajectory cookie exists but could not be loaded".to_string(),
+            )
+        })?;
+        if existing.run_id == run_id {
+            return Err(error::DecapodError::ValidationError(format!(
+                "trajectory '{run_id}' already exists"
+            )));
+        }
     }
     if original_intent.trim().is_empty() || derived_intent.trim().is_empty() {
         return Err(error::DecapodError::ValidationError(
@@ -525,6 +532,35 @@ mod tests {
             TrajectoryVerdict::Unsupported
         );
         assert_eq!(load_trajectory(temp.path(), "run_1").unwrap(), artifact);
+    }
+
+    #[test]
+    fn new_run_replaces_the_single_cookie_but_same_run_is_rejected() {
+        let temp = tempdir().unwrap();
+        let init = |run_id: &str| TrajectoryInit {
+            run_id: run_id.to_string(),
+            task_id: None,
+            original_intent: "original".to_string(),
+            derived_intent: "derived".to_string(),
+            active_boundaries: vec!["src/**".to_string()],
+            repo_scope: vec!["src/lib.rs".to_string()],
+            destination: None,
+            current_phase: None,
+            next_transitions: Vec::new(),
+            blockers: Vec::new(),
+        };
+
+        init_trajectory(temp.path(), init("run_old")).unwrap();
+        let replacement = init_trajectory(temp.path(), init("run_new")).unwrap();
+        assert_eq!(replacement.run_id, "run_new");
+        assert!(load_trajectory(temp.path(), "run_old").is_err());
+        assert_eq!(
+            load_trajectory(temp.path(), "run_new").unwrap(),
+            replacement
+        );
+
+        let same_run = init_trajectory(temp.path(), init("run_new"));
+        assert!(same_run.is_err());
     }
 
     #[test]

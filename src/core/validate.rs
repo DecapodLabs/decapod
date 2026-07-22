@@ -34,8 +34,8 @@ use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 fn is_inside_git_work_tree(repo_root: &Path) -> bool {
@@ -106,6 +106,94 @@ pub struct ProjectionFinding {
     pub remediation: String,
 }
 
+/// The evidence-backed category of a projection finding.
+///
+/// These categories deliberately describe the existing validation surfaces;
+/// they do not claim to observe runtime behavior that is not present in the
+/// repository evidence.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+pub enum DriftClass {
+    Configuration,
+    Specification,
+    Capability,
+    Interface,
+    GeneratedSurface,
+    Toolchain,
+    Evidence,
+    Implementation,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+pub enum DriftSeverity {
+    Advisory,
+    Blocking,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct DriftFinding {
+    pub class: DriftClass,
+    pub severity: DriftSeverity,
+    pub surface: String,
+    pub expected: String,
+    pub observed: String,
+    pub remediation: String,
+}
+
+impl DriftFinding {
+    fn from_projection(finding: &ProjectionFinding) -> Self {
+        let class = if finding.surface == "workspace" {
+            DriftClass::Implementation
+        } else if finding.surface == "repo.migration_validation" {
+            DriftClass::Toolchain
+        } else if finding.surface == ".decapod/config.toml" {
+            DriftClass::Configuration
+        } else if finding.surface.contains("generated/context")
+            || finding.surface.contains("artifacts/provenance")
+            || finding.surface.contains("workunits")
+        {
+            DriftClass::Evidence
+        } else if finding.surface.contains("generated/specs") {
+            if finding.expected.contains("config_input_hash") {
+                DriftClass::Configuration
+            } else if finding.expected.contains("spec_input_hash") {
+                DriftClass::Specification
+            } else if finding.expected.contains("declared_capabilities") {
+                DriftClass::Capability
+            } else if finding.expected.contains("repo_signal_fingerprint") {
+                DriftClass::Implementation
+            } else if finding.expected.contains("must exist")
+                || finding.expected.contains("content hash")
+            {
+                DriftClass::GeneratedSurface
+            } else {
+                DriftClass::Specification
+            }
+        } else if finding.surface.contains("INTERFACES") {
+            DriftClass::Interface
+        } else {
+            match finding.kind {
+                SurfaceKind::Authority => DriftClass::Configuration,
+                SurfaceKind::Evidence => DriftClass::Evidence,
+                SurfaceKind::Projection => DriftClass::GeneratedSurface,
+            }
+        };
+
+        // Existing projection findings are release-blocking because the
+        // projection gate already fails closed on them. Advisory hygiene
+        // warnings remain separate from this authoritative report.
+        Self {
+            class,
+            severity: DriftSeverity::Blocking,
+            surface: finding.surface.clone(),
+            expected: finding.expected.clone(),
+            observed: finding.observed.clone(),
+            remediation: finding.remediation.clone(),
+        }
+    }
+}
+
 fn is_decapod_isolated_worktree(_main_root: &Path, repo_root: &Path) -> bool {
     if let Ok(status) = crate::core::workspace::get_workspace_status(repo_root) {
         status.can_work
@@ -133,6 +221,7 @@ struct ValidationContext {
     warn_count: AtomicU32,
     fails: Mutex<Vec<String>>,
     warns: Mutex<Vec<String>>,
+    drift_findings: Mutex<Vec<DriftFinding>>,
     repo_files_cache: Mutex<Vec<(PathBuf, Vec<PathBuf>)>>,
 }
 
@@ -152,7 +241,36 @@ pub struct ValidationReport {
     pub warn_count: u32,
     pub failures: Vec<String>,
     pub warnings: Vec<String>,
+    pub drift_findings: Vec<DriftFinding>,
+    pub temporary_artifacts_cleaned: u32,
     pub gate_timings: Vec<ValidationGateTiming>,
+}
+
+static VALIDATION_TEMP_PATHS: OnceLock<Mutex<Vec<PathBuf>>> = OnceLock::new();
+
+fn validation_temp_paths() -> &'static Mutex<Vec<PathBuf>> {
+    VALIDATION_TEMP_PATHS.get_or_init(|| Mutex::new(Vec::new()))
+}
+
+pub fn register_validation_temp_path(path: PathBuf) {
+    validation_temp_paths().lock().unwrap().push(path);
+}
+
+/// Remove only temporary directories created by this process's validation run.
+///
+/// Validation intentionally does not scan or mutate arbitrary `/tmp` entries.
+/// Cleanup is invoked by the bounded runner only after every gate passes.
+pub fn cleanup_validation_temp_paths() -> Result<u32, error::DecapodError> {
+    let paths = std::mem::take(&mut *validation_temp_paths().lock().unwrap());
+    let mut cleaned = 0;
+    for path in paths {
+        match fs::remove_dir_all(&path) {
+            Ok(()) => cleaned += 1,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error::DecapodError::IoError(error)),
+        }
+    }
+    Ok(cleaned)
 }
 
 impl ValidationContext {
@@ -163,6 +281,7 @@ impl ValidationContext {
             warn_count: AtomicU32::new(0),
             fails: Mutex::new(Vec::new()),
             warns: Mutex::new(Vec::new()),
+            drift_findings: Mutex::new(Vec::new()),
             repo_files_cache: Mutex::new(Vec::new()),
         }
     }
@@ -429,6 +548,7 @@ fn validate_user_store_blank_slate(ctx: &ValidationContext) -> Result<(), error:
         crate::core::ulid::new_ulid()
     ));
     fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
+    register_validation_temp_path(tmp_root.clone());
 
     todo::initialize_todo_db(&tmp_root)?;
     let db_path = tmp_root.join("todo.db");
@@ -495,6 +615,7 @@ fn validate_repo_store_dogfood(
         crate::core::ulid::new_ulid()
     ));
     fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
+    register_validation_temp_path(tmp_root.clone());
     let tmp_db = tmp_root.join("todo.db");
     let _events = todo::rebuild_db_from_events(&events, &tmp_db)?;
 
@@ -4542,6 +4663,11 @@ fn validate_projection_consistency(
         }
     }
 
+    ctx.drift_findings
+        .lock()
+        .unwrap()
+        .extend(findings.iter().map(DriftFinding::from_projection));
+
     if findings.is_empty() {
         pass(
             "All Decapod-owned projections are consistent with authority and evidence",
@@ -6226,6 +6352,23 @@ pub fn run_validation(
     let warn_count = ctx.warn_count.load(Ordering::Relaxed);
     let fails = ctx.fails.lock().unwrap().clone();
     let warns = ctx.warns.lock().unwrap().clone();
+    let mut drift_findings = ctx.drift_findings.lock().unwrap().clone();
+    drift_findings.sort_by(|left, right| {
+        (
+            &left.class,
+            &left.severity,
+            &left.surface,
+            &left.expected,
+            &left.observed,
+        )
+            .cmp(&(
+                &right.class,
+                &right.severity,
+                &right.surface,
+                &right.expected,
+                &right.observed,
+            ))
+    });
     let fail_total = (fails.len() as u32).max(fail_count);
     let warn_total = (warns.len() as u32).max(warn_count);
     let mut gate_timings = timings.into_inner().unwrap();
@@ -6240,6 +6383,8 @@ pub fn run_validation(
         warn_count: warn_total,
         failures: fails,
         warnings: warns,
+        drift_findings,
+        temporary_artifacts_cleaned: 0,
         gate_timings: gate_timings
             .into_iter()
             .map(|(name, elapsed)| ValidationGateTiming {
@@ -6302,6 +6447,32 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
         report.warn_count.to_string().bright_yellow(),
         report.elapsed_ms as f64 / 1000.0
     );
+
+    if !report.drift_findings.is_empty() {
+        let blocking = report
+            .drift_findings
+            .iter()
+            .filter(|finding| finding.severity == DriftSeverity::Blocking)
+            .count();
+        println!(
+            "  {} findings={} blocking={}",
+            "drift".bright_cyan().bold(),
+            report.drift_findings.len(),
+            blocking
+        );
+        if verbose {
+            for finding in &report.drift_findings {
+                println!(
+                    "  {} [{:?}::{:?}] {} — {}",
+                    "!".bright_yellow(),
+                    finding.severity,
+                    finding.class,
+                    finding.surface,
+                    finding.remediation
+                );
+            }
+        }
+    }
 
     if !report.failures.is_empty() && verbose {
         println!(

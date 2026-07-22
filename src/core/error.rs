@@ -54,9 +54,9 @@ impl fmt::Display for DecapodError {
             Self::EnvVarError(e) => write!(f, "Environment variable error: {e}"),
             Self::ValidationError(s) => {
                 if let Some(msg) = s.strip_prefix("NEEDS_HUMAN_INPUT: ") {
-                    write!(f, "context: {msg}")
+                    write!(f, "context: NEEDS_HUMAN_INPUT: {msg}")
                 } else if s.starts_with("NEEDS_HUMAN_INPUT") {
-                    write!(f, "context: execution needs human input")
+                    write!(f, "context: NEEDS_HUMAN_INPUT: execution needs human input")
                 } else {
                     write!(f, "Validation error: {s}")
                 }
