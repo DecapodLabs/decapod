@@ -1,76 +1,142 @@
 {
-  "schema_version": "1.0.0",
-  "run_id": "bugs_01ky5t1t5drxd2q4",
-  "task_id": "bugs_01ky5t1t5drxd2q4",
-  "original_intent": "Assess and solve GitHub Issue #686 if its trajectory prerequisite is satisfied.",
-  "derived_intent": "Add a deterministic governed work-claim projection over the canonical TODO store, with explicit ownership, trajectory binding, and proof state.",
+  "schema_version": "1.1.0",
+  "run_id": "bugs_01ky5zjk7b64v1cj",
+  "intent_id": "intent:issue-685",
+  "task_id": "bugs_01ky5zjk7b64v1cj",
+  "original_intent": "Assess and solve GitHub Issue #685 if its trajectory model remains worth pursuing.",
+  "derived_intent": "Add a bounded repo-native loop trajectory model with retry feedback, proof references, event triggers, and proposal-only improvement records.",
   "destination": "single PR",
-  "current_phase": "proof",
+  "current_phase": "implementation",
   "next_transitions": [
     "publish",
     "validate"
   ],
   "active_boundaries": [
-    "Decapod CLI and repo-local TODO/trajectory custody",
-    "No new TODO database or cloud authority"
+    "Decapod CLI and tracked trajectory custody",
+    "No general agent runtime or silent self-modification"
   ],
   "repo_scope": [
-    "src/core/todo.rs",
-    "src/core/work_claim.rs",
+    "src/cli.rs",
+    "src/core/trajectory.rs",
+    "src/lib.rs",
     "tests/"
   ],
   "inspected_files": [
-    "src/core/schemas.rs",
-    "src/core/todo.rs",
-    "src/core/trajectory.rs"
+    "src/cli.rs",
+    "src/core/trajectory.rs",
+    "src/lib.rs",
+    "tests/trajectory_cli.rs"
   ],
   "modified_files": [
-    "src/core/entrypoint_integrity.rs",
-    "src/core/mod.rs",
-    "src/core/todo.rs",
-    "src/core/work_claim.rs"
+    "src/cli.rs",
+    "src/core/trajectory.rs",
+    "src/lib.rs",
+    "tests/trajectory_cli.rs",
+    "tests/workunit_publish_gate.rs"
   ],
   "declared_commands": [
     "cargo fmt --all",
-    "cargo test --lib core::work_claim",
-    "cargo test --test plugins_todo_tests",
-    "decapod data schema --subsystem todo --format json --deterministic"
+    "cargo test --lib core::trajectory",
+    "cargo test --test trajectory_cli"
   ],
   "tool_calls": [
-    "decapod rpc --op specs.refresh"
+    "decapod rpc --op specs.refresh",
+    "gh issue view 685"
   ],
-  "checks": [
+  "loops": [
     {
-      "name": "decapod_validate",
+      "intent_id": "intent:issue-685",
+      "trajectory_id": "bugs_01ky5zjk7b64v1cj",
+      "loop_id": "future-improvement",
+      "loop_type": "improvement",
+      "attempt": 1,
+      "parent_loop_id": "implementation-verification",
+      "trigger": "agent",
+      "observations": [
+        "cloud trajectory coordination remains outside this bounded PR"
+      ],
+      "grader_result": "skipped",
+      "feedback": "Proposal only: evaluate cross-machine trajectory indexing in a later issue.",
+      "mutation_proposal": "config",
+      "status": "open"
+    },
+    {
+      "intent_id": "intent:issue-685",
+      "trajectory_id": "bugs_01ky5zjk7b64v1cj",
+      "loop_id": "implementation-verification",
+      "loop_type": "verification",
+      "attempt": 1,
+      "trigger": "grader",
+      "tool_calls": [
+        "cargo test --lib core::trajectory"
+      ],
+      "observations": [
+        "typed loop tests initially exposed an assertion expectation mismatch"
+      ],
+      "grader_result": "fail",
+      "feedback": "Correct the test expectation and rerun the focused trajectory suite.",
+      "mutation_proposal": "none",
+      "status": "retrying"
+    },
+    {
+      "intent_id": "intent:issue-685",
+      "trajectory_id": "bugs_01ky5zjk7b64v1cj",
+      "loop_id": "implementation-verification",
+      "loop_type": "verification",
+      "attempt": 2,
+      "trigger": "grader",
+      "tool_calls": [
+        "cargo test --lib core::trajectory",
+        "cargo test --test trajectory_cli"
+      ],
+      "observations": [
+        "all focused trajectory and CLI tests passed"
+      ],
+      "grader_result": "pass",
+      "proof_refs": [
+        "test:core::trajectory",
+        "test:trajectory_cli"
+      ],
+      "mutation_proposal": "none",
       "status": "passed"
     },
     {
-      "name": "schema_projection_smoke",
-      "status": "passed"
-    },
-    {
-      "name": "todo_regression_tests",
-      "status": "passed"
-    },
-    {
-      "name": "work_claim_unit_tests",
-      "status": "passed"
+      "intent_id": "intent:issue-685",
+      "trajectory_id": "bugs_01ky5zjk7b64v1cj",
+      "loop_id": "issue-follow-up",
+      "loop_type": "event",
+      "attempt": 1,
+      "parent_loop_id": "implementation-verification",
+      "trigger": "engine",
+      "tool_calls": [
+        "gh issue view 685"
+      ],
+      "observations": [
+        "issue remains open and its acceptance criteria are still unmet on master"
+      ],
+      "grader_result": "skipped",
+      "proof_refs": [
+        "issue:685"
+      ],
+      "mutation_proposal": "none",
+      "status": "open"
     }
   ],
+  "checks": [],
   "evidence": [
-    "Issue #685 trajectory prerequisite is implemented on master; #686 is now addressed with a compatibility projection over todo.db and todo.events.jsonl.",
-    "cargo test --all-targets: 179 tests/targets passed; existing workspace_prune_regression::test_validate_stale_workspaces_cleanup remains the sole baseline failure with SQLite error no such table nodes.",
-    "decapod v0.76.0 validate --store user --refresh-specs --format json: status=ok, pass_count=170, fail_count=0, drift_findings=[], temporary_artifacts_cleaned=2"
+    "test:core::trajectory",
+    "test:trajectory_cli"
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [],
-  "completion_claim": "Issue #686 work-claim projection implemented and validated; ready for publication.",
-  "proof_status": "passed",
+  "unresolved_assumptions": [
+    "The existing local-first cookie remains the authority and Git history remains the historical store."
+  ],
+  "proof_status": "no_checks_run",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:e570b7722a7c82a9dd3515fcd0c11f39ba19a0ee6d530d0385834de6871b990e"
+  "artifact_hash": "sha256:f5e000446ee15ea9f1e57894b10530ff97fd20e3011a3d3c1b864b61f22cc093"
 }

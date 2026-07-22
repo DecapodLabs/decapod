@@ -951,6 +951,9 @@ pub(crate) enum TrajectoryCommand {
         run_id: String,
         #[clap(long)]
         task_id: Option<String>,
+        /// Stable intent boundary shared by loop records; defaults to intent:<run-id>
+        #[clap(long)]
+        intent_id: Option<String>,
         #[clap(long)]
         original_intent: String,
         #[clap(long)]
@@ -996,6 +999,9 @@ pub(crate) enum TrajectoryCommand {
         declared_commands: Vec<String>,
         #[clap(long = "tool-call")]
         tool_calls: Vec<String>,
+        /// Typed trajectory loop record as a JSON object; repeat for attempts or nested loops
+        #[clap(long = "loop-json")]
+        loops: Vec<String>,
         /// Check in name=status form: passed, failed, partial, or unavailable
         #[clap(long = "check")]
         checks: Vec<String>,

@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.76.0 -->
-<!-- decapod-fingerprint: 0da8411d76cf9b18befaf0b5b5a28048026d3aca782da95155270e378373df75 -->
+<!-- decapod-release: 0.77.0 -->
+<!-- decapod-fingerprint: ad3bb2fc17493a4f0e61d3ce6e18749543d8f74216f18013afdb7c88b32fb28d -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
@@ -89,6 +89,7 @@ Preserve the chain between intent, context, assumptions, action, and proof.
 ## Run-Level Trajectory and Proof
 Record the current run cookie at `.decapod/governance/trajectory.json`: initialize with intent/boundaries/scope, record inspected/modified files, commands/tool calls, checks, evidence, assumptions, and shortcut signals, then inspect with `decapod govern trajectory status --run-id <run-id>`. Git merge history is the historical trajectory store.
 Use `decapod govern trajectory init --run-id <run-id> --original-intent "..." --derived-intent "..." --boundary "..." --scope "..."` and `decapod govern trajectory record --run-id <run-id> --inspected-file <path> --check "name=status"`.
+Record bounded loop attempts with repeatable `--loop-json` objects containing `intent_id`, `trajectory_id`, `loop_id`, `loop_type`, `attempt`, `trigger`, `grader_result`, `feedback`, `proof_refs`, `mutation_proposal`, and `status`. Verification passes require proof references; failed verification feedback is bounded and retry attempts are contiguous. Event and improvement loops remain evidence records, and improvement output is a proposal only.
 Completion claims never prove completion: `passed`, `failed`, `partial`, `unavailable`, and `no_checks_run` remain distinct, and no checks means an `unsupported` completion verdict.
 ## Invariants (Normative)
 - **INV-DAEMONLESS**: Decapod MUST NOT leave background processes running.

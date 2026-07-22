@@ -178,6 +178,7 @@ fn trajectory_gate_replaces_workunit_requirement_for_publication() {
         trajectory::TrajectoryInit {
             run_id: "run_publish".to_string(),
             task_id: Some("test_000005".to_string()),
+            intent_id: None,
             original_intent: "publish a governed change".to_string(),
             derived_intent: "bind publication to the trajectory cookie".to_string(),
             active_boundaries: vec!["src/**".to_string()],
