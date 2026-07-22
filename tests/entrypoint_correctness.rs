@@ -129,7 +129,7 @@ fn test_validate_passes_after_init_without_git_repo() {
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let temp_path = temp_dir.path().to_path_buf();
 
-    let init = run_raw(&temp_path, &["init", "--force"], &[]);
+    let init = run_raw(&temp_path, &["init", "--force", "--no-git"], &[]);
     assert!(
         init.status.success(),
         "decapod init should succeed. Output:\n{}{}",

@@ -70,6 +70,30 @@ fn test_init_in_non_git_directory_with_git_opt_in() {
 }
 
 #[test]
+fn test_init_in_non_git_directory_initializes_git_by_default() {
+    let tmp = TempDir::new().expect("tmpdir");
+    let dir = tmp.path();
+
+    let out = run_decapod(dir, &["init", "--force"], &[]);
+
+    assert!(
+        out.status.success(),
+        "decapod init should initialize Git by default: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(
+        dir.join(".git").exists(),
+        "Expected .git to be created by init"
+    );
+
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        !stderr.contains("fatal:") && !stderr.contains("error:"),
+        "expected Git probes to remain quiet, got stderr: {stderr}"
+    );
+}
+
+#[test]
 fn test_init_in_existing_git_repository_preserves_state() {
     let tmp = TempDir::new().expect("tmpdir");
     let dir = tmp.path();
@@ -183,10 +207,15 @@ fn test_init_with_no_git_declined() {
 
     // Verify stdout/stderr contains warning
     let stdout = String::from_utf8_lossy(&out.stdout);
+    let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
         stdout.contains("Git repository was not initialized")
-            || String::from_utf8_lossy(&out.stderr).contains("Git repository was not initialized"),
+            || stderr.contains("Git repository was not initialized"),
         "Warning message should be printed"
+    );
+    assert!(
+        !stderr.contains("fatal:") && !stderr.contains("error:"),
+        "expected Git probe failures to remain quiet, got stderr: {stderr}"
     );
 }
 

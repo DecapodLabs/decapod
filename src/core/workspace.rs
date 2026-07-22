@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::env;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 /// Workspace status information
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -876,6 +876,8 @@ fn git_ref_exists(repo_root: &Path, git_ref: &str) -> bool {
             "--quiet",
             git_ref,
         ])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status()
         .map(|status| status.success())
         .unwrap_or(false)
@@ -997,6 +999,8 @@ pub fn detect_base_branch(repo_root: &Path) -> Option<String> {
                 "--quiet",
                 &reference,
             ])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .status()
             .map(|status| status.success())
             .unwrap_or(false);
@@ -2040,6 +2044,13 @@ mod tests {
         );
 
         assert_eq!(detect_base_branch(tmp.path()).as_deref(), Some("main"));
+    }
+
+    #[test]
+    fn detects_no_base_branch_outside_git_without_failing() {
+        let tmp = tempdir().expect("tempdir");
+
+        assert_eq!(detect_base_branch(tmp.path()), None);
     }
 
     #[test]

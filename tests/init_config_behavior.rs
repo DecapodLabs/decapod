@@ -821,6 +821,7 @@ fn init_supports_and_preserves_declared_capabilities() {
             "--declared-capability",
             "scheduled-jobs",
             "--force",
+            "--no-git",
         ],
     );
     assert!(
@@ -852,7 +853,7 @@ fn init_supports_and_preserves_declared_capabilities() {
     );
 
     // 2. Re-init with --force, and verify it PRESERVES them
-    let out = run_decapod(tmp.path(), &["init", "--force"]);
+    let out = run_decapod(tmp.path(), &["init", "--force", "--no-git"]);
     assert!(
         out.status.success(),
         "decapod init --force failed: {}",
@@ -937,7 +938,14 @@ fn init_validation_rejects_traversal_in_guided_paths() {
     let tmp = tempdir().expect("tempdir");
     let out = run_decapod(
         tmp.path(),
-        &["init", "with", "--protected-path", "../outside", "--force"],
+        &[
+            "init",
+            "with",
+            "--protected-path",
+            "../outside",
+            "--force",
+            "--no-git",
+        ],
     );
     assert!(
         out.status.success(),
