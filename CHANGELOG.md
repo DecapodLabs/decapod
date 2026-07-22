@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.74.0](https://github.com/DecapodLabs/decapod/compare/v0.73.3...v0.74.0) - 2026-07-22
+
+### Added
+
+- expose governed trajectory motion status
+
+### Other
+
+- refresh governed entrypoint fingerprints
+
 ## [0.73.3](https://github.com/DecapodLabs/decapod/compare/v0.73.2...v0.73.3) - 2026-07-22
 
 ### Fixed
