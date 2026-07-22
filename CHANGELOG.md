@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.77.0](https://github.com/DecapodLabs/decapod/compare/v0.76.0...v0.77.0) - 2026-07-22
+
+### Added
+
+- project todos as governed work claims ([#983](https://github.com/DecapodLabs/decapod/pull/983))
+
 ## [0.76.0](https://github.com/DecapodLabs/decapod/compare/v0.75.0...v0.76.0) - 2026-07-22
 
 ### Added
