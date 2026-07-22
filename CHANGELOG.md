@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.78.0](https://github.com/DecapodLabs/decapod/compare/v0.77.0...v0.78.0) - 2026-07-22
+
+### Added
+
+- capture governed loop trajectories
+
+### Fixed
+
+- satisfy trajectory clippy checks
+
+### Other
+
+- validate the checked-out decapod binary
+- align decapod 0.77 governance metadata
+
 ## [0.77.0](https://github.com/DecapodLabs/decapod/compare/v0.76.0...v0.77.0) - 2026-07-22
 
 ### Added
