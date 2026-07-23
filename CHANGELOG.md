@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.79.1](https://github.com/DecapodLabs/decapod/compare/v0.79.0...v0.79.1) - 2026-07-23
+
+### Fixed
+
+- include claims schema in Bazel build
+- require validation proof artifacts
+- require validation proof artifacts
+
+### Other
+
+- govern research claims as JSON
+
 ## [0.79.0](https://github.com/DecapodLabs/decapod/compare/v0.78.0...v0.79.0) - 2026-07-23
 
 ### Added
