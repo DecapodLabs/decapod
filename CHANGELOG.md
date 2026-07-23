@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.80.1](https://github.com/DecapodLabs/decapod/compare/v0.80.0...v0.80.1) - 2026-07-23
+
+### Fixed
+
+- scope validation temp artifacts to todo tasks ([#999](https://github.com/DecapodLabs/decapod/pull/999))
+
 ## [0.80.0](https://github.com/DecapodLabs/decapod/compare/v0.79.1...v0.80.0) - 2026-07-23
 
 ### Fixed
