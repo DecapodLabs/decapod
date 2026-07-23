@@ -1357,6 +1357,7 @@ pub fn publish_workspace(
         )));
     }
     verify_trajectory_gate_for_publish(repo_root, &status.git.current_branch)?;
+    verify_validation_artifacts_for_publish(repo_root)?;
     eval::verify_eval_gate_for_publish(&repo_root.join(".decapod").join("data"))?;
 
     // Resolve the actual network remote before committing. Decapod-created
@@ -1397,6 +1398,8 @@ pub fn publish_workspace(
             }
         }
     }
+
+    ensure_validation_artifacts_staged(repo_root)?;
 
     // Get current commit hash
     let hash_output = Command::new("git")
@@ -1488,7 +1491,7 @@ pub fn publish_workspace(
     })
 }
 
-fn extract_task_ids_from_branch(branch: &str) -> Vec<String> {
+pub fn extract_task_ids_from_branch(branch: &str) -> Vec<String> {
     let re = Regex::new(r"(?i)(?:aiml|apis|appl|arch|bend|bugs|cicd|code|data|desn|devx|docs|feat|fend|infr|lang|perf|plat|proj|r|refa|reft|root|secu|spec|test|todo|tool)[_-][a-z0-9]{6,}").expect("static regex");
     let mut out: Vec<String> = re
         .find_iter(branch)
@@ -1582,6 +1585,71 @@ pub fn verify_trajectory_gate_for_publish(
             Ok(())
         }
     }
+}
+
+/// Publication is only valid when the receipt and trajectory are present and
+/// cryptographically bound to one another. This closes the gap where a PR can
+/// be created from code that passed validation while carrying stale or absent
+/// proof artifacts.
+pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), DecapodError> {
+    let trajectory = trajectory::load_trajectory_cookie(repo_root)?.ok_or_else(|| {
+        DecapodError::ValidationError(format!(
+            "Cannot publish: missing trajectory cookie at {}.",
+            trajectory::trajectory_cookie_path(repo_root).display()
+        ))
+    })?;
+    let receipt_path = repo_root.join(crate::core::validate::VALIDATION_RECEIPT_PATH);
+    if !receipt_path.exists() {
+        return Err(DecapodError::ValidationError(format!(
+            "Cannot publish: missing validation receipt at {}.",
+            receipt_path.display()
+        )));
+    }
+    let raw = std::fs::read_to_string(&receipt_path).map_err(DecapodError::IoError)?;
+    let receipt: crate::core::validate::ValidationReceipt =
+        serde_json::from_str(&raw).map_err(|error| {
+            DecapodError::ValidationError(format!(
+                "Cannot publish: invalid validation receipt {}: {error}",
+                receipt_path.display()
+            ))
+        })?;
+    receipt.validate_integrity()?;
+    if receipt.trajectory_run_id.as_deref() != Some(trajectory.run_id.as_str())
+        || receipt.trajectory_artifact_hash.as_deref() != Some(trajectory.artifact_hash.as_str())
+    {
+        return Err(DecapodError::ValidationError(
+            "Cannot publish: validation receipt is not bound to the current trajectory artifact."
+                .to_string(),
+        ));
+    }
+    Ok(())
+}
+
+fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodError> {
+    let dir = repo_root.to_str().unwrap_or(".");
+    for path in [
+        trajectory::TRAJECTORY_PATH,
+        crate::core::validate::VALIDATION_RECEIPT_PATH,
+    ] {
+        let output = Command::new("git")
+            .args([
+                "-C",
+                dir,
+                "ls-files",
+                "--cached",
+                "--error-unmatch",
+                "--",
+                path,
+            ])
+            .output()
+            .map_err(DecapodError::IoError)?;
+        if !output.status.success() {
+            return Err(DecapodError::ValidationError(format!(
+                "Cannot publish: required validation artifact was not staged: {path}"
+            )));
+        }
+    }
+    Ok(())
 }
 
 pub fn get_allowed_ops(status: &WorkspaceStatus) -> Vec<AllowedOp> {
@@ -2203,6 +2271,16 @@ mod tests {
         let message = error.to_string();
         assert!(message.contains("no network-capable git remote"));
         assert!(message.contains("No commit was pushed"));
+    }
+
+    #[test]
+    fn validation_artifact_publish_gate_requires_trajectory_and_receipt() {
+        let tmp = tempdir().expect("tempdir");
+
+        let error = verify_validation_artifacts_for_publish(tmp.path())
+            .expect_err("publication must require the trajectory artifact");
+
+        assert!(error.to_string().contains("missing trajectory cookie"));
     }
 
     #[test]

@@ -6023,11 +6023,82 @@ fn run_validation_bounded(
     match result {
         Ok(mut report) if report.fail_count == 0 => {
             report.temporary_artifacts_cleaned = validate::cleanup_validation_temp_paths()?;
+            record_validation_proof(workspace_root, &report)?;
             write_validation_receipt(workspace_root, &report)?;
             Ok(report)
         }
         other => other,
     }
+}
+
+/// Every successful validation completion must leave a fresh, bound pair of
+/// tracked proof artifacts. The trajectory is the durable run record; the
+/// validation receipt binds the evaluator result to that trajectory hash.
+fn record_validation_proof(
+    project_root: &Path,
+    report: &validate::ValidationReport,
+) -> Result<core::trajectory::TrajectoryArtifact, error::DecapodError> {
+    let current_branch = core::workspace::get_workspace_status(project_root)
+        .map(|status| status.git.current_branch)
+        .unwrap_or_default();
+    let task_id = core::workspace::extract_task_ids_from_branch(&current_branch)
+        .into_iter()
+        .next();
+    let existing = core::trajectory::load_trajectory_cookie(project_root)?;
+    let needs_fresh_trajectory = existing
+        .as_ref()
+        .is_none_or(|artifact| task_id.is_some() && artifact.task_id.as_ref() != task_id.as_ref());
+    let trajectory = if needs_fresh_trajectory {
+        let run_id = format!("validation_{}", core::ulid::new_ulid());
+        core::trajectory::init_trajectory(
+            project_root,
+            core::trajectory::TrajectoryInit {
+                run_id,
+                task_id: task_id.clone(),
+                intent_id: None,
+                original_intent:
+                    "Produce proof artifacts for a repository validation completion.".to_string(),
+                derived_intent:
+                    "Run the bounded validation gates and bind the successful receipt to a trajectory."
+                        .to_string(),
+                active_boundaries: vec!["Repository validation and tracked proof artifacts".to_string()],
+                repo_scope: vec![
+                    core::trajectory::TRAJECTORY_PATH.to_string(),
+                    validate::VALIDATION_RECEIPT_PATH.to_string(),
+                ],
+                destination: Some("validation completion".to_string()),
+                current_phase: Some("validation".to_string()),
+                next_transitions: vec!["publish".to_string()],
+                blockers: vec![],
+            },
+        )?
+    } else {
+        existing.expect("existing trajectory is present when a fresh one is not required")
+    };
+
+    core::trajectory::record_trajectory(
+        project_root,
+        &trajectory.run_id,
+        core::trajectory::TrajectoryUpdate {
+            task_id,
+            current_phase: Some("validation".to_string()),
+            next_transitions: vec!["publish".to_string()],
+            declared_commands: vec!["decapod validate".to_string()],
+            modified_files: vec![
+                core::trajectory::TRAJECTORY_PATH.to_string(),
+                validate::VALIDATION_RECEIPT_PATH.to_string(),
+            ],
+            checks: vec![core::trajectory::TrajectoryCheck {
+                name: "decapod validate".to_string(),
+                status: core::trajectory::TrajectoryCheckStatus::Passed,
+            }],
+            evidence: vec![format!(
+                "validation epoch {} completed with zero failures",
+                report.validation_epoch.epoch_id
+            )],
+            ..Default::default()
+        },
+    )
 }
 
 fn write_validation_receipt(
@@ -6045,12 +6116,16 @@ fn write_validation_receipt(
         .unwrap_or_else(|| "UNRESOLVED".to_string());
     let repo_signal_fingerprint = core::project_specs::repo_signal_fingerprint(project_root)
         .unwrap_or_else(|_| "unavailable".to_string());
-    let trajectory = core::trajectory::load_trajectory_cookie(project_root)?;
+    let trajectory = core::trajectory::load_trajectory_cookie(project_root)?.ok_or_else(|| {
+        error::DecapodError::ValidationError(
+            "validation completion requires .decapod/governance/trajectory.json".to_string(),
+        )
+    })?;
     let receipt = validate::build_validation_receipt(
         report,
         git_revision,
         repo_signal_fingerprint,
-        trajectory.as_ref(),
+        Some(&trajectory),
     )?;
     let path = project_root.join(validate::VALIDATION_RECEIPT_PATH);
     if let Some(parent) = path.parent() {
