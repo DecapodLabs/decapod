@@ -301,6 +301,32 @@ fn validate_json_reports_self_heal_and_structured_summary() {
             .starts_with("sha256:")
     );
 
+    let trajectory_path = dir.join(".decapod/governance/trajectory.json");
+    assert!(
+        trajectory_path.exists(),
+        "successful validation must provide a trajectory artifact"
+    );
+    let trajectory: Value = serde_json::from_str(
+        &fs::read_to_string(&trajectory_path).expect("read trajectory artifact"),
+    )
+    .expect("parse trajectory artifact");
+    assert_eq!(
+        receipt["trajectory_run_id"], trajectory["run_id"],
+        "validation receipt must identify the current trajectory"
+    );
+    assert_eq!(
+        receipt["trajectory_artifact_hash"], trajectory["artifact_hash"],
+        "validation receipt must bind to the current trajectory hash"
+    );
+    assert!(
+        trajectory["checks"]
+            .as_array()
+            .unwrap_or(&Vec::new())
+            .iter()
+            .any(|check| check["name"] == "decapod validate" && check["status"] == "passed"),
+        "trajectory must record the successful validation proof"
+    );
+
     let receipt_path = dir.join(".decapod/generated/validation-epoch.json");
     assert!(
         !receipt_path.exists(),
