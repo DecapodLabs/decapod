@@ -409,13 +409,12 @@ fn validation_task_id(workspace_root: &Path) -> String {
         return sanitize_validation_task_id(&task_id);
     }
 
-    if let Ok(status) = workspace::get_workspace_status(workspace_root) {
-        if let Some(task_id) = workspace::extract_task_ids_from_branch(&status.git.current_branch)
+    if let Ok(status) = workspace::get_workspace_status(workspace_root)
+        && let Some(task_id) = workspace::extract_task_ids_from_branch(&status.git.current_branch)
             .into_iter()
             .next()
-        {
-            return sanitize_validation_task_id(&task_id);
-        }
+    {
+        return sanitize_validation_task_id(&task_id);
     }
 
     "todo-unassigned".to_string()
