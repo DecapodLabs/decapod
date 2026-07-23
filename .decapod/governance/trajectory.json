@@ -1,109 +1,63 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "validation_01KY68KD0JFM1RYP05EDGM8AKP",
-  "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
-  "task_id": "bugs_01ky67k6fw63bsj2",
-  "original_intent": "Produce proof artifacts for a repository validation completion.",
-  "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
-  "destination": "single PR",
-  "current_phase": "validation",
-  "next_transitions": [
-    "publish"
-  ],
+  "run_id": "run-986-987-20260723",
+  "intent_id": "intent:run-986-987-20260723",
+  "original_intent": "Solve GitHub Issues #986 and #987 in one PR",
+  "derived_intent": "Make decapod validate analyze validation.json for CI risk and use available CPU parallelism without losing bounded deterministic proof",
   "active_boundaries": [
-    "Repository validation and tracked proof artifacts"
+    "One Decapod repository PR; no direct .decapod store edits; isolated workspace only"
   ],
   "repo_scope": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json"
+    "validation implementation, tests, proof artifacts, single GitHub PR"
   ],
   "inspected_files": [
-    "research/claims.md",
-    "src/core/workspace.rs",
-    "src/lib.rs",
+    ".decapod/generated/specs/VALIDATION.md",
+    "src/core/entrypoint_integrity.rs",
+    "src/core/validate.rs",
     "tests/validate_termination.rs"
   ],
-  "modified_files": [
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    "research/claims.md",
-    "src/core/workspace.rs",
-    "src/lib.rs",
-    "tests/validate_termination.rs"
-  ],
-  "declared_commands": [
-    "cargo clippy --workspace --all-targets --offline -- -D warnings",
-    "cargo fmt --all",
-    "cargo test --test init_validate_green_field",
-    "cargo test --test trajectory_cli",
-    "cargo test --test validate_termination",
-    "cargo test --test workunit_publish_gate",
-    "decapod validate"
-  ],
-  "tool_calls": [
-    "decapod rpc --op specs.refresh",
-    "gh issue view 682",
-    "gh pr view 989"
-  ],
+  "modified_files": [],
+  "declared_commands": [],
+  "tool_calls": [],
   "checks": [
     {
-      "name": "cargo clippy --workspace --all-targets --offline -- -D warnings",
+      "name": "cargo_test_all_targets",
+      "status": "partial"
+    },
+    {
+      "name": "cargo_test_lib",
       "status": "passed"
     },
     {
-      "name": "cargo test --test init_validate_green_field",
-      "status": "passed"
-    },
-    {
-      "name": "cargo test --test trajectory_cli",
-      "status": "passed"
-    },
-    {
-      "name": "cargo test --test validate_termination",
-      "status": "passed"
-    },
-    {
-      "name": "cargo test --test workunit_publish_gate",
-      "status": "passed"
-    },
-    {
-      "name": "decapod validate",
+      "name": "validate_termination",
       "status": "passed"
     }
   ],
-  "evidence": [
-    "Issue #682 research claims and validation artifact lifecycle implemented",
-    "PR #989 stale trajectory custody reproduced and corrected",
-    "Validation receipt bound to current trajectory artifact hash",
-    "validation epoch ve_14f25174288f608f completed with zero failures",
-    "validation epoch ve_4b3aac4e7bc1dfdd completed with zero failures",
-    "validation epoch ve_75d0c7a0d9bc559f completed with zero failures"
-  ],
+  "evidence": [],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "passed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:dd082ca0c02dab42d7fc7f4c2b300767068d79e02840ba3aa00b96806ad00c61",
+  "artifact_hash": "sha256:72e5209ffe14bcab29e3321bc3daedcd380004bfad63176bd0656b78c874c375",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP": {
-        "id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
-        "raw_intent": "Produce proof artifacts for a repository validation completion.",
-        "refined_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
+      "intent:run-986-987-20260723": {
+        "id": "intent:run-986-987-20260723",
+        "raw_intent": "Solve GitHub Issues #986 and #987 in one PR",
+        "refined_intent": "Make decapod validate analyze validation.json for CI risk and use available CPU parallelism without losing bounded deterministic proof",
         "acceptance_criteria": [],
         "constraints": [
-          ".decapod/governance/trajectory.json",
-          ".decapod/governance/validation.json"
+          "validation implementation, tests, proof artifacts, single GitHub PR"
         ],
         "assumptions": [],
         "boundaries": [
-          "Repository validation and tracked proof artifacts"
+          "One Decapod repository PR; no direct .decapod store edits; isolated workspace only"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -116,199 +70,54 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
+        "intent_id": "intent:run-986-987-20260723",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
+        "intent_id": "intent:run-986-987-20260723",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
+        "intent_id": "intent:run-986-987-20260723",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KY68KD0JFM1RYP05EDGM8AKP"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KY68KD0JFM1RYP05EDGM8AKP"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KY68KD0JFM1RYP05EDGM8AKP"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KY68KD0JFM1RYP05EDGM8AKP"
-      },
-      {
-        "sequence": 8,
-        "event_id": "event:8",
-        "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KY68KD0JFM1RYP05EDGM8AKP"
-      },
-      {
-        "sequence": 9,
-        "event_id": "event:9",
-        "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:validation_01KY68KD0JFM1RYP05EDGM8AKP"
+        "detail": "trajectory:run-986-987-20260723"
       }
     ],
     "trajectories": {
-      "validation_01KY68KD0JFM1RYP05EDGM8AKP": {
-        "id": "validation_01KY68KD0JFM1RYP05EDGM8AKP",
-        "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
+      "run-986-987-20260723": {
+        "id": "run-986-987-20260723",
+        "intent_id": "intent:run-986-987-20260723",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
             "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
+              "validation implementation, tests, proof artifacts, single GitHub PR"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_14f25174288f608f completed with zero failures"
+              "src/core/validate.rs",
+              "src/core/entrypoint_integrity.rs",
+              "tests/validate_termination.rs",
+              ".decapod/generated/specs/VALIDATION.md"
             ],
             "proof_refs": [
-              "decapod validate"
+              "cargo_test_lib",
+              "validate_termination",
+              "cargo_test_all_targets"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_4b3aac4e7bc1dfdd completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "proof",
-            "tool": "gh issue view 682",
-            "command": "cargo fmt --all",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              "src/lib.rs",
-              "src/core/workspace.rs",
-              "tests/validate_termination.rs",
-              "research/claims.md",
-              "src/lib.rs",
-              "src/core/workspace.rs",
-              "tests/validate_termination.rs",
-              "research/claims.md",
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "Issue #682 research claims and validation artifact lifecycle implemented",
-              "PR #989 stale trajectory custody reproduced and corrected",
-              "Validation receipt bound to current trajectory artifact hash"
-            ],
-            "proof_refs": [
-              "cargo clippy --workspace --all-targets --offline -- -D warnings",
-              "cargo test --test validate_termination",
-              "cargo test --test init_validate_green_field",
-              "cargo test --test trajectory_cli",
-              "cargo test --test workunit_publish_gate",
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_4b3aac4e7bc1dfdd completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:7"
-          },
-          {
-            "sequence": 8,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_4b3aac4e7bc1dfdd completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:8"
-          },
-          {
-            "sequence": 9,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_75d0c7a0d9bc559f completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:9"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 9
+    "next_sequence": 4
   }
 }
