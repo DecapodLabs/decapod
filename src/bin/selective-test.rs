@@ -69,54 +69,54 @@ fn is_ignored_path(path: &str) -> bool {
 
 fn add_tests_for_file(file: &str, tests_to_run: &mut HashMap<String, bool>) {
     match file {
-        "src/core/todo.rs" => {
+        "src/decapod/core/todo.rs" => {
             tests_to_run.insert("todo_enforcement".to_string(), true);
             tests_to_run.insert("todo_rebuild_compat".to_string(), true);
         }
-        "src/core/validate.rs" => {
+        "src/decapod/core/validate.rs" => {
             tests_to_run.insert("validate_termination".to_string(), true);
             tests_to_run.insert("validate_optional_artifact_gates".to_string(), true);
         }
-        "src/core/gatekeeper.rs" => {
+        "src/decapod/core/gatekeeper.rs" => {
             tests_to_run.insert("validate_termination".to_string(), true);
             tests_to_run.insert("validate_optional_artifact_gates".to_string(), true);
         }
-        "src/core/workspace.rs" => {
+        "src/decapod/core/workspace.rs" => {
             tests_to_run.insert("workspace_interlock".to_string(), true);
         }
-        "src/core/workunit.rs" => {
+        "src/decapod/core/workunit.rs" => {
             tests_to_run.insert("workunit_cli".to_string(), true);
             tests_to_run.insert("workunit_publish_gate".to_string(), true);
         }
-        "src/core/obligation.rs" => {
+        "src/decapod/core/obligation.rs" => {
             tests_to_run.insert("obligation".to_string(), true);
         }
-        "src/core/docs.rs" => {
+        "src/decapod/core/docs.rs" => {
             tests_to_run.insert("context_capsule_cli".to_string(), true);
             tests_to_run.insert("context_capsule_rpc".to_string(), true);
             tests_to_run.insert("lcm_determinism".to_string(), true);
         }
-        "src/core/context_capsule.rs" => {
+        "src/decapod/core/context_capsule.rs" => {
             tests_to_run.insert("context_capsule_cli".to_string(), true);
             tests_to_run.insert("context_capsule_rpc".to_string(), true);
             tests_to_run.insert("context_capsule_schema".to_string(), true);
         }
-        "src/core/rpc.rs" => {
+        "src/decapod/core/rpc.rs" => {
             tests_to_run.insert("agent_rpc_suite".to_string(), true);
         }
-        "src/migration.rs" => {
+        "src/decapod/core/migration.rs" => {
             tests_to_run.insert("core_tests".to_string(), true);
         }
-        "src/lib.rs" => {
+        "src/decapod/lib.rs" => {
             tests_to_run.insert("entrypoint_correctness".to_string(), true);
             tests_to_run.insert("init_config_behavior".to_string(), true);
             tests_to_run.insert("init_validate_green_field".to_string(), true);
         }
-        "src/cli.rs" => {
+        "src/decapod/cli.rs" => {
             tests_to_run.insert("cli_contract_enforcement".to_string(), true);
         }
-        s if s.starts_with("src/plugins/") => {
-            if let Some(rest) = s.strip_prefix("src/plugins/") {
+        s if s.starts_with("src/decapod/plugins/") => {
+            if let Some(rest) = s.strip_prefix("src/decapod/plugins/") {
                 let plugin_name = rest.strip_suffix(".rs").unwrap_or(rest);
                 let test_name = format!("plugins_{plugin_name}_tests");
                 tests_to_run.insert(test_name, true);
@@ -130,8 +130,8 @@ fn add_tests_for_file(file: &str, tests_to_run: &mut HashMap<String, bool>) {
         s if s.ends_with(".sql") => {
             tests_to_run.insert("core_tests".to_string(), true);
         }
-        s if s.starts_with("src/core/") && s.ends_with(".rs") => {
-            if let Some(rest) = s.strip_prefix("src/core/") {
+        s if s.starts_with("src/decapod/core/") && s.ends_with(".rs") => {
+            if let Some(rest) = s.strip_prefix("src/decapod/core/") {
                 let module = rest.strip_suffix(".rs").unwrap_or(rest);
                 match module {
                     "todo" => {
@@ -221,13 +221,13 @@ fn run_reflex_mode(changed_files: &[String]) -> bool {
 
     for file in changed_files {
         match file.as_str() {
-            "src/core/todo.rs" => {
+            "src/decapod/core/todo.rs" => {
                 println!("Testing: todo module");
                 if !run_cargo_test("todo_enforcement", "2") {
                     failed = true;
                 }
             }
-            "src/core/validate.rs" => {
+            "src/decapod/core/validate.rs" => {
                 println!("Testing: validate module");
                 if !run_cargo_test("validate_termination", "2") {
                     failed = true;
@@ -236,8 +236,8 @@ fn run_reflex_mode(changed_files: &[String]) -> bool {
                     failed = true;
                 }
             }
-            s if s.starts_with("src/plugins/") => {
-                if let Some(rest) = s.strip_prefix("src/plugins/") {
+            s if s.starts_with("src/decapod/plugins/") => {
+                if let Some(rest) = s.strip_prefix("src/decapod/plugins/") {
                     let plugin_name = rest.strip_suffix(".rs").unwrap_or(rest);
                     println!("Testing: plugin {plugin_name}");
                     let test_name = format!("plugins_{plugin_name}_tests");
@@ -246,7 +246,7 @@ fn run_reflex_mode(changed_files: &[String]) -> bool {
                     }
                 }
             }
-            "src/cli.rs" | "src/lib.rs" => {
+            "src/decapod/cli.rs" | "src/decapod/lib.rs" => {
                 println!("Testing: CLI contracts");
                 if !run_cargo_test("cli_contract_enforcement", "2") {
                     failed = true;

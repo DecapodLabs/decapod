@@ -80,7 +80,7 @@ fn trajectory_cli_records_scope_actions_checks_and_verdicts() {
             "--boundary",
             "src/**",
             "--scope",
-            "src/lib.rs",
+            "src/decapod/lib.rs",
         ],
         env_password,
     );
@@ -101,9 +101,9 @@ fn trajectory_cli_records_scope_actions_checks_and_verdicts() {
             "awaiting proof",
             "--clear-blockers",
             "--inspected-file",
-            "src/lib.rs",
+            "src/decapod/lib.rs",
             "--modified-file",
-            "src/lib.rs",
+            "src/decapod/lib.rs",
             "--command",
             "cargo test --lib",
             "--tool-call",
@@ -122,7 +122,7 @@ fn trajectory_cli_records_scope_actions_checks_and_verdicts() {
     let record_json = json(&record, "trajectory record");
     assert_eq!(record_json["proof_status"], "passed");
     assert_eq!(record_json["verdicts"]["completion_proof"], "supported");
-    assert_eq!(record_json["inspected_files"][0], "src/lib.rs");
+    assert_eq!(record_json["inspected_files"][0], "src/decapod/lib.rs");
     assert_eq!(record_json["checks"][0]["status"], "passed");
 
     let status = run_decapod(
@@ -156,7 +156,7 @@ fn trajectory_cli_does_not_promote_completion_claim_without_checks() {
             "--boundary",
             "src/**",
             "--scope",
-            "src/lib.rs",
+            "src/decapod/lib.rs",
         ],
         env_password,
     );
@@ -240,7 +240,7 @@ fn trajectory_cli_records_typed_loop_attempts_and_proof_refs() {
             "--boundary",
             "src/**",
             "--scope",
-            "src/lib.rs",
+            "src/decapod/lib.rs",
         ],
         env_password,
     );

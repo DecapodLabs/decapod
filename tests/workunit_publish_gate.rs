@@ -182,7 +182,7 @@ fn trajectory_gate_replaces_workunit_requirement_for_publication() {
             original_intent: "publish a governed change".to_string(),
             derived_intent: "bind publication to the trajectory cookie".to_string(),
             active_boundaries: vec!["src/**".to_string()],
-            repo_scope: vec!["src/lib.rs".to_string()],
+            repo_scope: vec!["src/decapod/lib.rs".to_string()],
             destination: Some("single PR".to_string()),
             current_phase: Some("proof".to_string()),
             next_transitions: vec!["publish".to_string()],
