@@ -211,7 +211,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0b8204d35a0a4347b8dcc4bd939f3f229d6ab4cbbfe8b8f55bdcec2f71eeb194`
+- Repository signal fingerprint: `a3e5404ec1eb17df6b77c19af61f08157c9a6b3a06fdd779822b2b7ad01e6c2a`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
