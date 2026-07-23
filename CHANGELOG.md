@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.80.2](https://github.com/DecapodLabs/decapod/compare/v0.80.1...v0.80.2) - 2026-07-23
+
+### Fixed
+
+- align release-bound artifacts with v0.80.1
+
+### Other
+
+- refresh specs attestation timestamp
+- refresh generated spec attestation
+- nest Rust runtime under src/decapod
+
 ## [0.80.1](https://github.com/DecapodLabs/decapod/compare/v0.80.0...v0.80.1) - 2026-07-23
 
 ### Fixed
