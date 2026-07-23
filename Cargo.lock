@@ -396,7 +396,6 @@ dependencies = [
  "clap",
  "criterion",
  "decapod",
- "decapod-custody",
  "fancy-regex",
  "flate2",
  "regex",
@@ -405,18 +404,11 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
+ "thiserror",
  "tiktoken-rs",
  "tokio",
  "toml",
  "walkdir",
-]
-
-[[package]]
-name = "decapod-custody"
-version = "0.1.0"
-dependencies = [
- "serde",
- "thiserror",
 ]
 
 [[package]]

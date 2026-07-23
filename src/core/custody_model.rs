@@ -1,4 +1,4 @@
-//! A small, runtime-neutral custody model for durable agent execution state.
+//! Typed custody model for durable agent execution state within the Decapod runtime.
 //!
 //! Intent authority lives in [`IntentRecord`]. Trajectories are explicitly
 //! evidence: they can explain what happened, but they cannot approve scope or

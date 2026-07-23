@@ -1,10 +1,13 @@
-//! Host integration for the runtime-neutral `decapod-custody` model.
+//! Host integration for the intent custody model.
 //!
 //! The trajectory subsystem owns the durable file and invokes these helpers
-//! at its existing init/record boundaries. The crate remains responsible for
-//! lifecycle rules; this module only supplies current Decapod context.
+//! at its existing init/record boundaries. The model lives in the root crate
+//! alongside the rest of Decapod's core modules.
 
-pub use decapod_custody::{
+#[path = "custody_model.rs"]
+mod custody_model;
+
+pub use custody_model::{
     CUSTODY_SCHEMA_VERSION, Custody, CustodyError, CustodyState, InMemoryCustodyStore, IntentEvent,
     IntentEventKind, IntentRecord, IntentRefinement, IntentStatus, IntentSummary,
     ProjectKnowledgeCandidate, Trajectory, TrajectoryStep, TrajectoryStepInput,
