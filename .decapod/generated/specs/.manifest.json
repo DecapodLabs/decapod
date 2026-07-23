@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
   "template_version": "scaffold-v3",
-  "generated_at": "1784848447Z",
+  "generated_at": "1784848765Z",
   "repo_signal_fingerprint": "a1cc93c8a9c89d892402121971a7b1e9d88314dd3d98261a72131dc3a551fa76",
   "declared_capabilities": [
     "agent-helper",
