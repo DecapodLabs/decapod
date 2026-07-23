@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.80.0](https://github.com/DecapodLabs/decapod/compare/v0.79.1...v0.80.0) - 2026-07-23
+
+### Fixed
+
+- make validation parallel and agent-readable
+
+### Other
+
+- bind validation proof to final commit
+- record validation proof for 986 987
+
 ## [0.79.1](https://github.com/DecapodLabs/decapod/compare/v0.79.0...v0.79.1) - 2026-07-23
 
 ### Fixed
