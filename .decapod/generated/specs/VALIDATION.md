@@ -279,7 +279,7 @@ actionable validation signals before publication.
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `406d0d4fa85d579c37104a1ec8d743383718c554e8d8fb3ae911b85439993c92`
+- Repository signal fingerprint: `4d612a069a3bf8fa28928683edbea7003b9992fe5148416a17d31f134cc5a473`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
