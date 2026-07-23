@@ -1,0 +1,846 @@
+{
+  "$schema": "https://decapod.dev/schemas/research-claims-ledger-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "kind": "research_claims_ledger",
+  "ledger_id": "decapod-core-research-claims",
+  "title": "Decapod Falsifiable Research Claims",
+  "purpose": "Maintain explicit, measurable, and falsifiable claims about the governance capabilities that Decapod is intended to provide.",
+  "authority": {
+    "owner": "Decapod project",
+    "source_issue": "https://github.com/DecapodLabs/decapod/issues/682",
+    "status": "active",
+    "created_at": "2026-07-22",
+    "updated_at": "2026-07-22",
+    "change_policy": "Claims are changed only through an issue-scoped review that preserves the baseline, Decapod condition, failure modes, measurements, proof gate, open questions, and evidence status."
+  },
+  "scope": {
+    "product": "decapod",
+    "repository": "DecapodLabs/decapod",
+    "in_scope": [
+      "intent custody and task boundaries",
+      "governed context selection",
+      "validation and durable completion proof",
+      "multi-agent workspace and publication custody"
+    ],
+    "out_of_scope": [
+      "claims of model capability independent of Decapod",
+      "unmeasured production performance",
+      "security guarantees not supported by repository evidence",
+      "research conclusions from a single successful run"
+    ]
+  },
+  "methodology": {
+    "falsifiability_standard": "Every claim must state a comparable baseline, an observable Decapod condition, a failure mode that could disprove it, measurable outcomes, and a proof gate that identifies the evidence required for acceptance.",
+    "evidence_statuses": [
+      "not_started",
+      "instrumented",
+      "partial",
+      "supported",
+      "falsified",
+      "superseded"
+    ],
+    "measurement_rules": [
+      {
+        "id": "bounded-comparison",
+        "name": "Comparable baseline",
+        "requirement": "Baseline and Decapod conditions use the same task population, unit of analysis, difficulty controls, and observation window.",
+        "unit": "repository_task",
+        "evidence_source": "benchmark protocol and run artifacts"
+      },
+      {
+        "id": "observable-signal",
+        "name": "Observable failure signal",
+        "requirement": "Each failure mode names an observable signal and a falsifier rather than relying on a completion claim.",
+        "unit": "failure_event",
+        "evidence_source": "trajectory, validation receipt, tests, or benchmark observation"
+      },
+      {
+        "id": "proof-reference",
+        "name": "Proof reference",
+        "requirement": "A passing verification result must identify the artifact or command output that supports it.",
+        "unit": "proof_reference",
+        "evidence_source": "repository-native governance artifacts"
+      }
+    ]
+  },
+  "claims": [
+    {
+      "id": "intent-durability",
+      "sequence": 1,
+      "title": "Intent is not durable without governed custody",
+      "statement": "Agent work drifts less when original intent, derived intent, boundaries, and unresolved assumptions are persisted as inspectable state and reintroduced at decision boundaries.",
+      "why_it_matters": "Without durable intent custody, a plausible local edit can silently diverge from the human task while remaining difficult to diagnose after the fact.",
+      "baseline": {
+        "description": "Run the same multi-step repository task with a vanilla agent and no required custody artifacts.",
+        "population": "Comparable multi-step repository tasks performed by agents without Decapod custody.",
+        "unit_of_analysis": "repository_task",
+        "protocol": [
+          "Give the agent the same task statement and repository snapshot used by the Decapod condition.",
+          "Record scope drift, contradicted assumptions, repeated clarification, abandoned constraints, and unjustified task expansion.",
+          "Retain the final diff and an evaluator's event log."
+        ],
+        "controls": [
+          "Use the same model, task difficulty, repository snapshot, and tool budget across conditions.",
+          "Blind the evaluator to condition where practical."
+        ],
+        "confounders": [
+          "Model variance",
+          "Task familiarity",
+          "Repository size and pre-existing documentation quality"
+        ]
+      },
+      "decapod_condition": {
+        "description": "Run the task with a claimed todo, isolated workspace, initialized trajectory, and task-scoped context resolved through the Decapod control plane.",
+        "population": "The same multi-step repository task population as the baseline.",
+        "unit_of_analysis": "repository_task",
+        "protocol": [
+          "Claim a task-scoped todo before creating the isolated workspace.",
+          "Initialize and inspect the trajectory with original intent, derived intent, boundary, and scope.",
+          "Resolve task context before implementation and record proof references at validation."
+        ],
+        "controls": [
+          "Use the same model, task difficulty, repository snapshot, and tool budget as the baseline.",
+          "Count only inspectable custody events, not agent assertions."
+        ],
+        "confounders": [
+          "Learning effects from repeated tasks",
+          "Additional latency from governance operations",
+          "Differences in agent familiarity with Decapod"
+        ]
+      },
+      "failure_modes": [
+        {
+          "id": "intent-drift-not-reduced",
+          "description": "The Decapod condition has no lower drift rate than the baseline.",
+          "observable_signal": "Drift events per task are equal to or higher than the baseline.",
+          "severity": "high",
+          "falsifier": "A controlled comparison shows no improvement after accounting for task and model variance."
+        },
+        {
+          "id": "trajectory-not-explanatory",
+          "description": "The trajectory exists but cannot show which intent, boundary, or assumption was active.",
+          "observable_signal": "A reviewer cannot connect the final scope to trajectory fields and recorded proof.",
+          "severity": "high",
+          "falsifier": "At least one sampled task has a valid trajectory that cannot reconstruct the governing scope."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "drift-events-per-task",
+          "name": "Scope drift events per task",
+          "definition": "Count of evaluator-confirmed departures from the task boundary divided by completed tasks.",
+          "unit": "ratio",
+          "scale": "ratio",
+          "aggregation": "rate",
+          "collection_method": "Compare evaluator event logs with the declared task boundary.",
+          "comparator": "Decapod condition versus vanilla-agent baseline.",
+          "success_direction": "lower",
+          "threshold": null
+        },
+        {
+          "id": "intent-reference-coverage",
+          "name": "Actions with inspectable intent reference",
+          "definition": "Fraction of sampled decision-boundary actions linked to a task, trajectory, or resolved context record.",
+          "unit": "ratio",
+          "scale": "ratio",
+          "aggregation": "rate",
+          "collection_method": "Sample action records and verify repository-native references.",
+          "comparator": "Decapod condition versus vanilla-agent baseline.",
+          "success_direction": "higher",
+          "threshold": null
+        }
+      ],
+      "proof_gate": {
+        "id": "intent-custody-proof",
+        "required_artifacts": [
+          {
+            "path": ".decapod/governance/trajectory.json",
+            "kind": "trajectory",
+            "required": true,
+            "integrity": "hash",
+            "relationship": "connects original and derived intent to executed scope"
+          },
+          {
+            "path": ".decapod/governance/claims.json",
+            "kind": "schema",
+            "required": true,
+            "integrity": "schema",
+            "relationship": "defines the falsifiability contract"
+          }
+        ],
+        "required_commands": [
+          {
+            "id": "trajectory-status",
+            "command": "decapod govern trajectory status --run-id <run-id>",
+            "expected_exit_code": 0,
+            "bounded_seconds": 120,
+            "evidence_artifact": ".decapod/governance/trajectory.json"
+          }
+        ],
+        "acceptance_criteria": [
+          "The trajectory is bound to the claimed task and isolated workspace.",
+          "Original intent, derived intent, boundary, scope, and proof references are recoverable.",
+          "Any unresolved assumption remains visible rather than being silently discarded."
+        ],
+        "failure_behavior": "Do not treat the claim as supported; retain the failing observation and investigate custody or measurement gaps."
+      },
+      "open_questions": [
+        {
+          "id": "sample-size",
+          "question": "How many tasks and agent/tool combinations are needed to separate custody effects from model variance?",
+          "decision_impact": "Determines benchmark power and whether the claim can move beyond instrumented status.",
+          "owner": "Decapod research maintainers",
+          "status": "open"
+        }
+      ],
+      "evidence": {
+        "status": "instrumented",
+        "summary": "Trajectory, todo, workspace, and context custody surfaces are executable in the repository; comparative benchmark evidence remains required.",
+        "sources": [
+          {
+            "id": "issue-682",
+            "kind": "issue",
+            "ref": "https://github.com/DecapodLabs/decapod/issues/682",
+            "description": "Issue requesting a falsifiable research claims component.",
+            "trust": "human-authored"
+          },
+          {
+            "id": "trajectory-module",
+            "kind": "code",
+            "ref": "src/core/trajectory.rs",
+            "description": "Executable trajectory custody and integrity surface.",
+            "trust": "repo-native"
+          }
+        ],
+        "observations": [
+          {
+            "id": "repository-instrumentation",
+            "observed_at": "2026-07-22",
+            "result": "Custody primitives and trajectory proof references are present; no comparative benchmark was run for this ledger update.",
+            "source_refs": [
+              "issue-682",
+              "trajectory-module"
+            ]
+          }
+        ],
+        "last_evaluated_at": "2026-07-22"
+      },
+      "implementation_links": [
+        {
+          "surface": "todo custody",
+          "path": "src/core/todo.rs",
+          "symbol": "todo claim",
+          "relationship": "implements"
+        },
+        {
+          "surface": "trajectory custody",
+          "path": "src/core/trajectory.rs",
+          "symbol": "TrajectoryArtifact",
+          "relationship": "proves"
+        }
+      ],
+      "non_guarantees": [
+        "The claim does not guarantee that every agent action is correct.",
+        "The claim does not establish a causal effect without a controlled comparison."
+      ]
+    },
+    {
+      "id": "governed-context",
+      "sequence": 2,
+      "title": "Governed context is more useful than undifferentiated context",
+      "statement": "Context selected from repository state and constitutional boundaries produces fewer wrong-context failures than broad context dumps at comparable task difficulty.",
+      "why_it_matters": "Context volume alone does not establish relevance, lineage, policy binding, or task ownership.",
+      "baseline": {
+        "description": "Give an agent a large undifferentiated repository and context dump without a task-scoped capsule.",
+        "population": "Repository tasks requiring selection among multiple documentation, policy, and implementation sources.",
+        "unit_of_analysis": "repository_task",
+        "protocol": [
+          "Provide the same repository snapshot and task to the agent.",
+          "Measure irrelevant file churn, token use, boundary violations, rediscovery steps, and task failure.",
+          "Record which sources the agent actually used."
+        ],
+        "controls": [
+          "Hold task statement, repository snapshot, model, and tool budget constant.",
+          "Use the same evaluator and success criteria."
+        ],
+        "confounders": [
+          "Repository information architecture",
+          "Agent retrieval strategy",
+          "Task-specific terminology overlap"
+        ]
+      },
+      "decapod_condition": {
+        "description": "Resolve a deterministic task-scoped context capsule with explicit sources, scope, policy lineage, and task ownership before implementation.",
+        "population": "The same repository-task population as the baseline.",
+        "unit_of_analysis": "repository_task",
+        "protocol": [
+          "Resolve context through the Decapod control plane before implementation.",
+          "Verify capsule source lineage, policy binding, task scope, and deterministic hash.",
+          "Compare useful-source coverage and wrong-context failures with the baseline."
+        ],
+        "controls": [
+          "Hold task statement, repository snapshot, model, and tool budget constant.",
+          "Do not credit a source unless the capsule explains its inclusion."
+        ],
+        "confounders": [
+          "Quality of constitutional and repository metadata",
+          "Capsule construction policy",
+          "Additional context-resolution latency"
+        ]
+      },
+      "failure_modes": [
+        {
+          "id": "wrong-context-not-reduced",
+          "description": "Scoped context does not reduce irrelevant work or increases wrong-context failures.",
+          "observable_signal": "Irrelevant edits, boundary violations, or task failures are not lower than the broad-context baseline.",
+          "severity": "high",
+          "falsifier": "A controlled comparison shows no improvement or a regression on the pre-registered measurements."
+        },
+        {
+          "id": "capsule-lineage-incomplete",
+          "description": "The capsule cannot explain why each source was included.",
+          "observable_signal": "A reviewer cannot trace a mounted source to task scope and policy lineage.",
+          "severity": "medium",
+          "falsifier": "Any accepted capsule lacks deterministic source, scope, or policy lineage."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "irrelevant-edit-rate",
+          "name": "Irrelevant edit rate",
+          "definition": "Fraction of changed files judged unrelated to the task boundary.",
+          "unit": "ratio",
+          "scale": "ratio",
+          "aggregation": "rate",
+          "collection_method": "Blind evaluator labels final diff files against task scope.",
+          "comparator": "Decapod condition versus broad-context baseline.",
+          "success_direction": "lower",
+          "threshold": null
+        },
+        {
+          "id": "context-token-use",
+          "name": "Context token consumption",
+          "definition": "Tokens supplied or retrieved before the first implementation mutation.",
+          "unit": "tokens",
+          "scale": "ratio",
+          "aggregation": "median",
+          "collection_method": "Record tool and context token counts from the run evidence.",
+          "comparator": "Decapod condition versus broad-context baseline at matched success rate.",
+          "success_direction": "lower",
+          "threshold": null
+        }
+      ],
+      "proof_gate": {
+        "id": "governed-context-proof",
+        "required_artifacts": [
+          {
+            "path": ".decapod/generated/context/<capsule>.json",
+            "kind": "capsule",
+            "required": true,
+            "integrity": "hash",
+            "relationship": "proves source, scope, policy, and task lineage"
+          },
+          {
+            "path": ".decapod/governance/claims.json",
+            "kind": "schema",
+            "required": true,
+            "integrity": "schema",
+            "relationship": "defines the measurement and falsification contract"
+          }
+        ],
+        "required_commands": [
+          {
+            "id": "context-resolve",
+            "command": "decapod rpc --op context.resolve",
+            "expected_exit_code": 0,
+            "bounded_seconds": 120,
+            "evidence_artifact": ".decapod/generated/context/<capsule>.json"
+          }
+        ],
+        "acceptance_criteria": [
+          "The capsule identifies every included source and its task relationship.",
+          "Policy lineage, task scope, and deterministic integrity are valid.",
+          "Comparative observations distinguish useful context from irrelevant volume."
+        ],
+        "failure_behavior": "Mark the claim partial or falsified according to the observed result and preserve the capsule and evaluator evidence."
+      },
+      "open_questions": [
+        {
+          "id": "task-class-benefit",
+          "question": "Which task classes benefit most from narrowing, and when is additional context worth its cost?",
+          "decision_impact": "Determines routing policy and whether context selection should optimize for class-specific outcomes.",
+          "owner": "Decapod context maintainers",
+          "status": "open"
+        }
+      ],
+      "evidence": {
+        "status": "instrumented",
+        "summary": "Context capsule schemas, source lineage, policy binding, and integrity checks exist; a controlled baseline study remains open.",
+        "sources": [
+          {
+            "id": "context-capsule-module",
+            "kind": "code",
+            "ref": "src/core/context_capsule.rs",
+            "description": "Deterministic context capsule representation and validation.",
+            "trust": "repo-native"
+          },
+          {
+            "id": "context-validation",
+            "kind": "test",
+            "ref": "tests",
+            "description": "Repository validation gates for context artifacts.",
+            "trust": "repo-native"
+          }
+        ],
+        "observations": [
+          {
+            "id": "capsule-instrumentation",
+            "observed_at": "2026-07-22",
+            "result": "Context lineage and integrity are instrumented; no comparative benchmark was run for this ledger update.",
+            "source_refs": [
+              "context-capsule-module",
+              "context-validation"
+            ]
+          }
+        ],
+        "last_evaluated_at": "2026-07-22"
+      },
+      "implementation_links": [
+        {
+          "surface": "context capsule",
+          "path": "src/core/context_capsule.rs",
+          "symbol": "DeterministicContextCapsule",
+          "relationship": "implements"
+        },
+        {
+          "surface": "context resolution",
+          "path": "src/core/context_bundle.rs",
+          "symbol": "context.resolve",
+          "relationship": "proves"
+        }
+      ],
+      "non_guarantees": [
+        "The claim does not imply that smaller context is always better.",
+        "The claim does not guarantee that capsule policy can infer missing repository metadata."
+      ]
+    },
+    {
+      "id": "proof-backed-completion",
+      "sequence": 3,
+      "title": "Completion requires proof rather than an agent claim",
+      "statement": "Requiring bounded validation and durable proof artifacts lowers the false-done rate compared with accepting an agent's natural completion claim.",
+      "why_it_matters": "A successful-looking response is not evidence that the repository is valid, the intended scope was preserved, or the completion can be audited later.",
+      "baseline": {
+        "description": "Accept completion claims without a required validation run or durable proof artifact.",
+        "population": "Repository implementation tasks with a claimed completion response.",
+        "unit_of_analysis": "repository_task",
+        "protocol": [
+          "Accept the agent's completion claim when it reports success.",
+          "Run independent post-completion review for missing tests, broken builds, uncommitted changes, and unsupported claims.",
+          "Record the time from claim to discovery of an invalid completion."
+        ],
+        "controls": [
+          "Use the same task population and independent reviewer as the Decapod condition.",
+          "Apply identical post-completion review criteria."
+        ],
+        "confounders": [
+          "Reviewer diligence",
+          "Task complexity",
+          "Existing repository CI coverage"
+        ]
+      },
+      "decapod_condition": {
+        "description": "Require bounded validation to pass and bind a tracked trajectory artifact and validation receipt to every successful validation completion and publication flow.",
+        "population": "The same repository-task population as the baseline.",
+        "unit_of_analysis": "repository_task",
+        "protocol": [
+          "Run bounded decapod validation before completion.",
+          "Record a trajectory validation check and a hash-bound validation receipt.",
+          "Require both governance artifacts to be present and tracked at publication."
+        ],
+        "controls": [
+          "Use the same task population, model, repository snapshot, and independent reviewer.",
+          "Treat missing or stale proof as a failed completion even when the agent claims success."
+        ],
+        "confounders": [
+          "Validation suite coverage",
+          "Time required for proof generation",
+          "Warnings that do not block a passing validation"
+        ]
+      },
+      "failure_modes": [
+        {
+          "id": "missing-proof-accepted",
+          "description": "A completion is accepted without both durable governance artifacts.",
+          "observable_signal": "The validation receipt or trajectory is missing, untracked, stale, or not bound to the same run and hash.",
+          "severity": "critical",
+          "falsifier": "A publication path accepts a successful validation completion without the required artifact pair."
+        },
+        {
+          "id": "false-done-unchanged",
+          "description": "The proof-gated condition has the same false-done rate as the claim-only baseline.",
+          "observable_signal": "Independent review discovers invalid completions at the same or higher rate.",
+          "severity": "high",
+          "falsifier": "A controlled comparison finds no reduction in false-done outcomes."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "false-done-rate",
+          "name": "False-done rate",
+          "definition": "Fraction of accepted completions later found invalid by independent review.",
+          "unit": "ratio",
+          "scale": "ratio",
+          "aggregation": "rate",
+          "collection_method": "Compare completion acceptance records with post-completion review findings.",
+          "comparator": "Proof-gated condition versus claim-only baseline.",
+          "success_direction": "lower",
+          "threshold": null
+        },
+        {
+          "id": "proof-artifact-completeness",
+          "name": "Proof artifact completeness",
+          "definition": "Fraction of successful validation completions with a valid, tracked trajectory and validation receipt pair.",
+          "unit": "ratio",
+          "scale": "ratio",
+          "aggregation": "rate",
+          "collection_method": "Validate artifact presence, hashes, run binding, and Git tracking at publication.",
+          "comparator": "Proof-gated condition against the required invariant.",
+          "success_direction": "match",
+          "threshold": {
+            "operator": "eq",
+            "value": 1,
+            "unit": "ratio"
+          }
+        }
+      ],
+      "proof_gate": {
+        "id": "validation-proof-gate",
+        "required_artifacts": [
+          {
+            "path": ".decapod/governance/trajectory.json",
+            "kind": "trajectory",
+            "required": true,
+            "integrity": "hash",
+            "relationship": "records the validation check and run custody"
+          },
+          {
+            "path": ".decapod/governance/validation.json",
+            "kind": "receipt",
+            "required": true,
+            "integrity": "hash",
+            "relationship": "binds successful validation to the trajectory artifact"
+          },
+          {
+            "path": ".decapod/governance/claims.json",
+            "kind": "schema",
+            "required": true,
+            "integrity": "schema",
+            "relationship": "defines the proof and falsification contract"
+          }
+        ],
+        "required_commands": [
+          {
+            "id": "bounded-validation",
+            "command": "decapod validate",
+            "expected_exit_code": 0,
+            "bounded_seconds": 120,
+            "evidence_artifact": ".decapod/governance/validation.json"
+          }
+        ],
+        "acceptance_criteria": [
+          "Validation exits successfully within its bounded execution contract.",
+          "The trajectory records a passed validation check.",
+          "The receipt hash is valid and identifies the current trajectory run and artifact hash.",
+          "Publication refuses missing, stale, or untracked proof artifacts."
+        ],
+        "failure_behavior": "Do not claim completion or publish the validation result; report the concrete missing, stale, or failed proof gate."
+      },
+      "open_questions": [
+        {
+          "id": "predictive-proof",
+          "question": "Which proof gates best predict production-relevant correctness, and how should warning-heavy but passing runs be classified?",
+          "decision_impact": "Determines future validation policy and whether additional proof gates are warranted.",
+          "owner": "Decapod validation maintainers",
+          "status": "open"
+        }
+      ],
+      "evidence": {
+        "status": "instrumented",
+        "summary": "The validation and publication paths enforce a hash-bound trajectory and validation receipt pair; field evidence on false-done reduction remains required.",
+        "sources": [
+          {
+            "id": "issue-682",
+            "kind": "issue",
+            "ref": "https://github.com/DecapodLabs/decapod/issues/682",
+            "description": "Issue requiring durable validation proof artifacts.",
+            "trust": "human-authored"
+          },
+          {
+            "id": "validation-implementation",
+            "kind": "code",
+            "ref": "src/core/validate.rs",
+            "description": "Bounded validation receipt generation and integrity checks.",
+            "trust": "repo-native"
+          },
+          {
+            "id": "publication-gate",
+            "kind": "code",
+            "ref": "src/core/workspace.rs",
+            "description": "Publication gate requiring the validation artifact pair.",
+            "trust": "repo-native"
+          }
+        ],
+        "observations": [
+          {
+            "id": "proof-path-instrumentation",
+            "observed_at": "2026-07-22",
+            "result": "Validation and publication proof gates are executable; comparative false-done evidence was not collected for this ledger update.",
+            "source_refs": [
+              "validation-implementation",
+              "publication-gate"
+            ]
+          }
+        ],
+        "last_evaluated_at": "2026-07-22"
+      },
+      "implementation_links": [
+        {
+          "surface": "validation receipt",
+          "path": "src/core/validate.rs",
+          "symbol": "ValidationReceipt",
+          "relationship": "proves"
+        },
+        {
+          "surface": "publication gate",
+          "path": "src/core/workspace.rs",
+          "symbol": "verify_validation_artifacts_for_publish",
+          "relationship": "implements"
+        }
+      ],
+      "non_guarantees": [
+        "A passing validation is not a guarantee of production correctness.",
+        "Proof artifacts establish what was checked and bound, not that every unmeasured property is true."
+      ]
+    },
+    {
+      "id": "multi-agent-custody",
+      "sequence": 4,
+      "title": "Multi-agent work needs custody, not chat history",
+      "statement": "Claimed todos, isolated workspaces, explicit boundaries, and proof artifacts reduce coordination collisions and handoff ambiguity in concurrent agent work.",
+      "why_it_matters": "Concurrent work is difficult to audit when ownership, scope, and proof exist only in transient conversation history.",
+      "baseline": {
+        "description": "Run concurrent agents on adjacent or overlapping work without branch, worktree, ownership, or durable handoff records.",
+        "population": "Concurrent repository tasks with adjacent or intentionally overlapping interfaces.",
+        "unit_of_analysis": "concurrent_task_set",
+        "protocol": [
+          "Assign agents the same task set and repository snapshot used by the Decapod condition.",
+          "Record collisions, duplicate edits, overwritten assumptions, conflicting changes, and handoff ambiguity.",
+          "Evaluate whether final ownership and proof can be reconstructed."
+        ],
+        "controls": [
+          "Hold task topology, model mix, repository snapshot, and tool budget constant.",
+          "Use the same independent evaluator for both conditions."
+        ],
+        "confounders": [
+          "Interface coupling",
+          "Task decomposition quality",
+          "Agent communication strategy"
+        ]
+      },
+      "decapod_condition": {
+        "description": "Give each agent a claimed todo, todo-scoped workspace, explicit trajectory, and validation-gated publication path.",
+        "population": "The same concurrent task-set population as the baseline.",
+        "unit_of_analysis": "concurrent_task_set",
+        "protocol": [
+          "Claim each todo before creating its isolated workspace.",
+          "Record task ownership, branch scope, trajectory binding, and validation proof.",
+          "Require publication to pass custody and proof gates."
+        ],
+        "controls": [
+          "Hold task topology, model mix, repository snapshot, and tool budget constant.",
+          "Count only durable ownership and proof records as evidence."
+        ],
+        "confounders": [
+          "Additional coordination overhead",
+          "Differences in issue decomposition",
+          "Intentional interface sharing"
+        ]
+      },
+      "failure_modes": [
+        {
+          "id": "collisions-not-reduced",
+          "description": "The custody condition does not reduce collisions or duplicate edits.",
+          "observable_signal": "Concurrent runs show equal or higher collision, overwrite, or handoff ambiguity rates.",
+          "severity": "high",
+          "falsifier": "A controlled comparison finds no reduction in coordination failures."
+        },
+        {
+          "id": "stale-custody-published",
+          "description": "Publication accepts stale custody state or cannot show which agent owned the final diff.",
+          "observable_signal": "The final branch, todo, trajectory, and validation receipt do not agree on task ownership or scope.",
+          "severity": "critical",
+          "falsifier": "Any accepted publication has an unresolvable or contradictory custody chain."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "coordination-collision-rate",
+          "name": "Coordination collision rate",
+          "definition": "Collisions, duplicate edits, or overwritten assumptions per concurrent task set.",
+          "unit": "ratio",
+          "scale": "ratio",
+          "aggregation": "rate",
+          "collection_method": "Review Git history, workspace events, and evaluator annotations.",
+          "comparator": "Decapod condition versus uncustodied concurrent baseline.",
+          "success_direction": "lower",
+          "threshold": null
+        },
+        {
+          "id": "ownership-reconstruction-rate",
+          "name": "Ownership reconstruction rate",
+          "definition": "Fraction of sampled final diffs for which task owner, scope, and proof can be recovered.",
+          "unit": "ratio",
+          "scale": "ratio",
+          "aggregation": "rate",
+          "collection_method": "Independent reviewer reconstructs custody from repository-native records.",
+          "comparator": "Decapod condition versus uncustodied concurrent baseline.",
+          "success_direction": "higher",
+          "threshold": null
+        }
+      ],
+      "proof_gate": {
+        "id": "multi-agent-custody-proof",
+        "required_artifacts": [
+          {
+            "path": ".decapod/governance/trajectory.json",
+            "kind": "trajectory",
+            "required": true,
+            "integrity": "hash",
+            "relationship": "binds agent intent, task, and executed scope"
+          },
+          {
+            "path": ".decapod/governance/validation.json",
+            "kind": "receipt",
+            "required": true,
+            "integrity": "hash",
+            "relationship": "proves the published scope passed validation"
+          },
+          {
+            "path": ".decapod/governance/claims.json",
+            "kind": "schema",
+            "required": true,
+            "integrity": "schema",
+            "relationship": "defines custody measurements and falsifiers"
+          }
+        ],
+        "required_commands": [
+          {
+            "id": "workspace-status",
+            "command": "decapod workspace status",
+            "expected_exit_code": 0,
+            "bounded_seconds": 120,
+            "evidence_artifact": ".decapod/governance/trajectory.json"
+          },
+          {
+            "id": "publication-validation",
+            "command": "decapod validate",
+            "expected_exit_code": 0,
+            "bounded_seconds": 120,
+            "evidence_artifact": ".decapod/governance/validation.json"
+          }
+        ],
+        "acceptance_criteria": [
+          "Todo ownership, worktree branch, trajectory task binding, and validation receipt are mutually recoverable.",
+          "Publication rejects stale or contradictory custody state.",
+          "Git history preserves the final proof-bearing publication event."
+        ],
+        "failure_behavior": "Block publication and leave a precise custody handoff describing the unresolved owner, scope, or proof conflict."
+      },
+      "open_questions": [
+        {
+          "id": "shared-interface-scale",
+          "question": "How does custody scale when tasks intentionally share an interface or require coordinated changes across workspaces?",
+          "decision_impact": "Determines whether shared-interface workflows need an additional claim, protocol, or merge proof.",
+          "owner": "Decapod workspace maintainers",
+          "status": "open"
+        }
+      ],
+      "evidence": {
+        "status": "instrumented",
+        "summary": "Todo claims, isolated workspaces, trajectory binding, and publication proof gates are executable; concurrent benchmark evidence remains open.",
+        "sources": [
+          {
+            "id": "workspace-implementation",
+            "kind": "code",
+            "ref": "src/core/workspace.rs",
+            "description": "Workspace isolation, ownership, and publication gates.",
+            "trust": "repo-native"
+          },
+          {
+            "id": "todo-implementation",
+            "kind": "code",
+            "ref": "src/core/todo.rs",
+            "description": "Todo claim and task ownership surface.",
+            "trust": "repo-native"
+          }
+        ],
+        "observations": [
+          {
+            "id": "custody-instrumentation",
+            "observed_at": "2026-07-22",
+            "result": "Isolation, todo claims, trajectory binding, and proof-gated publication are instrumented; no concurrent benchmark was run for this ledger update.",
+            "source_refs": [
+              "workspace-implementation",
+              "todo-implementation"
+            ]
+          }
+        ],
+        "last_evaluated_at": "2026-07-22"
+      },
+      "implementation_links": [
+        {
+          "surface": "workspace isolation",
+          "path": "src/core/workspace.rs",
+          "symbol": "publish_workspace",
+          "relationship": "implements"
+        },
+        {
+          "surface": "task ownership",
+          "path": "src/core/todo.rs",
+          "symbol": "todo claim",
+          "relationship": "implements"
+        }
+      ],
+      "non_guarantees": [
+        "Isolation does not remove conflicts caused by intentionally shared interfaces.",
+        "A custody record does not prove that the agent's implementation is substantively correct."
+      ]
+    }
+  ],
+  "governance": {
+    "required_claim_fields": [
+      "id",
+      "sequence",
+      "title",
+      "statement",
+      "why_it_matters",
+      "baseline",
+      "decapod_condition",
+      "failure_modes",
+      "measurements",
+      "proof_gate",
+      "open_questions",
+      "evidence",
+      "implementation_links",
+      "non_guarantees"
+    ],
+    "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and changes preserve schema compatibility or explicitly version it.",
+    "new_capability_rule": "Every new kernel capability must map to one existing claim or introduce a new falsifiable claim before it is treated as research-relevant. A feature description alone is not evidence.",
+    "change_control": {
+      "requires_issue": true,
+      "requires_validation": true,
+      "requires_human_review": true
+    }
+  }
+}

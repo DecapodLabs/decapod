@@ -39,6 +39,7 @@ pub mod pool;
 pub mod project_specs;
 pub mod proof;
 pub mod repomap;
+pub mod research_claims;
 pub mod rpc;
 pub mod scaffold;
 pub mod schemas;

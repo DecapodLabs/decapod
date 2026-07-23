@@ -76,7 +76,8 @@
     "PR #989 stale trajectory custody reproduced and corrected",
     "Validation receipt bound to current trajectory artifact hash",
     "validation epoch ve_14f25174288f608f completed with zero failures",
-    "validation epoch ve_4b3aac4e7bc1dfdd completed with zero failures"
+    "validation epoch ve_4b3aac4e7bc1dfdd completed with zero failures",
+    "validation epoch ve_75d0c7a0d9bc559f completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -87,7 +88,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:c8a34ad17727198522703b7a946378992b1f2e070accffd4a80d257f9848220d",
+  "artifact_hash": "sha256:dd082ca0c02dab42d7fc7f4c2b300767068d79e02840ba3aa00b96806ad00c61",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -155,6 +156,13 @@
       {
         "sequence": 8,
         "event_id": "event:8",
+        "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:validation_01KY68KD0JFM1RYP05EDGM8AKP"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
         "intent_id": "intent:validation_01KY68KD0JFM1RYP05EDGM8AKP",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:validation_01KY68KD0JFM1RYP05EDGM8AKP"
@@ -276,12 +284,31 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_75d0c7a0d9bc559f completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 8
+    "next_sequence": 9
   }
 }

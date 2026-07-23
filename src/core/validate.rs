@@ -17,6 +17,7 @@ use crate::core::project_specs::{
     LOCAL_PROJECT_SPECS_SECURITY, LOCAL_PROJECT_SPECS_SEMANTICS, LOCAL_PROJECT_SPECS_VALIDATION,
     config_input_hash, hash_text, read_specs_manifest, repo_signal_fingerprint, spec_input_hash,
 };
+use crate::core::research_claims;
 use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
 use crate::core::trajectory;
@@ -2395,6 +2396,25 @@ fn validate_trajectory_artifacts_if_present(
 
     pass(
         "Trajectory cookie schema check passed for trajectory.json",
+        ctx,
+    );
+    Ok(())
+}
+
+fn validate_research_claims_if_present(
+    ctx: &ValidationContext,
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Research Claims Ledger Gate");
+    if research_claims::load_and_validate(repo_root)?.is_none() {
+        skip(
+            "No research claims ledger found; skipping claims schema gate",
+            ctx,
+        );
+        return Ok(());
+    }
+    pass(
+        "Research claims ledger schema and semantic checks passed",
         ctx,
     );
     Ok(())
@@ -6173,6 +6193,13 @@ pub fn run_validation(
             ctx,
             "validate_trajectory_artifacts_if_present",
             validate_trajectory_artifacts_if_present(ctx, main_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_research_claims_if_present",
+            validate_research_claims_if_present(ctx, working_root)
         );
         gate!(
             s,
