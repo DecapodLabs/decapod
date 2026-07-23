@@ -11,6 +11,9 @@ homepage = "https://github.com/DecapodLabs/decapod"
 readme = "README.md"
 keywords = ["governance", "ai", "ai-agents", "control-plane", "orchestration"]
 categories = ["artificial-intelligence", "command-line-utilities", "development-tools"]
+
+[workspace]
+resolver = "2"
 exclude = [
     ".decapod/*",
     "dist/*",
@@ -60,6 +63,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tiktoken-rs = "0.9"
 sha2 = "0.10"
+thiserror = "2"
 toml = "1.0"
 
 tokio = { version = "1", features = ["full"] }
