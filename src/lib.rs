@@ -5651,12 +5651,7 @@ fn run_validate_command(
     let store = match validate_cli.store.as_str() {
         "user" => {
             // User store uses a temp directory for blank-slate validation
-            let tmp_root = std::env::temp_dir().join(format!(
-                "decapod_validate_user_{}",
-                crate::core::ulid::new_ulid()
-            ));
-            std::fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
-            validate::register_validation_temp_path(tmp_root.clone());
+            let tmp_root = validate::create_validation_temp_path(workspace_root, "user")?;
             Store {
                 kind: StoreKind::User,
                 root: tmp_root,
@@ -5959,7 +5954,7 @@ fn run_validation_bounded(
 ) -> Result<validate::ValidationReport, error::DecapodError> {
     let timeout_secs = validate_timeout_secs();
     let started = std::time::Instant::now();
-    let (tx, rx) = mpsc::channel();
+    let (tx, rx) = mpsc::channel::<Result<validate::ValidationReport, error::DecapodError>>();
     let store_cloned = store.clone();
     let g_root = governance_root.to_path_buf();
     let w_root = workspace_root.to_path_buf();
