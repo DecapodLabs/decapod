@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.79.0](https://github.com/DecapodLabs/decapod/compare/v0.78.0...v0.79.0) - 2026-07-23
+
+### Added
+
+- add durable intent custody model
+
+### Other
+
+- keep intent custody in root crate
+
 ## [0.78.0](https://github.com/DecapodLabs/decapod/compare/v0.77.0...v0.78.0) - 2026-07-22
 
 ### Added
