@@ -1,11 +1,12 @@
-use clap::Parser;
+//! Selective test planning and execution for the `decapod qa` command.
+
+use crate::core::error::DecapodError;
+use clap::Args;
 use std::collections::HashMap;
 use std::process::{Command, Stdio};
 
-#[derive(Parser, Debug)]
-#[command(name = "selective-test")]
-#[command(about = "Selective test automation: runs tests against changed files only")]
-struct Args {
+#[derive(Args, Debug)]
+pub struct SelectiveTestCli {
     #[arg(help = "Files to test (comma or space separated)")]
     files: Option<String>,
 
@@ -14,6 +15,42 @@ struct Args {
 
     #[arg(long, help = "Run in reflex mode (post-commit hook style)")]
     reflex: bool,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_comma_and_space_separated_paths() {
+        assert_eq!(
+            get_changed_files_from_arg("src/main.rs, tests/cli.rs Cargo.toml"),
+            vec![
+                "src/main.rs".to_string(),
+                "tests/cli.rs".to_string(),
+                "Cargo.toml".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn maps_current_source_layout_to_existing_test_targets() {
+        let mut tests_to_run = HashMap::new();
+        add_tests_for_file("src/decapod/core/todo.rs", &mut tests_to_run);
+        add_tests_for_file("src/decapod/plugins/selective_test.rs", &mut tests_to_run);
+
+        assert!(tests_to_run.contains_key("todo_enforcement"));
+        assert!(tests_to_run.contains_key("todo_rebuild_compat"));
+        assert!(tests_to_run.contains_key("cli_contract_enforcement"));
+        assert!(!tests_to_run.contains_key("plugins_selective_test_tests"));
+    }
+
+    #[test]
+    fn ignores_generated_and_fixture_paths() {
+        assert!(is_ignored_path(".decapod/generated/specs/README.md"));
+        assert!(is_ignored_path("tests/fixtures/repo/file.txt"));
+        assert!(!is_ignored_path("src/decapod/lib.rs"));
+    }
 }
 
 fn get_changed_files() -> Vec<String> {
@@ -28,17 +65,19 @@ fn get_changed_files() -> Vec<String> {
         Some(out) => out
             .lines()
             .filter_map(|line| {
-                let parts: Vec<&str> = line.split_whitespace().collect();
-                if parts.len() >= 2 {
-                    let status = parts[0];
-                    if status
-                        .chars()
-                        .any(|c| matches!(c, 'M' | 'A' | 'D' | 'R' | 'C'))
-                    {
-                        return Some(parts[1].to_string());
-                    }
+                let status = line.get(..2)?;
+                if !status
+                    .chars()
+                    .any(|c| matches!(c, 'M' | 'A' | 'D' | 'R' | 'C' | '?'))
+                {
+                    return None;
                 }
-                None
+                let path = line.get(3..)?.trim();
+                let path = path
+                    .split_once(" -> ")
+                    .map(|(_, destination)| destination)
+                    .unwrap_or(path);
+                (!path.is_empty()).then(|| path.to_string())
             })
             .collect(),
         None => Vec::new(),
@@ -113,6 +152,9 @@ fn add_tests_for_file(file: &str, tests_to_run: &mut HashMap<String, bool>) {
             tests_to_run.insert("init_validate_green_field".to_string(), true);
         }
         "src/decapod/cli.rs" => {
+            tests_to_run.insert("cli_contract_enforcement".to_string(), true);
+        }
+        "src/decapod/plugins/selective_test.rs" => {
             tests_to_run.insert("cli_contract_enforcement".to_string(), true);
         }
         s if s.starts_with("src/decapod/plugins/") => {
@@ -236,6 +278,12 @@ fn run_reflex_mode(changed_files: &[String]) -> bool {
                     failed = true;
                 }
             }
+            "src/decapod/plugins/selective_test.rs" => {
+                println!("Testing: selective-test CLI contracts");
+                if !run_cargo_test("cli_contract_enforcement", "2") {
+                    failed = true;
+                }
+            }
             s if s.starts_with("src/decapod/plugins/") => {
                 if let Some(rest) = s.strip_prefix("src/decapod/plugins/") {
                     let plugin_name = rest.strip_suffix(".rs").unwrap_or(rest);
@@ -285,9 +333,7 @@ fn all_tests() -> Vec<&'static str> {
     ]
 }
 
-fn main() {
-    let args = Args::parse();
-
+pub fn run_selective_test_cli(args: SelectiveTestCli) -> Result<(), DecapodError> {
     let changed_files: Vec<String> = if args.reflex {
         get_changed_files()
     } else if args.all {
@@ -314,12 +360,13 @@ fn main() {
     if args.reflex {
         let failed = run_reflex_mode(&changed_files);
         if failed {
-            println!("✗ Some tests failed");
-            std::process::exit(1);
+            return Err(DecapodError::ValidationError(
+                "Some reflex-selective tests failed".to_string(),
+            ));
         } else {
             println!("✓ All affected tests passed");
         }
-        return;
+        return Ok(());
     }
 
     let mut tests_to_run: HashMap<String, bool> = HashMap::new();
@@ -343,7 +390,8 @@ fn main() {
     }
 
     println!("\n=== Tests to run ===");
-    let targets: Vec<String> = tests_to_run.keys().cloned().collect();
+    let mut targets: Vec<String> = tests_to_run.keys().cloned().collect();
+    targets.sort();
     println!("Target: {}", targets.join(" "));
 
     println!("\n=== Running selective tests ===");
@@ -356,9 +404,11 @@ fn main() {
     }
 
     if failed {
-        println!("\n=== Some selective tests failed ===");
-        std::process::exit(1);
+        Err(DecapodError::ValidationError(
+            "Some selective tests failed".to_string(),
+        ))
     } else {
         println!("\n=== All selective tests passed ===");
+        Ok(())
     }
 }

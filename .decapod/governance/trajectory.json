@@ -1,59 +1,61 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "run_issue991",
-  "intent_id": "intent:run_issue991",
-  "task_id": "bugs_01ky8j73f1h4rg98",
-  "original_intent": "Solve GitHub Issue #991 by restructuring the Rust source tree so src/main.rs is the only root source file.",
-  "derived_intent": "Move the library/runtime hierarchy under src/decapod, repair all build/test/path breaks, and publish the migration.",
-  "destination": "published PR #1005",
+  "run_id": "issue-990-20260723",
+  "intent_id": "intent:issue-990-20260723",
+  "task_id": "bugs_01ky8n4t2314wp63",
+  "original_intent": "Solve GitHub Issue #990 by consolidating the selective_tests crate into the existing Decapod source hierarchy.",
+  "derived_intent": "Move selective test planning and execution into the decapod qa command, remove the standalone Cargo and Bazel targets, align CI selectors, and add CLI coverage.",
+  "destination": "Publish a reviewable GitHub PR linked to Issue #990.",
   "current_phase": "proof",
   "next_transitions": [
-    "review"
+    "proof",
+    "publish"
   ],
   "active_boundaries": [
-    "Cargo.toml,src/**,tests/**,docs/**,root entrypoints,.decapod/generated/Dockerfile,.decapod/generated/specs/**",
-    "src/**"
+    "src/decapod/**,src/bin/selective-test.rs,Cargo.toml,BUILD.bazel,.github/workflows/ci.yml,tests/**,generated governance artifacts"
   ],
   "repo_scope": [
-    "Cargo.toml,src/**,tests/**,docs/**,.decapod/generated/specs/**",
-    "Issue #991 source layout plus Issue #1001 release-bound generated artifacts"
+    "Issue #990 selective test consolidation"
   ],
   "inspected_files": [
-    ".decapod/generated/Dockerfile",
+    ".github/workflows/ci.yml",
+    "BUILD.bazel",
     "Cargo.toml",
-    "src/decapod/core/entrypoint_integrity.rs",
-    "src/decapod/core/scaffold.rs",
-    "src/decapod/plugins/container.rs"
+    "src/bin/selective-test.rs",
+    "src/decapod/cli.rs",
+    "src/decapod/lib.rs",
+    "src/decapod/plugins/mod.rs"
   ],
   "modified_files": [
-    ".decapod/generated/Dockerfile",
-    ".decapod/generated/specs/.manifest.json",
-    "AGENTS.md",
-    "CLAUDE.md",
-    "CODEX.md",
-    "GEMINI.md",
-    "src/decapod/core/entrypoint_integrity.rs"
+    ".github/workflows/ci.yml",
+    "BUILD.bazel",
+    "Cargo.toml",
+    "src/decapod/cli.rs",
+    "src/decapod/core/entrypoint_integrity.rs",
+    "src/decapod/lib.rs",
+    "src/decapod/plugins/mod.rs",
+    "src/decapod/plugins/selective_test.rs",
+    "tests/cli_contract_enforcement.rs"
   ],
   "declared_commands": [
     "cargo check --all-targets",
-    "cargo test --lib core::entrypoint_integrity -- --test-threads=1",
-    "cargo test --test entrypoint_correctness -- --test-threads=1",
-    "decapod rpc --op specs.refresh",
-    "decapod validate --format json",
-    "git diff --check"
+    "cargo fmt --all -- --check",
+    "cargo test --lib plugins::selective_test -- --test-threads=1",
+    "cargo test --test cli_contract_enforcement -- --test-threads=1",
+    "cargo test --test entrypoint_correctness -- --test-threads=1"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "cargo_check",
+      "name": "cli_contract_tests",
       "status": "passed"
     },
     {
-      "name": "decapod_validate",
-      "status": "partial"
+      "name": "compile",
+      "status": "passed"
     },
     {
-      "name": "entrypoint_correctness_tests",
+      "name": "diff_check",
       "status": "passed"
     },
     {
@@ -61,42 +63,41 @@
       "status": "passed"
     },
     {
-      "name": "git_diff_check",
+      "name": "format",
+      "status": "passed"
+    },
+    {
+      "name": "selective_unit_tests",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Decapod 0.80.1 generated fingerprints and Dockerfile header",
-    "Issue #1001 release alignment in this PR",
-    "PR #1005"
+    "Focused tests and all-target compilation passed in the isolated workspace; CLI help exposes qa selective-test and --reflex; generated Decapod artifacts were refreshed by Decapod."
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "Unrelated claimed-but-unverified TODO hooks remain outside this PR scope"
-  ],
-  "completion_claim": "Issue #1001 release-bound Dockerfile, entrypoints, compiled manifest, and specs attestation aligned to Decapod 0.80.1; remaining validation failures are external governance gates.",
-  "proof_status": "partial",
+  "unresolved_assumptions": [],
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "caution"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:67ec89d9eb250508e4797310b4f72c8fb715f0a0237e8acfa47d39444f692d7e",
+  "artifact_hash": "sha256:5c04ee4bd1bbb3e9559cb13832a275e0153c3a111158d398a245af8103e6de1d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:run_issue991": {
-        "id": "intent:run_issue991",
-        "raw_intent": "Solve GitHub Issue #991 by restructuring the Rust source tree so src/main.rs is the only root source file.",
-        "refined_intent": "Move the library/runtime hierarchy under src/decapod, repair all build/test/path breaks, and publish the migration.",
+      "intent:issue-990-20260723": {
+        "id": "intent:issue-990-20260723",
+        "raw_intent": "Solve GitHub Issue #990 by consolidating the selective_tests crate into the existing Decapod source hierarchy.",
+        "refined_intent": "Move selective test planning and execution into the decapod qa command, remove the standalone Cargo and Bazel targets, align CI selectors, and add CLI coverage.",
         "acceptance_criteria": [],
         "constraints": [
-          "Cargo.toml,src/**,tests/**,docs/**,.decapod/generated/specs/**"
+          "Issue #990 selective test consolidation"
         ],
         "assumptions": [],
         "boundaries": [
-          "src/**"
+          "src/decapod/**,src/bin/selective-test.rs,Cargo.toml,BUILD.bazel,.github/workflows/ci.yml,tests/**,generated governance artifacts"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -109,63 +110,64 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:run_issue991",
+        "intent_id": "intent:issue-990-20260723",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:run_issue991",
+        "intent_id": "intent:issue-990-20260723",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:run_issue991",
+        "intent_id": "intent:issue-990-20260723",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run_issue991"
+        "detail": "trajectory:issue-990-20260723"
       }
     ],
     "trajectories": {
-      "run_issue991": {
-        "id": "run_issue991",
-        "intent_id": "intent:run_issue991",
+      "issue-990-20260723": {
+        "id": "issue-990-20260723",
+        "intent_id": "intent:issue-990-20260723",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
             "action": "proof",
-            "command": "decapod validate --format json",
+            "command": "cargo fmt --all -- --check",
             "scope": [
-              "Cargo.toml,src/**,tests/**,docs/**,.decapod/generated/specs/**"
+              "Issue #990 selective test consolidation"
             ],
             "observations": [
+              "src/bin/selective-test.rs",
+              "src/decapod/cli.rs",
+              "src/decapod/lib.rs",
+              "src/decapod/plugins/mod.rs",
+              ".github/workflows/ci.yml",
               "Cargo.toml",
+              "BUILD.bazel",
+              "src/decapod/plugins/selective_test.rs",
+              "src/decapod/cli.rs",
+              "src/decapod/lib.rs",
+              "src/decapod/plugins/mod.rs",
               "src/decapod/core/entrypoint_integrity.rs",
-              "src/decapod/core/scaffold.rs",
-              "src/decapod/plugins/container.rs",
-              ".decapod/generated/Dockerfile",
-              "src/decapod/core/entrypoint_integrity.rs",
-              "AGENTS.md",
-              "CLAUDE.md",
-              "GEMINI.md",
-              "CODEX.md",
-              ".decapod/generated/Dockerfile",
-              ".decapod/generated/specs/.manifest.json",
-              "PR #1005",
-              "Issue #1001 release alignment in this PR",
-              "Decapod 0.80.1 generated fingerprints and Dockerfile header"
+              ".github/workflows/ci.yml",
+              "Cargo.toml",
+              "BUILD.bazel",
+              "tests/cli_contract_enforcement.rs",
+              "Focused tests and all-target compilation passed in the isolated workspace; CLI help exposes qa selective-test and --reflex; generated Decapod artifacts were refreshed by Decapod."
             ],
             "proof_refs": [
-              "decapod_validate",
+              "format",
+              "compile",
+              "selective_unit_tests",
+              "cli_contract_tests",
               "entrypoint_integrity_tests",
-              "entrypoint_correctness_tests",
-              "cargo_check",
-              "git_diff_check"
+              "diff_check"
             ],
-            "validation_findings": [
-              "Unrelated claimed-but-unverified TODO hooks remain outside this PR scope"
-            ],
+            "validation_findings": [],
             "custody_event_id": "event:4"
           }
         ]

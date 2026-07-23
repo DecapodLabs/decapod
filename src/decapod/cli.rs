@@ -6,7 +6,7 @@ use crate::core::{constitution_cli, docs_cli, flight_recorder, obligation, todo,
 use crate::plan_governance;
 use crate::plugins::{
     aptitude, container, cron, decide, doctor, eval, federation, health, internalize, lcm, map_ops,
-    policy, primitives, reflex, verify, workflow,
+    policy, primitives, reflex, selective_test, verify, workflow,
 };
 
 use clap::{Parser, Subcommand};
@@ -1222,6 +1222,9 @@ pub(crate) enum QaCommand {
 
     /// Run gatling regression test across all CLI code paths
     Gatling(crate::plugins::gatling::GatlingCli),
+
+    /// Run only the integration tests affected by changed files.
+    SelectiveTest(selective_test::SelectiveTestCli),
 
     /// Variance-aware evaluation artifacts and promotion gates
     Eval(Box<eval::EvalCli>),

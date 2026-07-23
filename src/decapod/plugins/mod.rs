@@ -19,6 +19,7 @@ pub mod map_ops;
 pub mod policy;
 pub mod primitives;
 pub mod reflex;
+pub mod selective_test;
 pub mod verify;
 pub mod watcher;
 pub mod workflow;

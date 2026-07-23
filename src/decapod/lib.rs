@@ -7354,6 +7354,9 @@ fn run_qa_command(
             all,
         } => run_check(crate_description, commands, all)?,
         QaCommand::Gatling(ref gatling_cli) => plugins::gatling::run_gatling_cli(gatling_cli)?,
+        QaCommand::SelectiveTest(selective_test_cli) => {
+            plugins::selective_test::run_selective_test_cli(selective_test_cli)?;
+        }
         QaCommand::Eval(eval_cli) => {
             eval::run_eval_cli(project_store, *eval_cli)?;
         }

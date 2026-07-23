@@ -172,6 +172,25 @@ fn test_workspace_command_structure() {
 }
 
 #[test]
+fn test_selective_test_command_structure() {
+    let (_tmp, dir) = setup_repo();
+
+    let help = run_decapod(dir, &["qa", "selective-test", "--help"]);
+    assert!(
+        help.status.success(),
+        "qa selective-test help should succeed: {}",
+        String::from_utf8_lossy(&help.stderr)
+    );
+
+    let output = String::from_utf8_lossy(&help.stdout);
+    assert!(
+        output.contains("Run only the integration tests affected by changed files")
+            && output.contains("--reflex"),
+        "qa selective-test should expose its selective and reflex modes: {output}"
+    );
+}
+
+#[test]
 fn test_todo_command_structure() {
     let (_tmp, dir) = setup_repo();
 

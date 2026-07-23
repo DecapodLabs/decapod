@@ -57,7 +57,7 @@ jobs:
           git fetch --no-tags --prune origin "$base_ref"
           changed_files="$(git diff --name-only "origin/$base_ref"...HEAD)"
           echo "$changed_files"
-          if echo "$changed_files" | grep -qE '^src/core/sql/.*\.sql$'; then
+          if echo "$changed_files" | grep -qE '^src/decapod/core/sql/.*\.sql$'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -285,18 +285,18 @@ jobs:
 
           case "${{ matrix.target }}" in
             core)
-              if echo "$CHANGED" | grep -qE 'src/core/(todo|validate|workspace|workunit|obligation|docs|capsule|rpc|migration|gateway)'; then
+              if echo "$CHANGED" | grep -qE 'src/decapod/core/(todo|validate|workspace|workunit|obligation|docs|capsule|rpc|migration|gateway)'; then
                 bazelisk test //:todo_enforcement --test_arg=--test-threads=4
                 bazelisk test //:validate_termination --test_arg=--test-threads=4
                 bazelisk test //:workspace_interlock --test_arg=--test-threads=4
                 bazelisk test //:workunit_cli --test_arg=--test-threads=4
                 bazelisk test //:context_capsule_cli --test_arg=--test-threads=4
-              elif echo "$CHANGED" | grep -qE 'src/core/'; then
+              elif echo "$CHANGED" | grep -qE 'src/decapod/core/'; then
                 bazelisk test //:entrypoint_correctness --test_arg=--test-threads=4
               fi
               ;;
             plugins)
-              if echo "$CHANGED" | grep -qE 'src/plugins/'; then
+              if echo "$CHANGED" | grep -qE 'src/decapod/plugins/'; then
                 bazelisk test //:plugins_todo_tests --test_arg=--test-threads=4
                 bazelisk test //:plugins_policy_tests --test_arg=--test-threads=4
                 bazelisk test //:plugins_health_tests --test_arg=--test-threads=4
@@ -308,7 +308,7 @@ jobs:
               fi
               ;;
             cli)
-              if echo "$CHANGED" | grep -qE 'src/(cli|lib|main)'; then
+              if echo "$CHANGED" | grep -qE 'src/(decapod/(cli|lib)|main)'; then
                 bazelisk test //:cli_contract_enforcement --test_arg=--test-threads=4
                 bazelisk test //:entrypoint_correctness --test_arg=--test-threads=4
                 bazelisk test //:cli_contracts --test_arg=--test-threads=4
