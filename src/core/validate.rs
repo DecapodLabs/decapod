@@ -373,14 +373,81 @@ fn validation_temp_paths() -> &'static Mutex<Vec<PathBuf>> {
 }
 
 pub fn register_validation_temp_path(path: PathBuf) {
-    validation_temp_paths().lock().unwrap().push(path);
+    let mut paths = validation_temp_paths().lock().unwrap();
+    if !paths.iter().any(|registered| registered == &path) {
+        paths.push(path);
+    }
 }
 
-/// Remove only temporary directories registered by this process's validation run.
+fn sanitize_validation_task_id(task_id: &str) -> String {
+    let sanitized: String = task_id
+        .chars()
+        .map(|character| {
+            if character.is_ascii_alphanumeric() || character == '-' || character == '_' {
+                character.to_ascii_lowercase()
+            } else {
+                '-'
+            }
+        })
+        .collect();
+    let sanitized = sanitized.trim_matches('-');
+    if sanitized.is_empty() {
+        "todo-unassigned".to_string()
+    } else {
+        sanitized.to_string()
+    }
+}
+
+fn validation_task_id(workspace_root: &Path) -> String {
+    let explicit = ["DECAPOD_TASK_ID"].iter().find_map(|key| {
+        std::env::var(key)
+            .ok()
+            .filter(|value| !value.trim().is_empty())
+    });
+
+    if let Some(task_id) = explicit {
+        return sanitize_validation_task_id(&task_id);
+    }
+
+    if let Ok(status) = workspace::get_workspace_status(workspace_root) {
+        if let Some(task_id) = workspace::extract_task_ids_from_branch(&status.git.current_branch)
+            .into_iter()
+            .next()
+        {
+            return sanitize_validation_task_id(&task_id);
+        }
+    }
+
+    "todo-unassigned".to_string()
+}
+
+/// Return the task-owned temporary directory for this validation workspace.
+///
+/// The task ID is part of the path by contract. Legacy unscoped `/tmp`
+/// validation directories are intentionally not discovered or mutated.
+pub fn create_validation_temp_path(
+    workspace_root: &Path,
+    kind: &str,
+) -> Result<PathBuf, error::DecapodError> {
+    let task_root = std::env::temp_dir()
+        .join("decapod_validate")
+        .join(validation_task_id(workspace_root));
+    fs::create_dir_all(&task_root).map_err(error::DecapodError::IoError)?;
+    register_validation_temp_path(task_root);
+
+    let path = std::env::temp_dir()
+        .join("decapod_validate")
+        .join(validation_task_id(workspace_root))
+        .join(format!("{kind}_{}", crate::core::ulid::new_ulid()));
+    fs::create_dir_all(&path).map_err(error::DecapodError::IoError)?;
+    Ok(path)
+}
+
+/// Remove only task-owned directories registered by this process's validation run.
 ///
 /// Validation intentionally does not scan or mutate arbitrary `/tmp` entries.
-/// Cleanup is best-effort across every registered path so one stale path cannot
-/// prevent the remaining validation artifacts from being removed.
+/// Callers invoke this only after a green validation result; failed runs retain
+/// their task-scoped artifacts for diagnosis and a later green retry.
 pub fn cleanup_validation_temp_paths() -> Result<u32, error::DecapodError> {
     let paths = std::mem::take(&mut *validation_temp_paths().lock().unwrap());
     let mut cleaned = 0;
@@ -667,14 +734,12 @@ fn fetch_tasks_fingerprint(db_path: &Path) -> Result<String, error::DecapodError
     Ok(serde_json::to_string(&out).unwrap())
 }
 
-fn validate_user_store_blank_slate(ctx: &ValidationContext) -> Result<(), error::DecapodError> {
+fn validate_user_store_blank_slate(
+    ctx: &ValidationContext,
+    working_root: &Path,
+) -> Result<(), error::DecapodError> {
     info("Store: user (blank-slate semantics)");
-    let tmp_root = std::env::temp_dir().join(format!(
-        "decapod_validate_user_{}",
-        crate::core::ulid::new_ulid()
-    ));
-    fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
-    register_validation_temp_path(tmp_root.clone());
+    let tmp_root = create_validation_temp_path(working_root, "user")?;
 
     todo::initialize_todo_db(&tmp_root)?;
     let db_path = tmp_root.join("todo.db");
@@ -694,7 +759,7 @@ fn validate_user_store_blank_slate(ctx: &ValidationContext) -> Result<(), error:
 fn validate_repo_store_dogfood(
     store: &Store,
     ctx: &ValidationContext,
-    _working_root: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Store: repo (dogfood backlog semantics)");
 
@@ -736,12 +801,7 @@ fn validate_repo_store_dogfood(
         );
     }
 
-    let tmp_root = std::env::temp_dir().join(format!(
-        "decapod_validate_repo_{}",
-        crate::core::ulid::new_ulid()
-    ));
-    fs::create_dir_all(&tmp_root).map_err(error::DecapodError::IoError)?;
-    register_validation_temp_path(tmp_root.clone());
+    let tmp_root = create_validation_temp_path(working_root, "repo")?;
     let tmp_db = tmp_root.join("todo.db");
     let _events = todo::rebuild_db_from_events(&events, &tmp_db)?;
 
@@ -6097,12 +6157,12 @@ pub fn run_validation(
     match store.kind {
         StoreKind::User => {
             let start = Instant::now();
-            validate_user_store_blank_slate(&ctx)?;
+            validate_user_store_blank_slate(&ctx, working_root)?;
             let _ = start;
         }
         StoreKind::Repo => {
             let start = Instant::now();
-            validate_repo_store_dogfood(store, &ctx, main_root)?;
+            validate_repo_store_dogfood(store, &ctx, working_root)?;
             let _ = start;
         }
     }

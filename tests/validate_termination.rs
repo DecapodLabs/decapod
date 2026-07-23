@@ -1,7 +1,8 @@
 use rusqlite::Connection;
 use serde_json::Value;
-use std::collections::BTreeSet;
+use std::collections::hash_map::DefaultHasher;
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::Instant;
@@ -12,6 +13,11 @@ fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process
     cmd.current_dir(dir).args(args);
     for (k, v) in envs {
         cmd.env(k, v);
+    }
+    if !envs.iter().any(|(key, _)| *key == "DECAPOD_TASK_ID") {
+        let mut hasher = DefaultHasher::new();
+        dir.hash(&mut hasher);
+        cmd.env("DECAPOD_TASK_ID", format!("test_{:016x}", hasher.finish()));
     }
     cmd.output().expect("run decapod")
 }
@@ -74,15 +80,18 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
     (tmp, dir, password)
 }
 
-fn validation_temp_dirs() -> BTreeSet<PathBuf> {
-    fs::read_dir(std::env::temp_dir())
-        .expect("read system temp directory")
+fn validation_task_dir(task_id: &str) -> PathBuf {
+    std::env::temp_dir().join("decapod_validate").join(task_id)
+}
+
+fn validation_temp_dirs() -> Vec<PathBuf> {
+    let Ok(entries) = fs::read_dir(std::env::temp_dir().join("decapod_validate")) else {
+        return Vec::new();
+    };
+    entries
         .filter_map(|entry| {
             let path = entry.ok()?.path();
-            let name = path.file_name()?.to_string_lossy();
-            (name.starts_with("decapod_validate_repo_")
-                || name.starts_with("decapod_validate_user_"))
-            .then_some(path)
+            path.is_dir().then_some(path)
         })
         .collect()
 }
@@ -90,10 +99,8 @@ fn validation_temp_dirs() -> BTreeSet<PathBuf> {
 #[test]
 fn successful_validation_cleans_only_its_temporary_artifacts() {
     let (_tmp, dir, password) = setup_repo();
-    let unowned = std::env::temp_dir().join(format!(
-        "decapod_validate_user_unowned_{}",
-        std::process::id()
-    ));
+    let unowned =
+        std::env::temp_dir().join(format!("decapod_validate_unowned_{}", std::process::id()));
     fs::create_dir_all(&unowned).expect("create unowned validation-shaped temp directory");
     let validate = run_decapod(
         &dir,
@@ -116,7 +123,7 @@ fn successful_validation_cleans_only_its_temporary_artifacts() {
         payload["report"]["temporary_artifacts_cleaned"]
             .as_u64()
             .unwrap_or_default()
-            >= 2,
+            >= 1,
         "successful validation should report cleanup of its user-store temp dirs: {payload}"
     );
 
@@ -130,6 +137,7 @@ fn successful_validation_cleans_only_its_temporary_artifacts() {
 #[test]
 fn validate_terminates_with_typed_error_under_db_contention() {
     let (_tmp, dir, password) = setup_repo();
+    let task_id = format!("test_validation_cleanup_{}", std::process::id());
     let temp_before = validation_temp_dirs();
     let db_path = dir.join(".decapod").join("data").join("todo.db");
     assert!(db_path.exists(), "todo db should exist before lock test");
@@ -147,6 +155,7 @@ fn validate_terminates_with_typed_error_under_db_contention() {
             ("DECAPOD_SESSION_PASSWORD", &password),
             ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
             ("DECAPOD_VALIDATE_TIMEOUT_SECS", "2"),
+            ("DECAPOD_TASK_ID", &task_id),
         ],
     );
     let elapsed = start.elapsed();
@@ -170,10 +179,32 @@ fn validate_terminates_with_typed_error_under_db_contention() {
     conn.execute_batch("ROLLBACK;").expect("release lock");
 
     let temp_after = validation_temp_dirs();
-    assert_eq!(
-        temp_after.difference(&temp_before).count(),
-        0,
-        "failed validation must clean its owned temporary directories"
+    assert!(
+        temp_after
+            .iter()
+            .filter(|path| !temp_before.contains(path))
+            .all(|path| path == &validation_task_dir(&task_id)),
+        "failed validation must not create an unscoped temporary directory"
+    );
+
+    let green = run_decapod(
+        &dir,
+        &["validate"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+            ("DECAPOD_TASK_ID", &task_id),
+        ],
+    );
+    assert!(
+        green.status.success(),
+        "green validation should remove prior task-scoped artifacts: {}",
+        String::from_utf8_lossy(&green.stderr)
+    );
+    assert!(
+        !validation_task_dir(&task_id).exists(),
+        "green validation should remove the entire todo-scoped directory"
     );
 }
 
