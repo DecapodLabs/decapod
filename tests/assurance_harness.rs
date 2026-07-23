@@ -173,7 +173,7 @@ fn completion_phase_requires_verification_proofs() {
         .evaluate(&AssuranceEvaluateInput {
             op: "complete".to_string(),
             params: serde_json::json!({}),
-            touched_paths: vec!["src/lib.rs".to_string()],
+            touched_paths: vec!["src/decapod/lib.rs".to_string()],
             diff_summary: None,
             session_id: None,
             phase: Some(AssurancePhase::Complete),
@@ -196,7 +196,7 @@ fn protected_branch_or_workspace_state_triggers_workspace_interlock() {
         .evaluate(&AssuranceEvaluateInput {
             op: "build".to_string(),
             params: serde_json::json!({"auth_provider":"oauth"}),
-            touched_paths: vec!["src/lib.rs".to_string()],
+            touched_paths: vec!["src/decapod/lib.rs".to_string()],
             diff_summary: None,
             session_id: None,
             phase: Some(AssurancePhase::Build),

@@ -16,7 +16,7 @@ pub const CLAIMS_SCHEMA_VERSION: &str = "1.0.0";
 pub const CLAIMS_KIND: &str = "research_claims_ledger";
 pub const CLAIMS_SCHEMA_URI: &str =
     "https://decapod.dev/schemas/research-claims-ledger-1.0.0.schema.json";
-const CLAIMS_SCHEMA_DOCUMENT: &str = include_str!("../../assets/claims.schema.json");
+const CLAIMS_SCHEMA_DOCUMENT: &str = include_str!("../../../assets/claims.schema.json");
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]

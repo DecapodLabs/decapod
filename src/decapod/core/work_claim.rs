@@ -184,7 +184,7 @@ mod tests {
             updated_at: "2026-07-22T00:01:00Z".to_string(),
             completed_at: None,
             closed_at: None,
-            dir_path: "src/core/todo.rs".to_string(),
+            dir_path: "src/decapod/core/todo.rs".to_string(),
             scope: "src/**".to_string(),
             parent_task_id: None,
             priority: "medium".to_string(),
@@ -213,7 +213,7 @@ mod tests {
         assert_eq!(claim.status, WorkClaimStatus::Active);
         assert_eq!(claim.agent.as_deref(), Some("agent-a"));
         assert_eq!(claim.trajectory_id.as_deref(), Some("run-1"));
-        assert_eq!(claim.paths, vec!["src/core/todo.rs"]);
+        assert_eq!(claim.paths, vec!["src/decapod/core/todo.rs"]);
         assert_eq!(claim.validation_status, WorkClaimValidationStatus::Missing);
     }
 

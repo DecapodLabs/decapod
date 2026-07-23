@@ -14,7 +14,7 @@ If the global constitution mandates "100% test coverage" but your project allows
 ```markdown
 ### methodology/TESTING
 
-For this repository, we target a minimum of 80% line coverage. Critical paths in `src/core/` still require 100%.
+For this repository, we target a minimum of 80% line coverage. Critical paths in `src/decapod/core/` still require 100%.
 ```
 
 ## When to use Overrides

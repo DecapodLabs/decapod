@@ -310,7 +310,7 @@ fn test_rpc_context_resolve_determinism() {
         "op": "context.resolve",
         "params": {
             "op": "workspace.ensure",
-            "touched_paths": ["src/core/rpc.rs"],
+            "touched_paths": ["src/decapod/core/rpc.rs"],
             "intent_tags": ["security"],
             "limit": 5
         }

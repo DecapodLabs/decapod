@@ -911,8 +911,10 @@ fn test_intent_context_spec_contract_alignment() {
         .expect("run decapod constitution.get");
     assert!(output.status.success(), "constitution.get failed");
     let core_decapod = String::from_utf8_lossy(&output.stdout);
-    let lib_rs = fs::read_to_string(repo_root.join("src/lib.rs")).expect("read src/lib.rs");
-    let cli_rs = fs::read_to_string(repo_root.join("src/cli.rs")).expect("read src/cli.rs");
+    let lib_rs =
+        fs::read_to_string(repo_root.join("src/decapod/lib.rs")).expect("read src/decapod/lib.rs");
+    let cli_rs =
+        fs::read_to_string(repo_root.join("src/decapod/cli.rs")).expect("read src/decapod/cli.rs");
 
     let contract_phrase =
         "turn intent into context, then context into explicit specifications before inference";
@@ -927,7 +929,7 @@ fn test_intent_context_spec_contract_alignment() {
     );
     assert!(
         lib_rs.contains(contract_phrase) || cli_rs.contains(contract_phrase),
-        "src/lib.rs or src/cli.rs CLI about text must state the intent->context->specifications flow"
+        "src/decapod/lib.rs or src/decapod/cli.rs CLI about text must state the intent->context->specifications flow"
     );
 }
 

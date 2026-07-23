@@ -43,9 +43,9 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-// CLI struct definitions have been moved to src/cli.rs
+// CLI struct definitions live with the crate runtime under src/decapod/cli.rs.
 
-// (remaining CLI struct definitions removed — now in src/cli.rs)
+// (remaining CLI struct definitions are kept in src/decapod/cli.rs)
 
 // Process-local session password - eliminates unsafe env::set_var
 static SESSION_P_VAL: OnceLock<String> = OnceLock::new();
@@ -5167,8 +5167,8 @@ fn git_changed_paths(project_root: &Path) -> Vec<String> {
 fn has_schema_or_interface_changes(paths: &[String]) -> bool {
     paths.iter().any(|path| {
         path == "assets/constitution.json"
-            || path == "src/core/schemas.rs"
-            || path == "src/core/rpc.rs"
+            || path == "src/decapod/core/schemas.rs"
+            || path == "src/decapod/core/rpc.rs"
             || path.starts_with("tests/golden/rpc/")
     })
 }
@@ -7237,9 +7237,9 @@ fn deprecation_metadata() -> serde_json::Value {
             },
             {
                 "surface": "module",
-                "path": "src/plugins/heartbeat.rs",
+                "path": "src/decapod/plugins/heartbeat.rs",
                 "status": "deprecated",
-                "replacement": "src/plugins/health.rs"
+                "replacement": "src/decapod/plugins/health.rs"
             }
         ]
     })
@@ -10217,7 +10217,9 @@ fn run_demo_command(cli: DemoCli, project_root: &Path) -> Result<(), error::Deca
             println!("Step 3: Run impact to predict what will happen with changes");
             run_impact_command(
                 ImpactCli {
-                    changed_files: Some("src/core/validate.rs,src/lib.rs".to_string()),
+                    changed_files: Some(
+                        "src/decapod/core/validate.rs,src/decapod/lib.rs".to_string(),
+                    ),
                     format: "json".to_string(),
                     predict: true,
                 },
