@@ -376,21 +376,27 @@ pub fn register_validation_temp_path(path: PathBuf) {
     validation_temp_paths().lock().unwrap().push(path);
 }
 
-/// Remove only temporary directories created by this process's validation run.
+/// Remove only temporary directories registered by this process's validation run.
 ///
 /// Validation intentionally does not scan or mutate arbitrary `/tmp` entries.
-/// Cleanup is invoked by the bounded runner only after every gate passes.
+/// Cleanup is best-effort across every registered path so one stale path cannot
+/// prevent the remaining validation artifacts from being removed.
 pub fn cleanup_validation_temp_paths() -> Result<u32, error::DecapodError> {
     let paths = std::mem::take(&mut *validation_temp_paths().lock().unwrap());
     let mut cleaned = 0;
+    let mut first_error = None;
     for path in paths {
         match fs::remove_dir_all(&path) {
             Ok(()) => cleaned += 1,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-            Err(error) => return Err(error::DecapodError::IoError(error)),
+            Err(error) => {
+                if first_error.is_none() {
+                    first_error = Some(error::DecapodError::IoError(error));
+                }
+            }
         }
     }
-    Ok(cleaned)
+    first_error.map_or(Ok(cleaned), Err)
 }
 
 impl ValidationContext {

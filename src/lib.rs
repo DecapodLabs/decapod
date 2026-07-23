@@ -5648,6 +5648,19 @@ fn run_validate_command(
         auth_gate.check_and_trigger(governance_root)?;
     }
 
+    // Cleanup must also cover setup/healing errors that happen before the
+    // bounded worker starts. The worker and timeout branches handle normal
+    // validation completion; this guard covers every remaining return path.
+    struct ValidationTempCleanupGuard;
+    impl Drop for ValidationTempCleanupGuard {
+        fn drop(&mut self) {
+            if let Err(error) = validate::cleanup_validation_temp_paths() {
+                eprintln!("warning: validation temporary-artifact cleanup failed: {error}");
+            }
+        }
+    }
+    let _temp_cleanup_guard = ValidationTempCleanupGuard;
+
     let store = match validate_cli.store.as_str() {
         "user" => {
             // User store uses a temp directory for blank-slate validation
@@ -5959,7 +5972,8 @@ fn run_validation_bounded(
 ) -> Result<validate::ValidationReport, error::DecapodError> {
     let timeout_secs = validate_timeout_secs();
     let started = std::time::Instant::now();
-    let (tx, rx) = mpsc::channel();
+    let (tx, rx) =
+        mpsc::channel::<(Result<validate::ValidationReport, error::DecapodError>, u32)>();
     let store_cloned = store.clone();
     let g_root = governance_root.to_path_buf();
     let w_root = workspace_root.to_path_buf();
@@ -6000,17 +6014,31 @@ fn run_validation_bounded(
                 false,
             );
         }
-        let _ = tx.send(result);
+        let cleaned = validate::cleanup_validation_temp_paths().unwrap_or_default();
+        let _ = tx.send((result, cleaned));
     });
 
-    let result = match rx.recv_timeout(std::time::Duration::from_secs(timeout_secs)) {
-        Ok(result) => result.map_err(normalize_validate_error),
-        Err(mpsc::RecvTimeoutError::Timeout) => Err(error::DecapodError::ValidationError(format!(
-            "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({timeout_secs}s). Terminated to preserve proof-gate liveness."
-        ))),
-        Err(mpsc::RecvTimeoutError::Disconnected) => Err(error::DecapodError::ValidationError(
-            "VALIDATE_TIMEOUT_OR_LOCK: validate worker disconnected unexpectedly.".to_string(),
-        )),
+    let (result, cleaned) = match rx.recv_timeout(std::time::Duration::from_secs(timeout_secs)) {
+        Ok((result, cleaned)) => (result.map_err(normalize_validate_error), cleaned),
+        Err(mpsc::RecvTimeoutError::Timeout) => {
+            let cleaned = validate::cleanup_validation_temp_paths().unwrap_or_default();
+            (
+                Err(error::DecapodError::ValidationError(format!(
+                    "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({timeout_secs}s). Terminated to preserve proof-gate liveness."
+                ))),
+                cleaned,
+            )
+        }
+        Err(mpsc::RecvTimeoutError::Disconnected) => {
+            let cleaned = validate::cleanup_validation_temp_paths().unwrap_or_default();
+            (
+                Err(error::DecapodError::ValidationError(
+                    "VALIDATE_TIMEOUT_OR_LOCK: validate worker disconnected unexpectedly."
+                        .to_string(),
+                )),
+                cleaned,
+            )
+        }
     };
     let result = result.map_err(|err| {
         attach_validate_diagnostic_if_enabled(
@@ -6021,10 +6049,12 @@ fn run_validation_bounded(
         )
     });
     match result {
-        Ok(mut report) if report.fail_count == 0 => {
-            report.temporary_artifacts_cleaned = validate::cleanup_validation_temp_paths()?;
-            record_validation_proof(workspace_root, &report)?;
-            write_validation_receipt(workspace_root, &report)?;
+        Ok(mut report) => {
+            report.temporary_artifacts_cleaned = cleaned;
+            if report.fail_count == 0 {
+                record_validation_proof(workspace_root, &report)?;
+                write_validation_receipt(workspace_root, &report)?;
+            }
             Ok(report)
         }
         other => other,

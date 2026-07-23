@@ -1,5 +1,6 @@
 use rusqlite::Connection;
 use serde_json::Value;
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -73,6 +74,19 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
     (tmp, dir, password)
 }
 
+fn validation_temp_dirs() -> BTreeSet<PathBuf> {
+    fs::read_dir(std::env::temp_dir())
+        .expect("read system temp directory")
+        .filter_map(|entry| {
+            let path = entry.ok()?.path();
+            let name = path.file_name()?.to_string_lossy();
+            (name.starts_with("decapod_validate_repo_")
+                || name.starts_with("decapod_validate_user_"))
+            .then_some(path)
+        })
+        .collect()
+}
+
 #[test]
 fn successful_validation_cleans_only_its_temporary_artifacts() {
     let (_tmp, dir, password) = setup_repo();
@@ -116,6 +130,7 @@ fn successful_validation_cleans_only_its_temporary_artifacts() {
 #[test]
 fn validate_terminates_with_typed_error_under_db_contention() {
     let (_tmp, dir, password) = setup_repo();
+    let temp_before = validation_temp_dirs();
     let db_path = dir.join(".decapod").join("data").join("todo.db");
     assert!(db_path.exists(), "todo db should exist before lock test");
 
@@ -153,6 +168,13 @@ fn validate_terminates_with_typed_error_under_db_contention() {
     );
 
     conn.execute_batch("ROLLBACK;").expect("release lock");
+
+    let temp_after = validation_temp_dirs();
+    assert_eq!(
+        temp_after.difference(&temp_before).count(),
+        0,
+        "failed validation must clean its owned temporary directories"
+    );
 }
 
 #[test]
