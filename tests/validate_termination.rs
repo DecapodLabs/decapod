@@ -272,6 +272,13 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     assert_eq!(payload["report"]["status"], "ok");
     assert!(payload["report"]["fail_count"].as_u64().unwrap_or(1) == 0);
     assert!(payload["report"]["gate_timings"].is_array());
+    assert!(payload["report"]["parallelism"].as_u64().unwrap_or(0) >= 1);
+    assert!(matches!(
+        payload["report"]["ci_prediction"]["result"].as_str(),
+        Some("pass" | "review")
+    ));
+    assert!(payload["report"]["ci_prediction"]["reasons"].is_array());
+    assert!(payload["report"]["ci_prediction"]["recommendations"].is_array());
     let epoch = &payload["report"]["validation_epoch"];
     assert_eq!(epoch["schema_version"], "1.0.0");
     let epoch_id = epoch["epoch_id"].as_str().expect("epoch_id");
@@ -294,6 +301,14 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     assert_eq!(receipt["kind"], "validation_receipt");
     assert_eq!(receipt["decapod_release"], env!("CARGO_PKG_VERSION"));
     assert_eq!(receipt["status"], "ok");
+    assert!(receipt["warnings"].is_array());
+    assert!(receipt["failures"].is_array());
+    assert!(receipt["gate_timings"].is_array());
+    assert!(receipt["parallelism"].as_u64().unwrap_or(0) >= 1);
+    assert_eq!(
+        receipt["ci_prediction"]["result"],
+        payload["report"]["ci_prediction"]["result"]
+    );
     assert!(
         receipt["receipt_hash"]
             .as_str()

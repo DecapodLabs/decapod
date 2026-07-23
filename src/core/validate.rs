@@ -203,16 +203,20 @@ fn is_decapod_isolated_worktree(_main_root: &Path, repo_root: &Path) -> bool {
     }
 }
 
-/// Spawn a validation gate in a rayon scope with timing and error capture.
+/// Spawn a validation gate in a scoped thread with timing and error capture.
 ///
 /// Replaces ~10 lines of boilerplate per gate with a single invocation.
 macro_rules! gate {
     ($_scope:expr, $timings:expr, $ctx:expr, $name:literal, $body:expr) => {{
-        let start = Instant::now();
-        if let Err(e) = $body {
-            fail(&format!("gate error: {e}"), $ctx);
-        }
-        $timings.lock().unwrap().push(($name, start.elapsed()));
+        let ctx = $ctx;
+        let timings = $timings;
+        $_scope.spawn(move || {
+            let start = Instant::now();
+            if let Err(e) = $body {
+                fail(&format!("gate error: {e}"), ctx);
+            }
+            timings.lock().unwrap().push(($name, start.elapsed()));
+        });
     }};
 }
 
@@ -226,10 +230,18 @@ struct ValidationContext {
     repo_files_cache: Mutex<Vec<(PathBuf, Vec<PathBuf>)>>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ValidationGateTiming {
     pub name: String,
     pub elapsed_ms: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ValidationCiPrediction {
+    pub result: String,
+    pub confidence: String,
+    pub reasons: Vec<String>,
+    pub recommendations: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -245,6 +257,8 @@ pub struct ValidationReport {
     pub drift_findings: Vec<DriftFinding>,
     pub temporary_artifacts_cleaned: u32,
     pub gate_timings: Vec<ValidationGateTiming>,
+    pub parallelism: usize,
+    pub ci_prediction: ValidationCiPrediction,
 }
 
 pub const VALIDATION_RECEIPT_PATH: &str = ".decapod/governance/validation.json";
@@ -266,6 +280,16 @@ pub struct ValidationReceipt {
     pub elapsed_ms: u64,
     pub drift_findings: Vec<DriftFinding>,
     pub temporary_artifacts_cleaned: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub failures: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub warnings: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gate_timings: Option<Vec<ValidationGateTiming>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parallelism: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ci_prediction: Option<ValidationCiPrediction>,
     pub receipt_hash: String,
 }
 
@@ -332,6 +356,11 @@ pub fn build_validation_receipt(
         elapsed_ms: report.elapsed_ms,
         drift_findings: report.drift_findings.clone(),
         temporary_artifacts_cleaned: report.temporary_artifacts_cleaned,
+        failures: Some(report.failures.clone()),
+        warnings: Some(report.warnings.clone()),
+        gate_timings: Some(report.gate_timings.clone()),
+        parallelism: Some(report.parallelism),
+        ci_prediction: Some(report.ci_prediction.clone()),
         receipt_hash: String::new(),
     }
     .with_recomputed_hash()
@@ -6072,10 +6101,16 @@ pub fn run_validation(
         }
     }
 
-    // Run remaining gates in parallel for bounded wall-clock validation time.
+    // Run remaining gates concurrently for bounded wall-clock validation time.
+    // Each gate is independently timed and all shared findings are collected
+    // through the thread-safe validation context. The host's available
+    // parallelism is recorded in the proof report so agents can distinguish a
+    // parallel validation run from a sequential fallback.
+    let parallelism = std::thread::available_parallelism()
+        .map(std::num::NonZeroUsize::get)
+        .unwrap_or(1);
     let timings: Mutex<Vec<(&str, Duration)>> = Mutex::new(Vec::new());
-    {
-        let _s = ();
+    std::thread::scope(|s| {
         let ctx = &ctx;
         let timings = &timings;
         let broker = broker_content.as_deref();
@@ -6461,15 +6496,19 @@ pub fn run_validation(
             "validate_plan_governed_execution_gate",
             validate_plan_governed_execution_gate(store, ctx, main_root)
         );
-    }
+    });
 
     let elapsed = total_start.elapsed();
     let validation_epoch = active_validation_epoch(working_root)?;
     let pass_count = ctx.pass_count.load(Ordering::Relaxed);
     let fail_count = ctx.fail_count.load(Ordering::Relaxed);
     let warn_count = ctx.warn_count.load(Ordering::Relaxed);
-    let fails = ctx.fails.lock().unwrap().clone();
-    let warns = ctx.warns.lock().unwrap().clone();
+    let mut fails = ctx.fails.lock().unwrap().clone();
+    let mut warns = ctx.warns.lock().unwrap().clone();
+    // Gate completion order is intentionally nondeterministic. Sort the
+    // collected messages before exposing them in JSON, receipts, or hashes.
+    fails.sort();
+    warns.sort();
     let mut drift_findings = ctx.drift_findings.lock().unwrap().clone();
     drift_findings.sort_by(|left, right| {
         (
@@ -6489,6 +6528,7 @@ pub fn run_validation(
     });
     let fail_total = (fails.len() as u32).max(fail_count);
     let warn_total = (warns.len() as u32).max(warn_count);
+    let ci_prediction = predict_ci_outcome(fail_total, warn_total, &fails, &warns);
     let mut gate_timings = timings.into_inner().unwrap();
     gate_timings.sort_by_key(|b| std::cmp::Reverse(b.1));
 
@@ -6510,7 +6550,49 @@ pub fn run_validation(
                 elapsed_ms: elapsed.as_millis() as u64,
             })
             .collect(),
+        parallelism,
+        ci_prediction,
     })
+}
+
+pub fn predict_ci_outcome(
+    fail_count: u32,
+    warn_count: u32,
+    failures: &[String],
+    warnings: &[String],
+) -> ValidationCiPrediction {
+    if fail_count > 0 {
+        return ValidationCiPrediction {
+            result: "fail".to_string(),
+            confidence: "high".to_string(),
+            reasons: failures.to_vec(),
+            recommendations: vec![
+                "Resolve the reported validation failures and rerun `decapod validate --format json`."
+                    .to_string(),
+            ],
+        };
+    }
+
+    if warn_count > 0 {
+        return ValidationCiPrediction {
+            result: "review".to_string(),
+            confidence: "medium".to_string(),
+            reasons: warnings.to_vec(),
+            recommendations: vec![
+                "Review the reported validation warnings before relying on the CI result."
+                    .to_string(),
+                "Use `decapod validate -v --format json` to inspect the affected gate output."
+                    .to_string(),
+            ],
+        };
+    }
+
+    ValidationCiPrediction {
+        result: "pass".to_string(),
+        confidence: "high".to_string(),
+        reasons: vec!["All validation gates completed without failures or warnings.".to_string()],
+        recommendations: vec![],
+    }
 }
 
 pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
@@ -6534,6 +6616,13 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
         "  {} {}",
         "epoch".bright_cyan(),
         report.validation_epoch.epoch_id.bright_white()
+    );
+    println!(
+        "  {} workers={} ci_prediction={} confidence={}",
+        "execution".bright_cyan(),
+        report.parallelism,
+        report.ci_prediction.result,
+        report.ci_prediction.confidence
     );
     println!(
         "  {} {}",
@@ -6622,6 +6711,14 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
             "  {} {} hidden; use `-v` for warning details",
             "warnings".bright_yellow().bold(),
             report.warnings.len().to_string().bright_yellow()
+        );
+    }
+
+    if verbose && !report.ci_prediction.recommendations.is_empty() {
+        println!(
+            "  {} {}",
+            "recommendations".bright_blue().bold(),
+            output::preview_messages(&report.ci_prediction.recommendations, 10, 200)
         );
     }
 
@@ -6721,7 +6818,7 @@ fn validate_stale_workspaces(
 mod tests {
     use super::{
         SurfaceKind, ValidationContext, is_allowed_non_code_path, is_decapod_isolated_worktree,
-        is_non_code_path, strip_git_quotes, validate_git_workspace_context,
+        is_non_code_path, predict_ci_outcome, strip_git_quotes, validate_git_workspace_context,
         validate_root_dockerfile_seed_detection,
     };
     use super::{is_protected_git_branch, parse_ahead_behind_counts};
@@ -6826,6 +6923,27 @@ mod tests {
         assert_eq!(parse_ahead_behind_counts("3\t1\n"), Some((3, 1)));
         assert_eq!(parse_ahead_behind_counts("0 12"), Some((0, 12)));
         assert_eq!(parse_ahead_behind_counts("bad 12"), None);
+    }
+
+    #[test]
+    fn ci_prediction_preserves_actionable_validation_signals() {
+        let failures = vec!["gate failed".to_string()];
+        let warnings = vec!["review this warning".to_string()];
+
+        let failed = predict_ci_outcome(1, 1, &failures, &warnings);
+        assert_eq!(failed.result, "fail");
+        assert_eq!(failed.confidence, "high");
+        assert_eq!(failed.reasons, failures);
+        assert!(!failed.recommendations.is_empty());
+
+        let review = predict_ci_outcome(0, 1, &[], &warnings);
+        assert_eq!(review.result, "review");
+        assert_eq!(review.confidence, "medium");
+        assert_eq!(review.reasons, warnings);
+
+        let passing = predict_ci_outcome(0, 0, &[], &[]);
+        assert_eq!(passing.result, "pass");
+        assert_eq!(passing.confidence, "high");
     }
 
     #[test]
