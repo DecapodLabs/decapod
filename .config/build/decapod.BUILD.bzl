@@ -34,8 +34,8 @@ def decapod_targets():
 
     rust_library(
         name = "decapod_lib",
-        srcs = glob(["src/**/*.rs"], exclude = ["src/main.rs", "src/bin/*.rs"]),
-        compile_data = glob(["src/**/*.sql"]) + glob(["assets/schemas/*.schema.json"]),
+        srcs = native.glob(["src/**/*.rs"], exclude = ["src/main.rs", "src/bin/*.rs"]),
+        compile_data = native.glob(["src/**/*.sql"]) + native.glob(["assets/schemas/*.schema.json"]),
         edition = "2024",
         crate_name = "decapod",
         # Keep Bazel's release identity aligned with Cargo.toml instead of
@@ -88,7 +88,7 @@ def decapod_targets():
                 "//:decapod",
                 ".decapod/config.toml",
                 ".decapod/contracts/README_CONTRACTS.json",
-            ] + glob([
+            ] + native.glob([
                 ".decapod/generated/**/*",
                 ".decapod/governance/**/*",
             ]),
@@ -97,7 +97,7 @@ def decapod_targets():
             ] + all_crate_deps(normal = True, normal_dev = True),
             proc_macro_deps = all_crate_deps(proc_macro = True, proc_macro_dev = True),
         )
-        for path in glob(["tests/*.rs"])
+        for path in native.glob(["tests/*.rs"])
     ]
 
     # Automatically generate rust_test targets for plugins integration tests
@@ -118,5 +118,5 @@ def decapod_targets():
             ] + all_crate_deps(normal = True, normal_dev = True),
             proc_macro_deps = all_crate_deps(proc_macro = True, proc_macro_dev = True),
         )
-        for path in glob(["tests/plugins/*.rs"], exclude = ["tests/plugins/mod.rs"])
+        for path in native.glob(["tests/plugins/*.rs"], exclude = ["tests/plugins/mod.rs"])
     ]
