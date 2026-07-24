@@ -155,7 +155,7 @@ impl DriftFinding {
             || finding.surface.contains("workunits")
         {
             DriftClass::Evidence
-        } else if finding.surface.contains("generated/specs") {
+        } else if finding.surface.contains("managed/specs") {
             if finding.expected.contains("config_input_hash") {
                 DriftClass::Configuration
             } else if finding.expected.contains("spec_input_hash") {
@@ -645,7 +645,8 @@ fn validate_embedded_self_contained(
                     || line.contains(".decapod/data/")
                     || line.contains(".decapod/workspaces/")
                     || line.contains(".decapod/generated/")
-                    || line.contains(".decapod/generated/specs/")
+                    || line.contains(".decapod/managed/")
+                    || line.contains(".decapod/managed/specs/")
                     || line.contains(".decapod/generated/policy/")
                     || line.contains(".decapod/policy/")
                     || line.contains(".decapod/config.toml")
@@ -1467,7 +1468,12 @@ fn validate_generated_artifact_whitelist(
     let output = std::process::Command::new("git")
         .arg("-C")
         .arg(working_root)
-        .args(["ls-files", ".decapod/generated", ".decapod/data"])
+        .args([
+            "ls-files",
+            ".decapod/generated",
+            ".decapod/managed",
+            ".decapod/data",
+        ])
         .output();
 
     let output = match output {
@@ -1482,10 +1488,10 @@ fn validate_generated_artifact_whitelist(
     };
 
     let allowed_tracked = [
-        ".decapod/generated/Dockerfile",
+        ".decapod/managed/Dockerfile",
         ".decapod/data/knowledge.promotions.jsonl",
-        ".decapod/generated/specs/.manifest",
-        ".decapod/generated/specs/.manifest.json",
+        ".decapod/managed/specs/.manifest",
+        ".decapod/managed/specs/.manifest.json",
         VALIDATION_RECEIPT_PATH,
     ];
     let mut offenders = Vec::new();
@@ -1495,7 +1501,7 @@ fn validate_generated_artifact_whitelist(
             continue;
         }
         let is_allowed_exact = allowed_tracked.iter().any(|allowed| allowed == &path);
-        let is_allowed_specs_md = path.starts_with(".decapod/generated/specs/")
+        let is_allowed_specs_md = path.starts_with(".decapod/managed/specs/")
             && path.ends_with(".md")
             && !path.contains("/../");
         if !is_allowed_exact && !is_allowed_specs_md {
@@ -1823,7 +1829,7 @@ fn validate_project_specs_docs(
     let specs_dir = repo_root.join(LOCAL_PROJECT_SPECS_DIR);
     if !specs_dir.exists() {
         warn(
-            "Project specs directory missing (.decapod/generated/specs/). Run `decapod init --force` to scaffold intent/architecture docs.",
+            "Project specs directory missing (.decapod/managed/specs/). Run `decapod init --force` to scaffold intent/architecture docs.",
             ctx,
         );
         return Ok(());
@@ -1856,7 +1862,7 @@ fn validate_project_specs_docs(
     if manifest.is_none() {
         warn(
             &format!(
-                "TASK: Project specs manifest missing at {}. Run `decapod init --force` to generate scaffold metadata, then hydrate `.decapod/generated/specs/*.md`.",
+                "TASK: Project specs manifest missing at {}. Run `decapod init --force` to generate scaffold metadata, then hydrate `.decapod/managed/specs/*.md`.",
                 manifest_path.display()
             ),
             ctx,
@@ -1915,7 +1921,7 @@ fn validate_project_specs_docs(
             );
         } else {
             fail(
-                "OUT_OF_SYNC_ENTRYPOINTS: Generated agent entrypoint hashes differ from .decapod/generated/specs/.manifest.json. Regenerate the governed entrypoints and refresh specs.",
+                "OUT_OF_SYNC_ENTRYPOINTS: Generated agent entrypoint hashes differ from .decapod/managed/specs/.manifest.json. Regenerate the governed entrypoints and refresh specs.",
                 ctx,
             );
         }
@@ -4259,7 +4265,7 @@ fn is_allowed_non_code_path(path: &str) -> bool {
         || path.ends_with(".md")
         || path == ".decapod/config.toml"
         || path == ".decapod/OVERRIDE.md"
-        || path.starts_with(".decapod/generated/specs/")
+        || path.starts_with(".decapod/managed/specs/")
         || path.starts_with(".decapod/generated/artifacts/")
         || path.starts_with(".decapod/contracts/")
 }
@@ -4431,7 +4437,7 @@ fn validate_projection_consistency(
     let mut findings = Vec::new();
 
     let config_path = main_root.join(".decapod").join("config.toml");
-    let specs_dir = main_root.join(".decapod").join("generated").join("specs");
+    let specs_dir = main_root.join(".decapod").join("managed").join("specs");
     let manifest_path = specs_dir.join(".manifest.json");
     let todo_db = main_root.join(".decapod").join("data").join("todo.db");
     let todo_events = main_root
@@ -4535,7 +4541,7 @@ fn validate_projection_consistency(
 
     if !specs_dir.exists() {
         findings.push(ProjectionFinding {
-            surface: ".decapod/generated/specs/".to_string(),
+            surface: ".decapod/managed/specs/".to_string(),
             kind: SurfaceKind::Projection,
             expected:
                 "specs directory must exist with INTENT.md, ARCHITECTURE.md, INTERFACES.md, etc."
@@ -4554,7 +4560,7 @@ fn validate_projection_consistency(
             let spec_path = specs_dir.join(spec_file);
             if !spec_path.exists() {
                 findings.push(ProjectionFinding {
-                    surface: format!(".decapod/generated/specs/{spec_file}"),
+                    surface: format!(".decapod/managed/specs/{spec_file}"),
                     kind: SurfaceKind::Projection,
                     expected: format!("{spec_file} must exist as {role} projection"),
                     observed: "MISSING".to_string(),
@@ -4577,7 +4583,7 @@ fn validate_projection_consistency(
             let current_fp = crate::core::project_specs::repo_signal_fingerprint(main_root)?;
             if repo_fp != current_fp {
                 findings.push(ProjectionFinding {
-                    surface: ".decapod/generated/specs/.manifest.json".to_string(),
+                    surface: ".decapod/managed/specs/.manifest.json".to_string(),
                     kind: SurfaceKind::Projection,
                     expected: format!("repo_signal_fingerprint should match current codebase ({current_fp})"),
                     observed: format!("stale fingerprint: {repo_fp}"),
@@ -4594,14 +4600,14 @@ fn validate_projection_consistency(
             match manifest.get(field).and_then(|v| v.as_str()) {
                 Some(actual) if actual == expected => {}
                 Some(actual) => findings.push(ProjectionFinding {
-                    surface: ".decapod/generated/specs/.manifest.json".to_string(),
+                    surface: ".decapod/managed/specs/.manifest.json".to_string(),
                     kind: SurfaceKind::Authority,
                     expected: format!("{field}={expected}"),
                     observed: format!("{field}={actual}"),
                     remediation: "Refresh the living specs manifest from the canonical config and specs inputs".to_string(),
                 }),
                 None => findings.push(ProjectionFinding {
-                    surface: ".decapod/generated/specs/.manifest.json".to_string(),
+                    surface: ".decapod/managed/specs/.manifest.json".to_string(),
                     kind: SurfaceKind::Authority,
                     expected: format!("{field} must be present"),
                     observed: "missing".to_string(),
@@ -4620,7 +4626,7 @@ fn validate_projection_consistency(
             });
         if manifest_capabilities.as_ref() != Some(&declared_capabilities) {
             findings.push(ProjectionFinding {
-                surface: ".decapod/generated/specs/.manifest.json".to_string(),
+                surface: ".decapod/managed/specs/.manifest.json".to_string(),
                 kind: SurfaceKind::Authority,
                 expected: format!("declared_capabilities={declared_capabilities:?}"),
                 observed: format!("declared_capabilities={manifest_capabilities:?}"),
@@ -4642,7 +4648,7 @@ fn validate_projection_consistency(
                     let current_hash = crate::core::project_specs::hash_text(&body);
                     if current_hash != content_hash {
                         findings.push(ProjectionFinding {
-                            surface: format!(".decapod/generated/specs/{path}"),
+                            surface: format!(".decapod/managed/specs/{path}"),
                             kind: SurfaceKind::Projection,
                             expected: format!("content hash {content_hash}"),
                             observed: format!("divergent hash {current_hash}"),
@@ -4656,7 +4662,7 @@ fn validate_projection_consistency(
         }
     } else if specs_dir.exists() {
         findings.push(ProjectionFinding {
-            surface: ".decapod/generated/specs/.manifest.json".to_string(),
+            surface: ".decapod/managed/specs/.manifest.json".to_string(),
             kind: SurfaceKind::Projection,
             expected: "specs manifest must exist when specs directory exists".to_string(),
             observed: "MISSING".to_string(),
@@ -5714,7 +5720,7 @@ fn validate_root_dockerfile_seed_detection(
     let content = fs::read_to_string(&dockerfile_path).map_err(error::DecapodError::IoError)?;
     if crate::core::mentor::is_decapod_workspace_dockerfile(&content) {
         fail(
-            "Root Dockerfile contains Decapod workspace image markers. `.decapod/generated/Dockerfile` is Decapod's internal workspace container; the root Dockerfile must package the project application or microservice according to human intent. Remove `org.decapod.managed=\"workspace\"` and `ARG DECAPOD_IMAGE=` from the root Dockerfile or move workspace-container configuration under `.decapod/generated/Dockerfile`.",
+            "Root Dockerfile contains Decapod workspace image markers. `.decapod/managed/Dockerfile` is Decapod's internal workspace container; the root Dockerfile must package the project application or microservice according to human intent. Remove `org.decapod.managed=\"workspace\"` and `ARG DECAPOD_IMAGE=` from the root Dockerfile or move workspace-container configuration under `.decapod/managed/Dockerfile`.",
             ctx,
         );
     } else {

@@ -170,7 +170,7 @@ fn generated_workspace_dockerfile_includes_decapod_and_rust_when_needed() {
         go: false,
     });
     assert!(content.contains(&format!(
-        "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}",
+        "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}-debian",
         env!("CARGO_PKG_VERSION")
     )));
     assert!(content.contains("FROM $DECAPOD_IMAGE"));
@@ -229,14 +229,14 @@ fn generated_profile_stages_current_decapod_binary() {
     let dockerfile = prepare_generated_container_profile(&root).expect("prepare profile");
     assert_eq!(
         dockerfile,
-        root.join(".decapod").join("generated").join("Dockerfile")
+        root.join(".decapod").join("managed").join("Dockerfile")
     );
     assert!(
         root.join(".decapod")
             .join("generated")
             .join("decapod")
             .exists(),
-        "current decapod binary should be staged into the generated build context"
+        "current decapod binary should be staged into the ignored generated build context"
     );
     let content = fs::read_to_string(dockerfile).expect("read Dockerfile");
     assert!(content.contains("COPY .decapod/generated/decapod /usr/local/bin/decapod.local"));
@@ -306,7 +306,7 @@ fn local_generated_image_builds_generated_dockerfile_from_repo_context() {
     assert!(args.contains("build\n"));
     assert!(args.contains(&format!(
             "{}\n",
-            root.join(".decapod").join("generated").join("Dockerfile").display()
+            root.join(".decapod").join("managed").join("Dockerfile").display()
         )));
     assert!(
         args.ends_with(&format!("{}\n", root.display())),
@@ -355,7 +355,7 @@ fn container_schema_includes_dockerfile_template_component() {
         .expect("dockerfile_template component exists");
     assert_eq!(
         component.get("path").and_then(|v| v.as_str()),
-        Some(".decapod/generated/Dockerfile")
+        Some(".decapod/managed/Dockerfile")
     );
     assert_eq!(
         component.get("extra_packages_env").and_then(|v| v.as_str()),

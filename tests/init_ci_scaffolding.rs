@@ -71,7 +71,7 @@ fn init_force_preserves_existing_living_specs() {
     let out = run_decapod(tmp.path(), &["init", "--proof"]);
     assert!(out.status.success(), "initial init should succeed");
 
-    let specs_path = tmp.path().join(".decapod/generated/specs/README.md");
+    let specs_path = tmp.path().join(".decapod/managed/specs/README.md");
     let mut authored = fs::read_to_string(&specs_path).expect("read generated README");
     authored.push_str("\nProject-authored contract.\n");
     fs::write(&specs_path, &authored).expect("write authored README");

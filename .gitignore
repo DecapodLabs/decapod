@@ -45,13 +45,15 @@ dev/
 .decapod/generated/context/
 .decapod/generated/policy/
 .decapod/generated/artifacts/
-# Keep only the deterministic container build baseline and living specs tracked.
+.decapod/managed/*
+# Keep only the deterministic managed container build baseline and living specs tracked.
 !.decapod/data/
 !.decapod/data/knowledge.promotions.jsonl
-!.decapod/generated/Dockerfile
-!.decapod/generated/specs/
-!.decapod/generated/specs/*.md
-!.decapod/generated/specs/.manifest.json
+!.decapod/managed/
+!.decapod/managed/Dockerfile
+!.decapod/managed/specs/
+!.decapod/managed/specs/*.md
+!.decapod/managed/specs/.manifest.json
 # Durable governance cookies under `.decapod/governance/` are tracked; workunit
 # manifests remain ignored current-run execution state.
 .decapod/governance/workunits/

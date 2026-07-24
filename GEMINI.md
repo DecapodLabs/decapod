@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.81.1 -->
-<!-- decapod-fingerprint: 6094863e339c256d9e8c397490ad7aa7ee288cb481cdd31ec896b1e888d9c1f4 -->
+<!-- decapod-fingerprint: 74b4350ce1a2fee2971a6a724b518e4abd20f7f20afb864b212b61964130788f -->
 # GEMINI.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -61,7 +61,7 @@ decapod data schema --deterministic
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`. Reference `docs/PLAYBOOK`, capabilities, or context.scope RPC.
 
-Treat `.decapod/generated/specs/*` as living documents. Adjust specs as intent and code change over time.
+Treat `.decapod/managed/specs/*` as living documents. Adjust specs as intent and code change over time.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors

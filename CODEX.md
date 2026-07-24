@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.81.1 -->
-<!-- decapod-fingerprint: ee5856646090ab7c52d19f13a4e72600ffccf18680e83b059a592d4dfcf7770e -->
+<!-- decapod-fingerprint: 553aa21798c379cf9b44e2d6e3c060c750d058e0e12434cda54ce6cf651018dc -->
 # CODEX.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -61,7 +61,7 @@ decapod data schema --deterministic
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`. Reference `docs/PLAYBOOK`, capabilities, or context.scope RPC.
 
-Treat `.decapod/generated/specs/*` as living documents. Adjust specs as intent and code change over time.
+Treat `.decapod/managed/specs/*` as living documents. Adjust specs as intent and code change over time.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors

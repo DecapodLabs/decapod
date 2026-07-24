@@ -34,9 +34,10 @@ pub struct OrientationPacket {
 
 /// The plan context agents must see before selecting an implementation path.
 ///
-/// This is deliberately read-only: early inference reports the current plan
-/// state and its unresolved custody, but plan mutation remains an explicit
-/// `decapod govern plan` operation.
+/// The plan is the durable sketchpad for ideation and human-intent convergence:
+/// early inference reports its intent, state, task binding, open questions, and
+/// proof hooks. Plan mutation remains an explicit `decapod govern plan`
+/// operation so agents cannot silently rewrite the human-facing contract.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct GovernedPlanContext {
     pub status: String,

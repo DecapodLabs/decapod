@@ -300,7 +300,7 @@ fn validate_timeout_does_not_strand_db_for_followup_commands() {
 #[test]
 fn validate_json_reports_self_heal_and_structured_summary() {
     let (_tmp, dir, password) = setup_repo();
-    let dockerfile_path = dir.join(".decapod/generated/Dockerfile");
+    let dockerfile_path = dir.join(".decapod/managed/Dockerfile");
     fs::write(&dockerfile_path, "FROM rust:1.91.1-alpine\n").expect("write stale Dockerfile");
 
     let validate = run_decapod(
@@ -428,7 +428,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     let mutated = dockerfile_content
         .replace(
             &format!(
-                "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}",
+                "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}-debian",
                 env!("CARGO_PKG_VERSION")
             ),
             "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.0.0",
@@ -457,7 +457,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     );
     let maintained = fs::read_to_string(&dockerfile_path).expect("read maintained Dockerfile");
     assert!(maintained.contains(&format!(
-        "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}",
+        "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}-debian",
         env!("CARGO_PKG_VERSION")
     )));
     assert!(maintained.contains(&format!(

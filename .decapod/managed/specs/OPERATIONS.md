@@ -208,8 +208,7 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - **Secure Storage**: No secrets in config.toml; session passwords in env only; event logs append-only
 - **Defense in Depth**: Validation gates + capability gating + workspace isolation + session auth + audit trail
 
-<!-- decapod:codebase-attestation:start -->
-## Codebase Attestation
+<!-- decapod:codebase-attestation:start -->## Codebase Attestation
 
 - Repository signal fingerprint: `f19d90de9104ef2d226632fbe5f050f5ffbd0dce4f2ad293e9065375f4c259a2`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)

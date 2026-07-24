@@ -19,7 +19,7 @@ Decapod structures agent work into a predictable, machine-readable lifecycle:
 AI models are sensitive to context pollution. Decapod's **Context Capsules** ensure that every agent sees exactly what it needs, and nothing more. This reduces hallucinations and token waste.
 
 ### 2. Living Specifications
-Agents should not just "write code"; they should maintain intent. Decapod promotes the use of "Living Specs" (`.decapod/generated/specs/*`) which are synchronized with both the code and the agent's internal state (see [Explicit Intent](intent.md)).
+Agents should not just "write code"; they should maintain intent. Decapod promotes the use of "Living Specs" (`.decapod/managed/specs/*`) which are synchronized with both the code and the agent's internal state (see [Explicit Intent](intent.md)).
 
 ### 3. Aptitude & Memory
 Shared memory allows agents to learn from each other. If one agent discovers an obscure bug in a library, it can record that observation in Aptitude, which subsequent agents will automatically retrieve during context resolution.

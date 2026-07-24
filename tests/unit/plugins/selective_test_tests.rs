@@ -27,7 +27,7 @@ fn maps_current_source_layout_to_existing_test_targets() {
 
 #[test]
 fn ignores_generated_and_fixture_paths() {
-    assert!(is_ignored_path(".decapod/generated/specs/README.md"));
+    assert!(is_ignored_path(".decapod/managed/specs/README.md"));
     assert!(is_ignored_path("tests/fixtures/repo/file.txt"));
     assert!(!is_ignored_path("src/decapod/lib.rs"));
 }

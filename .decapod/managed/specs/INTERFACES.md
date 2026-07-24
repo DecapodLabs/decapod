@@ -225,7 +225,7 @@ Response envelope (`RpcResponse`):
 | `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | `qa verify completion <ID> --write` | Completion verifier, promotion review |
 | `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | `qa verify completion <ID> --import` | Structural inspection and receiver-local decision |
 | `.decapod/generated/policy/context_capsule_policy.json` | `init` / scaffold | Current-run capsule query resolution; ignored by Git |
-| `.decapod/generated/specs/*.md` | `init --force` / `rpc specs.refresh` | Validation, agents |
+| `.decapod/managed/specs/*.md` | `init --force` / `rpc specs.refresh` | Validation, agents |
 | `.decapod/generated/artifacts/provenance/*.json` | `workspace publish` / `validate` | Current-run diagnostics/evidence; ignored by Git |
 | `.decapod/governance/trajectory.json` | `govern trajectory` / `validate` | Tracked current-run custody and proof review; historical states are recovered from Git |
 | `.decapod/governance/validation.json` | `validate` | Tracked current successful validation receipt; overwritten per commit and historically recoverable from Git |
@@ -327,7 +327,7 @@ AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_TODO_CLAIM_CONFLICT severity=tran
 {
   "task_id": "feat_01...",
   "intent_ref": "Add OAuth2",
-  "spec_refs": [".decapod/generated/specs/INTERFACES.md"],
+  "spec_refs": [".decapod/managed/specs/INTERFACES.md"],
   "state_refs": [".decapod/generated/context/feat_01....json"],
   "proof_plan": ["cargo test", "decapod validate"],
   "proof_results": [{ "gate": "cargo test", "status": "pass", "artifact_ref": "..." }],

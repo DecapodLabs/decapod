@@ -57,7 +57,7 @@ fn scaffold_specs_are_fresh_project_only() {
         "schema_version = \"1.0.0\"\n\n[init]\nspecs = true\ndiagram_style = \"mermaid\"\nentrypoints = []\n\n[repo]\nproduct_name = \"fixture\"\n",
     )
     .expect("write project config");
-    fs::create_dir_all(root.join(".decapod/generated/specs")).expect("create specs dir");
+    fs::create_dir_all(root.join(".decapod/managed/specs")).expect("create specs dir");
 
     let initial_seed = SpecsSeed {
         product_name: Some("old-product".to_string()),
@@ -72,7 +72,7 @@ fn scaffold_specs_are_fresh_project_only() {
     refresh_project_specs(root, DiagramStyle::Mermaid, Some(&initial_seed))
         .expect("initial refresh");
 
-    let intent_path = root.join(".decapod/generated/specs/INTENT.md");
+    let intent_path = root.join(".decapod/managed/specs/INTENT.md");
     fs::write(
         &intent_path,
         "# Intent\n\n## Product Outcome\nStale generated product claim.\n",
@@ -743,7 +743,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must enforce generated wildcard ignore in .gitignore"
     );
     assert!(
-        gitignore.contains("!.decapod/generated/Dockerfile"),
+        gitignore.contains("!.decapod/managed/Dockerfile"),
         "decapod init must allowlist generated Dockerfile in .gitignore"
     );
     assert!(
@@ -767,7 +767,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must keep workunit manifests in ignored current-run state"
     );
     assert!(
-        gitignore.contains("!.decapod/generated/specs/*.md"),
+        gitignore.contains("!.decapod/managed/specs/*.md"),
         "decapod init must allowlist generated project specs artifacts in .gitignore"
     );
     assert!(
@@ -804,10 +804,10 @@ fn scaffold_store_and_docs_cli_behaviors() {
         .expect("git check-ignore runtime data");
     assert!(ignored.success(), "fresh runtime data must be ignored");
 
-    let generated_dockerfile = live_target.join(".decapod/generated/Dockerfile");
+    let generated_dockerfile = live_target.join(".decapod/managed/Dockerfile");
     assert!(
         generated_dockerfile.exists(),
-        "decapod init must generate .decapod/generated/Dockerfile"
+        "decapod init must generate .decapod/managed/Dockerfile"
     );
     let dockerfile_content = fs::read_to_string(&generated_dockerfile).expect("read Dockerfile");
     assert!(
@@ -816,31 +816,31 @@ fn scaffold_store_and_docs_cli_behaviors() {
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/ARCHITECTURE.md")
+            .join(".decapod/managed/specs/ARCHITECTURE.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/ARCHITECTURE.md"
+        "decapod init must scaffold .decapod/managed/specs/ARCHITECTURE.md"
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/INTENT.md")
+            .join(".decapod/managed/specs/INTENT.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/INTENT.md"
+        "decapod init must scaffold .decapod/managed/specs/INTENT.md"
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/INTERFACES.md")
+            .join(".decapod/managed/specs/INTERFACES.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/INTERFACES.md"
+        "decapod init must scaffold .decapod/managed/specs/INTERFACES.md"
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/VALIDATION.md")
+            .join(".decapod/managed/specs/VALIDATION.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/VALIDATION.md"
+        "decapod init must scaffold .decapod/managed/specs/VALIDATION.md"
     );
     let architecture =
-        fs::read_to_string(live_target.join(".decapod/generated/specs/ARCHITECTURE.md"))
-            .expect("read .decapod/generated/specs/ARCHITECTURE.md");
+        fs::read_to_string(live_target.join(".decapod/managed/specs/ARCHITECTURE.md"))
+            .expect("read .decapod/managed/specs/ARCHITECTURE.md");
     assert!(
         architecture.contains("```text"),
         "default diagram style should scaffold ascii topology block"
@@ -875,7 +875,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
     };
     scaffold_project_entrypoints(&force_opts).expect("force scaffold");
 
-    let intent_path = live_target.join(".decapod/generated/specs/INTENT.md");
+    let intent_path = live_target.join(".decapod/managed/specs/INTENT.md");
     let mut authored_intent = fs::read_to_string(&intent_path).expect("read generated intent");
     authored_intent.push_str("\n## Human Decision\n\nPreserve this authored contract.\n");
     fs::write(&intent_path, authored_intent).expect("author intent");
@@ -904,7 +904,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
     };
     scaffold_project_entrypoints(&mermaid_opts).expect("mermaid scaffold");
     let mermaid_arch =
-        fs::read_to_string(mermaid_target.join(".decapod/generated/specs/ARCHITECTURE.md"))
+        fs::read_to_string(mermaid_target.join(".decapod/managed/specs/ARCHITECTURE.md"))
             .expect("read mermaid architecture");
     assert!(
         mermaid_arch.contains("```mermaid"),
@@ -991,24 +991,24 @@ fn schemas_errors_and_validate_entrypoint_are_exercised() {
     assert!(matches!(from_sqlite, DecapodError::RusqliteError(_)));
 
     let repo = tempdir().expect("tempdir");
-    fs::create_dir_all(repo.path().join(".decapod/generated/specs")).expect("mkdir specs");
+    fs::create_dir_all(repo.path().join(".decapod/managed/specs")).expect("mkdir specs");
     fs::write(repo.path().join("AGENTS.md"), "entrypoint\n").expect("write agents");
     fs::write(repo.path().join("CLAUDE.md"), "entrypoint\n").expect("write claude");
     fs::write(repo.path().join("GEMINI.md"), "entrypoint\n").expect("write gemini");
     fs::create_dir_all(repo.path().join(".decapod")).expect("mkdir .decapod");
     fs::write(repo.path().join(".decapod/README.md"), "decapod readme\n").expect("write readme");
     fs::write(
-        repo.path().join(".decapod/generated/specs/INTENT.md"),
+        repo.path().join(".decapod/managed/specs/INTENT.md"),
         "**Version:** 0.0.1\n",
     )
     .expect("write intent");
     fs::write(
-        repo.path().join(".decapod/generated/specs/ARCHITECTURE.md"),
+        repo.path().join(".decapod/managed/specs/ARCHITECTURE.md"),
         "architecture\n",
     )
     .expect("write architecture");
     fs::write(
-        repo.path().join(".decapod/generated/specs/SYSTEM.md"),
+        repo.path().join(".decapod/managed/specs/SYSTEM.md"),
         "system\n",
     )
     .expect("write system");

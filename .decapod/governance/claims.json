@@ -450,13 +450,14 @@
         ]
       },
       "decapod_condition": {
-        "description": "Require bounded validation to pass and bind a tracked trajectory artifact and validation receipt to every successful validation completion and publication flow.",
+        "description": "Load the governed plan as the pre-inference intent sketchpad, require bounded validation to pass, and bind the detailed claims ledger, trajectory artifact, and validation receipt to every successful validation completion and publication flow.",
         "population": "The same repository-task population as the baseline.",
         "unit_of_analysis": "repository_task",
         "protocol": [
           "Run bounded decapod validation before completion.",
+          "Load the approved plan before inference and record unresolved intent questions as convergence gates rather than silently selecting a solution.",
           "Record a trajectory validation check and a hash-bound validation receipt.",
-          "Require both governance artifacts to be present and tracked at publication."
+          "Require the approved plan, claims ledger, trajectory, and validation receipt to be present and tracked at publication."
         ],
         "controls": [
           "Use the same task population, model, repository snapshot, and independent reviewer.",
@@ -471,10 +472,10 @@
       "failure_modes": [
         {
           "id": "missing-proof-accepted",
-          "description": "A completion is accepted without both durable governance artifacts.",
-          "observable_signal": "The validation receipt or trajectory is missing, untracked, stale, or not bound to the same run and hash.",
+          "description": "A completion is accepted without the four durable governance artifacts.",
+          "observable_signal": "The plan, claims ledger, validation receipt, or trajectory is missing, untracked, stale, or not bound to the governed publication.",
           "severity": "critical",
-          "falsifier": "A publication path accepts a successful validation completion without the required artifact pair."
+          "falsifier": "A publication path accepts a successful validation completion without any one of the required four artifacts, or inference proceeds without exposing the governed plan's unresolved intent state."
         },
         {
           "id": "false-done-unchanged",
@@ -500,7 +501,7 @@
         {
           "id": "proof-artifact-completeness",
           "name": "Proof artifact completeness",
-          "definition": "Fraction of successful validation completions with a valid, tracked trajectory and validation receipt pair.",
+          "definition": "Fraction of successful validation completions with valid, tracked plan, claims ledger, trajectory, and validation receipt artifacts.",
           "unit": "ratio",
           "scale": "ratio",
           "aggregation": "rate",
@@ -517,6 +518,13 @@
       "proof_gate": {
         "id": "validation-proof-gate",
         "required_artifacts": [
+          {
+            "path": ".decapod/governance/plan.json",
+            "kind": "schema",
+            "required": true,
+            "integrity": "schema",
+            "relationship": "binds the validation output to the governed execution intent"
+          },
           {
             "path": ".decapod/governance/trajectory.json",
             "kind": "trajectory",

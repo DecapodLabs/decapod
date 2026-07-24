@@ -55,8 +55,13 @@ fn release_workflow_publishes_decapod_ghcr_image() {
         "release workflow should not retain SHA or floating workspace image tags"
     );
     assert!(
-        workflow.contains("tag_suffix: \"\"") && workflow.contains("tag_suffix: \"-alpine\""),
-        "release workflow should publish glibc and alpine Decapod workspace image variants"
+        workflow.contains("tag_suffix: \"-debian\"")
+            && workflow.contains("tag_suffix: \"-alpine\""),
+        "release workflow should publish debian/glibc and alpine/musl Decapod workspace image variants"
+    );
+    assert!(
+        !workflow.contains("tag_suffix: \"-bookworm\""),
+        "the public glibc tag should remain distro-family based; bookworm is an implementation base"
     );
     assert!(
         workflow.contains("file: assets/Dockerfile.workspace"),

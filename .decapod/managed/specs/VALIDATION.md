@@ -15,14 +15,14 @@ Decapod keeps generated specs synchronized at governance pressure points. When r
 ### Refresh-Capable Paths
 - `decapod validate --refresh-specs`
 - `decapod rpc --op specs.refresh`
-- Initialization/scaffold refresh paths that regenerate `.decapod/generated/specs/*.md`
+- Initialization/scaffold refresh paths that regenerate `.decapod/managed/specs/*.md`
 
 ### Refresh Output Requirements
 - Preserve hand-maintained epistemic custody fields where possible
 - Blend repo context into existing canonical spec files
-- Update `.decapod/generated/specs/.manifest.json` after writing files
+- Update `.decapod/managed/specs/.manifest.json` after writing files
 - Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set## Release-Bound Agent Entrypoint Integrity
-The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and compiled binary SHA-256; `.decapod/generated/specs/.manifest.json` records the same release identity plus `template_hash` and `content_hash` entries for `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md`. Default validation independently checks the compiled release contract, declared metadata, canonical payload, regular-file type, and manifest synchronization. Regeneration must be explicit through the installed Decapod release.## Validation Decision Tree
+The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and compiled binary SHA-256; `.decapod/managed/specs/.manifest.json` records the same release identity plus `template_hash` and `content_hash` entries for `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md`. Default validation independently checks the compiled release contract, declared metadata, canonical payload, regular-file type, and manifest synchronization. Regeneration must be explicit through the installed Decapod release.## Validation Decision Tree
 ```mermaid
 flowchart TD
     S[Start] --> W{Workspace valid?}
@@ -198,10 +198,10 @@ No `.db` or `.jsonl` files outside `.decapod/` in project root
 | Tracked files in `.decapod/generated/` / `.decapod/data/` match whitelist | Fail |
 
 Whitelisted tracked paths:
-- `.decapod/generated/Dockerfile`
+- `.decapod/managed/Dockerfile`
 - `.decapod/data/knowledge.promotions.jsonl`
-- `.decapod/generated/specs/.manifest` / `.manifest.json`
-- `.decapod/generated/specs/*.md`
+- `.decapod/managed/specs/.manifest` / `.manifest.json`
+- `.decapod/managed/specs/*.md`
 - `.decapod/governance/validation.json`
 - `.decapod/governance/trajectory.json`
 
@@ -277,6 +277,47 @@ from the successful run so an agent can inspect the proof artifact and act on
 actionable validation signals before publication.
 
 <!-- decapod:codebase-attestation:start -->
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+## Background Processing Validation Overlay
+
+### Duplicate Delivery Tests
+- Same message delivered multiple times MUST produce same result
+- Idempotency key verification
+- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
+
+### Retry Tests
+- Configured retry/backoff policy verified
+- Configured retry bound or unbounded policy verified
+- Poison-work handling verified when the project declares it
+
+### Shutdown Tests
+- Graceful drain on signal
+- In-flight job completion or safe requeue
+- No data loss on forced termination
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Validation Overlay
+
+### Migration Proof Command
+- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
+- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
+
+### Migration Tests
+- All migrations MUST have integration tests
+- Rollback procedures MUST be tested
+- Data integrity checks post-migration
+
+### Persistence Integration Tests
+- Repository abstraction tested against real database
+- Transaction boundary tests
+- Concurrency conflict tests
+- Data integrity validation after recovery
+<!-- decapod:capability-overlay:persistent-state:end -->
+
 ## Codebase Attestation
 
 - Repository signal fingerprint: `f19d90de9104ef2d226632fbe5f050f5ffbd0dce4f2ad293e9065375f4c259a2`

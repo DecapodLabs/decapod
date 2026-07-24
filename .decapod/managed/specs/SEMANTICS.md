@@ -248,8 +248,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 - RPC: JSON over stdin/stdout (no HTTP)
 - Event logs: JSONL (one JSON object per line)
 
-<!-- decapod:codebase-attestation:start -->
-## Codebase Attestation
+<!-- decapod:codebase-attestation:start -->## Codebase Attestation
 
 - Repository signal fingerprint: `f19d90de9104ef2d226632fbe5f050f5ffbd0dce4f2ad293e9065375f4c259a2`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)

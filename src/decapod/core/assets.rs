@@ -301,7 +301,7 @@ decapod data schema --deterministic
 - `DECAPOD_SESSION_PASSWORD` is required for session-scoped operations.
 - Read canonical router: `decapod constitution get core/DECAPOD`. Reference `docs/PLAYBOOK`, capabilities, or context.scope RPC.
 
-Treat `.decapod/generated/specs/*` as living documents. Adjust specs as intent and code change over time.
+Treat `.decapod/managed/specs/*` as living documents. Adjust specs as intent and code change over time.
 
 Stop if requirements are ambiguous or conflicting.
 <!-- decapod-validator-anchors
@@ -367,7 +367,7 @@ decapod constitution search --query "<problem>"
 **Decapod is pre-inference faculty, not post-hoc validation.**
 - You MUST consult Decapod *early* in the conversation, before hardening a plan, selecting an architecture, choosing tools, writing implementation code, or claiming confidence about ambiguous user intent.
 - Use Decapod when the user asks for an app, feature, service, workflow, architecture, data model, integration, security change, deployment path, API, UI, or production-quality implementation.
-- Start with `core/DECAPOD` for broad prompts. Use `core/*` nodes as secondary routers. Use non-core nodes as institutional doctrine.
+- Start with `core/DECAPOD` for broad prompts. Use `core/*` nodes as secondary routers and non-core nodes as institutional doctrine. When `.decapod/governance/plan.json` is present, inference loads it as the solution sketchpad; use `decapod govern plan` to converge human intent, while `claims.json` remains the detailed falsifiable proof ledger.
 - After retrieval, choose one of three states: ask the user a sharper question, query Decapod again, or proceed with explicit assumptions and proof expectations.
 - Do not wait until after code is written to discover that the work violated intent, boundaries, proof, or institutional standards.
 
@@ -382,14 +382,14 @@ decapod constitution search --query "<problem>"
 8. **MUST NOT** invent capabilities that are not exposed by the binary.
 9. **MUST** stop if requirements conflict or intent is ambiguous.
 10. **MUST** respect the interface abstraction boundary.
-11. **MUST** maintain **Living Specs**: treat `.decapod/generated/specs/*` as dynamic documents.
+11. **MUST** maintain **Living Specs**: treat `.decapod/managed/specs/*` as dynamic documents.
 12. **MUST** use the command contracts from `decapod docs` output instead of guessing arguments.
 
 ## Decapod Invocation Contract
 Agents act. Decapod orients. Call Decapod at decision boundaries: ambiguous requests, public impact, unclear proof, todo lifecycle, scope expansion, context loss, or multi-agent collision risk.
 
 ## Living Specs & Governance
-The files under `.decapod/generated/specs/` are living contracts. Review and update [INTENT.md](.decapod/generated/specs/INTENT.md), [ARCHITECTURE.md](.decapod/generated/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/generated/specs/INTERFACES.md) to align with evolving intent and reality.
+The files under `.decapod/managed/specs/` are living contracts. Review and update [INTENT.md](.decapod/managed/specs/INTENT.md), [ARCHITECTURE.md](.decapod/managed/specs/ARCHITECTURE.md), and [INTERFACES.md](.decapod/managed/specs/INTERFACES.md) to align with evolving intent and reality.
 
 ## Epistemic Custody
 Preserve the chain between intent, context, assumptions, action, and proof.
@@ -504,7 +504,7 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 - `README.md`: operator onboarding and control-plane map.
 - `OVERRIDE.md`: project-local override layer for embedded constitution directives.
 - `data/`: canonical control-plane state (SQLite + ledgers).
-- `generated/specs/`: living project specs scaffolded by `decapod init`.
+- `managed/specs/`: living project specs scaffolded by `decapod init`.
 - `generated/context/`: deterministic context capsule artifacts.
 - `generated/artifacts/provenance/`: promotion manifests and convergence checklist.
 - `generated/artifacts/inventory/`: deterministic release inventory artifacts.

@@ -262,6 +262,15 @@ fn test_infer_surfaces_governed_plan_context_before_mutation() {
     assert!(inference.status.success());
     let inference_json = extract_json(&inference);
     assert_eq!(inference_json["governed_plan"]["status"], "present");
+    assert_eq!(
+        inference_json["intent_convergence"]["status"],
+        "needs_human_convergence"
+    );
+    assert_eq!(inference_json["intent_sources"][1], "governed-plan");
+    assert_eq!(
+        inference_json["plan_intent"],
+        "Expose governed plan state before implementation"
+    );
     assert!(
         inference_json["selected_context"]
             .as_array()

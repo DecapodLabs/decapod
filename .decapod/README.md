@@ -49,7 +49,7 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 - `README.md`: operator onboarding and control-plane map.
 - `OVERRIDE.md`: project-local override layer for embedded constitution directives.
 - `data/`: canonical control-plane state (SQLite + ledgers).
-- `generated/specs/`: living project specs scaffolded by `decapod init`.
+- `managed/specs/`: living project specs scaffolded by `decapod init`.
 - `generated/context/`: deterministic context capsule artifacts.
 - `generated/artifacts/provenance/`: promotion manifests and convergence checklist.
 - `generated/artifacts/inventory/`: deterministic release inventory artifacts.

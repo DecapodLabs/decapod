@@ -1566,7 +1566,7 @@ fn enrich_repo_context_interactive(
 ) -> Result<(), error::DecapodError> {
     print_init_block(
         "Repository Context",
-        "Review inferred intent before generating .decapod/generated/specs/.",
+        "Review inferred intent before generating .decapod/managed/specs/.",
     );
 
     let current_summary = repo.product_summary.clone().unwrap_or_else(|| {
@@ -1587,7 +1587,7 @@ fn enrich_repo_context_interactive(
         prompt_language_choice(&repo.primary_languages, &recommended_languages)?;
 
     let refine_now = prompt_yes_no(
-        "Refine done criteria now? (You can evolve .decapod/config.toml and .decapod/generated/specs/*.md later.)",
+        "Refine done criteria now? (You can evolve .decapod/config.toml and .decapod/managed/specs/*.md later.)",
         false,
     )?;
     if refine_now {
@@ -4877,13 +4877,13 @@ fn should_scaffold_validation_surfaces(project_root: &Path) -> bool {
     let required = [
         "AGENTS.md",
         ".decapod/README.md",
-        ".decapod/generated/Dockerfile",
-        ".decapod/generated/specs/README.md",
-        ".decapod/generated/specs/INTENT.md",
-        ".decapod/generated/specs/ARCHITECTURE.md",
-        ".decapod/generated/specs/INTERFACES.md",
-        ".decapod/generated/specs/VALIDATION.md",
-        ".decapod/generated/specs/.manifest.json",
+        ".decapod/managed/Dockerfile",
+        ".decapod/managed/specs/README.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/generated/policy/context_capsule_policy.json",
     ];
     required.iter().any(|rel| !project_root.join(rel).exists())
@@ -5092,7 +5092,7 @@ fn heal_generated_dockerfile(
     Ok(Some(ValidationHealAction {
         action: "heal_generated_dockerfile".to_string(),
         outcome: "refreshed".to_string(),
-        detail: "Refreshed the Decapod-managed image/version header in .decapod/generated/Dockerfile while preserving project workspace mutations.".to_string(),
+        detail: "Refreshed the Decapod-managed image/version header in .decapod/managed/Dockerfile while preserving project workspace mutations.".to_string(),
     }))
 }
 
@@ -9516,6 +9516,10 @@ fn run_infer_init(cli: InferInitCli, project_root: &Path) -> Result<(), error::D
 
     let intent = cli.intent.trim().to_lowercase();
     let governed_plan = governed_plan_context(project_root, None)?;
+    let plan_intent = governed_plan.intent.clone();
+    let plan_requires_convergence = governed_plan.status == "present"
+        && (governed_plan.state.as_deref() != Some("APPROVED")
+            || !governed_plan.unresolved_items.is_empty());
     let context_files: Vec<String> = cli
         .context
         .as_ref()
@@ -9579,16 +9583,43 @@ fn run_infer_init(cli: InferInitCli, project_root: &Path) -> Result<(), error::D
     }
 
     let token_budget = (selected_context.len() as u64 * 500).min(100_000);
-    let clarification_required = intent.len() < 20 || intent_type == "unknown";
+    let clarification_required =
+        intent.len() < 20 || intent_type == "unknown" || plan_requires_convergence;
+    let clarification_question = if plan_requires_convergence {
+        Some(
+            "Review the governed plan sketchpad, resolve its open items, and approve or update it before implementation."
+                .to_string(),
+        )
+    } else if clarification_required {
+        Some("Could you clarify what you'd like me to do?".to_string())
+    } else {
+        None
+    };
 
     let response = serde_json::json!({
         "intent": cli.intent,
         "intent_type": intent_type,
+        "intent_sources": if governed_plan.status == "present" {
+            vec!["human", "governed-plan"]
+        } else {
+            vec!["human"]
+        },
+        "plan_intent": plan_intent,
+        "intent_convergence": {
+            "status": if governed_plan.status != "present" {
+                "plan_unavailable"
+            } else if plan_requires_convergence {
+                "needs_human_convergence"
+            } else {
+                "ready"
+            },
+            "plan_path": governed_plan.path.clone(),
+            "open_items": governed_plan.unresolved_items.clone(),
+            "task_binding": governed_plan.task_binding.clone(),
+        },
         "confidence": if clarification_required { "low" } else { "high" },
         "clarification_required": clarification_required,
-        "clarification_question": if clarification_required {
-            Some("Could you clarify what you'd like me to do?".to_string())
-        } else { None },
+        "clarification_question": clarification_question,
         "selected_context": selected_context,
         "excluded_context": excluded_context,
         "selected_policies": if governed_plan.status == "present" {
@@ -9843,7 +9874,7 @@ fn apply_container_orientation_constraints(
             .relevant_areas
             .push("architecture/CONTAINERS".to_string());
         packet.constraints.push(
-            "Keep the Decapod workspace container under .decapod/generated/Dockerfile; a root Dockerfile must package the project application or microservice according to human intent.".to_string(),
+            "Keep the Decapod workspace container under .decapod/managed/Dockerfile; a root Dockerfile must package the project application or microservice according to human intent.".to_string(),
         );
         packet.proof_required.push(
             "Validate that any root Dockerfile contains application packaging rather than Decapod workspace seed markers.".to_string(),

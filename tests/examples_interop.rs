@@ -94,7 +94,7 @@ fn verification_guide_pins_jit_capsule_flow() {
         &[
             "docs/VERIFICATION.md",
             "AGENTS.md",
-            ".decapod/generated/specs/VALIDATION.md",
+            ".decapod/managed/specs/VALIDATION.md",
         ],
     );
 

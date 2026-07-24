@@ -220,14 +220,12 @@ fn non_code_allows_decapod_config_and_override() {
 
 #[test]
 fn non_code_allows_generated_specs_and_artifacts() {
-    assert!(is_allowed_non_code_path(
-        ".decapod/generated/specs/INTENT.md"
-    ));
+    assert!(is_allowed_non_code_path(".decapod/managed/specs/INTENT.md"));
     assert!(is_allowed_non_code_path(
         ".decapod/generated/artifacts/plan.json"
     ));
     assert!(is_allowed_non_code_path(
-        ".decapod/generated/specs/deep/nested.md"
+        ".decapod/managed/specs/deep/nested.md"
     ));
     // .md files always pass via the ends_with(".md") rule, so this is allowed too
     assert!(is_allowed_non_code_path(".decapod/generated/other.md"));

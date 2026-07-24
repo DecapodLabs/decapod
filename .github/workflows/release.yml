@@ -137,7 +137,9 @@ jobs:
       matrix:
         include:
           - variant: glibc
-            tag_suffix: ""
+            # Keep the public family tag stable across Debian codename upgrades;
+            # the current concrete glibc base is debian:bookworm-slim below.
+            tag_suffix: "-debian"
             build_image: rust:1.96.1-slim-bookworm
             runtime_image: debian:bookworm-slim
           - variant: musl

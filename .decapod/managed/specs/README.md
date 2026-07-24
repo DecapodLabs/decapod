@@ -1,6 +1,6 @@
 # Project Specs
 
-Canonical path: `.decapod/generated/specs/`.
+Canonical path: `.decapod/managed/specs/`.
 These files are the project-local contract for humans and agents.
 
 ## Snapshot
@@ -20,7 +20,9 @@ These files are the project-local contract for humans and agents.
 
 ## Canonical `.decapod/` Layout
 - `.decapod/data/`: canonical control-plane state (SQLite + ledgers).
-- `.decapod/generated/specs/`: **Living project specs** for humans and agents.
+- `.decapod/managed/Dockerfile`: Decapod's project-specific execution image; Decapod runs inside it and may add project build dependencies such as Go, Python, or system packages. Glibc is the default; `--image-profile alpine` selects the GHCR `-alpine`-tagged musl image.
+- `.decapod/managed/specs/`: **Living project specs** for humans and agents.
+- `Dockerfile` at the project root remains the product application's container image and is the artifact users package and deploy.
 - `.decapod/generated/context/`: deterministic context capsules.
 - `.decapod/generated/policy/context_capsule_policy.json`: repo-native JIT context policy contract.
 - `.decapod/generated/artifacts/provenance/`: promotion manifests and convergence checklist.

@@ -8,10 +8,12 @@
 use crate::core::container_runtime;
 use crate::core::db;
 use crate::core::error::DecapodError;
+use crate::core::research_claims;
 use crate::core::rpc::{AllowedOp, Blocker, BlockerKind};
 use crate::core::todo;
 use crate::core::trajectory;
 use crate::core::workunit::{self, WorkUnitStatus};
+use crate::plan_governance;
 use crate::plugins::eval;
 use fancy_regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -1622,12 +1624,30 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
                 .to_string(),
         ));
     }
+    for (path, present) in [
+        (
+            plan_governance::PLAN_PATH,
+            plan_governance::load_plan(repo_root)?.is_some(),
+        ),
+        (
+            research_claims::CLAIMS_PATH,
+            research_claims::load_and_validate(repo_root)?.is_some(),
+        ),
+    ] {
+        if !present {
+            return Err(DecapodError::ValidationError(format!(
+                "Cannot publish: required governance artifact is missing or invalid: {path}"
+            )));
+        }
+    }
     Ok(())
 }
 
 fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodError> {
     let dir = repo_root.to_str().unwrap_or(".");
     for path in [
+        plan_governance::PLAN_PATH,
+        research_claims::CLAIMS_PATH,
         trajectory::TRAJECTORY_PATH,
         crate::core::validate::VALIDATION_RECEIPT_PATH,
     ] {

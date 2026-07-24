@@ -4511,7 +4511,7 @@
     "concepts": [
       "Docker Workspace Security: Container workspaces require Docker/Podman isolation.",
       "Privilege Escalation: Agents must request elevated administrator permissions before running Docker/container workspace setup and execution commands.",
-      "Workspace/Application Boundary: `.decapod/generated/Dockerfile` is Decapod's internal workspace container seed; a root `Dockerfile` packages the project application or microservice according to human intent.",
+      "Workspace/Application Boundary: `.decapod/managed/Dockerfile` is Decapod's internal workspace container seed; a root `Dockerfile` packages the project application or microservice according to human intent.",
       "Containers are ephemeral. Any state written to the container filesystem is lost on restart.",
           "Image size impacts deployment velocity and attack surface. Smaller is faster and safer.",
           "Supply chain security requires knowing exactly what binaries and libraries are inside the image."
@@ -4530,7 +4530,7 @@
           "Pin base images to specific SHAs or minor versions; never use the 'latest' tag in production."
         ],
     "failure_modes": [
-      "Using `.decapod/generated/Dockerfile` workspace seed markers in the root Dockerfile, causing a Decapod agent environment to be mistaken for application packaging.",
+      "Using `.decapod/managed/Dockerfile` workspace seed markers in the root Dockerfile, causing a Decapod agent environment to be mistaken for application packaging.",
       "Leaking secrets or credentials into image layers during the build process.",
           "Running applications as root, allowing host compromise if the container boundary is breached.",
           "Failing to define a .dockerignore, resulting in massive build contexts and unintended file inclusion."
@@ -15719,7 +15719,7 @@
           "Use when updating Decapod generated project specs, validating alignment, or checking for drift."
         ],
         "concepts": [
-          "Living Specs: Treat files under .decapod/generated/specs/* as dynamic contracts. Review and update INTENT.md, ARCHITECTURE.md, and INTERFACES.md to align specs with intent.",
+          "Living Specs: Treat files under .decapod/managed/specs/* as dynamic contracts. Review and update INTENT.md, ARCHITECTURE.md, and INTERFACES.md to align specs with intent.",
           "Project Configuration: Read .decapod/config.toml as user-editable project context and update it when project scope changes.",
           "Acceptance Criteria: Falsifiable, testable conditions that define the success of a feature or task.",
           "Requirement Boundaries: The specific code paths, files, and subsystems that the spec governs.",
