@@ -25,8 +25,8 @@ fn release_workflow_publishes_decapod_ghcr_image() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let workflow = fs::read_to_string(root.join(".github/workflows/release.yml"))
         .expect("read release workflow");
-    let dockerfile =
-        fs::read_to_string(root.join("Dockerfile.workspace")).expect("read workspace Dockerfile");
+    let dockerfile = fs::read_to_string(root.join("assets/Dockerfile.workspace"))
+        .expect("read workspace Dockerfile");
 
     assert!(
         workflow.contains("packages: write"),
@@ -59,7 +59,7 @@ fn release_workflow_publishes_decapod_ghcr_image() {
         "release workflow should publish glibc and alpine Decapod workspace image variants"
     );
     assert!(
-        workflow.contains("file: Dockerfile.workspace"),
+        workflow.contains("file: assets/Dockerfile.workspace"),
         "release workflow should build the committed Decapod workspace image Dockerfile"
     );
     assert!(

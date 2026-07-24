@@ -1,4 +1,4 @@
-# Decapod workspace image shim.
+# Decapod workspace image shim, kept with repository assets.
 #
 # This image publishes a released Decapod binary for generated project workspace
 # containers. Consumer projects still maintain their own

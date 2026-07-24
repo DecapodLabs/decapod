@@ -99,7 +99,7 @@ jobs:
           shared-key: "ci-build-v1.96.1"
           save-if: "false"
       - name: Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings
 
   # DEPS-LINT: Cargo deny and unused dependency checks
   deps-lint:
@@ -114,7 +114,7 @@ jobs:
       - name: Run cargo-machete check
         run: cargo machete
       - name: Check license and duplicate dependencies
-        run: cargo install cargo-deny && cargo deny check
+        run: cargo install cargo-deny && cargo deny --config .config/deny.toml check
 
   # HEALTH: consumes the shared decapod binary from setup
   health:

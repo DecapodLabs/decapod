@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://decapod.dev/schemas/validation-receipt-1.0.0.schema.json",
+  "title": "Decapod Validation Receipt",
+  "description": "Integrity-checked output of the bounded Decapod validation gates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "decapod_release", "git_revision", "repo_signal_fingerprint", "trajectory_run_id", "trajectory_artifact_hash", "validation_epoch", "status", "pass_count", "fail_count", "warn_count", "elapsed_ms", "drift_findings", "temporary_artifacts_cleaned", "receipt_hash"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "kind": { "const": "validation_receipt" },
+    "decapod_release": { "type": "string" },
+    "git_revision": { "type": "string" },
+    "repo_signal_fingerprint": { "type": "string" },
+    "trajectory_run_id": { "type": ["string", "null"] },
+    "trajectory_artifact_hash": { "type": ["string", "null"] },
+    "validation_epoch": { "$ref": "#/$defs/validation_epoch" },
+    "status": { "const": "ok" },
+    "pass_count": { "type": "integer", "minimum": 0 },
+    "fail_count": { "type": "integer", "minimum": 0 },
+    "warn_count": { "type": "integer", "minimum": 0 },
+    "elapsed_ms": { "type": "integer", "minimum": 0 },
+    "drift_findings": { "type": "array", "items": { "$ref": "#/$defs/drift_finding" } },
+    "temporary_artifacts_cleaned": { "type": "integer", "minimum": 0 },
+    "failures": { "type": "array", "items": { "type": "string" } },
+    "warnings": { "type": "array", "items": { "type": "string" } },
+    "gate_timings": { "type": "array", "items": { "$ref": "#/$defs/gate_timing" } },
+    "parallelism": { "type": "integer", "minimum": 0 },
+    "ci_prediction": { "$ref": "#/$defs/ci_prediction" },
+    "receipt_hash": { "type": "string" }
+  },
+  "$defs": {
+    "validation_epoch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "epoch_id", "evaluator_identity", "evaluator_set_hash", "constitution_version", "constitution_hash", "validation_profile", "validation_profile_hash", "proof_rubric", "proof_rubric_hash", "generated_specs_manifest_hash", "generated_specs_fingerprint", "material_hashes"],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "epoch_id": { "type": "string" },
+        "evaluator_identity": { "type": "string" },
+        "evaluator_set_hash": { "type": "string" },
+        "constitution_version": { "type": "string" },
+        "constitution_hash": { "type": "string" },
+        "validation_profile": { "type": "string" },
+        "validation_profile_hash": { "type": "string" },
+        "proof_rubric": { "type": "string" },
+        "proof_rubric_hash": { "type": "string" },
+        "generated_specs_manifest_hash": { "type": "string" },
+        "generated_specs_fingerprint": { "type": "string" },
+        "material_hashes": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "drift_finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "severity", "surface", "expected", "observed", "remediation"],
+      "properties": {
+        "class": { "enum": ["configuration", "specification", "capability", "interface", "generated_surface", "toolchain", "evidence", "implementation"] },
+        "severity": { "enum": ["advisory", "blocking"] },
+        "surface": { "type": "string" },
+        "expected": { "type": "string" },
+        "observed": { "type": "string" },
+        "remediation": { "type": "string" }
+      }
+    },
+    "gate_timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "elapsed_ms"],
+      "properties": {
+        "name": { "type": "string" },
+        "elapsed_ms": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "ci_prediction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["result", "confidence", "reasons", "recommendations"],
+      "properties": {
+        "result": { "type": "string" },
+        "confidence": { "type": "string" },
+        "reasons": { "type": "array", "items": { "type": "string" } },
+        "recommendations": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

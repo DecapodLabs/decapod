@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://decapod.dev/schemas/plan-1.0.0.schema.json",
+  "title": "Decapod Governed Plan",
+  "description": "The repository-native contract for a Decapod governed execution plan.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "title",
+    "intent",
+    "state",
+    "todo_ids",
+    "proof_hooks",
+    "unknowns",
+    "human_questions",
+    "stop_conditions",
+    "unresolved_contradictions",
+    "deferred_questions",
+    "constraints",
+    "phases",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "title": { "type": "string" },
+    "intent": { "type": "string" },
+    "state": {
+      "type": "string",
+      "enum": ["DRAFT", "ANNOTATING", "APPROVED", "EXECUTING", "DONE"]
+    },
+    "todo_ids": { "$ref": "#/$defs/string_array" },
+    "proof_hooks": { "$ref": "#/$defs/string_array" },
+    "unknowns": { "$ref": "#/$defs/string_array" },
+    "human_questions": { "$ref": "#/$defs/string_array" },
+    "stop_conditions": { "$ref": "#/$defs/string_array" },
+    "unresolved_contradictions": { "$ref": "#/$defs/string_array" },
+    "deferred_questions": { "$ref": "#/$defs/string_array" },
+    "constraints": { "$ref": "#/$defs/constraints" },
+    "phases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/phase" }
+    },
+    "updated_at": { "type": "string" }
+  },
+  "$defs": {
+    "string_array": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["forbidden_paths", "file_touch_budget"],
+      "properties": {
+        "forbidden_paths": { "$ref": "#/$defs/string_array" },
+        "file_touch_budget": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "required_artifacts", "validation_checks", "satisfied", "satisfied_at"],
+      "properties": {
+        "description": { "type": "string" },
+        "required_artifacts": { "$ref": "#/$defs/string_array" },
+        "validation_checks": { "$ref": "#/$defs/string_array" },
+        "satisfied": { "type": "boolean" },
+        "satisfied_at": { "type": ["string", "null"] }
+      }
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "description", "entry_gates", "exit_gates", "entered", "completed", "entered_at", "completed_at"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "entry_gates": { "type": "array", "items": { "$ref": "#/$defs/gate" } },
+        "exit_gates": { "type": "array", "items": { "$ref": "#/$defs/gate" } },
+        "entered": { "type": "boolean" },
+        "completed": { "type": "boolean" },
+        "entered_at": { "type": ["string", "null"] },
+        "completed_at": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

@@ -389,7 +389,7 @@ fn load_constitution_asset() -> serde_json::Value {
 }
 
 fn load_constitution_schema() -> serde_json::Value {
-    serde_json::from_str(include_str!("../assets/constitution.schema.json"))
+    serde_json::from_str(include_str!("../assets/schemas/constitution.schema.json"))
         .expect("constitution schema json")
 }
 

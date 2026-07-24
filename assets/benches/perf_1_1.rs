@@ -1,3 +1,5 @@
+//! Performance benchmark suite kept with repository assets.
+
 use criterion::{Criterion, criterion_group, criterion_main};
 
 fn perf_1_1(c: &mut Criterion) {
