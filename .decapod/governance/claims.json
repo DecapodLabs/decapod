@@ -10,7 +10,7 @@
     "source_issue": "https://github.com/DecapodLabs/decapod/issues/682",
     "status": "active",
     "created_at": "2026-07-22",
-    "updated_at": "2026-07-23",
+    "updated_at": "2026-07-24",
     "change_policy": "Claims are changed only through an issue-scoped review that preserves the baseline, Decapod condition, failure modes, measurements, proof gate, open questions, and evidence status."
   },
   "scope": {
@@ -221,9 +221,19 @@
               "issue-682",
               "trajectory-module"
             ]
+          },
+          {
+            "id": "issue-1019-governance-bundle",
+            "observed_at": "2026-07-24",
+            "result": "Issue #1019 completed in an isolated governed workspace with plan, claims, trajectory, and validation artifacts carried into the publication diff; this is repository-native instrumentation evidence, not comparative benchmark evidence.",
+            "source_refs": [
+              "issue-1019",
+              "trajectory-issue-1019-20260724",
+              "validation-issue-1019-20260724"
+            ]
           }
         ],
-        "last_evaluated_at": "2026-07-22"
+        "last_evaluated_at": "2026-07-24"
       },
       "implementation_links": [
         {

@@ -39,6 +39,43 @@ jobs:
           done
           echo "✅ Commit messages look good"
 
+  # GOVERNANCE ARTIFACTS: Every PR must carry the complete proof bundle.
+  governance-artifacts:
+    name: Governance Artifacts (all four)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require all governance artifacts in the PR diff
+        run: |
+          set -euo pipefail
+          base_ref="${{ github.base_ref }}"
+          git fetch --no-tags --prune origin "$base_ref"
+          required=(
+            .decapod/governance/claims.json
+            .decapod/governance/trajectory.json
+            .decapod/governance/validation.json
+            .decapod/governance/plan.json
+          )
+          changed="$(git diff --name-only "origin/$base_ref"...HEAD)"
+          missing=()
+          for path in "${required[@]}"; do
+            test -f "$path" || { echo "❌ missing from checkout: $path"; missing+=("$path"); continue; }
+            if ! grep -Fxq "$path" <<<"$changed"; then
+              echo "❌ not changed in PR diff: $path"
+              missing+=("$path")
+            fi
+          done
+          if (( ${#missing[@]} > 0 )); then
+            echo "Required governance artifacts are missing from the PR diff: ${missing[*]}"
+            echo "Every PR must change claims.json, trajectory.json, validation.json, and plan.json."
+            exit 1
+          fi
+          echo "✅ All four governance artifacts are present and changed in the PR diff"
+
   detect-migration-script-changes:
     name: Detect Migration Script Changes
     runs-on: ubuntu-latest

@@ -1,50 +1,66 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "issue-1003-20260724",
-  "intent_id": "intent:issue-1003-20260724",
-  "task_id": "bugs_01ky97k3bsgywdtt",
-  "original_intent": "Complete GitHub Issue #1003 by determining whether .decapod/governance/plan.json is needed and integrating it into early intent and inference.",
-  "derived_intent": "Preserve plan.json as the authoritative execution gate and expose its state, task binding, proof hooks, unresolved items, and scope constraints through infer init and infer orientation.",
+  "run_id": "issue-1019-20260724",
+  "intent_id": "intent:issue-1019-20260724",
+  "task_id": "bugs_01ky9f3ztz3n1x7m",
+  "original_intent": "Solve GitHub Issue #1019 by renaming the managed Decapod workspace Dockerfile to Dockerfile.decapod.",
+  "derived_intent": "Implement and prove a complete managed Dockerfile.decapod migration across generation, execution, validation, specs, tests, and release-bound entrypoint governance, while preserving the root Dockerfile as the application packaging boundary.",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
   ],
   "active_boundaries": [
-    "Read-only plan context before inference; plan mutation remains explicit through govern plan; preserve existing execution and validation gates."
+    "Only the Decapod-managed workspace container path and its consumers; do not repurpose or rename a projects root Dockerfile."
   ],
   "repo_scope": [
-    "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+    "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
   ],
   "inspected_files": [
-    ".decapod/governance/plan.json",
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    "src/decapod/core/rpc.rs",
+    ".gitignore",
+    "src/decapod/core/scaffold.rs",
     "src/decapod/core/validate.rs",
+    "src/decapod/core/workspace.rs",
     "src/decapod/lib.rs",
-    "src/decapod/plan_governance.rs",
-    "tests/infer_precision.rs"
+    "src/decapod/plugins/container.rs",
+    "tests/unit/plugins/container_tests.rs",
+    "tests/validate_termination.rs"
   ],
   "modified_files": [
+    ".decapod/governance/claims.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    "src/decapod/core/rpc.rs",
+    ".decapod/managed/Dockerfile.decapod",
+    ".github/workflows/ci.yml",
+    "src/decapod/core/entrypoint_integrity.rs",
+    "src/decapod/core/scaffold.rs",
+    "src/decapod/core/validate.rs",
+    "src/decapod/core/workspace.rs",
     "src/decapod/lib.rs",
-    "tests/infer_precision.rs",
-    "tests/unit/lib_init_prompt_tests.rs"
+    "src/decapod/plugins/container.rs",
+    "tests/unit/core/workspace_tests.rs",
+    "tests/unit/plugins/container_tests.rs"
   ],
   "declared_commands": [
-    "DECAPOD_CONTAINER=1 target/debug/decapod qa verify todo --json bugs_01ky97k3bsgywdtt",
-    "DECAPOD_CONTAINER=1 target/debug/decapod validate --format json",
-    "cargo clippy --tests -- -D warnings",
-    "cargo fmt --all -- --check",
-    "cargo test --test infer_precision --test activation_conformance --test plan_governed_execution",
-    "decapod validate"
+    "cargo fmt --all",
+    "cargo test --lib",
+    "cargo test --lib required_governance_artifacts_must_all_be_in_pr_diff",
+    "cargo test --test core_tests --test validate_termination --test release_workflow_policy",
+    "cargo test --test research_claims",
+    "decapod validate",
+    "rg Dockerfile references"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "clippy",
+      "name": "cargo fmt --all",
+      "status": "passed"
+    },
+    {
+      "name": "cargo test --lib",
+      "status": "passed"
+    },
+    {
+      "name": "claims-schema",
       "status": "passed"
     },
     {
@@ -52,31 +68,23 @@
       "status": "passed"
     },
     {
-      "name": "focused_tests",
+      "name": "focused Dockerfile and validation tests",
       "status": "passed"
     },
     {
-      "name": "governed_validation",
-      "status": "passed"
-    },
-    {
-      "name": "todo_verification",
+      "name": "pr-governance-diff-gate",
       "status": "passed"
     }
   ],
   "evidence": [
-    "Bind this task trajectory to the claimed Issue #1003 todo so successful validation can refresh the receipt against the current run cookie.",
-    "Final governed validation passed with fail_count=0, pass_count=203, and parallelism=1.",
-    "Inference regression covers missing plan, bound plan, proof hooks, unresolved items, and infer init selected context",
-    "Todo proof replay passed with matching validate_passes output hash and all five tracked artifact hashes.",
-    "Validation epoch ve_150f4f5a3d9182c7 passed with fail_count=0",
-    "plan_governance.rs, validate.rs, todo.rs, completion_evidence.rs, and plan CLI call sites prove plan.json is active authoritative state",
-    "validation epoch ve_150f4f5a3d9182c7 completed with zero failures",
-    "validation epoch ve_cabc2510a671639b completed with zero failures"
+    "193 lib tests initially passed and exposed one stale release fingerprint fixture; after updating the v0.82.0 manifest, 194 lib tests passed.",
+    "Added a bounded Issue #1019 claims observation and enforced all four governance artifacts in Decapod publication and CI PR diffs.",
+    "Legacy managed Dockerfile migration unit test passed and preserves project-specific content.",
+    "validation epoch ve_bf77e9b8ef0411f4 completed with zero failures",
+    "validation epoch ve_ce1c98498e9491d1 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "completion_claim": "Issue #1003 is complete: governed plan context is surfaced during inference, proof verification is passed, and the final validation receipt is ready for publication.",
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -84,21 +92,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:eaa74b9ac44fccf890aa729adb9955b560ba9b30b4c86729c8961bcb26e3e985",
+  "artifact_hash": "sha256:48a96ffc2b82bb24b31e1ed910a67ca0affa5a75f03ec84a91e766af8a699e34",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:issue-1003-20260724": {
-        "id": "intent:issue-1003-20260724",
-        "raw_intent": "Complete GitHub Issue #1003 by determining whether .decapod/governance/plan.json is needed and integrating it into early intent and inference.",
-        "refined_intent": "Preserve plan.json as the authoritative execution gate and expose its state, task binding, proof hooks, unresolved items, and scope constraints through infer init and infer orientation.",
+      "intent:issue-1019-20260724": {
+        "id": "intent:issue-1019-20260724",
+        "raw_intent": "Solve GitHub Issue #1019 by renaming the managed Decapod workspace Dockerfile to Dockerfile.decapod.",
+        "refined_intent": "Implement and prove a complete managed Dockerfile.decapod migration across generation, execution, validation, specs, tests, and release-bound entrypoint governance, while preserving the root Dockerfile as the application packaging boundary.",
         "acceptance_criteria": [],
         "constraints": [
-          "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+          "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
         ],
         "assumptions": [],
         "boundaries": [
-          "Read-only plan context before inference; plan mutation remains explicit through govern plan; preserve existing execution and validation gates."
+          "Only the Decapod-managed workspace container path and its consumers; do not repurpose or rename a projects root Dockerfile."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -111,118 +119,123 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-1003-20260724"
+        "detail": "trajectory:issue-1019-20260724"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-1003-20260724"
+        "detail": "trajectory:issue-1019-20260724"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-1003-20260724"
+        "detail": "trajectory:issue-1019-20260724"
       },
       {
         "sequence": 7,
         "event_id": "event:7",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-1003-20260724"
+        "detail": "trajectory:issue-1019-20260724"
       },
       {
         "sequence": 8,
         "event_id": "event:8",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-1003-20260724"
+        "detail": "trajectory:issue-1019-20260724"
       },
       {
         "sequence": 9,
         "event_id": "event:9",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-1003-20260724"
+        "detail": "trajectory:issue-1019-20260724"
       },
       {
         "sequence": 10,
         "event_id": "event:10",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-1003-20260724"
+        "detail": "trajectory:issue-1019-20260724"
       },
       {
         "sequence": 11,
         "event_id": "event:11",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-1003-20260724"
+        "detail": "trajectory:issue-1019-20260724"
       },
       {
         "sequence": 12,
         "event_id": "event:12",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-1003-20260724"
+        "detail": "trajectory:issue-1019-20260724"
       },
       {
         "sequence": 13,
         "event_id": "event:13",
-        "intent_id": "intent:issue-1003-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-1003-20260724"
+        "detail": "trajectory:issue-1019-20260724"
       }
     ],
     "trajectories": {
-      "issue-1003-20260724": {
-        "id": "issue-1003-20260724",
-        "intent_id": "intent:issue-1003-20260724",
+      "issue-1019-20260724": {
+        "id": "issue-1019-20260724",
+        "intent_id": "intent:issue-1019-20260724",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "validation",
-            "command": "cargo fmt --all -- --check",
+            "action": "dockerfile-rename",
+            "command": "rg Dockerfile references",
             "scope": [
-              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+              "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
             ],
             "observations": [
-              ".decapod/governance/plan.json",
-              "src/decapod/plan_governance.rs",
+              "src/decapod/plugins/container.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/workspace.rs",
               "src/decapod/core/validate.rs",
               "src/decapod/lib.rs",
-              "src/decapod/core/rpc.rs",
-              "tests/infer_precision.rs",
-              "src/decapod/core/rpc.rs",
+              "tests/unit/plugins/container_tests.rs",
+              "tests/validate_termination.rs",
+              ".gitignore",
+              "src/decapod/plugins/container.rs",
+              "src/decapod/core/scaffold.rs",
+              "src/decapod/core/workspace.rs",
+              "src/decapod/core/validate.rs",
               "src/decapod/lib.rs",
-              "tests/infer_precision.rs",
-              "tests/unit/lib_init_prompt_tests.rs",
-              "plan_governance.rs, validate.rs, todo.rs, completion_evidence.rs, and plan CLI call sites prove plan.json is active authoritative state",
-              "Inference regression covers missing plan, bound plan, proof hooks, unresolved items, and infer init selected context",
-              "Validation epoch ve_150f4f5a3d9182c7 passed with fail_count=0"
+              "src/decapod/core/entrypoint_integrity.rs",
+              "tests/unit/plugins/container_tests.rs",
+              ".decapod/managed/Dockerfile.decapod",
+              "193 lib tests initially passed and exposed one stale release fingerprint fixture; after updating the v0.82.0 manifest, 194 lib tests passed.",
+              "Legacy managed Dockerfile migration unit test passed and preserves project-specific content."
             ],
             "proof_refs": [
-              "focused_tests",
-              "clippy",
-              "governed_validation"
+              "cargo test --lib",
+              "focused Dockerfile and validation tests",
+              "cargo fmt --all"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
@@ -230,30 +243,38 @@
           {
             "sequence": 5,
             "action": "validation",
+            "command": "decapod validate",
             "scope": [
-              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+              "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
             ],
             "observations": [
-              "Bind this task trajectory to the claimed Issue #1003 todo so successful validation can refresh the receipt against the current run cookie."
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_ce1c98498e9491d1 completed with zero failures"
             ],
-            "proof_refs": [],
+            "proof_refs": [
+              "decapod validate"
+            ],
             "validation_findings": [],
             "custody_event_id": "event:5"
           },
           {
             "sequence": 6,
             "action": "validation",
-            "command": "decapod validate",
+            "command": "cargo test --test research_claims",
             "scope": [
-              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+              "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
+              ".decapod/governance/claims.json",
+              ".github/workflows/ci.yml",
+              "src/decapod/core/workspace.rs",
+              "tests/unit/core/workspace_tests.rs",
+              "Added a bounded Issue #1019 claims observation and enforced all four governance artifacts in Decapod publication and CI PR diffs."
             ],
             "proof_refs": [
-              "decapod validate"
+              "claims-schema",
+              "pr-governance-diff-gate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
@@ -263,12 +284,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+              "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
+              "validation epoch ve_bf77e9b8ef0411f4 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -281,12 +302,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+              "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
+              "validation epoch ve_bf77e9b8ef0411f4 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -299,12 +320,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+              "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
+              "validation epoch ve_bf77e9b8ef0411f4 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -317,12 +338,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+              "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
+              "validation epoch ve_bf77e9b8ef0411f4 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -333,21 +354,17 @@
           {
             "sequence": 11,
             "action": "validation",
-            "command": "DECAPOD_CONTAINER=1 target/debug/decapod qa verify todo --json bugs_01ky97k3bsgywdtt",
+            "command": "decapod validate",
             "scope": [
-              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+              "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
             ],
             "observations": [
-              ".decapod/governance/validation.json",
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              ".decapod/governance/trajectory.json",
-              "Todo proof replay passed with matching validate_passes output hash and all five tracked artifact hashes.",
-              "Final governed validation passed with fail_count=0, pass_count=203, and parallelism=1."
+              "validation epoch ve_bf77e9b8ef0411f4 completed with zero failures"
             ],
             "proof_refs": [
-              "todo_verification",
-              "governed_validation"
+              "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:11"
@@ -357,12 +374,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+              "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
+              "validation epoch ve_bf77e9b8ef0411f4 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -375,12 +392,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+              "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_cabc2510a671639b completed with zero failures"
+              "validation epoch ve_bf77e9b8ef0411f4 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"

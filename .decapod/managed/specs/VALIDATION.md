@@ -198,7 +198,7 @@ No `.db` or `.jsonl` files outside `.decapod/` in project root
 | Tracked files in `.decapod/managed/` / `.decapod/data/` match whitelist | Fail |
 
 Whitelisted tracked paths:
-- `.decapod/managed/Dockerfile`
+- `.decapod/managed/Dockerfile.decapod`
 - `.decapod/data/knowledge.promotions.jsonl`
 - `.decapod/managed/specs/.manifest` / `.manifest.json`
 - `.decapod/managed/specs/*.md`
@@ -277,50 +277,9 @@ from the successful run so an agent can inspect the proof artifact and act on
 actionable validation signals before publication.
 
 <!-- decapod:codebase-attestation:start -->
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-## Background Processing Validation Overlay
-
-### Duplicate Delivery Tests
-- Same message delivered multiple times MUST produce same result
-- Idempotency key verification
-- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
-
-### Retry Tests
-- Configured retry/backoff policy verified
-- Configured retry bound or unbounded policy verified
-- Poison-work handling verified when the project declares it
-
-### Shutdown Tests
-- Graceful drain on signal
-- In-flight job completion or safe requeue
-- No data loss on forced termination
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Validation Overlay
-
-### Migration Proof Command
-- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
-- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
-
-### Migration Tests
-- All migrations MUST have integration tests
-- Rollback procedures MUST be tested
-- Data integrity checks post-migration
-
-### Persistence Integration Tests
-- Repository abstraction tested against real database
-- Transaction boundary tests
-- Concurrency conflict tests
-- Data integrity validation after recovery
-<!-- decapod:capability-overlay:persistent-state:end -->
-
 ## Codebase Attestation
 
-- Repository signal fingerprint: `828a7c34668bf616f6f2d3164ea38514bfd75279aea507c2a3a4b532d8728b4c`
+- Repository signal fingerprint: `4f6f6441055ceec5c2cdedc3d461ec3bb4a87d48ab8f4ffd261d6594054a3c63`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

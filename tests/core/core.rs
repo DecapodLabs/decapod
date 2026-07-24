@@ -743,7 +743,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must enforce generated wildcard ignore in .gitignore"
     );
     assert!(
-        gitignore.contains("!.decapod/managed/Dockerfile"),
+        gitignore.contains("!.decapod/managed/Dockerfile.decapod"),
         "decapod init must allowlist generated Dockerfile in .gitignore"
     );
     assert!(
@@ -804,10 +804,10 @@ fn scaffold_store_and_docs_cli_behaviors() {
         .expect("git check-ignore runtime data");
     assert!(ignored.success(), "fresh runtime data must be ignored");
 
-    let generated_dockerfile = live_target.join(".decapod/managed/Dockerfile");
+    let generated_dockerfile = live_target.join(".decapod/managed/Dockerfile.decapod");
     assert!(
         generated_dockerfile.exists(),
-        "decapod init must generate .decapod/managed/Dockerfile"
+        "decapod init must generate .decapod/managed/Dockerfile.decapod"
     );
     let dockerfile_content = fs::read_to_string(&generated_dockerfile).expect("read Dockerfile");
     assert!(

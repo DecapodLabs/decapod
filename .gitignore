@@ -46,7 +46,7 @@ dev/
 !.decapod/data/
 !.decapod/data/knowledge.promotions.jsonl
 !.decapod/managed/
-!.decapod/managed/Dockerfile
+!.decapod/managed/Dockerfile.decapod
 !.decapod/managed/specs/
 !.decapod/managed/specs/*.md
 !.decapod/managed/specs/.manifest.json

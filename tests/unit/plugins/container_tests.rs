@@ -229,7 +229,9 @@ fn generated_profile_stages_current_decapod_binary() {
     let dockerfile = prepare_generated_container_profile(&root).expect("prepare profile");
     assert_eq!(
         dockerfile,
-        root.join(".decapod").join("managed").join("Dockerfile")
+        root.join(".decapod")
+            .join("managed")
+            .join("Dockerfile.decapod")
     );
     assert!(
         root.join(".decapod")
@@ -240,6 +242,35 @@ fn generated_profile_stages_current_decapod_binary() {
     );
     let content = fs::read_to_string(dockerfile).expect("read Dockerfile");
     assert!(content.contains("COPY .decapod/managed/decapod /usr/local/bin/decapod.local"));
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
+fn generated_profile_migrates_legacy_dockerfile_without_overwriting_it() {
+    let root = std::env::temp_dir().join(format!(
+        "decapod-legacy-profile-{}",
+        crate::core::ulid::new_ulid().to_lowercase()
+    ));
+    let managed = root.join(".decapod").join("managed");
+    fs::create_dir_all(&managed).expect("mkdir managed");
+    let legacy = managed.join("Dockerfile");
+    let legacy_content = "# project-specific workspace package\nRUN echo keep-me\n";
+    fs::write(&legacy, legacy_content).expect("write legacy Dockerfile");
+
+    let current = prepare_generated_container_profile(&root).expect("migrate profile");
+
+    assert_eq!(
+        current,
+        root.join(".decapod")
+            .join("managed")
+            .join("Dockerfile.decapod")
+    );
+    assert!(!legacy.exists(), "legacy Dockerfile should be renamed");
+    assert_eq!(
+        fs::read_to_string(&current).expect("read migrated Dockerfile"),
+        legacy_content,
+        "migration must preserve project-specific Dockerfile content"
+    );
     let _ = fs::remove_dir_all(&root);
 }
 
@@ -306,7 +337,7 @@ fn local_generated_image_builds_generated_dockerfile_from_repo_context() {
     assert!(args.contains("build\n"));
     assert!(args.contains(&format!(
             "{}\n",
-            root.join(".decapod").join("managed").join("Dockerfile").display()
+            root.join(".decapod").join("managed").join("Dockerfile.decapod").display()
         )));
     assert!(
         args.ends_with(&format!("{}\n", root.display())),
@@ -355,7 +386,7 @@ fn container_schema_includes_dockerfile_template_component() {
         .expect("dockerfile_template component exists");
     assert_eq!(
         component.get("path").and_then(|v| v.as_str()),
-        Some(".decapod/managed/Dockerfile")
+        Some(".decapod/managed/Dockerfile.decapod")
     );
     assert_eq!(
         component.get("extra_packages_env").and_then(|v| v.as_str()),
