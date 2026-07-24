@@ -208,9 +208,48 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - **Secure Storage**: No secrets in config.toml; session passwords in env only; event logs append-only
 - **Defense in Depth**: Validation gates + capability gating + workspace isolation + session auth + audit trail
 
-<!-- decapod:codebase-attestation:start -->## Codebase Attestation
+<!-- decapod:codebase-attestation:start -->
 
-- Repository signal fingerprint: `f19d90de9104ef2d226632fbe5f050f5ffbd0dce4f2ad293e9065375f4c259a2`
+<!-- decapod:capability-overlay:background-processing:start -->
+
+## Background Processing Operations Overlay
+
+### Queue Visibility
+- Queue depth, processing rate, and latency MUST be monitored
+- Dead letter queue MUST be visible and alerted
+- Worker health and processing rate metrics required
+
+### Shutdown Behavior
+- Graceful shutdown: stop accepting new work, finish current job
+- Drain behavior and timeout MUST be selected for the deployment
+- Termination and requeue behavior MUST be selected and proven for the deployment
+
+### Worker Health
+- Worker liveness and readiness probes
+- Queue depth alerts for backpressure detection
+- Processing latency percentiles (p50, p95, p99)
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Operations Overlay
+
+### Backup & Recovery
+- Backup scope, schedule, retention, and restore evidence MUST be selected for the project
+- Recovery point objectives MUST be explicit project decisions, not assumed values
+- Recovery time objectives MUST be explicit project decisions, not assumed values
+- Restore verification cadence MUST be recorded with the operational proof plan
+
+### Migration Operations
+- All schema changes via migration files
+- Migration rollback procedures documented
+- Zero-downtime migration strategy for production
+- Migration health checks and rollback triggers
+<!-- decapod:capability-overlay:persistent-state:end -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `906629e199ed8cc08dcfd8c5590e30fc47c4bb16901ede21a76d457a78da3920`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
