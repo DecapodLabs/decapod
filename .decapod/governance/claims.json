@@ -10,7 +10,7 @@
     "source_issue": "https://github.com/DecapodLabs/decapod/issues/682",
     "status": "active",
     "created_at": "2026-07-22",
-    "updated_at": "2026-07-22",
+    "updated_at": "2026-07-23",
     "change_policy": "Claims are changed only through an issue-scoped review that preserves the baseline, Decapod condition, failure modes, measurements, proof gate, open questions, and evidence status."
   },
   "scope": {
@@ -815,6 +815,226 @@
       "non_guarantees": [
         "Isolation does not remove conflicts caused by intentionally shared interfaces.",
         "A custody record does not prove that the agent's implementation is substantively correct."
+      ]
+    },
+    {
+      "id": "proof-recovery-no-deadlock",
+      "sequence": 5,
+      "title": "Proof recovery must not deadlock on aggregate validation",
+      "statement": "Proof-gated completion must provide a reachable, evidence-preserving transition from stale or missing task proof to VERIFIED without requiring the aggregate validator to pass before proof replay.",
+      "why_it_matters": "If validation rejects every claimed-but-unverified task before verification can replay its proof, validate and verify form a circular dependency and claimed tasks can remain stranded indefinitely.",
+      "baseline": {
+        "description": "Attempt to recover a population of done tasks whose verification records are missing, stale, or failed while the aggregate validator reports those tasks as proof-hook failures.",
+        "population": "Done, claimed tasks with non-passing verification status in a Decapod repository.",
+        "unit_of_analysis": "repository_task",
+        "protocol": [
+          "Record the task IDs, proof status, validation receipt, and validation failure output before recovery.",
+          "Run the repository's normal aggregate validation and the supported verification command against the same task population.",
+          "Record whether each task reaches VERIFIED and whether aggregate validation passes after recovery.",
+          "Preserve the original failure evidence and recovery events in repository-native governance records."
+        ],
+        "controls": [
+          "Use the same repository snapshot, task population, and validation epoch for baseline and recovery observations.",
+          "Count only proof records and command results, not agent assertions."
+        ],
+        "confounders": [
+          "Independent source or governance changes during recovery",
+          "Missing proof artifacts that cannot be reconstructed from repository state",
+          "External GitHub or container availability"
+        ]
+      },
+      "decapod_condition": {
+        "description": "Replay all eligible task proofs from one stable validation snapshot that temporarily excludes the target population from the aggregate proof hook, then require a final aggregate validation pass before accepting VERIFIED results.",
+        "population": "The same done, claimed task population as the baseline.",
+        "unit_of_analysis": "repository_task",
+        "protocol": [
+          "Select the complete target population before any verification result is persisted.",
+          "Capture one deterministic validation result with all selected task IDs in the governed verification context.",
+          "Verify each task against that snapshot and persist results only through the Decapod verification path.",
+          "Run aggregate validation without the temporary verification context and reject the recovery if any claimed task remains unverified."
+        ],
+        "controls": [
+          "Use the same target IDs and active validation epoch for every task in a batch.",
+          "Require proof references to the validation snapshot, verification events, and final aggregate receipt."
+        ],
+        "confounders": [
+          "Proof artifacts may be intentionally invalid rather than merely stale",
+          "A task may require source changes before its proof can pass",
+          "Concurrent mutations can invalidate an otherwise stable snapshot"
+        ]
+      },
+      "failure_modes": [
+        {
+          "id": "aggregate-proof-cycle",
+          "description": "The supported verification workflow cannot make progress because each proof replay is blocked by the aggregate failure it is meant to repair.",
+          "observable_signal": "The target population remains claimed-but-unverified after a bounded recovery attempt, or verification requires bypassing the governed proof path.",
+          "severity": "critical",
+          "falsifier": "A clean repository fixture with multiple unverified done tasks reaches VERIFIED through the supported batch verification path and then passes aggregate validation."
+        },
+        {
+          "id": "false-proof-recovery",
+          "description": "Recovery marks a task verified even though the final aggregate validation still reports an unverified task or the task proof does not match the stable snapshot.",
+          "observable_signal": "A pass status is persisted while final validation fails, target IDs differ across the batch snapshot, or the recorded proof hash is not reproducible.",
+          "severity": "critical",
+          "falsifier": "An adversarial fixture causes final validation or hash comparison to fail and the implementation nevertheless leaves a VERIFIED result."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "proof-recovery-reachability",
+          "name": "Eligible tasks reaching verified state",
+          "definition": "Number of eligible claimed tasks that reach a passing verification result and final aggregate validation divided by the number of eligible claimed tasks selected for recovery.",
+          "unit": "ratio",
+          "scale": "ratio",
+          "aggregation": "rate",
+          "collection_method": "Compare the before-and-after task verification records with the batch verification report and final validation receipt.",
+          "comparator": "Decapod recovery condition versus the aggregate-first baseline.",
+          "success_direction": "higher",
+          "threshold": {
+            "operator": "eq",
+            "value": 1,
+            "unit": "ratio"
+          }
+        },
+        {
+          "id": "unverified-done-count",
+          "name": "Done tasks left claimed-but-unverified",
+          "definition": "Count of done tasks with a claimed assignment and a non-passing verification status after the recovery workflow completes.",
+          "unit": "count",
+          "scale": "nominal",
+          "aggregation": "count",
+          "collection_method": "Run the plan-governed validation gate and inspect its task-level proof report.",
+          "comparator": "Post-recovery count against zero.",
+          "success_direction": "lower",
+          "threshold": {
+            "operator": "eq",
+            "value": 0,
+            "unit": "count"
+          }
+        }
+      ],
+      "proof_gate": {
+        "id": "proof-recovery-gate",
+        "required_artifacts": [
+          {
+            "path": ".decapod/governance/trajectory.json",
+            "kind": "trajectory",
+            "required": true,
+            "integrity": "hash",
+            "relationship": "records the recovery scope, attempts, and proof references"
+          },
+          {
+            "path": ".decapod/governance/validation.json",
+            "kind": "receipt",
+            "required": true,
+            "integrity": "hash",
+            "relationship": "proves final aggregate validation after recovery"
+          },
+          {
+            "path": ".decapod/governance/claims.json",
+            "kind": "schema",
+            "required": true,
+            "integrity": "schema",
+            "relationship": "defines the falsifiability contract for this recovery claim"
+          }
+        ],
+        "required_commands": [
+          {
+            "id": "aggregate-validation",
+            "command": "decapod validate --format json",
+            "expected_exit_code": 0,
+            "bounded_seconds": 120,
+            "evidence_artifact": ".decapod/governance/validation.json"
+          },
+          {
+            "id": "batch-verification",
+            "command": "decapod qa verify --json",
+            "expected_exit_code": 0,
+            "bounded_seconds": 120,
+            "evidence_artifact": ".decapod/governance/trajectory.json"
+          }
+        ],
+        "acceptance_criteria": [
+          "A multi-task proof backlog has a supported recovery path that does not require first passing the aggregate proof hook.",
+          "Every recovered task has a reproducible proof result tied to the same validation snapshot and active validation epoch.",
+          "Final aggregate validation passes with no claimed-but-unverified done task remaining.",
+          "A failed final validation cannot leave a task accepted as verified."
+        ],
+        "failure_behavior": "Keep the task non-verified, preserve the failed proof and validation evidence, and report the precise recovery gate that remains unresolved."
+      },
+      "open_questions": [
+        {
+          "id": "historical-proof-ownership",
+          "question": "When a task was completed by an agent whose proof record is missing, what minimum repository-native evidence is sufficient for a later agent to recover verification without recreating the original execution context?",
+          "decision_impact": "Determines whether recovery can be automatic for legacy backlogs or must return tasks to an actionable open state.",
+          "owner": "Decapod governance maintainers",
+          "status": "open"
+        }
+      ],
+      "evidence": {
+        "status": "partial",
+        "summary": "The repository contains a reproducible multi-task claimed-but-unverified backlog and a regression surface for the aggregate-first deadlock; the recovery implementation and final clean receipt are the acceptance evidence for this claim.",
+        "sources": [
+          {
+            "id": "issue-1013",
+            "kind": "issue",
+            "ref": "https://github.com/DecapodLabs/decapod/issues/1013",
+            "description": "Issue documenting the claimed-but-unverified proof deadlock and its required recovery contract.",
+            "trust": "human-authored"
+          },
+          {
+            "id": "validate-proof-hook",
+            "kind": "code",
+            "ref": "src/decapod/core/validate.rs",
+            "description": "Aggregate validation gate that reports done tasks without passing verification proof.",
+            "trust": "repo-native"
+          },
+          {
+            "id": "verify-replay",
+            "kind": "code",
+            "ref": "src/decapod/plugins/verify.rs",
+            "description": "Verification capture and replay implementation under test for stable batch recovery.",
+            "trust": "repo-native"
+          }
+        ],
+        "observations": [
+          {
+            "id": "proof-deadlock-observation",
+            "observed_at": "2026-07-23",
+            "result": "Normal aggregate validation rejects the existing claimed-but-unverified backlog while a governed verification context can pass validation; batch replay must make that context stable and require a final aggregate pass.",
+            "source_refs": [
+              "issue-1013",
+              "validate-proof-hook",
+              "verify-replay"
+            ]
+          }
+        ],
+        "last_evaluated_at": "2026-07-23"
+      },
+      "implementation_links": [
+        {
+          "surface": "aggregate proof gate",
+          "path": "src/decapod/core/validate.rs",
+          "symbol": "validate_plan_governed_execution_gate",
+          "relationship": "documents"
+        },
+        {
+          "surface": "batch proof replay",
+          "path": "src/decapod/plugins/verify.rs",
+          "symbol": "run_verify_cli",
+          "relationship": "implements"
+        },
+        {
+          "surface": "regression coverage",
+          "path": "tests/verify_deadlock_regression.rs",
+          "symbol": "test_verify_deadlock_prevention",
+          "relationship": "proves"
+        }
+      ],
+      "non_guarantees": [
+        "Recovery does not make invalid proof artifacts valid.",
+        "Recovery does not replace source fixes required by an independent validation failure.",
+        "A passing recovery fixture is not evidence of production performance or universal agent correctness."
       ]
     }
   ],
