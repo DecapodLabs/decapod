@@ -1,7 +1,3 @@
-module(
-    name = "decapod",
-)
-
 bazel_dep(name = "rules_rust", version = "0.71.2")
 
 # Register Rust toolchain

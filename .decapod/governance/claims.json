@@ -1036,6 +1036,235 @@
         "Recovery does not replace source fixes required by an independent validation failure.",
         "A passing recovery fixture is not evidence of production performance or universal agent correctness."
       ]
+    },
+    {
+      "id": "build-layout-compatibility",
+      "sequence": 6,
+      "title": "Centralized build configuration preserves tool discovery",
+      "statement": "Canonical Bazel and Rust toolchain configuration can live under .config/build while minimal root discovery shims preserve Bazel builds, Bzlmod resolution, and rustup toolchain selection without maintaining duplicate configuration bodies.",
+      "why_it_matters": "Build metadata scattered across the repository increases discovery cost and creates a risk that local, CI, and release paths silently use different toolchain or graph definitions.",
+      "baseline": {
+        "description": "Keep the full Bazel graph, Bzlmod dependency declarations, Bazel rc settings, and Rust toolchain declaration at repository root.",
+        "population": "Repository builds, tests, and local Rust toolchain invocations in Decapod checkouts.",
+        "unit_of_analysis": "repository_build_invocation",
+        "protocol": [
+          "Run the repository's Bazel production build and representative Bazel tests from the repository root.",
+          "Run Cargo formatting and the build-layout/release-source policy tests.",
+          "Record the root configuration files and the resulting validation evidence."
+        ],
+        "controls": [
+          "Use the same repository revision, dependency lockfile, Rust version, and CI commands across conditions.",
+          "Treat only repository-native build and validation output as evidence."
+        ],
+        "confounders": [
+          "Bazel version or ruleset cache differences",
+          "Operating-system-specific symlink behavior",
+          "Pre-existing workspace or dependency failures"
+        ]
+      },
+      "decapod_condition": {
+        "description": "Keep canonical build configuration in .config/build and retain only the root files required for Bazel and rustup discovery.",
+        "population": "The same repository build invocation population as the baseline.",
+        "unit_of_analysis": "repository_build_invocation",
+        "protocol": [
+          "Load the root BUILD.bazel shim into the canonical .config/build/decapod.BUILD.bzl macro.",
+          "Include the canonical .config/build/decapod.MODULE.bazel through the root MODULE.bazel file.",
+          "Import .config/build/bazelrc and resolve the root rust-toolchain.toml symlink to the canonical toolchain file.",
+          "Run the same build, test, and governed validation commands as the baseline."
+        ],
+        "controls": [
+          "Preserve target labels, Cargo manifests, MODULE.bazel.lock, and production source/assets unchanged.",
+          "Require a structural policy test to reject duplicated configuration bodies or missing shims."
+        ],
+        "confounders": [
+          "Bazel include support differs by Bazel release",
+          "Git clients may not preserve symlinks when configured not to do so",
+          "CI may exercise additional targets beyond the local focused tests"
+        ]
+      },
+      "failure_modes": [
+        {
+          "id": "root-tool-discovery-broken",
+          "description": "A required tool cannot discover the canonical configuration after the move.",
+          "observable_signal": "Bazel cannot load the root package/module, Bazel rc settings are absent, or rustup does not resolve the pinned toolchain.",
+          "severity": "critical",
+          "falsifier": "A clean checkout fails the shared Bazel build or the root rustup compatibility check after the canonical files are moved."
+        },
+        {
+          "id": "configuration-divergence",
+          "description": "The root shim or canonical file diverges from the intended single source of truth.",
+          "observable_signal": "A second configuration body appears at root, the shim points to a stale path, or the release graph policy reads a different build definition than CI.",
+          "severity": "high",
+          "falsifier": "The structural layout test detects duplicate canonical content or the release policy and Bazel graph disagree about production inputs."
+        }
+      ],
+      "measurements": [
+        {
+          "id": "build-discovery-shim-completeness",
+          "name": "Required root discovery shims present",
+          "definition": "Count of required root BUILD.bazel, MODULE.bazel, .bazelrc, and rust-toolchain.toml compatibility entrypoints that resolve to the canonical configuration.",
+          "unit": "count",
+          "scale": "nominal",
+          "aggregation": "count",
+          "collection_method": "Run the repository build-layout policy test and inspect the root entrypoint metadata.",
+          "comparator": "Post-migration count against the required set of four entrypoints.",
+          "success_direction": "match",
+          "threshold": {
+            "operator": "eq",
+            "value": 4,
+            "unit": "entrypoint"
+          }
+        },
+        {
+          "id": "canonical-build-layout-pass",
+          "name": "Canonical build layout policy result",
+          "definition": "Whether the structural layout test confirms one canonical .config/build configuration home and valid root compatibility shims.",
+          "unit": "boolean",
+          "scale": "nominal",
+          "aggregation": "qualitative",
+          "collection_method": "Run cargo test --test build_layout_policy.",
+          "comparator": "Required invariant equals a passing test result.",
+          "success_direction": "match",
+          "threshold": null
+        }
+      ],
+      "proof_gate": {
+        "id": "build-layout-proof",
+        "required_artifacts": [
+          {
+            "path": ".config/build/decapod.BUILD.bzl",
+            "kind": "document",
+            "required": true,
+            "integrity": "git-tracked",
+            "relationship": "contains the canonical Bazel target graph"
+          },
+          {
+            "path": "tests/build_layout_policy.rs",
+            "kind": "test",
+            "required": true,
+            "integrity": "git-tracked",
+            "relationship": "proves the canonical layout and root compatibility shims"
+          },
+          {
+            "path": ".decapod/governance/validation.json",
+            "kind": "receipt",
+            "required": true,
+            "integrity": "hash",
+            "relationship": "records the governed validation result and Decapod evaluator version"
+          },
+          {
+            "path": ".decapod/governance/claims.json",
+            "kind": "schema",
+            "required": true,
+            "integrity": "schema",
+            "relationship": "defines the falsifiability contract for the layout claim"
+          }
+        ],
+        "required_commands": [
+          {
+            "id": "build-layout-test",
+            "command": "cargo test --test build_layout_policy --test release_artifact_policy",
+            "expected_exit_code": 0,
+            "bounded_seconds": 120,
+            "evidence_artifact": "tests/build_layout_policy.rs"
+          },
+          {
+            "id": "governed-validation",
+            "command": "DECAPOD_CONTAINER=1 decapod validate --format json",
+            "expected_exit_code": 0,
+            "bounded_seconds": 120,
+            "evidence_artifact": ".decapod/governance/validation.json"
+          }
+        ],
+        "acceptance_criteria": [
+          "Canonical Bazel and Rust toolchain bodies live under .config/build.",
+          "Root Bazel and rustup discovery entrypoints remain valid and do not duplicate canonical configuration.",
+          "The release source policy continues to exclude test code from production targets.",
+          "Decapod v0.81.0 governed validation passes with no failures."
+        ],
+        "failure_behavior": "Keep the layout claim unsupported, preserve the failing build or validation evidence, and restore or repair the relevant compatibility shim before publication."
+      },
+      "open_questions": [
+        {
+          "id": "bazel-root-marker-policy",
+          "question": "Should a future Bazel release permit the generated module lockfile to move under .config/build, or must it remain root-discovered?",
+          "decision_impact": "Determines whether the root lockfile remains an intentional exception to the canonical build configuration directory.",
+          "owner": "Decapod build maintainers",
+          "status": "deferred"
+        }
+      ],
+      "evidence": {
+        "status": "supported",
+        "summary": "The canonical layout, root compatibility shims, release-source policy, and v0.81.0 governed validation are present and passing locally; shared Bazel CI remains the final publication check.",
+        "sources": [
+          {
+            "id": "issue-998",
+            "kind": "issue",
+            "ref": "https://github.com/DecapodLabs/decapod/issues/998",
+            "description": "Issue defining the production-source and release-artifact boundary that this build graph preserves.",
+            "trust": "human-authored"
+          },
+          {
+            "id": "canonical-bazel-graph",
+            "kind": "code",
+            "ref": ".config/build/decapod.BUILD.bzl",
+            "description": "Canonical Bazel target graph and production source boundary.",
+            "trust": "repo-native"
+          },
+          {
+            "id": "build-layout-test",
+            "kind": "test",
+            "ref": "tests/build_layout_policy.rs",
+            "description": "Structural test for canonical configuration placement and compatibility shims.",
+            "trust": "repo-native"
+          },
+          {
+            "id": "v081-validation",
+            "kind": "artifact",
+            "ref": ".decapod/governance/validation.json",
+            "description": "Decapod v0.81.0 validation receipt with zero failures.",
+            "trust": "repo-native"
+          }
+        ],
+        "observations": [
+          {
+            "id": "canonical-layout-observation",
+            "observed_at": "2026-07-23",
+            "result": "Focused layout and release-source tests passed, and Decapod v0.81.0 validation reported status=ok with fail_count=0; shared Bazel CI then exposed a remaining compatibility failure for repair.",
+            "source_refs": [
+              "canonical-bazel-graph",
+              "build-layout-test",
+              "v081-validation"
+            ]
+          }
+        ],
+        "last_evaluated_at": "2026-07-23"
+      },
+      "implementation_links": [
+        {
+          "surface": "Bazel root shim",
+          "path": "BUILD.bazel",
+          "symbol": "decapod_targets",
+          "relationship": "documents"
+        },
+        {
+          "surface": "canonical Bazel graph",
+          "path": ".config/build/decapod.BUILD.bzl",
+          "symbol": "decapod_targets",
+          "relationship": "implements"
+        },
+        {
+          "surface": "layout regression coverage",
+          "path": "tests/build_layout_policy.rs",
+          "symbol": "build_and_toolchain_configuration_has_one_canonical_home",
+          "relationship": "proves"
+        }
+      ],
+      "non_guarantees": [
+        "The layout claim does not guarantee that Bazel versions outside the tested CI matrix support every module include behavior.",
+        "The root rustup symlink does not prove that Git clients configured without symlink support will preserve the intended checkout semantics.",
+        "Passing local validation is not a substitute for the shared Bazel CI build."
+      ]
     }
   ],
   "governance": {

@@ -22,7 +22,7 @@ fn build_and_toolchain_configuration_has_one_canonical_home() {
     );
     assert_eq!(
         fs::read_to_string(root.join("MODULE.bazel")).expect("read module root shim"),
-        "include(\"//.config/build:decapod.MODULE.bazel\")\n",
+        "module(\n    name = \"decapod\",\n)\n\ninclude(\"//.config/build:decapod.MODULE.bazel\")\n",
     );
     assert_eq!(
         fs::read_to_string(root.join(".bazelrc")).expect("read Bazel rc root shim"),

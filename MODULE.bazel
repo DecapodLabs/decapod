@@ -1,1 +1,5 @@
+module(
+    name = "decapod",
+)
+
 include("//.config/build:decapod.MODULE.bazel")
