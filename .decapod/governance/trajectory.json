@@ -1,101 +1,43 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "issues-995-1002-1004-20260724",
-  "intent_id": "intent:issues-995-1002-1004-20260724",
-  "task_id": "bugs_01ky8qy7yt8nn1x9",
-  "original_intent": "Solve GitHub Issues #995, #1002, and #1004 by consolidating repository configuration, schema, build, benchmark, and asset layouts.",
-  "derived_intent": "Move repository-owned tool/build/benchmark/Docker assets into explicit asset subdirectories where supported, retain required root discovery files, add strict plan trajectory validation schemas under assets, and update all consumers/tests.",
-  "destination": "Publish one reviewable PR linked to Issues #995, #1002, and #1004.",
-  "current_phase": "verify",
+  "run_id": "issue-998-20260723",
+  "intent_id": "intent:issue-998-20260723",
+  "task_id": "bugs_01ky8vzzgg651154",
+  "original_intent": "Solve GitHub Issue #998 by moving Rust test implementations out of src so release builds contain production code and relevant runtime assets only.",
+  "derived_intent": "Use out-of-line cfg(test) modules under tests/unit, preserve coverage, and prove cargo release and Bazel release graphs exclude tests.",
+  "current_phase": "implementation and release proof",
   "next_transitions": [
-    "implementation",
-    "publish",
-    "resolve-global-proof-backlog",
-    "verify"
-  ],
-  "blockers": [
-    "Task-level verification remains blocked by the shared baseline: decapod validate fails on 18 unrelated claimed-but-unverified TODOs."
+    "run Decapod validation, verify todo, publish PR"
   ],
   "active_boundaries": [
-    ".config/**",
-    ".github/**",
-    "BUILD.bazel",
-    "Cargo.toml",
-    "assets/**",
-    "assets/**,.config/**,Cargo.toml,BUILD.bazel,.github/**,tests/**,build/**,project/**,Dockerfile.workspace,src/** references only",
-    "tests/**"
+    "No inline test implementations in src; tests remain test-only; release targets include production src and relevant assets only."
   ],
   "repo_scope": [
-    "Issues #995, #1002, and #1004 repository organization"
+    "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
   ],
   "inspected_files": [
-    ".cargo/config.toml",
-    ".github/workflows/ci.yml",
-    ".github/workflows/release.yml",
-    ".gitignore",
+    ".decapod/config.toml",
     "BUILD.bazel",
     "Cargo.toml",
-    "src/decapod/core/trajectory.rs",
-    "src/decapod/core/validate.rs",
-    "src/decapod/plan_governance.rs"
+    "src",
+    "tests"
   ],
   "modified_files": [
-    "assets/Dockerfile.workspace",
-    "assets/benches/perf_1_1.rs",
-    "assets/benches/perf_1_2.rs",
-    "assets/benches/perf_1_3.rs",
-    "assets/build/compress_constitution.rs",
-    "assets/build/constitution_index.rs",
-    "assets/schemas/claims.schema.json",
-    "assets/schemas/constitution.schema.json",
-    "assets/schemas/plan.schema.json",
-    "assets/schemas/trajectory.schema.json",
-    "assets/schemas/validation.schema.json"
+    "src",
+    "tests/release_artifact_policy.rs",
+    "tests/unit"
   ],
   "declared_commands": [
-    "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo check --all-targets",
-    "cargo deny check --config .config/deny.toml",
-    "cargo fmt --all -- --check",
-    "cargo test --test assets_schema_contract --test release_workflow_policy --test constitution_scaffolding",
-    "docker run ... decapod validate --format json",
-    "gh pr checks 1010 --watch",
-    "gh pr create #1010",
-    "git push origin agent/unknown/bugs_01ky8qy7yt8nn1x9-issues-995-1002-1004"
+    "cargo build --release --bin decapod",
+    "cargo fmt --all",
+    "cargo test --lib",
+    "cargo test --no-run",
+    "cargo test --test release_artifact_policy"
   ],
   "tool_calls": [],
-  "loops": [
-    {
-      "intent_id": "intent:issues-995-1002-1004-20260724",
-      "trajectory_id": "issues-995-1002-1004-20260724",
-      "loop_id": "issues-995-1002-1004-validation",
-      "loop_type": "verification",
-      "attempt": 1,
-      "trigger": "engine",
-      "grader_result": "fail",
-      "feedback": "Container validation reports only the pre-existing global claimed-but-unverified TODO proof hook after all repository checks pass.",
-      "proof_refs": [
-        "cargo_clippy",
-        "cargo_deny",
-        "cargo_test_asset_contract",
-        "container_decapod_validate"
-      ],
-      "mutation_proposal": "none",
-      "status": "blocked",
-      "custody_event_id": "event:4"
-    }
-  ],
   "checks": [
     {
-      "name": "cargo_check_all_targets",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_clippy",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_deny",
+      "name": "cargo_build_release",
       "status": "passed"
     },
     {
@@ -103,106 +45,52 @@
       "status": "passed"
     },
     {
-      "name": "cargo_test_asset_contract",
+      "name": "cargo_test_lib",
+      "status": "partial"
+    },
+    {
+      "name": "cargo_test_no_run",
       "status": "passed"
     },
     {
-      "name": "cargo_test_constitution",
+      "name": "git_diff_check",
       "status": "passed"
     },
     {
-      "name": "cargo_test_release_workflow",
-      "status": "passed"
-    },
-    {
-      "name": "decapod_qa_verify",
-      "status": "failed"
-    },
-    {
-      "name": "decapod_validate",
-      "status": "failed"
-    },
-    {
-      "name": "hosted_chaos_replay",
-      "status": "passed"
-    },
-    {
-      "name": "hosted_checks",
-      "status": "passed"
-    },
-    {
-      "name": "hosted_clippy",
-      "status": "passed"
-    },
-    {
-      "name": "hosted_contract_conformance",
-      "status": "passed"
-    },
-    {
-      "name": "hosted_daemonless",
-      "status": "passed"
-    },
-    {
-      "name": "hosted_dependencies",
-      "status": "passed"
-    },
-    {
-      "name": "hosted_rpc",
-      "status": "passed"
-    },
-    {
-      "name": "hosted_sync_docs",
-      "status": "passed"
-    },
-    {
-      "name": "hosted_tests",
-      "status": "passed"
-    },
-    {
-      "name": "hosted_validate",
+      "name": "release_artifact_policy",
       "status": "passed"
     }
   ],
   "evidence": [
-    "All required hosted checks for PR #1010 passed after correcting cargo-deny global option ordering.",
-    "Container Decapod validation passed all repository gates except the pre-existing global claimed-but-unverified TODO proof hook.",
-    "Issue #1002 plan, trajectory, and validation schemas added under assets/schemas and covered by tests/assets_schema_contract.rs.",
-    "Issue #1004 build helpers, benchmarks, and Dockerfile moved under assets with Cargo, Bazel, CI, release, and tests updated.",
-    "Issue #995 layout consolidated under assets and .config while root Cargo/rust-toolchain discovery contracts were retained.",
-    "PR #1010 published at https://github.com/DecapodLabs/decapod/pull/1010.",
-    "The implementation PR #1010 remains fully green on GitHub.",
-    "decapod qa verify todo bugs_01ky8qy7yt8nn1x9 reported validate_passes failed because the shared validation baseline remains unchanged and fails on unrelated claimed-but-unverified tasks."
+    "Release binary target/release/decapod is a stripped 16,902,768-byte ELF; strings contains no migrated test module/helper symbols.",
+    "cargo test --lib ran 193 relocated tests; 192 passed and 1 failed on the pre-existing stale AGENTS.md entrypoint fingerprint fixture."
   ],
-  "shortcut_risk_signals": [
-    "No implementation shortcut: moved consumers and added executable contract tests."
-  ],
+  "shortcut_risk_signals": [],
   "unresolved_assumptions": [
-    "Task-level verification requires a passing local decapod validate baseline; hosted PR validation cannot rewrite the shared local custody baseline.",
-    "The 18 claimed-but-unverified TODOs are pre-existing global state outside this task scope and were not altered."
+    "The entrypoint fingerprint failure is baseline because this change does not alter canonical templates or expected release constants."
   ],
-  "completion_claim": "Issues #995, #1002, and #1004 are implemented and published in green PR #1010; task verification is explicitly blocked by the pre-existing global proof backlog.",
-  "proof_status": "failed",
+  "proof_status": "partial",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
-    "shortcut_risk": "caution",
-    "completion_proof": "unsupported"
+    "shortcut_risk": "supported",
+    "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:e749bf6e51a0a4934a49447f60adf66c5524c02ee0b443d45768958478c9e0d6",
+  "artifact_hash": "sha256:064dfe254bb9a8b271003f71abe869cca956502ded38d57ca7b5a83cafde4682",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:issues-995-1002-1004-20260724": {
-        "id": "intent:issues-995-1002-1004-20260724",
-        "raw_intent": "Solve GitHub Issues #995, #1002, and #1004 by consolidating repository configuration, schema, build, benchmark, and asset layouts.",
-        "refined_intent": "Move repository-owned tool/build/benchmark/Docker assets into explicit asset subdirectories where supported, retain required root discovery files, add strict plan trajectory validation schemas under assets, and update all consumers/tests.",
+      "intent:issue-998-20260723": {
+        "id": "intent:issue-998-20260723",
+        "raw_intent": "Solve GitHub Issue #998 by moving Rust test implementations out of src so release builds contain production code and relevant runtime assets only.",
+        "refined_intent": "Use out-of-line cfg(test) modules under tests/unit, preserve coverage, and prove cargo release and Bazel release graphs exclude tests.",
         "acceptance_criteria": [],
         "constraints": [
-          "Issues #995, #1002, and #1004 repository organization"
+          "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
         ],
         "assumptions": [],
         "boundaries": [
-          "assets/**,.config/**,Cargo.toml,BUILD.bazel,.github/**,tests/**,build/**,project/**,Dockerfile.workspace,src/** references only"
+          "No inline test implementations in src; tests remain test-only; release targets include production src and relevant assets only."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -215,110 +103,66 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:issues-995-1002-1004-20260724",
+        "intent_id": "intent:issue-998-20260723",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:issues-995-1002-1004-20260724",
+        "intent_id": "intent:issue-998-20260723",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:issues-995-1002-1004-20260724",
+        "intent_id": "intent:issue-998-20260723",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issues-995-1002-1004-20260724"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:issues-995-1002-1004-20260724",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issues-995-1002-1004-20260724"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:issues-995-1002-1004-20260724",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issues-995-1002-1004-20260724"
+        "detail": "trajectory:issue-998-20260723"
       }
     ],
     "trajectories": {
-      "issues-995-1002-1004-20260724": {
-        "id": "issues-995-1002-1004-20260724",
-        "intent_id": "intent:issues-995-1002-1004-20260724",
+      "issue-998-20260723": {
+        "id": "issue-998-20260723",
+        "intent_id": "intent:issue-998-20260723",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "loop:issues-995-1002-1004-validation:1",
+            "action": "implementation and release proof",
+            "command": "cargo fmt --all",
             "scope": [
-              "Issues #995, #1002, and #1004 repository organization"
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
             ],
-            "observations": [],
+            "observations": [
+              "src",
+              "tests",
+              "Cargo.toml",
+              "BUILD.bazel",
+              ".decapod/config.toml",
+              "src",
+              "tests/unit",
+              "tests/release_artifact_policy.rs",
+              "Release binary target/release/decapod is a stripped 16,902,768-byte ELF; strings contains no migrated test module/helper symbols.",
+              "cargo test --lib ran 193 relocated tests; 192 passed and 1 failed on the pre-existing stale AGENTS.md entrypoint fingerprint fixture."
+            ],
             "proof_refs": [
-              "cargo_test_asset_contract",
-              "cargo_deny",
-              "cargo_clippy",
-              "container_decapod_validate"
+              "cargo_fmt",
+              "cargo_test_no_run",
+              "cargo_test_lib",
+              "release_artifact_policy",
+              "cargo_build_release",
+              "git_diff_check"
             ],
             "validation_findings": [
-              "Container validation reports only the pre-existing global claimed-but-unverified TODO proof hook after all repository checks pass."
+              "The entrypoint fingerprint failure is baseline because this change does not alter canonical templates or expected release constants."
             ],
             "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "publish",
-            "command": "gh pr create #1010",
-            "scope": [
-              "Issues #995, #1002, and #1004 repository organization"
-            ],
-            "observations": [
-              "PR #1010 published at https://github.com/DecapodLabs/decapod/pull/1010.",
-              "All required hosted checks for PR #1010 passed after correcting cargo-deny global option ordering."
-            ],
-            "proof_refs": [
-              "hosted_validate",
-              "hosted_clippy",
-              "hosted_dependencies",
-              "hosted_contract_conformance",
-              "hosted_rpc",
-              "hosted_chaos_replay",
-              "hosted_daemonless",
-              "hosted_tests",
-              "hosted_sync_docs"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "verify",
-            "scope": [
-              "Issues #995, #1002, and #1004 repository organization"
-            ],
-            "observations": [
-              "decapod qa verify todo bugs_01ky8qy7yt8nn1x9 reported validate_passes failed because the shared validation baseline remains unchanged and fails on unrelated claimed-but-unverified tasks.",
-              "The implementation PR #1010 remains fully green on GitHub."
-            ],
-            "proof_refs": [
-              "hosted_checks",
-              "decapod_qa_verify"
-            ],
-            "validation_findings": [
-              "Task-level verification requires a passing local decapod validate baseline; hosted PR validation cannot rewrite the shared local custody baseline."
-            ],
-            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 4
   }
 }
