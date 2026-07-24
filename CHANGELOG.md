@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.80.4](https://github.com/DecapodLabs/decapod/compare/v0.80.3...v0.80.4) - 2026-07-24
+
+### Other
+
+- Record hosted verification and proof blocker
+- Fix cargo-deny config invocation
+- Record consolidation validation evidence
+- Consolidate repository assets and governance schemas
+
 ## [0.80.3](https://github.com/DecapodLabs/decapod/compare/v0.80.2...v0.80.3) - 2026-07-24
 
 ### Fixed
