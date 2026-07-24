@@ -6,32 +6,135 @@
   "original_intent": "Solve GitHub Issues #995, #1002, and #1004 by consolidating repository configuration, schema, build, benchmark, and asset layouts.",
   "derived_intent": "Move repository-owned tool/build/benchmark/Docker assets into explicit asset subdirectories where supported, retain required root discovery files, add strict plan trajectory validation schemas under assets, and update all consumers/tests.",
   "destination": "Publish one reviewable PR linked to Issues #995, #1002, and #1004.",
-  "current_phase": "research",
+  "current_phase": "implementation",
   "next_transitions": [
-    "implementation"
+    "implementation",
+    "publish"
+  ],
+  "blockers": [
+    "Global Decapod proof hook reports 18 unrelated done TODOs as claimed-but-unverified; repository gates otherwise pass."
   ],
   "active_boundaries": [
-    "assets/**,.config/**,Cargo.toml,BUILD.bazel,.github/**,tests/**,build/**,project/**,Dockerfile.workspace,src/** references only"
+    ".config/**",
+    ".github/**",
+    "BUILD.bazel",
+    "Cargo.toml",
+    "assets/**",
+    "assets/**,.config/**,Cargo.toml,BUILD.bazel,.github/**,tests/**,build/**,project/**,Dockerfile.workspace,src/** references only",
+    "tests/**"
   ],
   "repo_scope": [
     "Issues #995, #1002, and #1004 repository organization"
   ],
-  "inspected_files": [],
-  "modified_files": [],
-  "declared_commands": [],
+  "inspected_files": [
+    ".cargo/config.toml",
+    ".github/workflows/ci.yml",
+    ".github/workflows/release.yml",
+    ".gitignore",
+    "BUILD.bazel",
+    "Cargo.toml",
+    "src/decapod/core/trajectory.rs",
+    "src/decapod/core/validate.rs",
+    "src/decapod/plan_governance.rs"
+  ],
+  "modified_files": [
+    "assets/Dockerfile.workspace",
+    "assets/benches/perf_1_1.rs",
+    "assets/benches/perf_1_2.rs",
+    "assets/benches/perf_1_3.rs",
+    "assets/build/compress_constitution.rs",
+    "assets/build/constitution_index.rs",
+    "assets/schemas/claims.schema.json",
+    "assets/schemas/constitution.schema.json",
+    "assets/schemas/plan.schema.json",
+    "assets/schemas/trajectory.schema.json",
+    "assets/schemas/validation.schema.json"
+  ],
+  "declared_commands": [
+    "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+    "cargo check --all-targets",
+    "cargo deny check --config .config/deny.toml",
+    "cargo fmt --all -- --check",
+    "cargo test --test assets_schema_contract --test release_workflow_policy --test constitution_scaffolding",
+    "docker run ... decapod validate --format json"
+  ],
   "tool_calls": [],
-  "checks": [],
-  "evidence": [],
-  "shortcut_risk_signals": [],
-  "unresolved_assumptions": [],
-  "proof_status": "no_checks_run",
+  "loops": [
+    {
+      "intent_id": "intent:issues-995-1002-1004-20260724",
+      "trajectory_id": "issues-995-1002-1004-20260724",
+      "loop_id": "issues-995-1002-1004-validation",
+      "loop_type": "verification",
+      "attempt": 1,
+      "trigger": "engine",
+      "grader_result": "fail",
+      "feedback": "Container validation reports only the pre-existing global claimed-but-unverified TODO proof hook after all repository checks pass.",
+      "proof_refs": [
+        "cargo_clippy",
+        "cargo_deny",
+        "cargo_test_asset_contract",
+        "container_decapod_validate"
+      ],
+      "mutation_proposal": "none",
+      "status": "blocked",
+      "custody_event_id": "event:4"
+    }
+  ],
+  "checks": [
+    {
+      "name": "cargo_check_all_targets",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_clippy",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_deny",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_fmt",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_test_asset_contract",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_test_constitution",
+      "status": "passed"
+    },
+    {
+      "name": "cargo_test_release_workflow",
+      "status": "passed"
+    },
+    {
+      "name": "decapod_validate",
+      "status": "failed"
+    }
+  ],
+  "evidence": [
+    "Container Decapod validation passed all repository gates except the pre-existing global claimed-but-unverified TODO proof hook.",
+    "Issue #1002 plan, trajectory, and validation schemas added under assets/schemas and covered by tests/assets_schema_contract.rs.",
+    "Issue #1004 build helpers, benchmarks, and Dockerfile moved under assets with Cargo, Bazel, CI, release, and tests updated.",
+    "Issue #995 layout consolidated under assets and .config while root Cargo/rust-toolchain discovery contracts were retained."
+  ],
+  "shortcut_risk_signals": [
+    "No implementation shortcut: moved consumers and added executable contract tests."
+  ],
+  "unresolved_assumptions": [
+    "The 18 claimed-but-unverified TODOs are pre-existing global state outside this task scope and were not altered."
+  ],
+  "completion_claim": "Implementation is complete and locally proven; publish the branch and PR, then resolve the task proof hook if the global verifier permits it.",
+  "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
-    "shortcut_risk": "supported",
+    "shortcut_risk": "caution",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:ca7d4ae268bdc4c9b836749e0ef8bc6d836d1a2e26ec274395cec5f371e5b6fa",
+  "artifact_hash": "sha256:6177ead2017c073e2e214a4c097397845fb501d71129a2adf7a3ccea603fcc86",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -66,11 +169,44 @@
         "event_id": "event:3",
         "intent_id": "intent:issues-995-1002-1004-20260724",
         "kind": "refined"
+      },
+      {
+        "sequence": 4,
+        "event_id": "event:4",
+        "intent_id": "intent:issues-995-1002-1004-20260724",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issues-995-1002-1004-20260724"
       }
     ],
-    "trajectories": {},
+    "trajectories": {
+      "issues-995-1002-1004-20260724": {
+        "id": "issues-995-1002-1004-20260724",
+        "intent_id": "intent:issues-995-1002-1004-20260724",
+        "evidence_only": true,
+        "steps": [
+          {
+            "sequence": 4,
+            "action": "loop:issues-995-1002-1004-validation:1",
+            "scope": [
+              "Issues #995, #1002, and #1004 repository organization"
+            ],
+            "observations": [],
+            "proof_refs": [
+              "cargo_test_asset_contract",
+              "cargo_deny",
+              "cargo_clippy",
+              "container_decapod_validate"
+            ],
+            "validation_findings": [
+              "Container validation reports only the pre-existing global claimed-but-unverified TODO proof hook after all repository checks pass."
+            ],
+            "custody_event_id": "event:4"
+          }
+        ]
+      }
+    },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 3
+    "next_sequence": 4
   }
 }
