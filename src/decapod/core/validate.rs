@@ -6246,7 +6246,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_generated_artifact_whitelist",
-            validate_generated_artifact_whitelist(store, ctx, main_root)
+            validate_generated_artifact_whitelist(store, ctx, working_root)
         );
         gate!(
             s,
@@ -6275,7 +6275,7 @@ pub fn run_validation(
                 timings,
                 ctx,
                 "validate_projection_consistency",
-                validate_projection_consistency(ctx, main_root, working_root)
+                validate_projection_consistency(ctx, working_root, working_root)
             );
         }
         gate!(
@@ -6297,7 +6297,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_trajectory_artifacts_if_present",
-            validate_trajectory_artifacts_if_present(ctx, main_root)
+            validate_trajectory_artifacts_if_present(ctx, working_root)
         );
         gate!(
             s,
@@ -6332,7 +6332,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_context_capsules_if_present",
-            validate_context_capsules_if_present(ctx, main_root)
+            validate_context_capsules_if_present(ctx, working_root)
         );
         gate!(
             s,
@@ -6564,7 +6564,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_plan_governed_execution_gate",
-            validate_plan_governed_execution_gate(store, ctx, main_root)
+            validate_plan_governed_execution_gate(store, ctx, working_root)
         );
     });
 
