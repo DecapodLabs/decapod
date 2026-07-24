@@ -72,7 +72,7 @@ fn release_targets_are_production_sources_plus_runtime_assets() {
         .split("rust_binary(")
         .next()
         .expect("rust library graph");
-    assert!(library_graph.contains("srcs = glob([\"src/**/*.rs\"]"));
+    assert!(library_graph.contains("srcs = native.glob([\"src/**/*.rs\"]"));
     assert!(library_graph.contains("assets/schemas/*.schema.json"));
     assert!(
         !library_graph.contains("tests/"),

@@ -1195,7 +1195,7 @@
       ],
       "evidence": {
         "status": "supported",
-        "summary": "The canonical layout, root compatibility shims, release-source policy, and v0.81.0 governed validation are present and passing locally; shared Bazel CI remains the final publication check.",
+        "summary": "The canonical layout, root compatibility shims, release-source policy, v0.81.0 governed validation, and shared Bazel CI are passing.",
         "sources": [
           {
             "id": "issue-998",
@@ -1224,17 +1224,25 @@
             "ref": ".decapod/governance/validation.json",
             "description": "Decapod v0.81.0 validation receipt with zero failures.",
             "trust": "repo-native"
+          },
+          {
+            "id": "shared-bazel-ci",
+            "kind": "artifact",
+            "ref": "https://github.com/DecapodLabs/decapod/actions/runs/30065576008",
+            "description": "Pull request CI shared Bazel build and downstream Bazel-backed test gates passed for the final migration commit.",
+            "trust": "repo-native"
           }
         ],
         "observations": [
           {
             "id": "canonical-layout-observation",
             "observed_at": "2026-07-23",
-            "result": "Focused layout and release-source tests passed, and Decapod v0.81.0 validation reported status=ok with fail_count=0; shared Bazel CI then exposed a remaining compatibility failure for repair.",
+            "result": "Focused layout and release-source tests passed, Decapod v0.81.0 validation reported status=ok with fail_count=0, and shared Bazel CI passed the final canonical-layout build and downstream test gates.",
             "source_refs": [
               "canonical-bazel-graph",
               "build-layout-test",
-              "v081-validation"
+              "v081-validation",
+              "shared-bazel-ci"
             ]
           }
         ],
@@ -1263,7 +1271,7 @@
       "non_guarantees": [
         "The layout claim does not guarantee that Bazel versions outside the tested CI matrix support every module include behavior.",
         "The root rustup symlink does not prove that Git clients configured without symlink support will preserve the intended checkout semantics.",
-        "Passing local validation is not a substitute for the shared Bazel CI build."
+        "The claim does not guarantee compatibility with Bazel versions outside the tested CI matrix."
       ]
     }
   ],

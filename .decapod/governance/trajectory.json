@@ -7,6 +7,7 @@
   "derived_intent": "Use out-of-line cfg(test) modules under tests/unit, preserve coverage, and prove cargo release and Bazel release graphs exclude tests.",
   "current_phase": "validation",
   "next_transitions": [
+    "complete",
     "publish",
     "publish scoped PR with explicit governance blocker handoff",
     "run Decapod validation, verify todo, publish PR",
@@ -22,6 +23,8 @@
     ".bazelrc",
     ".config/build",
     ".decapod/config.toml",
+    ".decapod/governance/claims.json",
+    ".decapod/governance/validation.json",
     "BUILD.bazel",
     "Cargo.toml",
     "MODULE.bazel",
@@ -33,6 +36,7 @@
   "modified_files": [
     ".bazelrc",
     ".config/build",
+    ".decapod/governance/claims.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
     "BUILD.bazel",
@@ -53,6 +57,7 @@
     "cargo test --no-run",
     "cargo test --test build_layout_policy --test release_artifact_policy",
     "cargo test --test release_artifact_policy",
+    "cargo test --test research_claims --test build_layout_policy --test release_artifact_policy",
     "decapod qa verify recover --json",
     "decapod validate",
     "decapod validate --format json"
@@ -136,7 +141,15 @@
       "status": "passed"
     },
     {
+      "name": "focused_tests",
+      "status": "passed"
+    },
+    {
       "name": "git_diff_check",
+      "status": "passed"
+    },
+    {
+      "name": "governed_validation",
       "status": "passed"
     },
     {
@@ -152,6 +165,10 @@
       "status": "passed"
     },
     {
+      "name": "shared_bazel_ci",
+      "status": "passed"
+    },
+    {
       "name": "validation_parallelism",
       "status": "passed"
     }
@@ -160,6 +177,7 @@
     "19 TODOs recovered and verified from one stable validation snapshot; final aggregate validation status=ok; parallelism=1",
     "Container validation passed all repository gates except the shared claimed-but-unverified proof hook.",
     "Final no-bypass validation status=ok with fail_count=0; 19 recovered TODOs passed; validation parallelism=1.",
+    "PR #1015 CI run 30065576008 passed shared Bazel build and downstream test gates",
     "Release binary target/release/decapod is a stripped 16,902,768-byte ELF; strings contains no migrated test module/helper symbols.",
     "The former shared proof-hook blocker and the stale entrypoint fixture are resolved in this PR.",
     "cargo test --lib ran 193 relocated tests; 192 passed and 1 failed on the pre-existing stale AGENTS.md entrypoint fingerprint fixture.",
@@ -177,7 +195,7 @@
     "The entrypoint fingerprint failure is baseline because this change does not alter canonical templates or expected release constants.",
     "The shared backlog predates Issue #998 and is outside the scoped source/test refactor."
   ],
-  "completion_claim": "Build configuration is centralized under .config/build with root Bazel and rustup compatibility shims; v0.81.0 governed validation passes.",
+  "completion_claim": "Claims ledger includes the centralized build-layout claim, local focused proof passes, shared Bazel CI passes, and Decapod v0.81.0 validation reports zero failures.",
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -185,7 +203,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:db0f868d0ce95f5764d5796ba16a548a57c4b46f1dfd4f5f9049d277ad297b13",
+  "artifact_hash": "sha256:9d3f523c23654b2c0cbb864ba9404eb65ab497803d15469a2b5a109fb4b14a8a",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -448,6 +466,20 @@
       {
         "sequence": 36,
         "event_id": "event:36",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 37,
+        "event_id": "event:37",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 38,
+        "event_id": "event:38",
         "intent_id": "intent:issue-998-20260723",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue-998-20260723"
@@ -1075,12 +1107,52 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:36"
+          },
+          {
+            "sequence": 37,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a259af0629b39b23 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:37"
+          },
+          {
+            "sequence": 38,
+            "action": "validation",
+            "command": "cargo test --test research_claims --test build_layout_policy --test release_artifact_policy",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/claims.json",
+              ".decapod/governance/validation.json",
+              "tests/release_artifact_policy.rs",
+              ".decapod/governance/claims.json",
+              "PR #1015 CI run 30065576008 passed shared Bazel build and downstream test gates"
+            ],
+            "proof_refs": [
+              "focused_tests",
+              "shared_bazel_ci",
+              "governed_validation"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:38"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 36
+    "next_sequence": 38
   }
 }
