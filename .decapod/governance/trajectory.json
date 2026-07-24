@@ -5,9 +5,14 @@
   "task_id": "bugs_01ky8vzzgg651154",
   "original_intent": "Solve GitHub Issue #998 by moving Rust test implementations out of src so release builds contain production code and relevant runtime assets only.",
   "derived_intent": "Use out-of-line cfg(test) modules under tests/unit, preserve coverage, and prove cargo release and Bazel release graphs exclude tests.",
-  "current_phase": "implementation and release proof",
+  "current_phase": "verification blocked by shared proof backlog",
   "next_transitions": [
+    "publish",
+    "publish scoped PR with explicit governance blocker handoff",
     "run Decapod validation, verify todo, publish PR"
+  ],
+  "blockers": [
+    "Shared proof hook fails on 19 unrelated done TODOs whose validation baselines cannot be replayed while validate itself fails."
   ],
   "active_boundaries": [
     "No inline test implementations in src; tests remain test-only; release targets include production src and relevant assets only."
@@ -23,6 +28,8 @@
     "tests"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     "src",
     "tests/release_artifact_policy.rs",
     "tests/unit"
@@ -32,9 +39,29 @@
     "cargo fmt --all",
     "cargo test --lib",
     "cargo test --no-run",
-    "cargo test --test release_artifact_policy"
+    "cargo test --test release_artifact_policy",
+    "decapod validate"
   ],
   "tool_calls": [],
+  "loops": [
+    {
+      "intent_id": "intent:issue-998-20260723",
+      "trajectory_id": "issue-998-20260723",
+      "loop_id": "verification",
+      "loop_type": "verification",
+      "attempt": 1,
+      "trigger": "engine",
+      "grader_result": "fail",
+      "feedback": "Container validation is clean except for the pre-existing 19-TODO claimed-but-unverified proof hook; replay cannot pass while validate is blocked by that hook.",
+      "proof_refs": [
+        "container_decapod_validate",
+        "qa_verify_backlog"
+      ],
+      "mutation_proposal": "none",
+      "status": "blocked",
+      "custody_event_id": "event:24"
+    }
+  ],
   "checks": [
     {
       "name": "cargo_build_release",
@@ -53,8 +80,20 @@
       "status": "passed"
     },
     {
+      "name": "container_decapod_validate",
+      "status": "failed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
       "name": "git_diff_check",
       "status": "passed"
+    },
+    {
+      "name": "qa_verify_backlog",
+      "status": "failed"
     },
     {
       "name": "release_artifact_policy",
@@ -62,21 +101,25 @@
     }
   ],
   "evidence": [
+    "Container validation passed all repository gates except the shared claimed-but-unverified proof hook.",
     "Release binary target/release/decapod is a stripped 16,902,768-byte ELF; strings contains no migrated test module/helper symbols.",
-    "cargo test --lib ran 193 relocated tests; 192 passed and 1 failed on the pre-existing stale AGENTS.md entrypoint fingerprint fixture."
+    "cargo test --lib ran 193 relocated tests; 192 passed and 1 failed on the pre-existing stale AGENTS.md entrypoint fingerprint fixture.",
+    "decapod qa verify --json reports 19 done TODOs, 0 passed, 19 failed after proof recapture because validate_passes remains blocked by the same shared hook.",
+    "validation epoch ve_0771ae7377b229db completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
-    "The entrypoint fingerprint failure is baseline because this change does not alter canonical templates or expected release constants."
+    "The entrypoint fingerprint failure is baseline because this change does not alter canonical templates or expected release constants.",
+    "The shared backlog predates Issue #998 and is outside the scoped source/test refactor."
   ],
-  "proof_status": "partial",
+  "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "caution"
+    "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:064dfe254bb9a8b271003f71abe869cca956502ded38d57ca7b5a83cafde4682",
+  "artifact_hash": "sha256:26df87acd9a177c77d0cd7406e3ea922f48ceab6e536326d00390b2193e047cf",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -115,6 +158,146 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 10,
+        "event_id": "event:10",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 11,
+        "event_id": "event:11",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 12,
+        "event_id": "event:12",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 13,
+        "event_id": "event:13",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 14,
+        "event_id": "event:14",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 15,
+        "event_id": "event:15",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 16,
+        "event_id": "event:16",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 17,
+        "event_id": "event:17",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 18,
+        "event_id": "event:18",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 19,
+        "event_id": "event:19",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 20,
+        "event_id": "event:20",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 21,
+        "event_id": "event:21",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 22,
+        "event_id": "event:22",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 23,
+        "event_id": "event:23",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 24,
+        "event_id": "event:24",
         "intent_id": "intent:issue-998-20260723",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue-998-20260723"
@@ -157,12 +340,370 @@
               "The entrypoint fingerprint failure is baseline because this change does not alter canonical templates or expected release constants."
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
+          },
+          {
+            "sequence": 10,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:10"
+          },
+          {
+            "sequence": 11,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:11"
+          },
+          {
+            "sequence": 12,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:12"
+          },
+          {
+            "sequence": 13,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:13"
+          },
+          {
+            "sequence": 14,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:14"
+          },
+          {
+            "sequence": 15,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:15"
+          },
+          {
+            "sequence": 16,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:16"
+          },
+          {
+            "sequence": 17,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:17"
+          },
+          {
+            "sequence": 18,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:18"
+          },
+          {
+            "sequence": 19,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:19"
+          },
+          {
+            "sequence": 20,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:20"
+          },
+          {
+            "sequence": 21,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:21"
+          },
+          {
+            "sequence": 22,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:22"
+          },
+          {
+            "sequence": 23,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_0771ae7377b229db completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:23"
+          },
+          {
+            "sequence": 24,
+            "action": "loop:verification:1",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [],
+            "proof_refs": [
+              "container_decapod_validate",
+              "qa_verify_backlog"
+            ],
+            "validation_findings": [
+              "Container validation is clean except for the pre-existing 19-TODO claimed-but-unverified proof hook; replay cannot pass while validate is blocked by that hook."
+            ],
+            "custody_event_id": "event:24"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 24
   }
 }
