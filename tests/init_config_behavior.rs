@@ -118,7 +118,7 @@ fn init_with_backend_cloud_saves_to_config() {
 
     let registration_path = tmp
         .path()
-        .join(".decapod/generated/cloud/init-registration.json");
+        .join(".decapod/managed/cloud/init-registration.json");
     let registration =
         fs::read_to_string(registration_path).expect("read cloud init registration payload");
     let registration: serde_json::Value =
@@ -181,7 +181,7 @@ fn init_cloud_opt_in_does_not_store_secret_environment_values() {
 
     let registration = fs::read_to_string(
         tmp.path()
-            .join(".decapod/generated/cloud/init-registration.json"),
+            .join(".decapod/managed/cloud/init-registration.json"),
     )
     .expect("read cloud init registration");
     assert!(!registration.contains("private.supabase.local"));
@@ -218,7 +218,7 @@ fn session_acquire_uses_machine_local_config_not_repo_session_file() {
         "repo-local session_token should not be created"
     );
     assert!(
-        !tmp.path().join(".decapod/generated/sessions").exists(),
+        !tmp.path().join(".decapod/managed/sessions").exists(),
         "session credentials should not be written under repo generated state"
     );
 
@@ -271,7 +271,7 @@ fn session_acquire_falls_back_to_workspace_when_machine_config_is_unusable() {
 
     let fallback_session = tmp
         .path()
-        .join(".decapod/generated/sessions/workspace-fallback-agent.json");
+        .join(".decapod/managed/sessions/workspace-fallback-agent.json");
     assert!(
         fallback_session.is_file(),
         "workspace-local session file missing"
@@ -713,10 +713,10 @@ fn init_creates_custody_directory_and_intent_has_epistemic_custody_fields() {
         "decapod init with failed: {}",
         String::from_utf8_lossy(&out.stderr)
     );
-    let custody_dir = tmp.path().join(".decapod/generated/artifacts/custody");
+    let custody_dir = tmp.path().join(".decapod/managed/artifacts/custody");
     assert!(
         custody_dir.exists(),
-        "expected .decapod/generated/artifacts/custody/ directory to exist"
+        "expected .decapod/managed/artifacts/custody/ directory to exist"
     );
     let intent = fs::read_to_string(tmp.path().join(".decapod/managed/specs/INTENT.md"))
         .expect("read INTENT.md");

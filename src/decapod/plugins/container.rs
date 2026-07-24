@@ -721,7 +721,7 @@ fn ensure_local_generated_workspace_image(
 }
 
 pub fn prepare_generated_container_profile(repo: &Path) -> Result<PathBuf, error::DecapodError> {
-    let generated_dir = repo.join(".decapod").join("generated");
+    let generated_dir = repo.join(".decapod").join("managed");
     fs::create_dir_all(&generated_dir).map_err(error::DecapodError::IoError)?;
 
     stage_current_decapod_binary(&generated_dir)?;
@@ -968,7 +968,7 @@ fn render_generated_dockerfile(capabilities: &ProjectCapabilities) -> String {
                  echo \"No supported package manager found\" >&2; exit 1; \\\n\
              fi\n\
          RUN update-ca-certificates\n\
-         COPY .decapod/generated/decapod /usr/local/bin/decapod.local\n\
+         COPY .decapod/managed/decapod /usr/local/bin/decapod.local\n\
          RUN chmod 0755 /usr/local/bin/decapod.local && \\\n\
              if [ \"$DECAPOD_USE_LOCAL_BINARY\" = \"1\" ]; then \\\n\
                  cp /usr/local/bin/decapod.local /usr/local/bin/decapod; \\\n\

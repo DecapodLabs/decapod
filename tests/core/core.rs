@@ -466,8 +466,8 @@ fn migration_preserves_existing_event_log() {
     let sentinel = "{\"event_type\":\"task.add\",\"task_id\":\"SENTINEL\"}\n";
     fs::write(data_dir.join("todo.events.jsonl"), sentinel).expect("write sentinel events");
 
-    let generated = decapod_root.join("generated");
-    fs::create_dir_all(&generated).expect("generated dir");
+    let generated = decapod_root.join("managed");
+    fs::create_dir_all(&generated).expect("managed dir");
     fs::write(generated.join("decapod.version"), "0.8.0").expect("write old version");
 
     migration::check_and_migrate(decapod_root).expect("migration");
@@ -606,7 +606,7 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
         }
     }
 
-    let version_counter = fs::read_to_string(decapod_root.join("generated/version_counter.json"))
+    let version_counter = fs::read_to_string(decapod_root.join("managed/version_counter.json"))
         .expect("read version counter");
     let version_counter: serde_json::Value =
         serde_json::from_str(&version_counter).expect("version counter json");
@@ -616,7 +616,7 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
         migration::DECAPOD_VERSION
     );
 
-    let applied = fs::read_to_string(decapod_root.join("generated/migrations/applied.json"))
+    let applied = fs::read_to_string(decapod_root.join("managed/migrations/applied.json"))
         .expect("read applied migration ledger");
     let applied: serde_json::Value = serde_json::from_str(&applied).expect("applied json");
     let ids: Vec<String> = applied["entries"]
@@ -630,7 +630,7 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
         "applied ledger must include todo typed-id migration"
     );
 
-    let catalog = fs::read_to_string(decapod_root.join("generated/migrations/catalog.json"))
+    let catalog = fs::read_to_string(decapod_root.join("managed/migrations/catalog.json"))
         .expect("read migration catalog");
     let catalog: serde_json::Value = serde_json::from_str(&catalog).expect("catalog json");
     assert!(catalog["count"].as_u64().unwrap_or(0) >= 3);
@@ -739,7 +739,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
     assert!(live_target.join(".decapod/OVERRIDE.md").exists());
     let gitignore = fs::read_to_string(live_target.join(".gitignore")).expect("read .gitignore");
     assert!(
-        gitignore.contains(".decapod/generated/*"),
+        gitignore.contains(".decapod/managed/*"),
         "decapod init must enforce generated wildcard ignore in .gitignore"
     );
     assert!(
@@ -747,19 +747,19 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must allowlist generated Dockerfile in .gitignore"
     );
     assert!(
-        !gitignore.contains("!.decapod/generated/validation-epoch.json"),
+        !gitignore.contains("!.decapod/managed/validation-epoch.json"),
         "decapod init must keep validation epoch receipts ignored as volatile local state"
     );
     assert!(
-        !gitignore.contains("!.decapod/generated/context/"),
+        !gitignore.contains("!.decapod/managed/context/"),
         "decapod init must not allowlist generated context capsule artifacts"
     );
     assert!(
-        !gitignore.contains("!.decapod/generated/policy/"),
+        !gitignore.contains("!.decapod/managed/policy/"),
         "decapod init must not allowlist generated policy artifacts"
     );
     assert!(
-        !gitignore.contains("!.decapod/generated/artifacts/"),
+        !gitignore.contains("!.decapod/managed/artifacts/"),
         "decapod init must not allowlist generated artifact sprawl"
     );
     assert!(
@@ -848,14 +848,14 @@ fn scaffold_store_and_docs_cli_behaviors() {
 
     let gitignore_path = live_target.join(".gitignore");
     let mut stale_gitignore = fs::read_to_string(&gitignore_path).expect("read .gitignore");
-    stale_gitignore.push_str("!.decapod/generated/validation-epoch.json\n");
+    stale_gitignore.push_str("!.decapod/managed/validation-epoch.json\n");
     fs::write(&gitignore_path, stale_gitignore).expect("seed stale validation epoch allowlist");
 
     // Second run should succeed with checksum verification and prune deprecated ignore rules.
     scaffold_project_entrypoints(&live_opts).expect("second scaffold succeeds when files match");
     let gitignore = fs::read_to_string(&gitignore_path).expect("read refreshed .gitignore");
     assert!(
-        !gitignore.contains("!.decapod/generated/validation-epoch.json"),
+        !gitignore.contains("!.decapod/managed/validation-epoch.json"),
         "decapod init must remove stale validation epoch allowlist rules from existing projects"
     );
 
@@ -1150,8 +1150,8 @@ fn override_md_checksum_caching() {
     let tmp = tempdir().expect("tempdir");
     let root = tmp.path();
 
-    // Create .decapod/generated directory
-    fs::create_dir_all(root.join(".decapod/generated")).expect("mkdir generated");
+    // Create .decapod/managed directory
+    fs::create_dir_all(root.join(".decapod/managed")).expect("mkdir generated");
 
     // Create OVERRIDE.md
     let override_content_v1 = "# Test OVERRIDE.md v1\n\nContent version 1";
@@ -1165,13 +1165,13 @@ fn override_md_checksum_caching() {
 
     // Cache the checksum
     fs::write(
-        root.join(".decapod/generated/override.checksum"),
+        root.join(".decapod/managed/override.checksum"),
         &checksum_v1,
     )
     .expect("write checksum v1");
 
     // Read cached checksum
-    let cached = fs::read_to_string(root.join(".decapod/generated/override.checksum"))
+    let cached = fs::read_to_string(root.join(".decapod/managed/override.checksum"))
         .expect("read cached checksum");
     assert_eq!(cached, checksum_v1);
 
@@ -1189,13 +1189,13 @@ fn override_md_checksum_caching() {
 
     // Update cache
     fs::write(
-        root.join(".decapod/generated/override.checksum"),
+        root.join(".decapod/managed/override.checksum"),
         &checksum_v2,
     )
     .expect("write checksum v2");
 
     // Verify cache updated
-    let cached_v2 = fs::read_to_string(root.join(".decapod/generated/override.checksum"))
+    let cached_v2 = fs::read_to_string(root.join(".decapod/managed/override.checksum"))
         .expect("read cached checksum v2");
     assert_eq!(cached_v2, checksum_v2);
 }

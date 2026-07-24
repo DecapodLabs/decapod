@@ -83,28 +83,28 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
     }
     .with_recomputed_hash()
     .expect("compute capsule hash");
-    let capsule_path = ".decapod/generated/context/R_FIXTURE.json";
+    let capsule_path = ".decapod/managed/context/R_FIXTURE.json";
     write(
         &root.join(capsule_path),
         &serde_json::to_string_pretty(&capsule).expect("serialize capsule"),
     );
 
     write(
-        &root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json"),
+        &root.join(".decapod/managed/artifacts/provenance/artifact_manifest.json"),
         &format!(
             "{{\n  \"schema_version\": \"1.0.0\",\n  \"kind\": \"artifact_manifest\",\n  \"policy_lineage\": {{\n    \"policy_hash\": \"{policy_hash}\",\n    \"policy_revision\": \"fixture-policy@1\",\n    \"risk_tier\": \"medium\",\n    \"capsule_path\": \"{capsule_path}\",\n    \"capsule_hash\": \"{capsule_hash}\"\n  }},\n  \"artifacts\": [{{\"path\": \"README.md\", \"sha256\": \"{readme_hash}\"}}]\n}}\n",
             capsule_hash = capsule.capsule_hash
         ),
     );
     write(
-        &root.join(".decapod/generated/artifacts/provenance/proof_manifest.json"),
+        &root.join(".decapod/managed/artifacts/provenance/proof_manifest.json"),
         &format!(
             "{{\n  \"schema_version\": \"1.0.0\",\n  \"kind\": \"proof_manifest\",\n  \"policy_lineage\": {{\n    \"policy_hash\": \"{policy_hash}\",\n    \"policy_revision\": \"fixture-policy@1\",\n    \"risk_tier\": \"medium\",\n    \"capsule_path\": \"{capsule_path}\",\n    \"capsule_hash\": \"{capsule_hash}\"\n  }},\n  \"proofs\": [{{\"command\": \"decapod validate\", \"result\": \"pass\"}}],\n  \"environment\": {{\"os\": \"linux\", \"rust\": \"stable\"}}\n}}\n",
             capsule_hash = capsule.capsule_hash
         ),
     );
     write(
-        &root.join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json"),
+        &root.join(".decapod/managed/artifacts/provenance/intent_convergence_checklist.json"),
         &format!(
             "{{\n  \"schema_version\": \"1.0.0\",\n  \"kind\": \"intent_convergence_checklist\",\n  \"policy_lineage\": {{\n    \"policy_hash\": \"{policy_hash}\",\n    \"policy_revision\": \"fixture-policy@1\",\n    \"risk_tier\": \"medium\",\n    \"capsule_path\": \"{capsule_path}\",\n    \"capsule_hash\": \"{capsule_hash}\"\n  }},\n  \"pr\": {{\"base\": \"master\", \"scope\": \"fixture\"}},\n  \"intent\": \"Keep proofs and intent converged\",\n  \"scope\": \"release\",\n  \"checklist\": [\n    {{\"name\": \"intent\", \"status\": \"pass\", \"evidence\": \"INTENT.md\"}}\n  ]\n}}\n",
             capsule_hash = capsule.capsule_hash
@@ -191,12 +191,12 @@ fn release_check_allows_schema_changes_with_changelog_note() {
 fn release_check_autostamps_missing_policy_lineage() {
     let (_tmp, root) = setup_release_fixture("- schema: bump todo shape for v2");
     write(
-        &root.join(".decapod/generated/artifacts/provenance/proof_manifest.json"),
+        &root.join(".decapod/managed/artifacts/provenance/proof_manifest.json"),
         "{\n  \"schema_version\": \"1.0.0\",\n  \"kind\": \"proof_manifest\",\n  \"proofs\": [{\"command\": \"decapod validate\", \"result\": \"pass\"}],\n  \"environment\": {\"os\": \"linux\", \"rust\": \"stable\"}\n}\n",
     );
     let output = run_release_check(&root);
     assert!(output.status.success(), "release check should pass");
-    let proof_path = root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    let proof_path = root.join(".decapod/managed/artifacts/provenance/proof_manifest.json");
     let proof: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&proof_path).expect("read proof manifest"))
             .expect("parse proof manifest");
@@ -209,7 +209,7 @@ fn release_check_autostamps_missing_policy_lineage() {
 #[test]
 fn release_check_requires_consistent_policy_lineage_across_manifests() {
     let (_tmp, root) = setup_release_fixture("- schema: bump todo shape for v2");
-    let proof_path = root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    let proof_path = root.join(".decapod/managed/artifacts/provenance/proof_manifest.json");
     let mut proof: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&proof_path).expect("read proof manifest"))
             .expect("parse proof manifest");
@@ -222,15 +222,13 @@ fn release_check_requires_consistent_policy_lineage_across_manifests() {
     let output = run_release_check(&root);
     assert!(output.status.success(), "release check should pass");
     let proof_after: serde_json::Value = serde_json::from_str(
-        &fs::read_to_string(
-            root.join(".decapod/generated/artifacts/provenance/proof_manifest.json"),
-        )
-        .expect("read stamped proof"),
+        &fs::read_to_string(root.join(".decapod/managed/artifacts/provenance/proof_manifest.json"))
+            .expect("read stamped proof"),
     )
     .expect("parse stamped proof");
     let artifact_after: serde_json::Value = serde_json::from_str(
         &fs::read_to_string(
-            root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json"),
+            root.join(".decapod/managed/artifacts/provenance/artifact_manifest.json"),
         )
         .expect("read stamped artifact"),
     )
@@ -244,7 +242,7 @@ fn release_check_requires_consistent_policy_lineage_across_manifests() {
 #[test]
 fn release_check_repairs_lineage_capsule_drift() {
     let (_tmp, root) = setup_release_fixture("- schema: bump todo shape for v2");
-    let capsule_path = root.join(".decapod/generated/context/R_FIXTURE.json");
+    let capsule_path = root.join(".decapod/managed/context/R_FIXTURE.json");
     let mut capsule: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&capsule_path).expect("read capsule"))
             .expect("parse capsule");
@@ -257,10 +255,8 @@ fn release_check_repairs_lineage_capsule_drift() {
     let output = run_release_check(&root);
     assert!(output.status.success(), "release check should pass");
     let proof_after: serde_json::Value = serde_json::from_str(
-        &fs::read_to_string(
-            root.join(".decapod/generated/artifacts/provenance/proof_manifest.json"),
-        )
-        .expect("read stamped proof"),
+        &fs::read_to_string(root.join(".decapod/managed/artifacts/provenance/proof_manifest.json"))
+            .expect("read stamped proof"),
     )
     .expect("parse stamped proof");
     let lineage_capsule_path = proof_after["policy_lineage"]["capsule_path"]
@@ -296,7 +292,7 @@ fn release_check_fails_closed_for_invalid_release_risk_tier_env() {
 #[test]
 fn release_lineage_sync_stamps_all_provenance_manifests() {
     let (_tmp, root) = setup_release_fixture("- schema: bump todo shape for v2");
-    let proof_path = root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+    let proof_path = root.join(".decapod/managed/artifacts/provenance/proof_manifest.json");
     write(
         &proof_path,
         "{\n  \"schema_version\": \"1.0.0\",\n  \"kind\": \"proof_manifest\",\n  \"proofs\": [{\"command\": \"decapod validate\", \"result\": \"pass\"}],\n  \"environment\": {\"os\": \"linux\", \"rust\": \"stable\"}\n}\n",
@@ -316,7 +312,7 @@ fn release_lineage_sync_stamps_all_provenance_manifests() {
 
     let artifact: serde_json::Value = serde_json::from_str(
         &fs::read_to_string(
-            root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json"),
+            root.join(".decapod/managed/artifacts/provenance/artifact_manifest.json"),
         )
         .expect("read artifact manifest"),
     )
@@ -326,7 +322,7 @@ fn release_lineage_sync_stamps_all_provenance_manifests() {
             .expect("parse proof");
     let intent: serde_json::Value = serde_json::from_str(
         &fs::read_to_string(
-            root.join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json"),
+            root.join(".decapod/managed/artifacts/provenance/intent_convergence_checklist.json"),
         )
         .expect("read intent manifest"),
     )

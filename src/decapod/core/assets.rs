@@ -505,10 +505,10 @@ decapod data aptitude observe --category code_style --content "Team prefers asyn
 - `OVERRIDE.md`: project-local override layer for embedded constitution directives.
 - `data/`: canonical control-plane state (SQLite + ledgers).
 - `managed/specs/`: living project specs scaffolded by `decapod init`.
-- `generated/context/`: deterministic context capsule artifacts.
-- `generated/artifacts/provenance/`: promotion manifests and convergence checklist.
-- `generated/artifacts/inventory/`: deterministic release inventory artifacts.
-- `generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
+- `managed/context/`: deterministic context capsule artifacts.
+- `managed/artifacts/provenance/`: promotion manifests and convergence checklist.
+- `managed/artifacts/inventory/`: deterministic release inventory artifacts.
+- `managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `workspaces/`: isolated todo-scoped git worktrees for implementation.
 
 ## How It Works

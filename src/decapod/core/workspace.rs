@@ -720,7 +720,7 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
     let runtime = container_runtime::find_container_runtime()?;
     let dockerfile_path = workspace_path
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("Dockerfile");
     let mut build = Command::new(runtime);
     build

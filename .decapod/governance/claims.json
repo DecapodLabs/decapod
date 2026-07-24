@@ -334,7 +334,7 @@
         "id": "governed-context-proof",
         "required_artifacts": [
           {
-            "path": ".decapod/generated/context/<capsule>.json",
+            "path": ".decapod/managed/context/<capsule>.json",
             "kind": "capsule",
             "required": true,
             "integrity": "hash",
@@ -354,7 +354,7 @@
             "command": "decapod rpc --op context.resolve",
             "expected_exit_code": 0,
             "bounded_seconds": 120,
-            "evidence_artifact": ".decapod/generated/context/<capsule>.json"
+            "evidence_artifact": ".decapod/managed/context/<capsule>.json"
           }
         ],
         "acceptance_criteria": [

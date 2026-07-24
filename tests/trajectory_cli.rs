@@ -111,7 +111,7 @@ fn trajectory_cli_records_scope_actions_checks_and_verdicts() {
             "--check",
             "cargo_test=passed",
             "--evidence",
-            ".decapod/generated/artifacts/proof.json",
+            ".decapod/managed/artifacts/proof.json",
             "--assumption",
             "existing interface remains compatible",
             "--completion-claim",

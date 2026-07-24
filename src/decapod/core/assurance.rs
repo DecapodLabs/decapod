@@ -300,7 +300,7 @@ impl AssuranceEngine {
         let attestation_path = self
             .repo_root
             .join(".decapod")
-            .join("generated")
+            .join("managed")
             .join("assurance_attestations.jsonl");
         if !attestation_path.exists() {
             return Ok(None);
@@ -377,13 +377,13 @@ impl AssuranceEngine {
             } else {
                 "ok".to_string()
             },
-            trace_path: ".decapod/generated/assurance_attestations.jsonl".to_string(),
+            trace_path: ".decapod/managed/assurance_attestations.jsonl".to_string(),
         };
 
         let attestation_path = self
             .repo_root
             .join(".decapod")
-            .join("generated")
+            .join("managed")
             .join("assurance_attestations.jsonl");
         if let Some(parent) = attestation_path.parent() {
             fs::create_dir_all(parent).map_err(DecapodError::IoError)?;

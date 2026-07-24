@@ -87,13 +87,13 @@ flowchart LR
 | Untouched scaffold specs | `template_hash` == `content_hash` | Before implementation |## Evidence Artifacts
 | Artifact | Path | Required For |
 |----------|------|--------------|
-| Validation report | `.decapod/generated/artifacts/provenance/validation_report.json` | Current-run diagnostics; ignored by Git |
-| Proof manifest | `.decapod/generated/artifacts/provenance/proof_manifest.json` | Current-run diagnostics; ignored by Git |
-| Artifact manifest | `.decapod/generated/artifacts/provenance/artifact_manifest.json` | Current-run diagnostics; ignored by Git |
-| Completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | Reproducible completion review |
+| Validation report | `.decapod/managed/artifacts/provenance/validation_report.json` | Current-run diagnostics; ignored by Git |
+| Proof manifest | `.decapod/managed/artifacts/provenance/proof_manifest.json` | Current-run diagnostics; ignored by Git |
+| Artifact manifest | `.decapod/managed/artifacts/provenance/artifact_manifest.json` | Current-run diagnostics; ignored by Git |
+| Completion evidence | `.decapod/managed/artifacts/provenance/completion_evidence/*.json` | Reproducible completion review |
 | Trajectory cookie | `.decapod/governance/trajectory.json` | Current run custody schema, hash, and computed proof status; Git history preserves prior cookies |
 | Validation receipt | `.decapod/governance/validation.json` | Tracked successful per-commit validation value; overwritten after validation and preserved in Git history |
-| Imported completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | Untrusted external evidence inspection |
+| Imported completion evidence | `.decapod/managed/artifacts/provenance/completion_evidence/imports/*.json` | Untrusted external evidence inspection |
 | Test logs | CI artifact store | Promotion |
 | Architecture diagram | `ARCHITECTURE.md` (in specs) | Promotion |
 | Changelog entry | `CHANGELOG.md` | Promotion |
@@ -186,7 +186,7 @@ flowchart LR
 | No duplicated contract details | Fail |
 
 ### Health Purity Gate
-No manual `(health: VERIFIED|ASSERTED|STALE|CONTRADICTED)` markers in authoritative docs (excluding `.decapod/generated/`)
+No manual `(health: VERIFIED|ASSERTED|STALE|CONTRADICTED)` markers in authoritative docs (excluding `.decapod/managed/`)
 
 ### Project-Scoped State Gate
 No `.db` or `.jsonl` files outside `.decapod/` in project root
@@ -195,7 +195,7 @@ No `.db` or `.jsonl` files outside `.decapod/` in project root
 | Check | Failure Mode |
 |-------|--------------|
 | `.gitignore` has all `DECAPOD_GITIGNORE_RULES` | Fail |
-| Tracked files in `.decapod/generated/` / `.decapod/data/` match whitelist | Fail |
+| Tracked files in `.decapod/managed/` / `.decapod/data/` match whitelist | Fail |
 
 Whitelisted tracked paths:
 - `.decapod/managed/Dockerfile`
@@ -320,7 +320,7 @@ actionable validation signals before publication.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `906629e199ed8cc08dcfd8c5590e30fc47c4bb16901ede21a76d457a78da3920`
+- Repository signal fingerprint: `828a7c34668bf616f6f2d3164ea38514bfd75279aea507c2a3a4b532d8728b4c`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

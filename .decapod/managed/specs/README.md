@@ -23,13 +23,13 @@ These files are the project-local contract for humans and agents.
 - `.decapod/managed/Dockerfile`: Decapod's project-specific execution image; Decapod runs inside it and may add project build dependencies such as Go, Python, or system packages. Glibc is the default; `--image-profile alpine` selects the GHCR `-alpine`-tagged musl image.
 - `.decapod/managed/specs/`: **Living project specs** for humans and agents.
 - `Dockerfile` at the project root remains the product application's container image and is the artifact users package and deploy.
-- `.decapod/generated/context/`: deterministic context capsules.
-- `.decapod/generated/policy/context_capsule_policy.json`: repo-native JIT context policy contract.
-- `.decapod/generated/artifacts/provenance/`: promotion manifests and convergence checklist.
-- `.decapod/generated/artifacts/custody/`: epistemic custody artifacts (assumptions, contradictions, deferred questions).
+- `.decapod/managed/context/`: deterministic context capsules.
+- `.decapod/managed/policy/context_capsule_policy.json`: repo-native JIT context policy contract.
+- `.decapod/managed/artifacts/provenance/`: promotion manifests and convergence checklist.
+- `.decapod/managed/artifacts/custody/`: epistemic custody artifacts (assumptions, contradictions, deferred questions).
 - `.decapod/governance/trajectory.json`: current local-first trajectory cookie with intent, scope, actions, checks, and proof verdicts; Git history is the historical store.
-- `.decapod/generated/artifacts/inventory/`: deterministic release inventory.
-- `.decapod/generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
+- `.decapod/managed/artifacts/inventory/`: deterministic release inventory.
+- `.decapod/managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
 
 ## Day-0 Onboarding Checklist
@@ -58,7 +58,7 @@ Run `decapod validate --refresh-specs` to regenerate scaffold sections from curr
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `906629e199ed8cc08dcfd8c5590e30fc47c4bb16901ede21a76d457a78da3920`
+- Repository signal fingerprint: `828a7c34668bf616f6f2d3164ea38514bfd75279aea507c2a3a4b532d8728b4c`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

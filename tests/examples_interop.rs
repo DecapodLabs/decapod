@@ -77,11 +77,11 @@ fn release_inventory_surface_exists_and_writes_artifact() {
         "release inventory should emit envelope"
     );
     assert!(
-        root.join(".decapod/generated/artifacts/inventory/repo_inventory.json")
+        root.join(".decapod/managed/artifacts/inventory/repo_inventory.json")
             .exists(),
         "release inventory should write deterministic artifact"
     );
-    std::fs::remove_file(root.join(".decapod/generated/artifacts/inventory/repo_inventory.json"))
+    std::fs::remove_file(root.join(".decapod/managed/artifacts/inventory/repo_inventory.json"))
         .expect("cleanup generated inventory artifact");
 }
 
@@ -116,7 +116,7 @@ fn verification_guide_pins_jit_capsule_flow() {
         "verification guide must include governed capsule query flow"
     );
     assert!(
-        capsule_contract.contains(".decapod/generated/policy/context_capsule_policy.json"),
+        capsule_contract.contains(".decapod/managed/policy/context_capsule_policy.json"),
         "verification guide must pin capsule policy contract artifact path"
     );
     assert!(

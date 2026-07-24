@@ -22,7 +22,7 @@ else \
 echo "No supported package manager found" >&2; exit 1; \
 fi
 RUN update-ca-certificates
-COPY .decapod/generated/decapod /usr/local/bin/decapod.local
+COPY .decapod/managed/decapod /usr/local/bin/decapod.local
 RUN chmod 0755 /usr/local/bin/decapod.local && \
 if [ "$DECAPOD_USE_LOCAL_BINARY" = "1" ]; then \
 cp /usr/local/bin/decapod.local /usr/local/bin/decapod; \

@@ -89,9 +89,11 @@ def decapod_targets():
                 ".decapod/config.toml",
                 ".decapod/contracts/README_CONTRACTS.json",
             ] + native.glob([
-                ".decapod/generated/**/*",
+                # Runtime state is intentionally absent from a clean checkout;
+                # tests create the managed surfaces they need at runtime.
+                ".decapod/managed/**/*",
                 ".decapod/governance/**/*",
-            ]),
+            ], allow_empty = True),
             deps = [
                 ":decapod_lib",
             ] + all_crate_deps(normal = True, normal_dev = True),

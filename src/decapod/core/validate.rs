@@ -150,7 +150,7 @@ impl DriftFinding {
             DriftClass::Toolchain
         } else if finding.surface == ".decapod/config.toml" {
             DriftClass::Configuration
-        } else if finding.surface.contains("generated/context")
+        } else if finding.surface.contains("managed/context")
             || finding.surface.contains("artifacts/provenance")
             || finding.surface.contains("workunits")
         {
@@ -644,10 +644,10 @@ fn validate_embedded_self_contained(
                     || line.contains(".decapod/knowledge/")
                     || line.contains(".decapod/data/")
                     || line.contains(".decapod/workspaces/")
-                    || line.contains(".decapod/generated/")
+                    || line.contains(".decapod/managed/")
                     || line.contains(".decapod/managed/")
                     || line.contains(".decapod/managed/specs/")
-                    || line.contains(".decapod/generated/policy/")
+                    || line.contains(".decapod/managed/policy/")
                     || line.contains(".decapod/policy/")
                     || line.contains(".decapod/config.toml")
                     || line.contains("repo-scoped");
@@ -1370,7 +1370,7 @@ fn validate_health_purity(
         Regex::new(r"(?i)\(health:\s*(VERIFIED|ASSERTED|STALE|CONTRADICTED)\)").unwrap();
     let mut offenders = Vec::new();
 
-    let generated_path = working_root.join(".decapod").join("generated");
+    let generated_path = working_root.join(".decapod").join("managed");
 
     for path in files {
         if path.extension().is_some_and(|e| e == "md") {
@@ -1470,7 +1470,7 @@ fn validate_generated_artifact_whitelist(
         .arg(working_root)
         .args([
             "ls-files",
-            ".decapod/generated",
+            ".decapod/managed",
             ".decapod/managed",
             ".decapod/data",
         ])
@@ -2553,7 +2553,7 @@ fn validate_context_capsules_if_present(
 ) -> Result<(), error::DecapodError> {
     info("Context Capsule Gate");
 
-    let capsules_dir = repo_root.join(".decapod").join("generated").join("context");
+    let capsules_dir = repo_root.join(".decapod").join("managed").join("context");
     if !capsules_dir.exists() {
         skip(
             "No context capsules found; skipping context capsule gate",
@@ -2616,7 +2616,7 @@ fn validate_context_capsule_policy_contract(
             if msg.starts_with("CAPSULE_POLICY_MISSING:") =>
         {
             warn(
-                "Context capsule policy contract missing; run `decapod init --force` to scaffold .decapod/generated/policy/context_capsule_policy.json",
+                "Context capsule policy contract missing; run `decapod init --force` to scaffold .decapod/managed/policy/context_capsule_policy.json",
                 ctx,
             );
             return Ok(());
@@ -2787,7 +2787,7 @@ fn validate_internalization_artifacts_if_present(
 
     let artifacts_dir = repo_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("internalizations");
     if !artifacts_dir.exists() {
@@ -3207,12 +3207,8 @@ fn validate_policy_integrity(
 }
 
 fn validation_sessions_dir(repo_root: &Path) -> PathBuf {
-    machine_validation_sessions_dir(repo_root).unwrap_or_else(|| {
-        repo_root
-            .join(".decapod")
-            .join("generated")
-            .join("sessions")
-    })
+    machine_validation_sessions_dir(repo_root)
+        .unwrap_or_else(|| repo_root.join(".decapod").join("managed").join("sessions"))
 }
 
 fn machine_validation_sessions_dir(repo_root: &Path) -> Option<PathBuf> {
@@ -4266,7 +4262,7 @@ fn is_allowed_non_code_path(path: &str) -> bool {
         || path == ".decapod/config.toml"
         || path == ".decapod/OVERRIDE.md"
         || path.starts_with(".decapod/managed/specs/")
-        || path.starts_with(".decapod/generated/artifacts/")
+        || path.starts_with(".decapod/managed/artifacts/")
         || path.starts_with(".decapod/contracts/")
 }
 
@@ -4388,7 +4384,7 @@ fn run_migration_validation(
     let evidence_path = config
         .evidence_path
         .as_deref()
-        .unwrap_or(".decapod/generated/artifacts/custody/migration-validation.json");
+        .unwrap_or(".decapod/managed/artifacts/custody/migration-validation.json");
     let evidence_relative = Path::new(evidence_path);
     if evidence_relative.is_absolute()
         || evidence_relative
@@ -4444,7 +4440,7 @@ fn validate_projection_consistency(
         .join(".decapod")
         .join("data")
         .join("todo.events.jsonl");
-    let context_dir = main_root.join(".decapod").join("generated").join("context");
+    let context_dir = main_root.join(".decapod").join("managed").join("context");
     let workunit_dir = main_root
         .join(".decapod")
         .join("governance")
@@ -4735,7 +4731,7 @@ fn validate_projection_consistency(
                     if actual.is_empty() || actual != expected {
                         findings.push(ProjectionFinding {
                             surface: format!(
-                                ".decapod/generated/context/{}",
+                                ".decapod/managed/context/{}",
                                 path.file_name().unwrap().to_string_lossy()
                             ),
                             kind: SurfaceKind::Authority,
@@ -4755,7 +4751,7 @@ fn validate_projection_consistency(
                     Ok(expected) if expected == capsule.capsule_hash => {}
                     Ok(expected) => findings.push(ProjectionFinding {
                         surface: format!(
-                            ".decapod/generated/context/{}",
+                            ".decapod/managed/context/{}",
                             path.file_name().unwrap().to_string_lossy()
                         ),
                         kind: SurfaceKind::Evidence,
@@ -4767,7 +4763,7 @@ fn validate_projection_consistency(
                     }),
                     Err(error) => findings.push(ProjectionFinding {
                         surface: format!(
-                            ".decapod/generated/context/{}",
+                            ".decapod/managed/context/{}",
                             path.file_name().unwrap().to_string_lossy()
                         ),
                         kind: SurfaceKind::Evidence,
@@ -4783,7 +4779,7 @@ fn validate_projection_consistency(
                 {
                     findings.push(ProjectionFinding {
                         surface: format!(
-                            ".decapod/generated/context/{}",
+                            ".decapod/managed/context/{}",
                             path.file_name().unwrap().to_string_lossy()
                         ),
                         kind: SurfaceKind::Projection,

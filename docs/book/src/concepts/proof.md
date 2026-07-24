@@ -12,7 +12,7 @@ A "Gate" is a discrete check that must pass for a task to be considered valid. C
 
 ## The Evidence Ledger
 
-When an agent calls `decapod todo done --validated`, Decapod captures a snapshot of the repository state and the results of all required gates. This evidence is recorded in the `.decapod/generated/artifacts/` ledger (see [Artifacts Reference](../reference/artifacts.md)).
+When an agent calls `decapod todo done --validated`, Decapod captures a snapshot of the repository state and the results of all required gates. This evidence is recorded in the `.decapod/managed/artifacts/` ledger (see [Artifacts Reference](../reference/artifacts.md)).
 
 
 This creates **Epistemic Custody**: a verifiable chain of proof that shows *how* the agent verified the work and *what* the state of the world was at the moment of completion.

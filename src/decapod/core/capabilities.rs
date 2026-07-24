@@ -113,7 +113,7 @@ impl CapabilityRegistry {
                 "migrations/ directory for schema migrations".to_string(),
                 "storage/ or repository/ abstraction layer".to_string(),
                 "test fixtures for database integration tests".to_string(),
-                ".decapod/generated/artifacts/custody/ directory for epistemic custody artifacts".to_string(),
+                ".decapod/managed/artifacts/custody/ directory for epistemic custody artifacts".to_string(),
             ],
             evidence_signals: vec![
                 "Database migration files (e.g., migrations/*.sql)".to_string(),

@@ -221,7 +221,7 @@ fn rpc_context_capsule_query_write_tracks_touched_path() {
 
     let touched_path = touched[0].as_str().expect("touched path as str");
     assert!(
-        touched_path.ends_with(".decapod/generated/context/test_88.json"),
+        touched_path.ends_with(".decapod/managed/context/test_88.json"),
         "unexpected touched path: {touched_path}"
     );
     assert!(

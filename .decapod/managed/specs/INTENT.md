@@ -57,7 +57,7 @@ Decapod is a Rust CLI project that implements a governance runtime for AI agents
 - **Binary name**: `decapod` (also `selective-test` bench binary)
 - **Config**: `.decapod/config.toml` (schema_version 1.0.0)
 - **State**: `.decapod/data/*.db` + `.decapod/data/*.jsonl` event logs
-- **Generated artifacts**: `.decapod/generated/{specs,context,policy,artifacts,artifacts/provenance,artifacts/custody}`
+- **Generated artifacts**: `.decapod/managed/{specs,context,policy,artifacts,artifacts/provenance,artifacts/custody}`
 
 ## Product View
 ```mermaid
@@ -190,7 +190,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `906629e199ed8cc08dcfd8c5590e30fc47c4bb16901ede21a76d457a78da3920`
+- Repository signal fingerprint: `828a7c34668bf616f6f2d3164ea38514bfd75279aea507c2a3a4b532d8728b4c`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

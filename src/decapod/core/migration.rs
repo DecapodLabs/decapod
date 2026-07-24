@@ -16,9 +16,9 @@ use std::path::Path;
 
 /// Current Decapod version from Cargo.toml
 pub const DECAPOD_VERSION: &str = env!("CARGO_PKG_VERSION");
-const GENERATED_VERSION_COUNTER: &str = "generated/version_counter.json";
-const GENERATED_APPLIED_MIGRATIONS: &str = "generated/migrations/applied.json";
-const GENERATED_MIGRATION_CATALOG: &str = "generated/migrations/catalog.json";
+const GENERATED_VERSION_COUNTER: &str = "managed/version_counter.json";
+const GENERATED_APPLIED_MIGRATIONS: &str = "managed/migrations/applied.json";
+const GENERATED_MIGRATION_CATALOG: &str = "managed/migrations/catalog.json";
 
 /// Migration definition
 pub struct Migration {

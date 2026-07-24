@@ -186,7 +186,7 @@ The prototype is in interfaces-v2-contract.schema.json. The envelope is strict a
     "evidence": [
       {
         "kind": "file",
-        "ref": ".decapod/generated/artifacts/internalizations/..."
+        "ref": ".decapod/managed/artifacts/internalizations/..."
       }
     ]
   }

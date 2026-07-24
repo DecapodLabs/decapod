@@ -46,7 +46,7 @@ Persistent state is proven by the configured `[repo.migration_validation]` comma
 - **Primary binary**: `decapod`
 - **State**: 6 SQLite databases ("bins") + JSONL event logs in `.decapod/data/`
 - **Config**: `.decapod/config.toml` (schema_version 1.0.0)
-- **Generated**: `.decapod/generated/{specs,context,policy,artifacts}`
+- **Generated**: `.decapod/managed/{specs,context,policy,artifacts}`
 
 ## Architecture Map
 ```
@@ -352,8 +352,8 @@ Verification and artifact emission:
 | Trajectory cookie | `.decapod/governance/trajectory.json` (tracked) | `govern trajectory.*`; Git history stores prior cookies |
 | Validation receipt | `.decapod/governance/validation.json` (tracked, overwritten) | `validate`; Git history stores per-commit validation receipts |
 | Plan artifact | `.decapod/governance/plan.json` | `govern plan.*` |
-| Context capsules | `.decapod/generated/context/` (ignored current-run state) | `infer.*`, `govern capsule.*` |
-| Capsule policy | `.decapod/generated/policy/` (ignored cache) or `.decapod/policy/` override | `init`, `scaffold` |
+| Context capsules | `.decapod/managed/context/` (ignored current-run state) | `infer.*`, `govern capsule.*` |
+| Capsule policy | `.decapod/managed/policy/` (ignored cache) or `.decapod/policy/` override | `init`, `scaffold` |
 
 ### Schema Evolution + Migration Policy
 - **Schema versioning**: Per-bin `meta.schema_version` + centralized `schemas.rs` constants
@@ -398,7 +398,7 @@ Verification and artifact emission:
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `906629e199ed8cc08dcfd8c5590e30fc47c4bb16901ede21a76d457a78da3920`
+- Repository signal fingerprint: `828a7c34668bf616f6f2d3164ea38514bfd75279aea507c2a3a4b532d8728b4c`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

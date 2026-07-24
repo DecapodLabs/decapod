@@ -238,7 +238,7 @@ fn test_ttl_blocks_attach_after_expiry() {
     .unwrap();
 
     let art_dir = store_root
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("internalizations")
         .join(&result.artifact_id);
@@ -307,7 +307,7 @@ fn test_full_lifecycle_create_attach_detach_inspect() {
     assert_eq!(attach_result.lease_seconds, 900);
 
     let mount_path = store_root
-        .join("generated")
+        .join("managed")
         .join("sessions")
         .join("session-001")
         .join("internalize_mounts")

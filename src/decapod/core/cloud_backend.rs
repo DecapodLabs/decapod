@@ -68,7 +68,7 @@ impl CloudInitRegistration {
 pub fn init_registration_outbox_path(repo_root: &Path) -> PathBuf {
     repo_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("cloud")
         .join("init-registration.json")
 }

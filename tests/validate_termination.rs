@@ -395,7 +395,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         "trajectory must record the successful validation proof"
     );
 
-    let receipt_path = dir.join(".decapod/generated/validation-epoch.json");
+    let receipt_path = dir.join(".decapod/managed/validation-epoch.json");
     assert!(
         !receipt_path.exists(),
         "validate must not write a mutable validation epoch receipt into tracked generated artifacts"
@@ -422,7 +422,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     let dockerfile_content = fs::read_to_string(&dockerfile_path).expect("read Dockerfile");
     assert!(dockerfile_content.contains("FROM $DECAPOD_IMAGE"));
     assert!(
-        dockerfile_content.contains("COPY .decapod/generated/decapod /usr/local/bin/decapod.local")
+        dockerfile_content.contains("COPY .decapod/managed/decapod /usr/local/bin/decapod.local")
     );
 
     let mutated = dockerfile_content
@@ -635,20 +635,20 @@ fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
             "expected typed failure marker; got: {stderr}"
         );
         assert!(
-            stderr.contains(".decapod/generated/artifacts/diagnostics/validate/"),
+            stderr.contains(".decapod/managed/artifacts/diagnostics/validate/"),
             "expected diagnostics artifact path in stderr; got: {stderr}"
         );
     }
 
     let diagnostics_dir = dir
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("diagnostics")
         .join("validate");
     assert!(
         diagnostics_dir.exists(),
-        "diagnostics directory should be created under .decapod/generated/artifacts/diagnostics/validate"
+        "diagnostics directory should be created under .decapod/managed/artifacts/diagnostics/validate"
     );
 
     let mut diagnostic_count = 0usize;
@@ -720,7 +720,7 @@ fn validate_diagnostics_disabled_does_not_write_artifacts() {
     );
     let diagnostics_validate_dir = dir
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("diagnostics")
         .join("validate");
@@ -773,7 +773,7 @@ fn validate_diagnostics_payload_is_sanitized() {
 
     let diagnostics_dir = dir
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("diagnostics")
         .join("validate");

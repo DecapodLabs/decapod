@@ -39,12 +39,8 @@ dev/
 !.decapod/data/knowledge.promotions.jsonl
 .decapod/.stfolder
 .decapod/workspaces
-# Generated runtime outputs are non-canonical. Git history plus the trajectory
+# Managed runtime outputs are non-canonical. Git history plus the trajectory
 # cookie are the durable governance record; these paths are current-run state.
-.decapod/generated/*
-.decapod/generated/context/
-.decapod/generated/policy/
-.decapod/generated/artifacts/
 .decapod/managed/*
 # Keep only the deterministic managed container build baseline and living specs tracked.
 !.decapod/data/

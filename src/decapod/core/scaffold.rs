@@ -450,13 +450,13 @@ These files are the project-local contract for humans and agents.
 - `.decapod/managed/Dockerfile`: Decapod's project-specific execution image; Decapod runs inside it and may add project build dependencies such as Go, Python, or system packages. Glibc is the default; `--image-profile alpine` selects the GHCR `-alpine`-tagged musl image.
 - `.decapod/managed/specs/`: **Living project specs** for humans and agents.
 - `Dockerfile` at the project root remains the product application's container image and is the artifact users package and deploy.
-- `.decapod/generated/context/`: ignored, current-run deterministic context capsules.
-- `.decapod/generated/policy/`: ignored, current-run JIT context policy material; use `.decapod/policy/` for a durable override.
-- `.decapod/generated/artifacts/`: ignored, current-run provenance/custody/inventory/diagnostic outputs.
+- `.decapod/managed/context/`: ignored, current-run deterministic context capsules.
+- `.decapod/managed/policy/`: ignored, current-run JIT context policy material; use `.decapod/policy/` for a durable override.
+- `.decapod/managed/artifacts/`: ignored, current-run provenance/custody/inventory/diagnostic outputs.
 - `.decapod/governance/validation.json`: tracked per-commit validation receipt, overwritten after successful validation.
 - `.decapod/governance/trajectory.json`: the single tracked run cookie; Git history preserves prior merged cookies.
-- `.decapod/generated/artifacts/inventory/`: deterministic release inventory.
-- `.decapod/generated/artifacts/diagnostics/`: opt-in diagnostics artifacts.
+- `.decapod/managed/artifacts/inventory/`: deterministic release inventory.
+- `.decapod/managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
 
 ## Day-0 Onboarding Checklist
@@ -897,7 +897,7 @@ flowchart LR
 ## Evidence Artifacts
 | Artifact | Path | Required For |
 |---|---|---|
-| Validation report | `.decapod/generated/artifacts/provenance/*` | Current-run diagnostics; not a tracked promotion record |
+| Validation report | `.decapod/managed/artifacts/provenance/*` | Current-run diagnostics; not a tracked promotion record |
 | Test logs | CI artifact store | Promotion |
 | Architecture diagram snapshot | `ARCHITECTURE.md` | Promotion |
 | Changelog entry | `CHANGELOG.md` | Promotion |
@@ -1356,7 +1356,6 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     ".decapod/data/*",
     ".decapod/.stfolder",
     ".decapod/workspaces",
-    ".decapod/generated/*",
     ".decapod/managed/*",
     ".decapod/governance/workunits/",
     "!.decapod/data/",
@@ -1761,7 +1760,7 @@ pub fn scaffold_project_entrypoints(
     // The agent will manually consolidate content into appropriate OVERRIDE.md sections.
 
     // Generate .decapod/managed/Dockerfile from Rust-owned template component.
-    let generated_dir = opts.target_dir.join(".decapod/generated");
+    let generated_dir = opts.target_dir.join(".decapod/managed");
     if let Err(e) = fs::create_dir_all(&generated_dir) {
         eprintln!("warning: Failed to create {}: {e}", generated_dir.display());
     }
@@ -1811,7 +1810,7 @@ pub fn scaffold_project_entrypoints(
     }
 
     // Always create epistemic custody artifacts directory (core Decapod infrastructure)
-    let custody_dir = opts.target_dir.join(".decapod/generated/artifacts/custody");
+    let custody_dir = opts.target_dir.join(".decapod/managed/artifacts/custody");
     if !custody_dir.exists()
         && let Err(e) = fs::create_dir_all(&custody_dir)
     {

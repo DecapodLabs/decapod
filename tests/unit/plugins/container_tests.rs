@@ -192,7 +192,7 @@ fn generated_workspace_dockerfile_includes_decapod_and_rust_when_needed() {
         "ARG DECAPOD_VERSION={}",
         env!("CARGO_PKG_VERSION")
     )));
-    assert!(content.contains("COPY .decapod/generated/decapod /usr/local/bin/decapod.local"));
+    assert!(content.contains("COPY .decapod/managed/decapod /usr/local/bin/decapod.local"));
     assert!(content.contains("DECAPOD_USE_LOCAL_BINARY"));
     assert!(content.contains("cp /usr/local/bin/decapod.local /usr/local/bin/decapod"));
     assert!(content.contains("/usr/local/bin/decapod --help >/dev/null"));
@@ -233,13 +233,13 @@ fn generated_profile_stages_current_decapod_binary() {
     );
     assert!(
         root.join(".decapod")
-            .join("generated")
+            .join("managed")
             .join("decapod")
             .exists(),
         "current decapod binary should be staged into the ignored generated build context"
     );
     let content = fs::read_to_string(dockerfile).expect("read Dockerfile");
-    assert!(content.contains("COPY .decapod/generated/decapod /usr/local/bin/decapod.local"));
+    assert!(content.contains("COPY .decapod/managed/decapod /usr/local/bin/decapod.local"));
     let _ = fs::remove_dir_all(&root);
 }
 

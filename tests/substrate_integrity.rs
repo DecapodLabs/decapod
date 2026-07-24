@@ -167,7 +167,7 @@ fn test_config_toml_changes_flow_to_specs() {
     // 3. Check INTENT.md
     let intent_path = dir
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("specs")
         .join("INTENT.md");
     let intent_content = fs::read_to_string(&intent_path).unwrap();
@@ -204,7 +204,7 @@ fn test_override_md_changes_flow_to_specs() {
     // 3. Check INTENT.md
     let intent_path = dir
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("specs")
         .join("INTENT.md");
     let intent_content = fs::read_to_string(&intent_path).unwrap();
@@ -283,10 +283,7 @@ This intent from OVERRIDE must win.
     assert!(out.status.success(), "Init --force should succeed");
 
     // 5. Verify INTENT.md used the OVERRIDE
-    let intent_path = decapod_dir
-        .join("generated")
-        .join("specs")
-        .join("INTENT.md");
+    let intent_path = decapod_dir.join("managed").join("specs").join("INTENT.md");
     let intent_content = fs::read_to_string(&intent_path).unwrap();
     assert!(
         intent_content.contains("This intent from OVERRIDE must win"),

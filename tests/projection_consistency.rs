@@ -163,9 +163,9 @@ fn get_valid_context_capsule(dir: &Path, password: &str) -> serde_json::Value {
 }
 
 fn write_context_capsule(dir: &Path, capsule: &serde_json::Value) {
-    let context_dir = dir.join(".decapod/generated/context");
+    let context_dir = dir.join(".decapod/managed/context");
     fs::create_dir_all(&context_dir).expect("create context dir");
-    let capsule_path = dir.join(".decapod/generated/context/test_task.json");
+    let capsule_path = dir.join(".decapod/managed/context/test_task.json");
     fs::write(
         &capsule_path,
         serde_json::to_string_pretty(capsule).expect("serialize capsule"),
@@ -244,7 +244,7 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
     let projection_failure = failures.iter().find(|f| {
         let msg = f.as_str().unwrap_or("");
         msg.contains("[PROJECTION]")
-            && msg.contains(".decapod/generated/context/")
+            && msg.contains(".decapod/managed/context/")
             && msg.contains("repo_signal_fingerprint")
     });
     assert!(
@@ -264,7 +264,7 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
     let context_drift = drift_findings.iter().find(|finding| {
         finding["surface"]
             .as_str()
-            .is_some_and(|surface| surface.contains(".decapod/generated/context/"))
+            .is_some_and(|surface| surface.contains(".decapod/managed/context/"))
     });
     assert!(
         context_drift.is_some(),
@@ -644,7 +644,7 @@ fn persistent_state_activates_executable_migration_gate() {
         String::from_utf8_lossy(&projections3.stderr)
     );
     assert!(
-        dir.join(".decapod/generated/artifacts/custody/migration-validation.json")
+        dir.join(".decapod/managed/artifacts/custody/migration-validation.json")
             .exists(),
         "successful migration proof should record evidence"
     );

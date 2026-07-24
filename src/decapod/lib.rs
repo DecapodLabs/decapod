@@ -2786,7 +2786,7 @@ fn machine_project_sessions_dir(project_root: &Path) -> Result<PathBuf, error::D
 fn legacy_project_sessions_dir(project_root: &Path) -> PathBuf {
     project_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("sessions")
 }
 
@@ -2814,7 +2814,7 @@ fn session_file_candidates(project_root: &Path, agent_id: &str) -> Vec<PathBuf> 
 fn awareness_dir(project_root: &Path) -> PathBuf {
     project_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("awareness")
 }
 
@@ -4079,11 +4079,11 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     let rpc_golden_req = project_root.join("tests/golden/rpc/v1/agent_init.request.json");
     let rpc_golden_res = project_root.join("tests/golden/rpc/v1/agent_init.response.json");
     let artifact_manifest =
-        project_root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+        project_root.join(".decapod/managed/artifacts/provenance/artifact_manifest.json");
     let proof_manifest =
-        project_root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+        project_root.join(".decapod/managed/artifacts/provenance/proof_manifest.json");
     let intent_convergence_manifest = project_root
-        .join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
+        .join(".decapod/managed/artifacts/provenance/intent_convergence_checklist.json");
 
     if !changelog.exists() {
         failures.push("CHANGELOG.md missing".to_string());
@@ -4197,7 +4197,7 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
     let inventory = build_release_inventory(project_root)?;
     let out_dir = project_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("inventory");
     fs::create_dir_all(&out_dir).map_err(error::DecapodError::IoError)?;
@@ -4214,7 +4214,7 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
         serde_json::json!({
             "cmd": "release.inventory",
             "status": "ok",
-            "artifact": ".decapod/generated/artifacts/inventory/repo_inventory.json",
+            "artifact": ".decapod/managed/artifacts/inventory/repo_inventory.json",
             "summary": inventory["totals"]
         })
     );
@@ -4223,21 +4223,21 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
 
 fn run_release_lineage_sync(project_root: &Path) -> Result<(), error::DecapodError> {
     let artifact_manifest =
-        project_root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+        project_root.join(".decapod/managed/artifacts/provenance/artifact_manifest.json");
     let proof_manifest =
-        project_root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+        project_root.join(".decapod/managed/artifacts/provenance/proof_manifest.json");
     let intent_convergence_manifest = project_root
-        .join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
+        .join(".decapod/managed/artifacts/provenance/intent_convergence_checklist.json");
 
     let mut missing = Vec::new();
     if !artifact_manifest.exists() {
-        missing.push(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+        missing.push(".decapod/managed/artifacts/provenance/artifact_manifest.json");
     }
     if !proof_manifest.exists() {
-        missing.push(".decapod/generated/artifacts/provenance/proof_manifest.json");
+        missing.push(".decapod/managed/artifacts/provenance/proof_manifest.json");
     }
     if !intent_convergence_manifest.exists() {
-        missing.push(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
+        missing.push(".decapod/managed/artifacts/provenance/intent_convergence_checklist.json");
     }
     if !missing.is_empty() {
         println!(
@@ -4273,9 +4273,9 @@ fn run_release_lineage_sync(project_root: &Path) -> Result<(), error::DecapodErr
                 "capsule_hash": lineage.capsule_hash
             },
             "manifests": [
-                ".decapod/generated/artifacts/provenance/artifact_manifest.json",
-                ".decapod/generated/artifacts/provenance/proof_manifest.json",
-                ".decapod/generated/artifacts/provenance/intent_convergence_checklist.json"
+                ".decapod/managed/artifacts/provenance/artifact_manifest.json",
+                ".decapod/managed/artifacts/provenance/proof_manifest.json",
+                ".decapod/managed/artifacts/provenance/intent_convergence_checklist.json"
             ]
         })
     );
@@ -4884,7 +4884,7 @@ fn should_scaffold_validation_surfaces(project_root: &Path) -> bool {
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
         ".decapod/managed/specs/.manifest.json",
-        ".decapod/generated/policy/context_capsule_policy.json",
+        ".decapod/managed/policy/context_capsule_policy.json",
     ];
     required.iter().any(|rel| !project_root.join(rel).exists())
 }
@@ -5073,7 +5073,7 @@ fn heal_generated_dockerfile(
 ) -> Result<Option<ValidationHealAction>, error::DecapodError> {
     let dockerfile_path = project_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("Dockerfile");
     if !dockerfile_path.exists() {
         return Ok(None);
@@ -5442,7 +5442,7 @@ fn write_validate_diagnostic_artifact(
     let mut run_id_hasher = Sha256::new();
     run_id_hasher.update(crate::core::ulid::new_ulid().as_bytes());
     let run_id = hash_bytes_hex(&run_id_hasher.finalize())[..32].to_string();
-    let diagnostics_dir = project_root.join(".decapod/generated/artifacts/diagnostics/validate");
+    let diagnostics_dir = project_root.join(".decapod/managed/artifacts/diagnostics/validate");
     fs::create_dir_all(&diagnostics_dir).map_err(error::DecapodError::IoError)?;
 
     let mut payload = serde_json::json!({
@@ -5466,7 +5466,7 @@ fn write_validate_diagnostic_artifact(
     payload["artifact_hash"] = serde_json::json!(artifact_hash);
 
     let relative_path = PathBuf::from(format!(
-        ".decapod/generated/artifacts/diagnostics/validate/{run_id}.json"
+        ".decapod/managed/artifacts/diagnostics/validate/{run_id}.json"
     ));
     let artifact_path = project_root.join(&relative_path);
     let pretty = serde_json::to_vec_pretty(&payload).map_err(|e| {

@@ -363,7 +363,7 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
         id: "state_bound_context_capsule",
         passed: capsule["success"] == true
             && workspace_path
-                .join(".decapod/generated/context")
+                .join(".decapod/managed/context")
                 .join(format!("{task_id}.json"))
                 .exists(),
         evidence: capsule.to_string(),

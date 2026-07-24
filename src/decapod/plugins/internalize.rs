@@ -5,7 +5,7 @@
 //! so agents stop paying the long-context tax over and over.
 //!
 //! Artifacts are produced by pluggable "internalizer profiles" (external
-//! executables) and stored under `.decapod/generated/artifacts/internalizations/`.
+//! executables) and stored under `.decapod/managed/artifacts/internalizations/`.
 //!
 //! Truth label: REAL
 //! Proof surface: `decapod internalize inspect --id <id>`
@@ -246,7 +246,7 @@ impl InternalizerProfile {
             return Ok(Self::noop());
         }
         let profile_path = control_root(store_root)
-            .join("generated")
+            .join("managed")
             .join("profiles")
             .join("internalizers")
             .join(format!("{name}.json"));
@@ -505,7 +505,7 @@ fn control_root(store_root: &Path) -> PathBuf {
 
 fn artifacts_dir(store_root: &Path) -> PathBuf {
     control_root(store_root)
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("internalizations")
 }
@@ -516,7 +516,7 @@ fn artifact_dir(store_root: &Path, id: &str) -> PathBuf {
 
 fn session_dir(store_root: &Path, session_id: &str) -> PathBuf {
     control_root(store_root)
-        .join("generated")
+        .join("managed")
         .join("sessions")
         .join(session_id)
 }
