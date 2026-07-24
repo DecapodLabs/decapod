@@ -229,15 +229,6 @@ fn error_json(message: &str) -> Vec<u8> {
 fn internal_error(error: std::io::Error) -> HttpResponse {
     HttpResponse::json(500, error_json(&error.to_string()))
 }
-
 #[cfg(test)]
-mod tests {
-    use std::net::IpAddr;
-
-    #[test]
-    fn requires_loopback_for_default_binding() {
-        let parsed: IpAddr = "127.0.0.1".parse().unwrap();
-        assert!(parsed.is_loopback());
-        assert!(!"192.0.2.1".parse::<IpAddr>().unwrap().is_loopback());
-    }
-}
+#[path = "../../../tests/unit/core/http_transport_tests.rs"]
+mod tests;

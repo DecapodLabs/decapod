@@ -673,19 +673,6 @@ impl Drop for BrokerLease {
         let _ = fs::remove_file(&self.path);
     }
 }
-
 #[cfg(all(test, unix))]
-mod tests {
-    #[test]
-    fn broker_falls_back_for_socket_unavailable_errors() {
-        assert!(super::broker_io_error_allows_direct_fallback(
-            std::io::ErrorKind::PermissionDenied
-        ));
-        assert!(super::broker_io_error_allows_direct_fallback(
-            std::io::ErrorKind::InvalidInput
-        ));
-        assert!(!super::broker_io_error_allows_direct_fallback(
-            std::io::ErrorKind::Other
-        ));
-    }
-}
+#[path = "../../../tests/unit/core/group_broker_tests.rs"]
+mod tests;

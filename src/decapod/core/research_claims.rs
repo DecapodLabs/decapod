@@ -536,13 +536,6 @@ fn validate_nonempty_list(
     }
     Ok(())
 }
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn embedded_schema_is_closed_over_object_fields() {
-        validate_schema_document().expect("claims schema should be strict and valid");
-    }
-}
+#[path = "../../../tests/unit/core/research_claims_tests.rs"]
+mod tests;
