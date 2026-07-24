@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.82.1](https://github.com/DecapodLabs/decapod/compare/v0.82.0...v0.82.1) - 2026-07-24
+
+### Fixed
+
+- rename managed workspace Dockerfile for decapod
+
+### Other
+
+- refresh final validation receipts
+- record verified governance bundle proof
+- enforce complete PR governance artifact bundle
+- record issue 1019 validation receipts
+- refresh managed spec attestation
+
 ## [0.82.0](https://github.com/DecapodLabs/decapod/compare/v0.81.1...v0.82.0) - 2026-07-24
 
 ### Fixed
