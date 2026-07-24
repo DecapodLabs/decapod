@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.81.0](https://github.com/DecapodLabs/decapod/compare/v0.80.4...v0.81.0) - 2026-07-24
+
+### Fixed
+
+- replay recovered verification events
+- recover batch proof backlog deterministically
+
+### Other
+
+- record proof recovery governance
+- refresh governed specs for validation changes
+- record issue 998 validation evidence
+- refresh governed release artifacts
+- move Rust tests out of src for smaller releases
+
 ## [0.80.4](https://github.com/DecapodLabs/decapod/compare/v0.80.3...v0.80.4) - 2026-07-24
 
 ### Other
