@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.80.3](https://github.com/DecapodLabs/decapod/compare/v0.80.2...v0.80.3) - 2026-07-24
+
+### Fixed
+
+- satisfy selective test clippy checks
+
+### Other
+
+- refresh generated specs
+- fold selective tests into qa
+
 ## [0.80.2](https://github.com/DecapodLabs/decapod/compare/v0.80.1...v0.80.2) - 2026-07-23
 
 ### Fixed
