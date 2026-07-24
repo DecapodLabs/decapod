@@ -5,7 +5,7 @@
   "task_id": "bugs_01ky8vzzgg651154",
   "original_intent": "Solve GitHub Issue #998 by moving Rust test implementations out of src so release builds contain production code and relevant runtime assets only.",
   "derived_intent": "Use out-of-line cfg(test) modules under tests/unit, preserve coverage, and prove cargo release and Bazel release graphs exclude tests.",
-  "current_phase": "publish",
+  "current_phase": "validation",
   "next_transitions": [
     "publish",
     "publish scoped PR with explicit governance blocker handoff",
@@ -19,26 +19,39 @@
     "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
   ],
   "inspected_files": [
+    ".bazelrc",
+    ".config/build",
     ".decapod/config.toml",
     "BUILD.bazel",
     "Cargo.toml",
+    "MODULE.bazel",
+    "rust-toolchain.toml",
     "src",
     "src/decapod/plugins/verify.rs",
     "tests"
   ],
   "modified_files": [
+    ".bazelrc",
+    ".config/build",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    "rust-toolchain.toml",
     "src",
     "src/decapod/plugins/verify.rs",
+    "tests/build_layout_policy.rs",
     "tests/release_artifact_policy.rs",
     "tests/unit"
   ],
   "declared_commands": [
+    "DECAPOD_CONTAINER=1 decapod validate --format json",
     "cargo build --release --bin decapod",
     "cargo fmt --all",
+    "cargo fmt --all -- --check",
     "cargo test --lib",
     "cargo test --no-run",
+    "cargo test --test build_layout_policy --test release_artifact_policy",
     "cargo test --test release_artifact_policy",
     "decapod qa verify recover --json",
     "decapod validate",
@@ -88,6 +101,10 @@
     },
     {
       "name": "batch-proof-recovery",
+      "status": "passed"
+    },
+    {
+      "name": "build_layout_policy",
       "status": "passed"
     },
     {
@@ -147,17 +164,20 @@
     "The former shared proof-hook blocker and the stale entrypoint fixture are resolved in this PR.",
     "cargo test --lib ran 193 relocated tests; 192 passed and 1 failed on the pre-existing stale AGENTS.md entrypoint fingerprint fixture.",
     "decapod qa verify --json reports 19 done TODOs, 0 passed, 19 failed after proof recapture because validate_passes remains blocked by the same shared hook.",
+    "decapod_release=0.81.0",
     "stable batch snapshot recovery path implemented; final aggregate proof pending",
     "validation epoch ve_0771ae7377b229db completed with zero failures",
+    "validation epoch ve_a259af0629b39b23 completed with zero failures",
     "validation epoch ve_d0c221366faefdb4 completed with zero failures",
-    "validation epoch ve_e9e7cabde82f8af0 completed with zero failures"
+    "validation epoch ve_e9e7cabde82f8af0 completed with zero failures",
+    "validation_epoch=ve_a259af0629b39b23"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
     "The entrypoint fingerprint failure is baseline because this change does not alter canonical templates or expected release constants.",
     "The shared backlog predates Issue #998 and is outside the scoped source/test refactor."
   ],
-  "completion_claim": "Issue #998 source/test separation, claimed-task proof recovery, and serialized validation are verified for publication.",
+  "completion_claim": "Build configuration is centralized under .config/build with root Bazel and rustup compatibility shims; v0.81.0 governed validation passes.",
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -165,7 +185,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:77802e787427ac19b2daa032b854577f61fed8005351fa14cff532c620f1ebe3",
+  "artifact_hash": "sha256:f60c666ecb0d9254cf2d28ef8686be04c38639f0db59c62417fcfbaa02c7956e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -407,6 +427,20 @@
       {
         "sequence": 33,
         "event_id": "event:33",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 34,
+        "event_id": "event:34",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 35,
+        "event_id": "event:35",
         "intent_id": "intent:issue-998-20260723",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue-998-20260723"
@@ -966,12 +1000,62 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:33"
+          },
+          {
+            "sequence": 34,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a259af0629b39b23 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:34"
+          },
+          {
+            "sequence": 35,
+            "action": "validation",
+            "command": "cargo fmt --all -- --check",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              "BUILD.bazel",
+              "MODULE.bazel",
+              ".bazelrc",
+              "rust-toolchain.toml",
+              ".config/build",
+              "BUILD.bazel",
+              "MODULE.bazel",
+              ".bazelrc",
+              "rust-toolchain.toml",
+              ".config/build",
+              "tests/build_layout_policy.rs",
+              "tests/release_artifact_policy.rs",
+              "validation_epoch=ve_a259af0629b39b23",
+              "decapod_release=0.81.0"
+            ],
+            "proof_refs": [
+              "cargo_fmt",
+              "build_layout_policy",
+              "release_artifact_policy",
+              "decapod_validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:35"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 33
+    "next_sequence": 35
   }
 }
