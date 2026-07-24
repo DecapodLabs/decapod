@@ -57,16 +57,6 @@ rust_binary(
     proc_macro_deps = all_crate_deps(proc_macro = True),
 )
 
-rust_binary(
-    name = "selective-test",
-    srcs = ["src/bin/selective-test.rs"],
-    edition = "2024",
-    deps = [
-        ":decapod_lib",
-    ] + all_crate_deps(normal = True),
-    proc_macro_deps = all_crate_deps(proc_macro = True),
-)
-
 rust_test(
     name = "core_tests",
     srcs = ["tests/core/core.rs"],
