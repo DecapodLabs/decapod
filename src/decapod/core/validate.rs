@@ -203,20 +203,22 @@ fn is_decapod_isolated_worktree(_main_root: &Path, repo_root: &Path) -> bool {
     }
 }
 
-/// Spawn a validation gate in a scoped thread with timing and error capture.
+/// Run a validation gate with timing and error capture.
 ///
-/// Replaces ~10 lines of boilerplate per gate with a single invocation.
+/// Validation gates share repository state and several gates intentionally
+/// perform cleanup, projection, or receipt work. They therefore execute in
+/// declaration order; a future gate may only be parallelized after its
+/// read-only and isolation contract is explicit.
 macro_rules! gate {
     ($_scope:expr, $timings:expr, $ctx:expr, $name:literal, $body:expr) => {{
+        let _scope = &$_scope;
         let ctx = $ctx;
         let timings = $timings;
-        $_scope.spawn(move || {
-            let start = Instant::now();
-            if let Err(e) = $body {
-                fail(&format!("gate error: {e}"), ctx);
-            }
-            timings.lock().unwrap().push(($name, start.elapsed()));
-        });
+        let start = Instant::now();
+        if let Err(e) = $body {
+            fail(&format!("gate error: {e}"), ctx);
+        }
+        timings.lock().unwrap().push(($name, start.elapsed()));
     }};
 }
 
@@ -6166,14 +6168,11 @@ pub fn run_validation(
         }
     }
 
-    // Run remaining gates concurrently for bounded wall-clock validation time.
-    // Each gate is independently timed and all shared findings are collected
-    // through the thread-safe validation context. The host's available
-    // parallelism is recorded in the proof report so agents can distinguish a
-    // parallel validation run from a sequential fallback.
-    let parallelism = std::thread::available_parallelism()
-        .map(std::num::NonZeroUsize::get)
-        .unwrap_or(1);
+    // Run gates sequentially because the validation surface is stateful. This
+    // keeps single-CPU work, SQLite access, generated projections, temporary
+    // artifacts, and receipt writes deterministic. Truly pure read-only gate
+    // groups can be introduced later with an explicit isolation contract.
+    let parallelism = 1;
     let timings: Mutex<Vec<(&str, Duration)>> = Mutex::new(Vec::new());
     std::thread::scope(|s| {
         let ctx = &ctx;
