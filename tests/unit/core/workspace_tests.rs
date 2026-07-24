@@ -209,6 +209,52 @@ fn validation_artifact_publish_gate_requires_trajectory_and_receipt() {
 }
 
 #[test]
+fn required_governance_artifacts_must_all_be_in_pr_diff() {
+    let tmp = tempdir().expect("tempdir");
+    git(tmp.path(), &["init", "-q"]);
+    git(tmp.path(), &["config", "user.email", "test@test.com"]);
+    git(tmp.path(), &["config", "user.name", "Test"]);
+    std::fs::write(tmp.path().join("README.md"), "base\n").expect("write base");
+    git(tmp.path(), &["add", "README.md"]);
+    git(tmp.path(), &["commit", "-m", "base"]);
+    git(tmp.path(), &["checkout", "-q", "-b", "feature"]);
+
+    for path in REQUIRED_PR_GOVERNANCE_ARTIFACTS {
+        if *path == ".decapod/governance/claims.json" {
+            continue;
+        }
+        let artifact = tmp.path().join(path);
+        std::fs::create_dir_all(artifact.parent().expect("artifact parent"))
+            .expect("create artifact parent");
+        std::fs::write(artifact, "{}\n").expect("write artifact");
+    }
+    git(tmp.path(), &["add", "."]);
+    git(
+        tmp.path(),
+        &["commit", "-m", "proof artifacts without claims"],
+    );
+
+    let error = ensure_required_governance_artifacts_in_pr(tmp.path(), "master")
+        .expect_err("publication must reject a PR missing claims.json");
+    let message = error.to_string();
+    assert!(
+        message.contains(".decapod/governance/claims.json"),
+        "{message}"
+    );
+    assert!(message.contains("all four"), "{message}");
+
+    let claims = tmp.path().join(".decapod/governance/claims.json");
+    std::fs::write(claims, "{}\n").expect("write claims");
+    git(tmp.path(), &["add", ".decapod/governance/claims.json"]);
+    git(
+        tmp.path(),
+        &["commit", "-m", "include claims proof artifact"],
+    );
+    ensure_required_governance_artifacts_in_pr(tmp.path(), "master")
+        .expect("all four governance artifacts must be in the PR diff");
+}
+
+#[test]
 fn test_github_repo_slug_supports_common_remote_forms() {
     assert_eq!(
         github_repo_slug("git@github.com:DecapodLabs/decapod.git"),

@@ -54,6 +54,17 @@ pub struct GitStatus {
     pub has_local_mods: bool,
 }
 
+/// Governance artifacts that must travel with every published PR.
+///
+/// These are intentionally kept as one canonical set so presence checks,
+/// staging checks, and PR-diff checks cannot drift apart.
+pub const REQUIRED_PR_GOVERNANCE_ARTIFACTS: &[&str] = &[
+    plan_governance::PLAN_PATH,
+    research_claims::CLAIMS_PATH,
+    trajectory::TRAJECTORY_PATH,
+    crate::core::validate::VALIDATION_RECEIPT_PATH,
+];
+
 /// Container/Docker status
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ContainerStatus {
@@ -1402,6 +1413,7 @@ pub fn publish_workspace(
     }
 
     ensure_validation_artifacts_staged(repo_root)?;
+    ensure_required_governance_artifacts_in_pr(repo_root, &base_branch)?;
 
     // Get current commit hash
     let hash_output = Command::new("git")
@@ -1645,12 +1657,7 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
 
 fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodError> {
     let dir = repo_root.to_str().unwrap_or(".");
-    for path in [
-        plan_governance::PLAN_PATH,
-        research_claims::CLAIMS_PATH,
-        trajectory::TRAJECTORY_PATH,
-        crate::core::validate::VALIDATION_RECEIPT_PATH,
-    ] {
+    for path in REQUIRED_PR_GOVERNANCE_ARTIFACTS {
         let output = Command::new("git")
             .args([
                 "-C",
@@ -1669,6 +1676,62 @@ fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodErr
             )));
         }
     }
+    Ok(())
+}
+
+/// Require every governance artifact to be part of the actual PR diff.
+///
+/// Merely having an artifact in the branch or index is insufficient: a
+/// branch can inherit an unchanged file from its base, which would leave the
+/// resulting PR without the proof surface that governed the work. This gate
+/// runs after publication has committed local changes and before any push.
+pub fn ensure_required_governance_artifacts_in_pr(
+    repo_root: &Path,
+    base_branch: &str,
+) -> Result<(), DecapodError> {
+    let base_ref = base_ref_for_branch(repo_root, base_branch).ok_or_else(|| {
+        DecapodError::ValidationError(format!(
+            "Cannot publish: base branch '{base_branch}' is not available locally; fetch it before checking required PR governance artifacts."
+        ))
+    })?;
+    let dir = repo_root.to_str().unwrap_or(".");
+    let output = Command::new("git")
+        .args([
+            "-C",
+            dir,
+            "diff",
+            "--name-only",
+            &format!("{base_ref}...HEAD"),
+            "--",
+        ])
+        .args(REQUIRED_PR_GOVERNANCE_ARTIFACTS)
+        .output()
+        .map_err(DecapodError::IoError)?;
+    if !output.status.success() {
+        return Err(DecapodError::ValidationError(format!(
+            "Cannot publish: failed to inspect the PR diff against '{base_ref}': {}",
+            String::from_utf8_lossy(&output.stderr).trim()
+        )));
+    }
+
+    let changed: HashSet<String> = String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .map(str::to_string)
+        .collect();
+    let missing: Vec<&str> = REQUIRED_PR_GOVERNANCE_ARTIFACTS
+        .iter()
+        .copied()
+        .filter(|path| !changed.contains(*path))
+        .collect();
+    if !missing.is_empty() {
+        return Err(DecapodError::ValidationError(format!(
+            "Cannot publish: required governance artifacts are not included in the PR diff against '{base_ref}': {}. Every PR must change all four artifacts: plan, claims, trajectory, and validation.",
+            missing.join(", ")
+        )));
+    }
+
     Ok(())
 }
 

@@ -26,21 +26,26 @@
     "tests/validate_termination.rs"
   ],
   "modified_files": [
+    ".decapod/governance/claims.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
     ".decapod/managed/Dockerfile.decapod",
+    ".github/workflows/ci.yml",
     "src/decapod/core/entrypoint_integrity.rs",
     "src/decapod/core/scaffold.rs",
     "src/decapod/core/validate.rs",
     "src/decapod/core/workspace.rs",
     "src/decapod/lib.rs",
     "src/decapod/plugins/container.rs",
+    "tests/unit/core/workspace_tests.rs",
     "tests/unit/plugins/container_tests.rs"
   ],
   "declared_commands": [
     "cargo fmt --all",
     "cargo test --lib",
+    "cargo test --lib required_governance_artifacts_must_all_be_in_pr_diff",
     "cargo test --test core_tests --test validate_termination --test release_workflow_policy",
+    "cargo test --test research_claims",
     "decapod validate",
     "rg Dockerfile references"
   ],
@@ -55,16 +60,25 @@
       "status": "passed"
     },
     {
+      "name": "claims-schema",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
       "status": "passed"
     },
     {
       "name": "focused Dockerfile and validation tests",
       "status": "passed"
+    },
+    {
+      "name": "pr-governance-diff-gate",
+      "status": "passed"
     }
   ],
   "evidence": [
     "193 lib tests initially passed and exposed one stale release fingerprint fixture; after updating the v0.82.0 manifest, 194 lib tests passed.",
+    "Added a bounded Issue #1019 claims observation and enforced all four governance artifacts in Decapod publication and CI PR diffs.",
     "Legacy managed Dockerfile migration unit test passed and preserves project-specific content.",
     "validation epoch ve_ce1c98498e9491d1 completed with zero failures"
   ],
@@ -77,7 +91,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:a75b12ae115b2aacabe18f13dee5e9643a1f7a5493fd3b1210411e9eca3c40bd",
+  "artifact_hash": "sha256:8485ff9d7dfd94fff5d7a6a45b30d6310b53a02efa6d6a6121593d20458c0d65",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -123,6 +137,13 @@
       {
         "sequence": 5,
         "event_id": "event:5",
+        "intent_id": "intent:issue-1019-20260724",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-1019-20260724"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
         "intent_id": "intent:issue-1019-20260724",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue-1019-20260724"
@@ -186,12 +207,33 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "cargo test --test research_claims",
+            "scope": [
+              "src/decapod, tests, assets, .gitignore, .decapod/managed, and required governance receipts"
+            ],
+            "observations": [
+              ".decapod/governance/claims.json",
+              ".github/workflows/ci.yml",
+              "src/decapod/core/workspace.rs",
+              "tests/unit/core/workspace_tests.rs",
+              "Added a bounded Issue #1019 claims observation and enforced all four governance artifacts in Decapod publication and CI PR diffs."
+            ],
+            "proof_refs": [
+              "claims-schema",
+              "pr-governance-diff-gate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 6
   }
 }
