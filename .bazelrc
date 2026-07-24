@@ -1,4 +1,1 @@
-build --announce_rc
-build --color=yes
-build --curses=yes
-test --test_output=errors
+try-import %workspace%/.config/build/bazelrc

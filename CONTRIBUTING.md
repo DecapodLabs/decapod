@@ -32,6 +32,12 @@ Examples:
 
 Decapod uses Bazel (coordinated via Bazelisk) as its primary build and test system.
 
+Canonical Bazel and Rust toolchain configuration lives under `.config/build/`.
+The root `BUILD.bazel`, `MODULE.bazel`, and `.bazelrc` files are intentionally
+small Bazel discovery shims; `MODULE.bazel.lock` remains at the repository root
+because Bazel generates and discovers that lockfile there. The root
+`rust-toolchain.toml` is a rustup-compatible symlink to `.config/build/`.
+
 To build, test, and run validation locally, you can use the following commands:
 
 ```bash

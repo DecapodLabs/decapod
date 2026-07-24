@@ -1,0 +1,6 @@
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "decapod.BUILD.bzl",
+    "decapod.MODULE.bazel",
+])
