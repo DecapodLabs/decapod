@@ -4877,7 +4877,7 @@ fn should_scaffold_validation_surfaces(project_root: &Path) -> bool {
     let required = [
         "AGENTS.md",
         ".decapod/README.md",
-        ".decapod/managed/Dockerfile",
+        ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/README.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/ARCHITECTURE.md",
@@ -5071,10 +5071,8 @@ fn heal_container_runtime_override(
 fn heal_generated_dockerfile(
     project_root: &Path,
 ) -> Result<Option<ValidationHealAction>, error::DecapodError> {
-    let dockerfile_path = project_root
-        .join(".decapod")
-        .join("managed")
-        .join("Dockerfile");
+    let migrated = container::migrate_legacy_managed_dockerfile(project_root)?;
+    let dockerfile_path = container::managed_dockerfile_path(project_root);
     if !dockerfile_path.exists() {
         return Ok(None);
     }
@@ -5082,17 +5080,37 @@ fn heal_generated_dockerfile(
     let expected = container::generated_dockerfile_for_repo(project_root);
     let current = fs::read_to_string(&dockerfile_path).map_err(error::DecapodError::IoError)?;
     if current == expected {
-        return Ok(None);
+        return Ok(migrated.then_some(ValidationHealAction {
+            action: "migrate_managed_dockerfile".to_string(),
+            outcome: "renamed".to_string(),
+            detail: "Renamed the legacy .decapod/managed/Dockerfile to .decapod/managed/Dockerfile.decapod without changing its contents.".to_string(),
+        }));
     }
 
     let Some(updated) = maintain_generated_dockerfile_contract(&current, &expected) else {
-        return Ok(None);
+        return Ok(migrated.then_some(ValidationHealAction {
+            action: "migrate_managed_dockerfile".to_string(),
+            outcome: "renamed".to_string(),
+            detail: "Renamed the legacy .decapod/managed/Dockerfile to .decapod/managed/Dockerfile.decapod and preserved project-specific content.".to_string(),
+        }));
     };
     atomic_write_file(&dockerfile_path, &updated)?;
     Ok(Some(ValidationHealAction {
-        action: "heal_generated_dockerfile".to_string(),
-        outcome: "refreshed".to_string(),
-        detail: "Refreshed the Decapod-managed image/version header in .decapod/managed/Dockerfile while preserving project workspace mutations.".to_string(),
+        action: if migrated {
+            "migrate_managed_dockerfile".to_string()
+        } else {
+            "heal_generated_dockerfile".to_string()
+        },
+        outcome: if migrated {
+            "renamed_and_refreshed".to_string()
+        } else {
+            "refreshed".to_string()
+        },
+        detail: if migrated {
+            "Renamed the legacy .decapod/managed/Dockerfile to .decapod/managed/Dockerfile.decapod and refreshed its Decapod-managed image/version header while preserving project workspace mutations.".to_string()
+        } else {
+            "Refreshed the Decapod-managed image/version header in .decapod/managed/Dockerfile.decapod while preserving project workspace mutations.".to_string()
+        },
     }))
 }
 
@@ -9874,7 +9892,7 @@ fn apply_container_orientation_constraints(
             .relevant_areas
             .push("architecture/CONTAINERS".to_string());
         packet.constraints.push(
-            "Keep the Decapod workspace container under .decapod/managed/Dockerfile; a root Dockerfile must package the project application or microservice according to human intent.".to_string(),
+            "Keep the Decapod workspace container under .decapod/managed/Dockerfile.decapod; a root Dockerfile must package the project application or microservice according to human intent.".to_string(),
         );
         packet.proof_required.push(
             "Validate that any root Dockerfile contains application packaging rather than Decapod workspace seed markers.".to_string(),

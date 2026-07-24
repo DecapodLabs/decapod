@@ -1488,7 +1488,7 @@ fn validate_generated_artifact_whitelist(
     };
 
     let allowed_tracked = [
-        ".decapod/managed/Dockerfile",
+        ".decapod/managed/Dockerfile.decapod",
         ".decapod/data/knowledge.promotions.jsonl",
         ".decapod/managed/specs/.manifest",
         ".decapod/managed/specs/.manifest.json",
@@ -5716,7 +5716,7 @@ fn validate_root_dockerfile_seed_detection(
     let content = fs::read_to_string(&dockerfile_path).map_err(error::DecapodError::IoError)?;
     if crate::core::mentor::is_decapod_workspace_dockerfile(&content) {
         fail(
-            "Root Dockerfile contains Decapod workspace image markers. `.decapod/managed/Dockerfile` is Decapod's internal workspace container; the root Dockerfile must package the project application or microservice according to human intent. Remove `org.decapod.managed=\"workspace\"` and `ARG DECAPOD_IMAGE=` from the root Dockerfile or move workspace-container configuration under `.decapod/managed/Dockerfile`.",
+            "Root Dockerfile contains Decapod workspace image markers. `.decapod/managed/Dockerfile.decapod` is Decapod's internal workspace container; the root Dockerfile must package the project application or microservice according to human intent. Remove `org.decapod.managed=\"workspace\"` and `ARG DECAPOD_IMAGE=` from the root Dockerfile or move workspace-container configuration under `.decapod/managed/Dockerfile.decapod`.",
             ctx,
         );
     } else {

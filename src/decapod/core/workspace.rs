@@ -721,7 +721,7 @@ fn build_workspace_image(workspace_path: &Path, image_tag: &str) -> Result<(), D
     let dockerfile_path = workspace_path
         .join(".decapod")
         .join("managed")
-        .join("Dockerfile");
+        .join("Dockerfile.decapod");
     let mut build = Command::new(runtime);
     build
         .arg("build")

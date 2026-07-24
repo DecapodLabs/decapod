@@ -300,7 +300,7 @@ fn validate_timeout_does_not_strand_db_for_followup_commands() {
 #[test]
 fn validate_json_reports_self_heal_and_structured_summary() {
     let (_tmp, dir, password) = setup_repo();
-    let dockerfile_path = dir.join(".decapod/managed/Dockerfile");
+    let dockerfile_path = dir.join(".decapod/managed/Dockerfile.decapod");
     fs::write(&dockerfile_path, "FROM rust:1.91.1-alpine\n").expect("write stale Dockerfile");
 
     let validate = run_decapod(

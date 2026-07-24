@@ -447,7 +447,7 @@ These files are the project-local contract for humans and agents.
 
 ## Canonical `.decapod/` Layout
 - `.decapod/data/`: canonical control-plane state (SQLite + ledgers).
-- `.decapod/managed/Dockerfile`: Decapod's project-specific execution image; Decapod runs inside it and may add project build dependencies such as Go, Python, or system packages. Glibc is the default; `--image-profile alpine` selects the GHCR `-alpine`-tagged musl image.
+- `.decapod/managed/Dockerfile.decapod`: Decapod's project-specific execution image; Decapod runs inside it and may add project build dependencies such as Go, Python, or system packages. Glibc is the default; `--image-profile alpine` selects the GHCR `-alpine`-tagged musl image.
 - `.decapod/managed/specs/`: **Living project specs** for humans and agents.
 - `Dockerfile` at the project root remains the product application's container image and is the artifact users package and deploy.
 - `.decapod/managed/context/`: ignored, current-run deterministic context capsules.
@@ -1361,7 +1361,7 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     "!.decapod/data/",
     "!.decapod/data/knowledge.promotions.jsonl",
     "!.decapod/managed/",
-    "!.decapod/managed/Dockerfile",
+    "!.decapod/managed/Dockerfile.decapod",
     "!.decapod/managed/specs/",
     "!.decapod/managed/specs/*.md",
     "!.decapod/managed/specs/.manifest.json",
@@ -1371,7 +1371,10 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
 ///
 /// Keep stale allowlists out of downstream repos when a formerly tracked generated
 /// artifact becomes volatile local state.
-const DEPRECATED_DECAPOD_GITIGNORE_RULES: &[&str] = &["!.decapod/generated/validation-epoch.json"];
+const DEPRECATED_DECAPOD_GITIGNORE_RULES: &[&str] = &[
+    "!.decapod/generated/validation-epoch.json",
+    "!.decapod/managed/validation-epoch.json",
+];
 
 /// Ensure a given entry exists in the project's .gitignore file.
 /// Creates the file if it doesn't exist. Appends the entry if not already present.
@@ -1759,7 +1762,7 @@ pub fn scaffold_project_entrypoints(
     // Use get_legacy_entrypoint_contents() to read them and return to the agent.
     // The agent will manually consolidate content into appropriate OVERRIDE.md sections.
 
-    // Generate .decapod/managed/Dockerfile from Rust-owned template component.
+    // Generate .decapod/managed/Dockerfile.decapod from Rust-owned template component.
     let generated_dir = opts.target_dir.join(".decapod/managed");
     if let Err(e) = fs::create_dir_all(&generated_dir) {
         eprintln!("warning: Failed to create {}: {e}", generated_dir.display());
@@ -1771,7 +1774,10 @@ pub fn scaffold_project_entrypoints(
     if let Err(e) = fs::create_dir_all(&managed_dir) {
         eprintln!("warning: Failed to create {}: {e}", managed_dir.display());
     }
-    let dockerfile_path = managed_dir.join("Dockerfile");
+    if let Err(e) = crate::plugins::container::migrate_legacy_managed_dockerfile(&opts.target_dir) {
+        eprintln!("warning: Failed to migrate legacy managed Dockerfile: {e}");
+    }
+    let dockerfile_path = crate::plugins::container::managed_dockerfile_path(&opts.target_dir);
     if !dockerfile_path.exists() {
         let dockerfile_content =
             crate::plugins::container::generated_dockerfile_for_repo(&opts.target_dir);

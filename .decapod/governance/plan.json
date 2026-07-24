@@ -1,16 +1,15 @@
 {
   "schema_version": "1.0.0",
   "title": "Governed pre-inference plan and managed execution publication",
-  "intent": "Use .decapod/governance/plan.json as the automatic pre-inference sketchpad for ideating a target solution and converging on human intent; require plan, claims, trajectory, and validation receipts in every published validation-output change; keep living specs and the Decapod execution Dockerfile under .decapod/managed; publish stable -debian and -alpine image families, with Debian Bookworm as the current glibc base.",
+  "intent": "Rename the project-specific Decapod workspace runtime Dockerfile from .decapod/managed/Dockerfile to .decapod/managed/Dockerfile.decapod, preserving the root Dockerfile as the users application packaging boundary and updating every generator, executor, validator, allowlist, test, spec, and proof reference.",
   "state": "APPROVED",
   "todo_ids": [
-    "bugs_01kk3wktkzarkbqb",
-    "bugs_01kvk66syc16hehs",
-    "bugs_01ky97k3bsgywdtt"
+    "bugs_01ky9f3ztz3n1x7m"
   ],
   "proof_hooks": [
-    "decapod validate",
-    "cargo test --test infer_precision --test activation_conformance --test plan_governed_execution --test release_workflow_policy"
+    "cargo test --test validate_termination --test core --test release_workflow_policy",
+    "cargo test --test infer_precision --test activation_conformance --test plan_governed_execution",
+    "decapod validate"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -21,6 +20,18 @@
     "forbidden_paths": [],
     "file_touch_budget": null
   },
-  "phases": [],
-  "updated_at": "1784872309Z"
+  "phases": [
+    {
+      "id": "dockerfile-rename",
+      "name": "Rename managed workspace Dockerfile",
+      "description": "Update the managed workspace Dockerfile contract and all code, scaffold, validation, tests, specs, and repository policy references while keeping the root Dockerfile reserved for application packaging.",
+      "entry_gates": [],
+      "exit_gates": [],
+      "entered": true,
+      "completed": true,
+      "entered_at": "1784876915Z",
+      "completed_at": "1784877745Z"
+    }
+  ],
+  "updated_at": "1784877745Z"
 }

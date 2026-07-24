@@ -209,47 +209,9 @@ cd /tmp/smoke-test && decapod activate && decapod todo add "Smoke test" && decap
 - **Defense in Depth**: Validation gates + capability gating + workspace isolation + session auth + audit trail
 
 <!-- decapod:codebase-attestation:start -->
-
-<!-- decapod:capability-overlay:background-processing:start -->
-
-## Background Processing Operations Overlay
-
-### Queue Visibility
-- Queue depth, processing rate, and latency MUST be monitored
-- Dead letter queue MUST be visible and alerted
-- Worker health and processing rate metrics required
-
-### Shutdown Behavior
-- Graceful shutdown: stop accepting new work, finish current job
-- Drain behavior and timeout MUST be selected for the deployment
-- Termination and requeue behavior MUST be selected and proven for the deployment
-
-### Worker Health
-- Worker liveness and readiness probes
-- Queue depth alerts for backpressure detection
-- Processing latency percentiles (p50, p95, p99)
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-## Persistent State Operations Overlay
-
-### Backup & Recovery
-- Backup scope, schedule, retention, and restore evidence MUST be selected for the project
-- Recovery point objectives MUST be explicit project decisions, not assumed values
-- Recovery time objectives MUST be explicit project decisions, not assumed values
-- Restore verification cadence MUST be recorded with the operational proof plan
-
-### Migration Operations
-- All schema changes via migration files
-- Migration rollback procedures documented
-- Zero-downtime migration strategy for production
-- Migration health checks and rollback triggers
-<!-- decapod:capability-overlay:persistent-state:end -->
-
 ## Codebase Attestation
 
-- Repository signal fingerprint: `828a7c34668bf616f6f2d3164ea38514bfd75279aea507c2a3a4b532d8728b4c`
+- Repository signal fingerprint: `150408c0ba088757bc05e71c08d73c00152f4cef024a467cb478347846e50216`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
