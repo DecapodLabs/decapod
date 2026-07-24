@@ -71,7 +71,8 @@
     "Todo proof replay passed with matching validate_passes output hash and all five tracked artifact hashes.",
     "Validation epoch ve_150f4f5a3d9182c7 passed with fail_count=0",
     "plan_governance.rs, validate.rs, todo.rs, completion_evidence.rs, and plan CLI call sites prove plan.json is active authoritative state",
-    "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
+    "validation epoch ve_150f4f5a3d9182c7 completed with zero failures",
+    "validation epoch ve_cabc2510a671639b completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -83,7 +84,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:5d22ff827fc7852694cac6df6f6a2ef8268e5e5eb2b9381df337e2dea077a220",
+  "artifact_hash": "sha256:eaa74b9ac44fccf890aa729adb9955b560ba9b30b4c86729c8961bcb26e3e985",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -178,6 +179,13 @@
       {
         "sequence": 12,
         "event_id": "event:12",
+        "intent_id": "intent:issue-1003-20260724",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-1003-20260724"
+      },
+      {
+        "sequence": 13,
+        "event_id": "event:13",
         "intent_id": "intent:issue-1003-20260724",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue-1003-20260724"
@@ -361,12 +369,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:12"
+          },
+          {
+            "sequence": 13,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_cabc2510a671639b completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:13"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 12
+    "next_sequence": 13
   }
 }
