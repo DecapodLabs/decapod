@@ -9515,6 +9515,7 @@ fn run_infer_init(cli: InferInitCli, project_root: &Path) -> Result<(), error::D
     use std::fs;
 
     let intent = cli.intent.trim().to_lowercase();
+    let governed_plan = governed_plan_context(project_root, None)?;
     let context_files: Vec<String> = cli
         .context
         .as_ref()
@@ -9573,6 +9574,10 @@ fn run_infer_init(cli: InferInitCli, project_root: &Path) -> Result<(), error::D
         ];
     }
 
+    if governed_plan.status == "present" {
+        selected_context.push(governed_plan.path.clone());
+    }
+
     let token_budget = (selected_context.len() as u64 * 500).min(100_000);
     let clarification_required = intent.len() < 20 || intent_type == "unknown";
 
@@ -9586,7 +9591,12 @@ fn run_infer_init(cli: InferInitCli, project_root: &Path) -> Result<(), error::D
         } else { None },
         "selected_context": selected_context,
         "excluded_context": excluded_context,
-        "selected_policies": ["default"],
+        "selected_policies": if governed_plan.status == "present" {
+            vec!["default", "governed-plan"]
+        } else {
+            vec!["default"]
+        },
+        "governed_plan": governed_plan,
         "token_budget": token_budget,
         "proof_required": intent_type == "fix",
         "boundaries": { "max_tokens": 100000, "context_files_limit": 20 }
@@ -9623,6 +9633,7 @@ fn run_infer_orientation(
     let mut packet = OrientationPacket {
         user_goal: cli.intent.clone().unwrap_or_else(|| "Unknown".to_string()),
         task_id: cli.task_id.clone(),
+        governed_plan: governed_plan_context(project_root, cli.task_id.as_deref())?,
         constraints: vec!["Strict adherence to AGENTS.md".to_string()],
         allowed_scope: vec![],
         forbidden_scope: vec![".decapod/".to_string()],
@@ -9653,6 +9664,34 @@ fn run_infer_orientation(
     }
 
     let intent_lower = packet.user_goal.to_lowercase();
+
+    if packet.governed_plan.status == "present" {
+        packet
+            .relevant_areas
+            .push(packet.governed_plan.path.clone());
+        packet
+            .proof_required
+            .extend(packet.governed_plan.proof_hooks.iter().cloned());
+        packet.known_unknowns.extend(
+            packet
+                .governed_plan
+                .unresolved_items
+                .iter()
+                .map(|item| format!("Governed plan unresolved item: {item}")),
+        );
+        if packet.governed_plan.task_binding == "unbound" {
+            packet.known_unknowns.push(
+                "This task is not bound to the existing governed plan; update or replace the plan before mutation."
+                    .to_string(),
+            );
+        }
+        packet.next_action = format!(
+            "Review governed plan state ({}) and task binding ({}) before {}",
+            packet.governed_plan.state.as_deref().unwrap_or("unknown"),
+            packet.governed_plan.task_binding,
+            packet.next_action.trim_start_matches("Perform "),
+        );
+    }
 
     apply_container_orientation_constraints(&mut packet, &intent_lower);
 
@@ -9733,6 +9772,66 @@ fn run_infer_orientation(
     }
 
     Ok(())
+}
+
+fn governed_plan_context(
+    project_root: &Path,
+    task_id: Option<&str>,
+) -> Result<crate::core::rpc::GovernedPlanContext, error::DecapodError> {
+    let path = ".decapod/governance/plan.json".to_string();
+    let Some(plan) = plan_governance::load_plan(project_root)? else {
+        return Ok(crate::core::rpc::GovernedPlanContext {
+            status: "missing".to_string(),
+            path,
+            title: None,
+            intent: None,
+            state: None,
+            todo_ids: vec![],
+            proof_hooks: vec![],
+            unresolved_items: vec![],
+            forbidden_paths: vec![],
+            file_touch_budget: None,
+            task_binding: "not_available".to_string(),
+        });
+    };
+
+    let mut unresolved_items = Vec::new();
+    unresolved_items.extend(plan.unknowns.iter().map(|item| format!("unknown: {item}")));
+    unresolved_items.extend(
+        plan.human_questions
+            .iter()
+            .map(|item| format!("human_question: {item}")),
+    );
+    unresolved_items.extend(
+        plan.unresolved_contradictions
+            .iter()
+            .map(|item| format!("contradiction: {item}")),
+    );
+    unresolved_items.extend(
+        plan.deferred_questions
+            .iter()
+            .map(|item| format!("deferred_question: {item}")),
+    );
+
+    let task_binding = match task_id {
+        Some(id) if plan.todo_ids.iter().any(|candidate| candidate == id) => "bound",
+        Some(_) => "unbound",
+        None => "not_requested",
+    };
+
+    Ok(crate::core::rpc::GovernedPlanContext {
+        status: "present".to_string(),
+        path,
+        title: Some(plan.title),
+        intent: Some(plan.intent),
+        state: Some(format!("{:?}", plan.state).to_uppercase()),
+        todo_ids: plan.todo_ids,
+        proof_hooks: plan.proof_hooks,
+        unresolved_items,
+        forbidden_paths: plan.constraints.forbidden_paths,
+        file_touch_budget: plan.constraints.file_touch_budget,
+        task_binding: task_binding.to_string(),
+    })
 }
 
 fn apply_container_orientation_constraints(

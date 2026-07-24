@@ -73,6 +73,7 @@ fn test_infer_orientation_simple_task() {
 
     let json = extract_json(&output);
     assert_eq!(json["user_goal"], "add documentation to lib.rs");
+    assert_eq!(json["governed_plan"]["status"], "missing");
     assert!(json["decision_gates"].as_array().unwrap().is_empty());
     assert!(json["next_action"].as_str().unwrap().contains("research"));
 }
@@ -170,5 +171,109 @@ fn test_infer_orientation_with_task_id() {
             .unwrap()
             .iter()
             .any(|s| s.as_str().unwrap().contains("Reproduction"))
+    );
+}
+
+#[test]
+fn test_infer_surfaces_governed_plan_context_before_mutation() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+
+    init_git_repo(root);
+    run_cmd(root, &["init", "--force"]);
+    run_cmd(root, &["session", "acquire"]);
+
+    run_cmd(
+        root,
+        &["todo", "add", "integrate plan context into inference"],
+    );
+    let todos = run_cmd(root, &["todo", "list", "--format", "json"]);
+    assert!(todos.status.success());
+    let todo_id = extract_json(&todos)["items"][0]["id"]
+        .as_str()
+        .expect("todo id")
+        .to_string();
+
+    let plan = run_cmd(
+        root,
+        &[
+            "govern",
+            "plan",
+            "init",
+            "--title",
+            "Inference plan",
+            "--intent",
+            "Expose governed plan state before implementation",
+            "--todo-id",
+            &todo_id,
+            "--proof-hook",
+            "cargo test",
+            "--unknown",
+            "Whether the plan needs another phase",
+        ],
+    );
+    assert!(
+        plan.status.success(),
+        "plan init failed: {}",
+        String::from_utf8_lossy(&plan.stderr)
+    );
+
+    let orientation = run_cmd(
+        root,
+        &[
+            "infer",
+            "orientation",
+            "--intent",
+            "integrate plan context into inference",
+            "--task-id",
+            &todo_id,
+            "--format",
+            "json",
+        ],
+    );
+    assert!(orientation.status.success());
+    let orientation_json = extract_json(&orientation);
+    assert_eq!(orientation_json["governed_plan"]["status"], "present");
+    assert_eq!(orientation_json["governed_plan"]["state"], "DRAFT");
+    assert_eq!(orientation_json["governed_plan"]["task_binding"], "bound");
+    assert_eq!(
+        orientation_json["governed_plan"]["proof_hooks"][0],
+        "cargo test"
+    );
+    assert!(
+        orientation_json["known_unknowns"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|item| item.as_str().unwrap().contains("another phase"))
+    );
+
+    let inference = run_cmd(
+        root,
+        &[
+            "infer",
+            "init",
+            "--intent",
+            "integrate plan context into inference",
+            "--format",
+            "json",
+        ],
+    );
+    assert!(inference.status.success());
+    let inference_json = extract_json(&inference);
+    assert_eq!(inference_json["governed_plan"]["status"], "present");
+    assert!(
+        inference_json["selected_context"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|path| path == ".decapod/governance/plan.json")
+    );
+    assert!(
+        inference_json["selected_policies"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|policy| policy == "governed-plan")
     );
 }

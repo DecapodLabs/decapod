@@ -63,6 +63,13 @@ Generated interface specs include:
 | `decapod infer validate` | Post-inference verification | `--result`, `--intent`, `--format` | ValidationResult |
 | `decapod rpc --op <op>` | JSON-RPC interface | `--params`, `--stdin` | RpcResponse |
 
+`OrientationPacket` and `decapod infer init` include a read-only `governed_plan`
+context. It reports whether `.decapod/governance/plan.json` is present, its
+state, intent, bound TODO IDs, proof hooks, unresolved items, scope constraints,
+and (when a task ID is supplied) whether that task is bound to the plan. Plan
+mutation remains explicit through `decapod govern plan`; inference only reads
+the context before implementation decisions.
+
 ### JSON-RPC Operations (Agent-Native)
 
 All RPC calls use standard envelope:
