@@ -24,25 +24,25 @@ pub struct EntrypointExpectation {
     pub fingerprint: &'static str,
 }
 
-// These values are the v0.80.2 release manifest. Keep them immutable for the
+// These values are the v0.80.4 release manifest. Keep them immutable for the
 // lifetime of that release; a later release must update them deliberately and
 // regenerate the four root entrypoints through Decapod.
 pub const EXPECTED_ENTRYPOINTS: [EntrypointExpectation; 4] = [
     EntrypointExpectation {
         surface: "AGENTS.md",
-        fingerprint: "af849e8e04a7b1533285dddfac052b221c60e51d1ea7a6fddbfba961f3433851",
+        fingerprint: "23db93e0c4908732bfba798a23a120a43bc368f38bd4681f037b824c53942af8",
     },
     EntrypointExpectation {
         surface: "CLAUDE.md",
-        fingerprint: "53850acd075192f0a89cd9660635e2daf57ac0d02b82213086ffc103314c717f",
+        fingerprint: "0e02126293de7ece27661c736f594b34109886afddb30a338a746eb3a7b7854a",
     },
     EntrypointExpectation {
         surface: "GEMINI.md",
-        fingerprint: "2dd2fb43f09a90b586cff93c560199ff39a2515430d10e21a7ae0b67cb3d3dab",
+        fingerprint: "ff1447ef9cc3dda741409010ad20059bb42528b6df6aec130419b290b59aaf68",
     },
     EntrypointExpectation {
         surface: "CODEX.md",
-        fingerprint: "f103572b76b036899ffb08f40524e0173aee69dc7e00aa9db9bff6debc2d08cc",
+        fingerprint: "0daefe51efc683b52fa8d5edd20007cdf0e303232e4aa7aa276eea714d8aba04",
     },
 ];
 
@@ -338,42 +338,6 @@ pub fn validate_entrypoint(project_root: &Path, surface: &str) -> Result<(), Box
     }
     Ok(())
 }
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn compiled_manifest_matches_canonical_templates() {
-        assert_eq!(EXPECTED_ENTRYPOINTS.len(), ENTRYPOINT_FILES.len());
-        for surface in ENTRYPOINT_FILES {
-            let payload = canonical_template(surface).expect("canonical entrypoint");
-            assert_eq!(
-                fingerprint_for_payload(surface, RELEASE_VERSION, &payload),
-                expected_fingerprint(surface).expect("compiled fingerprint"),
-                "compiled release manifest drifted from canonical {surface}"
-            );
-            let manifest_entry = EXPECTED_ENTRYPOINTS
-                .iter()
-                .find(|entry| entry.surface == surface)
-                .expect("release manifest entry");
-            assert_eq!(
-                manifest_entry.fingerprint,
-                expected_fingerprint(surface).expect("computed fingerprint"),
-                "release manifest SHA drifted from computed {surface}"
-            );
-        }
-    }
-
-    #[test]
-    fn computed_manifest_is_filename_and_version_bound() {
-        for surface in ENTRYPOINT_FILES {
-            let payload = canonical_template(surface).expect("canonical entrypoint");
-            let expected = expected_fingerprint(surface).expect("computed fingerprint");
-            assert_eq!(
-                fingerprint_for_payload(surface, RELEASE_VERSION, &payload),
-                expected
-            );
-        }
-    }
-}
+#[path = "../../../tests/unit/core/entrypoint_integrity_tests.rs"]
+mod tests;

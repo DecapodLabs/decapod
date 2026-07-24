@@ -8,7 +8,8 @@ fn repository_claims_ledger_satisfies_typed_contract() {
         .expect("claims ledger should parse and validate")
         .expect("repository should carry its research claims ledger");
 
-    assert_eq!(ledger.claims.len(), 4);
+    assert_eq!(ledger.claims.len(), 5);
+    assert_eq!(ledger.claims[4].id, "proof-recovery-no-deadlock");
     assert!(ledger.governance.change_control.requires_issue);
     assert!(ledger.governance.change_control.requires_validation);
     assert!(ledger.governance.change_control.requires_human_review);

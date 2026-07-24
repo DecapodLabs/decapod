@@ -431,14 +431,6 @@ fn get_best_fragment_for_terms(path: &str, content: &str, terms: &[String]) -> O
         hash,
     })
 }
-
 #[cfg(test)]
-mod tests {
-    use super::truncate_chars;
-
-    #[test]
-    fn truncate_chars_respects_char_boundaries() {
-        let input = "alpha — beta";
-        assert_eq!(truncate_chars(input, 7), "alpha —...");
-    }
-}
+#[path = "../../../tests/unit/core/docs_tests.rs"]
+mod tests;

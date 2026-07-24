@@ -64,6 +64,8 @@ pub enum VerifyCommand {
         #[clap(value_name = "ID")]
         id: String,
     },
+    /// Recover a batch of done TODOs from the aggregate-proof deadlock.
+    Recover,
     /// Generate or independently verify a completion evidence record.
     Completion {
         #[clap(value_name = "ID")]
@@ -92,6 +94,12 @@ struct VerifyTarget {
     last_verified_at: Option<String>,
     last_verified_status: Option<String>,
     verification_policy_days: i64,
+}
+
+#[derive(Debug, Clone)]
+struct ValidationSnapshot {
+    passed: bool,
+    output_hash: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -422,7 +430,7 @@ fn load_targets(
             }
         } else {
             let mut stmt = conn.prepare(
-                "SELECT t.id, t.status, v.proof_plan, v.verification_artifacts, v.last_verified_at, v.last_verified_status, COALESCE(v.verification_policy_days, 90)\n                 FROM tasks t\n                 LEFT JOIN task_verification v ON v.todo_id = t.id\n                 WHERE t.status = 'done'\n                   AND v.proof_plan IS NOT NULL\n                   AND v.proof_plan <> ''\n                 ORDER BY t.updated_at DESC",
+                "SELECT t.id, t.status, v.proof_plan, v.verification_artifacts, v.last_verified_at, v.last_verified_status, COALESCE(v.verification_policy_days, 90)\n                 FROM tasks t\n                 LEFT JOIN task_verification v ON v.todo_id = t.id\n                 WHERE t.status = 'done'\n                   AND (v.last_verified_status IS NULL\n                        OR LOWER(v.last_verified_status) NOT IN ('verified', 'pass'))\n                 ORDER BY t.updated_at DESC",
             )?;
             let rows = stmt.query_map([], |row| {
                 Ok(VerifyTarget {
@@ -536,6 +544,7 @@ fn verify_target(
     target: &VerifyTarget,
     store_root: &Path,
     repo_root: &Path,
+    validation_snapshot: Option<&ValidationSnapshot>,
 ) -> Result<VerifyTodoResult, error::DecapodError> {
     let mut result = VerifyTodoResult {
         todo_id: target.todo_id.clone(),
@@ -653,8 +662,11 @@ fn verify_target(
                 return Ok(result);
             }
         }
-        let (validate_ok, actual_hash) =
-            run_validate_and_hash(store_root, repo_root, Some(&target.todo_id))?;
+        let (validate_ok, actual_hash) = if let Some(snapshot) = validation_snapshot {
+            (snapshot.passed, snapshot.output_hash.clone())
+        } else {
+            run_validate_and_hash(store_root, repo_root, Some(&target.todo_id))?
+        };
         let expected = expected_hash.unwrap_or_default();
         let hashes_match = actual_hash == expected;
 
@@ -987,6 +999,122 @@ pub fn capture_baseline_for_todo(
     Ok(())
 }
 
+fn refresh_batch_baselines(
+    store: &Store,
+    targets: &[VerifyTarget],
+    snapshot: &ValidationSnapshot,
+    validation_epoch: &ValidationEpochMetadata,
+) -> Result<(), error::DecapodError> {
+    if !snapshot.passed {
+        return Err(error::DecapodError::ValidationError(
+            "cannot recover verification baselines from a failing validation snapshot".to_string(),
+        ));
+    }
+
+    let completed_at = now_iso();
+    let mut updates = Vec::new();
+    for target in targets {
+        let proof_plan_raw = target.proof_plan.as_deref().ok_or_else(|| {
+            error::DecapodError::ValidationError(format!(
+                "TODO {} has no proof plan; it must be reopened or completed with --validated before recovery",
+                target.todo_id
+            ))
+        })?;
+        let proof_plan: Vec<String> = serde_json::from_str(proof_plan_raw).map_err(|_| {
+            error::DecapodError::ValidationError(format!(
+                "TODO {} has malformed proof_plan; it must be recaptured before recovery",
+                target.todo_id
+            ))
+        })?;
+        if !proof_plan.iter().any(|gate| gate == "validate_passes") {
+            return Err(error::DecapodError::ValidationError(format!(
+                "TODO {} has no validate_passes proof gate; recovery refuses to invent proof",
+                target.todo_id
+            )));
+        }
+
+        let artifacts_raw = target.artifacts.as_deref().ok_or_else(|| {
+            error::DecapodError::ValidationError(format!(
+                "TODO {} has no verification artifacts; reopen it or capture artifacts before recovery",
+                target.todo_id
+            ))
+        })?;
+        let mut artifacts: VerificationArtifacts =
+            serde_json::from_str(artifacts_raw).map_err(|_| {
+                error::DecapodError::ValidationError(format!(
+                    "TODO {} has malformed verification artifacts; recapture before recovery",
+                    target.todo_id
+                ))
+            })?;
+        if artifacts.file_artifacts.is_empty() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "TODO {} has no file artifacts; recovery refuses to accept unverifiable evidence",
+                target.todo_id
+            )));
+        }
+
+        let proof = artifacts
+            .proof_plan_results
+            .iter_mut()
+            .find(|proof| proof.proof_gate == "validate_passes")
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(format!(
+                    "TODO {} has no validate_passes artifact; recovery refuses to invent proof",
+                    target.todo_id
+                ))
+            })?;
+        proof.status = "pass".to_string();
+        proof.command = "decapod validate --format json".to_string();
+        proof.output_hash = snapshot.output_hash.clone();
+        proof.evaluator_epoch = Some(validation_epoch.epoch_id.clone());
+        proof.validation_epoch = Some(validation_epoch.clone());
+        artifacts.completed_at = completed_at.clone();
+        artifacts.evaluator_epoch = Some(validation_epoch.epoch_id.clone());
+        artifacts.validation_epoch = Some(validation_epoch.clone());
+
+        updates.push((
+            target.todo_id.clone(),
+            serde_json::to_string(&artifacts).unwrap(),
+            serde_json::to_string(&proof_plan).unwrap(),
+            artifacts,
+        ));
+    }
+
+    let db_path = todo::todo_db_path(&store.root);
+    let broker = DbBroker::new(&store.root);
+    broker.with_conn(&db_path, "decapod", None, "verify.recover.baselines", |conn| {
+        for (todo_id, artifacts_json, proof_plan_json, _) in &updates {
+            conn.execute(
+                "UPDATE task_verification
+                 SET proof_plan = ?1,
+                     verification_artifacts = ?2,
+                     last_verified_status = 'CLAIMED',
+                     last_verified_notes = 'baseline recovered from stable batch validation snapshot; awaiting final aggregate verification',
+                     updated_at = ?3
+                 WHERE todo_id = ?4",
+                rusqlite::params![proof_plan_json, artifacts_json, completed_at, todo_id],
+            )?;
+        }
+        Ok(())
+    })?;
+
+    for (todo_id, _, _, artifacts) in updates {
+        todo::record_task_event(
+            &store.root,
+            "task.verify.recover",
+            Some(&todo_id),
+            serde_json::json!({
+                "proof_plan": ["validate_passes"],
+                "verification_artifacts": artifacts,
+                "validation_epoch": validation_epoch,
+                "snapshot_output_hash": snapshot.output_hash,
+                "status": "CLAIMED"
+            }),
+        )?;
+    }
+    Ok(())
+}
+
 pub fn prune_verification_for_todo(
     store: &Store,
     todo_id: &str,
@@ -1016,6 +1144,95 @@ pub fn prune_verification_for_todo(
     Ok(())
 }
 
+fn run_recover_cli(store: &Store, repo_root: &Path, json: bool) -> Result<(), error::DecapodError> {
+    let targets = load_targets(store, None)?;
+    if targets.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "no done TODOs are available for proof recovery".to_string(),
+        ));
+    }
+
+    let old_verifying = std::env::var("DECAPOD_VERIFYING_TODO").ok();
+    let target_ids = targets
+        .iter()
+        .map(|target| target.todo_id.as_str())
+        .collect::<Vec<_>>()
+        .join(",");
+    unsafe {
+        std::env::set_var("DECAPOD_VERIFYING_TODO", &target_ids);
+    }
+
+    let result = (|| {
+        let (passed, output_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
+        let snapshot = ValidationSnapshot {
+            passed,
+            output_hash,
+        };
+        let validation_epoch = active_validation_epoch(repo_root)?;
+        refresh_batch_baselines(store, &targets, &snapshot, &validation_epoch)?;
+        let recovered_targets = load_targets(store, None)?;
+
+        let mut results = Vec::new();
+        for target in &recovered_targets {
+            let verification = verify_target(target, &store.root, repo_root, Some(&snapshot))?;
+            persist_result(
+                store,
+                &verification.todo_id,
+                &verification.status,
+                &verification.notes.join("; "),
+            )?;
+            results.push(verification);
+        }
+
+        unsafe {
+            std::env::remove_var("DECAPOD_VERIFYING_TODO");
+        }
+        let (final_passed, final_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
+        if !final_passed || results.iter().any(|result| result.status != "pass") {
+            for verification in &results {
+                persist_result(
+                    store,
+                    &verification.todo_id,
+                    "fail",
+                    "batch recovery rejected because final aggregate validation or task proof failed",
+                )?;
+            }
+            return Err(error::DecapodError::ValidationError(format!(
+                "proof recovery rejected: final aggregate validation passed={} hash={}",
+                final_passed, final_hash
+            )));
+        }
+
+        if json {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "ok",
+                    "recovered": results.len(),
+                    "validation_epoch": validation_epoch.epoch_id,
+                    "snapshot_output_hash": snapshot.output_hash,
+                    "final_output_hash": final_hash
+                })
+            );
+        } else {
+            println!(
+                "Recovered and verified {} TODO(s) with final aggregate validation passing.",
+                results.len()
+            );
+        }
+        Ok(())
+    })();
+
+    unsafe {
+        if let Some(value) = old_verifying {
+            std::env::set_var("DECAPOD_VERIFYING_TODO", value);
+        } else {
+            std::env::remove_var("DECAPOD_VERIFYING_TODO");
+        }
+    }
+    result
+}
+
 pub fn run_verify_cli(
     store: &Store,
     repo_root: &Path,
@@ -1042,6 +1259,9 @@ pub fn run_verify_cli(
                     println!("{}", serde_json::json!({ "status": "ok", "todo_id": id }));
                 }
                 return Ok(());
+            }
+            VerifyCommand::Recover => {
+                return run_recover_cli(store, repo_root, cli.json);
             }
             VerifyCommand::Completion {
                 id,
@@ -1235,8 +1455,18 @@ pub fn run_verify_cli(
         std::env::set_var("DECAPOD_VERIFYING_TODO", &target_ids_str);
     }
 
+    let validation_snapshot = if single_id.is_none() {
+        let (passed, output_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
+        Some(ValidationSnapshot {
+            passed,
+            output_hash,
+        })
+    } else {
+        None
+    };
+
     for target in &targets {
-        let result = verify_target(target, &store.root, repo_root)?;
+        let result = verify_target(target, &store.root, repo_root, validation_snapshot.as_ref())?;
         persist_result(
             store,
             &result.todo_id,
@@ -1547,32 +1777,6 @@ fn diagnose_task(
         "next_command": next_command,
     })
 }
-
 #[cfg(test)]
-mod tests {
-    use super::validation_proof_reason;
-
-    #[test]
-    fn stable_failed_validation_remains_blocked_with_explicit_reason() {
-        assert_eq!(
-            validation_proof_reason(false, true, "bugs_01test"),
-            "decapod validate did not pass; output hash is unchanged from the baseline, so verification remains blocked. Next: fix the reported validation gate, then run `decapod qa verify todo bugs_01test`"
-        );
-    }
-
-    #[test]
-    fn failed_validation_with_changed_output_reports_validation_failure() {
-        assert_eq!(
-            validation_proof_reason(false, false, "bugs_01test"),
-            "decapod validate did not pass. Next: fix the reported validation gate, then run `decapod qa verify todo bugs_01test`"
-        );
-    }
-
-    #[test]
-    fn passing_validation_with_changed_output_reports_hash_drift() {
-        assert_eq!(
-            validation_proof_reason(true, false, "bugs_01test"),
-            "validate output hash changed. Next: review the drift, then recapture with `decapod qa verify regen bugs_01test` if the change is intentional"
-        );
-    }
-}
+#[path = "../../../tests/unit/plugins/verify_tests.rs"]
+mod tests;

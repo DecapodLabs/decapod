@@ -408,7 +408,7 @@ Agents declare needed capabilities via `assurance.evaluate` params; interlocks b
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aabfe8a262f9b307f21fa52c3863efafb0011ba2a3173c46e28cb7fe8168adbe`
+- Repository signal fingerprint: `ff4e1faaba6920d2b784bc88e554c08bb7cf3cede0ab1a0538e07492596d8f1a`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
