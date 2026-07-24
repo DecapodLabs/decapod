@@ -4556,7 +4556,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         rusqlite::params![agent_id, category, expertise_level, ev.ts],
                     )?;
                 }
-                "task.verify.capture" | "task.verify.result" => {
+                "task.verify.capture" | "task.verify.result" | "task.verify.recover" => {
                     let id = ev.task_id.clone().ok_or_else(|| {
                         error::DecapodError::ValidationError(format!(
                             "{} missing task_id",
