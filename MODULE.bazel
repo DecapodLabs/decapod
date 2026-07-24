@@ -2,21 +2,4 @@ module(
     name = "decapod",
 )
 
-bazel_dep(name = "rules_rust", version = "0.71.2")
-
-# Register Rust toolchain
-rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
-rust.toolchain(
-    edition = "2024",
-    versions = ["1.96.1"],  # Match the Rust version in Cargo.toml
-)
-use_repo(rust, "rust_toolchains")
-
-# Crate universe for Cargo.toml dependencies
-crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
-crate.from_cargo(
-    name = "crates",
-    cargo_lockfile = "//:Cargo.lock",
-    manifests = ["//:Cargo.toml"],
-)
-use_repo(crate, "crates")
+include("//.config/build:decapod.MODULE.bazel")

@@ -64,13 +64,15 @@ fn release_targets_are_production_sources_plus_runtime_assets() {
     assert!(manifest.contains("path = \"src/main.rs\""));
     assert!(manifest.contains("build = \"assets/build/compress_constitution.rs\""));
 
-    let bazel = fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("BUILD.bazel"))
-        .expect("read Bazel build graph");
+    let bazel = fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join(".config/build/decapod.BUILD.bzl"),
+    )
+    .expect("read canonical Bazel build graph");
     let library_graph = bazel
         .split("rust_binary(")
         .next()
         .expect("rust library graph");
-    assert!(library_graph.contains("srcs = glob([\"src/**/*.rs\"]"));
+    assert!(library_graph.contains("srcs = native.glob([\"src/**/*.rs\"]"));
     assert!(library_graph.contains("assets/schemas/*.schema.json"));
     assert!(
         !library_graph.contains("tests/"),

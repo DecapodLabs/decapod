@@ -5,8 +5,9 @@
   "task_id": "bugs_01ky8vzzgg651154",
   "original_intent": "Solve GitHub Issue #998 by moving Rust test implementations out of src so release builds contain production code and relevant runtime assets only.",
   "derived_intent": "Use out-of-line cfg(test) modules under tests/unit, preserve coverage, and prove cargo release and Bazel release graphs exclude tests.",
-  "current_phase": "publish",
+  "current_phase": "validation",
   "next_transitions": [
+    "complete",
     "publish",
     "publish scoped PR with explicit governance blocker handoff",
     "run Decapod validation, verify todo, publish PR",
@@ -19,27 +20,44 @@
     "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
   ],
   "inspected_files": [
+    ".bazelrc",
+    ".config/build",
     ".decapod/config.toml",
+    ".decapod/governance/claims.json",
+    ".decapod/governance/validation.json",
     "BUILD.bazel",
     "Cargo.toml",
+    "MODULE.bazel",
+    "rust-toolchain.toml",
     "src",
     "src/decapod/plugins/verify.rs",
     "tests"
   ],
   "modified_files": [
+    ".bazelrc",
+    ".config/build",
+    ".decapod/governance/claims.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    "rust-toolchain.toml",
     "src",
     "src/decapod/plugins/verify.rs",
+    "tests/build_layout_policy.rs",
     "tests/release_artifact_policy.rs",
     "tests/unit"
   ],
   "declared_commands": [
+    "DECAPOD_CONTAINER=1 decapod validate --format json",
     "cargo build --release --bin decapod",
     "cargo fmt --all",
+    "cargo fmt --all -- --check",
     "cargo test --lib",
     "cargo test --no-run",
+    "cargo test --test build_layout_policy --test release_artifact_policy",
     "cargo test --test release_artifact_policy",
+    "cargo test --test research_claims --test build_layout_policy --test release_artifact_policy",
     "decapod qa verify recover --json",
     "decapod validate",
     "decapod validate --format json"
@@ -91,6 +109,10 @@
       "status": "passed"
     },
     {
+      "name": "build_layout_policy",
+      "status": "passed"
+    },
+    {
       "name": "cargo_build_release",
       "status": "passed"
     },
@@ -119,7 +141,15 @@
       "status": "passed"
     },
     {
+      "name": "focused_tests",
+      "status": "passed"
+    },
+    {
       "name": "git_diff_check",
+      "status": "passed"
+    },
+    {
+      "name": "governed_validation",
       "status": "passed"
     },
     {
@@ -135,6 +165,10 @@
       "status": "passed"
     },
     {
+      "name": "shared_bazel_ci",
+      "status": "passed"
+    },
+    {
       "name": "validation_parallelism",
       "status": "passed"
     }
@@ -143,21 +177,25 @@
     "19 TODOs recovered and verified from one stable validation snapshot; final aggregate validation status=ok; parallelism=1",
     "Container validation passed all repository gates except the shared claimed-but-unverified proof hook.",
     "Final no-bypass validation status=ok with fail_count=0; 19 recovered TODOs passed; validation parallelism=1.",
+    "PR #1015 CI run 30065576008 passed shared Bazel build and downstream test gates",
     "Release binary target/release/decapod is a stripped 16,902,768-byte ELF; strings contains no migrated test module/helper symbols.",
     "The former shared proof-hook blocker and the stale entrypoint fixture are resolved in this PR.",
     "cargo test --lib ran 193 relocated tests; 192 passed and 1 failed on the pre-existing stale AGENTS.md entrypoint fingerprint fixture.",
     "decapod qa verify --json reports 19 done TODOs, 0 passed, 19 failed after proof recapture because validate_passes remains blocked by the same shared hook.",
+    "decapod_release=0.81.0",
     "stable batch snapshot recovery path implemented; final aggregate proof pending",
     "validation epoch ve_0771ae7377b229db completed with zero failures",
+    "validation epoch ve_a259af0629b39b23 completed with zero failures",
     "validation epoch ve_d0c221366faefdb4 completed with zero failures",
-    "validation epoch ve_e9e7cabde82f8af0 completed with zero failures"
+    "validation epoch ve_e9e7cabde82f8af0 completed with zero failures",
+    "validation_epoch=ve_a259af0629b39b23"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
     "The entrypoint fingerprint failure is baseline because this change does not alter canonical templates or expected release constants.",
     "The shared backlog predates Issue #998 and is outside the scoped source/test refactor."
   ],
-  "completion_claim": "Issue #998 source/test separation, claimed-task proof recovery, and serialized validation are verified for publication.",
+  "completion_claim": "Claims ledger includes the centralized build-layout claim, local focused proof passes, shared Bazel CI passes, and Decapod v0.81.0 validation reports zero failures.",
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -165,7 +203,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:77802e787427ac19b2daa032b854577f61fed8005351fa14cff532c620f1ebe3",
+  "artifact_hash": "sha256:3e34a870ef88df98efe9311e4fd74495131bb55f43d788cbfe74870883b6ab9d",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -407,6 +445,48 @@
       {
         "sequence": 33,
         "event_id": "event:33",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 34,
+        "event_id": "event:34",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 35,
+        "event_id": "event:35",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 36,
+        "event_id": "event:36",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 37,
+        "event_id": "event:37",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 38,
+        "event_id": "event:38",
+        "intent_id": "intent:issue-998-20260723",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issue-998-20260723"
+      },
+      {
+        "sequence": 39,
+        "event_id": "event:39",
         "intent_id": "intent:issue-998-20260723",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issue-998-20260723"
@@ -966,12 +1046,138 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:33"
+          },
+          {
+            "sequence": 34,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a259af0629b39b23 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:34"
+          },
+          {
+            "sequence": 35,
+            "action": "validation",
+            "command": "cargo fmt --all -- --check",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              "BUILD.bazel",
+              "MODULE.bazel",
+              ".bazelrc",
+              "rust-toolchain.toml",
+              ".config/build",
+              "BUILD.bazel",
+              "MODULE.bazel",
+              ".bazelrc",
+              "rust-toolchain.toml",
+              ".config/build",
+              "tests/build_layout_policy.rs",
+              "tests/release_artifact_policy.rs",
+              "validation_epoch=ve_a259af0629b39b23",
+              "decapod_release=0.81.0"
+            ],
+            "proof_refs": [
+              "cargo_fmt",
+              "build_layout_policy",
+              "release_artifact_policy",
+              "decapod_validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:35"
+          },
+          {
+            "sequence": 36,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a259af0629b39b23 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:36"
+          },
+          {
+            "sequence": 37,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a259af0629b39b23 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:37"
+          },
+          {
+            "sequence": 38,
+            "action": "validation",
+            "command": "cargo test --test research_claims --test build_layout_policy --test release_artifact_policy",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/claims.json",
+              ".decapod/governance/validation.json",
+              "tests/release_artifact_policy.rs",
+              ".decapod/governance/claims.json",
+              "PR #1015 CI run 30065576008 passed shared Bazel build and downstream test gates"
+            ],
+            "proof_refs": [
+              "focused_tests",
+              "shared_bazel_ci",
+              "governed_validation"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:38"
+          },
+          {
+            "sequence": 39,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a259af0629b39b23 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:39"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 33
+    "next_sequence": 39
   }
 }
