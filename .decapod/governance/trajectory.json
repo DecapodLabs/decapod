@@ -6,13 +6,15 @@
   "original_intent": "Solve GitHub Issues #995, #1002, and #1004 by consolidating repository configuration, schema, build, benchmark, and asset layouts.",
   "derived_intent": "Move repository-owned tool/build/benchmark/Docker assets into explicit asset subdirectories where supported, retain required root discovery files, add strict plan trajectory validation schemas under assets, and update all consumers/tests.",
   "destination": "Publish one reviewable PR linked to Issues #995, #1002, and #1004.",
-  "current_phase": "implementation",
+  "current_phase": "verify",
   "next_transitions": [
     "implementation",
-    "publish"
+    "publish",
+    "resolve-global-proof-backlog",
+    "verify"
   ],
   "blockers": [
-    "Global Decapod proof hook reports 18 unrelated done TODOs as claimed-but-unverified; repository gates otherwise pass."
+    "Task-level verification remains blocked by the shared baseline: decapod validate fails on 18 unrelated claimed-but-unverified TODOs."
   ],
   "active_boundaries": [
     ".config/**",
@@ -56,7 +58,10 @@
     "cargo deny check --config .config/deny.toml",
     "cargo fmt --all -- --check",
     "cargo test --test assets_schema_contract --test release_workflow_policy --test constitution_scaffolding",
-    "docker run ... decapod validate --format json"
+    "docker run ... decapod validate --format json",
+    "gh pr checks 1010 --watch",
+    "gh pr create #1010",
+    "git push origin agent/unknown/bugs_01ky8qy7yt8nn1x9-issues-995-1002-1004"
   ],
   "tool_calls": [],
   "loops": [
@@ -110,23 +115,72 @@
       "status": "passed"
     },
     {
+      "name": "decapod_qa_verify",
+      "status": "failed"
+    },
+    {
       "name": "decapod_validate",
       "status": "failed"
+    },
+    {
+      "name": "hosted_chaos_replay",
+      "status": "passed"
+    },
+    {
+      "name": "hosted_checks",
+      "status": "passed"
+    },
+    {
+      "name": "hosted_clippy",
+      "status": "passed"
+    },
+    {
+      "name": "hosted_contract_conformance",
+      "status": "passed"
+    },
+    {
+      "name": "hosted_daemonless",
+      "status": "passed"
+    },
+    {
+      "name": "hosted_dependencies",
+      "status": "passed"
+    },
+    {
+      "name": "hosted_rpc",
+      "status": "passed"
+    },
+    {
+      "name": "hosted_sync_docs",
+      "status": "passed"
+    },
+    {
+      "name": "hosted_tests",
+      "status": "passed"
+    },
+    {
+      "name": "hosted_validate",
+      "status": "passed"
     }
   ],
   "evidence": [
+    "All required hosted checks for PR #1010 passed after correcting cargo-deny global option ordering.",
     "Container Decapod validation passed all repository gates except the pre-existing global claimed-but-unverified TODO proof hook.",
     "Issue #1002 plan, trajectory, and validation schemas added under assets/schemas and covered by tests/assets_schema_contract.rs.",
     "Issue #1004 build helpers, benchmarks, and Dockerfile moved under assets with Cargo, Bazel, CI, release, and tests updated.",
-    "Issue #995 layout consolidated under assets and .config while root Cargo/rust-toolchain discovery contracts were retained."
+    "Issue #995 layout consolidated under assets and .config while root Cargo/rust-toolchain discovery contracts were retained.",
+    "PR #1010 published at https://github.com/DecapodLabs/decapod/pull/1010.",
+    "The implementation PR #1010 remains fully green on GitHub.",
+    "decapod qa verify todo bugs_01ky8qy7yt8nn1x9 reported validate_passes failed because the shared validation baseline remains unchanged and fails on unrelated claimed-but-unverified tasks."
   ],
   "shortcut_risk_signals": [
     "No implementation shortcut: moved consumers and added executable contract tests."
   ],
   "unresolved_assumptions": [
+    "Task-level verification requires a passing local decapod validate baseline; hosted PR validation cannot rewrite the shared local custody baseline.",
     "The 18 claimed-but-unverified TODOs are pre-existing global state outside this task scope and were not altered."
   ],
-  "completion_claim": "Implementation is complete and locally proven; publish the branch and PR, then resolve the task proof hook if the global verifier permits it.",
+  "completion_claim": "Issues #995, #1002, and #1004 are implemented and published in green PR #1010; task verification is explicitly blocked by the pre-existing global proof backlog.",
   "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -134,7 +188,7 @@
     "shortcut_risk": "caution",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:6177ead2017c073e2e214a4c097397845fb501d71129a2adf7a3ccea603fcc86",
+  "artifact_hash": "sha256:e749bf6e51a0a4934a49447f60adf66c5524c02ee0b443d45768958478c9e0d6",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -176,6 +230,20 @@
         "intent_id": "intent:issues-995-1002-1004-20260724",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:issues-995-1002-1004-20260724"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:issues-995-1002-1004-20260724",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issues-995-1002-1004-20260724"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:issues-995-1002-1004-20260724",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:issues-995-1002-1004-20260724"
       }
     ],
     "trajectories": {
@@ -201,12 +269,56 @@
               "Container validation reports only the pre-existing global claimed-but-unverified TODO proof hook after all repository checks pass."
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "publish",
+            "command": "gh pr create #1010",
+            "scope": [
+              "Issues #995, #1002, and #1004 repository organization"
+            ],
+            "observations": [
+              "PR #1010 published at https://github.com/DecapodLabs/decapod/pull/1010.",
+              "All required hosted checks for PR #1010 passed after correcting cargo-deny global option ordering."
+            ],
+            "proof_refs": [
+              "hosted_validate",
+              "hosted_clippy",
+              "hosted_dependencies",
+              "hosted_contract_conformance",
+              "hosted_rpc",
+              "hosted_chaos_replay",
+              "hosted_daemonless",
+              "hosted_tests",
+              "hosted_sync_docs"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "verify",
+            "scope": [
+              "Issues #995, #1002, and #1004 repository organization"
+            ],
+            "observations": [
+              "decapod qa verify todo bugs_01ky8qy7yt8nn1x9 reported validate_passes failed because the shared validation baseline remains unchanged and fails on unrelated claimed-but-unverified tasks.",
+              "The implementation PR #1010 remains fully green on GitHub."
+            ],
+            "proof_refs": [
+              "hosted_checks",
+              "decapod_qa_verify"
+            ],
+            "validation_findings": [
+              "Task-level verification requires a passing local decapod validate baseline; hosted PR validation cannot rewrite the shared local custody baseline."
+            ],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 6
   }
 }
