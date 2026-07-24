@@ -146,13 +146,13 @@ pub(crate) struct InitGroupCli {
     /// Show what would change without writing files.
     #[clap(long)]
     pub dry_run: bool,
-    /// Generate project specs docs scaffolding under `.decapod/generated/specs/` (enabled by default).
+    /// Generate project specs docs scaffolding under `.decapod/managed/specs/` (enabled by default).
     #[clap(long = "no-specs", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub specs: bool,
     /// Generate GitHub Action workflow for project validation (enabled by default).
     #[clap(long = "no-ci", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub ci: bool,
-    /// Preferred diagram notation for generated `.decapod/generated/specs/ARCHITECTURE.md`.
+    /// Preferred diagram notation for generated `.decapod/managed/specs/ARCHITECTURE.md`.
 
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
     pub diagram_style: InitDiagramStyle,
@@ -293,13 +293,13 @@ pub(crate) struct InitWithCli {
     /// Create only AGENTS.md entrypoint file.
     #[clap(long)]
     pub agents: bool,
-    /// Generate project specs docs scaffolding under `.decapod/generated/specs/` (enabled by default).
+    /// Generate project specs docs scaffolding under `.decapod/managed/specs/` (enabled by default).
     #[clap(long = "no-specs", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub specs: bool,
     /// Generate GitHub Action workflow for project validation (enabled by default).
     #[clap(long = "no-ci", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub ci: bool,
-    /// Preferred diagram notation for generated `.decapod/generated/specs/ARCHITECTURE.md`.
+    /// Preferred diagram notation for generated `.decapod/managed/specs/ARCHITECTURE.md`.
 
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
     pub diagram_style: InitDiagramStyle,

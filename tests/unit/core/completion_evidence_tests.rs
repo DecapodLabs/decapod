@@ -21,7 +21,7 @@ fn fixture() -> CompletionEvidenceRecord {
             artifact: None,
         }],
         capsule: CapsuleEvidence {
-            path: ".decapod/generated/context/task-1.json".to_string(),
+            path: ".decapod/managed/context/task-1.json".to_string(),
             capsule_hash: "sha256:capsule".to_string(),
             policy_hash: "sha256:policy".to_string(),
             policy_version: "1".to_string(),
@@ -138,7 +138,7 @@ fn portable_envelope_is_tamper_evident_and_fails_closed_without_local_binding() 
         },
         record,
         capsule_artifact: FileDigest {
-            path: ".decapod/generated/context/task-1.json".to_string(),
+            path: ".decapod/managed/context/task-1.json".to_string(),
             sha256: "sha256:capsule".to_string(),
             size: 1,
         },
@@ -177,7 +177,7 @@ fn local_record_replays_and_detects_artifact_change() {
     git(root, &["add", "README.md"]);
     git(root, &["commit", "-m", "fixture"]);
 
-    let capsule_path = root.join(".decapod/generated/context/task-1.json");
+    let capsule_path = root.join(".decapod/managed/context/task-1.json");
     fs::create_dir_all(capsule_path.parent().unwrap()).expect("capsule directory");
     let capsule = DeterministicContextCapsule {
         schema_version: "1.1.0".to_string(),
@@ -215,7 +215,7 @@ fn local_record_replays_and_detects_artifact_change() {
         task_id: "task-1".to_string(),
         intent_ref: "INTENT.md".to_string(),
         spec_refs: vec!["ARCHITECTURE.md".to_string()],
-        state_refs: vec![".decapod/generated/context/task-1.json".to_string()],
+        state_refs: vec![".decapod/managed/context/task-1.json".to_string()],
         proof_plan: vec!["proof".to_string()],
         proof_results: vec![WorkUnitProofResult {
             gate: "proof".to_string(),

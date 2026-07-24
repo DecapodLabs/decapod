@@ -300,7 +300,7 @@ fn validate_timeout_does_not_strand_db_for_followup_commands() {
 #[test]
 fn validate_json_reports_self_heal_and_structured_summary() {
     let (_tmp, dir, password) = setup_repo();
-    let dockerfile_path = dir.join(".decapod/generated/Dockerfile");
+    let dockerfile_path = dir.join(".decapod/managed/Dockerfile");
     fs::write(&dockerfile_path, "FROM rust:1.91.1-alpine\n").expect("write stale Dockerfile");
 
     let validate = run_decapod(
@@ -395,7 +395,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         "trajectory must record the successful validation proof"
     );
 
-    let receipt_path = dir.join(".decapod/generated/validation-epoch.json");
+    let receipt_path = dir.join(".decapod/managed/validation-epoch.json");
     assert!(
         !receipt_path.exists(),
         "validate must not write a mutable validation epoch receipt into tracked generated artifacts"
@@ -422,13 +422,13 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     let dockerfile_content = fs::read_to_string(&dockerfile_path).expect("read Dockerfile");
     assert!(dockerfile_content.contains("FROM $DECAPOD_IMAGE"));
     assert!(
-        dockerfile_content.contains("COPY .decapod/generated/decapod /usr/local/bin/decapod.local")
+        dockerfile_content.contains("COPY .decapod/managed/decapod /usr/local/bin/decapod.local")
     );
 
     let mutated = dockerfile_content
         .replace(
             &format!(
-                "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}",
+                "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}-debian",
                 env!("CARGO_PKG_VERSION")
             ),
             "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.0.0",
@@ -457,7 +457,7 @@ fn validate_json_reports_self_heal_and_structured_summary() {
     );
     let maintained = fs::read_to_string(&dockerfile_path).expect("read maintained Dockerfile");
     assert!(maintained.contains(&format!(
-        "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}",
+        "ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v{}-debian",
         env!("CARGO_PKG_VERSION")
     )));
     assert!(maintained.contains(&format!(
@@ -635,20 +635,20 @@ fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
             "expected typed failure marker; got: {stderr}"
         );
         assert!(
-            stderr.contains(".decapod/generated/artifacts/diagnostics/validate/"),
+            stderr.contains(".decapod/managed/artifacts/diagnostics/validate/"),
             "expected diagnostics artifact path in stderr; got: {stderr}"
         );
     }
 
     let diagnostics_dir = dir
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("diagnostics")
         .join("validate");
     assert!(
         diagnostics_dir.exists(),
-        "diagnostics directory should be created under .decapod/generated/artifacts/diagnostics/validate"
+        "diagnostics directory should be created under .decapod/managed/artifacts/diagnostics/validate"
     );
 
     let mut diagnostic_count = 0usize;
@@ -720,7 +720,7 @@ fn validate_diagnostics_disabled_does_not_write_artifacts() {
     );
     let diagnostics_validate_dir = dir
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("diagnostics")
         .join("validate");
@@ -773,7 +773,7 @@ fn validate_diagnostics_payload_is_sanitized() {
 
     let diagnostics_dir = dir
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("diagnostics")
         .join("validate");

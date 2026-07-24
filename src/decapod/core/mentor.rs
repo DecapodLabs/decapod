@@ -1070,7 +1070,7 @@ impl MentorEngine {
                         "Dockerfile exists - Containerization Required".to_string()
                     },
                     why_short: if is_workspace_seed {
-                        ".decapod/generated/Dockerfile is Decapod's internal workspace container; the root Dockerfile must package the project application or microservice according to human intent.".to_string()
+                        ".decapod/managed/Dockerfile is Decapod's internal workspace container; the root Dockerfile must package the project application or microservice according to human intent.".to_string()
                     } else {
                         "Silicon Valley hygiene: validate that the Dockerfile packages the project application or microservice according to human intent.".to_string()
                     },
@@ -1096,7 +1096,7 @@ impl MentorEngine {
                 kind: ObligationKind::Container,
                 ref_path: "Dockerfile".to_string(),
                 title: "No application Dockerfile - Containerization Required".to_string(),
-                why_short: ".decapod/generated/Dockerfile is Decapod's internal workspace container; create a root Dockerfile that packages the project application or microservice according to human intent."
+                why_short: ".decapod/managed/Dockerfile is Decapod's internal workspace container; create a root Dockerfile that packages the project application or microservice according to human intent."
                     .to_string(),
                 evidence: Evidence {
                     source: "workspace".to_string(),

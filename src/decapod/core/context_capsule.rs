@@ -237,7 +237,7 @@ fn validate_scope(scope: &str) -> Result<(), error::DecapodError> {
 pub fn context_capsules_dir(project_root: &Path) -> PathBuf {
     project_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("context")
 }
 

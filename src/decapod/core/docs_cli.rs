@@ -441,7 +441,7 @@ fn calculate_sha256(path: &Path) -> Result<String, error::DecapodError> {
 fn get_cached_checksum(repo_root: &Path) -> Option<String> {
     let checksum_path = repo_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("override.checksum");
     std::fs::read_to_string(checksum_path).ok()
 }
@@ -450,7 +450,7 @@ fn get_cached_checksum(repo_root: &Path) -> Option<String> {
 fn cache_checksum(repo_root: &Path, checksum: &str) -> Result<(), error::DecapodError> {
     let checksum_path = repo_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("override.checksum");
     // Ensure generated directory exists
     if let Some(parent) = checksum_path.parent() {

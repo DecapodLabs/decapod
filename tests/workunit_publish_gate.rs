@@ -56,7 +56,7 @@ fn write_capsule(root: &std::path::Path, task_id: &str) {
             risk_tier: "medium".to_string(),
             policy_hash: "abc123".to_string(),
             policy_version: "jit-capsule-policy-v1".to_string(),
-            policy_path: ".decapod/generated/policy/context_capsule_policy.json".to_string(),
+            policy_path: ".decapod/managed/policy/context_capsule_policy.json".to_string(),
             repo_revision: "UNBORN:master".to_string(),
         },
         capsule_hash: String::new(),
@@ -115,7 +115,7 @@ fn publish_gate_passes_when_branch_task_verified() {
         dir.path(),
         "test_000002",
         workunit::WorkUnitStatus::Verified,
-        vec![".decapod/generated/context/test_000002.json"],
+        vec![".decapod/managed/context/test_000002.json"],
         vec!["validate_passes", "test:cargo test --all"],
         vec![
             ("validate_passes", "pass"),
@@ -134,7 +134,7 @@ fn publish_gate_fails_when_verified_task_missing_capsule_lineage() {
         dir.path(),
         "test_000003",
         workunit::WorkUnitStatus::Verified,
-        vec![".decapod/generated/context/test_000003.json"],
+        vec![".decapod/managed/context/test_000003.json"],
         vec!["validate_passes"],
         vec![("validate_passes", "pass")],
     );

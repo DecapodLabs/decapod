@@ -118,7 +118,7 @@ fn init_with_backend_cloud_saves_to_config() {
 
     let registration_path = tmp
         .path()
-        .join(".decapod/generated/cloud/init-registration.json");
+        .join(".decapod/managed/cloud/init-registration.json");
     let registration =
         fs::read_to_string(registration_path).expect("read cloud init registration payload");
     let registration: serde_json::Value =
@@ -181,7 +181,7 @@ fn init_cloud_opt_in_does_not_store_secret_environment_values() {
 
     let registration = fs::read_to_string(
         tmp.path()
-            .join(".decapod/generated/cloud/init-registration.json"),
+            .join(".decapod/managed/cloud/init-registration.json"),
     )
     .expect("read cloud init registration");
     assert!(!registration.contains("private.supabase.local"));
@@ -218,7 +218,7 @@ fn session_acquire_uses_machine_local_config_not_repo_session_file() {
         "repo-local session_token should not be created"
     );
     assert!(
-        !tmp.path().join(".decapod/generated/sessions").exists(),
+        !tmp.path().join(".decapod/managed/sessions").exists(),
         "session credentials should not be written under repo generated state"
     );
 
@@ -271,7 +271,7 @@ fn session_acquire_falls_back_to_workspace_when_machine_config_is_unusable() {
 
     let fallback_session = tmp
         .path()
-        .join(".decapod/generated/sessions/workspace-fallback-agent.json");
+        .join(".decapod/managed/sessions/workspace-fallback-agent.json");
     assert!(
         fallback_session.is_file(),
         "workspace-local session file missing"
@@ -355,8 +355,8 @@ fn init_with_project_dir_creates_directory_and_initializes_inside_it() {
 
     let project = tmp.path().join("pincher-with");
     assert!(project.is_dir(), "expected project directory to be created");
-    let intent = fs::read_to_string(project.join(".decapod/generated/specs/INTENT.md"))
-        .expect("read .decapod/generated/specs/INTENT.md");
+    let intent = fs::read_to_string(project.join(".decapod/managed/specs/INTENT.md"))
+        .expect("read .decapod/managed/specs/INTENT.md");
     assert!(
         intent.contains("Initialize a named project directory."),
         "intent spec should be written under the created project directory"
@@ -384,15 +384,15 @@ fn init_uses_existing_config_for_noninteractive_defaults() {
     );
 
     let architecture =
-        fs::read_to_string(tmp.path().join(".decapod/generated/specs/ARCHITECTURE.md"))
-            .expect("read .decapod/generated/specs/ARCHITECTURE.md");
+        fs::read_to_string(tmp.path().join(".decapod/managed/specs/ARCHITECTURE.md"))
+            .expect("read .decapod/managed/specs/ARCHITECTURE.md");
     assert!(
         architecture.contains("```mermaid"),
         "existing config should keep mermaid diagram style"
     );
 
-    let intent = fs::read_to_string(tmp.path().join(".decapod/generated/specs/INTENT.md"))
-        .expect("read .decapod/generated/specs/INTENT.md");
+    let intent = fs::read_to_string(tmp.path().join(".decapod/managed/specs/INTENT.md"))
+        .expect("read .decapod/managed/specs/INTENT.md");
     assert!(
         !intent.contains("Define the user-visible outcome in one paragraph."),
         "re-init should preserve intent-first seeded outcome"
@@ -449,14 +449,14 @@ fn init_with_accepts_noninteractive_spec_seed_flags() {
         String::from_utf8_lossy(&out.stderr)
     );
 
-    let intent = fs::read_to_string(tmp.path().join(".decapod/generated/specs/INTENT.md"))
+    let intent = fs::read_to_string(tmp.path().join(".decapod/managed/specs/INTENT.md"))
         .expect("read intent");
     assert!(
         intent.contains("Track brokerage intents with deterministic proofs."),
         "intent spec should include seeded summary"
     );
     let architecture =
-        fs::read_to_string(tmp.path().join(".decapod/generated/specs/ARCHITECTURE.md"))
+        fs::read_to_string(tmp.path().join(".decapod/managed/specs/ARCHITECTURE.md"))
             .expect("read architecture");
     assert!(
         architecture.contains("Broker-gated mutation path with deterministic context capsules."),
@@ -578,14 +578,14 @@ fn init_with_accepts_noninteractive_spec_seed_env() {
         String::from_utf8_lossy(&out.stderr)
     );
 
-    let intent = fs::read_to_string(tmp.path().join(".decapod/generated/specs/INTENT.md"))
+    let intent = fs::read_to_string(tmp.path().join(".decapod/managed/specs/INTENT.md"))
         .expect("read intent");
     assert!(
         intent.contains("Seed from env for non-interactive init."),
         "intent spec should include env-seeded summary"
     );
     let architecture =
-        fs::read_to_string(tmp.path().join(".decapod/generated/specs/ARCHITECTURE.md"))
+        fs::read_to_string(tmp.path().join(".decapod/managed/specs/ARCHITECTURE.md"))
             .expect("read architecture");
     assert!(
         architecture.contains("Capsule-first architecture with broker-enforced writes."),
@@ -713,12 +713,12 @@ fn init_creates_custody_directory_and_intent_has_epistemic_custody_fields() {
         "decapod init with failed: {}",
         String::from_utf8_lossy(&out.stderr)
     );
-    let custody_dir = tmp.path().join(".decapod/generated/artifacts/custody");
+    let custody_dir = tmp.path().join(".decapod/managed/artifacts/custody");
     assert!(
         custody_dir.exists(),
-        "expected .decapod/generated/artifacts/custody/ directory to exist"
+        "expected .decapod/managed/artifacts/custody/ directory to exist"
     );
-    let intent = fs::read_to_string(tmp.path().join(".decapod/generated/specs/INTENT.md"))
+    let intent = fs::read_to_string(tmp.path().join(".decapod/managed/specs/INTENT.md"))
         .expect("read INTENT.md");
     assert!(
         intent.contains("## Epistemic Custody Fields"),
@@ -785,7 +785,7 @@ fn init_preserves_manually_added_custody_fields_in_intent_md() {
     // 1. Initial init
     run_decapod(tmp.path(), &["init", "with", "--force"]);
 
-    let intent_path = tmp.path().join(".decapod/generated/specs/INTENT.md");
+    let intent_path = tmp.path().join(".decapod/managed/specs/INTENT.md");
     let mut intent_content = fs::read_to_string(&intent_path).expect("read intent");
 
     // 2. Manually add an assumption
@@ -839,7 +839,7 @@ fn init_supports_and_preserves_declared_capabilities() {
     );
 
     // Verify manifest has them
-    let manifest_path = tmp.path().join(".decapod/generated/specs/.manifest.json");
+    let manifest_path = tmp.path().join(".decapod/managed/specs/.manifest.json");
     let manifest_content = fs::read_to_string(&manifest_path).expect("read manifest");
     assert!(
         manifest_content.contains("persistent-state"),

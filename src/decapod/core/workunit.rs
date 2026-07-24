@@ -292,7 +292,7 @@ pub fn verify_capsule_policy_lineage_for_task(
     manifest: &WorkUnitManifest,
 ) -> Result<(), error::DecapodError> {
     let task_id = manifest.task_id.as_str();
-    let expected_rel = format!(".decapod/generated/context/{task_id}.json");
+    let expected_rel = format!(".decapod/managed/context/{task_id}.json");
     let expected_abs = project_root
         .join(&expected_rel)
         .to_string_lossy()
@@ -313,7 +313,7 @@ pub fn verify_capsule_policy_lineage_for_task(
 
     let capsule_path = project_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("context")
         .join(format!("{task_id}.json"));
     if !capsule_path.exists() {

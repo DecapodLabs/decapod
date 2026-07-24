@@ -6,7 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-pub const GENERATED_POLICY_REL_PATH: &str = ".decapod/generated/policy/context_capsule_policy.json";
+pub const GENERATED_POLICY_REL_PATH: &str = ".decapod/managed/policy/context_capsule_policy.json";
 pub const OVERRIDE_POLICY_REL_PATH: &str = ".decapod/policy/context_capsule_policy.json";
 pub const POLICY_SCHEMA_VERSION: &str = "1.0.0";
 

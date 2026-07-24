@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 const PLAN_SCHEMA_VERSION: &str = "1.0.0";
-const PLAN_PATH: &str = ".decapod/governance/plan.json";
+pub const PLAN_PATH: &str = ".decapod/governance/plan.json";
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]

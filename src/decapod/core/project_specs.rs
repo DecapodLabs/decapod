@@ -8,16 +8,16 @@ use crate::core::error;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-pub const LOCAL_PROJECT_SPECS_DIR: &str = ".decapod/generated/specs";
-pub const LOCAL_PROJECT_SPECS_README: &str = ".decapod/generated/specs/README.md";
-pub const LOCAL_PROJECT_SPECS_INTENT: &str = ".decapod/generated/specs/INTENT.md";
-pub const LOCAL_PROJECT_SPECS_ARCHITECTURE: &str = ".decapod/generated/specs/ARCHITECTURE.md";
-pub const LOCAL_PROJECT_SPECS_INTERFACES: &str = ".decapod/generated/specs/INTERFACES.md";
-pub const LOCAL_PROJECT_SPECS_VALIDATION: &str = ".decapod/generated/specs/VALIDATION.md";
-pub const LOCAL_PROJECT_SPECS_SEMANTICS: &str = ".decapod/generated/specs/SEMANTICS.md";
-pub const LOCAL_PROJECT_SPECS_OPERATIONS: &str = ".decapod/generated/specs/OPERATIONS.md";
-pub const LOCAL_PROJECT_SPECS_SECURITY: &str = ".decapod/generated/specs/SECURITY.md";
-pub const LOCAL_PROJECT_SPECS_MANIFEST: &str = ".decapod/generated/specs/.manifest.json";
+pub const LOCAL_PROJECT_SPECS_DIR: &str = ".decapod/managed/specs";
+pub const LOCAL_PROJECT_SPECS_README: &str = ".decapod/managed/specs/README.md";
+pub const LOCAL_PROJECT_SPECS_INTENT: &str = ".decapod/managed/specs/INTENT.md";
+pub const LOCAL_PROJECT_SPECS_ARCHITECTURE: &str = ".decapod/managed/specs/ARCHITECTURE.md";
+pub const LOCAL_PROJECT_SPECS_INTERFACES: &str = ".decapod/managed/specs/INTERFACES.md";
+pub const LOCAL_PROJECT_SPECS_VALIDATION: &str = ".decapod/managed/specs/VALIDATION.md";
+pub const LOCAL_PROJECT_SPECS_SEMANTICS: &str = ".decapod/managed/specs/SEMANTICS.md";
+pub const LOCAL_PROJECT_SPECS_OPERATIONS: &str = ".decapod/managed/specs/OPERATIONS.md";
+pub const LOCAL_PROJECT_SPECS_SECURITY: &str = ".decapod/managed/specs/SECURITY.md";
+pub const LOCAL_PROJECT_SPECS_MANIFEST: &str = ".decapod/managed/specs/.manifest.json";
 pub const LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA: &str = "1.1.0";
 pub const CAPABILITY_DEFINITION_VERSION: &str = "1.0.0";
 
@@ -148,7 +148,7 @@ pub fn local_project_specs_context(project_root: &Path) -> LocalProjectSpecsCont
         .and_then(|s| first_markdown_content_line(&s));
     ctx.security = read_if_exists(project_root, LOCAL_PROJECT_SPECS_SECURITY)
         .and_then(|s| first_markdown_content_line(&s));
-    ctx.update_guidance = "Treat .decapod/generated/specs/*.md as living project contracts: when user intent, interfaces, architecture, or proof gates change, update these specs before implementation proceeds.".to_string();
+    ctx.update_guidance = "Treat .decapod/managed/specs/*.md as living project contracts: when user intent, interfaces, architecture, or proof gates change, update these specs before implementation proceeds.".to_string();
     ctx
 }
 

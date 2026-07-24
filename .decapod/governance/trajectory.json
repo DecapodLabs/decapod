@@ -1,135 +1,50 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "issue-998-20260723",
-  "intent_id": "intent:issue-998-20260723",
-  "task_id": "bugs_01ky8vzzgg651154",
-  "original_intent": "Solve GitHub Issue #998 by moving Rust test implementations out of src so release builds contain production code and relevant runtime assets only.",
-  "derived_intent": "Use out-of-line cfg(test) modules under tests/unit, preserve coverage, and prove cargo release and Bazel release graphs exclude tests.",
+  "run_id": "issue-1003-20260724",
+  "intent_id": "intent:issue-1003-20260724",
+  "task_id": "bugs_01ky97k3bsgywdtt",
+  "original_intent": "Complete GitHub Issue #1003 by determining whether .decapod/governance/plan.json is needed and integrating it into early intent and inference.",
+  "derived_intent": "Preserve plan.json as the authoritative execution gate and expose its state, task binding, proof hooks, unresolved items, and scope constraints through infer init and infer orientation.",
   "current_phase": "validation",
   "next_transitions": [
-    "complete",
-    "publish",
-    "publish scoped PR with explicit governance blocker handoff",
-    "run Decapod validation, verify todo, publish PR",
-    "run decapod qa verify recover"
+    "publish"
   ],
   "active_boundaries": [
-    "No inline test implementations in src; tests remain test-only; release targets include production src and relevant assets only."
+    "Read-only plan context before inference; plan mutation remains explicit through govern plan; preserve existing execution and validation gates."
   ],
   "repo_scope": [
-    "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+    "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
   ],
   "inspected_files": [
-    ".bazelrc",
-    ".config/build",
-    ".decapod/config.toml",
-    ".decapod/governance/claims.json",
-    ".decapod/governance/validation.json",
-    "BUILD.bazel",
-    "Cargo.toml",
-    "MODULE.bazel",
-    "rust-toolchain.toml",
-    "src",
-    "src/decapod/plugins/verify.rs",
-    "tests"
-  ],
-  "modified_files": [
-    ".bazelrc",
-    ".config/build",
-    ".decapod/governance/claims.json",
+    ".decapod/governance/plan.json",
     ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
-    "BUILD.bazel",
-    "MODULE.bazel",
-    "rust-toolchain.toml",
-    "src",
-    "src/decapod/plugins/verify.rs",
-    "tests/build_layout_policy.rs",
-    "tests/release_artifact_policy.rs",
-    "tests/unit"
+    "src/decapod/core/rpc.rs",
+    "src/decapod/core/validate.rs",
+    "src/decapod/lib.rs",
+    "src/decapod/plan_governance.rs",
+    "tests/infer_precision.rs"
+  ],
+  "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
+    "src/decapod/core/rpc.rs",
+    "src/decapod/lib.rs",
+    "tests/infer_precision.rs",
+    "tests/unit/lib_init_prompt_tests.rs"
   ],
   "declared_commands": [
-    "DECAPOD_CONTAINER=1 decapod validate --format json",
-    "cargo build --release --bin decapod",
-    "cargo fmt --all",
+    "DECAPOD_CONTAINER=1 target/debug/decapod qa verify todo --json bugs_01ky97k3bsgywdtt",
+    "DECAPOD_CONTAINER=1 target/debug/decapod validate --format json",
+    "cargo clippy --tests -- -D warnings",
     "cargo fmt --all -- --check",
-    "cargo test --lib",
-    "cargo test --no-run",
-    "cargo test --test build_layout_policy --test release_artifact_policy",
-    "cargo test --test release_artifact_policy",
-    "cargo test --test research_claims --test build_layout_policy --test release_artifact_policy",
-    "decapod qa verify recover --json",
-    "decapod validate",
-    "decapod validate --format json"
+    "cargo test --test infer_precision --test activation_conformance --test plan_governed_execution",
+    "decapod validate"
   ],
   "tool_calls": [],
-  "loops": [
-    {
-      "intent_id": "intent:issue-998-20260723",
-      "trajectory_id": "issue-998-20260723",
-      "loop_id": "verification",
-      "loop_type": "verification",
-      "attempt": 1,
-      "trigger": "engine",
-      "grader_result": "fail",
-      "feedback": "Container validation is clean except for the pre-existing 19-TODO claimed-but-unverified proof hook; replay cannot pass while validate is blocked by that hook.",
-      "proof_refs": [
-        "container_decapod_validate",
-        "qa_verify_backlog"
-      ],
-      "mutation_proposal": "none",
-      "status": "blocked",
-      "custody_event_id": "event:24"
-    },
-    {
-      "intent_id": "intent:issue-998-20260723",
-      "trajectory_id": "issue-998-20260723",
-      "loop_id": "verification-recovery",
-      "loop_type": "verification",
-      "attempt": 1,
-      "trigger": "agent",
-      "grader_result": "pass",
-      "feedback": "Batch recovery reached all 19 target TODOs and final aggregate validation passed.",
-      "proof_refs": [
-        "decapod_validate",
-        "qa_verify_recover"
-      ],
-      "mutation_proposal": "none",
-      "status": "passed",
-      "custody_event_id": "event:31"
-    }
-  ],
   "checks": [
     {
-      "name": "aggregate-validation",
-      "status": "passed"
-    },
-    {
-      "name": "batch-proof-recovery",
-      "status": "passed"
-    },
-    {
-      "name": "build_layout_policy",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_build_release",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_fmt",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_test_lib",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_test_no_run",
-      "status": "passed"
-    },
-    {
-      "name": "container_decapod_validate",
+      "name": "clippy",
       "status": "passed"
     },
     {
@@ -137,15 +52,7 @@
       "status": "passed"
     },
     {
-      "name": "decapod_validate",
-      "status": "passed"
-    },
-    {
       "name": "focused_tests",
-      "status": "passed"
-    },
-    {
-      "name": "git_diff_check",
       "status": "passed"
     },
     {
@@ -153,49 +60,23 @@
       "status": "passed"
     },
     {
-      "name": "qa_verify_backlog",
-      "status": "passed"
-    },
-    {
-      "name": "qa_verify_recover",
-      "status": "passed"
-    },
-    {
-      "name": "release_artifact_policy",
-      "status": "passed"
-    },
-    {
-      "name": "shared_bazel_ci",
-      "status": "passed"
-    },
-    {
-      "name": "validation_parallelism",
+      "name": "todo_verification",
       "status": "passed"
     }
   ],
   "evidence": [
-    "19 TODOs recovered and verified from one stable validation snapshot; final aggregate validation status=ok; parallelism=1",
-    "Container validation passed all repository gates except the shared claimed-but-unverified proof hook.",
-    "Final no-bypass validation status=ok with fail_count=0; 19 recovered TODOs passed; validation parallelism=1.",
-    "PR #1015 CI run 30065576008 passed shared Bazel build and downstream test gates",
-    "Release binary target/release/decapod is a stripped 16,902,768-byte ELF; strings contains no migrated test module/helper symbols.",
-    "The former shared proof-hook blocker and the stale entrypoint fixture are resolved in this PR.",
-    "cargo test --lib ran 193 relocated tests; 192 passed and 1 failed on the pre-existing stale AGENTS.md entrypoint fingerprint fixture.",
-    "decapod qa verify --json reports 19 done TODOs, 0 passed, 19 failed after proof recapture because validate_passes remains blocked by the same shared hook.",
-    "decapod_release=0.81.0",
-    "stable batch snapshot recovery path implemented; final aggregate proof pending",
-    "validation epoch ve_0771ae7377b229db completed with zero failures",
-    "validation epoch ve_a259af0629b39b23 completed with zero failures",
-    "validation epoch ve_d0c221366faefdb4 completed with zero failures",
-    "validation epoch ve_e9e7cabde82f8af0 completed with zero failures",
-    "validation_epoch=ve_a259af0629b39b23"
+    "Bind this task trajectory to the claimed Issue #1003 todo so successful validation can refresh the receipt against the current run cookie.",
+    "Final governed validation passed with fail_count=0, pass_count=203, and parallelism=1.",
+    "Inference regression covers missing plan, bound plan, proof hooks, unresolved items, and infer init selected context",
+    "Todo proof replay passed with matching validate_passes output hash and all five tracked artifact hashes.",
+    "Validation epoch ve_150f4f5a3d9182c7 passed with fail_count=0",
+    "plan_governance.rs, validate.rs, todo.rs, completion_evidence.rs, and plan CLI call sites prove plan.json is active authoritative state",
+    "validation epoch ve_150f4f5a3d9182c7 completed with zero failures",
+    "validation epoch ve_cabc2510a671639b completed with zero failures"
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "The entrypoint fingerprint failure is baseline because this change does not alter canonical templates or expected release constants.",
-    "The shared backlog predates Issue #998 and is outside the scoped source/test refactor."
-  ],
-  "completion_claim": "Claims ledger includes the centralized build-layout claim, local focused proof passes, shared Bazel CI passes, and Decapod v0.81.0 validation reports zero failures.",
+  "unresolved_assumptions": [],
+  "completion_claim": "Issue #1003 is complete: governed plan context is surfaced during inference, proof verification is passed, and the final validation receipt is ready for publication.",
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -203,21 +84,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:3e34a870ef88df98efe9311e4fd74495131bb55f43d788cbfe74870883b6ab9d",
+  "artifact_hash": "sha256:eaa74b9ac44fccf890aa729adb9955b560ba9b30b4c86729c8961bcb26e3e985",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:issue-998-20260723": {
-        "id": "intent:issue-998-20260723",
-        "raw_intent": "Solve GitHub Issue #998 by moving Rust test implementations out of src so release builds contain production code and relevant runtime assets only.",
-        "refined_intent": "Use out-of-line cfg(test) modules under tests/unit, preserve coverage, and prove cargo release and Bazel release graphs exclude tests.",
+      "intent:issue-1003-20260724": {
+        "id": "intent:issue-1003-20260724",
+        "raw_intent": "Complete GitHub Issue #1003 by determining whether .decapod/governance/plan.json is needed and integrating it into early intent and inference.",
+        "refined_intent": "Preserve plan.json as the authoritative execution gate and expose its state, task binding, proof hooks, unresolved items, and scope constraints through infer init and infer orientation.",
         "acceptance_criteria": [],
         "constraints": [
-          "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+          "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
         ],
         "assumptions": [],
         "boundaries": [
-          "No inline test implementations in src; tests remain test-only; release targets include production src and relevant assets only."
+          "Read-only plan context before inference; plan mutation remains explicit through govern plan; preserve existing execution and validation gates."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -230,321 +111,132 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
+        "detail": "trajectory:issue-1003-20260724"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
+        "detail": "trajectory:issue-1003-20260724"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
+        "detail": "trajectory:issue-1003-20260724"
       },
       {
         "sequence": 7,
         "event_id": "event:7",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
+        "detail": "trajectory:issue-1003-20260724"
       },
       {
         "sequence": 8,
         "event_id": "event:8",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
+        "detail": "trajectory:issue-1003-20260724"
       },
       {
         "sequence": 9,
         "event_id": "event:9",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
+        "detail": "trajectory:issue-1003-20260724"
       },
       {
         "sequence": 10,
         "event_id": "event:10",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
+        "detail": "trajectory:issue-1003-20260724"
       },
       {
         "sequence": 11,
         "event_id": "event:11",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
+        "detail": "trajectory:issue-1003-20260724"
       },
       {
         "sequence": 12,
         "event_id": "event:12",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
+        "detail": "trajectory:issue-1003-20260724"
       },
       {
         "sequence": 13,
         "event_id": "event:13",
-        "intent_id": "intent:issue-998-20260723",
+        "intent_id": "intent:issue-1003-20260724",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 14,
-        "event_id": "event:14",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 15,
-        "event_id": "event:15",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 16,
-        "event_id": "event:16",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 17,
-        "event_id": "event:17",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 18,
-        "event_id": "event:18",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 19,
-        "event_id": "event:19",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 20,
-        "event_id": "event:20",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 21,
-        "event_id": "event:21",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 22,
-        "event_id": "event:22",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 23,
-        "event_id": "event:23",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 24,
-        "event_id": "event:24",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 25,
-        "event_id": "event:25",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 26,
-        "event_id": "event:26",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 27,
-        "event_id": "event:27",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 28,
-        "event_id": "event:28",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 29,
-        "event_id": "event:29",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 30,
-        "event_id": "event:30",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 31,
-        "event_id": "event:31",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 32,
-        "event_id": "event:32",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 33,
-        "event_id": "event:33",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 34,
-        "event_id": "event:34",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 35,
-        "event_id": "event:35",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 36,
-        "event_id": "event:36",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 37,
-        "event_id": "event:37",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 38,
-        "event_id": "event:38",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
-      },
-      {
-        "sequence": 39,
-        "event_id": "event:39",
-        "intent_id": "intent:issue-998-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-998-20260723"
+        "detail": "trajectory:issue-1003-20260724"
       }
     ],
     "trajectories": {
-      "issue-998-20260723": {
-        "id": "issue-998-20260723",
-        "intent_id": "intent:issue-998-20260723",
+      "issue-1003-20260724": {
+        "id": "issue-1003-20260724",
+        "intent_id": "intent:issue-1003-20260724",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "implementation and release proof",
-            "command": "cargo fmt --all",
+            "action": "validation",
+            "command": "cargo fmt --all -- --check",
             "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
             ],
             "observations": [
-              "src",
-              "tests",
-              "Cargo.toml",
-              "BUILD.bazel",
-              ".decapod/config.toml",
-              "src",
-              "tests/unit",
-              "tests/release_artifact_policy.rs",
-              "Release binary target/release/decapod is a stripped 16,902,768-byte ELF; strings contains no migrated test module/helper symbols.",
-              "cargo test --lib ran 193 relocated tests; 192 passed and 1 failed on the pre-existing stale AGENTS.md entrypoint fingerprint fixture."
+              ".decapod/governance/plan.json",
+              "src/decapod/plan_governance.rs",
+              "src/decapod/core/validate.rs",
+              "src/decapod/lib.rs",
+              "src/decapod/core/rpc.rs",
+              "tests/infer_precision.rs",
+              "src/decapod/core/rpc.rs",
+              "src/decapod/lib.rs",
+              "tests/infer_precision.rs",
+              "tests/unit/lib_init_prompt_tests.rs",
+              "plan_governance.rs, validate.rs, todo.rs, completion_evidence.rs, and plan CLI call sites prove plan.json is active authoritative state",
+              "Inference regression covers missing plan, bound plan, proof hooks, unresolved items, and infer init selected context",
+              "Validation epoch ve_150f4f5a3d9182c7 passed with fail_count=0"
             ],
             "proof_refs": [
-              "cargo_fmt",
-              "cargo_test_no_run",
-              "cargo_test_lib",
-              "release_artifact_policy",
-              "cargo_build_release",
-              "git_diff_check"
+              "focused_tests",
+              "clippy",
+              "governed_validation"
             ],
-            "validation_findings": [
-              "The entrypoint fingerprint failure is baseline because this change does not alter canonical templates or expected release constants."
-            ],
+            "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
             "action": "validation",
-            "command": "decapod validate",
             "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
+              "Bind this task trajectory to the claimed Issue #1003 todo so successful validation can refresh the receipt against the current run cookie."
             ],
-            "proof_refs": [
-              "decapod validate"
-            ],
+            "proof_refs": [],
             "validation_findings": [],
             "custody_event_id": "event:5"
           },
@@ -553,12 +245,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
+              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -571,12 +263,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
+              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -589,12 +281,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
+              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -607,12 +299,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
+              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -625,12 +317,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
+              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -641,17 +333,21 @@
           {
             "sequence": 11,
             "action": "validation",
-            "command": "decapod validate",
+            "command": "DECAPOD_CONTAINER=1 target/debug/decapod qa verify todo --json bugs_01ky97k3bsgywdtt",
             "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
             ],
             "observations": [
+              ".decapod/governance/validation.json",
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
+              ".decapod/governance/trajectory.json",
+              "Todo proof replay passed with matching validate_passes output hash and all five tracked artifact hashes.",
+              "Final governed validation passed with fail_count=0, pass_count=203, and parallelism=1."
             ],
             "proof_refs": [
-              "decapod validate"
+              "todo_verification",
+              "governed_validation"
             ],
             "validation_findings": [],
             "custody_event_id": "event:11"
@@ -661,12 +357,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
+              "validation epoch ve_150f4f5a3d9182c7 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -679,505 +375,24 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
+              "src/decapod/core/rpc.rs,src/decapod/lib.rs,tests/infer_precision.rs,tests/unit/lib_init_prompt_tests.rs,governance metadata"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
+              "validation epoch ve_cabc2510a671639b completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:13"
-          },
-          {
-            "sequence": 14,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:14"
-          },
-          {
-            "sequence": 15,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:15"
-          },
-          {
-            "sequence": 16,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:16"
-          },
-          {
-            "sequence": 17,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:17"
-          },
-          {
-            "sequence": 18,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:18"
-          },
-          {
-            "sequence": 19,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:19"
-          },
-          {
-            "sequence": 20,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:20"
-          },
-          {
-            "sequence": 21,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:21"
-          },
-          {
-            "sequence": 22,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:22"
-          },
-          {
-            "sequence": 23,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:23"
-          },
-          {
-            "sequence": 24,
-            "action": "loop:verification:1",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [],
-            "proof_refs": [
-              "container_decapod_validate",
-              "qa_verify_backlog"
-            ],
-            "validation_findings": [
-              "Container validation is clean except for the pre-existing 19-TODO claimed-but-unverified proof hook; replay cannot pass while validate is blocked by that hook."
-            ],
-            "custody_event_id": "event:24"
-          },
-          {
-            "sequence": 25,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_0771ae7377b229db completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:25"
-          },
-          {
-            "sequence": 26,
-            "action": "validation",
-            "command": "decapod qa verify recover --json",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              "src/decapod/plugins/verify.rs",
-              "src/decapod/plugins/verify.rs",
-              "stable batch snapshot recovery path implemented; final aggregate proof pending"
-            ],
-            "proof_refs": [
-              "batch-proof-recovery"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:26"
-          },
-          {
-            "sequence": 27,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_d0c221366faefdb4 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:27"
-          },
-          {
-            "sequence": 28,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_e9e7cabde82f8af0 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:28"
-          },
-          {
-            "sequence": 29,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_e9e7cabde82f8af0 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:29"
-          },
-          {
-            "sequence": 30,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_e9e7cabde82f8af0 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:30"
-          },
-          {
-            "sequence": 31,
-            "action": "loop:verification-recovery:1",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [],
-            "proof_refs": [
-              "qa_verify_recover",
-              "decapod_validate"
-            ],
-            "validation_findings": [
-              "Batch recovery reached all 19 target TODOs and final aggregate validation passed."
-            ],
-            "custody_event_id": "event:31"
-          },
-          {
-            "sequence": 32,
-            "action": "publish",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              "Final no-bypass validation status=ok with fail_count=0; 19 recovered TODOs passed; validation parallelism=1."
-            ],
-            "proof_refs": [
-              "cargo_test_lib",
-              "release_artifact_policy",
-              "qa_verify_recover",
-              "decapod_validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:32"
-          },
-          {
-            "sequence": 33,
-            "action": "trajectory.record",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              "The former shared proof-hook blocker and the stale entrypoint fixture are resolved in this PR."
-            ],
-            "proof_refs": [
-              "container_decapod_validate",
-              "qa_verify_backlog",
-              "cargo_test_lib"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:33"
-          },
-          {
-            "sequence": 34,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_a259af0629b39b23 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:34"
-          },
-          {
-            "sequence": 35,
-            "action": "validation",
-            "command": "cargo fmt --all -- --check",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              "BUILD.bazel",
-              "MODULE.bazel",
-              ".bazelrc",
-              "rust-toolchain.toml",
-              ".config/build",
-              "BUILD.bazel",
-              "MODULE.bazel",
-              ".bazelrc",
-              "rust-toolchain.toml",
-              ".config/build",
-              "tests/build_layout_policy.rs",
-              "tests/release_artifact_policy.rs",
-              "validation_epoch=ve_a259af0629b39b23",
-              "decapod_release=0.81.0"
-            ],
-            "proof_refs": [
-              "cargo_fmt",
-              "build_layout_policy",
-              "release_artifact_policy",
-              "decapod_validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:35"
-          },
-          {
-            "sequence": 36,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_a259af0629b39b23 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:36"
-          },
-          {
-            "sequence": 37,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_a259af0629b39b23 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:37"
-          },
-          {
-            "sequence": 38,
-            "action": "validation",
-            "command": "cargo test --test research_claims --test build_layout_policy --test release_artifact_policy",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/claims.json",
-              ".decapod/governance/validation.json",
-              "tests/release_artifact_policy.rs",
-              ".decapod/governance/claims.json",
-              "PR #1015 CI run 30065576008 passed shared Bazel build and downstream test gates"
-            ],
-            "proof_refs": [
-              "focused_tests",
-              "shared_bazel_ci",
-              "governed_validation"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:38"
-          },
-          {
-            "sequence": 39,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src,tests/Cargo.toml,BUILD.bazel,.decapod/governance projections"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_a259af0629b39b23 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:39"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 39
+    "next_sequence": 13
   }
 }

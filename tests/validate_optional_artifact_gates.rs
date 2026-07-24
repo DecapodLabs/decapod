@@ -433,7 +433,7 @@ fn validate_fails_on_verified_workunit_missing_capsule_policy_lineage() {
 fn validate_fails_on_verified_workunit_capsule_without_state_ref_binding() {
     let (_tmp, dir, password) = setup_repo();
     let workunits = dir.join(".decapod").join("governance").join("workunits");
-    let capsules = dir.join(".decapod").join("generated").join("context");
+    let capsules = dir.join(".decapod").join("managed").join("context");
     fs::create_dir_all(&workunits).expect("create workunits dir");
     fs::create_dir_all(&capsules).expect("create context dir");
 
@@ -506,7 +506,7 @@ fn validate_fails_on_verified_workunit_capsule_without_state_ref_binding() {
 #[test]
 fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
     let (_tmp, dir, password) = setup_repo();
-    let capsules = dir.join(".decapod").join("generated").join("context");
+    let capsules = dir.join(".decapod").join("managed").join("context");
     fs::create_dir_all(&capsules).expect("create capsules dir");
 
     let mut capsule = DeterministicContextCapsule {
@@ -655,13 +655,13 @@ fn validate_fails_when_gitignore_missing_generated_whitelist_rules() {
 #[test]
 fn validate_fails_when_validation_epoch_receipt_is_tracked() {
     let (_tmp, dir, password) = setup_repo();
-    let receipt = dir.join(".decapod/generated/validation-epoch.json");
+    let receipt = dir.join(".decapod/managed/validation-epoch.json");
     fs::create_dir_all(receipt.parent().expect("receipt parent")).expect("mkdir generated");
     fs::write(&receipt, "{}\n").expect("write validation epoch receipt");
 
     let add = Command::new("git")
         .current_dir(&dir)
-        .args(["add", "-f", ".decapod/generated/validation-epoch.json"])
+        .args(["add", "-f", ".decapod/managed/validation-epoch.json"])
         .output()
         .expect("git add validation epoch receipt");
     assert!(
@@ -695,7 +695,7 @@ fn validate_fails_on_invalid_context_capsule_policy_contract_if_present() {
     let (_tmp, dir, password) = setup_repo();
     let policy_path = dir
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("policy")
         .join("context_capsule_policy.json");
     let invalid = serde_json::json!({
@@ -814,7 +814,7 @@ fn validate_fails_on_best_effort_internalization_claiming_replayable() {
     let artifact_id = created["artifact_id"].as_str().expect("artifact id");
     let manifest_path = dir
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("internalizations")
         .join(artifact_id)

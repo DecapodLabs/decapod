@@ -1,21 +1,26 @@
 {
   "schema_version": "1.0.0",
-  "title": "Self-heal validation and structured reporting",
-  "intent": "Make decapod validation converge toward green via safe self-heal actions, structured reporting, and environment-aware gating in the claimed workspace.",
+  "title": "Governed pre-inference plan and managed execution publication",
+  "intent": "Use .decapod/governance/plan.json as the automatic pre-inference sketchpad for ideating a target solution and converging on human intent; require plan, claims, trajectory, and validation receipts in every published validation-output change; keep living specs and the Decapod execution Dockerfile under .decapod/managed; publish stable -debian and -alpine image families, with Debian Bookworm as the current glibc base.",
   "state": "APPROVED",
   "todo_ids": [
     "bugs_01kk3wktkzarkbqb",
-    "bugs_01kvk66syc16hehs"
+    "bugs_01kvk66syc16hehs",
+    "bugs_01ky97k3bsgywdtt"
   ],
   "proof_hooks": [
     "decapod validate",
-    "cargo test --test validate_termination validate_json_reports_self_heal_and_structured_summary -- --nocapture"
+    "cargo test --test infer_precision --test activation_conformance --test plan_governed_execution --test release_workflow_policy"
   ],
   "unknowns": [],
   "human_questions": [],
+  "stop_conditions": [],
+  "unresolved_contradictions": [],
+  "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [],
     "file_touch_budget": null
   },
-  "updated_at": "1772879509Z"
+  "phases": [],
+  "updated_at": "1784872309Z"
 }

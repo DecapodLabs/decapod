@@ -41,7 +41,7 @@ The inventory below is grounded in the current repository and is the required mi
 | Constitution discovery | src/decapod/core/constitution_cli.rs, embedded assets/constitution.json, lookup and schema assets | constitution get/search, context resolution, constitution tests, golden vectors, generated context | Node IDs, section names, lookup terms, required fields, embedded JSON shape |
 | RPC/control plane | src/decapod/core/rpc.rs, dispatch in src/decapod/lib.rs | CLI/RPC callers, tests/agent_rpc_suite.rs, golden request/response vectors, external agents | Request IDs, receipts, allowed-next operations, blockers, interlocks, error fields |
 | Context capsules and bundles | src/decapod/core/context_capsule.rs, src/decapod/core/context_bundle.rs, RPC context operations | pre-inference routing, project context, capsule schema tests, release/projection gates | Fragment identity, authority/source paths, scope, hashes, deterministic serialization |
-| Project specs | src/decapod/core/project_specs.rs, decapod rpc --op specs.refresh | .decapod/generated/specs/*, validation, agents, CI | Manifest version, spec filenames, content hashes, repo-signal fingerprint |
+| Project specs | src/decapod/core/project_specs.rs, decapod rpc --op specs.refresh | .decapod/managed/specs/*, validation, agents, CI | Manifest version, spec filenames, content hashes, repo-signal fingerprint |
 | Claims and evidence | proof/completion/validation modules and interfaces/CLAIMS | validation gates, canonical evidence tests, workunit publication, release checks | Claim kind, evidence refs, verification state, stale/blocked semantics |
 | Internalization | src/decapod/plugins/internalize.rs | internalize CLI, internalization tests, generated artifact validation | Five result types, manifest version, lease lifecycle, risk/capability fields, replay metadata |
 | Demands and plans | demand/scaffold/plan-governance paths | init/scaffold, plan execution, workunit gates | Required/must-not semantics, step state, checkpoint and rollback shape |
@@ -186,7 +186,7 @@ The prototype is in interfaces-v2-contract.schema.json. The envelope is strict a
     "evidence": [
       {
         "kind": "file",
-        "ref": ".decapod/generated/artifacts/internalizations/..."
+        "ref": ".decapod/managed/artifacts/internalizations/..."
       }
     ]
   }

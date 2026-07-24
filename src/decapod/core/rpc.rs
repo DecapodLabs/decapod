@@ -21,6 +21,7 @@ use std::collections::HashMap;
 pub struct OrientationPacket {
     pub user_goal: String,
     pub task_id: Option<String>,
+    pub governed_plan: GovernedPlanContext,
     pub constraints: Vec<String>,
     pub allowed_scope: Vec<String>,
     pub forbidden_scope: Vec<String>,
@@ -29,6 +30,27 @@ pub struct OrientationPacket {
     pub known_unknowns: Vec<String>,
     pub decision_gates: Vec<DecisionGate>,
     pub next_action: String,
+}
+
+/// The plan context agents must see before selecting an implementation path.
+///
+/// The plan is the durable sketchpad for ideation and human-intent convergence:
+/// early inference reports its intent, state, task binding, open questions, and
+/// proof hooks. Plan mutation remains an explicit `decapod govern plan`
+/// operation so agents cannot silently rewrite the human-facing contract.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub struct GovernedPlanContext {
+    pub status: String,
+    pub path: String,
+    pub title: Option<String>,
+    pub intent: Option<String>,
+    pub state: Option<String>,
+    pub todo_ids: Vec<String>,
+    pub proof_hooks: Vec<String>,
+    pub unresolved_items: Vec<String>,
+    pub forbidden_paths: Vec<String>,
+    pub file_touch_budget: Option<usize>,
+    pub task_binding: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -9,7 +9,7 @@ fn repo_root() -> PathBuf {
 
 fn read_kcr_trend(root: &Path) -> String {
     let candidates = [
-        ".decapod/generated/artifacts/provenance/kcr_trend.jsonl",
+        ".decapod/managed/artifacts/provenance/kcr_trend.jsonl",
         "docs/metrics/KCR_TREND.jsonl",
     ];
     for rel in candidates {

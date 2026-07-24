@@ -39,13 +39,13 @@ pub fn find_container_runtime() -> Result<String, error::DecapodError> {
 }
 
 pub fn current_decapod_version_tag() -> String {
-    format!("v{}", env!("CARGO_PKG_VERSION"))
+    format!("v{}-debian", env!("CARGO_PKG_VERSION"))
 }
 
 pub fn is_current_decapod_image(repository: &str, tag: &str, version_tag: &str) -> bool {
     match repository {
         DECAPOD_RELEASE_IMAGE_REPOSITORY => {
-            tag == version_tag || tag == format!("{version_tag}-alpine")
+            tag == version_tag || tag == version_tag.replace("-debian", "-alpine")
         }
         _ => false,
     }

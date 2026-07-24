@@ -12,9 +12,9 @@ use std::process::Command;
 
 pub const COMPLETION_EVIDENCE_SCHEMA_VERSION: &str = "1.0.0";
 pub const COMPLETION_EVIDENCE_DIR: &str =
-    ".decapod/generated/artifacts/provenance/completion_evidence";
+    ".decapod/managed/artifacts/provenance/completion_evidence";
 pub const IMPORTED_COMPLETION_EVIDENCE_DIR: &str =
-    ".decapod/generated/artifacts/provenance/completion_evidence/imports";
+    ".decapod/managed/artifacts/provenance/completion_evidence/imports";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CompletionProofEvidence {
@@ -704,7 +704,7 @@ pub fn build_record(
     workunit::verify_capsule_policy_lineage_for_task(project_root, &manifest)?;
 
     let capsule_path = project_root
-        .join(".decapod/generated/context")
+        .join(".decapod/managed/context")
         .join(format!("{task_id}.json"));
     let capsule = load_capsule(&capsule_path)?;
     let capsule_hash = capsule.computed_hash_hex().map_err(|e| {

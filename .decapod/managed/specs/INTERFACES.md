@@ -63,6 +63,13 @@ Generated interface specs include:
 | `decapod infer validate` | Post-inference verification | `--result`, `--intent`, `--format` | ValidationResult |
 | `decapod rpc --op <op>` | JSON-RPC interface | `--params`, `--stdin` | RpcResponse |
 
+`OrientationPacket` and `decapod infer init` include a read-only `governed_plan`
+context. It reports whether `.decapod/governance/plan.json` is present, its
+state, intent, bound TODO IDs, proof hooks, unresolved items, scope constraints,
+and (when a task ID is supplied) whether that task is bound to the plan. Plan
+mutation remains explicit through `decapod govern plan`; inference only reads
+the context before implementation decisions.
+
 ### JSON-RPC Operations (Agent-Native)
 
 All RPC calls use standard envelope:
@@ -214,12 +221,12 @@ Response envelope (`RpcResponse`):
 |------|--------|---------|
 | `.decapod/data/*.db` | Decapod CLI (single-writer per store) | Decapod CLI, validation (read-only) |
 | `.decapod/data/*.jsonl` | Decapod CLI (append-only) | Decapod CLI, flight-recorder, rebuild |
-| `.decapod/generated/context/*.json` | `capsule.query --write` | Current-run context only; ignored by Git |
-| `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | `qa verify completion <ID> --write` | Completion verifier, promotion review |
-| `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | `qa verify completion <ID> --import` | Structural inspection and receiver-local decision |
-| `.decapod/generated/policy/context_capsule_policy.json` | `init` / scaffold | Current-run capsule query resolution; ignored by Git |
-| `.decapod/generated/specs/*.md` | `init --force` / `rpc specs.refresh` | Validation, agents |
-| `.decapod/generated/artifacts/provenance/*.json` | `workspace publish` / `validate` | Current-run diagnostics/evidence; ignored by Git |
+| `.decapod/managed/context/*.json` | `capsule.query --write` | Current-run context only; ignored by Git |
+| `.decapod/managed/artifacts/provenance/completion_evidence/*.json` | `qa verify completion <ID> --write` | Completion verifier, promotion review |
+| `.decapod/managed/artifacts/provenance/completion_evidence/imports/*.json` | `qa verify completion <ID> --import` | Structural inspection and receiver-local decision |
+| `.decapod/managed/policy/context_capsule_policy.json` | `init` / scaffold | Current-run capsule query resolution; ignored by Git |
+| `.decapod/managed/specs/*.md` | `init --force` / `rpc specs.refresh` | Validation, agents |
+| `.decapod/managed/artifacts/provenance/*.json` | `workspace publish` / `validate` | Current-run diagnostics/evidence; ignored by Git |
 | `.decapod/governance/trajectory.json` | `govern trajectory` / `validate` | Tracked current-run custody and proof review; historical states are recovered from Git |
 | `.decapod/governance/validation.json` | `validate` | Tracked current successful validation receipt; overwritten per commit and historically recoverable from Git |
 
@@ -320,8 +327,8 @@ AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_TODO_CLAIM_CONFLICT severity=tran
 {
   "task_id": "feat_01...",
   "intent_ref": "Add OAuth2",
-  "spec_refs": [".decapod/generated/specs/INTERFACES.md"],
-  "state_refs": [".decapod/generated/context/feat_01....json"],
+  "spec_refs": [".decapod/managed/specs/INTERFACES.md"],
+  "state_refs": [".decapod/managed/context/feat_01....json"],
   "proof_plan": ["cargo test", "decapod validate"],
   "proof_results": [{ "gate": "cargo test", "status": "pass", "artifact_ref": "..." }],
   "validation_epoch": { "epoch_id": "...", "timestamp": "..." },
@@ -408,7 +415,7 @@ Agents declare needed capabilities via `assurance.evaluate` params; interlocks b
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ff4e1faaba6920d2b784bc88e554c08bb7cf3cede0ab1a0538e07492596d8f1a`
+- Repository signal fingerprint: `828a7c34668bf616f6f2d3164ea38514bfd75279aea507c2a3a4b532d8728b4c`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

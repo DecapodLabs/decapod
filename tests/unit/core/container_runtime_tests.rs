@@ -12,13 +12,13 @@ fn missing_runtime_error_names_both_supported_runtimes() {
 fn image_retention_keeps_only_current_decapod_versions() {
     assert!(is_current_decapod_image(
         DECAPOD_RELEASE_IMAGE_REPOSITORY,
-        "v0.72.9",
-        "v0.72.9"
+        "v0.72.9-debian",
+        "v0.72.9-debian"
     ));
     assert!(is_current_decapod_image(
         DECAPOD_RELEASE_IMAGE_REPOSITORY,
         "v0.72.9-alpine",
-        "v0.72.9"
+        "v0.72.9-debian"
     ));
     assert!(!is_current_decapod_image(
         DECAPOD_RELEASE_IMAGE_REPOSITORY,
@@ -27,13 +27,13 @@ fn image_retention_keeps_only_current_decapod_versions() {
     ));
     assert!(!is_current_decapod_image(
         DECAPOD_RELEASE_IMAGE_REPOSITORY,
-        "v0.72.8",
-        "v0.72.9"
+        "v0.72.8-debian",
+        "v0.72.9-debian"
     ));
     assert!(!is_current_decapod_image(
         "docker.io/library/alpine",
         "3.20",
-        "v0.72.9"
+        "v0.72.9-debian"
     ));
 }
 

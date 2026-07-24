@@ -57,7 +57,7 @@ fn scaffold_specs_are_fresh_project_only() {
         "schema_version = \"1.0.0\"\n\n[init]\nspecs = true\ndiagram_style = \"mermaid\"\nentrypoints = []\n\n[repo]\nproduct_name = \"fixture\"\n",
     )
     .expect("write project config");
-    fs::create_dir_all(root.join(".decapod/generated/specs")).expect("create specs dir");
+    fs::create_dir_all(root.join(".decapod/managed/specs")).expect("create specs dir");
 
     let initial_seed = SpecsSeed {
         product_name: Some("old-product".to_string()),
@@ -72,7 +72,7 @@ fn scaffold_specs_are_fresh_project_only() {
     refresh_project_specs(root, DiagramStyle::Mermaid, Some(&initial_seed))
         .expect("initial refresh");
 
-    let intent_path = root.join(".decapod/generated/specs/INTENT.md");
+    let intent_path = root.join(".decapod/managed/specs/INTENT.md");
     fs::write(
         &intent_path,
         "# Intent\n\n## Product Outcome\nStale generated product claim.\n",
@@ -466,8 +466,8 @@ fn migration_preserves_existing_event_log() {
     let sentinel = "{\"event_type\":\"task.add\",\"task_id\":\"SENTINEL\"}\n";
     fs::write(data_dir.join("todo.events.jsonl"), sentinel).expect("write sentinel events");
 
-    let generated = decapod_root.join("generated");
-    fs::create_dir_all(&generated).expect("generated dir");
+    let generated = decapod_root.join("managed");
+    fs::create_dir_all(&generated).expect("managed dir");
     fs::write(generated.join("decapod.version"), "0.8.0").expect("write old version");
 
     migration::check_and_migrate(decapod_root).expect("migration");
@@ -606,7 +606,7 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
         }
     }
 
-    let version_counter = fs::read_to_string(decapod_root.join("generated/version_counter.json"))
+    let version_counter = fs::read_to_string(decapod_root.join("managed/version_counter.json"))
         .expect("read version counter");
     let version_counter: serde_json::Value =
         serde_json::from_str(&version_counter).expect("version counter json");
@@ -616,7 +616,7 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
         migration::DECAPOD_VERSION
     );
 
-    let applied = fs::read_to_string(decapod_root.join("generated/migrations/applied.json"))
+    let applied = fs::read_to_string(decapod_root.join("managed/migrations/applied.json"))
         .expect("read applied migration ledger");
     let applied: serde_json::Value = serde_json::from_str(&applied).expect("applied json");
     let ids: Vec<String> = applied["entries"]
@@ -630,7 +630,7 @@ fn migration_rewrites_legacy_todo_ids_and_references() {
         "applied ledger must include todo typed-id migration"
     );
 
-    let catalog = fs::read_to_string(decapod_root.join("generated/migrations/catalog.json"))
+    let catalog = fs::read_to_string(decapod_root.join("managed/migrations/catalog.json"))
         .expect("read migration catalog");
     let catalog: serde_json::Value = serde_json::from_str(&catalog).expect("catalog json");
     assert!(catalog["count"].as_u64().unwrap_or(0) >= 3);
@@ -739,27 +739,27 @@ fn scaffold_store_and_docs_cli_behaviors() {
     assert!(live_target.join(".decapod/OVERRIDE.md").exists());
     let gitignore = fs::read_to_string(live_target.join(".gitignore")).expect("read .gitignore");
     assert!(
-        gitignore.contains(".decapod/generated/*"),
+        gitignore.contains(".decapod/managed/*"),
         "decapod init must enforce generated wildcard ignore in .gitignore"
     );
     assert!(
-        gitignore.contains("!.decapod/generated/Dockerfile"),
+        gitignore.contains("!.decapod/managed/Dockerfile"),
         "decapod init must allowlist generated Dockerfile in .gitignore"
     );
     assert!(
-        !gitignore.contains("!.decapod/generated/validation-epoch.json"),
+        !gitignore.contains("!.decapod/managed/validation-epoch.json"),
         "decapod init must keep validation epoch receipts ignored as volatile local state"
     );
     assert!(
-        !gitignore.contains("!.decapod/generated/context/"),
+        !gitignore.contains("!.decapod/managed/context/"),
         "decapod init must not allowlist generated context capsule artifacts"
     );
     assert!(
-        !gitignore.contains("!.decapod/generated/policy/"),
+        !gitignore.contains("!.decapod/managed/policy/"),
         "decapod init must not allowlist generated policy artifacts"
     );
     assert!(
-        !gitignore.contains("!.decapod/generated/artifacts/"),
+        !gitignore.contains("!.decapod/managed/artifacts/"),
         "decapod init must not allowlist generated artifact sprawl"
     );
     assert!(
@@ -767,7 +767,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         "decapod init must keep workunit manifests in ignored current-run state"
     );
     assert!(
-        gitignore.contains("!.decapod/generated/specs/*.md"),
+        gitignore.contains("!.decapod/managed/specs/*.md"),
         "decapod init must allowlist generated project specs artifacts in .gitignore"
     );
     assert!(
@@ -804,10 +804,10 @@ fn scaffold_store_and_docs_cli_behaviors() {
         .expect("git check-ignore runtime data");
     assert!(ignored.success(), "fresh runtime data must be ignored");
 
-    let generated_dockerfile = live_target.join(".decapod/generated/Dockerfile");
+    let generated_dockerfile = live_target.join(".decapod/managed/Dockerfile");
     assert!(
         generated_dockerfile.exists(),
-        "decapod init must generate .decapod/generated/Dockerfile"
+        "decapod init must generate .decapod/managed/Dockerfile"
     );
     let dockerfile_content = fs::read_to_string(&generated_dockerfile).expect("read Dockerfile");
     assert!(
@@ -816,31 +816,31 @@ fn scaffold_store_and_docs_cli_behaviors() {
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/ARCHITECTURE.md")
+            .join(".decapod/managed/specs/ARCHITECTURE.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/ARCHITECTURE.md"
+        "decapod init must scaffold .decapod/managed/specs/ARCHITECTURE.md"
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/INTENT.md")
+            .join(".decapod/managed/specs/INTENT.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/INTENT.md"
+        "decapod init must scaffold .decapod/managed/specs/INTENT.md"
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/INTERFACES.md")
+            .join(".decapod/managed/specs/INTERFACES.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/INTERFACES.md"
+        "decapod init must scaffold .decapod/managed/specs/INTERFACES.md"
     );
     assert!(
         live_target
-            .join(".decapod/generated/specs/VALIDATION.md")
+            .join(".decapod/managed/specs/VALIDATION.md")
             .exists(),
-        "decapod init must scaffold .decapod/generated/specs/VALIDATION.md"
+        "decapod init must scaffold .decapod/managed/specs/VALIDATION.md"
     );
     let architecture =
-        fs::read_to_string(live_target.join(".decapod/generated/specs/ARCHITECTURE.md"))
-            .expect("read .decapod/generated/specs/ARCHITECTURE.md");
+        fs::read_to_string(live_target.join(".decapod/managed/specs/ARCHITECTURE.md"))
+            .expect("read .decapod/managed/specs/ARCHITECTURE.md");
     assert!(
         architecture.contains("```text"),
         "default diagram style should scaffold ascii topology block"
@@ -848,14 +848,14 @@ fn scaffold_store_and_docs_cli_behaviors() {
 
     let gitignore_path = live_target.join(".gitignore");
     let mut stale_gitignore = fs::read_to_string(&gitignore_path).expect("read .gitignore");
-    stale_gitignore.push_str("!.decapod/generated/validation-epoch.json\n");
+    stale_gitignore.push_str("!.decapod/managed/validation-epoch.json\n");
     fs::write(&gitignore_path, stale_gitignore).expect("seed stale validation epoch allowlist");
 
     // Second run should succeed with checksum verification and prune deprecated ignore rules.
     scaffold_project_entrypoints(&live_opts).expect("second scaffold succeeds when files match");
     let gitignore = fs::read_to_string(&gitignore_path).expect("read refreshed .gitignore");
     assert!(
-        !gitignore.contains("!.decapod/generated/validation-epoch.json"),
+        !gitignore.contains("!.decapod/managed/validation-epoch.json"),
         "decapod init must remove stale validation epoch allowlist rules from existing projects"
     );
 
@@ -875,7 +875,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
     };
     scaffold_project_entrypoints(&force_opts).expect("force scaffold");
 
-    let intent_path = live_target.join(".decapod/generated/specs/INTENT.md");
+    let intent_path = live_target.join(".decapod/managed/specs/INTENT.md");
     let mut authored_intent = fs::read_to_string(&intent_path).expect("read generated intent");
     authored_intent.push_str("\n## Human Decision\n\nPreserve this authored contract.\n");
     fs::write(&intent_path, authored_intent).expect("author intent");
@@ -904,7 +904,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
     };
     scaffold_project_entrypoints(&mermaid_opts).expect("mermaid scaffold");
     let mermaid_arch =
-        fs::read_to_string(mermaid_target.join(".decapod/generated/specs/ARCHITECTURE.md"))
+        fs::read_to_string(mermaid_target.join(".decapod/managed/specs/ARCHITECTURE.md"))
             .expect("read mermaid architecture");
     assert!(
         mermaid_arch.contains("```mermaid"),
@@ -991,24 +991,24 @@ fn schemas_errors_and_validate_entrypoint_are_exercised() {
     assert!(matches!(from_sqlite, DecapodError::RusqliteError(_)));
 
     let repo = tempdir().expect("tempdir");
-    fs::create_dir_all(repo.path().join(".decapod/generated/specs")).expect("mkdir specs");
+    fs::create_dir_all(repo.path().join(".decapod/managed/specs")).expect("mkdir specs");
     fs::write(repo.path().join("AGENTS.md"), "entrypoint\n").expect("write agents");
     fs::write(repo.path().join("CLAUDE.md"), "entrypoint\n").expect("write claude");
     fs::write(repo.path().join("GEMINI.md"), "entrypoint\n").expect("write gemini");
     fs::create_dir_all(repo.path().join(".decapod")).expect("mkdir .decapod");
     fs::write(repo.path().join(".decapod/README.md"), "decapod readme\n").expect("write readme");
     fs::write(
-        repo.path().join(".decapod/generated/specs/INTENT.md"),
+        repo.path().join(".decapod/managed/specs/INTENT.md"),
         "**Version:** 0.0.1\n",
     )
     .expect("write intent");
     fs::write(
-        repo.path().join(".decapod/generated/specs/ARCHITECTURE.md"),
+        repo.path().join(".decapod/managed/specs/ARCHITECTURE.md"),
         "architecture\n",
     )
     .expect("write architecture");
     fs::write(
-        repo.path().join(".decapod/generated/specs/SYSTEM.md"),
+        repo.path().join(".decapod/managed/specs/SYSTEM.md"),
         "system\n",
     )
     .expect("write system");
@@ -1150,8 +1150,8 @@ fn override_md_checksum_caching() {
     let tmp = tempdir().expect("tempdir");
     let root = tmp.path();
 
-    // Create .decapod/generated directory
-    fs::create_dir_all(root.join(".decapod/generated")).expect("mkdir generated");
+    // Create .decapod/managed directory
+    fs::create_dir_all(root.join(".decapod/managed")).expect("mkdir generated");
 
     // Create OVERRIDE.md
     let override_content_v1 = "# Test OVERRIDE.md v1\n\nContent version 1";
@@ -1165,13 +1165,13 @@ fn override_md_checksum_caching() {
 
     // Cache the checksum
     fs::write(
-        root.join(".decapod/generated/override.checksum"),
+        root.join(".decapod/managed/override.checksum"),
         &checksum_v1,
     )
     .expect("write checksum v1");
 
     // Read cached checksum
-    let cached = fs::read_to_string(root.join(".decapod/generated/override.checksum"))
+    let cached = fs::read_to_string(root.join(".decapod/managed/override.checksum"))
         .expect("read cached checksum");
     assert_eq!(cached, checksum_v1);
 
@@ -1189,13 +1189,13 @@ fn override_md_checksum_caching() {
 
     // Update cache
     fs::write(
-        root.join(".decapod/generated/override.checksum"),
+        root.join(".decapod/managed/override.checksum"),
         &checksum_v2,
     )
     .expect("write checksum v2");
 
     // Verify cache updated
-    let cached_v2 = fs::read_to_string(root.join(".decapod/generated/override.checksum"))
+    let cached_v2 = fs::read_to_string(root.join(".decapod/managed/override.checksum"))
         .expect("read cached checksum v2");
     assert_eq!(cached_v2, checksum_v2);
 }

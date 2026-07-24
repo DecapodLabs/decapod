@@ -118,7 +118,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     assert!(!config.contains("token"));
     assert!(!dir.join(".decapod/session_token").exists());
 
-    let registration_path = dir.join(".decapod/generated/cloud/init-registration.json");
+    let registration_path = dir.join(".decapod/managed/cloud/init-registration.json");
     let registration = std::fs::read_to_string(registration_path)
         .expect("cloud opt-in should create a mock init registration payload");
     let registration: serde_json::Value =

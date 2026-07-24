@@ -15,14 +15,14 @@ Decapod keeps generated specs synchronized at governance pressure points. When r
 ### Refresh-Capable Paths
 - `decapod validate --refresh-specs`
 - `decapod rpc --op specs.refresh`
-- Initialization/scaffold refresh paths that regenerate `.decapod/generated/specs/*.md`
+- Initialization/scaffold refresh paths that regenerate `.decapod/managed/specs/*.md`
 
 ### Refresh Output Requirements
 - Preserve hand-maintained epistemic custody fields where possible
 - Blend repo context into existing canonical spec files
-- Update `.decapod/generated/specs/.manifest.json` after writing files
+- Update `.decapod/managed/specs/.manifest.json` after writing files
 - Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set## Release-Bound Agent Entrypoint Integrity
-The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and compiled binary SHA-256; `.decapod/generated/specs/.manifest.json` records the same release identity plus `template_hash` and `content_hash` entries for `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md`. Default validation independently checks the compiled release contract, declared metadata, canonical payload, regular-file type, and manifest synchronization. Regeneration must be explicit through the installed Decapod release.## Validation Decision Tree
+The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and compiled binary SHA-256; `.decapod/managed/specs/.manifest.json` records the same release identity plus `template_hash` and `content_hash` entries for `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CODEX.md`. Default validation independently checks the compiled release contract, declared metadata, canonical payload, regular-file type, and manifest synchronization. Regeneration must be explicit through the installed Decapod release.## Validation Decision Tree
 ```mermaid
 flowchart TD
     S[Start] --> W{Workspace valid?}
@@ -87,13 +87,13 @@ flowchart LR
 | Untouched scaffold specs | `template_hash` == `content_hash` | Before implementation |## Evidence Artifacts
 | Artifact | Path | Required For |
 |----------|------|--------------|
-| Validation report | `.decapod/generated/artifacts/provenance/validation_report.json` | Current-run diagnostics; ignored by Git |
-| Proof manifest | `.decapod/generated/artifacts/provenance/proof_manifest.json` | Current-run diagnostics; ignored by Git |
-| Artifact manifest | `.decapod/generated/artifacts/provenance/artifact_manifest.json` | Current-run diagnostics; ignored by Git |
-| Completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/*.json` | Reproducible completion review |
+| Validation report | `.decapod/managed/artifacts/provenance/validation_report.json` | Current-run diagnostics; ignored by Git |
+| Proof manifest | `.decapod/managed/artifacts/provenance/proof_manifest.json` | Current-run diagnostics; ignored by Git |
+| Artifact manifest | `.decapod/managed/artifacts/provenance/artifact_manifest.json` | Current-run diagnostics; ignored by Git |
+| Completion evidence | `.decapod/managed/artifacts/provenance/completion_evidence/*.json` | Reproducible completion review |
 | Trajectory cookie | `.decapod/governance/trajectory.json` | Current run custody schema, hash, and computed proof status; Git history preserves prior cookies |
 | Validation receipt | `.decapod/governance/validation.json` | Tracked successful per-commit validation value; overwritten after validation and preserved in Git history |
-| Imported completion evidence | `.decapod/generated/artifacts/provenance/completion_evidence/imports/*.json` | Untrusted external evidence inspection |
+| Imported completion evidence | `.decapod/managed/artifacts/provenance/completion_evidence/imports/*.json` | Untrusted external evidence inspection |
 | Test logs | CI artifact store | Promotion |
 | Architecture diagram | `ARCHITECTURE.md` (in specs) | Promotion |
 | Changelog entry | `CHANGELOG.md` | Promotion |
@@ -186,7 +186,7 @@ flowchart LR
 | No duplicated contract details | Fail |
 
 ### Health Purity Gate
-No manual `(health: VERIFIED|ASSERTED|STALE|CONTRADICTED)` markers in authoritative docs (excluding `.decapod/generated/`)
+No manual `(health: VERIFIED|ASSERTED|STALE|CONTRADICTED)` markers in authoritative docs (excluding `.decapod/managed/`)
 
 ### Project-Scoped State Gate
 No `.db` or `.jsonl` files outside `.decapod/` in project root
@@ -195,13 +195,13 @@ No `.db` or `.jsonl` files outside `.decapod/` in project root
 | Check | Failure Mode |
 |-------|--------------|
 | `.gitignore` has all `DECAPOD_GITIGNORE_RULES` | Fail |
-| Tracked files in `.decapod/generated/` / `.decapod/data/` match whitelist | Fail |
+| Tracked files in `.decapod/managed/` / `.decapod/data/` match whitelist | Fail |
 
 Whitelisted tracked paths:
-- `.decapod/generated/Dockerfile`
+- `.decapod/managed/Dockerfile`
 - `.decapod/data/knowledge.promotions.jsonl`
-- `.decapod/generated/specs/.manifest` / `.manifest.json`
-- `.decapod/generated/specs/*.md`
+- `.decapod/managed/specs/.manifest` / `.manifest.json`
+- `.decapod/managed/specs/*.md`
 - `.decapod/governance/validation.json`
 - `.decapod/governance/trajectory.json`
 
@@ -277,9 +277,50 @@ from the successful run so an agent can inspect the proof artifact and act on
 actionable validation signals before publication.
 
 <!-- decapod:codebase-attestation:start -->
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+## Background Processing Validation Overlay
+
+### Duplicate Delivery Tests
+- Same message delivered multiple times MUST produce same result
+- Idempotency key verification
+- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
+
+### Retry Tests
+- Configured retry/backoff policy verified
+- Configured retry bound or unbounded policy verified
+- Poison-work handling verified when the project declares it
+
+### Shutdown Tests
+- Graceful drain on signal
+- In-flight job completion or safe requeue
+- No data loss on forced termination
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+## Persistent State Validation Overlay
+
+### Migration Proof Command
+- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
+- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
+
+### Migration Tests
+- All migrations MUST have integration tests
+- Rollback procedures MUST be tested
+- Data integrity checks post-migration
+
+### Persistence Integration Tests
+- Repository abstraction tested against real database
+- Transaction boundary tests
+- Concurrency conflict tests
+- Data integrity validation after recovery
+<!-- decapod:capability-overlay:persistent-state:end -->
+
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ff4e1faaba6920d2b784bc88e554c08bb7cf3cede0ab1a0538e07492596d8f1a`
+- Repository signal fingerprint: `828a7c34668bf616f6f2d3164ea38514bfd75279aea507c2a3a4b532d8728b4c`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (94 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

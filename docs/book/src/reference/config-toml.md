@@ -8,7 +8,7 @@ Governs the behavior of the `decapod init` command.
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `specs` | bool | `true` | If true, scaffolds living documentation under `.decapod/generated/specs/`. |
+| `specs` | bool | `true` | If true, scaffolds living documentation under `.decapod/managed/specs/`. |
 | `diagram_style` | enum | `"ascii"` | Preferred style for generated architecture diagrams (`"ascii"` or `"mermaid"`). |
 | `entrypoints` | list | `[...]` | The agent entrypoint files to maintain (e.g., `AGENTS.md`, `CLAUDE.md`). |
 

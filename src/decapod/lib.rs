@@ -1566,7 +1566,7 @@ fn enrich_repo_context_interactive(
 ) -> Result<(), error::DecapodError> {
     print_init_block(
         "Repository Context",
-        "Review inferred intent before generating .decapod/generated/specs/.",
+        "Review inferred intent before generating .decapod/managed/specs/.",
     );
 
     let current_summary = repo.product_summary.clone().unwrap_or_else(|| {
@@ -1587,7 +1587,7 @@ fn enrich_repo_context_interactive(
         prompt_language_choice(&repo.primary_languages, &recommended_languages)?;
 
     let refine_now = prompt_yes_no(
-        "Refine done criteria now? (You can evolve .decapod/config.toml and .decapod/generated/specs/*.md later.)",
+        "Refine done criteria now? (You can evolve .decapod/config.toml and .decapod/managed/specs/*.md later.)",
         false,
     )?;
     if refine_now {
@@ -2786,7 +2786,7 @@ fn machine_project_sessions_dir(project_root: &Path) -> Result<PathBuf, error::D
 fn legacy_project_sessions_dir(project_root: &Path) -> PathBuf {
     project_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("sessions")
 }
 
@@ -2814,7 +2814,7 @@ fn session_file_candidates(project_root: &Path, agent_id: &str) -> Vec<PathBuf> 
 fn awareness_dir(project_root: &Path) -> PathBuf {
     project_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("awareness")
 }
 
@@ -4079,11 +4079,11 @@ fn run_release_check(project_root: &Path) -> Result<(), error::DecapodError> {
     let rpc_golden_req = project_root.join("tests/golden/rpc/v1/agent_init.request.json");
     let rpc_golden_res = project_root.join("tests/golden/rpc/v1/agent_init.response.json");
     let artifact_manifest =
-        project_root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+        project_root.join(".decapod/managed/artifacts/provenance/artifact_manifest.json");
     let proof_manifest =
-        project_root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+        project_root.join(".decapod/managed/artifacts/provenance/proof_manifest.json");
     let intent_convergence_manifest = project_root
-        .join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
+        .join(".decapod/managed/artifacts/provenance/intent_convergence_checklist.json");
 
     if !changelog.exists() {
         failures.push("CHANGELOG.md missing".to_string());
@@ -4197,7 +4197,7 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
     let inventory = build_release_inventory(project_root)?;
     let out_dir = project_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("artifacts")
         .join("inventory");
     fs::create_dir_all(&out_dir).map_err(error::DecapodError::IoError)?;
@@ -4214,7 +4214,7 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
         serde_json::json!({
             "cmd": "release.inventory",
             "status": "ok",
-            "artifact": ".decapod/generated/artifacts/inventory/repo_inventory.json",
+            "artifact": ".decapod/managed/artifacts/inventory/repo_inventory.json",
             "summary": inventory["totals"]
         })
     );
@@ -4223,21 +4223,21 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
 
 fn run_release_lineage_sync(project_root: &Path) -> Result<(), error::DecapodError> {
     let artifact_manifest =
-        project_root.join(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+        project_root.join(".decapod/managed/artifacts/provenance/artifact_manifest.json");
     let proof_manifest =
-        project_root.join(".decapod/generated/artifacts/provenance/proof_manifest.json");
+        project_root.join(".decapod/managed/artifacts/provenance/proof_manifest.json");
     let intent_convergence_manifest = project_root
-        .join(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
+        .join(".decapod/managed/artifacts/provenance/intent_convergence_checklist.json");
 
     let mut missing = Vec::new();
     if !artifact_manifest.exists() {
-        missing.push(".decapod/generated/artifacts/provenance/artifact_manifest.json");
+        missing.push(".decapod/managed/artifacts/provenance/artifact_manifest.json");
     }
     if !proof_manifest.exists() {
-        missing.push(".decapod/generated/artifacts/provenance/proof_manifest.json");
+        missing.push(".decapod/managed/artifacts/provenance/proof_manifest.json");
     }
     if !intent_convergence_manifest.exists() {
-        missing.push(".decapod/generated/artifacts/provenance/intent_convergence_checklist.json");
+        missing.push(".decapod/managed/artifacts/provenance/intent_convergence_checklist.json");
     }
     if !missing.is_empty() {
         println!(
@@ -4273,9 +4273,9 @@ fn run_release_lineage_sync(project_root: &Path) -> Result<(), error::DecapodErr
                 "capsule_hash": lineage.capsule_hash
             },
             "manifests": [
-                ".decapod/generated/artifacts/provenance/artifact_manifest.json",
-                ".decapod/generated/artifacts/provenance/proof_manifest.json",
-                ".decapod/generated/artifacts/provenance/intent_convergence_checklist.json"
+                ".decapod/managed/artifacts/provenance/artifact_manifest.json",
+                ".decapod/managed/artifacts/provenance/proof_manifest.json",
+                ".decapod/managed/artifacts/provenance/intent_convergence_checklist.json"
             ]
         })
     );
@@ -4877,14 +4877,14 @@ fn should_scaffold_validation_surfaces(project_root: &Path) -> bool {
     let required = [
         "AGENTS.md",
         ".decapod/README.md",
-        ".decapod/generated/Dockerfile",
-        ".decapod/generated/specs/README.md",
-        ".decapod/generated/specs/INTENT.md",
-        ".decapod/generated/specs/ARCHITECTURE.md",
-        ".decapod/generated/specs/INTERFACES.md",
-        ".decapod/generated/specs/VALIDATION.md",
-        ".decapod/generated/specs/.manifest.json",
-        ".decapod/generated/policy/context_capsule_policy.json",
+        ".decapod/managed/Dockerfile",
+        ".decapod/managed/specs/README.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/policy/context_capsule_policy.json",
     ];
     required.iter().any(|rel| !project_root.join(rel).exists())
 }
@@ -5073,7 +5073,7 @@ fn heal_generated_dockerfile(
 ) -> Result<Option<ValidationHealAction>, error::DecapodError> {
     let dockerfile_path = project_root
         .join(".decapod")
-        .join("generated")
+        .join("managed")
         .join("Dockerfile");
     if !dockerfile_path.exists() {
         return Ok(None);
@@ -5092,7 +5092,7 @@ fn heal_generated_dockerfile(
     Ok(Some(ValidationHealAction {
         action: "heal_generated_dockerfile".to_string(),
         outcome: "refreshed".to_string(),
-        detail: "Refreshed the Decapod-managed image/version header in .decapod/generated/Dockerfile while preserving project workspace mutations.".to_string(),
+        detail: "Refreshed the Decapod-managed image/version header in .decapod/managed/Dockerfile while preserving project workspace mutations.".to_string(),
     }))
 }
 
@@ -5442,7 +5442,7 @@ fn write_validate_diagnostic_artifact(
     let mut run_id_hasher = Sha256::new();
     run_id_hasher.update(crate::core::ulid::new_ulid().as_bytes());
     let run_id = hash_bytes_hex(&run_id_hasher.finalize())[..32].to_string();
-    let diagnostics_dir = project_root.join(".decapod/generated/artifacts/diagnostics/validate");
+    let diagnostics_dir = project_root.join(".decapod/managed/artifacts/diagnostics/validate");
     fs::create_dir_all(&diagnostics_dir).map_err(error::DecapodError::IoError)?;
 
     let mut payload = serde_json::json!({
@@ -5466,7 +5466,7 @@ fn write_validate_diagnostic_artifact(
     payload["artifact_hash"] = serde_json::json!(artifact_hash);
 
     let relative_path = PathBuf::from(format!(
-        ".decapod/generated/artifacts/diagnostics/validate/{run_id}.json"
+        ".decapod/managed/artifacts/diagnostics/validate/{run_id}.json"
     ));
     let artifact_path = project_root.join(&relative_path);
     let pretty = serde_json::to_vec_pretty(&payload).map_err(|e| {
@@ -9515,6 +9515,11 @@ fn run_infer_init(cli: InferInitCli, project_root: &Path) -> Result<(), error::D
     use std::fs;
 
     let intent = cli.intent.trim().to_lowercase();
+    let governed_plan = governed_plan_context(project_root, None)?;
+    let plan_intent = governed_plan.intent.clone();
+    let plan_requires_convergence = governed_plan.status == "present"
+        && (governed_plan.state.as_deref() != Some("APPROVED")
+            || !governed_plan.unresolved_items.is_empty());
     let context_files: Vec<String> = cli
         .context
         .as_ref()
@@ -9573,20 +9578,56 @@ fn run_infer_init(cli: InferInitCli, project_root: &Path) -> Result<(), error::D
         ];
     }
 
+    if governed_plan.status == "present" {
+        selected_context.push(governed_plan.path.clone());
+    }
+
     let token_budget = (selected_context.len() as u64 * 500).min(100_000);
-    let clarification_required = intent.len() < 20 || intent_type == "unknown";
+    let clarification_required =
+        intent.len() < 20 || intent_type == "unknown" || plan_requires_convergence;
+    let clarification_question = if plan_requires_convergence {
+        Some(
+            "Review the governed plan sketchpad, resolve its open items, and approve or update it before implementation."
+                .to_string(),
+        )
+    } else if clarification_required {
+        Some("Could you clarify what you'd like me to do?".to_string())
+    } else {
+        None
+    };
 
     let response = serde_json::json!({
         "intent": cli.intent,
         "intent_type": intent_type,
+        "intent_sources": if governed_plan.status == "present" {
+            vec!["human", "governed-plan"]
+        } else {
+            vec!["human"]
+        },
+        "plan_intent": plan_intent,
+        "intent_convergence": {
+            "status": if governed_plan.status != "present" {
+                "plan_unavailable"
+            } else if plan_requires_convergence {
+                "needs_human_convergence"
+            } else {
+                "ready"
+            },
+            "plan_path": governed_plan.path.clone(),
+            "open_items": governed_plan.unresolved_items.clone(),
+            "task_binding": governed_plan.task_binding.clone(),
+        },
         "confidence": if clarification_required { "low" } else { "high" },
         "clarification_required": clarification_required,
-        "clarification_question": if clarification_required {
-            Some("Could you clarify what you'd like me to do?".to_string())
-        } else { None },
+        "clarification_question": clarification_question,
         "selected_context": selected_context,
         "excluded_context": excluded_context,
-        "selected_policies": ["default"],
+        "selected_policies": if governed_plan.status == "present" {
+            vec!["default", "governed-plan"]
+        } else {
+            vec!["default"]
+        },
+        "governed_plan": governed_plan,
         "token_budget": token_budget,
         "proof_required": intent_type == "fix",
         "boundaries": { "max_tokens": 100000, "context_files_limit": 20 }
@@ -9623,6 +9664,7 @@ fn run_infer_orientation(
     let mut packet = OrientationPacket {
         user_goal: cli.intent.clone().unwrap_or_else(|| "Unknown".to_string()),
         task_id: cli.task_id.clone(),
+        governed_plan: governed_plan_context(project_root, cli.task_id.as_deref())?,
         constraints: vec!["Strict adherence to AGENTS.md".to_string()],
         allowed_scope: vec![],
         forbidden_scope: vec![".decapod/".to_string()],
@@ -9653,6 +9695,34 @@ fn run_infer_orientation(
     }
 
     let intent_lower = packet.user_goal.to_lowercase();
+
+    if packet.governed_plan.status == "present" {
+        packet
+            .relevant_areas
+            .push(packet.governed_plan.path.clone());
+        packet
+            .proof_required
+            .extend(packet.governed_plan.proof_hooks.iter().cloned());
+        packet.known_unknowns.extend(
+            packet
+                .governed_plan
+                .unresolved_items
+                .iter()
+                .map(|item| format!("Governed plan unresolved item: {item}")),
+        );
+        if packet.governed_plan.task_binding == "unbound" {
+            packet.known_unknowns.push(
+                "This task is not bound to the existing governed plan; update or replace the plan before mutation."
+                    .to_string(),
+            );
+        }
+        packet.next_action = format!(
+            "Review governed plan state ({}) and task binding ({}) before {}",
+            packet.governed_plan.state.as_deref().unwrap_or("unknown"),
+            packet.governed_plan.task_binding,
+            packet.next_action.trim_start_matches("Perform "),
+        );
+    }
 
     apply_container_orientation_constraints(&mut packet, &intent_lower);
 
@@ -9735,6 +9805,66 @@ fn run_infer_orientation(
     Ok(())
 }
 
+fn governed_plan_context(
+    project_root: &Path,
+    task_id: Option<&str>,
+) -> Result<crate::core::rpc::GovernedPlanContext, error::DecapodError> {
+    let path = ".decapod/governance/plan.json".to_string();
+    let Some(plan) = plan_governance::load_plan(project_root)? else {
+        return Ok(crate::core::rpc::GovernedPlanContext {
+            status: "missing".to_string(),
+            path,
+            title: None,
+            intent: None,
+            state: None,
+            todo_ids: vec![],
+            proof_hooks: vec![],
+            unresolved_items: vec![],
+            forbidden_paths: vec![],
+            file_touch_budget: None,
+            task_binding: "not_available".to_string(),
+        });
+    };
+
+    let mut unresolved_items = Vec::new();
+    unresolved_items.extend(plan.unknowns.iter().map(|item| format!("unknown: {item}")));
+    unresolved_items.extend(
+        plan.human_questions
+            .iter()
+            .map(|item| format!("human_question: {item}")),
+    );
+    unresolved_items.extend(
+        plan.unresolved_contradictions
+            .iter()
+            .map(|item| format!("contradiction: {item}")),
+    );
+    unresolved_items.extend(
+        plan.deferred_questions
+            .iter()
+            .map(|item| format!("deferred_question: {item}")),
+    );
+
+    let task_binding = match task_id {
+        Some(id) if plan.todo_ids.iter().any(|candidate| candidate == id) => "bound",
+        Some(_) => "unbound",
+        None => "not_requested",
+    };
+
+    Ok(crate::core::rpc::GovernedPlanContext {
+        status: "present".to_string(),
+        path,
+        title: Some(plan.title),
+        intent: Some(plan.intent),
+        state: Some(format!("{:?}", plan.state).to_uppercase()),
+        todo_ids: plan.todo_ids,
+        proof_hooks: plan.proof_hooks,
+        unresolved_items,
+        forbidden_paths: plan.constraints.forbidden_paths,
+        file_touch_budget: plan.constraints.file_touch_budget,
+        task_binding: task_binding.to_string(),
+    })
+}
+
 fn apply_container_orientation_constraints(
     packet: &mut crate::core::rpc::OrientationPacket,
     intent_lower: &str,
@@ -9744,7 +9874,7 @@ fn apply_container_orientation_constraints(
             .relevant_areas
             .push("architecture/CONTAINERS".to_string());
         packet.constraints.push(
-            "Keep the Decapod workspace container under .decapod/generated/Dockerfile; a root Dockerfile must package the project application or microservice according to human intent.".to_string(),
+            "Keep the Decapod workspace container under .decapod/managed/Dockerfile; a root Dockerfile must package the project application or microservice according to human intent.".to_string(),
         );
         packet.proof_required.push(
             "Validate that any root Dockerfile contains application packaging rather than Decapod workspace seed markers.".to_string(),

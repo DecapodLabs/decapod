@@ -24,7 +24,7 @@ fn init_repo(root: &Path, branch: &str) {
 
 fn seed_docs(root: &Path) {
     fs::create_dir_all(root.join("docs/decisions")).expect("docs dir");
-    fs::create_dir_all(root.join(".decapod/generated")).expect("generated dir");
+    fs::create_dir_all(root.join(".decapod/managed")).expect("managed dir");
     fs::write(
         root.join("docs/spec.md"),
         "## Auth\nUse provider abstraction.\n## Verify\nRun validate.\n",

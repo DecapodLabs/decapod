@@ -6,7 +6,7 @@ Decapod is configured via `.decapod/config.toml` (see the [Config Specification 
 
 Controls how `decapod init` behaves.
 
-- `specs`: (bool) Whether to generate spec scaffolding under `.decapod/generated/specs/`.
+- `specs`: (bool) Whether to generate spec scaffolding under `.decapod/managed/specs/`.
 - `diagram_style`: ("ascii" or "mermaid") The style for generated architecture diagrams.
 - `entrypoints`: (list) Which agent entrypoints to create (e.g., `["AGENTS.md", "CLAUDE.md"]`).
 
