@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.81.1](https://github.com/DecapodLabs/decapod/compare/v0.81.0...v0.81.1) - 2026-07-24
+
+### Fixed
+
+- use native glob in Bazel build macro
+- preserve Bazel module root contract and record build claim
+
+### Other
+
+- bind validation receipt to final commit
+- align release policy with Bazel native glob
+- record claims and v0.81 validation evidence
+- refresh v0.81 build layout proof
+- centralize build configuration under .config
+
 ## [0.81.0](https://github.com/DecapodLabs/decapod/compare/v0.80.4...v0.81.0) - 2026-07-24
 
 ### Fixed
