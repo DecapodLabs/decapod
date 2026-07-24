@@ -67,7 +67,7 @@ Audit dependencies for duplicate versions, unapproved licenses, and known vulner
 ```bash
 # Custom dependency lints (duplicate check, license limits)
 cargo install cargo-deny --locked
-cargo deny check
+cargo deny --config .config/deny.toml check
 
 # Security vulnerability checks
 cargo install cargo-audit --locked
