@@ -15,7 +15,7 @@ cargo_toml_env_vars(
 
 cargo_build_script(
     name = "build_script",
-    srcs = ["build/compress_constitution.rs"],
+    srcs = ["assets/build/compress_constitution.rs"],
     edition = "2024",
     data = [
         "assets/constitution.json",
@@ -35,7 +35,7 @@ cargo_build_script(
 rust_library(
     name = "decapod_lib",
     srcs = glob(["src/**/*.rs"], exclude = ["src/main.rs", "src/bin/*.rs"]),
-    compile_data = glob(["src/**/*.sql"]) + ["assets/claims.schema.json"],
+    compile_data = glob(["src/**/*.sql"]) + glob(["assets/schemas/*.schema.json"]),
     edition = "2024",
     crate_name = "decapod",
     # Keep Bazel's release identity aligned with Cargo.toml instead of

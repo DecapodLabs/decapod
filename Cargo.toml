@@ -3,7 +3,7 @@ name = "decapod"
 version = "0.80.3"
 edition = "2024"
 rust-version = "1.96.1"
-build = "build/compress_constitution.rs"
+build = "assets/build/compress_constitution.rs"
 description = "Decapod is a Rust-built governance runtime for AI agents: repo-native state, enforced workflow, proof gates, safe coordination."
 license = "MIT"
 repository = "https://github.com/DecapodLabs/decapod"
@@ -19,7 +19,7 @@ exclude = [
     "dist/*",
     "target/*",
     "constitution_embed/*",
-    "project/assets/*.mp4",
+    "assets/*.mp4",
     "tests/fixtures/*",
     "tests/golden_vectors/*"
 ]
@@ -132,17 +132,17 @@ path = "tests/verify_deadlock_regression.rs"
 
 [[bench]]
 name = "perf_1_1"
-path = "project/benches/perf_1_1.rs"
+path = "assets/benches/perf_1_1.rs"
 harness = false
 
 [[bench]]
 name = "perf_1_2"
-path = "project/benches/perf_1_2.rs"
+path = "assets/benches/perf_1_2.rs"
 harness = false
 
 [[bench]]
 name = "perf_1_3"
-path = "project/benches/perf_1_3.rs"
+path = "assets/benches/perf_1_3.rs"
 harness = false
 
 # The profile that 'cargo dist' will build with

@@ -1,4 +1,4 @@
-# deny.toml
+# Decapod cargo-deny policy.
 # Configuration for cargo-deny
 
 [graph]

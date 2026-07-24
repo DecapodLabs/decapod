@@ -3,9 +3,11 @@
 # --- Build Artifacts ---
 target/
 dist/
-build/
-!build/
-!build/constitution_index.rs
+/build/
+!assets/build/
+!assets/build/*.rs
+!assets/benches/
+!assets/benches/*.rs
 dev/
 *.o
 *.so

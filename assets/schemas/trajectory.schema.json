@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://decapod.dev/schemas/trajectory-1.1.0.schema.json",
+  "title": "Decapod Run Trajectory",
+  "description": "Evidence envelope for intent, action, checks, assumptions, and completion proof.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "original_intent", "derived_intent", "active_boundaries", "repo_scope", "inspected_files", "modified_files", "declared_commands", "tool_calls", "checks", "evidence", "shortcut_risk_signals", "unresolved_assumptions", "proof_status", "verdicts", "artifact_hash", "custody"],
+  "properties": {
+    "schema_version": { "enum": ["1.0.0", "1.1.0"] },
+    "run_id": { "type": "string" },
+    "intent_id": { "type": ["string", "null"] },
+    "task_id": { "type": ["string", "null"] },
+    "original_intent": { "type": "string" },
+    "derived_intent": { "type": "string" },
+    "destination": { "type": ["string", "null"] },
+    "current_phase": { "type": ["string", "null"] },
+    "next_transitions": { "$ref": "#/$defs/string_array" },
+    "blockers": { "$ref": "#/$defs/string_array" },
+    "active_boundaries": { "$ref": "#/$defs/string_array" },
+    "repo_scope": { "$ref": "#/$defs/string_array" },
+    "inspected_files": { "$ref": "#/$defs/string_array" },
+    "modified_files": { "$ref": "#/$defs/string_array" },
+    "declared_commands": { "$ref": "#/$defs/string_array" },
+    "tool_calls": { "$ref": "#/$defs/string_array" },
+    "loops": { "type": "array", "items": { "$ref": "#/$defs/loop" } },
+    "checks": { "type": "array", "items": { "$ref": "#/$defs/check" } },
+    "evidence": { "$ref": "#/$defs/string_array" },
+    "shortcut_risk_signals": { "$ref": "#/$defs/string_array" },
+    "unresolved_assumptions": { "$ref": "#/$defs/string_array" },
+    "completion_claim": { "type": ["string", "null"] },
+    "proof_status": { "enum": ["passed", "failed", "partial", "unavailable", "no_checks_run"] },
+    "verdicts": { "$ref": "#/$defs/verdicts" },
+    "artifact_hash": { "type": "string" },
+    "custody": { "type": "object" }
+  },
+  "$defs": {
+    "string_array": { "type": "array", "items": { "type": "string" } },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status"],
+      "properties": {
+        "name": { "type": "string" },
+        "status": { "enum": ["passed", "failed", "partial", "unavailable"] }
+      }
+    },
+    "verdicts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intent_alignment", "boundary_discipline", "shortcut_risk", "completion_proof"],
+      "properties": {
+        "intent_alignment": { "$ref": "#/$defs/verdict" },
+        "boundary_discipline": { "$ref": "#/$defs/verdict" },
+        "shortcut_risk": { "$ref": "#/$defs/verdict" },
+        "completion_proof": { "$ref": "#/$defs/verdict" }
+      }
+    },
+    "verdict": { "enum": ["supported", "caution", "unsupported", "unassessed"] },
+    "loop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intent_id", "trajectory_id", "loop_id", "loop_type", "attempt", "trigger", "grader_result", "mutation_proposal", "status"],
+      "properties": {
+        "intent_id": { "type": "string" },
+        "trajectory_id": { "type": "string" },
+        "loop_id": { "type": "string" },
+        "loop_type": { "enum": ["agent", "verification", "event", "improvement"] },
+        "attempt": { "type": "integer", "minimum": 0 },
+        "parent_loop_id": { "type": ["string", "null"] },
+        "trigger": { "enum": ["human", "webhook", "cron", "agent", "grader", "engine"] },
+        "tool_calls": { "$ref": "#/$defs/string_array" },
+        "observations": { "$ref": "#/$defs/string_array" },
+        "grader_result": { "enum": ["pass", "fail", "skipped"] },
+        "feedback": { "type": "string" },
+        "proof_refs": { "$ref": "#/$defs/string_array" },
+        "mutation_proposal": { "enum": ["none", "prompt", "tool", "config", "rubric", "policy"] },
+        "status": { "enum": ["open", "retrying", "passed", "failed", "blocked"] },
+        "custody_event_id": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

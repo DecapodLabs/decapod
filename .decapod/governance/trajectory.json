@@ -1,103 +1,51 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "issue-990-20260723",
-  "intent_id": "intent:issue-990-20260723",
-  "task_id": "bugs_01ky8n4t2314wp63",
-  "original_intent": "Solve GitHub Issue #990 by consolidating the selective_tests crate into the existing Decapod source hierarchy.",
-  "derived_intent": "Move selective test planning and execution into the decapod qa command, remove the standalone Cargo and Bazel targets, align CI selectors, and add CLI coverage.",
-  "destination": "Publish a reviewable GitHub PR linked to Issue #990.",
-  "current_phase": "proof",
+  "run_id": "issues-995-1002-1004-20260724",
+  "intent_id": "intent:issues-995-1002-1004-20260724",
+  "task_id": "bugs_01ky8qy7yt8nn1x9",
+  "original_intent": "Solve GitHub Issues #995, #1002, and #1004 by consolidating repository configuration, schema, build, benchmark, and asset layouts.",
+  "derived_intent": "Move repository-owned tool/build/benchmark/Docker assets into explicit asset subdirectories where supported, retain required root discovery files, add strict plan trajectory validation schemas under assets, and update all consumers/tests.",
+  "destination": "Publish one reviewable PR linked to Issues #995, #1002, and #1004.",
+  "current_phase": "research",
   "next_transitions": [
-    "proof",
-    "publish"
+    "implementation"
   ],
   "active_boundaries": [
-    "src/decapod/**,src/bin/selective-test.rs,Cargo.toml,BUILD.bazel,.github/workflows/ci.yml,tests/**,generated governance artifacts"
+    "assets/**,.config/**,Cargo.toml,BUILD.bazel,.github/**,tests/**,build/**,project/**,Dockerfile.workspace,src/** references only"
   ],
   "repo_scope": [
-    "Issue #990 selective test consolidation"
+    "Issues #995, #1002, and #1004 repository organization"
   ],
-  "inspected_files": [
-    ".github/workflows/ci.yml",
-    "BUILD.bazel",
-    "Cargo.toml",
-    "src/bin/selective-test.rs",
-    "src/decapod/cli.rs",
-    "src/decapod/lib.rs",
-    "src/decapod/plugins/mod.rs"
-  ],
-  "modified_files": [
-    ".github/workflows/ci.yml",
-    "BUILD.bazel",
-    "Cargo.toml",
-    "src/decapod/cli.rs",
-    "src/decapod/core/entrypoint_integrity.rs",
-    "src/decapod/lib.rs",
-    "src/decapod/plugins/mod.rs",
-    "src/decapod/plugins/selective_test.rs",
-    "tests/cli_contract_enforcement.rs"
-  ],
-  "declared_commands": [
-    "cargo check --all-targets",
-    "cargo fmt --all -- --check",
-    "cargo test --lib plugins::selective_test -- --test-threads=1",
-    "cargo test --test cli_contract_enforcement -- --test-threads=1",
-    "cargo test --test entrypoint_correctness -- --test-threads=1"
-  ],
+  "inspected_files": [],
+  "modified_files": [],
+  "declared_commands": [],
   "tool_calls": [],
-  "checks": [
-    {
-      "name": "cli_contract_tests",
-      "status": "passed"
-    },
-    {
-      "name": "compile",
-      "status": "passed"
-    },
-    {
-      "name": "diff_check",
-      "status": "passed"
-    },
-    {
-      "name": "entrypoint_integrity_tests",
-      "status": "passed"
-    },
-    {
-      "name": "format",
-      "status": "passed"
-    },
-    {
-      "name": "selective_unit_tests",
-      "status": "passed"
-    }
-  ],
-  "evidence": [
-    "Focused tests and all-target compilation passed in the isolated workspace; CLI help exposes qa selective-test and --reflex; generated Decapod artifacts were refreshed by Decapod."
-  ],
+  "checks": [],
+  "evidence": [],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "passed",
+  "proof_status": "no_checks_run",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "supported"
+    "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:5c04ee4bd1bbb3e9559cb13832a275e0153c3a111158d398a245af8103e6de1d",
+  "artifact_hash": "sha256:ca7d4ae268bdc4c9b836749e0ef8bc6d836d1a2e26ec274395cec5f371e5b6fa",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:issue-990-20260723": {
-        "id": "intent:issue-990-20260723",
-        "raw_intent": "Solve GitHub Issue #990 by consolidating the selective_tests crate into the existing Decapod source hierarchy.",
-        "refined_intent": "Move selective test planning and execution into the decapod qa command, remove the standalone Cargo and Bazel targets, align CI selectors, and add CLI coverage.",
+      "intent:issues-995-1002-1004-20260724": {
+        "id": "intent:issues-995-1002-1004-20260724",
+        "raw_intent": "Solve GitHub Issues #995, #1002, and #1004 by consolidating repository configuration, schema, build, benchmark, and asset layouts.",
+        "refined_intent": "Move repository-owned tool/build/benchmark/Docker assets into explicit asset subdirectories where supported, retain required root discovery files, add strict plan trajectory validation schemas under assets, and update all consumers/tests.",
         "acceptance_criteria": [],
         "constraints": [
-          "Issue #990 selective test consolidation"
+          "Issues #995, #1002, and #1004 repository organization"
         ],
         "assumptions": [],
         "boundaries": [
-          "src/decapod/**,src/bin/selective-test.rs,Cargo.toml,BUILD.bazel,.github/workflows/ci.yml,tests/**,generated governance artifacts"
+          "assets/**,.config/**,Cargo.toml,BUILD.bazel,.github/**,tests/**,build/**,project/**,Dockerfile.workspace,src/** references only"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -110,71 +58,19 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:issue-990-20260723",
+        "intent_id": "intent:issues-995-1002-1004-20260724",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:issue-990-20260723",
+        "intent_id": "intent:issues-995-1002-1004-20260724",
         "kind": "refined"
-      },
-      {
-        "sequence": 4,
-        "event_id": "event:4",
-        "intent_id": "intent:issue-990-20260723",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:issue-990-20260723"
       }
     ],
-    "trajectories": {
-      "issue-990-20260723": {
-        "id": "issue-990-20260723",
-        "intent_id": "intent:issue-990-20260723",
-        "evidence_only": true,
-        "steps": [
-          {
-            "sequence": 4,
-            "action": "proof",
-            "command": "cargo fmt --all -- --check",
-            "scope": [
-              "Issue #990 selective test consolidation"
-            ],
-            "observations": [
-              "src/bin/selective-test.rs",
-              "src/decapod/cli.rs",
-              "src/decapod/lib.rs",
-              "src/decapod/plugins/mod.rs",
-              ".github/workflows/ci.yml",
-              "Cargo.toml",
-              "BUILD.bazel",
-              "src/decapod/plugins/selective_test.rs",
-              "src/decapod/cli.rs",
-              "src/decapod/lib.rs",
-              "src/decapod/plugins/mod.rs",
-              "src/decapod/core/entrypoint_integrity.rs",
-              ".github/workflows/ci.yml",
-              "Cargo.toml",
-              "BUILD.bazel",
-              "tests/cli_contract_enforcement.rs",
-              "Focused tests and all-target compilation passed in the isolated workspace; CLI help exposes qa selective-test and --reflex; generated Decapod artifacts were refreshed by Decapod."
-            ],
-            "proof_refs": [
-              "format",
-              "compile",
-              "selective_unit_tests",
-              "cli_contract_tests",
-              "entrypoint_integrity_tests",
-              "diff_check"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:4"
-          }
-        ]
-      }
-    },
+    "trajectories": {},
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 3
   }
 }

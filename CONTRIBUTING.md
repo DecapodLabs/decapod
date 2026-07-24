@@ -86,8 +86,8 @@ cargo install cargo-udeps --locked
 cargo +nightly udeps
 ```
 
-### 4. Interactive Consistency Lints (`clippy.toml`)
-We configure Clippy via `clippy.toml` to disallow raw standard library APIs (like blocking sockets) in favor of async libraries or project-wide connection pools. Running standard `cargo clippy` will check this automatically.
+### 4. Interactive Consistency Lints (`.config/clippy.toml`)
+We configure Clippy via `.config/clippy.toml` to disallow raw standard library APIs (like blocking sockets) in favor of async libraries or project-wide connection pools. `.cargo/config.toml` exports `CLIPPY_CONF_DIR=.config` so standard `cargo clippy` checks this policy automatically.
 
 ### 5. Fast Test Loop (`cargo-nextest` & `cargo-watch`)
 Speed up testing cycles with a modern test runner and auto-check on file changes:

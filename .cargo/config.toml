@@ -1,6 +1,9 @@
 # Build configuration for Decapod
 # Optimized for fast compilation in CI and good release binaries
 
+[env]
+CLIPPY_CONF_DIR = { value = ".config", relative = true }
+
 # Use LLD linker for 2-3x faster linking (requires: apt-get install lld)
 # [target.x86_64-unknown-linux-gnu]
 # linker = "clang"

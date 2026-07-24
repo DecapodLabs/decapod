@@ -1,4 +1,4 @@
-# clippy.toml
+# Decapod Clippy policy.
 # Enforce high-level API usage and security standards by restricting low-level/raw std APIs.
 
 disallowed-methods = [

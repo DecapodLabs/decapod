@@ -1,5 +1,5 @@
 {
-  "$schema": "./constitution.schema.json",
+  "$schema": "./schemas/constitution.schema.json",
   "version": "3.0.0",
   "nodes": {
     "core/DECAPOD": {
