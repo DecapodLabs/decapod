@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.82.0](https://github.com/DecapodLabs/decapod/compare/v0.81.1...v0.82.0) - 2026-07-24
+
+### Fixed
+
+- retire generated state path in favor of managed
+- validate publication from active worktree
+- govern plan and managed workspace publication
+- surface governed plans during inference
+
+### Other
+
+- bind final managed-path validation proof
+- refresh managed specs manifest
+- refresh managed spec attestations
+- bind issue 1003 proof artifacts
+- align governed metadata with v0.81.1
+
 ## [0.81.1](https://github.com/DecapodLabs/decapod/compare/v0.81.0...v0.81.1) - 2026-07-24
 
 ### Fixed
