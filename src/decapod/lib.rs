@@ -162,6 +162,12 @@ fn seed_init_generated_state(target_dir: &Path, dry_run: bool) -> Result<(), err
         return Ok(());
     }
 
+    if core::research_claims::ensure_template(target_dir, false)? {
+        println!(
+            "Governance: created {} (replace the template claim through issue-scoped review)",
+            core::research_claims::CLAIMS_PATH
+        );
+    }
     let _ = docs_cli::sync_override_checksum(target_dir, false)?;
     Ok(())
 }
@@ -5989,6 +5995,16 @@ fn run_govern_command(
                     )));
                 }
             }
+        },
+        GovernCommand::Artifacts(artifacts_cli) => match artifacts_cli.command {
+            ArtifactsCommand::Inventory {
+                base_branch,
+                repair,
+            } => core::governance_artifacts::run_inventory(
+                workspace_root,
+                base_branch.as_deref(),
+                repair,
+            )?,
         },
         GovernCommand::Plan(plan_cli) => run_plan_command(plan_cli, project_store, workspace_root)?,
         GovernCommand::Workunit(workunit_cli) => {

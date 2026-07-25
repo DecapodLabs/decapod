@@ -25,5 +25,6 @@
   - [Config (config.toml)](reference/config-toml.md)
   - [CLI Reference](reference/cli.md)
   - [Propodus Todo Boundary](reference/propodus.md)
+  - [Governance Artifact Inventory](reference/governance-artifacts.md)
   - [Error Codes](reference/errors.md)
   - [Artifacts](reference/artifacts.md)

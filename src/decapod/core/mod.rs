@@ -28,6 +28,7 @@ pub mod error;
 pub mod external_action;
 pub mod flight_recorder;
 pub mod gatekeeper;
+pub mod governance_artifacts;
 pub mod group_broker;
 pub mod http_transport;
 pub mod interview;

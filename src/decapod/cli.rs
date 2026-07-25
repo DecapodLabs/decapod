@@ -755,6 +755,9 @@ pub(crate) enum GovernCommand {
     /// Workspace safety gates: path blocklist, diff size, secret scan, dangerous patterns
     Gatekeeper(GatekeeperCli),
 
+    /// Inspect and repair the required publication governance artifacts
+    Artifacts(ArtifactsCli),
+
     /// Plan-governed execution artifacts and gates
     Plan(PlanCli),
 
@@ -769,6 +772,25 @@ pub(crate) enum GovernCommand {
 
     /// STATE_COMMIT: prove and verify cryptographic state commitments
     StateCommit(StateCommitCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct ArtifactsCli {
+    #[clap(subcommand)]
+    pub command: ArtifactsCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum ArtifactsCommand {
+    /// Inventory plan, claims, trajectory, and validation artifacts
+    Inventory {
+        /// Base branch used to verify the PR diff (defaults to master, then main)
+        #[clap(long = "base-branch")]
+        base_branch: Option<String>,
+        /// Create the claims ledger template when claims.json is absent
+        #[clap(long)]
+        repair: bool,
+    },
 }
 
 #[derive(clap::Args, Debug)]

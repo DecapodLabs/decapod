@@ -2510,7 +2510,7 @@ fn validate_research_claims_if_present(
     info("Research Claims Ledger Gate");
     if research_claims::load_and_validate(repo_root)?.is_none() {
         skip(
-            "No research claims ledger found; skipping claims schema gate",
+            "No research claims ledger found; run `decapod govern artifacts inventory --repair` to create the preserved, schema-valid template",
             ctx,
         );
         return Ok(());

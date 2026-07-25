@@ -1648,7 +1648,7 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
     ] {
         if !present {
             return Err(DecapodError::ValidationError(format!(
-                "Cannot publish: required governance artifact is missing or invalid: {path}"
+                "Cannot publish: required governance artifact is missing or invalid: {path}. Run `decapod govern artifacts inventory --repair`, then rerun the inventory command before publication."
             )));
         }
     }
@@ -1727,7 +1727,7 @@ pub fn ensure_required_governance_artifacts_in_pr(
         .collect();
     if !missing.is_empty() {
         return Err(DecapodError::ValidationError(format!(
-            "Cannot publish: required governance artifacts are not included in the PR diff against '{base_ref}': {}. Every PR must change all four artifacts: plan, claims, trajectory, and validation.",
+            "Cannot publish: required governance artifacts are not included in the PR diff against '{base_ref}': {}. Every PR must change all four artifacts: plan, claims, trajectory, and validation. Run `decapod govern artifacts inventory --base-branch {base_ref}` for the exact repair report.",
             missing.join(", ")
         )));
     }
