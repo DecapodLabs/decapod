@@ -11,17 +11,7 @@
   "repo_scope": [
     "src/decapod/core, src/decapod/cli.rs, src/decapod/lib.rs, tests, docs, governed release/spec artifacts"
   ],
-  "inspected_files": [
-    ".decapod/managed/specs/.manifest.json",
-    "docs/book/src/reference/propodus.md",
-    "src/decapod/core/auth.rs",
-    "src/decapod/core/cloud_backend.rs",
-    "src/decapod/core/propodus.rs",
-    "src/decapod/core/storage.rs",
-    "tests/cloud_backend_storage.rs",
-    "tests/init_config_behavior.rs",
-    "tests/propodus_contract.rs"
-  ],
+  "inspected_files": [],
   "modified_files": [
     "docs/book/src/SUMMARY.md",
     "docs/book/src/reference/cli.md",
@@ -52,11 +42,7 @@
       "status": "partial"
     },
     {
-      "name": "decapod_validate_container",
-      "status": "passed"
-    },
-    {
-      "name": "issue_triage",
+      "name": "decapod_validate_final",
       "status": "passed"
     },
     {
@@ -65,7 +51,7 @@
     }
   ],
   "evidence": [
-    "Propodus contract tests: 4 passed; decapod validate in container: 202 passed; full serialized suite reached unrelated workspace_prune_regression fixture failure"
+    "Final in-container decapod validate: status ok, fail_count 0, pass_count 202, temporary_artifacts_cleaned 1; Propodus contract tests: 4 passed; serialized repository suite reached unrelated workspace_prune_regression fixture failure"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -79,7 +65,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "caution"
   },
-  "artifact_hash": "sha256:53844591e5e1d0badea0d0c600758c264693bc1bc195dc31e53218c078296473",
+  "artifact_hash": "sha256:30880c2b04cfebee26105d39ec13b46d95d10a0929ca1cd4771153d76a67a47e",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -121,34 +107,6 @@
         "intent_id": "intent:run-propodus-phase1-20260725",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run-propodus-phase1-20260725"
-      },
-      {
-        "sequence": 5,
-        "event_id": "event:5",
-        "intent_id": "intent:run-propodus-phase1-20260725",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-propodus-phase1-20260725"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:run-propodus-phase1-20260725",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-propodus-phase1-20260725"
-      },
-      {
-        "sequence": 7,
-        "event_id": "event:7",
-        "intent_id": "intent:run-propodus-phase1-20260725",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-propodus-phase1-20260725"
-      },
-      {
-        "sequence": 8,
-        "event_id": "event:8",
-        "intent_id": "intent:run-propodus-phase1-20260725",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:run-propodus-phase1-20260725"
       }
     ],
     "trajectories": {
@@ -159,71 +117,6 @@
         "steps": [
           {
             "sequence": 4,
-            "action": "trajectory.record",
-            "scope": [
-              "src/decapod/core, src/decapod/cli.rs, src/decapod/lib.rs, tests, docs, governed release/spec artifacts"
-            ],
-            "observations": [
-              "src/decapod/core/cloud_backend.rs",
-              "src/decapod/core/auth.rs",
-              "src/decapod/core/storage.rs",
-              "tests/cloud_backend_storage.rs",
-              "tests/init_config_behavior.rs"
-            ],
-            "proof_refs": [
-              "issue_triage"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:4"
-          },
-          {
-            "sequence": 5,
-            "action": "trajectory.record",
-            "scope": [
-              "src/decapod/core, src/decapod/cli.rs, src/decapod/lib.rs, tests, docs, governed release/spec artifacts"
-            ],
-            "observations": [
-              "src/decapod/core/propodus.rs",
-              "tests/propodus_contract.rs"
-            ],
-            "proof_refs": [
-              "propodus_contract_tests"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "trajectory.record",
-            "scope": [
-              "src/decapod/core, src/decapod/cli.rs, src/decapod/lib.rs, tests, docs, governed release/spec artifacts"
-            ],
-            "observations": [
-              "docs/book/src/reference/propodus.md"
-            ],
-            "proof_refs": [
-              "cargo_fmt"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
-          },
-          {
-            "sequence": 7,
-            "action": "trajectory.record",
-            "scope": [
-              "src/decapod/core, src/decapod/cli.rs, src/decapod/lib.rs, tests, docs, governed release/spec artifacts"
-            ],
-            "observations": [
-              ".decapod/managed/specs/.manifest.json"
-            ],
-            "proof_refs": [
-              "decapod_validate_container"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:7"
-          },
-          {
-            "sequence": 8,
             "action": "propodus-phase-1",
             "scope": [
               "src/decapod/core, src/decapod/cli.rs, src/decapod/lib.rs, tests, docs, governed release/spec artifacts"
@@ -245,23 +138,24 @@
               "tests/context_capsule_rpc.rs",
               "tests/release_check_policy.rs",
               "tests/validate_optional_artifact_gates.rs",
-              "Propodus contract tests: 4 passed; decapod validate in container: 202 passed; full serialized suite reached unrelated workspace_prune_regression fixture failure"
+              "Final in-container decapod validate: status ok, fail_count 0, pass_count 202, temporary_artifacts_cleaned 1; Propodus contract tests: 4 passed; serialized repository suite reached unrelated workspace_prune_regression fixture failure"
             ],
             "proof_refs": [
-              "cargo_test_serialized",
+              "cargo_fmt",
               "propodus_contract_tests",
-              "cargo_fmt"
+              "decapod_validate_final",
+              "cargo_test_serialized"
             ],
             "validation_findings": [
               "Hosted Vercel alias, deployment auth, and live integration remain unverified and deferred to the next wave"
             ],
-            "custody_event_id": "event:8"
+            "custody_event_id": "event:4"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 8
+    "next_sequence": 4
   }
 }
