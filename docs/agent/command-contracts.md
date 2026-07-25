@@ -17,6 +17,9 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod session`
 - **Intent:** Session token management (required for agent operation)
 
+## `decapod cloud`
+- **Intent:** Optional cloud credential and Propodus integration commands
+
 ## `decapod constitution`
 - **Intent:** Embedded Constitution Graph queries and lookups
 
