@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "title": "Propodus phase 1: governed local client boundary and proof",
   "intent": "Deliver one coherent first phase for the propodus-labeled Decapod backlog: establish the versioned todo contract, machine-local bearer credential boundary, typed optional HTTP backend adapter/client, deterministic local fake-service proof, and living documentation while preserving local SQLite defaults and keeping hosted authentication, stable production deployment, and live integration as the next wave.",
-  "state": "EXECUTING",
+  "state": "DONE",
   "todo_ids": [
     "feat_01kydm9j7phcvjyv"
   ],
@@ -39,10 +39,10 @@
       "entry_gates": [],
       "exit_gates": [],
       "entered": true,
-      "completed": false,
+      "completed": true,
       "entered_at": "1785016815Z",
-      "completed_at": null
+      "completed_at": "1785019855Z"
     }
   ],
-  "updated_at": "1785016815Z"
+  "updated_at": "1785019855Z"
 }

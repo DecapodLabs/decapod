@@ -583,7 +583,7 @@ fn validate_fails_on_invalid_knowledge_promotion_ledger_if_present() {
     );
     let stderr = combined_output(&validate);
     assert!(
-        stderr.contains("Knowledge promotion ledger missing"),
+        stderr.contains("Knowledge promotion ledger 'actor' must be a non-empty string"),
         "expected promotion ledger schema failure in stderr, got:\n{stderr}"
     );
 }

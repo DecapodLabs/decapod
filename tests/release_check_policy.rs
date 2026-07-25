@@ -53,7 +53,7 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
     );
     write(&root.join("README.md"), "fixture\n");
     write(
-        &root.join("src/core/schemas.rs"),
+        &root.join("src/decapod/core/schemas.rs"),
         "pub fn schema_version() -> &'static str { \"1\" }\n",
     );
 
@@ -155,7 +155,7 @@ fn run_release_lineage_sync(root: &Path) -> std::process::Output {
 fn release_check_blocks_schema_changes_without_changelog_note() {
     let (_tmp, root) = setup_release_fixture("- housekeeping only");
     fs::write(
-        root.join("src/core/schemas.rs"),
+        root.join("src/decapod/core/schemas.rs"),
         "pub fn schema_version() -> &'static str { \"2\" }\n",
     )
     .expect("mutate schemas");
@@ -173,7 +173,7 @@ fn release_check_blocks_schema_changes_without_changelog_note() {
 fn release_check_allows_schema_changes_with_changelog_note() {
     let (_tmp, root) = setup_release_fixture("- schema: bump todo shape for v2");
     fs::write(
-        root.join("src/core/schemas.rs"),
+        root.join("src/decapod/core/schemas.rs"),
         "pub fn schema_version() -> &'static str { \"2\" }\n",
     )
     .expect("mutate schemas");
