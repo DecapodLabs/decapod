@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.83.0](https://github.com/DecapodLabs/decapod/compare/v0.82.1...v0.83.0) - 2026-07-25
+
+### Added
+
+- make governance proof artifacts explicit
+- add governed Propodus todo client boundary
+
+### Fixed
+
+- include proof template in Bazel build
+
+### Other
+
+- record container validation proof
+- record final phase validation
+- align governance fixture expectations
+
 ## [0.82.1](https://github.com/DecapodLabs/decapod/compare/v0.82.0...v0.82.1) - 2026-07-24
 
 ### Fixed
