@@ -40,7 +40,18 @@ fn setup_repo() -> (TempDir, std::path::PathBuf) {
         .expect("git init");
     assert!(init.status.success(), "git init failed");
 
-    let decapod_init = run_decapod(&dir, &["init", "--force"]);
+    // This fixture inspects the host worktree path returned by workspace ensure.
+    // Opt out of the repository default container custody mode explicitly.
+    let decapod_init = run_decapod(
+        &dir,
+        &[
+            "init",
+            "--force",
+            "--no-container-workspaces",
+            "--isolation-mode",
+            "worktree",
+        ],
+    );
     assert!(
         decapod_init.status.success(),
         "decapod init failed: {}",
@@ -132,6 +143,22 @@ fn setup_repo() -> (TempDir, std::path::PathBuf) {
         claim.status.success(),
         "todo claim failed: {}",
         String::from_utf8_lossy(&claim.stderr)
+    );
+
+    // agent.init/context.resolve may refresh governed artifacts. Commit the
+    // fixture state before workspace ensure, which intentionally rejects a
+    // dirty protected branch.
+    let governance_add = run_git(&dir, &["add", "-A"]);
+    assert!(
+        governance_add.status.success(),
+        "fixture governance git add failed: {}",
+        String::from_utf8_lossy(&governance_add.stderr)
+    );
+    let governance_commit = run_git(&dir, &["commit", "-m", "record resolved context"]);
+    assert!(
+        governance_commit.status.success(),
+        "fixture governance commit failed: {}",
+        String::from_utf8_lossy(&governance_commit.stderr)
     );
 
     let ensure = run_decapod(&dir, &["workspace", "ensure"]);

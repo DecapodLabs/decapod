@@ -50,6 +50,11 @@ pub struct Decision {
     pub version: i32,
 }
 
+/// Backend-neutral repo-scoped todo boundary.
+///
+/// Local SQLite is the default implementation. Optional remote adapters, such
+/// as `core::propodus::PropodusTodoStore`, implement this seam without leaking
+/// HTTP or authentication concerns into the local storage kernel.
 #[async_trait]
 pub trait TodoStore: Send + Sync {
     async fn list_tasks(&self) -> Result<Vec<Task>>;

@@ -4,9 +4,10 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub const PUBLIC_CLOUD_BACKEND_UNAVAILABLE: &str = "Cloud backend is not included in the public Decapod crate. Use local mode; future cloud integrations must attach through the Vercel backend boundary without private git/path dependencies.";
+pub const PUBLIC_CLOUD_BACKEND_UNAVAILABLE: &str = "Cloud todo persistence is not selected automatically. Use the optional Propodus HTTP adapter explicitly; local SQLite remains the default and no private backend dependency is required.";
 
-pub const INIT_REGISTRATION_ROUTE: &str = "POST /api/decapod/init/register";
+pub const PROPODUS_TODO_ROUTE_SUMMARY: &str =
+    "GET /api/health; GET /api/todos?repo_id=<repo>; POST /api/todos; PATCH /api/todos?id=<todo>";
 
 pub fn unavailable_error() -> DecapodError {
     DecapodError::NotImplemented(PUBLIC_CLOUD_BACKEND_UNAVAILABLE.to_string())
@@ -44,21 +45,21 @@ impl CloudInitRegistration {
             schema_version: "1.0.0".to_string(),
             provider: provider.to_string(),
             api_url: api_url.trim_end_matches('/').to_string(),
-            route: INIT_REGISTRATION_ROUTE.to_string(),
+            route: PROPODUS_TODO_ROUTE_SUMMARY.to_string(),
             project_id: project_id.to_string(),
             repo_id: repo_id.to_string(),
             repo_root_hint: repo_root.display().to_string(),
             created_at: time::now_epoch_z(),
             writes: vec![
                 CloudWriteIntent {
-                    table: "repositories".to_string(),
-                    operation: "upsert".to_string(),
+                    table: "todos".to_string(),
+                    operation: "list/create".to_string(),
                     key: "repo_id".to_string(),
                 },
                 CloudWriteIntent {
-                    table: "init_events".to_string(),
-                    operation: "insert".to_string(),
-                    key: "event_id".to_string(),
+                    table: "todos".to_string(),
+                    operation: "claim/complete".to_string(),
+                    key: "todo_id".to_string(),
                 },
             ],
         }

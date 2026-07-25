@@ -125,16 +125,17 @@ fn init_with_backend_cloud_saves_to_config() {
         serde_json::from_str(&registration).expect("parse cloud init registration");
     assert_eq!(registration["provider"], "vercel");
     assert_eq!(
-        registration["route"], "POST /api/decapod/init/register",
-        "registration should target the modeled Vercel init route"
+        registration["route"],
+        "GET /api/health; GET /api/todos?repo_id=<repo>; POST /api/todos; PATCH /api/todos?id=<todo>",
+        "registration should target the versioned Propodus todo contract"
     );
     assert!(
         registration["writes"]
             .as_array()
             .expect("writes array")
             .iter()
-            .any(|write| write["table"] == "repositories" && write["operation"] == "upsert"),
-        "registration should model repository upsert"
+            .any(|write| write["table"] == "todos" && write["operation"] == "list/create"),
+        "registration should model repo-scoped todo access"
     );
 }
 

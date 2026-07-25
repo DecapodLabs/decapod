@@ -28,6 +28,23 @@ Defines the operational policy and metadata for the repository.
 | `external_tracker` | bool | `false` | Whether Decapod should expect and validate external issue references. |
 | `container_workspaces` | bool | `true` | If true, Decapod will strongly encourage/enforce Docker isolation for worktrees. |
 
+## The `[cloud]` Section
+
+Cloud configuration is an explicit, experimental opt-in and contains only
+non-secret routing data. `api_url`, `project_id`, and `repo_id` are configurable
+for development, previews, and future repositories; bearer credentials belong
+to `decapod cloud login`, `DECAPOD_ACCESS_TOKEN`, or another machine-local
+credential boundary, never this file.
+
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `enabled` | bool | `false` | Records cloud intent; does not switch local SQLite automatically. |
+| `experimental` | bool | `true` | Required while the hosted adapter is being rolled out. |
+| `provider` | string | `"vercel"` | Non-secret provider identifier. |
+| `api_url` | string | `"https://decapod-cloud.vercel.app"` | Configurable Propodus API base URL. |
+| `project_id` | string | `""` | Non-secret deployment/project correlation value. |
+| `repo_id` | string | `""` | Canonical repository identifier authorized by the deployment. |
+
 ## Schema Versioning
 
 Decapod uses a `schema_version` key at the root to ensure forward and backward compatibility as the governance kernel evolves.

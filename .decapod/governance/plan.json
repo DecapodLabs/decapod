@@ -1,14 +1,14 @@
 {
   "schema_version": "1.0.0",
-  "title": "Governed pre-inference plan and managed execution publication",
-  "intent": "Rename the project-specific Decapod workspace runtime Dockerfile from .decapod/managed/Dockerfile to .decapod/managed/Dockerfile.decapod, preserving the root Dockerfile as the users application packaging boundary and updating every generator, executor, validator, allowlist, test, spec, and proof reference.",
-  "state": "APPROVED",
+  "title": "Propodus phase 1: governed local client boundary and proof",
+  "intent": "Deliver one coherent first phase for the propodus-labeled Decapod backlog: establish the versioned todo contract, machine-local bearer credential boundary, typed optional HTTP backend adapter/client, deterministic local fake-service proof, and living documentation while preserving local SQLite defaults and keeping hosted authentication, stable production deployment, and live integration as the next wave.",
+  "state": "DONE",
   "todo_ids": [
-    "bugs_01ky9f3ztz3n1x7m"
+    "feat_01kydm9j7phcvjyv"
   ],
   "proof_hooks": [
-    "cargo test --test validate_termination --test core --test release_workflow_policy",
-    "cargo test --test infer_precision --test activation_conformance --test plan_governed_execution",
+    "cargo fmt --check",
+    "cargo test",
     "decapod validate"
   ],
   "unknowns": [],
@@ -31,7 +31,18 @@
       "completed": true,
       "entered_at": "1784876915Z",
       "completed_at": "1784877745Z"
+    },
+    {
+      "id": "propodus-phase-1",
+      "name": "Deliver local Propodus client boundary",
+      "description": "Implement the versioned todo contract, machine-local credential lookup, optional typed HTTP backend client, deterministic local fake-service proof, and living docs; defer hosted auth/deployment/integration execution to the next wave.",
+      "entry_gates": [],
+      "exit_gates": [],
+      "entered": true,
+      "completed": true,
+      "entered_at": "1785016815Z",
+      "completed_at": "1785019855Z"
     }
   ],
-  "updated_at": "1784877745Z"
+  "updated_at": "1785019855Z"
 }

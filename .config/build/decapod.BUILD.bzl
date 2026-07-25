@@ -35,7 +35,9 @@ def decapod_targets():
     rust_library(
         name = "decapod_lib",
         srcs = native.glob(["src/**/*.rs"], exclude = ["src/main.rs", "src/bin/*.rs"]),
-        compile_data = native.glob(["src/**/*.sql"]) + native.glob(["assets/schemas/*.schema.json"]),
+        compile_data = native.glob(["src/**/*.sql"])
+        + native.glob(["assets/schemas/*.schema.json"])
+        + ["assets/templates/claims.json"],
         edition = "2024",
         crate_name = "decapod",
         # Keep Bazel's release identity aligned with Cargo.toml instead of

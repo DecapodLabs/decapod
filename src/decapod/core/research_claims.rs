@@ -17,6 +17,7 @@ pub const CLAIMS_KIND: &str = "research_claims_ledger";
 pub const CLAIMS_SCHEMA_URI: &str =
     "https://decapod.dev/schemas/research-claims-ledger-1.0.0.schema.json";
 const CLAIMS_SCHEMA_DOCUMENT: &str = include_str!("../../../assets/schemas/claims.schema.json");
+const CLAIMS_TEMPLATE: &str = include_str!("../../../assets/templates/claims.json");
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -383,6 +384,26 @@ pub fn load_and_validate(repo_root: &Path) -> Result<Option<ClaimsLedger>, Decap
     })?;
     validate_ledger(&ledger)?;
     Ok(Some(ledger))
+}
+
+/// Create the deterministic repository claims template when a project does
+/// not yet have a research ledger. Existing content is never overwritten.
+pub fn ensure_template(repo_root: &Path, dry_run: bool) -> Result<bool, DecapodError> {
+    let path = repo_root.join(CLAIMS_PATH);
+    if path.exists() || dry_run {
+        return Ok(false);
+    }
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
+    }
+    fs::write(&path, CLAIMS_TEMPLATE).map_err(DecapodError::IoError)?;
+    load_and_validate(repo_root)?.ok_or_else(|| {
+        DecapodError::ValidationError(format!(
+            "claims template was written but could not be loaded: {}",
+            path.display()
+        ))
+    })?;
+    Ok(true)
 }
 
 pub fn validate_schema_document() -> Result<(), DecapodError> {

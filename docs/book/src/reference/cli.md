@@ -31,6 +31,15 @@ Bootstrap or manage the Decapod lifecycle.
 ### `capabilities`
 Discover the features supported by the current Decapod binary.
 
+### `cloud`
+Optional cloud credential operations. These commands do not enable cloud
+storage or change the local SQLite default.
+
+- `cloud login`: run the device authorization flow and save the credential in
+  the machine-local credential directory.
+- `cloud status`: report credential availability and source without printing a
+  token.
+
 ---
 
 ## Workspace Management (alias: `w`)
@@ -74,6 +83,17 @@ Classification and approval for high-risk actions.
 
 ### `govern health`
 Claims, proofs, and system-wide integrity status.
+
+### `govern artifacts inventory`
+Inspect the four required publication artifacts and their PR-diff presence.
+
+- `--base-branch <branch>`: branch used for the PR diff; defaults to `master`,
+  then `main`.
+- `--repair`: create the schema-valid claims ledger template only when
+  `.decapod/governance/claims.json` is absent.
+
+This research claims ledger is separate from Health Engine claims in
+`.decapod/data/health.db`.
 
 ### `govern capsule query`
 Perform a deterministic query over the embedded constitution.

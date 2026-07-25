@@ -16,7 +16,7 @@ pub(crate) mod subsystems;
 use cli::*;
 
 use core::{
-    cloud_backend, db, docs, docs_cli, error, flight_recorder, migration, obligation, proof,
+    auth, cloud_backend, db, docs, docs_cli, error, flight_recorder, migration, obligation, proof,
     repomap, scaffold, state_commit,
     store::{Store, StoreKind, find_decapod_project_root, find_governance_root},
     todo, trace, validate, workspace,
@@ -140,11 +140,34 @@ fn record_cloud_init_registration(
     Ok(())
 }
 
+fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
+    match cloud_cli.command {
+        CloudCommand::Login => auth::perform_cloud_auth(&std::env::current_dir()?),
+        CloudCommand::Status => match auth::load_cloud_credential(None) {
+            Ok(credential) => {
+                println!("cloud credential available ({:?})", credential.source);
+                Ok(())
+            }
+            Err(error::DecapodError::SessionError(message)) => {
+                println!("cloud credential unavailable: {message}");
+                Ok(())
+            }
+            Err(error) => Err(error),
+        },
+    }
+}
+
 fn seed_init_generated_state(target_dir: &Path, dry_run: bool) -> Result<(), error::DecapodError> {
     if dry_run {
         return Ok(());
     }
 
+    if core::research_claims::ensure_template(target_dir, false)? {
+        println!(
+            "Governance: created {} (replace the template claim through issue-scoped review)",
+            core::research_claims::CLAIMS_PATH
+        );
+    }
     let _ = docs_cli::sync_override_checksum(target_dir, false)?;
     Ok(())
 }
@@ -2181,6 +2204,9 @@ pub fn run() -> Result<(), error::DecapodError> {
         }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
+        }
+        Command::Cloud(cloud_cli) => {
+            run_cloud_command(cloud_cli)?;
         }
         Command::Release(release_cli) => {
             let project_root = decapod_root_option?;
@@ -5969,6 +5995,16 @@ fn run_govern_command(
                     )));
                 }
             }
+        },
+        GovernCommand::Artifacts(artifacts_cli) => match artifacts_cli.command {
+            ArtifactsCommand::Inventory {
+                base_branch,
+                repair,
+            } => core::governance_artifacts::run_inventory(
+                workspace_root,
+                base_branch.as_deref(),
+                repair,
+            )?,
         },
         GovernCommand::Plan(plan_cli) => run_plan_command(plan_cli, project_store, workspace_root)?,
         GovernCommand::Workunit(workunit_cli) => {

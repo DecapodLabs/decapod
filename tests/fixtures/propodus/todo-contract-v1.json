@@ -1,0 +1,37 @@
+{
+  "contract_id": "decapod.propodus.todo",
+  "contract_version": "v1",
+  "repo_id": "DecapodLabs/decapod",
+  "routes": {
+    "health": "GET /api/health",
+    "list": "GET /api/todos?repo_id=<repo>",
+    "create": "POST /api/todos",
+    "update": "PATCH /api/todos?id=<todo>"
+  },
+  "create_request": {
+    "repo_id": "DecapodLabs/decapod",
+    "title": "phase proof",
+    "description": "local fake service contract proof",
+    "actor": "test-agent"
+  },
+  "update_request": {
+    "status": "in_progress",
+    "actor": "test-agent"
+  },
+  "todo": {
+    "id": "todo_v1_fixture",
+    "repo_id": "DecapodLabs/decapod",
+    "title": "phase proof",
+    "description": "local fake service contract proof",
+    "status": "pending",
+    "actor": null,
+    "version": 1
+  },
+  "error_examples": [
+    {"status": 400, "code": "validation_error"},
+    {"status": 401, "code": "authentication_required"},
+    {"status": 403, "code": "repository_not_authorized"},
+    {"status": 404, "code": "todo_not_found"},
+    {"status": 409, "code": "todo_conflict"}
+  ]
+}
