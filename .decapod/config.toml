@@ -46,3 +46,19 @@ args = [
 working_directory = "."
 timeout_seconds = 120
 expected_exit_code = 0
+
+[governance]
+protected_paths = []
+approval_categories = ["destructive_operations"]
+
+[proof]
+commands = []
+
+[custody]
+isolation = "container"
+
+[tracker]
+provider = "decapod"
+
+[context]
+declared_sources = []

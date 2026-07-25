@@ -16,7 +16,7 @@ pub(crate) mod subsystems;
 use cli::*;
 
 use core::{
-    cloud_backend, db, docs, docs_cli, error, flight_recorder, migration, obligation, proof,
+    auth, cloud_backend, db, docs, docs_cli, error, flight_recorder, migration, obligation, proof,
     repomap, scaffold, state_commit,
     store::{Store, StoreKind, find_decapod_project_root, find_governance_root},
     todo, trace, validate, workspace,
@@ -138,6 +138,23 @@ fn record_cloud_init_registration(
         );
     }
     Ok(())
+}
+
+fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
+    match cloud_cli.command {
+        CloudCommand::Login => auth::perform_cloud_auth(&std::env::current_dir()?),
+        CloudCommand::Status => match auth::load_cloud_credential(None) {
+            Ok(credential) => {
+                println!("cloud credential available ({:?})", credential.source);
+                Ok(())
+            }
+            Err(error::DecapodError::SessionError(message)) => {
+                println!("cloud credential unavailable: {message}");
+                Ok(())
+            }
+            Err(error) => Err(error),
+        },
+    }
 }
 
 fn seed_init_generated_state(target_dir: &Path, dry_run: bool) -> Result<(), error::DecapodError> {
@@ -2181,6 +2198,9 @@ pub fn run() -> Result<(), error::DecapodError> {
         }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
+        }
+        Command::Cloud(cloud_cli) => {
+            run_cloud_command(cloud_cli)?;
         }
         Command::Release(release_cli) => {
             let project_root = decapod_root_option?;

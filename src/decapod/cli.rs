@@ -669,6 +669,20 @@ pub(crate) struct SessionCli {
     pub command: SessionCommand,
 }
 
+#[derive(clap::Args, Debug)]
+pub(crate) struct CloudCli {
+    #[clap(subcommand)]
+    pub command: CloudCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudCommand {
+    /// Run the interactive device authorization flow and save the token outside the repository.
+    Login,
+    /// Report whether a local or environment credential is available without printing it.
+    Status,
+}
+
 #[derive(Subcommand, Debug)]
 pub(crate) enum SessionCommand {
     /// Acquire a new session token (required before using other commands)
@@ -1336,6 +1350,10 @@ pub(crate) enum Command {
     /// Session token management (required for agent operation)
     #[clap(name = "session", visible_alias = "s")]
     Session(SessionCli),
+
+    /// Optional cloud credential and Propodus integration commands
+    #[clap(name = "cloud")]
+    Cloud(CloudCli),
 
     /// Embedded Constitution Graph queries and lookups
     #[clap(name = "constitution", visible_alias = "c")]

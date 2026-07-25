@@ -31,6 +31,15 @@ Bootstrap or manage the Decapod lifecycle.
 ### `capabilities`
 Discover the features supported by the current Decapod binary.
 
+### `cloud`
+Optional cloud credential operations. These commands do not enable cloud
+storage or change the local SQLite default.
+
+- `cloud login`: run the device authorization flow and save the credential in
+  the machine-local credential directory.
+- `cloud status`: report credential availability and source without printing a
+  token.
+
 ---
 
 ## Workspace Management (alias: `w`)

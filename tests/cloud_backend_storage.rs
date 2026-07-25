@@ -125,13 +125,16 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
         serde_json::from_str(&registration).expect("parse cloud init registration");
     assert_eq!(registration["provider"], "vercel");
     assert_eq!(registration["api_url"], "https://decapod-cloud.vercel.app");
-    assert_eq!(registration["route"], "POST /api/decapod/init/register");
+    assert_eq!(
+        registration["route"],
+        "GET /api/health; GET /api/todos?repo_id=<repo>; POST /api/todos; PATCH /api/todos?id=<todo>"
+    );
     assert!(
         registration["writes"]
             .as_array()
             .expect("writes array")
             .iter()
-            .any(|write| write["table"] == "init_events" && write["operation"] == "insert"),
-        "registration should model backend-owned init event insert"
+            .any(|write| write["table"] == "todos" && write["operation"] == "claim/complete"),
+        "registration should model the repo-scoped todo lifecycle"
     );
 }
