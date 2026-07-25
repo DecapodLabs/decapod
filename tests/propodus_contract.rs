@@ -7,9 +7,11 @@ use decapod::core::propodus::{
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 
+type RecordedRequest = (String, String, String, Option<Vec<u8>>);
+
 #[derive(Clone, Default)]
 struct FakePropodusService {
-    requests: Arc<Mutex<Vec<(String, String, String, Option<Vec<u8>>)>>>,
+    requests: Arc<Mutex<Vec<RecordedRequest>>>,
     responses: Arc<Mutex<VecDeque<PropodusHttpResponse>>>,
 }
 
@@ -21,7 +23,7 @@ impl FakePropodusService {
         }
     }
 
-    fn requests(&self) -> Vec<(String, String, String, Option<Vec<u8>>)> {
+    fn requests(&self) -> Vec<RecordedRequest> {
         self.requests.lock().unwrap().clone()
     }
 }
