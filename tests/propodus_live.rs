@@ -55,6 +55,23 @@ fn live_propodus_contract_proves_canonical_scope_and_mutations() {
         .complete_todo(&todo.id, "decapod-live-proof")
         .expect("canonical repository complete");
 
+    let invalid_client = PropodusClient::with_transport(
+        &PropodusConfig {
+            repo_id: CANONICAL_REPO_ID.to_string(),
+            ..config.clone()
+        },
+        "not-a-valid-propodus-token",
+        CurlTransport::default(),
+    )
+    .expect("invalid-token proof client configuration");
+    assert!(
+        matches!(
+            invalid_client.list_todos(),
+            Err(PropodusClientError::Authentication(_))
+        ),
+        "Propodus must reject an invalid bearer token with 401 authentication failure"
+    );
+
     let unauthorized_config = PropodusConfig {
         repo_id: disposable_repo_id,
         ..config

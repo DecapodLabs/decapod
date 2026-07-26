@@ -35,11 +35,15 @@ cargo test --test propodus_live -- --ignored --nocapture
 
 The proof creates one uniquely named todo in the canonical repository,
 claims it, completes it, and verifies that the disposable repository receives
-`403 repository_not_authorized`. It does not delete the sentinel because the
-v1 client contract has no delete operation; remove it with Propodus operator
-tooling after the run. The test is ignored by default, and the CI job is
-manual, environment-protected, and gated by the `DECAPOD_PROPODUS_LIVE`
+`403 repository_not_authorized`. It also verifies that an invalid bearer token
+is rejected with a 401 authentication failure. It does not delete the sentinel
+because the v1 client contract has no delete operation; remove it with Propodus
+operator tooling after the run. The test is ignored by default, and the CI job
+is manual, environment-protected, and gated by the `DECAPOD_PROPODUS_LIVE`
 repository variable.
+
+Propodus also uses `403 organization_seat_required` when a valid GitHub bearer
+token lacks the required organization seat for the canonical repository.
 
 ## Credentials
 
@@ -52,7 +56,10 @@ Credentials are never read from `.decapod/config.toml`. Lookup precedence is:
 Use `decapod cloud status` to check availability without printing the token.
 Bearer tokens are sent only in the `Authorization` header. The current
 machine-local file is a credential boundary, not provider authentication proof;
-backend verification remains a Propodus deployment responsibility.
+backend verification remains a Propodus deployment responsibility. The current
+`decapod cloud login` flow is still the pre-Propodus Auth0 device flow; it does
+not yet mint the GitHub-subject Propodus JWT used by the live proof. That login
+exchange remains the scope of the future cloud-auth alignment.
 
 ## Delivery boundary
 

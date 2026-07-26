@@ -177,6 +177,7 @@ fn failure_statuses_remain_distinct_and_do_not_decode_as_success() {
     let cases = [
         (401, "authentication_required", "Authentication"),
         (403, "repository_not_authorized", "Service"),
+        (403, "organization_seat_required", "Service"),
         (404, "todo_not_found", "NotFound"),
         (409, "todo_conflict", "Conflict"),
     ];
