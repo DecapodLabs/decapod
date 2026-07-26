@@ -1,10 +1,10 @@
-//! Canonical GitHub repository gate for explicit Propodus cloud mode.
+//! Canonical GitHub repository identity for explicit cloud mode.
 //!
 //! The project file may describe a desired backend, but it must not be allowed
 //! to choose which repository slice receives cloud state. The active cloud
 //! path therefore derives the canonical owner/name from the Git remote and
-//! requires an explicit dogfood gate. The gate is a temporary local opt-in,
-//! not an authenticated immutable GitHub identity.
+//! The external service remains responsible for authenticating and
+//! authorizing that identity; this module only produces the client binding.
 
 use crate::core::error::DecapodError;
 use serde::{Deserialize, Serialize};
@@ -12,20 +12,16 @@ use std::path::Path;
 use std::process::Command;
 
 pub const DOGFOOD_REPOSITORY: &str = "DecapodLabs/decapod";
-/// Temporary local dogfood gate. It is not sent to Propodus or presented as
-/// authenticated repository identity until the service contract defines that
-/// binding.
-pub const PROPODUS_DOGFOOD_GATE_ENV: &str = "DECAPOD_PROPODUS_DOGFOOD";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RepositoryIdentity {
     pub canonical_name: String,
+    pub owner: String,
+    pub repository: String,
     pub remote_url: String,
 }
 
-pub fn resolve_dogfood_repository_identity(
-    repo_root: &Path,
-) -> Result<RepositoryIdentity, DecapodError> {
+pub fn resolve_repository_identity(repo_root: &Path) -> Result<RepositoryIdentity, DecapodError> {
     let output = Command::new("git")
         .current_dir(repo_root)
         .args(["remote", "get-url", "origin"])
@@ -41,45 +37,45 @@ pub fn resolve_dogfood_repository_identity(
         ));
     }
     let remote_url = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    resolve_dogfood_repository_from_remote_with_gate(
-        &remote_url,
-        std::env::var(PROPODUS_DOGFOOD_GATE_ENV).ok().as_deref() == Some("1"),
-    )
+    resolve_repository_identity_from_remote(&remote_url)
 }
 
-pub fn resolve_dogfood_repository_from_remote(
+pub fn resolve_repository_identity_from_remote(
     remote_url: &str,
-) -> Result<RepositoryIdentity, DecapodError> {
-    resolve_dogfood_repository_from_remote_with_gate(
-        remote_url,
-        std::env::var(PROPODUS_DOGFOOD_GATE_ENV).ok().as_deref() == Some("1"),
-    )
-}
-
-pub fn resolve_dogfood_repository_from_remote_with_gate(
-    remote_url: &str,
-    dogfood_gate_enabled: bool,
 ) -> Result<RepositoryIdentity, DecapodError> {
     let canonical_name = parse_github_repository(remote_url).ok_or_else(|| {
         DecapodError::ValidationError(format!(
             "cloud mode requires a GitHub origin remote; got unsupported remote `{remote_url}`"
         ))
     })?;
-    if canonical_name != DOGFOOD_REPOSITORY {
-        return Err(DecapodError::ValidationError(format!(
-            "cloud dogfood is restricted to {DOGFOOD_REPOSITORY}; resolved {canonical_name}"
-        )));
-    }
-    if !dogfood_gate_enabled {
-        return Err(DecapodError::ValidationError(format!(
-            "cloud dogfood requires {PROPODUS_DOGFOOD_GATE_ENV}=1; this is a temporary explicit gate, not authenticated repository identity"
-        )));
-    }
+    let (owner, repository) = canonical_name.split_once('/').ok_or_else(|| {
+        DecapodError::ValidationError("GitHub remote did not resolve to owner/name".to_string())
+    })?;
+    let owner = owner.to_string();
+    let repository = repository.to_string();
 
     Ok(RepositoryIdentity {
         canonical_name,
+        owner,
+        repository,
         remote_url: remote_url.trim().to_string(),
     })
+}
+
+/// Compatibility alias for callers that adopted the earlier dogfood naming.
+/// Runtime identity is no longer restricted to this repository; authorization
+/// belongs to the cloud service after it verifies the authenticated identity.
+pub fn resolve_dogfood_repository_identity(
+    repo_root: &Path,
+) -> Result<RepositoryIdentity, DecapodError> {
+    resolve_repository_identity(repo_root)
+}
+
+/// Compatibility alias for the earlier dogfood-specific API.
+pub fn resolve_dogfood_repository_from_remote(
+    remote_url: &str,
+) -> Result<RepositoryIdentity, DecapodError> {
+    resolve_repository_identity_from_remote(remote_url)
 }
 
 pub fn parse_github_repository(remote_url: &str) -> Option<String> {
@@ -129,30 +125,23 @@ mod tests {
     }
 
     #[test]
-    fn dogfood_identity_is_canonical_and_explicitly_gated() {
-        let identity = super::resolve_dogfood_repository_from_remote_with_gate(
+    fn repository_identity_is_canonical_without_a_local_gate() {
+        let identity = super::resolve_repository_identity_from_remote(
             "git@github.com:DecapodLabs/decapod.git",
-            true,
         )
-        .expect("dogfood identity");
+        .expect("repository identity");
         assert_eq!(identity.canonical_name, "DecapodLabs/decapod");
+        assert_eq!(identity.owner, "DecapodLabs");
+        assert_eq!(identity.repository, "decapod");
     }
 
     #[test]
-    fn dogfood_identity_rejects_other_repositories_and_missing_gate() {
-        assert!(
-            super::resolve_dogfood_repository_from_remote_with_gate(
-                "git@github.com:DecapodLabs/decapod.git",
-                false,
-            )
-            .is_err()
-        );
-        assert!(
-            super::resolve_dogfood_repository_from_remote_with_gate(
-                "git@github.com:DecapodLabs/propodus.git",
-                true,
-            )
-            .is_err()
-        );
+    fn repository_identity_preserves_fork_boundaries() {
+        let identity = super::resolve_repository_identity_from_remote(
+            "https://github.com/example/decapod-fork.git",
+        )
+        .expect("fork identity");
+        assert_eq!(identity.canonical_name, "example/decapod-fork");
+        assert_ne!(identity.canonical_name, super::DOGFOOD_REPOSITORY);
     }
 }

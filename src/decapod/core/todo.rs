@@ -3,7 +3,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::propodus::{PropodusClient, PropodusTodoStore};
-use crate::core::repo_identity::{RepositoryIdentity, resolve_dogfood_repository_identity};
+use crate::core::repo_identity::{RepositoryIdentity, resolve_repository_identity};
 use crate::core::schemas; // Import the new schemas module
 use crate::core::storage::{Task as StorageTask, TodoStore};
 use crate::core::store::Store;
@@ -4807,7 +4807,7 @@ fn cloud_runtime(
             cloud.provider
         )));
     }
-    let identity = resolve_dogfood_repository_identity(&project_root)?;
+    let identity = resolve_repository_identity(&project_root)?;
     Ok(Some((cloud, identity)))
 }
 

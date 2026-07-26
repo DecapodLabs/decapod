@@ -61,6 +61,7 @@ impl TodoStore for MockPropodusStore {
 struct MockFactory {
     store: MockPropodusStore,
     builds: Arc<Mutex<usize>>,
+    identities: Arc<Mutex<Vec<String>>>,
 }
 
 impl CloudTodoStoreFactory for MockFactory {
@@ -70,8 +71,11 @@ impl CloudTodoStoreFactory for MockFactory {
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, DecapodError> {
         assert_eq!(config.provider, "vercel");
-        assert_eq!(identity.canonical_name, "DecapodLabs/decapod");
         *self.builds.lock().expect("builds lock") += 1;
+        self.identities
+            .lock()
+            .expect("identities lock")
+            .push(identity.canonical_name.clone());
         Ok(Box::new(self.store.clone()))
     }
 }
@@ -159,15 +163,11 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
     let data_root = project.path().join(".decapod/data");
     let todo_db = data_root.join("todo.db");
     assert!(!todo_db.exists(), "test starts without local todo SQLite");
-    // This integration test invokes the same env-gated production resolver as
-    // the binary. Tests in this file run serially to keep the process-global
-    // dogfood marker isolated.
-    unsafe { std::env::set_var("DECAPOD_PROPODUS_DOGFOOD", "1") };
-
     let store = MockPropodusStore::default();
     let factory = MockFactory {
         store: store.clone(),
         builds: Arc::new(Mutex::new(0)),
+        identities: Arc::new(Mutex::new(Vec::new())),
     };
     let decapod_store = Store {
         kind: StoreKind::Repo,
@@ -226,6 +226,14 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
     );
     assert_eq!(*factory.builds.lock().expect("builds lock"), 7);
     assert!(
+        factory
+            .identities
+            .lock()
+            .expect("identities lock")
+            .iter()
+            .all(|identity| identity == "DecapodLabs/decapod")
+    );
+    assert!(
         !todo_db.exists(),
         "cloud CLI must not initialize local todo SQLite"
     );
@@ -256,17 +264,19 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
             "git@github.com:someone/decapod.git",
         ],
     );
-    let fork_error = run_todo_cli_with_cloud_factory(
+    run_todo_cli_with_cloud_factory(
         &decapod_store,
         parse_todo(&["list", "--format", "json"]),
         &factory,
     )
-    .expect_err("fork must fail before factory/network");
+    .expect("fork identity must reach the provider boundary");
     assert!(
-        fork_error
-            .to_string()
-            .contains("restricted to DecapodLabs/decapod")
+        factory
+            .identities
+            .lock()
+            .expect("identities lock")
+            .last()
+            .is_some_and(|identity| identity == "someone/decapod")
     );
-    assert_eq!(*factory.builds.lock().expect("builds lock"), 7);
-    unsafe { std::env::remove_var("DECAPOD_PROPODUS_DOGFOOD") };
+    assert_eq!(*factory.builds.lock().expect("builds lock"), 8);
 }

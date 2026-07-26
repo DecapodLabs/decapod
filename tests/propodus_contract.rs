@@ -90,6 +90,29 @@ fn fixture_declares_versioned_contract_and_failure_taxonomy() {
 }
 
 #[test]
+fn onboarding_fixture_declares_provider_neutral_routes_and_safety_boundary() {
+    let raw = include_str!("fixtures/propodus/onboarding-contract-v1.json");
+    let fixture: serde_json::Value = serde_json::from_str(raw).unwrap();
+    assert_eq!(fixture["contract_id"], "decapod.cloud.onboarding");
+    assert_eq!(fixture["contract_version"], "v1");
+    assert_eq!(
+        fixture["routes"]["exchange"],
+        "POST /api/auth/session/exchange"
+    );
+    assert_eq!(
+        fixture["repository_binding"]["canonical_name"],
+        "DecapodLabs/decapod"
+    );
+    assert!(
+        fixture["safety"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|value| value.as_str().unwrap().contains("repository configuration"))
+    );
+}
+
+#[test]
 fn credential_precedence_is_explicit_environment_then_machine_file() {
     let explicit = resolve_cloud_credential(
         Some("explicit-token"),

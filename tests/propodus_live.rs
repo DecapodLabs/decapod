@@ -18,7 +18,6 @@ fn run_decapod(dir: &Path, args: &[&str], agent: &str, token: &str) -> std::proc
         .current_dir(dir)
         .env("DECAPOD_AGENT_ID", agent)
         .env("DECAPOD_ACCESS_TOKEN", token)
-        .env("DECAPOD_PROPODUS_DOGFOOD", "1")
         .output()
         .expect("run decapod command")
 }
@@ -209,10 +208,13 @@ fn live_decapod_cloud_commands_share_state_and_reject_forks() {
         "decapod-live-fork-agent",
         &credential,
     );
-    assert!(!fork_list.status.success(), "forks must fail closed");
+    assert!(
+        !fork_list.status.success(),
+        "unauthorized forks must fail closed"
+    );
     let fork_error = String::from_utf8_lossy(&fork_list.stderr);
     assert!(
-        fork_error.contains("restricted to DecapodLabs/decapod"),
+        fork_error.contains("403") || fork_error.contains("repository_not_authorized"),
         "unexpected fork rejection: {fork_error}"
     );
 }
