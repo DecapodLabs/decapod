@@ -69,7 +69,8 @@
     "container_validate=202 passed, 0 failed",
     "focused_tests=tests/cloud_backend_storage.rs,tests/cloud_command_path.rs,tests/init_config_behavior.rs,tests/propodus_contract.rs",
     "pr=https://github.com/DecapodLabs/decapod/pull/1036",
-    "validation epoch ve_384d6a144548fcff completed with zero failures"
+    "validation epoch ve_384d6a144548fcff completed with zero failures",
+    "validation epoch ve_3ebfebc2881beebf completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -81,7 +82,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:6243a08168792693bd35f16699adb3f8dad356834c98ab744f603cb6138e583a",
+  "artifact_hash": "sha256:3948beb75fa329e261734945cd1b855fee77fa0b492c054c82274236e2de2bbc",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -141,6 +142,13 @@
       {
         "sequence": 7,
         "event_id": "event:7",
+        "intent_id": "intent:wave2-propodus-1036-alignment",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:wave2-propodus-1036-alignment"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
         "intent_id": "intent:wave2-propodus-1036-alignment",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:wave2-propodus-1036-alignment"
@@ -231,12 +239,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "PR #1036 source, tests, workflow, docs, generated specs, and governance artifacts"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_3ebfebc2881beebf completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 8
   }
 }
