@@ -5,10 +5,12 @@
   "task_id": "code_01kyeg2sh0z2j8b0",
   "original_intent": "Advance Decapod v0.83.2 toward safe Propodus cloud dogfooding",
   "derived_intent": "Add provider-neutral verified GitHub repository identity and a typed, offline-testable cloud onboarding/session contract; keep local default and defer live auth until the provider contract is proven",
-  "current_phase": "implementation",
+  "current_phase": "validation",
   "next_transitions": [
     "commit proof-backed changes, publish PR, then rerun protected validation in the published workspace",
-    "implement typed contract, test, refresh specs, validate, publish PR"
+    "implement typed contract, test, refresh specs, validate, publish PR",
+    "publish",
+    "publish branch and create PR"
   ],
   "active_boundaries": [
     "Decapod owns client/session boundary and command resumption; Propodus owns external auth, policy, persistence, and provider deployment; do not switch repository backend or embed provider business logic"
@@ -27,6 +29,8 @@
     "tests/propodus_contract.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     "docs/book/src/reference/propodus.md",
     "src/decapod/core/cloud_backend.rs",
     "src/decapod/core/entrypoint_integrity.rs",
@@ -42,7 +46,9 @@
     "cargo fmt --all",
     "cargo test -- --test-threads=1",
     "decapod rpc --op specs.refresh",
-    "decapod validate --format json"
+    "decapod validate",
+    "decapod validate --format json",
+    "podman run ... decapod validate --format json"
   ],
   "tool_calls": [],
   "checks": [
@@ -55,8 +61,16 @@
       "status": "failed"
     },
     {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
       "name": "decapod_validate",
       "status": "failed"
+    },
+    {
+      "name": "decapod_validate_container",
+      "status": "passed"
     },
     {
       "name": "targeted_cloud_contract_tests",
@@ -64,7 +78,9 @@
     }
   ],
   "evidence": [
-    "206 parallel tests initially passed before known entrypoint session race; serial targeted suites passed; serial full suite reached pre-existing release_artifact_policy failure for inline tests in cli.rs/cloud_backend.rs/repo_identity.rs; validation reported 197 passes with host container/dirty/plan gates"
+    "206 parallel tests initially passed before known entrypoint session race; serial targeted suites passed; serial full suite reached pre-existing release_artifact_policy failure for inline tests in cli.rs/cloud_backend.rs/repo_identity.rs; validation reported 197 passes with host container/dirty/plan gates",
+    "Containerized Decapod v0.83.2 validation exited 0 with 201 passing gates and 7 existing warnings; no failure gates",
+    "validation epoch ve_a7f64761462dd611 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [
@@ -77,7 +93,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:2b688f8510f704d08b5edab76a045f5fda951276b6ec8673c7e3aac8d8f7f0ca",
+  "artifact_hash": "sha256:9bd7214c7496e195e2d32fd1d8ae12faa04209294d7a4f76ec91660856639628",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -116,6 +132,20 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:propodus-next-wave-01kyeg"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:propodus-next-wave-01kyeg"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
         "intent_id": "intent:propodus-next-wave-01kyeg",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:propodus-next-wave-01kyeg"
@@ -165,12 +195,46 @@
               "Live provider deployment credentials and hosted policy remain outside Decapod proof"
             ],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a7f64761462dd611 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "trajectory.record",
+            "command": "podman run ... decapod validate --format json",
+            "scope": [
+              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+            ],
+            "observations": [
+              "Containerized Decapod v0.83.2 validation exited 0 with 201 passing gates and 7 existing warnings; no failure gates"
+            ],
+            "proof_refs": [
+              "decapod_validate_container"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 6
   }
 }
