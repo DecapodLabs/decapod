@@ -508,9 +508,9 @@ fn apply_repo_context_env_overrides(ctx: &mut RepoContext) {
     }
     if let Ok(v) = std::env::var("DECAPOD_INIT_BACKEND") {
         if v.eq_ignore_ascii_case("cloud") {
-            ctx.mode = crate::cli::BackendType::Cloud;
+            ctx.set_backend(crate::cli::BackendType::Cloud);
         } else {
-            ctx.mode = crate::cli::BackendType::Local;
+            ctx.set_backend(crate::cli::BackendType::Local);
         }
     }
     dedupe_sorted(&mut ctx.primary_languages);
@@ -573,7 +573,7 @@ fn apply_repo_context_cli_overrides(ctx: &mut RepoContext, init_with: &InitWithC
             .collect();
     }
     ctx.container_workspaces = init_with.container_workspaces;
-    ctx.mode = init_with.mode.clone();
+    ctx.set_backend(init_with.mode);
     dedupe_sorted(&mut ctx.primary_languages);
     dedupe_sorted(&mut ctx.detected_surfaces);
     ctx.capabilities.sort();
@@ -1418,7 +1418,7 @@ fn init_with_from_config(
             .map(|proof| format!("{}={}", proof.name, proof.command))
             .collect(),
         mode: if config.cloud.as_ref().map(|c| c.enabled).unwrap_or(false)
-            || config.repo.mode == crate::cli::BackendType::Cloud
+            || config.repo.effective_backend().is_cloud()
         {
             crate::cli::BackendType::Cloud
         } else {
@@ -1430,8 +1430,7 @@ fn init_with_from_config(
 }
 
 fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjectConfig {
-    let cloud_enabled =
-        init.mode == crate::cli::BackendType::Cloud || repo.mode == crate::cli::BackendType::Cloud;
+    let cloud_enabled = init.mode.is_cloud() || repo.effective_backend().is_cloud();
     let mut repo = repo;
     let external_tracker = repo.external_tracker;
     let tracker_is_external = external_tracker
@@ -1442,7 +1441,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
     repo.external_tracker = tracker_is_external;
     // Explicit cloud mode is an active backend selection. Local remains the
     // default when the caller does not opt in.
-    repo.mode = init.mode.clone();
+    repo.set_backend(init.mode);
 
     let mut entrypoints = Vec::new();
     let no_entrypoint_flags = !init.claude && !init.gemini && !init.cdx_ep && !init.agents;
@@ -1708,7 +1707,7 @@ fn enrich_repo_context_interactive(
     } else {
         crate::cli::BackendType::Local
     };
-    repo.mode = init.mode.clone();
+    repo.set_backend(init.mode);
 
     let enable_ci = prompt_yes_no("Scaffold GitHub Action for decapod validate?", init.ci)?;
     init.ci = enable_ci;
@@ -2118,7 +2117,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             tracker_url: init_group.tracker_url.clone(),
                             declared_context_sources: init_group.declared_context_sources.clone(),
                             proof_commands: init_group.proof_commands.clone(),
-                            mode: init_group.mode.clone(),
+                            mode: init_group.mode,
                             git: init_group.git,
                             no_git: init_group.no_git,
                         }
@@ -2149,9 +2148,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
             apply_repo_context_env_overrides(&mut repo_ctx);
             apply_repo_context_cli_overrides(&mut repo_ctx, &init_with);
-            if repo_ctx.mode == crate::cli::BackendType::Cloud
-                && init_with.mode == crate::cli::BackendType::Local
-            {
+            if repo_ctx.effective_backend().is_cloud() && !init_with.mode.is_cloud() {
                 init_with.mode = crate::cli::BackendType::Cloud;
             }
             apply_substrate_adoption(&mut repo_ctx, &init_target);
@@ -2480,7 +2477,7 @@ fn is_cloud_todo_command(
         return Ok(false);
     }
     Ok(load_project_config_if_present(workspace_root)?
-        .is_some_and(|config| config.repo.mode == crate::cli::BackendType::Cloud))
+        .is_some_and(|config| config.repo.effective_backend().is_cloud()))
 }
 
 fn command_requires_worktree(command: &Command) -> bool {
@@ -5350,7 +5347,7 @@ fn run_validate_command(
 
     // Ensure cloud authentication if using cloud backend
     if crate::cli::DecapodProjectConfig::load(governance_root)
-        .map(|config| config.repo.mode == crate::cli::BackendType::Cloud)
+        .map(|config| config.repo.effective_backend().is_cloud())
         .unwrap_or(false)
     {
         let auth_gate = crate::core::auth::get_cloud_auth_gate();

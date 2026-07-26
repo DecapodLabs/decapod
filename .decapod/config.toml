@@ -22,6 +22,7 @@ primary_languages = ["Rust"]
 detected_surfaces = ["cargo"]
 external_tracker = false
 container_workspaces = true
+backend = "local"
 mode = "local"
 declared_capabilities = [
     "agent-helper",

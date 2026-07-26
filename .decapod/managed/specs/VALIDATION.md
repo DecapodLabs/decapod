@@ -211,11 +211,15 @@ Whitelisted tracked paths:
 | `.decapod/config.toml` exists | Warn |
 | `schema_version = "1.0.0"` | Fail |
 | Has `[repo]` and `[init]` tables | Fail |
+| `repo.backend` is local or cloud when present | Fail |
+| Legacy `repo.mode` is accepted only when `repo.backend` is absent | Fail |
 | `repo.product_summary` non-empty | Fail |
 | `repo.architecture_direction` non-empty | Fail |
 | `repo.done_criteria` non-empty | Warn |
 | No cloud secrets in config | Fail |
 | Cloud opt-in: experimental + provider + api_url | Fail if enabled but incomplete |
+
+Cloud command proof must also demonstrate that canonical `repo.backend` selection wins over a conflicting legacy `repo.mode`, missing external session state fails closed, and no local `todo.db` is created as a fallback.
 
 ### Project Specs Architecture Gate
 | Check | Failure Mode |
@@ -279,7 +283,7 @@ actionable validation signals before publication.
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da1fab632fe6eed26a5ec8c54740931c5c64db065f9fd086ca290afc8111d4f3`
+- Repository signal fingerprint: `aef45298529360ab3a760375c208c47076affb050574776345fde8d32580b7d0`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

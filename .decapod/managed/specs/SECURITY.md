@@ -59,6 +59,12 @@ flowchart LR
 - **Token Lifetime**: N/A (direct CLI invocation)
 - **Elevation**: `sudo`/`doas` required for `workspace ensure --container`
 
+### External Cloud Session Boundary
+- Decapod consumes a provider-issued machine session; it does not implement external identity, authorization policy, or session issuance.
+- Onboarding handoffs are one-time HTTPS URLs with an explicit expiration and provider-neutral state.
+- Repository configuration contains backend selection and non-secret endpoint metadata only; raw access/refresh credentials remain outside the repository.
+- Headless flows print a safe resume instruction and fail closed when no valid session exists.
+
 ## Authorization
 
 ### Role Model
@@ -221,7 +227,7 @@ Completion evidence export carries canonical records, source revision bindings, 
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da1fab632fe6eed26a5ec8c54740931c5c64db065f9fd086ca290afc8111d4f3`
+- Repository signal fingerprint: `aef45298529360ab3a760375c208c47076affb050574776345fde8d32580b7d0`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

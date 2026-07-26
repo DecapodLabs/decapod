@@ -88,7 +88,7 @@ impl DbBroker {
         let project_root =
             find_decapod_project_root(&self.root).unwrap_or_else(|_| self.root.clone());
         if let Ok(config) = crate::cli::DecapodProjectConfig::load(&project_root) {
-            return config.repo.mode == crate::cli::BackendType::Cloud;
+            return config.repo.effective_backend().is_cloud();
         }
         false
     }

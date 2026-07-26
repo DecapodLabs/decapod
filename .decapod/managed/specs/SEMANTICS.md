@@ -98,6 +98,12 @@ stateDiagram-v2
 | Obligation status derived, never asserted | Data | `obligation verify` computes from deps/proofs/commit |
 | Session required for mutations | Auth | Broker rejects mutating ops without valid session |
 | Capability-gated external actions | Security | Every `git`/`docker`/`cargo` call declares capability |
+
+### Cloud Onboarding Handoff
+- `pending -> authorized` only after the external provider reports a completed handoff.
+- `pending -> canceled | expired | failed | uncertain` remains visible to the caller and never authorizes local fallback.
+- `authorized` yields a machine-local session boundary; credentials are not copied into `.decapod/config.toml` or printed in command output.
+- A missing, expired, or revoked session causes a bounded onboarding/resume instruction and the selected cloud operation fails closed.
 | No secrets in config.toml | Security | `validate` config gate rejects forbidden keys |
 | Specs manifest tracks template drift | Governance | `validate` specs gate fails on stale template_hash |
 | Ordered phase completion | Governance | Phase transitions reject out-of-order, concurrent, or incomplete execution |## Event Sourcing Schema
@@ -251,7 +257,7 @@ Error codes stable within major version (0.x may add codes; 1.0+ semver).
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da1fab632fe6eed26a5ec8c54740931c5c64db065f9fd086ca290afc8111d4f3`
+- Repository signal fingerprint: `aef45298529360ab3a760375c208c47076affb050574776345fde8d32580b7d0`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

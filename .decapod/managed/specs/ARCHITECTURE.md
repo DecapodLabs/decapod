@@ -48,6 +48,11 @@ Persistent state is proven by the configured `[repo.migration_validation]` comma
 - **Config**: `.decapod/config.toml` (schema_version 1.0.0)
 - **Generated**: `.decapod/managed/{specs,context,policy,artifacts}`
 
+### Backend Selection and External Onboarding
+`[repo].backend` is the canonical storage/runtime selection. A legacy `[repo].mode` is accepted only for compatibility when `backend` is absent. The effective backend is resolved before command dispatch, so an explicit cloud selection cannot fall through to local todo SQLite. Governance plans, claims, trajectories, validation records, and specification JSON retain local ownership in both backend modes.
+
+The external session boundary is provider-neutral. Decapod accepts a machine-local session result or a bounded one-time HTTPS onboarding handoff; it does not mint, persist, or print access/refresh credentials. Headless callers receive a safe URL/resume instruction and a bounded state rather than an interactive prompt.
+
 ## Architecture Map
 ```
 src/
@@ -398,7 +403,7 @@ Verification and artifact emission:
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da1fab632fe6eed26a5ec8c54740931c5c64db065f9fd086ca290afc8111d4f3`
+- Repository signal fingerprint: `aef45298529360ab3a760375c208c47076affb050574776345fde8d32580b7d0`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
