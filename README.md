@@ -10,11 +10,11 @@
 </p>
 
 <p align="center">
-  Decapod is a daemonless, local-first governance kernel that agents call at governance boundaries — before acting, before inference, before touching code, before completing — to shape intent, bound context, enforce boundaries, and produce proof.
+  Decapod runs on demand. Agents call it at governance boundaries — before acting, before inference, before touching code, before completing — to shape intent, bound context, enforce boundaries, and produce proof.
 </p>
 
 <p align="center">
-  You keep working in your harness (Cursor, Claude Code, Codex, Antigravity, or any agent tool); Decapod gives those agents a shared governance layer inside the repo.
+  You keep working in your harness (Cursor, Claude Code, Codex, Antigravity, or any agent tool). Decapod gives those agents a shared governance layer inside the repo.
 </p>
 
 <p align="center">
@@ -72,9 +72,7 @@ flowchart TD
 
 **Harness ↔ User pings** — The harness can ping the user for additional context when intent is unclear or verification needs human input.
 
-Decapod is called by the agent at governance boundaries. Before inference, the agent may branch into Decapod to shape intent, context, and gates. After inference, the agent may branch into Decapod when the work needs boundary checks, verification, proof, or another governed pass.
-
-Each Decapod call may recurse until the work is shaped, bounded, and provable. Decapod is not the agent and not the model; it is the governance kernel the agent calls whenever work needs control.
+Decapod is called by the agent at governance boundaries. Before inference, the agent branches into Decapod to shape intent, context, and gates. After inference, the agent branches into Decapod when the work needs boundary checks, verification, proof, or another governed pass. Each call may recurse until the work is shaped, bounded, and provable. Decapod is not the agent and not the model; it is the governance kernel the agent calls whenever work needs control.
 
 Decapod is called before:
 
@@ -88,8 +86,8 @@ Decapod is called before:
 ## Capabilities
 
 1. **Clarifies intent** — Converts vague requests into explicit, versioned specifications.
-2. **Bounds context** — Resolves only the minimal relevant code/docs for the task.
-3. **Coordinates concurrent agents** — Lets Cursor, Claude Code, Codex, Gemini CLI, and other tools work against the same repo at the same time without duplicating work, trampling workspaces, or losing state.
+2. **Bounds context** — Resolves only the minimal relevant code and docs for the task.
+3. **Coordinates concurrent agents** — Lets Cursor, Claude Code, Codex, Gemini CLI, and other tools work against the same repo simultaneously without duplicating work, trampling workspaces, or losing state.
 4. **Enforces boundaries** — Safeguards protected branches and sensitive modules.
 5. **Governs adaptation** — Manages feedback-driven instruction changes through explicit review.
 6. **Requires proof** — Gates completion on deterministic verification artifacts.
@@ -100,9 +98,9 @@ Decapod is called before:
 
 Decapod preserves what agent workbenches lose: governed project state that survives a session, a tool switch, a crash, a retry, or a handoff.
 
-`.decapod/` is the repo-native substrate for governed agent execution. It records the durable state Decapod needs to keep work bounded, attributable, resumable, and provable without depending on any one model provider, agent workbench, or conversation transcript.
+`.decapod/` is the repo-native substrate for governed agent execution. It records the durable state Decapod needs to keep work bounded, attributable, resumable, and provable — without depending on any one model provider, agent workbench, or conversation transcript.
 
-```text
+```
 .decapod/
   managed/
     specs/         # Living specs (INTENT, ARCHITECTURE, INTERFACES, OPERATIONS, README, SECURITY, SEMANTICS, VALIDATION)
@@ -128,7 +126,7 @@ The substrate turns the important parts of agent work into durable repo state:
 
 Every governed run leaves operational evidence. The generated files are the human-visible proof surface: inspect them locally, review them in PRs, and use them to re-establish state across different agents like Cursor, Codex, Gemini, and Kilo.
 
-Decapod does not make agents smarter by giving them longer conversations. Decapod makes agent work shippable by turning intent, context, boundaries, custody, validation, and completion into governed repo state.
+Decapod does not make agents smarter by giving them longer conversations. It makes agent work shippable by turning intent, context, boundaries, custody, validation, and completion into governed repo state.
 
 ---
 
