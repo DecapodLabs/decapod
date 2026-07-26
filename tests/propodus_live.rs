@@ -12,19 +12,13 @@ fn required_env(name: &str) -> String {
     env::var(name).unwrap_or_else(|_| panic!("{name} is required for the live proof"))
 }
 
-fn run_decapod(
-    dir: &Path,
-    args: &[&str],
-    agent: &str,
-    token: &str,
-    repo_id: &str,
-) -> std::process::Output {
+fn run_decapod(dir: &Path, args: &[&str], agent: &str, token: &str) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(args)
         .current_dir(dir)
         .env("DECAPOD_AGENT_ID", agent)
         .env("DECAPOD_ACCESS_TOKEN", token)
-        .env("DECAPOD_GITHUB_REPOSITORY_ID", repo_id)
+        .env("DECAPOD_PROPODUS_DOGFOOD", "1")
         .output()
         .expect("run decapod command")
 }
@@ -76,7 +70,6 @@ fn live_propodus_contract_proves_canonical_scope_and_mutations() {
         api_url,
         project_id: "decapod-live-proof".to_string(),
         repo_id: CANONICAL_REPO_ID.to_string(),
-        immutable_repo_id: Some(required_env("DECAPOD_GITHUB_REPOSITORY_ID")),
     };
     let client = PropodusClient::with_transport(&config, &credential, CurlTransport::default())
         .expect("live Propodus client configuration");
@@ -146,7 +139,6 @@ fn live_decapod_cloud_commands_share_state_and_reject_forks() {
     );
     let api_url = required_env("DECAPOD_PROPODUS_API_URL");
     let credential = required_env("DECAPOD_PROPODUS_ACCESS_TOKEN");
-    let immutable_repo_id = required_env("DECAPOD_GITHUB_REPOSITORY_ID");
 
     let canonical = tempdir().expect("canonical proof repository");
     prepare_cloud_repo(
@@ -166,7 +158,6 @@ fn live_decapod_cloud_commands_share_state_and_reject_forks() {
         &["todo", "add", &title, "--format", "json"],
         "decapod-live-agent-one",
         &credential,
-        &immutable_repo_id,
     );
     assert!(
         add.status.success(),
@@ -185,7 +176,6 @@ fn live_decapod_cloud_commands_share_state_and_reject_forks() {
             &args,
             "decapod-live-agent-one",
             &credential,
-            &immutable_repo_id,
         );
         assert!(
             output.status.success(),
@@ -199,7 +189,6 @@ fn live_decapod_cloud_commands_share_state_and_reject_forks() {
         &["todo", "list", "--status", "all", "--format", "json"],
         "decapod-live-agent-two",
         &credential,
-        &immutable_repo_id,
     );
     assert!(second_agent_list.status.success());
     let list = String::from_utf8_lossy(&second_agent_list.stdout);
@@ -219,7 +208,6 @@ fn live_decapod_cloud_commands_share_state_and_reject_forks() {
         &["todo", "list", "--format", "json"],
         "decapod-live-fork-agent",
         &credential,
-        &immutable_repo_id,
     );
     assert!(!fork_list.status.success(), "forks must fail closed");
     let fork_error = String::from_utf8_lossy(&fork_list.stderr);
