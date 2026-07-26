@@ -7,6 +7,7 @@
   "derived_intent": "Add provider-neutral verified GitHub repository identity and a typed, offline-testable cloud onboarding/session contract; keep local default and defer live auth until the provider contract is proven",
   "current_phase": "validation",
   "next_transitions": [
+    "await CI and review feedback",
     "commit proof-backed changes, publish PR, then rerun protected validation in the published workspace",
     "implement typed contract, test, refresh specs, validate, publish PR",
     "publish",
@@ -48,6 +49,8 @@
     "decapod rpc --op specs.refresh",
     "decapod validate",
     "decapod validate --format json",
+    "gh pr create --repo DecapodLabs/decapod",
+    "git push origin agent/unknown/code_01kyeg2sh0z2j8b0-propodus-next-wave",
     "podman run ... decapod validate --format json"
   ],
   "tool_calls": [],
@@ -73,6 +76,10 @@
       "status": "passed"
     },
     {
+      "name": "publish",
+      "status": "passed"
+    },
+    {
       "name": "targeted_cloud_contract_tests",
       "status": "passed"
     }
@@ -80,6 +87,7 @@
   "evidence": [
     "206 parallel tests initially passed before known entrypoint session race; serial targeted suites passed; serial full suite reached pre-existing release_artifact_policy failure for inline tests in cli.rs/cloud_backend.rs/repo_identity.rs; validation reported 197 passes with host container/dirty/plan gates",
     "Containerized Decapod v0.83.2 validation exited 0 with 201 passing gates and 7 existing warnings; no failure gates",
+    "PR #1043 created at https://github.com/DecapodLabs/decapod/pull/1043",
     "validation epoch ve_2e41a0824e6dc01a completed with zero failures",
     "validation epoch ve_a7f64761462dd611 completed with zero failures"
   ],
@@ -94,7 +102,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:88b601f5a184f12baec0a14a145581af9ffffde4c5eb32ae1f986a9530734735",
+  "artifact_hash": "sha256:68af468dcd1d311058eadfdf4c9eb5f468b6024c1b6d3f5c6cdb1cc19b908edb",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -154,6 +162,20 @@
       {
         "sequence": 7,
         "event_id": "event:7",
+        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:propodus-next-wave-01kyeg"
+      },
+      {
+        "sequence": 8,
+        "event_id": "event:8",
+        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:propodus-next-wave-01kyeg"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
         "intent_id": "intent:propodus-next-wave-01kyeg",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:propodus-next-wave-01kyeg"
@@ -255,12 +277,46 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
+          },
+          {
+            "sequence": 8,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_2e41a0824e6dc01a completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "trajectory.record",
+            "command": "git push origin agent/unknown/code_01kyeg2sh0z2j8b0-propodus-next-wave",
+            "scope": [
+              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+            ],
+            "observations": [
+              "PR #1043 created at https://github.com/DecapodLabs/decapod/pull/1043"
+            ],
+            "proof_refs": [
+              "publish"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 7
+    "next_sequence": 9
   }
 }
