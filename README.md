@@ -10,15 +10,15 @@
 </p>
 
 <p align="center">
-  Decapod runs on demand. Agents call it at governance boundaries — before acting, before inference, before touching code, before completing — to shape intent, bound context, enforce boundaries, and produce proof.
-</p>
-
-<p align="center">
   You keep working in Cursor, Claude Code, Codex, Antigravity, or any other harness; Decapod gives the agents operating there a shared governance kernel inside the repository.
 </p>
 
 <p align="center">
-  <a href="https://github.com/DecapodLabs/decapod/actions"><img alt="CI" src="https://github.com/DecapodLabs/decapod/actions/workflows/ci.yml/badge.svg"></a>
+  Decapod is a local-first, daemonless, repo-native governance kernel that agents call at governance boundaries — before acting, before inference, before touching code, before completing — to shape intent, bound context, enforce boundaries, and produce proof.
+</p>
+
+<p align="center">
+  <a href="https://github.com/DecapodLabs/decod/actions"><img alt="CI" src="https://github.com/DecapodLabs/decapod/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://crates.io/crates/decapod"><img alt="crates.io" src="https://img.shields.io/crates/v/decapod.svg"></a>
   <a href="https://github.com/DecapodLabs/decapod/blob/master/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 </p>
@@ -56,7 +56,7 @@ flowchart LR
     end
 
     subgraph Harness["Agent Harness"]
-        Harness["Harness<br/>(Cursor, Codex,<br/>Claude Code, ...)"]
+        Harness["Harness"]
     end
 
     subgraph Intelligence["Intelligence"]
@@ -118,7 +118,7 @@ Decapod is called before:
 
 1. **Clarifies intent** — Converts vague requests into explicit, versioned specifications.
 2. **Bounds context** — Resolves only the minimal relevant code and docs for the task.
-3. **Coordinates concurrent agents** — Lets Cursor, Claude Code, Codex, Gemini CLI, and other tools work against the same repo simultaneously without duplicating work, trampling workspaces, or losing state.
+3. **Coordinates concurrent agents** — Lets the harness work against the same repo simultaneously without duplicating work, trampling workspaces, or losing state.
 4. **Enforces boundaries** — Safeguards protected branches and sensitive modules.
 5. **Governs adaptation** — Manages feedback-driven instruction changes through explicit review.
 6. **Requires proof** — Gates completion on deterministic verification artifacts.
@@ -172,7 +172,7 @@ An engineering organization’s tribal knowledge and review culture becomes *exe
 ## Guarantees
 
 - **Daemonless** — Runs on demand like `git` or `grep`.
-- **Repo-native** — State lives in your repository by default (configurable).
+- **Local-first** — State lives in your repository by default (configurable).
 - **Provider-agnostic** — Works with any model provider, agent harness, or toolchain (behavior may vary per integration).
 - **Completion requires passed proof-plan gates** — `VERIFIED` status requires passed proof-plan gates (INV-PROOF-GATED).
 - **Enforces protected paths and branch isolation (configured)** — Protected paths and branch isolation enforced per `.decapod/config.toml`.
