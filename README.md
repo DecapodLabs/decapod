@@ -139,8 +139,8 @@ Decapod preserves what agent workbenches lose: governed project state that survi
   generated/
     awareness/     # Deterministic context capsules — generated at runtime
     artifacts/     # Verification output and proof provenance — generated at runtime
-  data/            # Durable repo-native state (DBs, events, todos) — tracked
-  governance/      # Trajectory, proof rubrics, validation receipts — generated at runtime
+  data/            # Durable repo-native state — untracked (optionally select `backend=cloud` in `.decapod/config.toml` or during `decapod init`)
+  governance/      # Living evidence (trajectory, proof rubrics, validation receipts, research claims) — tracked
   workspaces/      # Isolated git worktrees (container workspaces require explicit opt-in) — created on demand
   config.toml      # Project shape and agent-facing configuration — tracked
   OVERRIDE.md      # Local rules that override embedded defaults — tracked
