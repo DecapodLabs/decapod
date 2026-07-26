@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "title": "Propodus wave 2 review closure: truthful credential and CLI dogfood",
   "intent": "Revise PR #1036 to close the latest review gaps: make injected Propodus JWT credentials truthful and fail-fast, downgrade unbound repository identity claims, prove the production CLI dispatch with a mock Propodus transport, document explicit v1 governance limitations, and provide a repeatable dogfood runbook while preserving Propodus-owned auth policy.",
-  "state": "EXECUTING",
+  "state": "DONE",
   "todo_ids": [
     "cicd_01kydv7dsj7sayv4"
   ],
@@ -74,10 +74,10 @@
       "entry_gates": [],
       "exit_gates": [],
       "entered": true,
-      "completed": false,
+      "completed": true,
       "entered_at": "1785034186Z",
-      "completed_at": null
+      "completed_at": "1785035649Z"
     }
   ],
-  "updated_at": "1785034186Z"
+  "updated_at": "1785035649Z"
 }
