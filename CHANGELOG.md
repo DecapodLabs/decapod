@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.83.1](https://github.com/DecapodLabs/decapod/compare/v0.83.0...v0.83.1) - 2026-07-26
+
+### Added
+
+- activate verified Propodus cloud todo routing
+- start propodus wave two proof boundary
+
+### Other
+
+- Record Propodus review validation proof
+- Refresh specs after Propodus review closure
+- Document Propodus dogfood delivery boundary
+- Test cloud CLI preflight and Propodus dogfood
+- Align cloud todo boundary with Propodus contract
+- record final governed validation
+- close governed Propodus alignment phase
+- record Propodus alignment proof trajectory
+- record governed Propodus alignment phase
+- refresh generated Propodus specs
+- document Propodus cloud identity and live proof
+- prove cloud command and repository dogfood boundaries
+- align Propodus proof with dogfood auth contract
+- record wave two governed proof
+
 ## [0.83.0](https://github.com/DecapodLabs/decapod/compare/v0.82.1...v0.83.0) - 2026-07-25
 
 ### Added
