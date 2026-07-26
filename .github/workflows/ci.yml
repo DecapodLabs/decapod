@@ -187,7 +187,7 @@ jobs:
         run: cargo install cargo-deny && cargo deny --config .config/deny.toml check
 
   # VALIDATE: fan-out from the shared decapod binary built by setup
-  validate:
+  health:
     name: Decapod Validate
     runs-on: ubuntu-latest
     needs: setup
