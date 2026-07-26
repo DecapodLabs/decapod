@@ -32,6 +32,7 @@
     }
   ],
   "evidence": [
+    "validation epoch ve_1e44b4e4dfec6886 completed with zero failures",
     "validation epoch ve_86cdf1e09cd56911 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
@@ -43,7 +44,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:cc98d12d309324f20483ecce0d6738a88df9744813c94a5e897882c057b58b49",
+  "artifact_hash": "sha256:6314cbb665fa31c3a46e6a1c92e751b5771593768c9fdf05a4fde12bc46aed12",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -85,6 +86,13 @@
         "intent_id": "intent:cloud-cutover-01kyen",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:cloud-cutover-01kyen"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:cloud-cutover-01kyen",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:cloud-cutover-01kyen"
       }
     ],
     "trajectories": {
@@ -110,12 +118,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod,tests,docs/book/src/reference/propodus.md,.decapod/config.toml"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_1e44b4e4dfec6886 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 5
   }
 }
