@@ -1436,9 +1436,9 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             .as_deref()
             .is_some_and(|provider| provider != "decapod");
     repo.external_tracker = tracker_is_external;
-    // #688 adds the cloud opt-in boundary only. Fresh init config must keep
-    // local storage canonical until a later sync feature explicitly changes it.
-    repo.mode = crate::cli::BackendType::Local;
+    // Explicit cloud mode is an active backend selection. Local remains the
+    // default when the caller does not opt in.
+    repo.mode = init.mode.clone();
 
     let mut entrypoints = Vec::new();
     let no_entrypoint_flags = !init.claude && !init.gemini && !init.cdx_ep && !init.agents;
@@ -1704,7 +1704,7 @@ fn enrich_repo_context_interactive(
     } else {
         crate::cli::BackendType::Local
     };
-    repo.mode = crate::cli::BackendType::Local;
+    repo.mode = init.mode.clone();
 
     let enable_ci = prompt_yes_no("Scaffold GitHub Action for decapod validate?", init.ci)?;
     init.ci = enable_ci;

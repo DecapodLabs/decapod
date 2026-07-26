@@ -1,7 +1,11 @@
+use crate::cli::{BackendType, CloudConfigSection, DecapodProjectConfig};
 use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
+use crate::core::propodus::{PropodusClient, PropodusTodoStore};
+use crate::core::repo_identity::{RepositoryIdentity, resolve_verified_repository_identity};
 use crate::core::schemas; // Import the new schemas module
+use crate::core::storage::{Task as StorageTask, TodoStore};
 use crate::core::store::Store;
 use crate::core::work_claim;
 use crate::plugins::aptitude;
@@ -4771,8 +4775,317 @@ fn summarize_claim_container_error(err: &str) -> String {
         .collect()
 }
 
+fn cloud_runtime(
+    root: &Path,
+) -> Result<Option<(CloudConfigSection, RepositoryIdentity)>, error::DecapodError> {
+    let project_root = crate::core::store::find_decapod_project_root(
+        &env::current_dir().map_err(error::DecapodError::IoError)?,
+    )
+    .unwrap_or_else(|_| {
+        root.parent()
+            .and_then(Path::parent)
+            .map(Path::to_path_buf)
+            .unwrap_or_else(|| root.to_path_buf())
+    });
+    let config = DecapodProjectConfig::load(&project_root)?;
+    if config.repo.mode != BackendType::Cloud {
+        return Ok(None);
+    }
+    let cloud = config.cloud.ok_or_else(|| {
+        error::DecapodError::Config(
+            "repo.mode=cloud requires an enabled [cloud] configuration".to_string(),
+        )
+    })?;
+    if !cloud.enabled {
+        return Err(error::DecapodError::Config(
+            "repo.mode=cloud requires cloud.enabled=true".to_string(),
+        ));
+    }
+    if cloud.provider != "vercel" {
+        return Err(error::DecapodError::Config(format!(
+            "unsupported cloud provider `{}` for the Propodus todo path",
+            cloud.provider
+        )));
+    }
+    let identity = resolve_verified_repository_identity(&project_root)?;
+    Ok(Some((cloud, identity)))
+}
+
+fn cloud_error(error: anyhow::Error) -> error::DecapodError {
+    error::DecapodError::ValidationError(format!("Propodus cloud todo operation failed: {error}"))
+}
+
+fn cloud_task_from_command(
+    title: &str,
+    description: &str,
+    priority: &str,
+    tags: &str,
+    scope: &str,
+    dir: Option<&String>,
+    repo_id: &str,
+) -> StorageTask {
+    let now = chrono::Utc::now();
+    StorageTask {
+        id: String::new(),
+        repo_id: repo_id.to_string(),
+        hash: String::new(),
+        title: title.trim().to_string(),
+        description: (!description.trim().is_empty()).then(|| description.to_string()),
+        status: "pending".to_string(),
+        assignee: None,
+        scope: if scope.trim().is_empty() {
+            "repo".to_string()
+        } else {
+            scope.trim().to_string()
+        },
+        dir_path: dir.map(|value| value.to_string()).unwrap_or_default(),
+        priority: priority.to_string(),
+        category: String::new(),
+        tags: tags
+            .split(',')
+            .map(str::trim)
+            .filter(|tag| !tag.is_empty())
+            .map(str::to_string)
+            .collect(),
+        created_at: now,
+        updated_at: now,
+        version: 1,
+    }
+}
+
+fn cloud_status_matches(requested: &str, actual: &str) -> bool {
+    match requested {
+        "open" => actual == "pending",
+        "done" => actual == "completed",
+        "all" => true,
+        value => value == actual,
+    }
+}
+
+fn run_cloud_todo_command(
+    root: &Path,
+    command: &TodoCommand,
+    config: &CloudConfigSection,
+    identity: &RepositoryIdentity,
+) -> Result<JsonValue, error::DecapodError> {
+    let client = PropodusClient::from_verified_cloud_config(config, identity)
+        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?;
+    let store = PropodusTodoStore::new(client);
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?;
+    runtime.block_on(run_cloud_todo_command_with_store_async(
+        root,
+        command,
+        &store,
+        &identity.canonical_name,
+    ))
+}
+
+async fn run_cloud_todo_command_with_store_async(
+    root: &Path,
+    command: &TodoCommand,
+    store: &dyn TodoStore,
+    repo_id: &str,
+) -> Result<JsonValue, error::DecapodError> {
+    let actor = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+    let result = match command {
+        TodoCommand::List {
+            status,
+            scope,
+            tags,
+            title_search,
+            dir,
+        } => {
+            let mut items = store.list_tasks().await.map_err(cloud_error)?;
+            items.retain(|task| {
+                cloud_status_matches(status, &task.status)
+                    && scope.as_deref().is_none_or(|value| value == task.scope)
+                    && tags
+                        .as_deref()
+                        .is_none_or(|value| task.tags.iter().any(|tag| tag == value))
+                    && title_search.as_deref().is_none_or(|value| {
+                        task.title.to_lowercase().contains(&value.to_lowercase())
+                    })
+                    && dir.as_deref().is_none_or(|value| task.dir_path == *value)
+            });
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.list",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "backend": "propodus",
+                "items": items,
+            })
+        }
+        TodoCommand::Add {
+            title,
+            description,
+            priority,
+            tags,
+            scope,
+            dir,
+            ..
+        } => {
+            let task = cloud_task_from_command(
+                title,
+                description,
+                priority,
+                tags,
+                scope,
+                dir.as_ref(),
+                repo_id,
+            );
+            let task = store
+                .add_task(
+                    task,
+                    actor.clone(),
+                    format!("intent:todo.add:{}", crate::core::ulid::new_ulid()),
+                )
+                .await
+                .map_err(cloud_error)?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.add",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "backend": "propodus",
+                "id": task.id,
+                "item": task,
+            })
+        }
+        TodoCommand::Get { id } => cloud_get_task(root, store, id).await?,
+        TodoCommand::Show { id, id_positional } => {
+            let task_id = resolve_task_id_arg(id, id_positional, "todo show")?;
+            cloud_get_task(root, store, &task_id).await?
+        }
+        TodoCommand::Claim { id, .. } => {
+            let task = store.claim_task(id, actor).await.map_err(cloud_error)?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.claim",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "backend": "propodus",
+                "id": id,
+                "item": task,
+            })
+        }
+        TodoCommand::Done {
+            id,
+            id_positional,
+            validated,
+            ..
+        } => {
+            if *validated {
+                return Err(error::DecapodError::NotImplemented(
+                    "cloud todo proof capture is not part of the Propodus v1 contract; complete the remote task first, then run a remote proof workflow".to_string(),
+                ));
+            }
+            let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
+            let task = store
+                .complete_task(&task_id, actor, String::new())
+                .await
+                .map_err(cloud_error)?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.done",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "backend": "propodus",
+                "id": task_id,
+                "item": task,
+            })
+        }
+        _ => {
+            return Err(error::DecapodError::NotImplemented(
+                "this todo operation is not in the Propodus v1 contract; cloud mode never falls back to local SQLite".to_string(),
+            ));
+        }
+    };
+    Ok(result)
+}
+
+pub fn run_cloud_todo_command_with_store(
+    root: &Path,
+    command: &TodoCommand,
+    store: &dyn TodoStore,
+) -> Result<JsonValue, error::DecapodError> {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?;
+    runtime.block_on(run_cloud_todo_command_with_store_async(
+        root,
+        command,
+        store,
+        crate::core::repo_identity::DOGFOOD_REPOSITORY,
+    ))
+}
+
+async fn cloud_get_task(
+    root: &Path,
+    store: &dyn TodoStore,
+    id: &str,
+) -> Result<JsonValue, error::DecapodError> {
+    let item = store
+        .list_tasks()
+        .await
+        .map_err(cloud_error)?
+        .into_iter()
+        .find(|task| task.id == id);
+    Ok(serde_json::json!({
+        "ts": now_iso(),
+        "cmd": "todo.get",
+        "status": if item.is_some() { "ok" } else { "not_found" },
+        "root": root.to_string_lossy(),
+        "backend": "propodus",
+        "item": item,
+    }))
+}
+
 pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodError> {
     let root = &store.root;
+    if let Some((cloud, identity)) = cloud_runtime(root)? {
+        let out = run_cloud_todo_command(root, &cli.command, &cloud, &identity)?;
+        match cli.format {
+            OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&out).unwrap()),
+            OutputFormat::Text => {
+                if matches!(cli.command, TodoCommand::List { .. }) {
+                    let items = out
+                        .get("items")
+                        .and_then(JsonValue::as_array)
+                        .cloned()
+                        .unwrap_or_default();
+                    if items.is_empty() {
+                        println!("No tasks found.");
+                    } else {
+                        println!("Cloud tasks (root: {}):", root.display());
+                        for item in items {
+                            println!(
+                                "- {} [{}|{}|{}] {}",
+                                item.get("id").and_then(JsonValue::as_str).unwrap_or("?"),
+                                item.get("status")
+                                    .and_then(JsonValue::as_str)
+                                    .unwrap_or("?"),
+                                item.get("priority")
+                                    .and_then(JsonValue::as_str)
+                                    .unwrap_or("?"),
+                                item.get("scope")
+                                    .and_then(JsonValue::as_str)
+                                    .unwrap_or("repo"),
+                                item.get("title").and_then(JsonValue::as_str).unwrap_or("")
+                            );
+                        }
+                    }
+                } else {
+                    println!("{}", serde_json::to_string(&out).unwrap());
+                }
+            }
+        }
+        return Ok(());
+    }
     let out = match &cli.command {
         TodoCommand::Add { .. } => add_task(root, &cli.command)?,
         TodoCommand::List {

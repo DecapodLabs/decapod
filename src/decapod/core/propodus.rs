@@ -6,6 +6,7 @@
 
 use crate::cli::CloudConfigSection;
 use crate::core::auth;
+use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::storage::{Task as StorageTask, TodoStore};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -25,6 +26,7 @@ pub struct PropodusConfig {
     pub api_url: String,
     pub project_id: String,
     pub repo_id: String,
+    pub immutable_repo_id: Option<String>,
 }
 
 impl From<&CloudConfigSection> for PropodusConfig {
@@ -33,6 +35,7 @@ impl From<&CloudConfigSection> for PropodusConfig {
             api_url: config.api_url.clone(),
             project_id: config.project_id.clone(),
             repo_id: config.repo_id.clone(),
+            immutable_repo_id: None,
         }
     }
 }
@@ -238,6 +241,7 @@ impl std::error::Error for PropodusClientError {}
 pub struct PropodusClient<T = CurlTransport> {
     api_url: String,
     repo_id: String,
+    immutable_repo_id: Option<String>,
     credential: String,
     transport: T,
 }
@@ -247,6 +251,21 @@ impl PropodusClient<CurlTransport> {
         let credential = auth::load_cloud_credential(None)
             .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
         Self::with_transport(&config.into(), &credential.token, CurlTransport::default())
+    }
+
+    pub fn from_verified_cloud_config(
+        config: &CloudConfigSection,
+        identity: &RepositoryIdentity,
+    ) -> Result<Self, PropodusClientError> {
+        let credential = auth::load_cloud_credential(None)
+            .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+        let config = PropodusConfig {
+            api_url: config.api_url.clone(),
+            project_id: config.project_id.clone(),
+            repo_id: identity.canonical_name.clone(),
+            immutable_repo_id: Some(identity.immutable_id.clone()),
+        };
+        Self::with_transport(&config, &credential.token, CurlTransport::default())
     }
 }
 
@@ -272,9 +291,16 @@ impl<T: PropodusTransport> PropodusClient<T> {
                 "a bearer credential is required".to_string(),
             ));
         }
+        let immutable_repo_id = config
+            .immutable_repo_id
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(str::to_string);
         Ok(Self {
             api_url: api_url.to_string(),
             repo_id: config.repo_id.trim().to_string(),
+            immutable_repo_id,
             credential: credential.trim().to_string(),
             transport,
         })
@@ -282,6 +308,10 @@ impl<T: PropodusTransport> PropodusClient<T> {
 
     pub fn repo_id(&self) -> &str {
         &self.repo_id
+    }
+
+    pub fn immutable_repo_id(&self) -> Option<&str> {
+        self.immutable_repo_id.as_deref()
     }
 
     /// Verify that the configured Propodus endpoint is reachable and returns
@@ -353,15 +383,24 @@ impl<T: PropodusTransport> PropodusClient<T> {
         })
     }
 
-    pub fn claim_todo(&self, id: &str, actor: &str) -> Result<(), PropodusClientError> {
+    pub fn claim_todo(&self, id: &str, actor: &str) -> Result<PropodusTodo, PropodusClientError> {
         self.update_todo(id, PROPODUS_STATUS_IN_PROGRESS, actor)
     }
 
-    pub fn complete_todo(&self, id: &str, actor: &str) -> Result<(), PropodusClientError> {
+    pub fn complete_todo(
+        &self,
+        id: &str,
+        actor: &str,
+    ) -> Result<PropodusTodo, PropodusClientError> {
         self.update_todo(id, PROPODUS_STATUS_COMPLETED, actor)
     }
 
-    fn update_todo(&self, id: &str, status: &str, actor: &str) -> Result<(), PropodusClientError> {
+    fn update_todo(
+        &self,
+        id: &str,
+        status: &str,
+        actor: &str,
+    ) -> Result<PropodusTodo, PropodusClientError> {
         if id.trim().is_empty() || actor.trim().is_empty() {
             return Err(PropodusClientError::Validation(
                 "todo id and actor are required".to_string(),
@@ -382,7 +421,9 @@ impl<T: PropodusTransport> PropodusClient<T> {
         let response = self.send("PATCH", &url, Some(&body))?;
         let payload: PropodusMutationResponse = decode_json(&response.body)?;
         if payload.ok {
-            Ok(())
+            payload.todo.ok_or_else(|| {
+                PropodusClientError::Decode("successful update response omitted todo".to_string())
+            })
         } else {
             Err(payload
                 .error
@@ -436,16 +477,17 @@ impl<T: PropodusTransport> TodoStore for PropodusTodoStore<T> {
         task: StorageTask,
         actor: String,
         _intent: String,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<StorageTask> {
         self.client
             .create_todo(&task.title, task.description.as_deref(), Some(&actor))
-            .map(|_| ())
+            .map(to_storage_task)
             .map_err(|error| anyhow::anyhow!(error.to_string()))
     }
 
-    async fn claim_task(&self, id: &str, actor: String) -> anyhow::Result<()> {
+    async fn claim_task(&self, id: &str, actor: String) -> anyhow::Result<StorageTask> {
         self.client
             .claim_todo(id, &actor)
+            .map(to_storage_task)
             .map_err(|error| anyhow::anyhow!(error.to_string()))
     }
 
@@ -454,9 +496,10 @@ impl<T: PropodusTransport> TodoStore for PropodusTodoStore<T> {
         id: &str,
         actor: String,
         _resolution: String,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<StorageTask> {
         self.client
             .complete_todo(id, &actor)
+            .map(to_storage_task)
             .map_err(|error| anyhow::anyhow!(error.to_string()))
     }
 }

@@ -58,9 +58,9 @@ pub struct Decision {
 #[async_trait]
 pub trait TodoStore: Send + Sync {
     async fn list_tasks(&self) -> Result<Vec<Task>>;
-    async fn add_task(&self, task: Task, actor: String, intent: String) -> Result<()>;
-    async fn claim_task(&self, id: &str, actor: String) -> Result<()>;
-    async fn complete_task(&self, id: &str, actor: String, resolution: String) -> Result<()>;
+    async fn add_task(&self, task: Task, actor: String, intent: String) -> Result<Task>;
+    async fn claim_task(&self, id: &str, actor: String) -> Result<Task>;
+    async fn complete_task(&self, id: &str, actor: String, resolution: String) -> Result<Task>;
 }
 
 #[async_trait]

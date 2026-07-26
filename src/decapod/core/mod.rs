@@ -40,6 +40,7 @@ pub mod pool;
 pub mod project_specs;
 pub mod proof;
 pub mod propodus;
+pub mod repo_identity;
 pub mod repomap;
 pub mod research_claims;
 pub mod rpc;
