@@ -234,12 +234,12 @@ pub(crate) struct InitGroupCli {
     /// Proof command in `name=command` form (repeatable/comma-separated).
     #[clap(long = "proof-command", value_delimiter = ',')]
     pub proof_commands: Vec<String>,
-    /// Init storage boundary: 'local' (default) or 'cloud' (experimental, account required).
+    /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
-    /// Cloud mode records non-secret Decapod Cloud intent in `.decapod/config.toml`.
+    /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
     /// It does not perform login, provisioning, or sync during init.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
-    pub mode: BackendType,
+    pub backend: BackendType,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -363,12 +363,12 @@ pub(crate) struct InitWithCli {
     /// Proof command in `name=command` form (repeatable/comma-separated).
     #[clap(long = "proof-command", value_delimiter = ',')]
     pub proof_commands: Vec<String>,
-    /// Init storage boundary: 'local' (default) or 'cloud' (experimental, account required).
+    /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
-    /// Cloud mode records non-secret Decapod Cloud intent in `.decapod/config.toml`.
+    /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
     /// It does not perform login, provisioning, or sync during init.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
-    pub mode: BackendType,
+    pub backend: BackendType,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -590,13 +590,9 @@ pub struct RepoContext {
     pub external_tracker: bool,
     #[serde(default = "default_container_workspaces_true")]
     pub container_workspaces: bool,
-    /// Canonical repository backend selection. The legacy `mode` field remains
-    /// accepted for compatibility and is used only when this field is absent.
+    /// Canonical repository backend selection.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backend: Option<BackendType>,
-    /// Legacy backend selector retained as a read-compatible input.
-    #[serde(default)]
-    pub mode: BackendType,
     #[serde(
         rename = "declared_capabilities",
         alias = "capabilities",
@@ -609,16 +605,14 @@ pub struct RepoContext {
 }
 
 impl RepoContext {
-    /// Resolve the canonical backend while accepting pre-backend config files.
+    /// Resolve the configured repository backend.
     pub fn effective_backend(&self) -> BackendType {
-        self.backend.unwrap_or(self.mode)
+        self.backend.unwrap_or_default()
     }
 
-    /// Set the canonical backend and keep the legacy field coherent for older
-    /// readers that still inspect `repo.mode` directly.
+    /// Set the canonical repository backend.
     pub fn set_backend(&mut self, backend: BackendType) {
         self.backend = Some(backend);
-        self.mode = backend;
     }
 }
 
@@ -1825,11 +1819,9 @@ mod tests {
     use super::{BackendType, RepoContext};
 
     #[test]
-    fn backend_field_takes_precedence_over_legacy_mode() {
-        let mut context = RepoContext {
-            mode: BackendType::Cloud,
-            ..RepoContext::default()
-        };
+    fn backend_field_selects_the_repository_backend() {
+        let mut context = RepoContext::default();
+        context.backend = Some(BackendType::Cloud);
         assert_eq!(context.effective_backend(), BackendType::Cloud);
 
         context.backend = Some(BackendType::Local);
@@ -1837,11 +1829,10 @@ mod tests {
     }
 
     #[test]
-    fn setting_backend_keeps_legacy_mode_readers_coherent() {
+    fn setting_backend_selects_the_canonical_config_field() {
         let mut context = RepoContext::default();
         context.set_backend(BackendType::Cloud);
         assert_eq!(context.backend, Some(BackendType::Cloud));
-        assert_eq!(context.mode, BackendType::Cloud);
         assert_eq!(context.effective_backend(), BackendType::Cloud);
     }
 }

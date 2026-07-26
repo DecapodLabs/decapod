@@ -4072,6 +4072,13 @@ fn validate_markdown_primitives_roundtrip_gate(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("Markdown Primitive Round-Trip Gate");
+    if DbBroker::new(&store.root).is_cloud() {
+        skip(
+            "Markdown primitive round-trip is local-store-only; cloud todo proof is supplied by the Propodus contract and protected production proof",
+            ctx,
+        );
+        return Ok(());
+    }
     match primitives::validate_roundtrip_gate(store) {
         Ok(()) => {
             pass(

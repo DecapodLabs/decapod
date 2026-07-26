@@ -89,7 +89,7 @@ them to repository configuration, generated governance, URLs, or commits.
 
 From a fresh checkout of the canonical repository:
 
-1. Run `decapod init --mode cloud --proof` and confirm `.decapod/config.toml`
+1. Run `decapod init --backend cloud --proof` and confirm `.decapod/config.toml`
    contains `repo.backend = "cloud"`, `[cloud].enabled = true`, and the intended
    Propodus `api_url`. The endpoint is selected only from this project config;
    no service URL is inferred from credentials.

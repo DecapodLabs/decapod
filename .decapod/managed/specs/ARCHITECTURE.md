@@ -51,8 +51,13 @@ This project's architecture consists of the following key layers/directories:
 - Define the strongest existing primitives in the codebase (e.g., helper utilities, base controllers, data access layers).
 
 ## Topology
-```text
-Host Application -> Library API -> Domain Core -> Adapters (Store / Network)
+```mermaid
+flowchart LR
+  H[Host Application] --> L[Library API]
+  L --> D[Domain Core]
+  D --> AD[Adapter Layer]
+  AD --> DB[(Store)]
+  AD --> N[Network]
 ```
 
 ## Store Boundaries
@@ -64,8 +69,18 @@ flowchart LR
 ```
 
 ## Happy Path Sequence
-```text
-Client request -> API validation -> domain execution -> persistence -> response with trace id
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant G as API
+  participant D as Domain
+  participant DB as Datastore
+  C->>G: Request
+  G->>D: Validate + execute
+  D->>DB: Commit transaction
+  DB-->>D: Commit ok
+  D-->>G: Domain result
+  G-->>C: Response + trace_id
 ```
 
 ## Error Path
@@ -123,7 +138,7 @@ sequenceDiagram
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `32250d0b66f0149a84299933c8152b0ef32fc76c75ce65775cf181a2ee5aa2e0`
+- Repository signal fingerprint: `4b90d3e50a5c0a0113a3cc5c2c7b7bd178b159861eb3307967669fc7f72694cd`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

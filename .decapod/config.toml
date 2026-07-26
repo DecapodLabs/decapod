@@ -3,7 +3,7 @@ schema_version = "1.0.0"
 [init]
 specs = true
 ci = true
-diagram_style = "ascii"
+diagram_style = "mermaid"
 entrypoints = [
     "AGENTS.md",
     "CLAUDE.md",
@@ -29,7 +29,6 @@ detected_surfaces = [
 external_tracker = false
 container_workspaces = true
 backend = "cloud"
-mode = "cloud"
 declared_capabilities = [
     "agent-helper",
     "authentication",

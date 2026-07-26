@@ -136,7 +136,7 @@ fn git(dir: &std::path::Path, args: &[&str]) {
 fn cloud_project() -> TempDir {
     let project = tempfile::tempdir().expect("project tempdir");
     let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(project.path())
         .output()
         .expect("init cloud project");

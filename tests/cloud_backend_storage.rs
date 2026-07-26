@@ -21,7 +21,7 @@ fn test_cloud_opt_in_fails_closed_without_verified_remote() {
     let dir = tmp.path().to_path_buf();
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -55,7 +55,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     let dir = tmp.path().to_path_buf();
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .env_remove("SUPABASE_URL")
         .env_remove("SUPABASE_KEY")
         .current_dir(&dir)
@@ -76,7 +76,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     assert!(config.contains("provider = \"vercel\""));
     assert!(config.contains("api_url = \"https://project-oqn7i.vercel.app\""));
     assert!(config.contains("backend = \"cloud\""));
-    assert!(config.contains("mode = \"cloud\""));
+    assert!(!config.contains("mode = \"cloud\""));
     assert!(!config.contains("SUPABASE"));
     assert!(!config.contains("supabase"));
     assert!(!config.contains("token"));
@@ -108,7 +108,7 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path().to_path_buf();
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -144,11 +144,11 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
 }
 
 #[test]
-fn canonical_backend_selection_overrides_legacy_mode_without_local_fallback() {
+fn canonical_backend_selection_uses_cloud_without_local_fallback() {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path().to_path_buf();
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -156,11 +156,7 @@ fn canonical_backend_selection_overrides_legacy_mode_without_local_fallback() {
     let config_path = dir.join(".decapod/config.toml");
     let config = std::fs::read_to_string(&config_path).expect("config");
     assert!(config.contains("backend = \"cloud\""));
-    std::fs::write(
-        config_path,
-        config.replace("mode = \"cloud\"", "mode = \"local\""),
-    )
-    .expect("rewrite legacy compatibility field");
+    assert!(!config.contains("mode = "));
 
     git(
         &dir,

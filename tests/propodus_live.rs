@@ -24,7 +24,7 @@ fn run_decapod(dir: &Path, args: &[&str], agent: &str, token: &str) -> std::proc
 
 fn prepare_cloud_repo(dir: &Path, api_url: &str, remote: &str) {
     let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(dir)
         .output()
         .expect("initialize cloud proof repository");

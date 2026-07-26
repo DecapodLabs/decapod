@@ -1,4 +1,5 @@
-# Validation
+# Validation## Validation Philosophy
+> Validation is a release gate, not documentation theater.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -39,9 +40,6 @@
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Validation Philosophy
-> Validation is a release gate, not documentation theater.
 
 ## Validation Harness
 Define the test and verification harness used by this project.
@@ -146,7 +144,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `32250d0b66f0149a84299933c8152b0ef32fc76c75ce65775cf181a2ee5aa2e0`
+- Repository signal fingerprint: `4b90d3e50a5c0a0113a3cc5c2c7b7bd178b159861eb3307967669fc7f72694cd`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
