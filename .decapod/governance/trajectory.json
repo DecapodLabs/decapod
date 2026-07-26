@@ -8,6 +8,7 @@
   "current_phase": "validation",
   "next_transitions": [
     "await CI and review feedback",
+    "await review",
     "commit proof-backed changes, publish PR, then rerun protected validation in the published workspace",
     "implement typed contract, test, refresh specs, validate, publish PR",
     "publish",
@@ -46,10 +47,12 @@
   "declared_commands": [
     "cargo fmt --all",
     "cargo test -- --test-threads=1",
+    "decapod govern trajectory record",
     "decapod rpc --op specs.refresh",
     "decapod validate",
     "decapod validate --format json",
     "gh pr create --repo DecapodLabs/decapod",
+    "gh run 30191503487",
     "git push origin agent/unknown/code_01kyeg2sh0z2j8b0-propodus-next-wave",
     "podman run ... decapod validate --format json"
   ],
@@ -64,6 +67,10 @@
       "status": "failed"
     },
     {
+      "name": "container_validation",
+      "status": "passed"
+    },
+    {
       "name": "decapod validate",
       "status": "passed"
     },
@@ -76,18 +83,29 @@
       "status": "passed"
     },
     {
+      "name": "pr_ci",
+      "status": "passed"
+    },
+    {
       "name": "publish",
       "status": "passed"
     },
     {
       "name": "targeted_cloud_contract_tests",
       "status": "passed"
+    },
+    {
+      "name": "targeted_tests",
+      "status": "passed"
     }
   ],
   "evidence": [
     "206 parallel tests initially passed before known entrypoint session race; serial targeted suites passed; serial full suite reached pre-existing release_artifact_policy failure for inline tests in cli.rs/cloud_backend.rs/repo_identity.rs; validation reported 197 passes with host container/dirty/plan gates",
+    "Container validation receipt status=ok with fail_count=0",
     "Containerized Decapod v0.83.2 validation exited 0 with 201 passing gates and 7 existing warnings; no failure gates",
     "PR #1043 created at https://github.com/DecapodLabs/decapod/pull/1043",
+    "PR #1043 published at https://github.com/DecapodLabs/decapod/pull/1043",
+    "PR CI run 30191503487 all required jobs passed",
     "validation epoch ve_2e41a0824e6dc01a completed with zero failures",
     "validation epoch ve_a7f64761462dd611 completed with zero failures"
   ],
@@ -95,6 +113,7 @@
   "unresolved_assumptions": [
     "Live provider deployment credentials and hosted policy remain outside Decapod proof"
   ],
+  "completion_claim": "Provider-neutral onboarding and repository identity boundary are implemented, tested, spec-refreshed, container-validated, and published in PR #1043; live provider exchange remains deferred until its contract is proven.",
   "proof_status": "failed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -102,7 +121,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:2f5d71852ceda8e8cac89ea95df15bc406e03f9c024e35dece759758244956bb",
+  "artifact_hash": "sha256:ddb7d6a99a79e28229959bdebee28f713247155154c1c80670c10dd58d0bc64f",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -183,6 +202,20 @@
       {
         "sequence": 10,
         "event_id": "event:10",
+        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:propodus-next-wave-01kyeg"
+      },
+      {
+        "sequence": 11,
+        "event_id": "event:11",
+        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:propodus-next-wave-01kyeg"
+      },
+      {
+        "sequence": 12,
+        "event_id": "event:12",
         "intent_id": "intent:propodus-next-wave-01kyeg",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:propodus-next-wave-01kyeg"
@@ -336,12 +369,53 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:10"
+          },
+          {
+            "sequence": 11,
+            "action": "validation",
+            "command": "decapod govern trajectory record",
+            "scope": [
+              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "PR #1043 published at https://github.com/DecapodLabs/decapod/pull/1043",
+              "Container validation receipt status=ok with fail_count=0",
+              "PR CI run 30191503487 all required jobs passed"
+            ],
+            "proof_refs": [
+              "cargo_fmt",
+              "targeted_tests",
+              "container_validation",
+              "pr_ci"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:11"
+          },
+          {
+            "sequence": 12,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a7f64761462dd611 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:12"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 10
+    "next_sequence": 12
   }
 }
