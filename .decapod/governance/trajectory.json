@@ -102,7 +102,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:68af468dcd1d311058eadfdf4c9eb5f468b6024c1b6d3f5c6cdb1cc19b908edb",
+  "artifact_hash": "sha256:2f5d71852ceda8e8cac89ea95df15bc406e03f9c024e35dece759758244956bb",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -176,6 +176,13 @@
       {
         "sequence": 9,
         "event_id": "event:9",
+        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:propodus-next-wave-01kyeg"
+      },
+      {
+        "sequence": 10,
+        "event_id": "event:10",
         "intent_id": "intent:propodus-next-wave-01kyeg",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:propodus-next-wave-01kyeg"
@@ -311,12 +318,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:9"
+          },
+          {
+            "sequence": 10,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_a7f64761462dd611 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:10"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 9
+    "next_sequence": 10
   }
 }
