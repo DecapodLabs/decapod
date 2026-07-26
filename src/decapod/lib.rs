@@ -2117,7 +2117,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             tracker_url: init_group.tracker_url.clone(),
                             declared_context_sources: init_group.declared_context_sources.clone(),
                             proof_commands: init_group.proof_commands.clone(),
-                            mode: init_group.mode.clone(),
+                            mode: init_group.mode,
                             git: init_group.git,
                             no_git: init_group.no_git,
                         }
