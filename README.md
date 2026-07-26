@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  You keep working in your harness (Cursor, Claude Code, Codex, Antigravity, or any agent tool). Decapod gives those agents a shared governance layer inside the repo.
+  You keep working in Cursor, Claude Code, Codex, Antigravity, or any other harness; Decapod gives the agents operating there a shared governance kernel inside the repository.
 </p>
 
 <p align="center">
@@ -55,7 +55,7 @@ flowchart LR
         UserOut["User"]
     end
 
-    subgraph Tools["Agent Harness"]
+    subgraph Harness["Agent Harness"]
         Harness["Harness<br/>(Cursor, Codex,<br/>Claude Code, ...)"]
     end
 
@@ -67,25 +67,27 @@ flowchart LR
         Decapod["Decapod"]
     end
 
-    subgraph Actor["Agent<br/>(LLM Actor)"]
+    subgraph Agent["Agent"]
         Agent["Agent"]
     end
 
     UserIn == "intent" ==> Harness
     Harness == "governed request" ==> Agent
 
-    Agent == "pre-inference<br/>call" ==> Decapod
-    Decapod == "intent, context,<br/>gates" ==> Agent
+    %% Optional pre-inference governance
+    Agent -.->|"may call Decapod\n(pre-inference)"| Decapod
+    Decapod -.->|"intent, context,\ngates" ==> Agent
 
     Agent == "inference" ==> Model
     Model == "response" ==> Agent
 
-    Agent == "post-inference<br/>call" ==> Decapod
-    Decapod == "boundaries,<br/>checks, proof" ==> Agent
+    %% Optional post-inference verification/proof
+    Agent -.->|"may call Decapod\n(post-inference)"| Decapod
+    Decapod -.->|"boundaries,\nchecks, proof" ==> Agent
 
     Agent == "verified result" ==> UserOut
 
-    Agent -.- "clarification<br/>ping" -.- UserIn
+    Agent -.- "clarification\nping" -.- UserIn
 
     style UserIn fill:#ff6b9d,stroke:#c44569,color:#fff
     style UserOut fill:#ff6b9d,stroke:#c44569,color:#fff
@@ -97,12 +99,11 @@ flowchart LR
     style Tools fill:#eff6ff,stroke:#bfdbfe,color:#000
     style Intelligence fill:#ecfdf5,stroke:#a7f3d0,color:#000
     style Governance fill:#fef9c3,stroke:#fde047,color:#000
-    style Actor fill:#faf5ff,stroke:#e9d5ff,color:#000
 ```
 
 **Harness ↔ User pings** — The harness can ping the user for additional context when intent is unclear or verification needs human input.
 
-Decapod is called by the agent at governance boundaries. Before inference, the agent branches into Decapod to shape intent, context, and gates. After inference, the agent branches into Decapod when the work needs boundary checks, verification, proof, or another governed pass. Each call may recurse until the work is shaped, bounded, and provable. Decapod is not the agent and not the model; it is the governance kernel the agent calls whenever work needs control.
+Decapod is called by the agent at governance boundaries. Before inference, the agent *may* branch into Decapod to shape intent, context, and gates. After inference, the agent *may* branch into Decapod when the work needs boundary checks, verification, proof, or another governed pass. Each call may recurse until the work is shaped, bounded, and provable. Decapod is not the agent and not the model; it is the governance kernel the agent calls whenever work needs control.
 
 Decapod is called before:
 
@@ -140,7 +141,7 @@ Decapod preserves what agent workbenches lose: governed project state that survi
     artifacts/     # Verification output and proof provenance
   data/            # Durable repo-native state (DBs, events, todos)
   governance/      # Trajectory, proof rubrics, validation receipts
-  workspaces/      # Isolated git worktrees and container workspaces
+  workspaces/      # Isolated git worktrees (container workspaces require explicit opt-in)
   config.toml      # Project shape and agent-facing configuration
   OVERRIDE.md      # Local rules that override embedded defaults
 ```
@@ -164,14 +165,15 @@ Decapod does not make agents smarter by giving them longer conversations. It mak
 
 Decapod ships with an embedded engineering constitution: 100+ embedded constitution documents covering architecture, security, performance, and testing.
 
-Everything an engineering org usually keeps in tribal memory or review culture becomes executable guidance. Your agent does not guess; it reads the constitution, cites claim IDs, follows gates, and produces proof.
+An engineering organization’s tribal knowledge and review culture becomes *executable guidance* through the constitution. Agents consult the constitution, cite claim IDs, follow gates, and produce proof — reducing guesswork but not eliminating the need for judgment.
 
 ---
 
 ## Guarantees
 
 - **Daemonless** — Runs on demand like `git` or `grep`.
-- **Repo-native** — All state lives in your repository.
+- **Repo-native** — State lives in your repository by default (configurable).
+- **Provider-agnostic** — Works with any model provider, agent harness, or toolchain (behavior may vary per integration).
 - **Completion requires passed proof-plan gates** — `VERIFIED` status requires passed proof-plan gates (INV-PROOF-GATED).
 - **Enforces protected paths and branch isolation (configured)** — Protected paths and branch isolation enforced per `.decapod/config.toml`.
 
@@ -184,8 +186,10 @@ Decapod is not an agent framework, prompt pack, model router, or generic orchest
 Decapod provides comprehensive documentation for both human operators and AI agents.
 
 - **[Human Documentation (mdBook)](https://decapodlabs.github.io/decapod/)**: Conceptual overview, workflows, adoption guide, and reference.
-- **[Agent Orientation Corpus (embedded, via `decapod docs ingest`)**: API-awareness layer for agents, including command contracts and payload examples.
+- **Agent Orientation Corpus** (embedded, via `decapod docs ingest`): API-awareness layer for agents, including command contracts and payload examples.
 - **[Universal Agent Contract (AGENTS.md)](AGENTS.md)**: The machine-readable entrypoint for all agents operating in this repo.
+
+---
 
 ## Contributing
 
