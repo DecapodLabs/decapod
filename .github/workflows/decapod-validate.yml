@@ -13,16 +13,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Cache Decapod
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/bin/decapod
-          key: ${{ runner.os }}-decapod-${{ hashFiles('Cargo.toml', 'Cargo.lock') }}
-      - name: Install Decapod
-        run: |
-          if ! command -v decapod &> /dev/null; then
-            cargo install decapod
-          fi
+      - name: Build branch Decapod binary
+        run: cargo build --release --bin decapod
+      - name: Select branch Decapod binary
+        run: echo "$PWD/target/release" >> "$GITHUB_PATH"
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1
