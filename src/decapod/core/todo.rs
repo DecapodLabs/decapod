@@ -3,7 +3,7 @@ use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
 use crate::core::propodus::{PropodusClient, PropodusTodoStore};
-use crate::core::repo_identity::{RepositoryIdentity, resolve_verified_repository_identity};
+use crate::core::repo_identity::{RepositoryIdentity, resolve_dogfood_repository_identity};
 use crate::core::schemas; // Import the new schemas module
 use crate::core::storage::{Task as StorageTask, TodoStore};
 use crate::core::store::Store;
@@ -4778,15 +4778,15 @@ fn summarize_claim_container_error(err: &str) -> String {
 fn cloud_runtime(
     root: &Path,
 ) -> Result<Option<(CloudConfigSection, RepositoryIdentity)>, error::DecapodError> {
-    let project_root = crate::core::store::find_decapod_project_root(
-        &env::current_dir().map_err(error::DecapodError::IoError)?,
-    )
-    .unwrap_or_else(|_| {
-        root.parent()
-            .and_then(Path::parent)
-            .map(Path::to_path_buf)
-            .unwrap_or_else(|| root.to_path_buf())
-    });
+    let project_root = root
+        .parent()
+        .and_then(Path::parent)
+        .map(Path::to_path_buf)
+        .ok_or_else(|| {
+            error::DecapodError::Config(
+                "unable to resolve the project root for cloud todo configuration".to_string(),
+            )
+        })?;
     let config = DecapodProjectConfig::load(&project_root)?;
     if config.repo.mode != BackendType::Cloud {
         return Ok(None);
@@ -4807,12 +4807,37 @@ fn cloud_runtime(
             cloud.provider
         )));
     }
-    let identity = resolve_verified_repository_identity(&project_root)?;
+    let identity = resolve_dogfood_repository_identity(&project_root)?;
     Ok(Some((cloud, identity)))
 }
 
 fn cloud_error(error: anyhow::Error) -> error::DecapodError {
     error::DecapodError::ValidationError(format!("Propodus cloud todo operation failed: {error}"))
+}
+
+pub trait CloudTodoStoreFactory {
+    fn build(
+        &self,
+        config: &CloudConfigSection,
+        identity: &RepositoryIdentity,
+    ) -> Result<Box<dyn TodoStore>, error::DecapodError>;
+}
+
+struct PropodusCloudTodoStoreFactory;
+
+impl CloudTodoStoreFactory for PropodusCloudTodoStoreFactory {
+    fn build(
+        &self,
+        config: &CloudConfigSection,
+        identity: &RepositoryIdentity,
+    ) -> Result<Box<dyn TodoStore>, error::DecapodError> {
+        let client = PropodusClient::from_dogfood_cloud_config(config, identity).map_err(|error| {
+            error::DecapodError::ValidationError(format!(
+                "Propodus credential/configuration preflight failed: {error}. Configure a Propodus-issued bearer through DECAPOD_ACCESS_TOKEN or the machine credential file; Decapod does not mint provider tokens."
+            ))
+        })?;
+        Ok(Box::new(PropodusTodoStore::new(client)))
+    }
 }
 
 fn cloud_task_from_command(
@@ -4862,15 +4887,14 @@ fn cloud_status_matches(requested: &str, actual: &str) -> bool {
     }
 }
 
-fn run_cloud_todo_command(
+fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     root: &Path,
     command: &TodoCommand,
     config: &CloudConfigSection,
     identity: &RepositoryIdentity,
+    factory: &F,
 ) -> Result<JsonValue, error::DecapodError> {
-    let client = PropodusClient::from_verified_cloud_config(config, identity)
-        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?;
-    let store = PropodusTodoStore::new(client);
+    let store = factory.build(config, identity)?;
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -4878,7 +4902,7 @@ fn run_cloud_todo_command(
     runtime.block_on(run_cloud_todo_command_with_store_async(
         root,
         command,
-        &store,
+        store.as_ref(),
         &identity.canonical_name,
     ))
 }
@@ -4980,7 +5004,7 @@ async fn run_cloud_todo_command_with_store_async(
         } => {
             if *validated {
                 return Err(error::DecapodError::NotImplemented(
-                    "cloud todo proof capture is not part of the Propodus v1 contract; complete the remote task first, then run a remote proof workflow".to_string(),
+                    "cloud todo --validated is intentionally unsupported in Propodus v1: the service has no proof-capture contract. Complete the remote task first, then run a separate local/remote proof workflow; see docs/book/src/reference/propodus.md".to_string(),
                 ));
             }
             let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
@@ -5046,9 +5070,18 @@ async fn cloud_get_task(
 }
 
 pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodError> {
+    run_todo_cli_with_cloud_factory(store, cli, &PropodusCloudTodoStoreFactory)
+}
+
+pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
+    store: &Store,
+    cli: TodoCli,
+    factory: &F,
+) -> Result<(), error::DecapodError> {
     let root = &store.root;
     if let Some((cloud, identity)) = cloud_runtime(root)? {
-        let out = run_cloud_todo_command(root, &cli.command, &cloud, &identity)?;
+        let out =
+            run_cloud_todo_command_with_factory(root, &cli.command, &cloud, &identity, factory)?;
         match cli.format {
             OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&out).unwrap()),
             OutputFormat::Text => {

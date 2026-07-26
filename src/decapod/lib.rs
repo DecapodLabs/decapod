@@ -7,6 +7,7 @@
 //! docs and constitution documents, not in Rust source comments.
 
 pub(crate) mod cli;
+pub use cli::CloudConfigSection;
 pub mod constitution;
 pub mod core;
 pub(crate) mod plan_governance;
@@ -145,7 +146,10 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
         CloudCommand::Login => auth::perform_cloud_auth(&std::env::current_dir()?),
         CloudCommand::Status => match auth::load_cloud_credential(None) {
             Ok(credential) => {
-                println!("cloud credential available ({:?})", credential.source);
+                println!(
+                    "Propodus bearer configured ({:?}); issuer, audience, GitHub subject, repository, and seat claims are validated by Propodus",
+                    credential.source
+                );
                 Ok(())
             }
             Err(error::DecapodError::SessionError(message)) => {
@@ -2234,9 +2238,12 @@ pub fn run() -> Result<(), error::DecapodError> {
             // For other commands, ensure .decapod exists in the GOVERNANCE root
             let decapod_root_path = governance_root.join(".decapod");
             store_root = decapod_root_path.join("data");
-            std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
+            let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
+            if !cloud_todo_command {
+                std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
+            }
 
-            if should_route_via_group_broker(&cli.command, &argv) {
+            if !cloud_todo_command && should_route_via_group_broker(&cli.command, &argv) {
                 match core::group_broker::maybe_route_mutation(&store_root, &argv) {
                     Err(e) => {
                         if !core::group_broker::is_internal_invocation() {
@@ -2263,22 +2270,24 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Check for version/schema changes and run protected migrations if needed.
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
-            let migration_result =
-                migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
-                    subsystems::initialize_all_dbs(data_root)
-                });
-            match migration_result {
-                Ok(()) => {}
-                Err(e) if is_validate_cmd => {
-                    let normalized = normalize_validate_error(e);
-                    return Err(attach_validate_diagnostic_if_enabled(
-                        normalized,
-                        &workspace_root,
-                        0,
-                        validate_timeout_secs(),
-                    ));
+            if !cloud_todo_command {
+                let migration_result =
+                    migration::check_and_migrate_with_backup(&decapod_root_path, |data_root| {
+                        subsystems::initialize_all_dbs(data_root)
+                    });
+                match migration_result {
+                    Ok(()) => {}
+                    Err(e) if is_validate_cmd => {
+                        let normalized = normalize_validate_error(e);
+                        return Err(attach_validate_diagnostic_if_enabled(
+                            normalized,
+                            &workspace_root,
+                            0,
+                            validate_timeout_secs(),
+                        ));
+                    }
+                    Err(e) => return Err(e),
                 }
-                Err(e) => return Err(e),
             }
 
             // Best-effort hygiene: routinely scrub stale git worktree metadata/config.
@@ -2294,7 +2303,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                 root: store_root.clone(),
             };
 
-            if should_auto_clock_in(&cli.command)
+            if !cloud_todo_command
+                && should_auto_clock_in(&cli.command)
                 && let Err(e) =
                     retry_transient_sqlite(|| todo::clock_in_agent_presence(&project_store), 4)
             {
@@ -2460,6 +2470,17 @@ fn should_auto_clock_in(command: &Command) -> bool {
         | Command::System(_) => false,
         _ => true,
     }
+}
+
+fn is_cloud_todo_command(
+    command: &Command,
+    workspace_root: &Path,
+) -> Result<bool, error::DecapodError> {
+    if !matches!(command, Command::Todo(_)) {
+        return Ok(false);
+    }
+    Ok(load_project_config_if_present(workspace_root)?
+        .is_some_and(|config| config.repo.mode == crate::cli::BackendType::Cloud))
 }
 
 fn command_requires_worktree(command: &Command) -> bool {
