@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "title": "Propodus phase 2 alignment: cloud command path and dogfood proof",
   "intent": "Align PR #1036 with Decapod issues #1032-#1035 and #1037: activate explicit cloud todo storage through the typed Propodus adapter, derive and fail-closed on canonical GitHub repository identity, consume a machine-local Propodus bearer boundary without embedding service identity policy, and provide a protected command-level dogfood proof while preserving local offline defaults.",
-  "state": "EXECUTING",
+  "state": "DONE",
   "todo_ids": [
     "cicd_01kydv7dsj7sayv4"
   ],
@@ -11,14 +11,12 @@
     "cargo test",
     "decapod validate"
   ],
-  "unknowns": [
-    "Propodus #24 must provide the GitHub login/token exchange before Decapod can replace the legacy interactive login flow."
-  ],
+  "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [
-    "Propodus must expose an immutable repository identity field or authenticated resolver input before production cloud selection can require it."
+    "Propodus issue #24 must expose the GitHub login/token exchange before Decapod can replace the legacy interactive login flow; this PR consumes only the machine bearer contract available in Propodus PR #31."
   ],
   "constraints": {
     "forbidden_paths": [],
@@ -65,10 +63,10 @@
       "entry_gates": [],
       "exit_gates": [],
       "entered": true,
-      "completed": false,
+      "completed": true,
       "entered_at": "1785027089Z",
-      "completed_at": null
+      "completed_at": "1785029250Z"
     }
   ],
-  "updated_at": "1785027089Z"
+  "updated_at": "1785029250Z"
 }
