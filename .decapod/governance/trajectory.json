@@ -6,6 +6,9 @@
   "original_intent": "Start Propodus wave 2 in Decapod v0.83.0 and solve issue #1022 within the same PR.",
   "derived_intent": "Deliver release-labeled PR governance exemption, Decapod-side opt-in live Propodus proof, v0.83.0 generated projections, and explicit service-boundary documentation while leaving hosted Propodus auth, allowlisting, URL, and persistence to Propodus.",
   "current_phase": "propodus-phase-2",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
     "Decapod governance kernel, CI, typed Propodus client, tests, docs, and generated governance artifacts only; no payments, identity implementation, website, or Propodus deployment changes."
   ],
@@ -21,6 +24,8 @@
   ],
   "modified_files": [
     ".decapod/governance/claims.json",
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     ".github/workflows/ci.yml",
     "docs/book/src/reference/propodus.md",
     "src/decapod/core/entrypoint_integrity.rs",
@@ -31,7 +36,8 @@
   "declared_commands": [
     "cargo clippy --locked --all-targets --all-features -- -D warnings",
     "cargo fmt --all -- --check",
-    "cargo test --locked"
+    "cargo test --locked",
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
@@ -48,6 +54,14 @@
       "status": "passed"
     },
     {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod_validate",
+      "status": "passed"
+    },
+    {
       "name": "focused_tests",
       "status": "passed"
     }
@@ -55,7 +69,11 @@
   "evidence": [
     "entrypoint_release=0.83.0",
     "issue_1022=release_label_gate",
-    "propodus_live=ignored_by_default_manual_protected"
+    "propodus_live=ignored_by_default_manual_protected",
+    "validation epoch ve_6ae38cd6df7733bc completed with zero failures",
+    "validation_pass_count=202",
+    "validation_receipt=.decapod/governance/validation.json",
+    "validation_warnings=6"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
@@ -66,7 +84,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:b1dce5cb698b868c59840d69bfadf1bec128495023fd52e9ec66e8c4e54aa8d5",
+  "artifact_hash": "sha256:f93fe07a69bb0f8b292ed3e71259ef1635429c46590386671a3eb6d9cce00de7",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -105,6 +123,20 @@
       {
         "sequence": 4,
         "event_id": "event:4",
+        "intent_id": "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYDVZ5AF1DPQYWDF2DJ4KBW8"
+      },
+      {
+        "sequence": 5,
+        "event_id": "event:5",
+        "intent_id": "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:01KYDVZ5AF1DPQYWDF2DJ4KBW8"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
         "intent_id": "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:01KYDVZ5AF1DPQYWDF2DJ4KBW8"
@@ -148,12 +180,47 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
+          },
+          {
+            "sequence": 5,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "DecapodLabs/decapod issue #1022 and wave-2 Propodus client proof surfaces related to #766/#1028; claims.json included in the publication bundle."
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_6ae38cd6df7733bc completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "propodus-phase-2",
+            "scope": [
+              "DecapodLabs/decapod issue #1022 and wave-2 Propodus client proof surfaces related to #766/#1028; claims.json included in the publication bundle."
+            ],
+            "observations": [
+              "validation_receipt=.decapod/governance/validation.json",
+              "validation_pass_count=202",
+              "validation_warnings=6"
+            ],
+            "proof_refs": [
+              "decapod_validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 4
+    "next_sequence": 6
   }
 }

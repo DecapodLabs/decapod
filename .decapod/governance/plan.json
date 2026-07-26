@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "title": "Propodus phase 2: release-safe integration proof",
   "intent": "Deliver a bounded second phase for the Decapod-owned Propodus boundary: exempt explicitly labeled release PRs from the governance-artifact diff gate, add a credential-gated live proof harness for the typed client, document its canonical repository isolation and failure taxonomy, and keep all default checks network-free while Propodus owns hosted authentication, authorization, deployment, and persistence.",
-  "state": "APPROVED",
+  "state": "DONE",
   "todo_ids": [
     "cicd_01kydv7dsj7sayv4"
   ],
@@ -50,10 +50,10 @@
       "entry_gates": [],
       "exit_gates": [],
       "entered": true,
-      "completed": false,
+      "completed": true,
       "entered_at": "1785023973Z",
-      "completed_at": null
+      "completed_at": "1785025157Z"
     }
   ],
-  "updated_at": "1785024839Z"
+  "updated_at": "1785025157Z"
 }
