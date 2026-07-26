@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.83.2](https://github.com/DecapodLabs/decapod/compare/v0.83.1...v0.83.2) - 2026-07-26
+
+### Added
+
+- align cloud backend contract with onboarding handoff
+
+### Other
+
+- record container-mode validation proof
+- record backend alignment claim context
+- close backend alignment phase
+- record validation proof
+- refresh living specs manifest
+- refresh release integrity after backend alignment
+
 ## [0.83.1](https://github.com/DecapodLabs/decapod/compare/v0.83.0...v0.83.1) - 2026-07-26
 
 ### Added
