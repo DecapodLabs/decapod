@@ -6,12 +6,15 @@
 
 <p align="center">
   <strong>Decapod</strong><br />
-  Repo-native governance for AI coding agents.
+  Repo-native governance kernel for AI coding agents.
 </p>
 
 <p align="center">
-  Decapod is a daemonless, local-first kernel that agents call when coding work needs intent, context, boundaries, coordination, or proof.
-  You keep working in Cursor, Claude Code, Codex, Antigravity, or any other agent tool; Decapod gives those agents a shared control plane inside the repo.
+  Decapod is a daemonless, local-first governance kernel that agents call at governance boundaries — before acting, before inference, before touching code, before completing — to shape intent, bound context, enforce boundaries, and produce proof.
+</p>
+
+<p align="center">
+  You keep working in your harness (Cursor, Claude Code, Codex, Antigravity, or any agent tool); Decapod gives those agents a shared governance layer inside the repo.
 </p>
 
 <p align="center">
@@ -35,8 +38,6 @@ decapod init
 
 `decapod init` creates `.decapod/`, the repo-native substrate your agent uses to turn intent, rules, context, custody, validation, and completion into inspectable project state.
 
-Your **conversational** workflow does not change. You keep working through your agent; Decapod gives the agent the missing control plane. Intent is captured, scope is bounded, context is shaped, protected areas are respected, work is isolated, and completion is proven against the project's rules and the Decapod constitution.
-
 Agent conversations are temporary. Repo state is durable. Decapod preserves the parts of agent work that should not live only in a chat transcript, so a later agent, reviewer, CI run, or human maintainer can recover what was requested, what was understood, what boundaries applied, what changed, what validation ran, and what remains unresolved.
 
 ---
@@ -49,30 +50,27 @@ AI coding agents often lose the plot: they forget intent, pull too much context,
 
 ```mermaid
 flowchart TD
-    UserIn["User"] -->|"intent"| AgentPre["Agent (Pre)"]
-    AgentPre -->|"governed request"| Model["Model"]
-    Model -->|"response"| AgentPost["Agent (Post)"]
-    AgentPost -->|"verified result"| UserOut["User"]
+    UserIn["User"] -->|"intent"| Harness["Harness"]
+    Harness -->|"governed request"| Agent["Agent"]
+    Agent -->|"calls Governance Kernel\n(pre-inference)"| GovernanceKernel["Governance Kernel"]
+    GovernanceKernel -->|"intent, context, gates"| Agent
+    Agent -->|"inference"| Model["Model"]
+    Model -->|"response"| Agent
+    Agent -->|"calls Governance Kernel\n(post-inference)"| GovernanceKernel
+    GovernanceKernel -->|"boundaries, checks, proof"| Agent
+    Agent -->|"verified result"| UserOut["User"]
 
-    AgentPre -.->|"ping for context"| UserIn
-
-    AgentPre -. "optional governance path" .-> DecapodPre["Decapod (Pre)"]
-    DecapodPre -. "intent, context, gates" .-> AgentPre
-
-    AgentPost -. "optional proof path" .-> DecapodPost["Decapod (Post)"]
-    DecapodPost -. "boundaries, checks, proof" .-> AgentPost
-    DecapodPost -. "needs more context" .-> AgentPre
+    Agent -.->|"clarification ping"| UserIn
 
     style UserIn fill:#ff6b9d,stroke:#c44569,color:#fff
     style UserOut fill:#ff6b9d,stroke:#c44569,color:#fff
-    style AgentPre fill:#a855f7,stroke:#7c3aed,color:#fff
-    style AgentPost fill:#a855f7,stroke:#7c3aed,color:#fff
+    style Harness fill:#3b82f6,stroke:#2563eb,color:#fff
+    style Agent fill:#a855f7,stroke:#7c3aed,color:#fff
     style Model fill:#06b6d4,stroke:#0891b2,color:#fff
-    style DecapodPre fill:#fbbf24,stroke:#f59e0b,color:#000
-    style DecapodPost fill:#fbbf24,stroke:#f59e0b,color:#000
+    style GovernanceKernel fill:#fbbf24,stroke:#f59e0b,color:#000
 ```
 
-**Agent ↔ User pings** — The 1st agent (governance) and 2nd agent (proof) can ping the user for additional context when intent is unclear or verification needs human input.
+**Harness ↔ User pings** — The harness can ping the user for additional context when intent is unclear or verification needs human input.
 
 Decapod is called by the agent at governance boundaries. Before inference, the agent may branch into Decapod to shape intent, context, and gates. After inference, the agent may branch into Decapod when the work needs boundary checks, verification, proof, or another governed pass.
 
@@ -106,11 +104,15 @@ Decapod preserves what agent workbenches lose: governed project state that survi
 
 ```text
 .decapod/
+  managed/
+    specs/         # Living specs (INTENT, ARCHITECTURE, INTERFACES, OPERATIONS, README, SECURITY, SEMANTICS, VALIDATION)
+    sessions/      # Agent session custody and correlation
   generated/
-    specs/         # Human-visible intent and architecture specs
-    context/       # Deterministic context capsules
+    awareness/     # Deterministic context capsules
     artifacts/     # Verification output and proof provenance
   data/            # Durable repo-native state (DBs, events, todos)
+  governance/      # Trajectory, proof rubrics, validation receipts
+  workspaces/      # Isolated git worktrees and container workspaces
   config.toml      # Project shape and agent-facing configuration
   OVERRIDE.md      # Local rules that override embedded defaults
 ```
@@ -124,7 +126,7 @@ The substrate turns the important parts of agent work into durable repo state:
 - **Validation** becomes proof artifacts and receipts instead of a final assertion.
 - **Completion** becomes a verified state transition instead of "looks done".
 
-Every governed run leaves operational evidence. The generated files are the human-visible proof surface: inspect them locally, review them in PRs, and use them to re-establish state across different agents like Claude, Codex, Gemini, Cursor, and Kilo.
+Every governed run leaves operational evidence. The generated files are the human-visible proof surface: inspect them locally, review them in PRs, and use them to re-establish state across different agents like Cursor, Codex, Gemini, and Kilo.
 
 Decapod does not make agents smarter by giving them longer conversations. Decapod makes agent work shippable by turning intent, context, boundaries, custody, validation, and completion into governed repo state.
 
@@ -132,7 +134,7 @@ Decapod does not make agents smarter by giving them longer conversations. Decapo
 
 ## The constitution
 
-Decapod ships with an embedded engineering constitution: over 100 declarative documents covering architecture, security, performance, and testing.
+Decapod ships with an embedded engineering constitution: 100+ embedded constitution documents covering architecture, security, performance, and testing.
 
 Everything an engineering org usually keeps in tribal memory or review culture becomes executable guidance. Your agent does not guess; it reads the constitution, cites claim IDs, follows gates, and produces proof.
 
@@ -142,11 +144,10 @@ Everything an engineering org usually keeps in tribal memory or review culture b
 
 - **Daemonless** — Runs on demand like `git` or `grep`.
 - **Repo-native** — All state lives in your repository.
-- **Provider-agnostic** — Works across agent workbenches.
-- **Proof-gated** — Completion requires passed verification gates.
-- **Boundary-aware** — Enforces protected paths and branch isolation.
+- **Completion requires passed proof-plan gates** — `VERIFIED` status requires passed proof-plan gates (INV-PROOF-GATED).
+- **Enforces protected paths and branch isolation (configured)** — Protected paths and branch isolation enforced per `.decapod/config.toml`.
 
-Decapod is not an agent framework, prompt pack, model router, or generic orchestrator. It is the repo-native governance layer agents call when work needs bounded execution, coordination, continuity, and proof.
+Decapod is not an agent framework, prompt pack, model router, or generic orchestrator. It is the repo-native governance kernel agents call when work needs bounded execution, coordination, continuity, and proof.
 
 ---
 
@@ -155,7 +156,7 @@ Decapod is not an agent framework, prompt pack, model router, or generic orchest
 Decapod provides comprehensive documentation for both human operators and AI agents.
 
 - **[Human Documentation (mdBook)](https://decapodlabs.github.io/decapod/)**: Conceptual overview, workflows, adoption guide, and reference.
-- **[Agent Orientation Corpus](docs/agent/api-index.md)**: API-awareness layer for agents, including command contracts and payload examples.
+- **[Agent Orientation Corpus (embedded, via `decapod docs ingest`)**: API-awareness layer for agents, including command contracts and payload examples.
 - **[Universal Agent Contract (AGENTS.md)](AGENTS.md)**: The machine-readable entrypoint for all agents operating in this repo.
 
 ## Contributing
