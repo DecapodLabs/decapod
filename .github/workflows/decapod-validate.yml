@@ -19,7 +19,10 @@ jobs:
           path: ~/.cargo/bin/decapod
           key: ${{ runner.os }}-decapod-${{ hashFiles('Cargo.toml', 'Cargo.lock') }}
       - name: Install Decapod
-        run: cargo install --path . --locked --force
+        run: |
+          if ! command -v decapod &> /dev/null; then
+            cargo install decapod
+          fi
       - name: Decapod Validate
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: 1

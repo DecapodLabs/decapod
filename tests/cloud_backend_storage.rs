@@ -1,8 +1,22 @@
 use std::process::Command;
 use tempfile::TempDir;
 
+fn git(dir: &std::path::Path, args: &[&str]) {
+    let output = Command::new("git")
+        .args(args)
+        .current_dir(dir)
+        .output()
+        .expect("run git");
+    assert!(
+        output.status.success(),
+        "git {:?} failed: {}",
+        args,
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
 #[test]
-fn test_cloud_opt_in_keeps_local_state_usable() {
+fn test_cloud_opt_in_fails_closed_without_verified_remote() {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path().to_path_buf();
 
@@ -18,71 +32,20 @@ fn test_cloud_opt_in_keeps_local_state_usable() {
         String::from_utf8_lossy(&init_out.stderr)
     );
 
-    let title = format!(
-        "Test local task with cloud opt-in {}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-    );
-
     let add_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["todo", "add", &title, "--format", "json"])
+        .args(["todo", "add", "must not fall back", "--format", "json"])
         .current_dir(&dir)
         .output()
         .expect("todo add");
 
     assert!(
-        add_out.status.success(),
-        "todo add failed: {}",
-        String::from_utf8_lossy(&add_out.stderr)
+        !add_out.status.success(),
+        "cloud mode must not use local SQLite"
     );
-
-    let add_json: serde_json::Value =
-        serde_json::from_slice(&add_out.stdout).expect("parse todo add json");
-    let task_id = add_json["id"].as_str().expect("task id").to_string();
-
-    let list_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["todo", "list", "--format", "json"])
-        .current_dir(&dir)
-        .output()
-        .expect("todo list");
-
+    let error = String::from_utf8_lossy(&add_out.stderr);
     assert!(
-        list_out.status.success(),
-        "todo list failed: {}",
-        String::from_utf8_lossy(&list_out.stderr)
-    );
-
-    let list_stdout = String::from_utf8_lossy(&list_out.stdout);
-    assert!(
-        list_stdout.contains(&title),
-        "Task '{}' not found in list output after cloud opt-in: {}",
-        title,
-        list_stdout
-    );
-    assert!(
-        list_stdout.contains(&task_id),
-        "Cloud task ID '{}' not found in list output",
-        task_id
-    );
-
-    let get_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["todo", "get", "--id", &task_id, "--format", "json"])
-        .current_dir(&dir)
-        .output()
-        .expect("todo get");
-
-    assert!(
-        get_out.status.success(),
-        "todo get failed: {}",
-        String::from_utf8_lossy(&get_out.stderr)
-    );
-
-    let get_stdout = String::from_utf8_lossy(&get_out.stdout);
-    assert!(
-        get_stdout.contains(&title),
-        "Task get did not return expected title"
+        error.contains("origin Git remote"),
+        "unexpected error: {error}"
     );
 }
 
@@ -112,7 +75,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     assert!(config.contains("experimental = true"));
     assert!(config.contains("provider = \"vercel\""));
     assert!(config.contains("api_url = \"https://decapod-cloud.vercel.app\""));
-    assert!(config.contains("mode = \"local\""));
+    assert!(config.contains("mode = \"cloud\""));
     assert!(!config.contains("SUPABASE"));
     assert!(!config.contains("supabase"));
     assert!(!config.contains("token"));
@@ -136,5 +99,65 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
             .iter()
             .any(|write| write["table"] == "todos" && write["operation"] == "claim/complete"),
         "registration should model the repo-scoped todo lifecycle"
+    );
+}
+
+#[test]
+fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
+    let tmp = TempDir::new().expect("tempdir");
+    let dir = tmp.path().to_path_buf();
+    let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .current_dir(&dir)
+        .output()
+        .expect("decapod init");
+    assert!(init_out.status.success());
+    git(
+        &dir,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "git@github.com:DecapodLabs/decapod.git",
+        ],
+    );
+
+    let data_home = TempDir::new().expect("credential data home");
+    let list_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["todo", "list", "--format", "json"])
+        .current_dir(&dir)
+        .env("DECAPOD_PROPODUS_DOGFOOD", "1")
+        .env_remove("DECAPOD_ACCESS_TOKEN")
+        .env("XDG_DATA_HOME", data_home.path())
+        .output()
+        .expect("cloud list");
+    assert!(!list_out.status.success());
+    let error = String::from_utf8_lossy(&list_out.stderr);
+    assert!(
+        error.contains("Propodus credential/configuration preflight failed")
+            && error.contains("DECAPOD_ACCESS_TOKEN"),
+        "unexpected credential preflight error: {error}"
+    );
+    assert!(
+        !dir.join(".decapod/data/todo.db").exists(),
+        "cloud credential preflight must not initialize local SQLite"
+    );
+}
+
+#[test]
+fn cloud_login_fails_fast_until_propodus_exchange_exists() {
+    let tmp = TempDir::new().expect("tempdir");
+    let data_home = TempDir::new().expect("credential data home");
+    let login_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["cloud", "login"])
+        .current_dir(tmp.path())
+        .env("XDG_DATA_HOME", data_home.path())
+        .output()
+        .expect("cloud login");
+    assert!(!login_out.status.success());
+    let error = String::from_utf8_lossy(&login_out.stderr);
+    assert!(
+        error.contains("Propodus-compatible GitHub login is not available"),
+        "unexpected login error: {error}"
     );
 }

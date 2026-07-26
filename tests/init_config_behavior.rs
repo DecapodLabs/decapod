@@ -108,8 +108,8 @@ fn init_with_backend_cloud_saves_to_config() {
         "cloud API URL should use the Vercel backend default: {config}"
     );
     assert!(
-        config.contains("mode = \"local\""),
-        "cloud opt-in must not switch storage away from local by default: {config}"
+        config.contains("mode = \"cloud\""),
+        "explicit cloud opt-in must activate cloud todo routing: {config}"
     );
     assert!(
         !config.contains("supabase") && !config.contains("token") && !config.contains("secret"),

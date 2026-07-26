@@ -6,6 +6,7 @@
 
 use crate::cli::CloudConfigSection;
 use crate::core::auth;
+use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::storage::{Task as StorageTask, TodoStore};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
@@ -248,6 +249,20 @@ impl PropodusClient<CurlTransport> {
             .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
         Self::with_transport(&config.into(), &credential.token, CurlTransport::default())
     }
+
+    pub fn from_dogfood_cloud_config(
+        config: &CloudConfigSection,
+        identity: &RepositoryIdentity,
+    ) -> Result<Self, PropodusClientError> {
+        let credential = auth::load_cloud_credential(None)
+            .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+        let config = PropodusConfig {
+            api_url: config.api_url.clone(),
+            project_id: config.project_id.clone(),
+            repo_id: identity.canonical_name.clone(),
+        };
+        Self::with_transport(&config, &credential.token, CurlTransport::default())
+    }
 }
 
 impl<T: PropodusTransport> PropodusClient<T> {
@@ -282,6 +297,20 @@ impl<T: PropodusTransport> PropodusClient<T> {
 
     pub fn repo_id(&self) -> &str {
         &self.repo_id
+    }
+
+    /// Verify that the configured Propodus endpoint is reachable and returns
+    /// a successful health response. The endpoint owns the response schema;
+    /// the Decapod boundary only requires a successful HTTP status.
+    pub fn health_check(&self) -> Result<(), PropodusClientError> {
+        let url = format!("{}{}", self.api_url, PROPODUS_HEALTH_ROUTE);
+        let response = self.send("GET", &url, None)?;
+        if response.body.is_empty() {
+            return Err(PropodusClientError::Decode(
+                "Propodus health response was empty".to_string(),
+            ));
+        }
+        Ok(())
     }
 
     pub fn list_todos(&self) -> Result<Vec<PropodusTodo>, PropodusClientError> {
@@ -339,15 +368,24 @@ impl<T: PropodusTransport> PropodusClient<T> {
         })
     }
 
-    pub fn claim_todo(&self, id: &str, actor: &str) -> Result<(), PropodusClientError> {
+    pub fn claim_todo(&self, id: &str, actor: &str) -> Result<PropodusTodo, PropodusClientError> {
         self.update_todo(id, PROPODUS_STATUS_IN_PROGRESS, actor)
     }
 
-    pub fn complete_todo(&self, id: &str, actor: &str) -> Result<(), PropodusClientError> {
+    pub fn complete_todo(
+        &self,
+        id: &str,
+        actor: &str,
+    ) -> Result<PropodusTodo, PropodusClientError> {
         self.update_todo(id, PROPODUS_STATUS_COMPLETED, actor)
     }
 
-    fn update_todo(&self, id: &str, status: &str, actor: &str) -> Result<(), PropodusClientError> {
+    fn update_todo(
+        &self,
+        id: &str,
+        status: &str,
+        actor: &str,
+    ) -> Result<PropodusTodo, PropodusClientError> {
         if id.trim().is_empty() || actor.trim().is_empty() {
             return Err(PropodusClientError::Validation(
                 "todo id and actor are required".to_string(),
@@ -368,7 +406,9 @@ impl<T: PropodusTransport> PropodusClient<T> {
         let response = self.send("PATCH", &url, Some(&body))?;
         let payload: PropodusMutationResponse = decode_json(&response.body)?;
         if payload.ok {
-            Ok(())
+            payload.todo.ok_or_else(|| {
+                PropodusClientError::Decode("successful update response omitted todo".to_string())
+            })
         } else {
             Err(payload
                 .error
@@ -422,16 +462,17 @@ impl<T: PropodusTransport> TodoStore for PropodusTodoStore<T> {
         task: StorageTask,
         actor: String,
         _intent: String,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<StorageTask> {
         self.client
             .create_todo(&task.title, task.description.as_deref(), Some(&actor))
-            .map(|_| ())
+            .map(to_storage_task)
             .map_err(|error| anyhow::anyhow!(error.to_string()))
     }
 
-    async fn claim_task(&self, id: &str, actor: String) -> anyhow::Result<()> {
+    async fn claim_task(&self, id: &str, actor: String) -> anyhow::Result<StorageTask> {
         self.client
             .claim_todo(id, &actor)
+            .map(to_storage_task)
             .map_err(|error| anyhow::anyhow!(error.to_string()))
     }
 
@@ -440,9 +481,10 @@ impl<T: PropodusTransport> TodoStore for PropodusTodoStore<T> {
         id: &str,
         actor: String,
         _resolution: String,
-    ) -> anyhow::Result<()> {
+    ) -> anyhow::Result<StorageTask> {
         self.client
             .complete_todo(id, &actor)
+            .map(to_storage_task)
             .map_err(|error| anyhow::anyhow!(error.to_string()))
     }
 }
