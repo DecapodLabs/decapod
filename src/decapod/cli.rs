@@ -1808,8 +1808,10 @@ mod tests {
 
     #[test]
     fn backend_field_selects_the_repository_backend() {
-        let mut context = RepoContext::default();
-        context.backend = Some(BackendType::Cloud);
+        let mut context = RepoContext {
+            backend: Some(BackendType::Cloud),
+            ..RepoContext::default()
+        };
         assert_eq!(context.effective_backend(), BackendType::Cloud);
 
         context.backend = Some(BackendType::Local);

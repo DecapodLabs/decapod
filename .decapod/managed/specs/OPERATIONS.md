@@ -5,7 +5,12 @@
 - [ ] Runbooks linked for all Sev1/Sev2 alerts.
 - [ ] Rollback plan validated.
 - [ ] Capacity guardrails documented.## Deployment Model
-Describe the operational runtime model, scheduling, and system deployment architecture.
+Describe the operational runtime model, scheduling, and system deployment architecture.## Service Level Objectives
+| SLI | SLO Target | Measurement Window | Owner |
+|---|---|---|---|
+| Availability | 99.9% | 30d | TBD |
+| P95 latency | TBD | 7d | TBD |
+| Error rate | < 1% | 7d | TBD |
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -43,13 +48,6 @@ Describe the operational runtime model, scheduling, and system deployment archit
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Service Level Objectives
-| SLI | SLO Target | Measurement Window | Owner |
-|---|---|---|---|
-| Availability | 99.9% | 30d | TBD |
-| P95 latency | TBD | 7d | TBD |
-| Error rate | < 1% | 7d | TBD |
 
 ## Monitoring
 | Signal | Metric | Threshold | Alert |
@@ -113,7 +111,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d3bebb4a840905935590ab6f8e1eb01b9984a87a528a044cf8b32fe6ee1b060b`
-- Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
+- Repository signal fingerprint: `e83d4b8305b885bcca5a6abf5c85362c90ddbf2a74dc922b0d594c6341cf3b7b`
+- Significant implementation surfaces: `.github/` (7 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

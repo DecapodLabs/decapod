@@ -131,15 +131,10 @@ fn live_decapod_cloud_commands_share_state_and_reject_forks() {
         Ok("1"),
         "set DECAPOD_PROPODUS_LIVE=1 to opt into the live proof"
     );
-    let api_url = required_env("DECAPOD_PROPODUS_API_URL");
     let credential = required_env("DECAPOD_PROPODUS_ACCESS_TOKEN");
 
     let canonical = tempdir().expect("canonical proof repository");
-    prepare_cloud_repo(
-        canonical.path(),
-        &api_url,
-        "git@github.com:DecapodLabs/decapod.git",
-    );
+    prepare_cloud_repo(canonical.path(), "git@github.com:DecapodLabs/decapod.git");
     let title = format!(
         "Decapod command dogfood proof {}",
         SystemTime::now()
