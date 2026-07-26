@@ -1,0 +1,31 @@
+{
+  "contract_id": "decapod.cloud.onboarding",
+  "contract_version": "v1",
+  "routes": {
+    "start": "POST /api/onboarding/start",
+    "status": "GET /api/onboarding/status?flow=<flow>",
+    "exchange": "POST /api/auth/session/exchange",
+    "refresh": "POST /api/auth/session/refresh"
+  },
+  "repository_binding": {
+    "canonical_name": "DecapodLabs/decapod",
+    "owner": "DecapodLabs",
+    "repository": "decapod"
+  },
+  "handoff": {
+    "flow_id": "opaque-flow-id",
+    "bootstrap_url": "https://cloud.example.test/onboard/opaque",
+    "expires_at": "2030-01-01T00:00:00Z",
+    "poll_after_seconds": 2
+  },
+  "session": {
+    "access_token": "machine-local-only",
+    "refresh_token": "machine-local-only",
+    "expires_at": "2030-01-01T00:00:00Z"
+  },
+  "safety": [
+    "credentials are not placed in repository configuration",
+    "credentials are not placed in onboarding URLs",
+    "provider authentication and repository authorization remain external"
+  ]
+}

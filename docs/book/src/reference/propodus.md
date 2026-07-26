@@ -2,7 +2,7 @@
 
 Propodus is an optional remote service boundary for repo-scoped todos. It is
 not compiled into Decapod and it does not replace local SQLite by default.
-`repo.mode = "cloud"` is an explicit opt-in: in that mode the todo commands
+`repo.backend = "cloud"` is an explicit opt-in: in that mode the todo commands
 use Propodus directly and never silently fall back to local SQLite.
 
 ## Contract v1
@@ -22,6 +22,11 @@ The checked-in compatibility fixture is
 local `propodus_contract` test, which uses an injectable fake transport and
 never contacts Vercel, Neon, or production data.
 
+The provider-neutral onboarding/session shape is recorded separately in
+`tests/fixtures/propodus/onboarding-contract-v1.json`. It is a Decapod client
+boundary and offline safety fixture, not a claim that live provider exchange
+has been proven.
+
 The command boundary is covered by `tests/cloud_command_path.rs`, which proves
 that list, add, claim, and complete are routed through the backend-neutral
 `TodoStore` adapter. Unsupported local-only operations return an explicit
@@ -35,15 +40,14 @@ and the absence of local SQLite initialization for cloud todo commands.
 
 The opt-in live proof is `tests/propodus_live.rs`. Run it only with
 `DECAPOD_PROPODUS_LIVE=1`, `DECAPOD_PROPODUS_API_URL`,
-`DECAPOD_PROPODUS_ACCESS_TOKEN`, `DECAPOD_PROPODUS_DOGFOOD=1`, and a
+`DECAPOD_PROPODUS_ACCESS_TOKEN`, and a
 disposable `DECAPOD_PROPODUS_DISPOSABLE_REPO_ID`:
 
 ```text
 DECAPOD_PROPODUS_LIVE=1 \
 DECAPOD_PROPODUS_API_URL=https://your-stable-propodus.example \
 DECAPOD_PROPODUS_ACCESS_TOKEN=... \
-DECAPOD_PROPODUS_DOGFOOD=1 \
-DECAPOD_PROPODUS_DISPOSABLE_REPO_ID=DecapodLabs/propodus-live-deny \
+DECAPOD_PROPODUS_DISPOSABLE_REPO_ID=example/decapod-live-deny \
 cargo test --test propodus_live -- --ignored --nocapture
 ```
 
@@ -84,33 +88,29 @@ remains deferred until Propodus issue #24 exposes its stable route.
 From a fresh checkout of the canonical repository:
 
 1. Run `decapod init --mode cloud --proof` and confirm `.decapod/config.toml`
-   contains `repo.mode = "cloud"`, `[cloud].enabled = true`, and the intended
+   contains `repo.backend = "cloud"`, `[cloud].enabled = true`, and the intended
    Propodus `api_url`. The endpoint is selected only from this project config;
    no service URL is inferred from credentials.
-2. Ensure `origin` is an unambiguous GitHub remote for
-   `DecapodLabs/decapod`. Forks and other remotes fail before any network
-   request.
-3. Set `DECAPOD_PROPODUS_DOGFOOD=1` as the explicit temporary dogfood gate.
-   This is a local opt-in marker, not an authenticated repository identity,
-   and is not sent to Propodus.
-4. Provision a Propodus-issued bearer JWT in `DECAPOD_ACCESS_TOKEN` or in
+2. Ensure `origin` is an unambiguous GitHub remote. Decapod derives the
+   canonical owner/name from it and sends that binding to the provider; the
+   provider decides whether the authenticated session may use the repository.
+3. Provision a Propodus-issued bearer JWT in `DECAPOD_ACCESS_TOKEN` or in
    `~/.local/share/decapod/session_token.json`. The token must satisfy the
    issuer, audience, GitHub-subject, repository-authorization, and seat rules
    enforced by Propodus. Decapod cannot mint, refresh, revoke, or validate
    those provider claims.
-5. Run `decapod todo list`, `add`, `get`, `show`, `claim`, or `done`. Missing
-   credentials, the dogfood gate, cloud config, or canonical remote produce a
-   preflight error; authentication, authorization, and transport failures do
+4. Run `decapod todo list`, `add`, `get`, `show`, `claim`, or `done`. Missing
+   credentials, cloud config, or a canonical GitHub remote produce a preflight
+   error; authentication, authorization, and transport failures do
    not fall back to local SQLite.
 
 ## Repository identity
 
-Cloud dogfood is fail-closed to the canonical `DecapodLabs/decapod` origin.
-Decapod derives owner/name from `origin` and rejects non-GitHub, ambiguous, and
-fork remotes. The explicit `DECAPOD_PROPODUS_DOGFOOD=1` value is only a
-temporary local gate because Propodus has not yet published a wire contract
-binding an immutable GitHub repository ID to the request. The project file's
-`cloud.repo_id` is not an authority to select another repository.
+Cloud mode derives a canonical `owner/name` binding from the `origin` remote
+and rejects non-GitHub or ambiguous remotes. Forks remain distinct identities
+and are passed to the provider for authorization; Decapod does not maintain a
+repo allowlist or treat `cloud.repo_id` as authority to select another
+repository.
 
 ## v1 governance limits
 
@@ -126,10 +126,11 @@ see [Decapod issue #1038](https://github.com/DecapodLabs/decapod/issues/1038).
 ## Delivery boundary
 
 Wave 1 provided the Decapod-side contract, credential lookup, typed client,
-storage adapter, and deterministic local proof. Wave 2 now activates the
-explicit cloud todo command path, verified repository identity, adapter-level
+storage adapter, and deterministic local proof. Wave 2 activates the explicit
+cloud todo command path, remote-derived repository identity, adapter-level
 command proof, and protected command-level live proof without moving hosted
-authentication, repository allowlisting, stable URL ownership, persistence, or
-deployment into Decapod. Those remain Propodus responsibilities. The client
-stays configurable so deployment decisions do not become hardcoded service
-policy.
+authentication, repository authorization, stable URL ownership, persistence,
+or deployment into Decapod. The next wave adds the provider-neutral onboarding
+and machine-session payload boundary; live login remains deferred until the
+provider publishes and proves the wire contract. Those external concerns
+remain provider responsibilities.

@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "title": "Propodus wave 2 review closure: truthful credential and CLI dogfood",
-  "intent": "Revise PR #1036 to close the latest review gaps: make injected Propodus JWT credentials truthful and fail-fast, downgrade unbound repository identity claims, prove the production CLI dispatch with a mock Propodus transport, document explicit v1 governance limitations, and provide a repeatable dogfood runbook while preserving Propodus-owned auth policy.",
-  "state": "DONE",
+  "title": "Propodus next wave: provider-neutral onboarding and verified repository identity",
+  "intent": "Advance Decapod v0.83.2 toward safe Propodus cloud dogfooding with explicit provider-neutral repository identity and onboarding/session interfaces, while local remains the default and live provider auth remains deferred until proven",
+  "state": "APPROVED",
   "todo_ids": [
-    "cicd_01kydv7dsj7sayv4"
+    "code_01kyeg2sh0z2j8b0"
   ],
   "proof_hooks": [
     "cargo fmt --check",
@@ -16,79 +16,14 @@
   "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [
-    "Propodus issue #24 must expose the GitHub login/token exchange before Decapod can provide an interactive compatible login; this PR must explicitly document injected-token dogfood instead."
+    "When Propodus publishes a stable onboarding/session payload contract, integrate the real exchange and refresh loop"
   ],
   "constraints": {
-    "forbidden_paths": [],
-    "file_touch_budget": 80
+    "forbidden_paths": [
+      ".decapod/config.toml backend switch"
+    ],
+    "file_touch_budget": 40
   },
-  "phases": [
-    {
-      "id": "dockerfile-rename",
-      "name": "Rename managed workspace Dockerfile",
-      "description": "Update the managed workspace Dockerfile contract and all code, scaffold, validation, tests, specs, and repository policy references while keeping the root Dockerfile reserved for application packaging.",
-      "entry_gates": [],
-      "exit_gates": [],
-      "entered": true,
-      "completed": true,
-      "entered_at": "1784876915Z",
-      "completed_at": "1784877745Z"
-    },
-    {
-      "id": "propodus-phase-1",
-      "name": "Deliver local Propodus client boundary",
-      "description": "Implement the versioned todo contract, machine-local credential lookup, optional typed HTTP backend client, deterministic local fake-service proof, and living docs; defer hosted auth/deployment/integration execution to the next wave.",
-      "entry_gates": [],
-      "exit_gates": [],
-      "entered": true,
-      "completed": true,
-      "entered_at": "1785016815Z",
-      "completed_at": "1785019855Z"
-    },
-    {
-      "id": "propodus-phase-2",
-      "name": "Deliver release-safe live proof boundary",
-      "description": "Exempt release-labeled PRs from the four-artifact CI gate and add a default-off, credential-gated live Propodus proof for health, list, create, claim, complete, and cross-repository authorization behavior.",
-      "entry_gates": [],
-      "exit_gates": [],
-      "entered": true,
-      "completed": true,
-      "entered_at": "1785023973Z",
-      "completed_at": "1785025157Z"
-    },
-    {
-      "id": "propodus-phase-2-alignment",
-      "name": "Align cloud command path and dogfood proof",
-      "description": "Select the Propodus-backed todo store only for explicit cloud mode, verify canonical GitHub repository identity with an immutable runtime identity input, keep the Propodus bearer/session boundary thin, reject unsupported local fallback, and prove actual Decapod commands plus shared and unauthorized behavior through a protected opt-in live harness.",
-      "entry_gates": [],
-      "exit_gates": [],
-      "entered": true,
-      "completed": true,
-      "entered_at": "1785027089Z",
-      "completed_at": "1785029250Z"
-    },
-    {
-      "id": "propodus-review-closure",
-      "name": "Close credential, identity, CLI, and dogfood review gaps",
-      "description": "Make cloud credentials truthful and fail-fast, retain only a temporary identity gate until Propodus binds immutable identity, prove the actual CLI boundary with an injected transport, document v1 unsupported proof semantics, and update the protected dogfood runbook.",
-      "entry_gates": [],
-      "exit_gates": [],
-      "entered": true,
-      "completed": true,
-      "entered_at": "1785034186Z",
-      "completed_at": "1785035649Z"
-    },
-    {
-      "id": "propodus-phase-2-1040",
-      "name": "Advance provider-neutral cloud backend contract",
-      "description": "Preserve local-first governance and existing mode inputs while adding the non-breaking backend contract, provider-neutral onboarding/session seam, deterministic backend selection proof, and refreshed living specs for Issue #1040; defer provider implementation details and live deployment to the next wave.",
-      "entry_gates": [],
-      "exit_gates": [],
-      "entered": true,
-      "completed": true,
-      "entered_at": "1785041922Z",
-      "completed_at": "1785043828Z"
-    }
-  ],
-  "updated_at": "1785043828Z"
+  "phases": [],
+  "updated_at": "1785047330Z"
 }

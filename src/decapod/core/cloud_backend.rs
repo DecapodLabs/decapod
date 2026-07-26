@@ -1,4 +1,5 @@
 use crate::core::error::DecapodError;
+use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::time;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -8,6 +9,11 @@ pub const PUBLIC_CLOUD_BACKEND_UNAVAILABLE: &str = "Cloud todo persistence is no
 
 pub const PROPODUS_TODO_ROUTE_SUMMARY: &str =
     "GET /api/health; GET /api/todos?repo_id=<repo>; POST /api/todos; PATCH /api/todos?id=<todo>";
+pub const CLOUD_ONBOARDING_CONTRACT_VERSION: &str = "v1";
+pub const CLOUD_ONBOARDING_START_ROUTE: &str = "/api/onboarding/start";
+pub const CLOUD_ONBOARDING_STATUS_ROUTE: &str = "/api/onboarding/status";
+pub const CLOUD_SESSION_EXCHANGE_ROUTE: &str = "/api/auth/session/exchange";
+pub const CLOUD_SESSION_REFRESH_ROUTE: &str = "/api/auth/session/refresh";
 
 /// Provider-neutral states returned while an external onboarding handoff is
 /// being completed. Decapod does not interpret provider identity or policy
@@ -32,6 +38,247 @@ pub struct CloudOnboardingHandoff {
     pub expires_at: String,
     pub poll_after_seconds: u64,
     pub state: CloudOnboardingState,
+}
+
+/// The repository binding sent to an external cloud service. The owner/name
+/// comes from the Git remote; no local config field or fork allowlist is
+/// treated as authenticated identity.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CloudRepositoryBinding {
+    pub canonical_name: String,
+    pub owner: String,
+    pub repository: String,
+}
+
+impl From<&RepositoryIdentity> for CloudRepositoryBinding {
+    fn from(identity: &RepositoryIdentity) -> Self {
+        Self {
+            canonical_name: identity.canonical_name.clone(),
+            owner: identity.owner.clone(),
+            repository: identity.repository.clone(),
+        }
+    }
+}
+
+/// Public, provider-neutral payload for starting the browser/loopback
+/// handoff. Provider policy and identity verification happen after this
+/// boundary.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CloudOnboardingStartRequest {
+    pub contract_version: String,
+    pub repository: CloudRepositoryBinding,
+}
+
+impl CloudOnboardingStartRequest {
+    pub fn for_repository(identity: &RepositoryIdentity) -> Self {
+        Self {
+            contract_version: CLOUD_ONBOARDING_CONTRACT_VERSION.to_string(),
+            repository: identity.into(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CloudOnboardingStartResponse {
+    #[serde(alias = "flow")]
+    pub flow_id: String,
+    pub bootstrap_url: String,
+    pub expires_at: String,
+    #[serde(default)]
+    pub poll_after_seconds: Option<u64>,
+}
+
+impl CloudOnboardingStartResponse {
+    pub fn into_handoff(self) -> Result<(String, CloudOnboardingHandoff), DecapodError> {
+        let mut handoff = CloudOnboardingHandoff::new(&self.bootstrap_url, &self.expires_at)?;
+        if let Some(poll_after_seconds) = self.poll_after_seconds {
+            if poll_after_seconds == 0 {
+                return Err(DecapodError::ValidationError(
+                    "cloud onboarding poll interval must be greater than zero".to_string(),
+                ));
+            }
+            handoff.poll_after_seconds = poll_after_seconds;
+        }
+        Ok((self.flow_id, handoff))
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CloudOnboardingStatusResponse {
+    #[serde(alias = "flow")]
+    pub flow_id: String,
+    pub state: CloudOnboardingState,
+    #[serde(default)]
+    pub expires_at: Option<String>,
+    #[serde(default)]
+    pub poll_after_seconds: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CloudSessionExchangeRequest {
+    pub contract_version: String,
+    pub flow_id: String,
+}
+
+impl CloudSessionExchangeRequest {
+    pub fn new(flow_id: &str) -> Result<Self, DecapodError> {
+        let flow_id = flow_id.trim();
+        if flow_id.is_empty() || flow_id.chars().any(|c| c.is_control() || c.is_whitespace()) {
+            return Err(DecapodError::ValidationError(
+                "cloud onboarding flow ID must be a non-empty opaque value".to_string(),
+            ));
+        }
+        Ok(Self {
+            contract_version: CLOUD_ONBOARDING_CONTRACT_VERSION.to_string(),
+            flow_id: flow_id.to_string(),
+        })
+    }
+}
+
+/// Machine-local session material returned by the cloud exchange. It is never
+/// written to repository configuration or included in onboarding URLs.
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CloudSession {
+    pub access_token: String,
+    #[serde(default)]
+    pub refresh_token: Option<String>,
+    #[serde(default)]
+    pub expires_at: Option<String>,
+}
+
+impl CloudSession {
+    pub fn validate(&self) -> Result<(), DecapodError> {
+        if self.access_token.trim().is_empty()
+            || self
+                .access_token
+                .chars()
+                .any(|c| c.is_control() || c.is_whitespace())
+        {
+            return Err(DecapodError::SessionError(
+                "cloud exchange returned an invalid access credential".to_string(),
+            ));
+        }
+        if self.refresh_token.as_deref().is_some_and(|token| {
+            token.trim().is_empty() || token.chars().any(|c| c.is_control() || c.is_whitespace())
+        }) {
+            return Err(DecapodError::SessionError(
+                "cloud exchange returned an invalid refresh credential".to_string(),
+            ));
+        }
+        Ok(())
+    }
+
+    pub fn redacted_summary(&self) -> String {
+        format!(
+            "cloud session configured (refresh={}, expires_at={})",
+            self.refresh_token.is_some(),
+            self.expires_at.as_deref().unwrap_or("unspecified")
+        )
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CloudSessionExchangeResponse {
+    pub session: CloudSession,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CloudSessionRefreshRequest {
+    pub contract_version: String,
+    pub refresh_token: String,
+}
+
+impl CloudSessionRefreshRequest {
+    pub fn new(refresh_token: &str) -> Result<Self, DecapodError> {
+        let refresh_token = refresh_token.trim();
+        if refresh_token.is_empty()
+            || refresh_token
+                .chars()
+                .any(|c| c.is_control() || c.is_whitespace())
+        {
+            return Err(DecapodError::SessionError(
+                "cloud refresh requires a non-empty opaque credential".to_string(),
+            ));
+        }
+        Ok(Self {
+            contract_version: CLOUD_ONBOARDING_CONTRACT_VERSION.to_string(),
+            refresh_token: refresh_token.to_string(),
+        })
+    }
+}
+
+/// Deterministic endpoint builder shared by a future live adapter and the
+/// offline contract tests. Credentials are carried in request bodies/headers,
+/// never in URLs.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CloudOnboardingEndpoints {
+    base_url: String,
+}
+
+impl CloudOnboardingEndpoints {
+    pub fn new(base_url: &str) -> Result<Self, DecapodError> {
+        let base_url = base_url.trim().trim_end_matches('/');
+        if !(base_url.starts_with("https://") || base_url.starts_with("http://")) {
+            return Err(DecapodError::Config(
+                "cloud API URL must use http:// or https://".to_string(),
+            ));
+        }
+        if base_url
+            .chars()
+            .any(|c| c.is_control() || c.is_whitespace())
+        {
+            return Err(DecapodError::Config(
+                "cloud API URL must not contain whitespace or control characters".to_string(),
+            ));
+        }
+        Ok(Self {
+            base_url: base_url.to_string(),
+        })
+    }
+
+    pub fn start(&self) -> String {
+        format!("{}{}", self.base_url, CLOUD_ONBOARDING_START_ROUTE)
+    }
+
+    pub fn status(&self, flow_id: &str) -> Result<String, DecapodError> {
+        let flow_id = validate_opaque_component(flow_id, "flow ID")?;
+        Ok(format!(
+            "{}{}?flow={}",
+            self.base_url,
+            CLOUD_ONBOARDING_STATUS_ROUTE,
+            percent_encode_component(flow_id)
+        ))
+    }
+
+    pub fn exchange(&self) -> String {
+        format!("{}{}", self.base_url, CLOUD_SESSION_EXCHANGE_ROUTE)
+    }
+
+    pub fn refresh(&self) -> String {
+        format!("{}{}", self.base_url, CLOUD_SESSION_REFRESH_ROUTE)
+    }
+}
+
+fn validate_opaque_component<'a>(value: &'a str, label: &str) -> Result<&'a str, DecapodError> {
+    let value = value.trim();
+    if value.is_empty() || value.chars().any(|c| c.is_control() || c.is_whitespace()) {
+        return Err(DecapodError::ValidationError(format!(
+            "cloud {label} must be a non-empty opaque value"
+        )));
+    }
+    Ok(value)
+}
+
+fn percent_encode_component(value: &str) -> String {
+    value
+        .bytes()
+        .map(|byte| match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                (byte as char).to_string()
+            }
+            byte => format!("%{byte:02X}"),
+        })
+        .collect()
 }
 
 impl CloudOnboardingHandoff {
@@ -172,7 +419,12 @@ pub fn write_mock_init_registration(
 
 #[cfg(test)]
 mod tests {
-    use super::{CloudOnboardingHandoff, CloudOnboardingState};
+    use super::{
+        CloudOnboardingEndpoints, CloudOnboardingHandoff, CloudOnboardingStartRequest,
+        CloudOnboardingStartResponse, CloudOnboardingState, CloudSession,
+        CloudSessionExchangeRequest, CloudSessionRefreshRequest,
+    };
+    use crate::core::repo_identity::resolve_repository_identity_from_remote;
 
     #[test]
     fn onboarding_handoff_is_provider_neutral_and_headless_safe() {
@@ -205,5 +457,86 @@ mod tests {
             .is_err()
         );
         assert!(CloudOnboardingHandoff::new("https://cloud.example.test/onboard", "",).is_err());
+    }
+
+    #[test]
+    fn onboarding_contract_binds_remote_identity_without_provider_policy() {
+        let identity =
+            resolve_repository_identity_from_remote("git@github.com:DecapodLabs/decapod.git")
+                .expect("repository identity");
+        let request = CloudOnboardingStartRequest::for_repository(&identity);
+        assert_eq!(request.contract_version, "v1");
+        assert_eq!(request.repository.canonical_name, "DecapodLabs/decapod");
+        assert_eq!(request.repository.owner, "DecapodLabs");
+        assert_eq!(request.repository.repository, "decapod");
+        let encoded = serde_json::to_string(&request).expect("request JSON");
+        assert!(!encoded.contains("token"));
+    }
+
+    #[test]
+    fn onboarding_endpoints_are_bounded_and_credentials_never_enter_urls() {
+        let endpoints =
+            CloudOnboardingEndpoints::new("https://cloud.example.test/").expect("endpoints");
+        assert_eq!(
+            endpoints.start(),
+            "https://cloud.example.test/api/onboarding/start"
+        );
+        assert_eq!(
+            endpoints.status("flow/one".trim()).expect("status URL"),
+            "https://cloud.example.test/api/onboarding/status?flow=flow%2Fone"
+        );
+        assert_eq!(
+            endpoints.exchange(),
+            "https://cloud.example.test/api/auth/session/exchange"
+        );
+        assert_eq!(
+            endpoints.refresh(),
+            "https://cloud.example.test/api/auth/session/refresh"
+        );
+        assert!(endpoints.status("flow one").is_err());
+    }
+
+    #[test]
+    fn exchange_and_refresh_payloads_validate_opaque_credentials() {
+        let exchange = CloudSessionExchangeRequest::new("flow-123").expect("exchange request");
+        assert_eq!(exchange.contract_version, "v1");
+        assert!(CloudSessionExchangeRequest::new("flow 123").is_err());
+
+        let session = CloudSession {
+            access_token: "access-opaque".to_string(),
+            refresh_token: Some("refresh-opaque".to_string()),
+            expires_at: Some("2030-01-01T00:00:00Z".to_string()),
+        };
+        session.validate().expect("session");
+        assert!(session.redacted_summary().contains("refresh=true"));
+        assert!(!session.redacted_summary().contains("access-opaque"));
+
+        let refresh = CloudSessionRefreshRequest::new("refresh-opaque").expect("refresh");
+        assert_eq!(refresh.contract_version, "v1");
+        assert!(CloudSessionRefreshRequest::new(" ").is_err());
+    }
+
+    #[test]
+    fn onboarding_start_response_produces_safe_handoff() {
+        let (flow_id, handoff) = CloudOnboardingStartResponse {
+            flow_id: "flow-123".to_string(),
+            bootstrap_url: "https://cloud.example.test/onboard/opaque".to_string(),
+            expires_at: "2030-01-01T00:00:00Z".to_string(),
+            poll_after_seconds: Some(4),
+        }
+        .into_handoff()
+        .expect("handoff");
+        assert_eq!(flow_id, "flow-123");
+        assert_eq!(handoff.poll_after_seconds, 4);
+        assert!(
+            CloudOnboardingStartResponse {
+                flow_id: "flow-123".to_string(),
+                bootstrap_url: "https://cloud.example.test/onboard/opaque".to_string(),
+                expires_at: "2030-01-01T00:00:00Z".to_string(),
+                poll_after_seconds: Some(0),
+            }
+            .into_handoff()
+            .is_err()
+        );
     }
 }
