@@ -21,7 +21,7 @@ fn test_cloud_opt_in_fails_closed_without_verified_remote() {
     let dir = tmp.path().to_path_buf();
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -55,7 +55,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     let dir = tmp.path().to_path_buf();
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .env_remove("SUPABASE_URL")
         .env_remove("SUPABASE_KEY")
         .current_dir(&dir)
@@ -70,13 +70,12 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
 
     let config_path = dir.join(".decapod/config.toml");
     let config = std::fs::read_to_string(config_path).unwrap();
-    assert!(config.contains("[cloud]"));
-    assert!(config.contains("enabled = true"));
-    assert!(config.contains("experimental = true"));
-    assert!(config.contains("provider = \"vercel\""));
-    assert!(config.contains("api_url = \"https://decapod-cloud.vercel.app\""));
     assert!(config.contains("backend = \"cloud\""));
-    assert!(config.contains("mode = \"cloud\""));
+    assert!(!config.contains("[cloud]"));
+    assert!(!config.contains("api_url"));
+    assert!(!config.contains("project_id"));
+    assert!(!config.contains("repo_id"));
+    assert!(!config.contains("mode = \"cloud\""));
     assert!(!config.contains("SUPABASE"));
     assert!(!config.contains("supabase"));
     assert!(!config.contains("token"));
@@ -88,7 +87,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     let registration: serde_json::Value =
         serde_json::from_str(&registration).expect("parse cloud init registration");
     assert_eq!(registration["provider"], "vercel");
-    assert_eq!(registration["api_url"], "https://decapod-cloud.vercel.app");
+    assert_eq!(registration["api_url"], "https://project-oqn7i.vercel.app");
     assert_eq!(
         registration["route"],
         "GET /api/health; GET /api/todos?repo_id=<repo>; POST /api/todos; PATCH /api/todos?id=<todo>"
@@ -108,7 +107,7 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path().to_path_buf();
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -134,8 +133,7 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
     assert!(!list_out.status.success());
     let error = String::from_utf8_lossy(&list_out.stderr);
     assert!(
-        error.contains("Propodus credential/configuration preflight failed")
-            && error.contains("DECAPOD_ACCESS_TOKEN"),
+        error.contains("Propodus cloud preflight failed") && error.contains("DECAPOD_ACCESS_TOKEN"),
         "unexpected credential preflight error: {error}"
     );
     assert!(
@@ -145,11 +143,11 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
 }
 
 #[test]
-fn canonical_backend_selection_overrides_legacy_mode_without_local_fallback() {
+fn canonical_backend_selection_uses_cloud_without_local_fallback() {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path().to_path_buf();
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -157,11 +155,7 @@ fn canonical_backend_selection_overrides_legacy_mode_without_local_fallback() {
     let config_path = dir.join(".decapod/config.toml");
     let config = std::fs::read_to_string(&config_path).expect("config");
     assert!(config.contains("backend = \"cloud\""));
-    std::fs::write(
-        config_path,
-        config.replace("mode = \"cloud\"", "mode = \"local\""),
-    )
-    .expect("rewrite legacy compatibility field");
+    assert!(!config.contains("mode = "));
 
     git(
         &dir,
@@ -196,7 +190,7 @@ fn canonical_backend_selection_overrides_legacy_mode_without_local_fallback() {
 }
 
 #[test]
-fn cloud_login_fails_fast_until_propodus_exchange_exists() {
+fn cloud_login_requires_a_project_origin() {
     let tmp = TempDir::new().expect("tempdir");
     let data_home = TempDir::new().expect("credential data home");
     let login_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
@@ -208,7 +202,7 @@ fn cloud_login_fails_fast_until_propodus_exchange_exists() {
     assert!(!login_out.status.success());
     let error = String::from_utf8_lossy(&login_out.stderr);
     assert!(
-        error.contains("Propodus-compatible GitHub login is not available"),
+        error.contains("origin Git remote"),
         "unexpected login error: {error}"
     );
 }

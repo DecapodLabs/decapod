@@ -1655,38 +1655,11 @@ fn validate_project_config_toml(
         );
     }
 
-    if let Some(cloud_table) = cloud_table {
-        let cloud_enabled = cloud_table
-            .get("enabled")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-        if cloud_enabled {
-            let experimental = cloud_table
-                .get("experimental")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false);
-            let provider_present = cloud_table
-                .get("provider")
-                .and_then(|v| v.as_str())
-                .map(|s| !s.trim().is_empty())
-                .unwrap_or(false);
-            let api_url_present = cloud_table
-                .get("api_url")
-                .and_then(|v| v.as_str())
-                .map(|s| !s.trim().is_empty())
-                .unwrap_or(false);
-            if experimental && provider_present && api_url_present {
-                pass(
-                    "Project config captures experimental Decapod Cloud opt-in boundary",
-                    ctx,
-                );
-            } else {
-                fail(
-                    "Enabled cloud config must be experimental and include non-secret provider/api_url wiring.",
-                    ctx,
-                );
-            }
-        }
+    if typed_config.repo.effective_backend().is_cloud() {
+        pass(
+            "Project config selects cloud backend; Propodus endpoint and provider defaults are binary-owned",
+            ctx,
+        );
     }
 
     match crate::cli::canonical_repo_relative_paths(&typed_config.governance.protected_paths) {
@@ -4072,6 +4045,13 @@ fn validate_markdown_primitives_roundtrip_gate(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("Markdown Primitive Round-Trip Gate");
+    if DbBroker::new(&store.root).is_cloud() {
+        skip(
+            "Markdown primitive round-trip is local-store-only; cloud todo proof is supplied by the Propodus contract and protected production proof",
+            ctx,
+        );
+        return Ok(());
+    }
     match primitives::validate_roundtrip_gate(store) {
         Ok(()) => {
             pass(

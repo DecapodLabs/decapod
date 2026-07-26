@@ -186,9 +186,9 @@ jobs:
       - name: Check license and duplicate dependencies
         run: cargo install cargo-deny && cargo deny --config .config/deny.toml check
 
-  # HEALTH: consumes the shared decapod binary from setup
+  # VALIDATE: fan-out from the shared decapod binary built by setup
   health:
-    name: Health Checks
+    name: Decapod Validate
     runs-on: ubuntu-latest
     needs: setup
     steps:

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
-use decapod::CloudConfigSection;
+use decapod::CloudRuntimeConfig;
 use decapod::core::error::DecapodError;
 use decapod::core::repo_identity::RepositoryIdentity;
 use decapod::core::storage::{Task, TodoStore};
@@ -67,7 +67,7 @@ struct MockFactory {
 impl CloudTodoStoreFactory for MockFactory {
     fn build(
         &self,
-        config: &CloudConfigSection,
+        config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, DecapodError> {
         assert_eq!(config.provider, "vercel");
@@ -106,7 +106,7 @@ struct FailingFactory;
 impl CloudTodoStoreFactory for FailingFactory {
     fn build(
         &self,
-        _config: &CloudConfigSection,
+        _config: &CloudRuntimeConfig,
         _identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, DecapodError> {
         Ok(Box::new(FailingStore))
@@ -136,7 +136,7 @@ fn git(dir: &std::path::Path, args: &[&str]) {
 fn cloud_project() -> TempDir {
     let project = tempfile::tempdir().expect("project tempdir");
     let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(project.path())
         .output()
         .expect("init cloud project");

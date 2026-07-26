@@ -15,15 +15,20 @@ entrypoints = [
 product_name = "decapod"
 product_summary = "Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to converge on human intent, shape context before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work."
 architecture_direction = "cli"
-product_type = "cli"
+product_type = "service_or_library"
 done_criteria = "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
 base_branch = "master"
-primary_languages = ["Rust"]
-detected_surfaces = ["cargo"]
+primary_languages = [
+    "Rust",
+    "rust",
+]
+detected_surfaces = [
+    "cargo",
+    "rust",
+]
 external_tracker = false
 container_workspaces = true
-backend = "local"
-mode = "local"
+backend = "cloud"
 declared_capabilities = [
     "agent-helper",
     "authentication",

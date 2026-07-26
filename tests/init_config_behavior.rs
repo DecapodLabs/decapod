@@ -74,43 +74,27 @@ fn init_persists_remote_default_base_branch() {
 fn init_with_backend_cloud_saves_to_config() {
     let tmp = tempdir().expect("tempdir");
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "with", "--mode", "cloud", "--force"])
+        .args(["init", "with", "--backend", "cloud", "--force"])
         .current_dir(tmp.path())
         .output()
         .expect("run decapod");
 
     assert!(
         out.status.success(),
-        "decapod init with --mode cloud failed: {}",
+        "decapod init with --backend cloud failed: {}",
         String::from_utf8_lossy(&out.stderr)
     );
 
     let config_path = tmp.path().join(".decapod/config.toml");
     let config = fs::read_to_string(config_path).expect("read config.toml");
     assert!(
-        config.contains("[cloud]"),
-        "missing [cloud] section: {config}"
+        config.contains("backend = \"cloud\""),
+        "explicit cloud backend must be recorded: {config}"
     );
-    assert!(
-        config.contains("enabled = true"),
-        "cloud opt-in should be recorded: {config}"
-    );
-    assert!(
-        config.contains("experimental = true"),
-        "cloud should be marked experimental: {config}"
-    );
-    assert!(
-        config.contains("provider = \"vercel\""),
-        "cloud provider should be non-secret Vercel wiring: {config}"
-    );
-    assert!(
-        config.contains("api_url = \"https://decapod-cloud.vercel.app\""),
-        "cloud API URL should use the Vercel backend default: {config}"
-    );
-    assert!(
-        config.contains("mode = \"cloud\""),
-        "explicit cloud opt-in must activate cloud todo routing: {config}"
-    );
+    assert!(!config.contains("[cloud]"));
+    assert!(!config.contains("api_url"));
+    assert!(!config.contains("project_id"));
+    assert!(!config.contains("repo_id"));
     assert!(
         !config.contains("supabase") && !config.contains("token") && !config.contains("secret"),
         "repo config must not contain credentials or legacy backend secrets: {config}"
@@ -146,10 +130,11 @@ fn init_with_backend_local_is_default() {
 
     let config_path = tmp.path().join(".decapod/config.toml");
     let config = fs::read_to_string(config_path).expect("read config.toml");
-    assert!(config.contains("mode = \"local\""));
+    assert!(config.contains("backend = \"local\""));
+    assert!(!config.contains("mode = \"local\""));
     assert!(
         !config.contains("[cloud]"),
-        "cloud section must not be serialized when cloud is disabled: {config}"
+        "cloud service details must not be serialized: {config}"
     );
 }
 
@@ -157,7 +142,7 @@ fn init_with_backend_local_is_default() {
 fn init_cloud_opt_in_does_not_store_secret_environment_values() {
     let tmp = tempdir().expect("tempdir");
     let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(["init", "with", "--mode", "cloud", "--force"])
+        .args(["init", "with", "--backend", "cloud", "--force"])
         .current_dir(tmp.path())
         .env("SUPABASE_URL", "https://private.supabase.local")
         .env("SUPABASE_KEY", "super-secret-service-role")
@@ -173,7 +158,11 @@ fn init_cloud_opt_in_does_not_store_secret_environment_values() {
 
     let config_path = tmp.path().join(".decapod/config.toml");
     let config = fs::read_to_string(config_path).expect("read config.toml");
-    assert!(config.contains("enabled = true"));
+    assert!(config.contains("backend = \"cloud\""));
+    assert!(!config.contains("[cloud]"));
+    assert!(!config.contains("api_url"));
+    assert!(!config.contains("project_id"));
+    assert!(!config.contains("repo_id"));
     assert!(!config.contains("private.supabase.local"));
     assert!(!config.contains("super-secret-service-role"));
     assert!(!config.contains("repo-config-must-not-store-this"));

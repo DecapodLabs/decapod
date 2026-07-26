@@ -1,29 +1,28 @@
 {
   "schema_version": "1.0.0",
-  "title": "Propodus next wave: provider-neutral onboarding and verified repository identity",
-  "intent": "Advance Decapod v0.83.2 toward safe Propodus cloud dogfooding with explicit provider-neutral repository identity and onboarding/session interfaces, while local remains the default and live provider auth remains deferred until proven",
+  "title": "Decapod cloud cutover: Propodus todo composition and machine session",
+  "intent": "Cut Decapod over to the working Propodus cloud path: activate the cloud todo adapter, automate one-time onboarding and machine-local JWT session refresh, preserve canonical repository and fork identity separation, and prove protected list/add/claim/complete behavior against production without local fallback.",
   "state": "APPROVED",
   "todo_ids": [
-    "code_01kyeg2sh0z2j8b0"
+    "feat_01kyenj71ap51saz"
   ],
   "proof_hooks": [
     "cargo fmt --check",
     "cargo test",
-    "decapod validate"
+    "decapod validate",
+    "protected production todo proof"
   ],
   "unknowns": [],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [
-    "When Propodus publishes a stable onboarding/session payload contract, integrate the real exchange and refresh loop"
-  ],
+  "deferred_questions": [],
   "constraints": {
     "forbidden_paths": [
-      ".decapod/config.toml backend switch"
+      ".decapod/data"
     ],
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785047330Z"
+  "updated_at": "1785051681Z"
 }

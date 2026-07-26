@@ -2,7 +2,7 @@
 
 Propodus is an optional remote service boundary for repo-scoped todos. It is
 not compiled into Decapod and it does not replace local SQLite by default.
-`repo.backend = "cloud"` is an explicit opt-in: in that mode the todo commands
+`repo.backend = "cloud"` selects the cloud backend: todo commands
 use Propodus directly and never silently fall back to local SQLite.
 
 ## Contract v1
@@ -22,15 +22,17 @@ The checked-in compatibility fixture is
 local `propodus_contract` test, which uses an injectable fake transport and
 never contacts Vercel, Neon, or production data.
 
-The provider-neutral onboarding/session shape is recorded separately in
-`tests/fixtures/propodus/onboarding-contract-v1.json`. It is a Decapod client
-boundary and offline safety fixture, not a claim that live provider exchange
-has been proven.
+The deployed onboarding/session shape is recorded separately in
+`tests/fixtures/propodus/onboarding-contract-v1.json`: Decapod starts with the
+canonical `repo_id`, prints/opens the one-time URL, polls status, consumes the
+ready flow once, exchanges the returned code for a machine session, and
+rotates that session through the refresh route. Credentials stay outside the
+repository.
 
 The command boundary is covered by `tests/cloud_command_path.rs`, which proves
 that list, add, claim, and complete are routed through the backend-neutral
 `TodoStore` adapter. Unsupported local-only operations return an explicit
-error in cloud mode.
+error on the cloud backend.
 
 The production-dispatch proof is `tests/cloud_cli_boundary.rs`; it uses a
 mock Propodus store factory and exercises the same `run_todo_cli` composition
@@ -74,43 +76,42 @@ Credentials are never read from `.decapod/config.toml`. Lookup precedence is:
 3. the machine-local `~/.local/share/decapod/session_token.json`.
 
 Use `decapod cloud status` to check whether a bearer is configured without
-printing the token. `decapod cloud login` fails fast with an explicit
-unsupported error; it no longer runs a legacy Auth0 device flow that could
-produce a token Propodus cannot accept. Bearer tokens are sent only in the
-`Authorization` header. Propodus PR #31 defines the active bearer contract as
-a JWT with its configured issuer/audience and a GitHub subject; Propodus owns
-those checks. Decapod only checks that a credential is present and reports a
-service 401/403 without logging the token. The GitHub login/token exchange
-remains deferred until Propodus issue #24 exposes its stable route.
+printing the token. `decapod cloud login` and the first cloud todo command use
+Decapod's baked-in Propodus endpoint to start or resume onboarding.
+Interactive terminals open the URL when a browser launcher is available and
+always print it as a fallback; headless callers receive a bounded resume
+instruction. A completed exchange is stored machine-locally with restrictive
+permissions and expired sessions refresh through the provider. Bearer tokens
+are sent only in the `Authorization` header; Decapod never logs or writes
+them to repository configuration, generated governance, URLs, or commits.
 
 ## Repeatable dogfood setup
 
 From a fresh checkout of the canonical repository:
 
-1. Run `decapod init --mode cloud --proof` and confirm `.decapod/config.toml`
-   contains `repo.backend = "cloud"`, `[cloud].enabled = true`, and the intended
-   Propodus `api_url`. The endpoint is selected only from this project config;
-   no service URL is inferred from credentials.
+1. Run `decapod init --backend cloud --proof` and confirm `.decapod/config.toml`
+   contains only the backend selection `repo.backend = "cloud"` for cloud
+   composition. The Propodus endpoint and provider are binary-owned; no service
+   URL or project identifier is stored in project configuration.
 2. Ensure `origin` is an unambiguous GitHub remote. Decapod derives the
    canonical owner/name from it and sends that binding to the provider; the
    provider decides whether the authenticated session may use the repository.
-3. Provision a Propodus-issued bearer JWT in `DECAPOD_ACCESS_TOKEN` or in
-   `~/.local/share/decapod/session_token.json`. The token must satisfy the
-   issuer, audience, GitHub-subject, repository-authorization, and seat rules
-   enforced by Propodus. Decapod cannot mint, refresh, revoke, or validate
-   those provider claims.
-4. Run `decapod todo list`, `add`, `get`, `show`, `claim`, or `done`. Missing
-   credentials, cloud config, or a canonical GitHub remote produce a preflight
-   error; authentication, authorization, and transport failures do
-   not fall back to local SQLite.
+3. Run `decapod todo list`, `add`, `get`, `show`, `claim`, or `done`. If no
+   machine session exists, Decapod starts the one-time browser handoff and
+   resumes it on the next invocation. A controlled `DECAPOD_ACCESS_TOKEN`
+   remains available for protected proofs.
+4. Cloud todo commands use the same `TodoStore` command boundary as local
+   todo commands, but compose the Propodus adapter and JWT instead of local
+   SQLite. They do not acquire the local agent session or create/migrate the
+   local todo database. Missing credentials or a canonical
+   GitHub remote fail closed and never fall back to SQLite.
 
 ## Repository identity
 
-Cloud mode derives a canonical `owner/name` binding from the `origin` remote
+The cloud backend derives a canonical `owner/name` binding from the `origin` remote
 and rejects non-GitHub or ambiguous remotes. Forks remain distinct identities
 and are passed to the provider for authorization; Decapod does not maintain a
-repo allowlist or treat `cloud.repo_id` as authority to select another
-repository.
+repo allowlist or accept a project-configured repository identifier.
 
 ## v1 governance limits
 
@@ -127,10 +128,9 @@ see [Decapod issue #1038](https://github.com/DecapodLabs/decapod/issues/1038).
 
 Wave 1 provided the Decapod-side contract, credential lookup, typed client,
 storage adapter, and deterministic local proof. Wave 2 activates the explicit
-cloud todo command path, remote-derived repository identity, adapter-level
-command proof, and protected command-level live proof without moving hosted
-authentication, repository authorization, stable URL ownership, persistence,
-or deployment into Decapod. The next wave adds the provider-neutral onboarding
-and machine-session payload boundary; live login remains deferred until the
-provider publishes and proves the wire contract. Those external concerns
-remain provider responsibilities.
+cloud todo command path, remote-derived repository identity, deployed
+onboarding/session exchange, machine-local refresh, adapter-level command
+proof, and protected command-level live proof without moving hosted
+authentication, repository authorization, persistence, or deployment into
+Decapod. Local mode continues to use SQLite through the same backend-neutral
+todo command boundary.

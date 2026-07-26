@@ -1,5 +1,8 @@
 use crate::core::ansi::AnsiExt;
+use crate::core::cloud_backend::CloudSession;
 use crate::core::error::DecapodError;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -43,6 +46,30 @@ pub enum CredentialSource {
 pub struct CloudCredential {
     pub token: String,
     pub source: CredentialSource,
+    pub refresh_token: Option<String>,
+    pub session_id: Option<String>,
+    pub expires_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+struct MachineSessionRecord {
+    #[serde(alias = "token", alias = "session_token")]
+    access_token: String,
+    #[serde(default)]
+    refresh_token: Option<String>,
+    #[serde(default)]
+    session_id: Option<String>,
+    #[serde(default)]
+    expires_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PendingCloudOnboarding {
+    pub api_url: String,
+    pub repo_id: String,
+    pub flow_id: String,
+    pub url: String,
+    pub expires_at: String,
 }
 
 pub fn cloud_credential_path() -> Result<PathBuf, DecapodError> {
@@ -73,50 +100,138 @@ pub fn resolve_cloud_credential(
         return Ok(CloudCredential {
             token: value.to_string(),
             source,
+            refresh_token: None,
+            session_id: None,
+            expires_at: None,
         });
     }
 
     Err(DecapodError::SessionError(
-        "no Propodus bearer configured; set DECAPOD_ACCESS_TOKEN or provision the machine credential file at ~/.local/share/decapod/session_token.json (cloud login is unavailable until the Propodus GitHub exchange contract is published)".to_string(),
+        "no cloud session is configured; run the cloud todo command in an interactive terminal to start browser onboarding".to_string(),
     ))
 }
 
-fn read_machine_credential() -> Result<Option<String>, DecapodError> {
+fn read_machine_session_record() -> Result<Option<MachineSessionRecord>, DecapodError> {
     let path = machine_session_token_path()?;
     if !path.exists() {
         return Ok(None);
     }
     let raw = fs::read_to_string(path).map_err(DecapodError::IoError)?;
-    let value: serde_json::Value = serde_json::from_str(&raw).map_err(|_| {
+    let record: MachineSessionRecord = serde_json::from_str(&raw).map_err(|_| {
         DecapodError::SessionError("cloud credential file is not valid JSON".to_string())
     })?;
-    value
-        .get("token")
-        .and_then(serde_json::Value::as_str)
-        .or_else(|| {
-            value
-                .get("session_token")
-                .and_then(serde_json::Value::as_str)
-        })
-        .map(str::to_owned)
-        .ok_or_else(|| {
-            DecapodError::SessionError("cloud credential file does not contain a token".to_string())
-        })
-        .map(Some)
+    if record.access_token.trim().is_empty() {
+        return Err(DecapodError::SessionError(
+            "cloud credential file does not contain an access token".to_string(),
+        ));
+    }
+    Ok(Some(record))
 }
 
 pub fn load_cloud_credential(explicit: Option<&str>) -> Result<CloudCredential, DecapodError> {
-    resolve_cloud_credential(
-        explicit,
-        env::var(CLOUD_ACCESS_TOKEN_ENV).ok().as_deref(),
-        read_machine_credential()?.as_deref(),
-    )
+    let environment = env::var(CLOUD_ACCESS_TOKEN_ENV).ok();
+    if explicit.is_some() || environment.is_some() {
+        return resolve_cloud_credential(explicit, environment.as_deref(), None);
+    }
+    load_machine_session()?.ok_or_else(|| {
+        DecapodError::SessionError(
+            "no cloud session is configured; run the cloud todo command in an interactive terminal to start browser onboarding".to_string(),
+        )
+    })
 }
 
 pub fn perform_cloud_auth(_target_dir: &Path) -> Result<(), DecapodError> {
-    Err(DecapodError::NotImplemented(
-        "Propodus-compatible GitHub login is not available in Decapod yet. Configure a Propodus-issued bearer JWT through DECAPOD_ACCESS_TOKEN or ~/.local/share/decapod/session_token.json; the Propodus service owns issuer, audience, GitHub-subject, refresh, and revocation checks.".to_string(),
+    Err(DecapodError::SessionError(
+        "cloud login requires the configured project cloud endpoint; run a cloud todo command to start repository-bound onboarding".to_string(),
     ))
+}
+
+pub fn load_machine_session() -> Result<Option<CloudCredential>, DecapodError> {
+    let Some(record) = read_machine_session_record()? else {
+        return Ok(None);
+    };
+    Ok(Some(CloudCredential {
+        token: record.access_token,
+        source: CredentialSource::MachineFile,
+        refresh_token: record.refresh_token,
+        session_id: record.session_id,
+        expires_at: record.expires_at,
+    }))
+}
+
+pub fn store_machine_session(session: &CloudSession) -> Result<(), DecapodError> {
+    session.validate()?;
+    let path = machine_session_token_path()?;
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
+    }
+    let record = MachineSessionRecord {
+        access_token: session.access_token.clone(),
+        refresh_token: session.refresh_token.clone(),
+        session_id: session.session_id.clone(),
+        expires_at: session.expires_at.clone(),
+    };
+    let bytes = serde_json::to_vec_pretty(&record).map_err(|error| {
+        DecapodError::SessionError(format!("failed to serialize cloud session: {error}"))
+    })?;
+    fs::write(&path, bytes).map_err(DecapodError::IoError)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600))
+            .map_err(DecapodError::IoError)?;
+    }
+    Ok(())
+}
+
+pub fn cloud_session_is_expired(credential: &CloudCredential) -> bool {
+    let Some(expires_at) = credential.expires_at.as_deref() else {
+        return false;
+    };
+    DateTime::parse_from_rfc3339(expires_at)
+        .map(|value| value.with_timezone(&Utc) <= Utc::now())
+        .unwrap_or(true)
+}
+
+pub fn store_pending_cloud_onboarding(
+    pending: &PendingCloudOnboarding,
+) -> Result<(), DecapodError> {
+    let path = machine_data_dir()?.join("onboarding.json");
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(DecapodError::IoError)?;
+    }
+    let bytes = serde_json::to_vec_pretty(pending).map_err(|error| {
+        DecapodError::SessionError(format!(
+            "failed to serialize cloud onboarding state: {error}"
+        ))
+    })?;
+    fs::write(&path, bytes).map_err(DecapodError::IoError)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600))
+            .map_err(DecapodError::IoError)?;
+    }
+    Ok(())
+}
+
+pub fn load_pending_cloud_onboarding() -> Result<Option<PendingCloudOnboarding>, DecapodError> {
+    let path = machine_data_dir()?.join("onboarding.json");
+    if !path.exists() {
+        return Ok(None);
+    }
+    let raw = fs::read_to_string(path).map_err(DecapodError::IoError)?;
+    serde_json::from_str(&raw).map(Some).map_err(|_| {
+        DecapodError::SessionError("cloud onboarding state is not valid JSON".to_string())
+    })
+}
+
+pub fn clear_pending_cloud_onboarding() -> Result<(), DecapodError> {
+    let path = machine_data_dir()?.join("onboarding.json");
+    if path.exists() {
+        fs::remove_file(path).map_err(DecapodError::IoError)?;
+    }
+    Ok(())
 }
 
 pub fn is_token_valid(_target_dir: &Path) -> bool {

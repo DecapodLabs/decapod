@@ -1,141 +1,65 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "propodus-next-wave-01kyeg",
-  "intent_id": "intent:propodus-next-wave-01kyeg",
-  "task_id": "code_01kyeg2sh0z2j8b0",
-  "original_intent": "Advance Decapod v0.83.2 toward safe Propodus cloud dogfooding",
-  "derived_intent": "Add provider-neutral verified GitHub repository identity and a typed, offline-testable cloud onboarding/session contract; keep local default and defer live auth until the provider contract is proven",
+  "run_id": "cloud-cutover-01kyen",
+  "intent_id": "intent:cloud-cutover-01kyen",
+  "task_id": "feat_01kyenj71ap51saz",
+  "original_intent": "Cut Decapod over to the working Propodus cloud path",
+  "derived_intent": "Activate cloud todo composition, implement machine-local onboarding/session refresh, preserve remote repository identity and fork separation, and prove protected production todo workflow without local fallback",
   "current_phase": "validation",
   "next_transitions": [
-    "await CI and review feedback",
-    "await review",
-    "commit proof-backed changes, publish PR, then rerun protected validation in the published workspace",
-    "implement typed contract, test, refresh specs, validate, publish PR",
-    "publish",
-    "publish branch and create PR"
+    "inspect live contract and implement cutover",
+    "publish"
   ],
   "active_boundaries": [
-    "Decapod owns client/session boundary and command resumption; Propodus owns external auth, policy, persistence, and provider deployment; do not switch repository backend or embed provider business logic"
+    "Decapod owns CLI composition, client-side onboarding/session custody, and proof capture; Propodus owns hosted authentication, authorization, persistence, deployment, and business policy"
   ],
   "repo_scope": [
-    "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+    "src/decapod,tests,docs/book/src/reference/propodus.md,.decapod/config.toml"
   ],
-  "inspected_files": [
-    "docs/book/src/reference/propodus.md",
-    "src/decapod/core/cloud_backend.rs",
-    "src/decapod/core/propodus.rs",
-    "src/decapod/core/repo_identity.rs",
-    "src/decapod/core/todo.rs",
-    "tests/cloud_backend_storage.rs",
-    "tests/cloud_cli_boundary.rs",
-    "tests/propodus_contract.rs"
-  ],
+  "inspected_files": [],
   "modified_files": [
     ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    "docs/book/src/reference/propodus.md",
-    "src/decapod/core/cloud_backend.rs",
-    "src/decapod/core/entrypoint_integrity.rs",
-    "src/decapod/core/repo_identity.rs",
-    "src/decapod/core/todo.rs",
-    "tests/cloud_backend_storage.rs",
-    "tests/cloud_cli_boundary.rs",
-    "tests/fixtures/propodus/onboarding-contract-v1.json",
-    "tests/propodus_contract.rs",
-    "tests/propodus_live.rs"
+    ".decapod/governance/validation.json"
   ],
   "declared_commands": [
-    "cargo fmt --all",
-    "cargo test -- --test-threads=1",
-    "decapod govern trajectory record",
-    "decapod rpc --op specs.refresh",
-    "decapod validate",
-    "decapod validate --format json",
-    "gh pr create --repo DecapodLabs/decapod",
-    "gh run 30191503487",
-    "git push origin agent/unknown/code_01kyeg2sh0z2j8b0-propodus-next-wave",
-    "podman run ... decapod validate --format json"
+    "decapod validate"
   ],
   "tool_calls": [],
   "checks": [
     {
-      "name": "cargo_fmt",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_test_serial",
-      "status": "failed"
-    },
-    {
-      "name": "container_validation",
-      "status": "passed"
-    },
-    {
       "name": "decapod validate",
-      "status": "passed"
-    },
-    {
-      "name": "decapod_validate",
-      "status": "failed"
-    },
-    {
-      "name": "decapod_validate_container",
-      "status": "passed"
-    },
-    {
-      "name": "pr_ci",
-      "status": "passed"
-    },
-    {
-      "name": "publish",
-      "status": "passed"
-    },
-    {
-      "name": "targeted_cloud_contract_tests",
-      "status": "passed"
-    },
-    {
-      "name": "targeted_tests",
       "status": "passed"
     }
   ],
   "evidence": [
-    "206 parallel tests initially passed before known entrypoint session race; serial targeted suites passed; serial full suite reached pre-existing release_artifact_policy failure for inline tests in cli.rs/cloud_backend.rs/repo_identity.rs; validation reported 197 passes with host container/dirty/plan gates",
-    "Container validation receipt status=ok with fail_count=0",
-    "Containerized Decapod v0.83.2 validation exited 0 with 201 passing gates and 7 existing warnings; no failure gates",
-    "PR #1043 created at https://github.com/DecapodLabs/decapod/pull/1043",
-    "PR #1043 published at https://github.com/DecapodLabs/decapod/pull/1043",
-    "PR CI run 30191503487 all required jobs passed",
-    "validation epoch ve_2e41a0824e6dc01a completed with zero failures",
-    "validation epoch ve_a7f64761462dd611 completed with zero failures"
+    "validation epoch ve_028ba8efdaf58351 completed with zero failures",
+    "validation epoch ve_1e44b4e4dfec6886 completed with zero failures",
+    "validation epoch ve_86cdf1e09cd56911 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
-  "unresolved_assumptions": [
-    "Live provider deployment credentials and hosted policy remain outside Decapod proof"
-  ],
-  "completion_claim": "Provider-neutral onboarding and repository identity boundary are implemented, tested, spec-refreshed, container-validated, and published in PR #1043; live provider exchange remains deferred until its contract is proven.",
-  "proof_status": "failed",
+  "unresolved_assumptions": [],
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:ddb7d6a99a79e28229959bdebee28f713247155154c1c80670c10dd58d0bc64f",
+  "artifact_hash": "sha256:92abdfa4c1c16775bfa04a1152d2d0277b71422455c54e65fe13611ecc165fc6",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:propodus-next-wave-01kyeg": {
-        "id": "intent:propodus-next-wave-01kyeg",
-        "raw_intent": "Advance Decapod v0.83.2 toward safe Propodus cloud dogfooding",
-        "refined_intent": "Add provider-neutral verified GitHub repository identity and a typed, offline-testable cloud onboarding/session contract; keep local default and defer live auth until the provider contract is proven",
+      "intent:cloud-cutover-01kyen": {
+        "id": "intent:cloud-cutover-01kyen",
+        "raw_intent": "Cut Decapod over to the working Propodus cloud path",
+        "refined_intent": "Activate cloud todo composition, implement machine-local onboarding/session refresh, preserve remote repository identity and fork separation, and prove protected production todo workflow without local fallback",
         "acceptance_criteria": [],
         "constraints": [
-          "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+          "src/decapod,tests,docs/book/src/reference/propodus.md,.decapod/config.toml"
         ],
         "assumptions": [],
         "boundaries": [
-          "Decapod owns client/session boundary and command resumption; Propodus owns external auth, policy, persistence, and provider deployment; do not switch repository backend or embed provider business logic"
+          "Decapod owns CLI composition, client-side onboarding/session custody, and proof capture; Propodus owns hosted authentication, authorization, persistence, deployment, and business policy"
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -148,122 +72,66 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "intent_id": "intent:cloud-cutover-01kyen",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "intent_id": "intent:cloud-cutover-01kyen",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "intent_id": "intent:cloud-cutover-01kyen",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:propodus-next-wave-01kyeg"
+        "detail": "trajectory:cloud-cutover-01kyen"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "intent_id": "intent:cloud-cutover-01kyen",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:propodus-next-wave-01kyeg"
+        "detail": "trajectory:cloud-cutover-01kyen"
       },
       {
         "sequence": 6,
         "event_id": "event:6",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "intent_id": "intent:cloud-cutover-01kyen",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:propodus-next-wave-01kyeg"
+        "detail": "trajectory:cloud-cutover-01kyen"
       },
       {
         "sequence": 7,
         "event_id": "event:7",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "intent_id": "intent:cloud-cutover-01kyen",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:propodus-next-wave-01kyeg"
-      },
-      {
-        "sequence": 8,
-        "event_id": "event:8",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:propodus-next-wave-01kyeg"
-      },
-      {
-        "sequence": 9,
-        "event_id": "event:9",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:propodus-next-wave-01kyeg"
-      },
-      {
-        "sequence": 10,
-        "event_id": "event:10",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:propodus-next-wave-01kyeg"
-      },
-      {
-        "sequence": 11,
-        "event_id": "event:11",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:propodus-next-wave-01kyeg"
-      },
-      {
-        "sequence": 12,
-        "event_id": "event:12",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:propodus-next-wave-01kyeg"
+        "detail": "trajectory:cloud-cutover-01kyen"
       }
     ],
     "trajectories": {
-      "propodus-next-wave-01kyeg": {
-        "id": "propodus-next-wave-01kyeg",
-        "intent_id": "intent:propodus-next-wave-01kyeg",
+      "cloud-cutover-01kyen": {
+        "id": "cloud-cutover-01kyen",
+        "intent_id": "intent:cloud-cutover-01kyen",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "trajectory.record",
-            "command": "cargo fmt --all",
+            "action": "validation",
+            "command": "decapod validate",
             "scope": [
-              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+              "src/decapod,tests,docs/book/src/reference/propodus.md,.decapod/config.toml"
             ],
             "observations": [
-              "src/decapod/core/repo_identity.rs",
-              "src/decapod/core/cloud_backend.rs",
-              "src/decapod/core/propodus.rs",
-              "src/decapod/core/todo.rs",
-              "tests/cloud_backend_storage.rs",
-              "tests/cloud_cli_boundary.rs",
-              "tests/propodus_contract.rs",
-              "docs/book/src/reference/propodus.md",
-              "src/decapod/core/repo_identity.rs",
-              "src/decapod/core/cloud_backend.rs",
-              "src/decapod/core/todo.rs",
-              "src/decapod/core/entrypoint_integrity.rs",
-              "tests/cloud_backend_storage.rs",
-              "tests/cloud_cli_boundary.rs",
-              "tests/propodus_contract.rs",
-              "tests/propodus_live.rs",
-              "tests/fixtures/propodus/onboarding-contract-v1.json",
-              "docs/book/src/reference/propodus.md",
-              "206 parallel tests initially passed before known entrypoint session race; serial targeted suites passed; serial full suite reached pre-existing release_artifact_policy failure for inline tests in cli.rs/cloud_backend.rs/repo_identity.rs; validation reported 197 passes with host container/dirty/plan gates"
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_86cdf1e09cd56911 completed with zero failures"
             ],
             "proof_refs": [
-              "cargo_fmt",
-              "targeted_cloud_contract_tests",
-              "cargo_test_serial",
-              "decapod_validate"
+              "decapod validate"
             ],
-            "validation_findings": [
-              "Live provider deployment credentials and hosted policy remain outside Decapod proof"
-            ],
+            "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
@@ -271,12 +139,12 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+              "src/decapod,tests,docs/book/src/reference/propodus.md,.decapod/config.toml"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_a7f64761462dd611 completed with zero failures"
+              "validation epoch ve_1e44b4e4dfec6886 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
@@ -286,16 +154,18 @@
           },
           {
             "sequence": 6,
-            "action": "trajectory.record",
-            "command": "podman run ... decapod validate --format json",
+            "action": "validation",
+            "command": "decapod validate",
             "scope": [
-              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+              "src/decapod,tests,docs/book/src/reference/propodus.md,.decapod/config.toml"
             ],
             "observations": [
-              "Containerized Decapod v0.83.2 validation exited 0 with 201 passing gates and 7 existing warnings; no failure gates"
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_1e44b4e4dfec6886 completed with zero failures"
             ],
             "proof_refs": [
-              "decapod_validate_container"
+              "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
@@ -305,117 +175,24 @@
             "action": "validation",
             "command": "decapod validate",
             "scope": [
-              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+              "src/decapod,tests,docs/book/src/reference/propodus.md,.decapod/config.toml"
             ],
             "observations": [
               ".decapod/governance/trajectory.json",
               ".decapod/governance/validation.json",
-              "validation epoch ve_2e41a0824e6dc01a completed with zero failures"
+              "validation epoch ve_028ba8efdaf58351 completed with zero failures"
             ],
             "proof_refs": [
               "decapod validate"
             ],
             "validation_findings": [],
             "custody_event_id": "event:7"
-          },
-          {
-            "sequence": 8,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_2e41a0824e6dc01a completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:8"
-          },
-          {
-            "sequence": 9,
-            "action": "trajectory.record",
-            "command": "git push origin agent/unknown/code_01kyeg2sh0z2j8b0-propodus-next-wave",
-            "scope": [
-              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
-            ],
-            "observations": [
-              "PR #1043 created at https://github.com/DecapodLabs/decapod/pull/1043"
-            ],
-            "proof_refs": [
-              "publish"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:9"
-          },
-          {
-            "sequence": 10,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_a7f64761462dd611 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:10"
-          },
-          {
-            "sequence": 11,
-            "action": "validation",
-            "command": "decapod govern trajectory record",
-            "scope": [
-              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "PR #1043 published at https://github.com/DecapodLabs/decapod/pull/1043",
-              "Container validation receipt status=ok with fail_count=0",
-              "PR CI run 30191503487 all required jobs passed"
-            ],
-            "proof_refs": [
-              "cargo_fmt",
-              "targeted_tests",
-              "container_validation",
-              "pr_ci"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:11"
-          },
-          {
-            "sequence": 12,
-            "action": "validation",
-            "command": "decapod validate",
-            "scope": [
-              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
-            ],
-            "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_a7f64761462dd611 completed with zero failures"
-            ],
-            "proof_refs": [
-              "decapod validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:12"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 12
+    "next_sequence": 7
   }
 }
