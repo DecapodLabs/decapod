@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
-  "title": "Propodus phase 2 alignment: cloud command path and dogfood proof",
-  "intent": "Align PR #1036 with Decapod issues #1032-#1035 and #1037: activate explicit cloud todo storage through the typed Propodus adapter, derive and fail-closed on canonical GitHub repository identity, consume a machine-local Propodus bearer boundary without embedding service identity policy, and provide a protected command-level dogfood proof while preserving local offline defaults.",
-  "state": "DONE",
+  "title": "Propodus wave 2 review closure: truthful credential and CLI dogfood",
+  "intent": "Revise PR #1036 to close the latest review gaps: make injected Propodus JWT credentials truthful and fail-fast, downgrade unbound repository identity claims, prove the production CLI dispatch with a mock Propodus transport, document explicit v1 governance limitations, and provide a repeatable dogfood runbook while preserving Propodus-owned auth policy.",
+  "state": "EXECUTING",
   "todo_ids": [
     "cicd_01kydv7dsj7sayv4"
   ],
@@ -16,7 +16,7 @@
   "stop_conditions": [],
   "unresolved_contradictions": [],
   "deferred_questions": [
-    "Propodus issue #24 must expose the GitHub login/token exchange before Decapod can replace the legacy interactive login flow; this PR consumes only the machine bearer contract available in Propodus PR #31."
+    "Propodus issue #24 must expose the GitHub login/token exchange before Decapod can provide an interactive compatible login; this PR must explicitly document injected-token dogfood instead."
   ],
   "constraints": {
     "forbidden_paths": [],
@@ -66,7 +66,18 @@
       "completed": true,
       "entered_at": "1785027089Z",
       "completed_at": "1785029250Z"
+    },
+    {
+      "id": "propodus-review-closure",
+      "name": "Close credential, identity, CLI, and dogfood review gaps",
+      "description": "Make cloud credentials truthful and fail-fast, retain only a temporary identity gate until Propodus binds immutable identity, prove the actual CLI boundary with an injected transport, document v1 unsupported proof semantics, and update the protected dogfood runbook.",
+      "entry_gates": [],
+      "exit_gates": [],
+      "entered": true,
+      "completed": false,
+      "entered_at": "1785034186Z",
+      "completed_at": null
     }
   ],
-  "updated_at": "1785029250Z"
+  "updated_at": "1785034186Z"
 }

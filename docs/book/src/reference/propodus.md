@@ -27,16 +27,22 @@ that list, add, claim, and complete are routed through the backend-neutral
 `TodoStore` adapter. Unsupported local-only operations return an explicit
 error in cloud mode.
 
+The production-dispatch proof is `tests/cloud_cli_boundary.rs`; it uses a
+mock Propodus store factory and exercises the same `run_todo_cli` composition
+used by the binary. It proves config discovery, canonical-origin validation,
+credential preflight, list/add/get/show/claim/done routing, not-found behavior,
+and the absence of local SQLite initialization for cloud todo commands.
+
 The opt-in live proof is `tests/propodus_live.rs`. Run it only with
 `DECAPOD_PROPODUS_LIVE=1`, `DECAPOD_PROPODUS_API_URL`,
-`DECAPOD_PROPODUS_ACCESS_TOKEN`, `DECAPOD_GITHUB_REPOSITORY_ID`, and a
+`DECAPOD_PROPODUS_ACCESS_TOKEN`, `DECAPOD_PROPODUS_DOGFOOD=1`, and a
 disposable `DECAPOD_PROPODUS_DISPOSABLE_REPO_ID`:
 
 ```text
 DECAPOD_PROPODUS_LIVE=1 \
 DECAPOD_PROPODUS_API_URL=https://your-stable-propodus.example \
 DECAPOD_PROPODUS_ACCESS_TOKEN=... \
-DECAPOD_GITHUB_REPOSITORY_ID=... \
+DECAPOD_PROPODUS_DOGFOOD=1 \
 DECAPOD_PROPODUS_DISPOSABLE_REPO_ID=DecapodLabs/propodus-live-deny \
 cargo test --test propodus_live -- --ignored --nocapture
 ```
@@ -61,27 +67,61 @@ Credentials are never read from `.decapod/config.toml`. Lookup precedence is:
 
 1. an explicit client credential;
 2. `DECAPOD_ACCESS_TOKEN` for controlled development and CI use;
-3. the machine-local `session_token.json`.
+3. the machine-local `~/.local/share/decapod/session_token.json`.
 
-Use `decapod cloud status` to check availability without printing the token.
-Bearer tokens are sent only in the `Authorization` header. The current
-machine-local file is a credential boundary, not provider authentication proof;
-backend verification remains a Propodus responsibility. Propodus PR #31
-defines the active bearer contract as a GitHub-subject JWT with repository and
-seat authorization. Decapod can consume such a machine credential, but the
-GitHub login/token exchange remains deferred until Propodus issue #24 exposes
-that stable route; the legacy Auth0 device flow is not part of the active
-Propodus todo path.
+Use `decapod cloud status` to check whether a bearer is configured without
+printing the token. `decapod cloud login` fails fast with an explicit
+unsupported error; it no longer runs a legacy Auth0 device flow that could
+produce a token Propodus cannot accept. Bearer tokens are sent only in the
+`Authorization` header. Propodus PR #31 defines the active bearer contract as
+a JWT with its configured issuer/audience and a GitHub subject; Propodus owns
+those checks. Decapod only checks that a credential is present and reports a
+service 401/403 without logging the token. The GitHub login/token exchange
+remains deferred until Propodus issue #24 exposes its stable route.
+
+## Repeatable dogfood setup
+
+From a fresh checkout of the canonical repository:
+
+1. Run `decapod init --mode cloud --proof` and confirm `.decapod/config.toml`
+   contains `repo.mode = "cloud"`, `[cloud].enabled = true`, and the intended
+   Propodus `api_url`. The endpoint is selected only from this project config;
+   no service URL is inferred from credentials.
+2. Ensure `origin` is an unambiguous GitHub remote for
+   `DecapodLabs/decapod`. Forks and other remotes fail before any network
+   request.
+3. Set `DECAPOD_PROPODUS_DOGFOOD=1` as the explicit temporary dogfood gate.
+   This is a local opt-in marker, not an authenticated repository identity,
+   and is not sent to Propodus.
+4. Provision a Propodus-issued bearer JWT in `DECAPOD_ACCESS_TOKEN` or in
+   `~/.local/share/decapod/session_token.json`. The token must satisfy the
+   issuer, audience, GitHub-subject, repository-authorization, and seat rules
+   enforced by Propodus. Decapod cannot mint, refresh, revoke, or validate
+   those provider claims.
+5. Run `decapod todo list`, `add`, `get`, `show`, `claim`, or `done`. Missing
+   credentials, the dogfood gate, cloud config, or canonical remote produce a
+   preflight error; authentication, authorization, and transport failures do
+   not fall back to local SQLite.
 
 ## Repository identity
 
 Cloud dogfood is fail-closed to the canonical `DecapodLabs/decapod` origin.
-Decapod derives owner/name from `origin`, rejects non-GitHub, ambiguous, and
-fork remotes, and requires the immutable GitHub repository identity supplied by
-`DECAPOD_GITHUB_REPOSITORY_ID`. The project file's `cloud.repo_id` is not an
-authority to select another repository. Propodus currently authorizes the
-canonical name; the immutable value is retained at the Decapod identity
-boundary until the service contract exposes its final wire field.
+Decapod derives owner/name from `origin` and rejects non-GitHub, ambiguous, and
+fork remotes. The explicit `DECAPOD_PROPODUS_DOGFOOD=1` value is only a
+temporary local gate because Propodus has not yet published a wire contract
+binding an immutable GitHub repository ID to the request. The project file's
+`cloud.repo_id` is not an authority to select another repository.
+
+## v1 governance limits
+
+Propodus v1 supports repo-scoped list/create/claim/complete operations. `get`
+and `show` intentionally use list-and-filter because the v1 TodoStore contract
+has no repo-scoped get route; a missing item returns `status = "not_found"`.
+`todo done --validated` is intentionally rejected because v1 has no proof
+capture or verification-artifact contract. This is an explicit unsupported
+boundary, not full remote governance completion; a future proof-contract issue
+must define the service-side evidence model before Decapod can compose it;
+see [Decapod issue #1038](https://github.com/DecapodLabs/decapod/issues/1038).
 
 ## Delivery boundary
 

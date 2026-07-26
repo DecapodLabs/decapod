@@ -88,7 +88,7 @@ jobs:
       DECAPOD_PROPODUS_API_URL: ${{ secrets.DECAPOD_PROPODUS_API_URL }}
       DECAPOD_PROPODUS_ACCESS_TOKEN: ${{ secrets.DECAPOD_PROPODUS_ACCESS_TOKEN }}
       DECAPOD_PROPODUS_DISPOSABLE_REPO_ID: ${{ secrets.DECAPOD_PROPODUS_DISPOSABLE_REPO_ID }}
-      DECAPOD_GITHUB_REPOSITORY_ID: ${{ secrets.DECAPOD_GITHUB_REPOSITORY_ID }}
+      DECAPOD_PROPODUS_DOGFOOD: "1"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -100,7 +100,7 @@ jobs:
       - name: Verify protected live-proof inputs
         run: |
           set -euo pipefail
-          for variable in DECAPOD_PROPODUS_API_URL DECAPOD_PROPODUS_ACCESS_TOKEN DECAPOD_PROPODUS_DISPOSABLE_REPO_ID DECAPOD_GITHUB_REPOSITORY_ID; do
+          for variable in DECAPOD_PROPODUS_API_URL DECAPOD_PROPODUS_ACCESS_TOKEN DECAPOD_PROPODUS_DISPOSABLE_REPO_ID DECAPOD_PROPODUS_DOGFOOD; do
             if [[ -z "${!variable:-}" ]]; then
               echo "Missing protected live-proof input: $variable"
               exit 1
