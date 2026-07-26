@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.84.0](https://github.com/DecapodLabs/decapod/compare/v0.83.2...v0.84.0) - 2026-07-26
+
+### Other
+
+- Record final publication evidence
+- Record container validation proof
+- Record v0.83.2 onboarding proof boundary
+- Record PR publication
+- Record publish validation attempt
+- Record container validation proof
+- Advance cloud onboarding contract toward Propodus dogfood
+
 ## [0.83.2](https://github.com/DecapodLabs/decapod/compare/v0.83.1...v0.83.2) - 2026-07-26
 
 ### Added
