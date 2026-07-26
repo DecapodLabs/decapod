@@ -52,12 +52,12 @@ AI coding agents often lose the plot: they forget intent, pull too much context,
 flowchart TD
     UserIn["User"] -->|"intent"| Harness["Harness"]
     Harness -->|"governed request"| Agent["Agent"]
-    Agent -->|"calls Governance Kernel\n(pre-inference)"| GovernanceKernel["Governance Kernel"]
-    GovernanceKernel -->|"intent, context, gates"| Agent
+    Agent -->|"calls Decapod\n(pre-inference)"| Decapod["Decapod"]
+    Decapod -->|"intent, context, gates"| Agent
     Agent -->|"inference"| Model["Model"]
     Model -->|"response"| Agent
-    Agent -->|"calls Governance Kernel\n(post-inference)"| GovernanceKernel
-    GovernanceKernel -->|"boundaries, checks, proof"| Agent
+    Agent -->|"calls Decapod\n(post-inference)"| Decapod
+    Decapod -->|"boundaries, checks, proof"| Agent
     Agent -->|"verified result"| UserOut["User"]
 
     Agent -.->|"clarification ping"| UserIn
@@ -67,7 +67,7 @@ flowchart TD
     style Harness fill:#3b82f6,stroke:#2563eb,color:#fff
     style Agent fill:#a855f7,stroke:#7c3aed,color:#fff
     style Model fill:#06b6d4,stroke:#0891b2,color:#fff
-    style GovernanceKernel fill:#fbbf24,stroke:#f59e0b,color:#000
+    style Decapod fill:#fbbf24,stroke:#f59e0b,color:#000
 ```
 
 **Harness ↔ User pings** — The harness can ping the user for additional context when intent is unclear or verification needs human input.
