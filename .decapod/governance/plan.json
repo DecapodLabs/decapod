@@ -85,10 +85,10 @@
       "entry_gates": [],
       "exit_gates": [],
       "entered": true,
-      "completed": false,
+      "completed": true,
       "entered_at": "1785041922Z",
-      "completed_at": null
+      "completed_at": "1785043828Z"
     }
   ],
-  "updated_at": "1785041922Z"
+  "updated_at": "1785043828Z"
 }
