@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.85.0](https://github.com/DecapodLabs/decapod/compare/v0.84.0...v0.85.0) - 2026-07-26
+
+### Added
+
+- activate Propodus cloud todo cutover
+
+### Other
+
+- preserve stable validation job id
+- refresh validation after ci fanout
+- fan out validation from shared build
+- validate with the branch decapod binary
+- refresh post-push validation receipt
+- autogenerate/sync command contracts
+- record cloud cutover validation
+- make cloud backend binary-owned
+- make backend the sole config selector
+- record v0.84.0 validation proof
+- refresh cloud cutover claims
+
 ## [0.84.0](https://github.com/DecapodLabs/decapod/compare/v0.83.2...v0.84.0) - 2026-07-26
 
 ### Other
