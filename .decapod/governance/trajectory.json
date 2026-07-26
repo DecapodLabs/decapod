@@ -1,82 +1,56 @@
 {
   "schema_version": "1.1.0",
-  "run_id": "01KYDVZ5AF1DPQYWDF2DJ4KBW8",
-  "intent_id": "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8",
+  "run_id": "wave2-propodus-1036-alignment",
+  "intent_id": "intent:wave2-propodus-1036-alignment",
   "task_id": "cicd_01kydv7dsj7sayv4",
-  "original_intent": "Start Propodus wave 2 in Decapod v0.83.0 and solve issue #1022 within the same PR.",
-  "derived_intent": "Deliver release-labeled PR governance exemption, Decapod-side opt-in live Propodus proof, v0.83.0 generated projections, and explicit service-boundary documentation while leaving hosted Propodus auth, allowlisting, URL, and persistence to Propodus.",
-  "current_phase": "propodus-phase-2",
-  "next_transitions": [
-    "publish"
-  ],
+  "original_intent": "Update PR #1036 to align Decapod issues #1032 through #1035 and #1037 with current Propodus PR #31 boundaries.",
+  "derived_intent": "Activate explicit Propodus-backed todo commands, fail closed on verified canonical GitHub identity, and prove command-level shared and unauthorized behavior without moving Propodus-owned auth or policy into Decapod.",
   "active_boundaries": [
-    "Decapod governance kernel, CI, typed Propodus client, tests, docs, and generated governance artifacts only; no payments, identity implementation, website, or Propodus deployment changes."
+    "Decapod owns cloud composition, client credential boundary, repository identity resolution, typed errors, and proof orchestration; Propodus owns GitHub exchange, seat policy, persistence, deployment, and service allowlists."
   ],
   "repo_scope": [
-    "DecapodLabs/decapod issue #1022 and wave-2 Propodus client proof surfaces related to #766/#1028; claims.json included in the publication bundle."
+    "PR #1036 source, tests, workflow, docs, generated specs, and governance artifacts"
   ],
   "inspected_files": [
-    ".github/workflows/ci.yml",
-    "docs/book/src/reference/propodus.md",
     "src/decapod/core/propodus.rs",
-    "tests/propodus_contract.rs",
-    "tests/release_workflow_policy.rs"
+    "src/decapod/core/repo_identity.rs",
+    "src/decapod/core/todo.rs",
+    "tests/cloud_command_path.rs",
+    "tests/propodus_live.rs"
   ],
   "modified_files": [
-    ".decapod/governance/claims.json",
-    ".decapod/governance/trajectory.json",
-    ".decapod/governance/validation.json",
-    ".github/workflows/ci.yml",
-    "docs/book/src/reference/propodus.md",
-    "src/decapod/core/entrypoint_integrity.rs",
     "src/decapod/core/propodus.rs",
-    "tests/propodus_live.rs",
-    "tests/release_workflow_policy.rs"
+    "src/decapod/core/repo_identity.rs",
+    "src/decapod/core/todo.rs",
+    "tests/cloud_command_path.rs",
+    "tests/propodus_live.rs"
   ],
-  "declared_commands": [
-    "cargo clippy --locked --all-targets --all-features -- -D warnings",
-    "cargo fmt --all -- --check",
-    "cargo test --locked",
-    "decapod validate"
-  ],
+  "declared_commands": [],
   "tool_calls": [],
   "checks": [
     {
-      "name": "cargo_clippy",
+      "name": "cargo_check",
       "status": "passed"
     },
     {
-      "name": "cargo_fmt",
-      "status": "passed"
-    },
-    {
-      "name": "cargo_test",
-      "status": "passed"
-    },
-    {
-      "name": "decapod validate",
-      "status": "passed"
-    },
-    {
-      "name": "decapod_validate",
+      "name": "clippy",
       "status": "passed"
     },
     {
       "name": "focused_tests",
       "status": "passed"
+    },
+    {
+      "name": "specs_refresh",
+      "status": "passed"
     }
   ],
   "evidence": [
-    "entrypoint_release=0.83.0",
-    "issue_1022=release_label_gate",
-    "propodus_live=ignored_by_default_manual_protected",
-    "validation epoch ve_6ae38cd6df7733bc completed with zero failures",
-    "validation_pass_count=202",
-    "validation_receipt=.decapod/governance/validation.json",
-    "validation_warnings=6"
+    "focused_tests=tests/cloud_backend_storage.rs,tests/cloud_command_path.rs,tests/init_config_behavior.rs,tests/propodus_contract.rs"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
+  "completion_claim": "PR #1036 implementation updated; final governed validation pending",
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -84,21 +58,21 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:f93fe07a69bb0f8b292ed3e71259ef1635429c46590386671a3eb6d9cce00de7",
+  "artifact_hash": "sha256:345c0f6e31e323cb32c5f30885eeeeb621f93116f3e8329fb08935c0f355f0a1",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
-      "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8": {
-        "id": "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8",
-        "raw_intent": "Start Propodus wave 2 in Decapod v0.83.0 and solve issue #1022 within the same PR.",
-        "refined_intent": "Deliver release-labeled PR governance exemption, Decapod-side opt-in live Propodus proof, v0.83.0 generated projections, and explicit service-boundary documentation while leaving hosted Propodus auth, allowlisting, URL, and persistence to Propodus.",
+      "intent:wave2-propodus-1036-alignment": {
+        "id": "intent:wave2-propodus-1036-alignment",
+        "raw_intent": "Update PR #1036 to align Decapod issues #1032 through #1035 and #1037 with current Propodus PR #31 boundaries.",
+        "refined_intent": "Activate explicit Propodus-backed todo commands, fail closed on verified canonical GitHub identity, and prove command-level shared and unauthorized behavior without moving Propodus-owned auth or policy into Decapod.",
         "acceptance_criteria": [],
         "constraints": [
-          "DecapodLabs/decapod issue #1022 and wave-2 Propodus client proof surfaces related to #766/#1028; claims.json included in the publication bundle."
+          "PR #1036 source, tests, workflow, docs, generated specs, and governance artifacts"
         ],
         "assumptions": [],
         "boundaries": [
-          "Decapod governance kernel, CI, typed Propodus client, tests, docs, and generated governance artifacts only; no payments, identity implementation, website, or Propodus deployment changes."
+          "Decapod owns cloud composition, client credential boundary, repository identity resolution, typed errors, and proof orchestration; Propodus owns GitHub exchange, seat policy, persistence, deployment, and service allowlists."
         ],
         "out_of_scope": [],
         "proof_requirements": [],
@@ -111,116 +85,86 @@
       {
         "sequence": 2,
         "event_id": "event:2",
-        "intent_id": "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8",
+        "intent_id": "intent:wave2-propodus-1036-alignment",
         "kind": "created"
       },
       {
         "sequence": 3,
         "event_id": "event:3",
-        "intent_id": "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8",
+        "intent_id": "intent:wave2-propodus-1036-alignment",
         "kind": "refined"
       },
       {
         "sequence": 4,
         "event_id": "event:4",
-        "intent_id": "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8",
+        "intent_id": "intent:wave2-propodus-1036-alignment",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:01KYDVZ5AF1DPQYWDF2DJ4KBW8"
+        "detail": "trajectory:wave2-propodus-1036-alignment"
       },
       {
         "sequence": 5,
         "event_id": "event:5",
-        "intent_id": "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8",
+        "intent_id": "intent:wave2-propodus-1036-alignment",
         "kind": "trajectory_step_recorded",
-        "detail": "trajectory:01KYDVZ5AF1DPQYWDF2DJ4KBW8"
-      },
-      {
-        "sequence": 6,
-        "event_id": "event:6",
-        "intent_id": "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8",
-        "kind": "trajectory_step_recorded",
-        "detail": "trajectory:01KYDVZ5AF1DPQYWDF2DJ4KBW8"
+        "detail": "trajectory:wave2-propodus-1036-alignment"
       }
     ],
     "trajectories": {
-      "01KYDVZ5AF1DPQYWDF2DJ4KBW8": {
-        "id": "01KYDVZ5AF1DPQYWDF2DJ4KBW8",
-        "intent_id": "intent:01KYDVZ5AF1DPQYWDF2DJ4KBW8",
+      "wave2-propodus-1036-alignment": {
+        "id": "wave2-propodus-1036-alignment",
+        "intent_id": "intent:wave2-propodus-1036-alignment",
         "evidence_only": true,
         "steps": [
           {
             "sequence": 4,
-            "action": "propodus-phase-2",
-            "command": "cargo fmt --all -- --check",
+            "action": "trajectory.record",
             "scope": [
-              "DecapodLabs/decapod issue #1022 and wave-2 Propodus client proof surfaces related to #766/#1028; claims.json included in the publication bundle."
+              "PR #1036 source, tests, workflow, docs, generated specs, and governance artifacts"
             ],
             "observations": [
-              ".github/workflows/ci.yml",
+              "src/decapod/core/todo.rs",
               "src/decapod/core/propodus.rs",
-              "tests/release_workflow_policy.rs",
-              "tests/propodus_contract.rs",
-              "docs/book/src/reference/propodus.md",
-              ".github/workflows/ci.yml",
-              "src/decapod/core/propodus.rs",
-              "tests/release_workflow_policy.rs",
-              "tests/propodus_live.rs",
-              "docs/book/src/reference/propodus.md",
-              "src/decapod/core/entrypoint_integrity.rs",
-              ".decapod/governance/claims.json",
-              "issue_1022=release_label_gate",
-              "propodus_live=ignored_by_default_manual_protected",
-              "entrypoint_release=0.83.0"
+              "src/decapod/core/repo_identity.rs",
+              "tests/cloud_command_path.rs",
+              "tests/propodus_live.rs"
             ],
             "proof_refs": [
-              "cargo_fmt",
+              "cargo_check",
               "focused_tests",
-              "cargo_test",
-              "cargo_clippy"
+              "clippy",
+              "specs_refresh"
             ],
             "validation_findings": [],
             "custody_event_id": "event:4"
           },
           {
             "sequence": 5,
-            "action": "validation",
-            "command": "decapod validate",
+            "action": "trajectory.record",
             "scope": [
-              "DecapodLabs/decapod issue #1022 and wave-2 Propodus client proof surfaces related to #766/#1028; claims.json included in the publication bundle."
+              "PR #1036 source, tests, workflow, docs, generated specs, and governance artifacts"
             ],
             "observations": [
-              ".decapod/governance/trajectory.json",
-              ".decapod/governance/validation.json",
-              "validation epoch ve_6ae38cd6df7733bc completed with zero failures"
+              "src/decapod/core/todo.rs",
+              "src/decapod/core/propodus.rs",
+              "src/decapod/core/repo_identity.rs",
+              "tests/cloud_command_path.rs",
+              "tests/propodus_live.rs",
+              "focused_tests=tests/cloud_backend_storage.rs,tests/cloud_command_path.rs,tests/init_config_behavior.rs,tests/propodus_contract.rs"
             ],
             "proof_refs": [
-              "decapod validate"
+              "cargo_check",
+              "focused_tests",
+              "clippy",
+              "specs_refresh"
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
-          },
-          {
-            "sequence": 6,
-            "action": "propodus-phase-2",
-            "scope": [
-              "DecapodLabs/decapod issue #1022 and wave-2 Propodus client proof surfaces related to #766/#1028; claims.json included in the publication bundle."
-            ],
-            "observations": [
-              "validation_receipt=.decapod/governance/validation.json",
-              "validation_pass_count=202",
-              "validation_warnings=6"
-            ],
-            "proof_refs": [
-              "decapod_validate"
-            ],
-            "validation_findings": [],
-            "custody_event_id": "event:6"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 5
   }
 }
