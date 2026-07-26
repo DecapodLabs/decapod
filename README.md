@@ -1,7 +1,7 @@
 <p align="center">🦀</p>
 
 <p align="center">
-  <code>cargo install decapod && decapod init</code>
+  <code>cargo binstall decapod && decapod init</code>
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@ Paper: [Accountable Agentic Execution (Raber, 2026)](https://decapodlabs.github.
 ## Quick Start
 
 ```bash
-cargo install decapod
+cargo binstall decapod
 decapod init
 ```
 
