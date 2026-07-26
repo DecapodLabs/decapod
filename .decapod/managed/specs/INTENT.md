@@ -59,6 +59,13 @@ Decapod is a Rust CLI project that implements a governance runtime for AI agents
 - **State**: `.decapod/data/*.db` + `.decapod/data/*.jsonl` event logs
 - **Generated artifacts**: `.decapod/managed/{specs,context,policy,artifacts,artifacts/provenance,artifacts/custody}`
 
+## Backend and Cloud Boundary
+- `repo.backend = "local" | "cloud"` is the canonical persisted backend selector.
+- Existing `repo.mode` values remain readable as a compatibility input; when both are present, `repo.backend` wins.
+- Local governance artifacts remain authoritative in both backends: plans, claims, trajectories, validation receipts, and specification JSON stay in `.decapod/`.
+- Explicit cloud selection fails closed when its external session or adapter contract is unavailable; it never silently falls back to local todo SQLite.
+- Browser onboarding is an external, one-time handoff. Decapod may carry a bounded HTTPS URL and provider-neutral pending/authorized/canceled/expired/failed/uncertain state, but never stores raw credentials in repository configuration.
+
 ## Product View
 ```mermaid
 flowchart LR
@@ -190,7 +197,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da1fab632fe6eed26a5ec8c54740931c5c64db065f9fd086ca290afc8111d4f3`
+- Repository signal fingerprint: `b9d64eb5b34aeb08bbf2ef73e32ffdfbb68cfbccc927ba057344704d81a0335b`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

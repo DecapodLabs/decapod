@@ -77,7 +77,18 @@
       "completed": true,
       "entered_at": "1785034186Z",
       "completed_at": "1785035649Z"
+    },
+    {
+      "id": "propodus-phase-2-1040",
+      "name": "Advance provider-neutral cloud backend contract",
+      "description": "Preserve local-first governance and existing mode inputs while adding the non-breaking backend contract, provider-neutral onboarding/session seam, deterministic backend selection proof, and refreshed living specs for Issue #1040; defer provider implementation details and live deployment to the next wave.",
+      "entry_gates": [],
+      "exit_gates": [],
+      "entered": true,
+      "completed": false,
+      "entered_at": "1785041922Z",
+      "completed_at": null
     }
   ],
-  "updated_at": "1785035649Z"
+  "updated_at": "1785041922Z"
 }

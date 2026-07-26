@@ -417,12 +417,18 @@ fn default_true() -> bool {
     true
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq, clap::ValueEnum)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq, Eq, clap::ValueEnum)]
 #[serde(rename_all = "lowercase")]
 pub enum BackendType {
     #[default]
     Local,
     Cloud,
+}
+
+impl BackendType {
+    pub fn is_cloud(self) -> bool {
+        matches!(self, Self::Cloud)
+    }
 }
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq, clap::ValueEnum)]
@@ -584,6 +590,11 @@ pub struct RepoContext {
     pub external_tracker: bool,
     #[serde(default = "default_container_workspaces_true")]
     pub container_workspaces: bool,
+    /// Canonical repository backend selection. The legacy `mode` field remains
+    /// accepted for compatibility and is used only when this field is absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub backend: Option<BackendType>,
+    /// Legacy backend selector retained as a read-compatible input.
     #[serde(default)]
     pub mode: BackendType,
     #[serde(
@@ -595,6 +606,20 @@ pub struct RepoContext {
     pub capabilities: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub migration_validation: Option<MigrationValidationConfig>,
+}
+
+impl RepoContext {
+    /// Resolve the canonical backend while accepting pre-backend config files.
+    pub fn effective_backend(&self) -> BackendType {
+        self.backend.unwrap_or(self.mode)
+    }
+
+    /// Set the canonical backend and keep the legacy field coherent for older
+    /// readers that still inspect `repo.mode` directly.
+    pub fn set_backend(&mut self, backend: BackendType) {
+        self.backend = Some(backend);
+        self.mode = backend;
+    }
 }
 
 /// Human-governed executable proof for the persistent-state capability.
@@ -1793,4 +1818,30 @@ pub(crate) struct DemoCli {
     /// Demo to run: interlock
     #[clap(long, default_value = "interlock")]
     pub demo: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{BackendType, RepoContext};
+
+    #[test]
+    fn backend_field_takes_precedence_over_legacy_mode() {
+        let mut context = RepoContext {
+            mode: BackendType::Cloud,
+            ..RepoContext::default()
+        };
+        assert_eq!(context.effective_backend(), BackendType::Cloud);
+
+        context.backend = Some(BackendType::Local);
+        assert_eq!(context.effective_backend(), BackendType::Local);
+    }
+
+    #[test]
+    fn setting_backend_keeps_legacy_mode_readers_coherent() {
+        let mut context = RepoContext::default();
+        context.set_backend(BackendType::Cloud);
+        assert_eq!(context.backend, Some(BackendType::Cloud));
+        assert_eq!(context.mode, BackendType::Cloud);
+        assert_eq!(context.effective_backend(), BackendType::Cloud);
+    }
 }

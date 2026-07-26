@@ -1,4 +1,4 @@
-use crate::cli::{BackendType, CloudConfigSection, DecapodProjectConfig};
+use crate::cli::{CloudConfigSection, DecapodProjectConfig};
 use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
@@ -4788,17 +4788,17 @@ fn cloud_runtime(
             )
         })?;
     let config = DecapodProjectConfig::load(&project_root)?;
-    if config.repo.mode != BackendType::Cloud {
+    if !config.repo.effective_backend().is_cloud() {
         return Ok(None);
     }
     let cloud = config.cloud.ok_or_else(|| {
         error::DecapodError::Config(
-            "repo.mode=cloud requires an enabled [cloud] configuration".to_string(),
+            "repo.backend=cloud requires an enabled [cloud] configuration".to_string(),
         )
     })?;
     if !cloud.enabled {
         return Err(error::DecapodError::Config(
-            "repo.mode=cloud requires cloud.enabled=true".to_string(),
+            "repo.backend=cloud requires cloud.enabled=true".to_string(),
         ));
     }
     if cloud.provider != "vercel" {

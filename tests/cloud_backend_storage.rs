@@ -75,6 +75,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     assert!(config.contains("experimental = true"));
     assert!(config.contains("provider = \"vercel\""));
     assert!(config.contains("api_url = \"https://decapod-cloud.vercel.app\""));
+    assert!(config.contains("backend = \"cloud\""));
     assert!(config.contains("mode = \"cloud\""));
     assert!(!config.contains("SUPABASE"));
     assert!(!config.contains("supabase"));
@@ -141,6 +142,58 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
     assert!(
         !dir.join(".decapod/data/todo.db").exists(),
         "cloud credential preflight must not initialize local SQLite"
+    );
+}
+
+#[test]
+fn canonical_backend_selection_overrides_legacy_mode_without_local_fallback() {
+    let tmp = TempDir::new().expect("tempdir");
+    let dir = tmp.path().to_path_buf();
+    let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .current_dir(&dir)
+        .output()
+        .expect("decapod init");
+    assert!(init_out.status.success());
+    let config_path = dir.join(".decapod/config.toml");
+    let config = std::fs::read_to_string(&config_path).expect("config");
+    assert!(config.contains("backend = \"cloud\""));
+    std::fs::write(
+        config_path,
+        config.replace("mode = \"cloud\"", "mode = \"local\""),
+    )
+    .expect("rewrite legacy compatibility field");
+
+    git(
+        &dir,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "git@github.com:DecapodLabs/decapod.git",
+        ],
+    );
+    let data_home = TempDir::new().expect("credential data home");
+    let list_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["todo", "list", "--format", "json"])
+        .current_dir(&dir)
+        .env("DECAPOD_PROPODUS_DOGFOOD", "1")
+        .env_remove("DECAPOD_ACCESS_TOKEN")
+        .env("XDG_DATA_HOME", data_home.path())
+        .output()
+        .expect("cloud todo list");
+
+    assert!(
+        !list_out.status.success(),
+        "missing cloud session must fail closed"
+    );
+    assert!(
+        String::from_utf8_lossy(&list_out.stderr).contains("credential")
+            || String::from_utf8_lossy(&list_out.stdout).contains("credential")
+    );
+    assert!(
+        !dir.join(".decapod/data/todo.db").exists(),
+        "backend selection must not fall back to local SQLite"
     );
 }
 

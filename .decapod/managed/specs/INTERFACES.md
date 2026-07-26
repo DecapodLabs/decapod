@@ -25,6 +25,14 @@ Generated interface specs include:
 
 `.decapod/config.toml` may declare `repo.declared_capabilities` as a sorted, deduplicated list. The legacy `repo.capabilities` spelling remains readable for compatibility. Capability declarations shape context and generated specifications but do not grant external-action permissions by themselves; runtime authorization remains governed by the action capability and session/policy checks.
 
+### Repository Backend Contract
+The canonical repository configuration is `repo.backend = "local" | "cloud"`. `repo.mode` remains a readable legacy input for existing projects; if both fields exist, `backend` is authoritative. New initialization and documentation use `backend` while retaining the legacy field for older readers.
+
+Cloud selection does not move local governance state. Plans, claims, trajectories, validation receipts, and specification JSON remain local `.decapod/` artifacts. Todo operations that require an external backend fail closed when the session or adapter is unavailable; they do not fall back to local SQLite.
+
+### External Onboarding Handoff
+The `CloudOnboardingHandoff` contract carries only a trusted HTTPS `bootstrap_url`, bounded `expires_at`, `poll_after_seconds`, and provider-neutral state (`pending`, `authorized`, `canceled`, `expired`, `failed`, or `uncertain`). The URL may be opened automatically in an interactive terminal or printed with a resume instruction in a headless terminal. Raw access/refresh credentials are outside this repository contract.
+
 ### Core Commands (Agent-Facing)
 
 | Command | Purpose | Key Flags | Output |
@@ -415,7 +423,7 @@ Agents declare needed capabilities via `assurance.evaluate` params; interlocks b
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `da1fab632fe6eed26a5ec8c54740931c5c64db065f9fd086ca290afc8111d4f3`
+- Repository signal fingerprint: `b9d64eb5b34aeb08bbf2ef73e32ffdfbb68cfbccc927ba057344704d81a0335b`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->
