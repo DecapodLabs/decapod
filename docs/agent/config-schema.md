@@ -15,7 +15,5 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub cloud: Option<CloudConfigSection>,
 }
 ```
