@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
-  "title": "Propodus phase 2: release-safe integration proof",
-  "intent": "Deliver a bounded second phase for the Decapod-owned Propodus boundary: exempt explicitly labeled release PRs from the governance-artifact diff gate, add a credential-gated live proof harness for the typed client, document its canonical repository isolation and failure taxonomy, and keep all default checks network-free while Propodus owns hosted authentication, authorization, deployment, and persistence.",
-  "state": "DONE",
+  "title": "Propodus phase 2 alignment: cloud command path and dogfood proof",
+  "intent": "Align PR #1036 with Decapod issues #1032-#1035 and #1037: activate explicit cloud todo storage through the typed Propodus adapter, derive and fail-closed on canonical GitHub repository identity, consume a machine-local Propodus bearer boundary without embedding service identity policy, and provide a protected command-level dogfood proof while preserving local offline defaults.",
+  "state": "EXECUTING",
   "todo_ids": [
     "cicd_01kydv7dsj7sayv4"
   ],
@@ -11,14 +11,18 @@
     "cargo test",
     "decapod validate"
   ],
-  "unknowns": [],
+  "unknowns": [
+    "Propodus #24 must provide the GitHub login/token exchange before Decapod can replace the legacy interactive login flow."
+  ],
   "human_questions": [],
   "stop_conditions": [],
   "unresolved_contradictions": [],
-  "deferred_questions": [],
+  "deferred_questions": [
+    "Propodus must expose an immutable repository identity field or authenticated resolver input before production cloud selection can require it."
+  ],
   "constraints": {
     "forbidden_paths": [],
-    "file_touch_budget": null
+    "file_touch_budget": 80
   },
   "phases": [
     {
@@ -53,7 +57,18 @@
       "completed": true,
       "entered_at": "1785023973Z",
       "completed_at": "1785025157Z"
+    },
+    {
+      "id": "propodus-phase-2-alignment",
+      "name": "Align cloud command path and dogfood proof",
+      "description": "Select the Propodus-backed todo store only for explicit cloud mode, verify canonical GitHub repository identity with an immutable runtime identity input, keep the Propodus bearer/session boundary thin, reject unsupported local fallback, and prove actual Decapod commands plus shared and unauthorized behavior through a protected opt-in live harness.",
+      "entry_gates": [],
+      "exit_gates": [],
+      "entered": true,
+      "completed": false,
+      "entered_at": "1785027089Z",
+      "completed_at": null
     }
   ],
-  "updated_at": "1785025157Z"
+  "updated_at": "1785027089Z"
 }
