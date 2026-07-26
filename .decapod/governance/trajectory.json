@@ -80,6 +80,7 @@
   "evidence": [
     "206 parallel tests initially passed before known entrypoint session race; serial targeted suites passed; serial full suite reached pre-existing release_artifact_policy failure for inline tests in cli.rs/cloud_backend.rs/repo_identity.rs; validation reported 197 passes with host container/dirty/plan gates",
     "Containerized Decapod v0.83.2 validation exited 0 with 201 passing gates and 7 existing warnings; no failure gates",
+    "validation epoch ve_2e41a0824e6dc01a completed with zero failures",
     "validation epoch ve_a7f64761462dd611 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
@@ -93,7 +94,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "unsupported"
   },
-  "artifact_hash": "sha256:9bd7214c7496e195e2d32fd1d8ae12faa04209294d7a4f76ec91660856639628",
+  "artifact_hash": "sha256:88b601f5a184f12baec0a14a145581af9ffffde4c5eb32ae1f986a9530734735",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -146,6 +147,13 @@
       {
         "sequence": 6,
         "event_id": "event:6",
+        "intent_id": "intent:propodus-next-wave-01kyeg",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:propodus-next-wave-01kyeg"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:propodus-next-wave-01kyeg",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:propodus-next-wave-01kyeg"
@@ -229,12 +237,30 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core,src/decapod,tests,living specs refreshed through Decapod CLI"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_2e41a0824e6dc01a completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 6
+    "next_sequence": 7
   }
 }
