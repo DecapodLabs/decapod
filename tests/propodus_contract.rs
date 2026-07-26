@@ -55,6 +55,7 @@ fn config() -> PropodusConfig {
         api_url: "https://propodus.example.test".to_string(),
         project_id: "test-project".to_string(),
         repo_id: "DecapodLabs/decapod".to_string(),
+        immutable_repo_id: Some("github:repo:123".to_string()),
     }
 }
 

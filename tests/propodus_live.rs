@@ -1,11 +1,58 @@
 use decapod::core::propodus::{CurlTransport, PropodusClient, PropodusClientError, PropodusConfig};
 use std::env;
+use std::fs;
+use std::path::Path;
+use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tempfile::tempdir;
 
 const CANONICAL_REPO_ID: &str = "DecapodLabs/decapod";
 
 fn required_env(name: &str) -> String {
     env::var(name).unwrap_or_else(|_| panic!("{name} is required for the live proof"))
+}
+
+fn run_decapod(
+    dir: &Path,
+    args: &[&str],
+    agent: &str,
+    token: &str,
+    repo_id: &str,
+) -> std::process::Output {
+    Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(args)
+        .current_dir(dir)
+        .env("DECAPOD_AGENT_ID", agent)
+        .env("DECAPOD_ACCESS_TOKEN", token)
+        .env("DECAPOD_GITHUB_REPOSITORY_ID", repo_id)
+        .output()
+        .expect("run decapod command")
+}
+
+fn prepare_cloud_repo(dir: &Path, api_url: &str, remote: &str) {
+    let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["init", "--mode", "cloud", "--force", "--proof"])
+        .current_dir(dir)
+        .output()
+        .expect("initialize cloud proof repository");
+    assert!(
+        init.status.success(),
+        "cloud init failed: {}",
+        String::from_utf8_lossy(&init.stderr)
+    );
+    let remote_result = Command::new("git")
+        .args(["remote", "add", "origin", remote])
+        .current_dir(dir)
+        .output()
+        .expect("configure proof remote");
+    assert!(remote_result.status.success());
+    let config_path = dir.join(".decapod/config.toml");
+    let config = fs::read_to_string(&config_path).expect("read cloud config");
+    fs::write(
+        config_path,
+        config.replace("https://decapod-cloud.vercel.app", api_url),
+    )
+    .expect("write proof API URL");
 }
 
 #[test]
@@ -29,6 +76,7 @@ fn live_propodus_contract_proves_canonical_scope_and_mutations() {
         api_url,
         project_id: "decapod-live-proof".to_string(),
         repo_id: CANONICAL_REPO_ID.to_string(),
+        immutable_repo_id: Some(required_env("DECAPOD_GITHUB_REPOSITORY_ID")),
     };
     let client = PropodusClient::with_transport(&config, &credential, CurlTransport::default())
         .expect("live Propodus client configuration");
@@ -86,4 +134,97 @@ fn live_propodus_contract_proves_canonical_scope_and_mutations() {
         Err(error) => panic!("expected 403 repository_not_authorized, got {error}"),
         Ok(_) => panic!("unprovisioned repository unexpectedly returned todo data"),
     }
+}
+
+#[test]
+#[ignore = "requires DECAPOD_PROPODUS_LIVE=1 and protected Propodus inputs"]
+fn live_decapod_cloud_commands_share_state_and_reject_forks() {
+    assert_eq!(
+        env::var("DECAPOD_PROPODUS_LIVE").as_deref(),
+        Ok("1"),
+        "set DECAPOD_PROPODUS_LIVE=1 to opt into the live proof"
+    );
+    let api_url = required_env("DECAPOD_PROPODUS_API_URL");
+    let credential = required_env("DECAPOD_PROPODUS_ACCESS_TOKEN");
+    let immutable_repo_id = required_env("DECAPOD_GITHUB_REPOSITORY_ID");
+
+    let canonical = tempdir().expect("canonical proof repository");
+    prepare_cloud_repo(
+        canonical.path(),
+        &api_url,
+        "git@github.com:DecapodLabs/decapod.git",
+    );
+    let title = format!(
+        "Decapod command dogfood proof {}",
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system clock")
+            .as_nanos()
+    );
+    let add = run_decapod(
+        canonical.path(),
+        &["todo", "add", &title, "--format", "json"],
+        "decapod-live-agent-one",
+        &credential,
+        &immutable_repo_id,
+    );
+    assert!(
+        add.status.success(),
+        "cloud add failed: {}",
+        String::from_utf8_lossy(&add.stderr)
+    );
+    let add_json: serde_json::Value = serde_json::from_slice(&add.stdout).expect("add JSON");
+    let task_id = add_json["id"].as_str().expect("cloud task ID").to_string();
+
+    for args in [
+        vec!["todo", "claim", "--id", task_id.as_str()],
+        vec!["todo", "done", "--id", task_id.as_str()],
+    ] {
+        let output = run_decapod(
+            canonical.path(),
+            &args,
+            "decapod-live-agent-one",
+            &credential,
+            &immutable_repo_id,
+        );
+        assert!(
+            output.status.success(),
+            "cloud lifecycle command failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    let second_agent_list = run_decapod(
+        canonical.path(),
+        &["todo", "list", "--status", "all", "--format", "json"],
+        "decapod-live-agent-two",
+        &credential,
+        &immutable_repo_id,
+    );
+    assert!(second_agent_list.status.success());
+    let list = String::from_utf8_lossy(&second_agent_list.stdout);
+    assert!(
+        list.contains(&task_id),
+        "second agent cannot see shared task: {list}"
+    );
+    assert!(
+        list.contains(&title),
+        "second agent cannot see task title: {list}"
+    );
+
+    let fork = tempdir().expect("fork proof repository");
+    prepare_cloud_repo(fork.path(), &api_url, "git@github.com:someone/decapod.git");
+    let fork_list = run_decapod(
+        fork.path(),
+        &["todo", "list", "--format", "json"],
+        "decapod-live-fork-agent",
+        &credential,
+        &immutable_repo_id,
+    );
+    assert!(!fork_list.status.success(), "forks must fail closed");
+    let fork_error = String::from_utf8_lossy(&fork_list.stderr);
+    assert!(
+        fork_error.contains("restricted to DecapodLabs/decapod"),
+        "unexpected fork rejection: {fork_error}"
+    );
 }
