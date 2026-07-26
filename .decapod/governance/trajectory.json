@@ -7,7 +7,8 @@
   "derived_intent": "Activate cloud todo composition, implement machine-local onboarding/session refresh, preserve remote repository identity and fork separation, and prove protected production todo workflow without local fallback",
   "current_phase": "validation",
   "next_transitions": [
-    "inspect live contract and implement cutover"
+    "inspect live contract and implement cutover",
+    "publish"
   ],
   "active_boundaries": [
     "Decapod owns CLI composition, client-side onboarding/session custody, and proof capture; Propodus owns hosted authentication, authorization, persistence, deployment, and business policy"
@@ -16,21 +17,33 @@
     "src/decapod,tests,docs/book/src/reference/propodus.md,.decapod/config.toml"
   ],
   "inspected_files": [],
-  "modified_files": [],
-  "declared_commands": [],
+  "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json"
+  ],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
-  "checks": [],
-  "evidence": [],
+  "checks": [
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    }
+  ],
+  "evidence": [
+    "validation epoch ve_86cdf1e09cd56911 completed with zero failures"
+  ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "no_checks_run",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:6e521673123c49ef892e233896f0cc2c9d62d78ee454e179634c5fa1593667cc",
+  "artifact_hash": "sha256:cc98d12d309324f20483ecce0d6738a88df9744813c94a5e897882c057b58b49",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -65,11 +78,44 @@
         "event_id": "event:3",
         "intent_id": "intent:cloud-cutover-01kyen",
         "kind": "refined"
+      },
+      {
+        "sequence": 4,
+        "event_id": "event:4",
+        "intent_id": "intent:cloud-cutover-01kyen",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:cloud-cutover-01kyen"
       }
     ],
-    "trajectories": {},
+    "trajectories": {
+      "cloud-cutover-01kyen": {
+        "id": "cloud-cutover-01kyen",
+        "intent_id": "intent:cloud-cutover-01kyen",
+        "evidence_only": true,
+        "steps": [
+          {
+            "sequence": 4,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod,tests,docs/book/src/reference/propodus.md,.decapod/config.toml"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_86cdf1e09cd56911 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:4"
+          }
+        ]
+      }
+    },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 3
+    "next_sequence": 4
   }
 }
