@@ -1,4 +1,4 @@
-use crate::cli::{CloudConfigSection, DecapodProjectConfig};
+use crate::cli::{CloudRuntimeConfig, DecapodProjectConfig};
 use crate::core::broker::DbBroker;
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
@@ -4777,7 +4777,7 @@ fn summarize_claim_container_error(err: &str) -> String {
 
 fn cloud_runtime(
     root: &Path,
-) -> Result<Option<(CloudConfigSection, RepositoryIdentity)>, error::DecapodError> {
+) -> Result<Option<(CloudRuntimeConfig, RepositoryIdentity)>, error::DecapodError> {
     let project_root = root
         .parent()
         .and_then(Path::parent)
@@ -4791,22 +4791,7 @@ fn cloud_runtime(
     if !config.repo.effective_backend().is_cloud() {
         return Ok(None);
     }
-    let cloud = config.cloud.ok_or_else(|| {
-        error::DecapodError::Config(
-            "repo.backend=cloud requires an enabled [cloud] configuration".to_string(),
-        )
-    })?;
-    if !cloud.enabled {
-        return Err(error::DecapodError::Config(
-            "repo.backend=cloud requires cloud.enabled=true".to_string(),
-        ));
-    }
-    if cloud.provider != "vercel" {
-        return Err(error::DecapodError::Config(format!(
-            "unsupported cloud provider `{}` for the Propodus todo path",
-            cloud.provider
-        )));
-    }
+    let cloud = CloudRuntimeConfig::default();
     let identity = resolve_repository_identity(&project_root)?;
     Ok(Some((cloud, identity)))
 }
@@ -4818,7 +4803,7 @@ fn cloud_error(error: anyhow::Error) -> error::DecapodError {
 pub trait CloudTodoStoreFactory {
     fn build(
         &self,
-        config: &CloudConfigSection,
+        config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, error::DecapodError>;
 }
@@ -4828,7 +4813,7 @@ struct PropodusCloudTodoStoreFactory;
 impl CloudTodoStoreFactory for PropodusCloudTodoStoreFactory {
     fn build(
         &self,
-        config: &CloudConfigSection,
+        config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, error::DecapodError> {
         let client = PropodusClient::from_dogfood_cloud_config(config, identity).map_err(|error| {
@@ -4890,7 +4875,7 @@ fn cloud_status_matches(requested: &str, actual: &str) -> bool {
 fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     root: &Path,
     command: &TodoCommand,
-    config: &CloudConfigSection,
+    config: &CloudRuntimeConfig,
     identity: &RepositoryIdentity,
     factory: &F,
 ) -> Result<JsonValue, error::DecapodError> {
@@ -5024,7 +5009,7 @@ async fn run_cloud_todo_command_with_store_async(
         }
         _ => {
             return Err(error::DecapodError::NotImplemented(
-                "this todo operation is not in the Propodus v1 contract; cloud mode never falls back to local SQLite".to_string(),
+                "this todo operation is not in the Propodus v1 contract; the cloud backend never falls back to local SQLite".to_string(),
             ));
         }
     };

@@ -399,8 +399,6 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub cloud: Option<CloudConfigSection>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -530,19 +528,11 @@ pub fn canonical_repo_relative_paths(raw: &[String]) -> Result<Vec<String>, Stri
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct CloudConfigSection {
-    #[serde(default)]
-    pub enabled: bool,
-    #[serde(default = "default_true")]
-    pub experimental: bool,
+pub struct CloudRuntimeConfig {
     #[serde(default = "default_cloud_provider")]
     pub provider: String,
     #[serde(default = "default_cloud_api_url")]
     pub api_url: String,
-    #[serde(default)]
-    pub project_id: String,
-    #[serde(default)]
-    pub repo_id: String,
 }
 
 fn default_cloud_provider() -> String {
@@ -550,18 +540,17 @@ fn default_cloud_provider() -> String {
 }
 
 fn default_cloud_api_url() -> String {
-    "https://project-oqn7i.vercel.app".to_string()
+    std::env::var("DECAPOD_PROPODUS_API_URL")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| "https://project-oqn7i.vercel.app".to_string())
 }
 
-impl Default for CloudConfigSection {
+impl Default for CloudRuntimeConfig {
     fn default() -> Self {
         Self {
-            enabled: false,
-            experimental: true,
             provider: default_cloud_provider(),
             api_url: default_cloud_api_url(),
-            project_id: String::new(),
-            repo_id: String::new(),
         }
     }
 }
@@ -677,7 +666,6 @@ impl Default for DecapodProjectConfig {
             custody: CustodyConfig::default(),
             tracker: TrackerConfig::default(),
             context: DeclaredContextConfig::default(),
-            cloud: None,
         }
     }
 }

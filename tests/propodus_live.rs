@@ -1,6 +1,5 @@
 use decapod::core::propodus::{CurlTransport, PropodusClient, PropodusClientError, PropodusConfig};
 use std::env;
-use std::fs;
 use std::path::Path;
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -18,11 +17,15 @@ fn run_decapod(dir: &Path, args: &[&str], agent: &str, token: &str) -> std::proc
         .current_dir(dir)
         .env("DECAPOD_AGENT_ID", agent)
         .env("DECAPOD_ACCESS_TOKEN", token)
+        .env(
+            "DECAPOD_PROPODUS_API_URL",
+            required_env("DECAPOD_PROPODUS_API_URL"),
+        )
         .output()
         .expect("run decapod command")
 }
 
-fn prepare_cloud_repo(dir: &Path, api_url: &str, remote: &str) {
+fn prepare_cloud_repo(dir: &Path, remote: &str) {
     let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(dir)
@@ -39,13 +42,6 @@ fn prepare_cloud_repo(dir: &Path, api_url: &str, remote: &str) {
         .output()
         .expect("configure proof remote");
     assert!(remote_result.status.success());
-    let config_path = dir.join(".decapod/config.toml");
-    let config = fs::read_to_string(&config_path).expect("read cloud config");
-    fs::write(
-        config_path,
-        config.replace("https://project-oqn7i.vercel.app", api_url),
-    )
-    .expect("write proof API URL");
 }
 
 #[test]
@@ -67,7 +63,6 @@ fn live_propodus_contract_proves_canonical_scope_and_mutations() {
 
     let config = PropodusConfig {
         api_url,
-        project_id: "decapod-live-proof".to_string(),
         repo_id: CANONICAL_REPO_ID.to_string(),
     };
     let client = PropodusClient::with_transport(&config, &credential, CurlTransport::default())
@@ -201,7 +196,7 @@ fn live_decapod_cloud_commands_share_state_and_reject_forks() {
     );
 
     let fork = tempdir().expect("fork proof repository");
-    prepare_cloud_repo(fork.path(), &api_url, "git@github.com:someone/decapod.git");
+    prepare_cloud_repo(fork.path(), "git@github.com:someone/decapod.git");
     let fork_list = run_decapod(
         fork.path(),
         &["todo", "list", "--format", "json"],

@@ -70,12 +70,11 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
 
     let config_path = dir.join(".decapod/config.toml");
     let config = std::fs::read_to_string(config_path).unwrap();
-    assert!(config.contains("[cloud]"));
-    assert!(config.contains("enabled = true"));
-    assert!(config.contains("experimental = true"));
-    assert!(config.contains("provider = \"vercel\""));
-    assert!(config.contains("api_url = \"https://project-oqn7i.vercel.app\""));
     assert!(config.contains("backend = \"cloud\""));
+    assert!(!config.contains("[cloud]"));
+    assert!(!config.contains("api_url"));
+    assert!(!config.contains("project_id"));
+    assert!(!config.contains("repo_id"));
     assert!(!config.contains("mode = \"cloud\""));
     assert!(!config.contains("SUPABASE"));
     assert!(!config.contains("supabase"));
@@ -191,7 +190,7 @@ fn canonical_backend_selection_uses_cloud_without_local_fallback() {
 }
 
 #[test]
-fn cloud_login_requires_a_project_cloud_configuration() {
+fn cloud_login_requires_a_project_origin() {
     let tmp = TempDir::new().expect("tempdir");
     let data_home = TempDir::new().expect("credential data home");
     let login_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
@@ -203,7 +202,7 @@ fn cloud_login_requires_a_project_cloud_configuration() {
     assert!(!login_out.status.success());
     let error = String::from_utf8_lossy(&login_out.stderr);
     assert!(
-        error.contains("config.toml") || error.contains(".decapod"),
+        error.contains("origin Git remote"),
         "unexpected login error: {error}"
     );
 }

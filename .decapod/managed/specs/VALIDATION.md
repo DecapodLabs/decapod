@@ -1,5 +1,10 @@
 # Validation## Validation Philosophy
-> Validation is a release gate, not documentation theater.
+> Validation is a release gate, not documentation theater.## Validation Harness
+Define the test and verification harness used by this project.
+Key features:
+- **Automated Tests**: Unit and integration test suites.
+- **Linting & Formatting**: Static analysis tools and checkers.
+- **CI/CD Integration**: Automatic execution of validation gates on push.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -40,13 +45,6 @@
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Validation Harness
-Define the test and verification harness used by this project.
-Key features:
-- **Automated Tests**: Unit and integration test suites.
-- **Linting & Formatting**: Static analysis tools and checkers.
-- **CI/CD Integration**: Automatic execution of validation gates on push.
 
 ## Generated Spec Refresh Gates
 Decapod must keep generated specs synchronized at governance pressure points. Fresh `decapod init` may scaffold a missing specs directory. After initialization, refresh must re-evaluate the existing codebase, preserve authored spec content, update codebase-derived attestations, and refresh the manifest rather than rendering scaffold replacements.
@@ -144,7 +142,7 @@ flowchart LR
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4b90d3e50a5c0a0113a3cc5c2c7b7bd178b159861eb3307967669fc7f72694cd`
+- Repository signal fingerprint: `d3bebb4a840905935590ab6f8e1eb01b9984a87a528a044cf8b32fe6ee1b060b`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

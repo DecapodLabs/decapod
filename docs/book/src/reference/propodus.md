@@ -2,7 +2,7 @@
 
 Propodus is an optional remote service boundary for repo-scoped todos. It is
 not compiled into Decapod and it does not replace local SQLite by default.
-`repo.backend = "cloud"` is an explicit opt-in: in that mode the todo commands
+`repo.backend = "cloud"` selects the cloud backend: todo commands
 use Propodus directly and never silently fall back to local SQLite.
 
 ## Contract v1
@@ -32,7 +32,7 @@ repository.
 The command boundary is covered by `tests/cloud_command_path.rs`, which proves
 that list, add, claim, and complete are routed through the backend-neutral
 `TodoStore` adapter. Unsupported local-only operations return an explicit
-error in cloud mode.
+error on the cloud backend.
 
 The production-dispatch proof is `tests/cloud_cli_boundary.rs`; it uses a
 mock Propodus store factory and exercises the same `run_todo_cli` composition
@@ -77,7 +77,7 @@ Credentials are never read from `.decapod/config.toml`. Lookup precedence is:
 
 Use `decapod cloud status` to check whether a bearer is configured without
 printing the token. `decapod cloud login` and the first cloud todo command use
-the repository's configured cloud endpoint to start or resume onboarding.
+Decapod's baked-in Propodus endpoint to start or resume onboarding.
 Interactive terminals open the URL when a browser launcher is available and
 always print it as a fallback; headless callers receive a bounded resume
 instruction. A completed exchange is stored machine-locally with restrictive
@@ -90,9 +90,9 @@ them to repository configuration, generated governance, URLs, or commits.
 From a fresh checkout of the canonical repository:
 
 1. Run `decapod init --backend cloud --proof` and confirm `.decapod/config.toml`
-   contains `repo.backend = "cloud"`, `[cloud].enabled = true`, and the intended
-   Propodus `api_url`. The endpoint is selected only from this project config;
-   no service URL is inferred from credentials.
+   contains only the backend selection `repo.backend = "cloud"` for cloud
+   composition. The Propodus endpoint and provider are binary-owned; no service
+   URL or project identifier is stored in project configuration.
 2. Ensure `origin` is an unambiguous GitHub remote. Decapod derives the
    canonical owner/name from it and sends that binding to the provider; the
    provider decides whether the authenticated session may use the repository.
@@ -103,16 +103,15 @@ From a fresh checkout of the canonical repository:
 4. Cloud todo commands use the same `TodoStore` command boundary as local
    todo commands, but compose the Propodus adapter and JWT instead of local
    SQLite. They do not acquire the local agent session or create/migrate the
-   local todo database. Missing credentials, cloud config, or a canonical
+   local todo database. Missing credentials or a canonical
    GitHub remote fail closed and never fall back to SQLite.
 
 ## Repository identity
 
-Cloud mode derives a canonical `owner/name` binding from the `origin` remote
+The cloud backend derives a canonical `owner/name` binding from the `origin` remote
 and rejects non-GitHub or ambiguous remotes. Forks remain distinct identities
 and are passed to the provider for authorization; Decapod does not maintain a
-repo allowlist or treat `cloud.repo_id` as authority to select another
-repository.
+repo allowlist or accept a project-configured repository identifier.
 
 ## v1 governance limits
 

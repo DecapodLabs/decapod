@@ -7,7 +7,7 @@
 //! docs and constitution documents, not in Rust source comments.
 
 pub(crate) mod cli;
-pub use cli::CloudConfigSection;
+pub use cli::CloudRuntimeConfig;
 pub mod constitution;
 pub mod core;
 pub(crate) mod plan_governance;
@@ -117,17 +117,15 @@ fn record_cloud_init_registration(
     config: &DecapodProjectConfig,
     dry_run: bool,
 ) -> Result<(), error::DecapodError> {
-    let cloud_enabled = config.cloud.as_ref().map(|c| c.enabled).unwrap_or(false);
-    if !cloud_enabled {
+    if !config.repo.effective_backend().is_cloud() {
         return Ok(());
     }
 
-    let cloud = config.cloud.clone().unwrap_or_default();
+    let cloud = crate::cli::CloudRuntimeConfig::default();
     let registration = cloud_backend::CloudInitRegistration::for_init(
         &cloud.provider,
         &cloud.api_url,
-        &cloud.project_id,
-        &cloud.repo_id,
+        "",
         target_dir,
     );
     if let Some(path) =
@@ -145,14 +143,9 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
     match cloud_cli.command {
         CloudCommand::Login => {
             let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
-            let config = DecapodProjectConfig::load(&project_root)?;
-            let cloud = config.cloud.ok_or_else(|| {
-                error::DecapodError::Config(
-                    "cloud login requires an enabled [cloud] configuration".to_string(),
-                )
-            })?;
             let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
-            let propodus = core::propodus::PropodusConfig::from(&cloud);
+            let propodus =
+                core::propodus::PropodusConfig::from(&crate::cli::CloudRuntimeConfig::default());
             core::propodus::ensure_cloud_session(
                 &propodus,
                 &identity,
@@ -1435,9 +1428,7 @@ fn init_with_from_config(
             .iter()
             .map(|proof| format!("{}={}", proof.name, proof.command))
             .collect(),
-        backend: if config.cloud.as_ref().map(|c| c.enabled).unwrap_or(false)
-            || config.repo.effective_backend().is_cloud()
-        {
+        backend: if config.repo.effective_backend().is_cloud() {
             crate::cli::BackendType::Cloud
         } else {
             crate::cli::BackendType::Local
@@ -1448,7 +1439,6 @@ fn init_with_from_config(
 }
 
 fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjectConfig {
-    let cloud_enabled = init.backend.is_cloud() || repo.effective_backend().is_cloud();
     let mut repo = repo;
     let external_tracker = repo.external_tracker;
     let tracker_is_external = external_tracker
@@ -1457,7 +1447,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             .as_deref()
             .is_some_and(|provider| provider != "decapod");
     repo.external_tracker = tracker_is_external;
-    // Explicit cloud mode is an active backend selection. Local remains the
+    // Explicit cloud backend selection is active. Local remains the
     // default when the caller does not opt in.
     repo.set_backend(init.backend);
 
@@ -1538,14 +1528,6 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         },
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
-        },
-        cloud: if cloud_enabled {
-            Some(crate::cli::CloudConfigSection {
-                enabled: true,
-                ..crate::cli::CloudConfigSection::default()
-            })
-        } else {
-            None
         },
     }
 }
@@ -2222,10 +2204,11 @@ pub fn run() -> Result<(), error::DecapodError> {
             seed_init_generated_state(&target_dir, init_with.dry_run)?;
             if !init_with.dry_run
                 && config.repo.effective_backend().is_cloud()
-                && let Some(cloud) = config.cloud.as_ref()
                 && let Ok(identity) = core::repo_identity::resolve_repository_identity(&target_dir)
             {
-                let propodus = core::propodus::PropodusConfig::from(cloud);
+                let propodus = core::propodus::PropodusConfig::from(
+                    &crate::cli::CloudRuntimeConfig::default(),
+                );
                 let onboarding = core::propodus::ensure_cloud_session(
                     &propodus,
                     &identity,
@@ -2235,7 +2218,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     let message = error.to_string();
                     if message.contains("interactive terminal") {
                         println!(
-                            "Cloud configuration saved for {}; run a cloud todo command in an interactive terminal to complete onboarding.",
+                            "Cloud backend selected for {}; run a cloud todo command in an interactive terminal to complete onboarding.",
                             identity.canonical_name
                         );
                     } else {

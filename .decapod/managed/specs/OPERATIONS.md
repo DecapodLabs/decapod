@@ -4,7 +4,8 @@
 - [ ] Dashboards for latency/errors/throughput are live.
 - [ ] Runbooks linked for all Sev1/Sev2 alerts.
 - [ ] Rollback plan validated.
-- [ ] Capacity guardrails documented.
+- [ ] Capacity guardrails documented.## Deployment Model
+Describe the operational runtime model, scheduling, and system deployment architecture.
 
 <!-- decapod:capability-overlay:background-processing:start -->
 
@@ -42,9 +43,6 @@
 - Zero-downtime migration strategy for production
 - Migration health checks and rollback triggers
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Deployment Model
-Describe the operational runtime model, scheduling, and system deployment architecture.
 
 ## Service Level Objectives
 | SLI | SLO Target | Measurement Window | Owner |
@@ -115,7 +113,7 @@ Use `tracing` + `tracing-subscriber` with structured JSON output and request cor
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4b90d3e50a5c0a0113a3cc5c2c7b7bd178b159861eb3307967669fc7f72694cd`
+- Repository signal fingerprint: `d3bebb4a840905935590ab6f8e1eb01b9984a87a528a044cf8b32fe6ee1b060b`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

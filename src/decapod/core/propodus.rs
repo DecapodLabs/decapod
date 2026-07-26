@@ -4,7 +4,7 @@
 //! The transport is injectable so default tests remain local and the storage
 //! boundary can be exercised without Vercel, Neon, or hosted credentials.
 
-use crate::cli::CloudConfigSection;
+use crate::cli::CloudRuntimeConfig;
 use crate::core::auth;
 use crate::core::cloud_backend::{
     CloudOnboardingEndpoints, CloudOnboardingExchangeResponse, CloudOnboardingStartResponse,
@@ -32,16 +32,14 @@ pub const PROPODUS_STATUS_COMPLETED: &str = "completed";
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PropodusConfig {
     pub api_url: String,
-    pub project_id: String,
     pub repo_id: String,
 }
 
-impl From<&CloudConfigSection> for PropodusConfig {
-    fn from(config: &CloudConfigSection) -> Self {
+impl From<&CloudRuntimeConfig> for PropodusConfig {
+    fn from(config: &CloudRuntimeConfig) -> Self {
         Self {
             api_url: config.api_url.clone(),
-            project_id: config.project_id.clone(),
-            repo_id: config.repo_id.clone(),
+            repo_id: String::new(),
         }
     }
 }
@@ -253,19 +251,18 @@ pub struct PropodusClient<T = CurlTransport> {
 }
 
 impl PropodusClient<CurlTransport> {
-    pub fn from_cloud_config(config: &CloudConfigSection) -> Result<Self, PropodusClientError> {
+    pub fn from_cloud_config(config: &CloudRuntimeConfig) -> Result<Self, PropodusClientError> {
         let credential = auth::load_cloud_credential(None)
             .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
         Self::with_transport(&config.into(), &credential.token, CurlTransport::default())
     }
 
     pub fn from_dogfood_cloud_config(
-        config: &CloudConfigSection,
+        config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Self, PropodusClientError> {
         let config = PropodusConfig {
             api_url: config.api_url.clone(),
-            project_id: config.project_id.clone(),
             repo_id: identity.canonical_name.clone(),
         };
         let credential = ensure_cloud_session(&config, identity, CurlTransport::default())?;
@@ -509,7 +506,7 @@ impl<T: PropodusTransport> PropodusClient<T> {
         }
         if config.repo_id.trim().is_empty() {
             return Err(PropodusClientError::Configuration(
-                "cloud.repo_id is required for Propodus todo operations".to_string(),
+                "repository identity is required for Propodus todo operations".to_string(),
             ));
         }
         if credential.trim().is_empty() {

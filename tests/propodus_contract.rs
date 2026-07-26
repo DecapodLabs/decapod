@@ -53,7 +53,6 @@ impl PropodusTransport for FakePropodusService {
 fn config() -> PropodusConfig {
     PropodusConfig {
         api_url: "https://propodus.example.test".to_string(),
-        project_id: "test-project".to_string(),
         repo_id: "DecapodLabs/decapod".to_string(),
     }
 }

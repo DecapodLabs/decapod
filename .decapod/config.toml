@@ -68,11 +68,3 @@ provider = "decapod"
 
 [context]
 declared_sources = []
-
-[cloud]
-enabled = true
-experimental = true
-provider = "vercel"
-api_url = "https://project-oqn7i.vercel.app"
-project_id = ""
-repo_id = ""

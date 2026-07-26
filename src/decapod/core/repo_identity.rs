@@ -1,4 +1,4 @@
-//! Canonical GitHub repository identity for explicit cloud mode.
+//! Canonical GitHub repository identity for the cloud backend.
 //!
 //! The project file may describe a desired backend, but it must not be allowed
 //! to choose which repository slice receives cloud state. The active cloud
@@ -33,7 +33,7 @@ pub fn resolve_repository_identity(repo_root: &Path) -> Result<RepositoryIdentit
         })?;
     if !output.status.success() {
         return Err(DecapodError::ValidationError(
-            "cloud mode requires a configured origin Git remote".to_string(),
+            "cloud backend requires a configured origin Git remote".to_string(),
         ));
     }
     let remote_url = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -45,7 +45,7 @@ pub fn resolve_repository_identity_from_remote(
 ) -> Result<RepositoryIdentity, DecapodError> {
     let canonical_name = parse_github_repository(remote_url).ok_or_else(|| {
         DecapodError::ValidationError(format!(
-            "cloud mode requires a GitHub origin remote; got unsupported remote `{remote_url}`"
+            "cloud backend requires a GitHub origin remote; got unsupported remote `{remote_url}`"
         ))
     })?;
     let (owner, repository) = canonical_name.split_once('/').ok_or_else(|| {

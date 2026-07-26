@@ -372,7 +372,6 @@ pub struct CloudInitRegistration {
     pub provider: String,
     pub api_url: String,
     pub route: String,
-    pub project_id: String,
     pub repo_id: String,
     pub repo_root_hint: String,
     pub created_at: String,
@@ -387,19 +386,12 @@ pub struct CloudWriteIntent {
 }
 
 impl CloudInitRegistration {
-    pub fn for_init(
-        provider: &str,
-        api_url: &str,
-        project_id: &str,
-        repo_id: &str,
-        repo_root: &Path,
-    ) -> Self {
+    pub fn for_init(provider: &str, api_url: &str, repo_id: &str, repo_root: &Path) -> Self {
         Self {
             schema_version: "1.0.0".to_string(),
             provider: provider.to_string(),
             api_url: api_url.trim_end_matches('/').to_string(),
             route: PROPODUS_TODO_ROUTE_SUMMARY.to_string(),
-            project_id: project_id.to_string(),
             repo_id: repo_id.to_string(),
             repo_root_hint: repo_root.display().to_string(),
             created_at: time::now_epoch_z(),
