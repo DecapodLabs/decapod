@@ -97,6 +97,10 @@ fn onboarding_fixture_declares_provider_neutral_routes_and_safety_boundary() {
     assert_eq!(fixture["contract_version"], "v1");
     assert_eq!(
         fixture["routes"]["exchange"],
+        "POST /api/onboarding/exchange"
+    );
+    assert_eq!(
+        fixture["routes"]["session_exchange"],
         "POST /api/auth/session/exchange"
     );
     assert_eq!(

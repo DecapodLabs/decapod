@@ -4,8 +4,12 @@
   "routes": {
     "start": "POST /api/onboarding/start",
     "status": "GET /api/onboarding/status?flow=<flow>",
-    "exchange": "POST /api/auth/session/exchange",
+    "exchange": "POST /api/onboarding/exchange",
+    "session_exchange": "POST /api/auth/session/exchange",
     "refresh": "POST /api/auth/session/refresh"
+  },
+  "start_request": {
+    "repo_id": "DecapodLabs/decapod"
   },
   "repository_binding": {
     "canonical_name": "DecapodLabs/decapod",
@@ -14,13 +18,14 @@
   },
   "handoff": {
     "flow_id": "opaque-flow-id",
-    "bootstrap_url": "https://cloud.example.test/onboard/opaque",
+    "bootstrap_url": "https://cloud.example.test/onboarding?flow=opaque-flow-id",
     "expires_at": "2030-01-01T00:00:00Z",
     "poll_after_seconds": 2
   },
   "session": {
-    "access_token": "machine-local-only",
-    "refresh_token": "machine-local-only",
+    "access_token": "opaque-machine-access",
+    "refresh_token": "opaque-machine-refresh",
+    "session_id": "opaque-machine-session",
     "expires_at": "2030-01-01T00:00:00Z"
   },
   "safety": [

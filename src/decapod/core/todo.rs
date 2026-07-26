@@ -4833,7 +4833,7 @@ impl CloudTodoStoreFactory for PropodusCloudTodoStoreFactory {
     ) -> Result<Box<dyn TodoStore>, error::DecapodError> {
         let client = PropodusClient::from_dogfood_cloud_config(config, identity).map_err(|error| {
             error::DecapodError::ValidationError(format!(
-                "Propodus credential/configuration preflight failed: {error}. Configure a Propodus-issued bearer through DECAPOD_ACCESS_TOKEN or the machine credential file; Decapod does not mint provider tokens."
+                "Propodus cloud preflight failed: {error}. Complete the printed repository-bound onboarding URL or use DECAPOD_ACCESS_TOKEN only for a controlled proof."
             ))
         })?;
         Ok(Box::new(PropodusTodoStore::new(client)))

@@ -6,13 +6,21 @@
 
 use crate::cli::CloudConfigSection;
 use crate::core::auth;
+use crate::core::cloud_backend::{
+    CloudOnboardingEndpoints, CloudOnboardingExchangeResponse, CloudOnboardingStartResponse,
+    CloudOnboardingState, CloudOnboardingStatusResponse, CloudSession, CloudSessionExchangeRequest,
+    CloudSessionExchangeResponse, CloudSessionRefreshRequest,
+};
 use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::storage::{Task as StorageTask, TodoStore};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::io::IsTerminal;
 use std::process::Command;
+use std::thread;
+use std::time::{Duration, Instant};
 
 pub const PROPODUS_CONTRACT_ID: &str = "decapod.propodus.todo";
 pub const PROPODUS_CONTRACT_VERSION: &str = "v1";
@@ -156,8 +164,6 @@ impl PropodusTransport for CurlTransport {
             "Accept: application/json",
             "--header",
             "Content-Type: application/json",
-            "--header",
-            &format!("Authorization: Bearer {bearer}"),
             "--connect-timeout",
             &self.connect_timeout_seconds.to_string(),
             "--max-time",
@@ -166,6 +172,9 @@ impl PropodusTransport for CurlTransport {
             "\n%{http_code}",
             url,
         ]);
+        if !bearer.trim().is_empty() {
+            command.args(["--header", &format!("Authorization: Bearer {bearer}")]);
+        }
         if let Some(body) = body {
             command.args(["--data-binary", &String::from_utf8_lossy(body)]);
         }
@@ -254,15 +263,236 @@ impl PropodusClient<CurlTransport> {
         config: &CloudConfigSection,
         identity: &RepositoryIdentity,
     ) -> Result<Self, PropodusClientError> {
-        let credential = auth::load_cloud_credential(None)
-            .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
         let config = PropodusConfig {
             api_url: config.api_url.clone(),
             project_id: config.project_id.clone(),
             repo_id: identity.canonical_name.clone(),
         };
+        let credential = ensure_cloud_session(&config, identity, CurlTransport::default())?;
         Self::with_transport(&config, &credential.token, CurlTransport::default())
     }
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct OnboardingStartRequest {
+    repo_id: String,
+}
+
+/// Resolve a machine session for the repository-bound cloud path. Explicit
+/// environment credentials remain supported for protected proofs, while the
+/// normal interactive path starts or resumes the one-time browser exchange.
+pub fn ensure_cloud_session<T: PropodusTransport>(
+    config: &PropodusConfig,
+    identity: &RepositoryIdentity,
+    transport: T,
+) -> Result<auth::CloudCredential, PropodusClientError> {
+    if let Ok(credential) = auth::load_cloud_credential(None) {
+        if credential.source != auth::CredentialSource::MachineFile
+            || !auth::cloud_session_is_expired(&credential)
+        {
+            return Ok(credential);
+        }
+        if let (Some(session_id), Some(refresh_token)) = (
+            credential.session_id.as_deref(),
+            credential.refresh_token.as_deref(),
+        ) {
+            let session = refresh_cloud_session(config, session_id, refresh_token, &transport)?;
+            auth::store_machine_session(&session)
+                .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+            return auth::load_machine_session()
+                .map_err(|error| PropodusClientError::Authentication(error.to_string()))?
+                .ok_or_else(|| {
+                    PropodusClientError::Authentication(
+                        "cloud session was not persisted".to_string(),
+                    )
+                });
+        }
+    }
+
+    complete_cloud_onboarding(config, identity, transport)
+}
+
+fn complete_cloud_onboarding<T: PropodusTransport>(
+    config: &PropodusConfig,
+    identity: &RepositoryIdentity,
+    transport: T,
+) -> Result<auth::CloudCredential, PropodusClientError> {
+    let endpoints = CloudOnboardingEndpoints::new(&config.api_url)
+        .map_err(|error| PropodusClientError::Configuration(error.to_string()))?;
+    let interactive = std::io::stdin().is_terminal()
+        && std::env::var_os("GITHUB_ACTIONS").is_none()
+        && std::env::var_os("DECAPOD_HEADLESS").is_none();
+    let pending = auth::load_pending_cloud_onboarding()
+        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?
+        .filter(|pending| {
+            pending.api_url == config.api_url && pending.repo_id == identity.canonical_name
+        });
+
+    let (flow_id, url, expires_at) = if let Some(pending) = pending {
+        (pending.flow_id, pending.url, pending.expires_at)
+    } else {
+        if !interactive {
+            return Err(PropodusClientError::Authentication(
+                "no cloud credential is configured; run this command in an interactive terminal to start browser onboarding, then rerun it here".to_string(),
+            ));
+        }
+        let request = OnboardingStartRequest {
+            repo_id: identity.canonical_name.clone(),
+        };
+        let body = serde_json::to_vec(&request)
+            .map_err(|error| PropodusClientError::Decode(error.to_string()))?;
+        let response = public_request(&transport, "POST", &endpoints.start(), Some(&body))?;
+        let started: CloudOnboardingStartResponse = decode_json(&response.body)?;
+        let (flow_id, handoff) = started
+            .into_handoff()
+            .map_err(|error| PropodusClientError::Validation(error.to_string()))?;
+        let pending = auth::PendingCloudOnboarding {
+            api_url: config.api_url.clone(),
+            repo_id: identity.canonical_name.clone(),
+            flow_id: flow_id.clone(),
+            url: handoff.bootstrap_url.clone(),
+            expires_at: handoff.expires_at.clone(),
+        };
+        auth::store_pending_cloud_onboarding(&pending)
+            .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+        (flow_id, handoff.bootstrap_url, handoff.expires_at)
+    };
+
+    println!("Cloud onboarding URL: {url}");
+    println!(
+        "This one-time URL expires at {expires_at}; no credential is stored in the repository."
+    );
+    try_open_browser(&url);
+
+    let deadline = Instant::now()
+        + if interactive {
+            Duration::from_secs(120)
+        } else {
+            Duration::from_secs(0)
+        };
+    let mut first = true;
+    loop {
+        let status_url = endpoints
+            .status(&flow_id)
+            .map_err(|error| PropodusClientError::Validation(error.to_string()))?;
+        let response = public_request(&transport, "GET", &status_url, None)?;
+        let status: CloudOnboardingStatusResponse = decode_json(&response.body)?;
+        match status.state {
+            CloudOnboardingState::Authorized => break,
+            CloudOnboardingState::Canceled
+            | CloudOnboardingState::Expired
+            | CloudOnboardingState::Failed => {
+                let _ = auth::clear_pending_cloud_onboarding();
+                return Err(PropodusClientError::Authentication(format!(
+                    "cloud onboarding ended with status {:?}",
+                    status.state
+                )));
+            }
+            CloudOnboardingState::Pending | CloudOnboardingState::Uncertain => {
+                if !interactive || Instant::now() >= deadline {
+                    return Err(PropodusClientError::Authentication(
+                        "cloud onboarding is pending; finish the printed URL and rerun the command to resume".to_string(),
+                    ));
+                }
+                if !first {
+                    thread::sleep(Duration::from_secs(
+                        status.poll_after_seconds.unwrap_or(2).clamp(1, 10),
+                    ));
+                }
+                first = false;
+            }
+        }
+    }
+
+    let exchange_body = serde_json::to_vec(&serde_json::json!({ "flow": flow_id }))
+        .map_err(|error| PropodusClientError::Decode(error.to_string()))?;
+    let response = public_request(
+        &transport,
+        "POST",
+        &endpoints.exchange(),
+        Some(&exchange_body),
+    )?;
+    let exchange: CloudOnboardingExchangeResponse = decode_json(&response.body)?;
+    let code = exchange.code.trim();
+    if code.is_empty() {
+        return Err(PropodusClientError::Authentication(
+            "cloud onboarding exchange returned no code".to_string(),
+        ));
+    }
+
+    let request = CloudSessionExchangeRequest::new(code)
+        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+    let body = serde_json::to_vec(&request)
+        .map_err(|error| PropodusClientError::Decode(error.to_string()))?;
+    let response = public_request(
+        &transport,
+        "POST",
+        &endpoints.session_exchange(),
+        Some(&body),
+    )?;
+    let session = CloudSessionExchangeResponse::into_session(decode_json(&response.body)?)
+        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+    session
+        .validate()
+        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+    auth::store_machine_session(&session)
+        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+    auth::clear_pending_cloud_onboarding()
+        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+    auth::load_machine_session()
+        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?
+        .ok_or_else(|| {
+            PropodusClientError::Authentication("cloud session was not persisted".to_string())
+        })
+}
+
+fn refresh_cloud_session<T: PropodusTransport>(
+    config: &PropodusConfig,
+    session_id: &str,
+    refresh_token: &str,
+    transport: &T,
+) -> Result<CloudSession, PropodusClientError> {
+    let endpoints = CloudOnboardingEndpoints::new(&config.api_url)
+        .map_err(|error| PropodusClientError::Configuration(error.to_string()))?;
+    let request = CloudSessionRefreshRequest::new(session_id, refresh_token)
+        .map_err(|error| PropodusClientError::Authentication(error.to_string()))?;
+    let body = serde_json::to_vec(&request)
+        .map_err(|error| PropodusClientError::Decode(error.to_string()))?;
+    let response = public_request(transport, "POST", &endpoints.refresh(), Some(&body))?;
+    CloudSessionExchangeResponse::into_session(decode_json(&response.body)?)
+        .map_err(|error| PropodusClientError::Authentication(error.to_string()))
+}
+
+fn public_request<T: PropodusTransport>(
+    transport: &T,
+    method: &str,
+    url: &str,
+    body: Option<&[u8]>,
+) -> Result<PropodusHttpResponse, PropodusClientError> {
+    let response = transport.request(method, url, "", body)?;
+    if (200..300).contains(&response.status) {
+        Ok(response)
+    } else {
+        Err(map_http_error(response))
+    }
+}
+
+fn try_open_browser(url: &str) {
+    if std::env::var_os("DECAPOD_HEADLESS").is_some() {
+        return;
+    }
+    let (program, args): (&str, &[&str]) = if cfg!(target_os = "macos") {
+        ("open", &[url])
+    } else if cfg!(target_os = "windows") {
+        ("cmd", &["/C", "start", "", url])
+    } else {
+        ("xdg-open", &[url])
+    };
+    let _ = Command::new(program)
+        .args(args)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn();
 }
 
 impl<T: PropodusTransport> PropodusClient<T> {

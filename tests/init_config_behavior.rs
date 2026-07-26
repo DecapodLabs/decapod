@@ -104,7 +104,7 @@ fn init_with_backend_cloud_saves_to_config() {
         "cloud provider should be non-secret Vercel wiring: {config}"
     );
     assert!(
-        config.contains("api_url = \"https://decapod-cloud.vercel.app\""),
+        config.contains("api_url = \"https://project-oqn7i.vercel.app\""),
         "cloud API URL should use the Vercel backend default: {config}"
     );
     assert!(

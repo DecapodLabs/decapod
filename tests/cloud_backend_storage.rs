@@ -74,7 +74,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     assert!(config.contains("enabled = true"));
     assert!(config.contains("experimental = true"));
     assert!(config.contains("provider = \"vercel\""));
-    assert!(config.contains("api_url = \"https://decapod-cloud.vercel.app\""));
+    assert!(config.contains("api_url = \"https://project-oqn7i.vercel.app\""));
     assert!(config.contains("backend = \"cloud\""));
     assert!(config.contains("mode = \"cloud\""));
     assert!(!config.contains("SUPABASE"));
@@ -88,7 +88,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     let registration: serde_json::Value =
         serde_json::from_str(&registration).expect("parse cloud init registration");
     assert_eq!(registration["provider"], "vercel");
-    assert_eq!(registration["api_url"], "https://decapod-cloud.vercel.app");
+    assert_eq!(registration["api_url"], "https://project-oqn7i.vercel.app");
     assert_eq!(
         registration["route"],
         "GET /api/health; GET /api/todos?repo_id=<repo>; POST /api/todos; PATCH /api/todos?id=<todo>"
@@ -134,8 +134,7 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
     assert!(!list_out.status.success());
     let error = String::from_utf8_lossy(&list_out.stderr);
     assert!(
-        error.contains("Propodus credential/configuration preflight failed")
-            && error.contains("DECAPOD_ACCESS_TOKEN"),
+        error.contains("Propodus cloud preflight failed") && error.contains("DECAPOD_ACCESS_TOKEN"),
         "unexpected credential preflight error: {error}"
     );
     assert!(
@@ -196,7 +195,7 @@ fn canonical_backend_selection_overrides_legacy_mode_without_local_fallback() {
 }
 
 #[test]
-fn cloud_login_fails_fast_until_propodus_exchange_exists() {
+fn cloud_login_requires_a_project_cloud_configuration() {
     let tmp = TempDir::new().expect("tempdir");
     let data_home = TempDir::new().expect("credential data home");
     let login_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
@@ -208,7 +207,7 @@ fn cloud_login_fails_fast_until_propodus_exchange_exists() {
     assert!(!login_out.status.success());
     let error = String::from_utf8_lossy(&login_out.stderr);
     assert!(
-        error.contains("Propodus-compatible GitHub login is not available"),
+        error.contains("config.toml") || error.contains(".decapod"),
         "unexpected login error: {error}"
     );
 }

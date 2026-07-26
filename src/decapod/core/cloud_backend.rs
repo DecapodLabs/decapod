@@ -12,6 +12,7 @@ pub const PROPODUS_TODO_ROUTE_SUMMARY: &str =
 pub const CLOUD_ONBOARDING_CONTRACT_VERSION: &str = "v1";
 pub const CLOUD_ONBOARDING_START_ROUTE: &str = "/api/onboarding/start";
 pub const CLOUD_ONBOARDING_STATUS_ROUTE: &str = "/api/onboarding/status";
+pub const CLOUD_ONBOARDING_EXCHANGE_ROUTE: &str = "/api/onboarding/exchange";
 pub const CLOUD_SESSION_EXCHANGE_ROUTE: &str = "/api/auth/session/exchange";
 pub const CLOUD_SESSION_REFRESH_ROUTE: &str = "/api/auth/session/refresh";
 
@@ -22,9 +23,11 @@ pub const CLOUD_SESSION_REFRESH_ROUTE: &str = "/api/auth/session/refresh";
 #[serde(rename_all = "snake_case")]
 pub enum CloudOnboardingState {
     Pending,
+    #[serde(rename = "ready", alias = "authorized")]
     Authorized,
     Canceled,
     Expired,
+    #[serde(rename = "denied", alias = "failed")]
     Failed,
     Uncertain,
 }
@@ -80,8 +83,9 @@ impl CloudOnboardingStartRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CloudOnboardingStartResponse {
-    #[serde(alias = "flow")]
+    #[serde(alias = "flow", alias = "id")]
     pub flow_id: String,
+    #[serde(alias = "url")]
     pub bootstrap_url: String,
     pub expires_at: String,
     #[serde(default)]
@@ -105,8 +109,9 @@ impl CloudOnboardingStartResponse {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CloudOnboardingStatusResponse {
-    #[serde(alias = "flow")]
+    #[serde(alias = "flow", alias = "id")]
     pub flow_id: String,
+    #[serde(alias = "status")]
     pub state: CloudOnboardingState,
     #[serde(default)]
     pub expires_at: Option<String>,
@@ -115,22 +120,27 @@ pub struct CloudOnboardingStatusResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CloudOnboardingExchangeResponse {
+    pub transaction_id: String,
+    pub repository_id: String,
+    pub code: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CloudSessionExchangeRequest {
-    pub contract_version: String,
-    pub flow_id: String,
+    pub code: String,
 }
 
 impl CloudSessionExchangeRequest {
-    pub fn new(flow_id: &str) -> Result<Self, DecapodError> {
-        let flow_id = flow_id.trim();
-        if flow_id.is_empty() || flow_id.chars().any(|c| c.is_control() || c.is_whitespace()) {
+    pub fn new(code: &str) -> Result<Self, DecapodError> {
+        let code = code.trim();
+        if code.is_empty() || code.chars().any(|c| c.is_control() || c.is_whitespace()) {
             return Err(DecapodError::ValidationError(
-                "cloud onboarding flow ID must be a non-empty opaque value".to_string(),
+                "cloud session exchange code must be a non-empty opaque value".to_string(),
             ));
         }
         Ok(Self {
-            contract_version: CLOUD_ONBOARDING_CONTRACT_VERSION.to_string(),
-            flow_id: flow_id.to_string(),
+            code: code.to_string(),
         })
     }
 }
@@ -142,6 +152,8 @@ pub struct CloudSession {
     pub access_token: String,
     #[serde(default)]
     pub refresh_token: Option<String>,
+    #[serde(default)]
+    pub session_id: Option<String>,
     #[serde(default)]
     pub expires_at: Option<String>,
 }
@@ -179,29 +191,45 @@ impl CloudSession {
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CloudSessionExchangeResponse {
-    pub session: CloudSession,
+    #[serde(default)]
+    pub credentials: Option<CloudSession>,
+    #[serde(default)]
+    pub session: Option<CloudSession>,
+}
+
+impl CloudSessionExchangeResponse {
+    pub fn into_session(self) -> Result<CloudSession, DecapodError> {
+        self.credentials.or(self.session).ok_or_else(|| {
+            DecapodError::SessionError("cloud session exchange returned no credentials".to_string())
+        })
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CloudSessionRefreshRequest {
-    pub contract_version: String,
+    pub session_id: String,
     pub refresh_token: String,
 }
 
 impl CloudSessionRefreshRequest {
-    pub fn new(refresh_token: &str) -> Result<Self, DecapodError> {
+    pub fn new(session_id: &str, refresh_token: &str) -> Result<Self, DecapodError> {
+        let session_id = session_id.trim();
         let refresh_token = refresh_token.trim();
-        if refresh_token.is_empty()
+        if session_id.is_empty()
+            || session_id
+                .chars()
+                .any(|c| c.is_control() || c.is_whitespace())
+            || refresh_token.is_empty()
             || refresh_token
                 .chars()
                 .any(|c| c.is_control() || c.is_whitespace())
         {
             return Err(DecapodError::SessionError(
-                "cloud refresh requires a non-empty opaque credential".to_string(),
+                "cloud refresh requires non-empty opaque credentials".to_string(),
             ));
         }
         Ok(Self {
-            contract_version: CLOUD_ONBOARDING_CONTRACT_VERSION.to_string(),
+            session_id: session_id.to_string(),
             refresh_token: refresh_token.to_string(),
         })
     }
@@ -251,6 +279,10 @@ impl CloudOnboardingEndpoints {
     }
 
     pub fn exchange(&self) -> String {
+        format!("{}{}", self.base_url, CLOUD_ONBOARDING_EXCHANGE_ROUTE)
+    }
+
+    pub fn session_exchange(&self) -> String {
         format!("{}{}", self.base_url, CLOUD_SESSION_EXCHANGE_ROUTE)
     }
 
@@ -487,6 +519,10 @@ mod tests {
         );
         assert_eq!(
             endpoints.exchange(),
+            "https://cloud.example.test/api/onboarding/exchange"
+        );
+        assert_eq!(
+            endpoints.session_exchange(),
             "https://cloud.example.test/api/auth/session/exchange"
         );
         assert_eq!(
@@ -498,22 +534,24 @@ mod tests {
 
     #[test]
     fn exchange_and_refresh_payloads_validate_opaque_credentials() {
-        let exchange = CloudSessionExchangeRequest::new("flow-123").expect("exchange request");
-        assert_eq!(exchange.contract_version, "v1");
-        assert!(CloudSessionExchangeRequest::new("flow 123").is_err());
+        let exchange = CloudSessionExchangeRequest::new("code-123").expect("exchange request");
+        assert_eq!(exchange.code, "code-123");
+        assert!(CloudSessionExchangeRequest::new("code 123").is_err());
 
         let session = CloudSession {
             access_token: "access-opaque".to_string(),
             refresh_token: Some("refresh-opaque".to_string()),
+            session_id: Some("session-opaque".to_string()),
             expires_at: Some("2030-01-01T00:00:00Z".to_string()),
         };
         session.validate().expect("session");
         assert!(session.redacted_summary().contains("refresh=true"));
         assert!(!session.redacted_summary().contains("access-opaque"));
 
-        let refresh = CloudSessionRefreshRequest::new("refresh-opaque").expect("refresh");
-        assert_eq!(refresh.contract_version, "v1");
-        assert!(CloudSessionRefreshRequest::new(" ").is_err());
+        let refresh =
+            CloudSessionRefreshRequest::new("session-opaque", "refresh-opaque").expect("refresh");
+        assert_eq!(refresh.session_id, "session-opaque");
+        assert!(CloudSessionRefreshRequest::new(" ", "refresh-opaque").is_err());
     }
 
     #[test]

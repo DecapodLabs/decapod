@@ -143,7 +143,25 @@ fn record_cloud_init_registration(
 
 fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
     match cloud_cli.command {
-        CloudCommand::Login => auth::perform_cloud_auth(&std::env::current_dir()?),
+        CloudCommand::Login => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let config = DecapodProjectConfig::load(&project_root)?;
+            let cloud = config.cloud.ok_or_else(|| {
+                error::DecapodError::Config(
+                    "cloud login requires an enabled [cloud] configuration".to_string(),
+                )
+            })?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let propodus = core::propodus::PropodusConfig::from(&cloud);
+            core::propodus::ensure_cloud_session(
+                &propodus,
+                &identity,
+                core::propodus::CurlTransport::default(),
+            )
+            .map_err(|error| error::DecapodError::SessionError(error.to_string()))?;
+            println!("Cloud session ready for {}.", identity.canonical_name);
+            Ok(())
+        }
         CloudCommand::Status => match auth::load_cloud_credential(None) {
             Ok(credential) => {
                 println!(
@@ -2202,6 +2220,29 @@ pub fn run() -> Result<(), error::DecapodError> {
             write_project_config(&target_dir, &config, init_with.dry_run)?;
             record_cloud_init_registration(&target_dir, &config, init_with.dry_run)?;
             seed_init_generated_state(&target_dir, init_with.dry_run)?;
+            if !init_with.dry_run
+                && config.repo.effective_backend().is_cloud()
+                && let Some(cloud) = config.cloud.as_ref()
+                && let Ok(identity) = core::repo_identity::resolve_repository_identity(&target_dir)
+            {
+                let propodus = core::propodus::PropodusConfig::from(cloud);
+                let onboarding = core::propodus::ensure_cloud_session(
+                    &propodus,
+                    &identity,
+                    core::propodus::CurlTransport::default(),
+                );
+                if let Err(error) = onboarding {
+                    let message = error.to_string();
+                    if message.contains("interactive terminal") {
+                        println!(
+                            "Cloud configuration saved for {}; run a cloud todo command in an interactive terminal to complete onboarding.",
+                            identity.canonical_name
+                        );
+                    } else {
+                        return Err(error::DecapodError::SessionError(message));
+                    }
+                }
+            }
         }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
@@ -2227,15 +2268,19 @@ pub fn run() -> Result<(), error::DecapodError> {
             let governance_root = find_governance_root(&workspace_root);
 
             let is_validate_cmd = matches!(&cli.command, Command::Validate(_));
-            if requires_session_token(&cli.command) {
-                ensure_session_valid()?;
-            }
             enforce_worktree_requirement(&cli.command, &workspace_root)?;
 
             // For other commands, ensure .decapod exists in the GOVERNANCE root
             let decapod_root_path = governance_root.join(".decapod");
             store_root = decapod_root_path.join("data");
             let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
+            // Cloud todo operations use the Propodus machine session/JWT and
+            // deliberately bypass the local SQLite-backed agent session. This
+            // keeps the cloud path free of local database locks while leaving
+            // every local command on its existing governance/session path.
+            if requires_session_token(&cli.command) && !cloud_todo_command {
+                ensure_session_valid()?;
+            }
             if !cloud_todo_command {
                 std::fs::create_dir_all(&store_root).map_err(error::DecapodError::IoError)?;
             }

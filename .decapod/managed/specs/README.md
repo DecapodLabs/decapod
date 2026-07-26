@@ -4,10 +4,10 @@ Canonical path: `.decapod/managed/specs/`.
 These files are the project-local contract for humans and agents.
 
 ## Snapshot
-- Project: decapod
-- Outcome: Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to converge on human intent, shape context before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work.
-- Detected languages: Rust
-- Detected surfaces: cargo, git, docker
+- Project: this repository
+- Outcome: Define the intended user-visible outcome.
+- Detected languages: not detected yet
+- Detected surfaces: not detected yet
 
 ## How to use this folder
 - [INTENT.md](./INTENT.md): what success means and what is explicitly out of scope.
@@ -23,42 +23,31 @@ These files are the project-local contract for humans and agents.
 - `.decapod/managed/Dockerfile.decapod`: Decapod's project-specific execution image; Decapod runs inside it and may add project build dependencies such as Go, Python, or system packages. Glibc is the default; `--image-profile alpine` selects the GHCR `-alpine`-tagged musl image.
 - `.decapod/managed/specs/`: **Living project specs** for humans and agents.
 - `Dockerfile` at the project root remains the product application's container image and is the artifact users package and deploy.
-- `.decapod/managed/context/`: deterministic context capsules.
-- `.decapod/managed/policy/context_capsule_policy.json`: repo-native JIT context policy contract.
-- `.decapod/managed/artifacts/provenance/`: promotion manifests and convergence checklist.
-- `.decapod/managed/artifacts/custody/`: epistemic custody artifacts (assumptions, contradictions, deferred questions).
-- `.decapod/governance/trajectory.json`: current local-first trajectory cookie with intent, scope, actions, checks, and proof verdicts; Git history is the historical store.
+- `.decapod/managed/context/`: ignored, current-run deterministic context capsules.
+- `.decapod/managed/policy/`: ignored, current-run JIT context policy material; use `.decapod/policy/` for a durable override.
+- `.decapod/managed/artifacts/`: ignored, current-run provenance/custody/inventory/diagnostic outputs.
+- `.decapod/governance/validation.json`: tracked per-commit validation receipt, overwritten after successful validation.
+- `.decapod/governance/trajectory.json`: the single tracked run cookie; Git history preserves prior merged cookies.
 - `.decapod/managed/artifacts/inventory/`: deterministic release inventory.
 - `.decapod/managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.
 
 ## Day-0 Onboarding Checklist
-- [x] Replace all placeholders in all 8 spec files.
-- [x] Confirm primary user outcome and acceptance criteria in [INTENT.md](./INTENT.md).
-- [x] Confirm topology and runtime model in [ARCHITECTURE.md](./ARCHITECTURE.md).
-- [x] Document all inbound/outbound contracts in [INTERFACES.md](./INTERFACES.md).
-- [x] Define validation gates and CI proof surfaces in [VALIDATION.md](./VALIDATION.md).
-- [x] Define state machines and invariants in [SEMANTICS.md](./SEMANTICS.md).
-- [x] Define SLOs, alerting, and incident process in [OPERATIONS.md](./OPERATIONS.md).
-- [x] Define threat model and auth/authz decisions in [SECURITY.md](./SECURITY.md).
-- [x] Ensure architecture diagram, docs, changelog, and tests are mapped to promotion gates.
-- [x] Run all validation/test commands and attach evidence artifacts.
-
-## Spec Maintenance
-These specs are **living contracts**. Update them when:
-- New CLI commands or RPC operations are added (`INTERFACES.md`)
-- New validation gates are introduced (`VALIDATION.md`)
-- State machines or invariants change (`SEMANTICS.md`)
-- Architecture decisions are recorded (`ARCHITECTURE.md` + ADR register)
-- Operational procedures evolve (`OPERATIONS.md`)
-- Security boundaries shift (`SECURITY.md`)
-
-Run `decapod validate --refresh-specs` to regenerate scaffold sections from current config.
+- [ ] Replace all placeholders in all 8 spec files.
+- [ ] Confirm primary user outcome and acceptance criteria in [INTENT.md](./INTENT.md).
+- [ ] Confirm topology and runtime model in [ARCHITECTURE.md](./ARCHITECTURE.md).
+- [ ] Document all inbound/outbound contracts in [INTERFACES.md](./INTERFACES.md).
+- [ ] Define validation gates and CI proof surfaces in [VALIDATION.md](./VALIDATION.md).
+- [ ] Define state machines and invariants in [SEMANTICS.md](./SEMANTICS.md).
+- [ ] Define SLOs, alerting, and incident process in [OPERATIONS.md](./OPERATIONS.md).
+- [ ] Define threat model and auth/authz decisions in [SECURITY.md](./SECURITY.md).
+- [ ] Ensure architecture diagram, docs, changelog, and tests are mapped to promotion gates.
+- [ ] Run all validation/test commands and attach evidence artifacts.
 
 <!-- decapod:codebase-attestation:start -->
 ## Codebase Attestation
 
-- Repository signal fingerprint: `feab2a2d22572302c8352154d9c6f0a7ad1ccec2276e08feebe268d65fc9d9be`
+- Repository signal fingerprint: `32250d0b66f0149a84299933c8152b0ef32fc76c75ce65775cf181a2ee5aa2e0`
 - Significant implementation surfaces: `.github/` (8 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `docs/` (1 files), `src/` (97 files), `tests/` (4 files)
 - Refreshed from the current codebase by `decapod specs.refresh`
 <!-- decapod:codebase-attestation:end -->

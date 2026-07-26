@@ -43,7 +43,7 @@ fn prepare_cloud_repo(dir: &Path, api_url: &str, remote: &str) {
     let config = fs::read_to_string(&config_path).expect("read cloud config");
     fs::write(
         config_path,
-        config.replace("https://decapod-cloud.vercel.app", api_url),
+        config.replace("https://project-oqn7i.vercel.app", api_url),
     )
     .expect("write proof API URL");
 }

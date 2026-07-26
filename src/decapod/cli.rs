@@ -550,7 +550,7 @@ fn default_cloud_provider() -> String {
 }
 
 fn default_cloud_api_url() -> String {
-    "https://decapod-cloud.vercel.app".to_string()
+    "https://project-oqn7i.vercel.app".to_string()
 }
 
 impl Default for CloudConfigSection {
