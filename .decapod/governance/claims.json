@@ -11,7 +11,7 @@
     "status": "active",
     "created_at": "2026-07-22",
     "updated_at": "2026-07-25",
-    "change_policy": "Claims are changed only through an issue-scoped review that preserves the baseline, Decapod condition, failure modes, measurements, proof gate, open questions, and evidence status. Governance artifact generation and publication inventory are tracked under issue #1025; wave-2 release-safe external-backend proof changes remain bounded to Decapod-owned client, configuration, onboarding, and CI surfaces."
+    "change_policy": "Claims are changed only through an issue-scoped review that preserves the baseline, Decapod condition, failure modes, measurements, proof gate, open questions, and evidence status. Governance artifact generation and publication inventory are tracked under issue #1025; wave-2 release-safe external-backend proof changes remain bounded to Decapod-owned client, configuration, onboarding, and CI surfaces. The v0.83.2 onboarding boundary is supported by typed offline contract tests; live provider exchange remains an explicitly unproven follow-up."
   },
   "scope": {
     "product": "decapod",
