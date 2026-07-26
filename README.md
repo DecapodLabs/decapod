@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/DecapodLabs/decod/actions"><img alt="CI" src="https://github.com/DecapodLabs/decapod/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/DecapodLabs/decapod/actions"><img alt="CI" src="https://github.com/DecapodLabs/decapod/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://crates.io/crates/decapod"><img alt="crates.io" src="https://img.shields.io/crates/v/decapod.svg"></a>
   <a href="https://github.com/DecapodLabs/decapod/blob/master/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 </p>
@@ -75,19 +75,19 @@ flowchart LR
     Harness == "governed request" ==> Agent
 
     %% Optional pre-inference governance
-    Agent -.->|"may call Decapod\n(pre-inference)"| Decapod
-    Decapod -.->|"intent, context,\ngates" ==> Agent
+    Agent -.->|"may call Decapod (pre-inference)"| Decapod
+    Decapod -.->|"intent, context,\nngates"| Agent
 
     Agent == "inference" ==> Model
     Model == "response" ==> Agent
 
     %% Optional post-inference verification/proof
-    Agent -.->|"may call Decapod\n(post-inference)"| Decapod
-    Decapod -.->|"boundaries,\nchecks, proof" ==> Agent
+    Agent -.->|"may call Decapod (post-inference)"| Decapod
+    Decapod -.->|"boundaries,\nchecks, proof"| Agent
 
     Agent == "verified result" ==> UserOut
 
-    Agent -.- "clarification\nping" -.- UserIn
+    Agent -.- "clarification ping" -.- UserIn
 
     style UserIn fill:#ff6b9d,stroke:#c44569,color:#fff
     style UserOut fill:#ff6b9d,stroke:#c44569,color:#fff
@@ -134,16 +134,16 @@ Decapod preserves what agent workbenches lose: governed project state that survi
 ```
 .decapod/
   managed/
-    specs/         # Living specs (INTENT, ARCHITECTURE, INTERFACES, OPERATIONS, README, SECURITY, SEMANTICS, VALIDATION)
-    sessions/      # Agent session custody and correlation
+    specs/         # Living specs (INTENT, ARCHITECTURE, INTERFACES, OPERATIONS, README, SECURITY, SEMANTICS, VALIDATION) — tracked
+    sessions/      # Agent session custody and correlation — tracked
   generated/
-    awareness/     # Deterministic context capsules
-    artifacts/     # Verification output and proof provenance
-  data/            # Durable repo-native state (DBs, events, todos)
-  governance/      # Trajectory, proof rubrics, validation receipts
-  workspaces/      # Isolated git worktrees (container workspaces require explicit opt-in)
-  config.toml      # Project shape and agent-facing configuration
-  OVERRIDE.md      # Local rules that override embedded defaults
+    awareness/     # Deterministic context capsules — generated at runtime
+    artifacts/     # Verification output and proof provenance — generated at runtime
+  data/            # Durable repo-native state (DBs, events, todos) — tracked
+  governance/      # Trajectory, proof rubrics, validation receipts — generated at runtime
+  workspaces/      # Isolated git worktrees (container workspaces require explicit opt-in) — created on demand
+  config.toml      # Project shape and agent-facing configuration — tracked
+  OVERRIDE.md      # Local rules that override embedded defaults — tracked
 ```
 
 The substrate turns the important parts of agent work into durable repo state:
@@ -165,14 +165,15 @@ Decapod does not make agents smarter by giving them longer conversations. It mak
 
 Decapod ships with an embedded engineering constitution: 100+ embedded constitution documents covering architecture, security, performance, and testing.
 
-An engineering organization’s tribal knowledge and review culture becomes *executable guidance* through the constitution. Agents consult the constitution, cite claim IDs, follow gates, and produce proof — reducing guesswork but not eliminating the need for judgment.
+Agents consult the constitution, cite claim IDs, follow gates, and produce proof — reducing guesswork but not eliminating the need for judgment.
 
 ---
 
 ## Guarantees
 
 - **Daemonless** — Runs on demand like `git` or `grep`.
-- **Local-first** — State lives in your repository by default (configurable).
+- **Local-first** — Ordinary governance runs locally without requiring a persistent hosted service.
+- **Repo-native** — Governed state remains durable and inspectable with the repository.
 - **Provider-agnostic** — Works with any model provider, agent harness, or toolchain (behavior may vary per integration).
 - **Completion requires passed proof-plan gates** — `VERIFIED` status requires passed proof-plan gates (INV-PROOF-GATED).
 - **Enforces protected paths and branch isolation (configured)** — Protected paths and branch isolation enforced per `.decapod/config.toml`.
@@ -186,7 +187,7 @@ Decapod is not an agent framework, prompt pack, model router, or generic orchest
 Decapod provides comprehensive documentation for both human operators and AI agents.
 
 - **[Human Documentation (mdBook)](https://decapodlabs.github.io/decapod/)**: Conceptual overview, workflows, adoption guide, and reference.
-- **Agent Orientation Corpus** (embedded, via `decapod docs ingest`): API-awareness layer for agents, including command contracts and payload examples.
+- **[Agent API Index](docs/agent/api-index.md)** — Contracts and interfaces for agents integrating with Decapod.
 - **[Universal Agent Contract (AGENTS.md)](AGENTS.md)**: The machine-readable entrypoint for all agents operating in this repo.
 
 ---
