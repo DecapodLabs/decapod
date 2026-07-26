@@ -284,6 +284,20 @@ impl<T: PropodusTransport> PropodusClient<T> {
         &self.repo_id
     }
 
+    /// Verify that the configured Propodus endpoint is reachable and returns
+    /// a successful health response. The endpoint owns the response schema;
+    /// the Decapod boundary only requires a successful HTTP status.
+    pub fn health_check(&self) -> Result<(), PropodusClientError> {
+        let url = format!("{}{}", self.api_url, PROPODUS_HEALTH_ROUTE);
+        let response = self.send("GET", &url, None)?;
+        if response.body.is_empty() {
+            return Err(PropodusClientError::Decode(
+                "Propodus health response was empty".to_string(),
+            ));
+        }
+        Ok(())
+    }
+
     pub fn list_todos(&self) -> Result<Vec<PropodusTodo>, PropodusClientError> {
         let url = format!(
             "{}{}?repo_id={}",

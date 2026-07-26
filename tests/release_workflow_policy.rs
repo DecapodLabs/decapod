@@ -176,3 +176,32 @@ fn public_release_surface_has_no_private_propodus_dependency() {
         );
     }
 }
+
+#[test]
+fn governance_artifact_gate_skips_release_labeled_prs() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let workflow =
+        fs::read_to_string(root.join(".github/workflows/ci.yml")).expect("read CI workflow");
+
+    assert!(
+        workflow.contains("governance-artifacts:"),
+        "CI must retain the governance artifact job"
+    );
+    assert!(
+        workflow.contains(
+            "if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'release')"
+        ),
+        "release-labeled PRs must not be forced to carry the four governance artifacts"
+    );
+    for artifact in [
+        ".decapod/governance/claims.json",
+        ".decapod/governance/trajectory.json",
+        ".decapod/governance/validation.json",
+        ".decapod/governance/plan.json",
+    ] {
+        assert!(
+            workflow.contains(artifact),
+            "the regular governance gate must continue checking {artifact}"
+        );
+    }
+}

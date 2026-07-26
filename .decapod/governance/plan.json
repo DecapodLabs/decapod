@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "title": "Propodus phase 1: governed local client boundary and proof",
-  "intent": "Deliver one coherent first phase for the propodus-labeled Decapod backlog: establish the versioned todo contract, machine-local bearer credential boundary, typed optional HTTP backend adapter/client, deterministic local fake-service proof, and living documentation while preserving local SQLite defaults and keeping hosted authentication, stable production deployment, and live integration as the next wave.",
-  "state": "DONE",
+  "title": "Propodus phase 2: release-safe integration proof",
+  "intent": "Deliver a bounded second phase for the Decapod-owned Propodus boundary: exempt explicitly labeled release PRs from the governance-artifact diff gate, add a credential-gated live proof harness for the typed client, document its canonical repository isolation and failure taxonomy, and keep all default checks network-free while Propodus owns hosted authentication, authorization, deployment, and persistence.",
+  "state": "APPROVED",
   "todo_ids": [
-    "feat_01kydm9j7phcvjyv"
+    "cicd_01kydv7dsj7sayv4"
   ],
   "proof_hooks": [
     "cargo fmt --check",
@@ -42,7 +42,18 @@
       "completed": true,
       "entered_at": "1785016815Z",
       "completed_at": "1785019855Z"
+    },
+    {
+      "id": "propodus-phase-2",
+      "name": "Deliver release-safe live proof boundary",
+      "description": "Exempt release-labeled PRs from the four-artifact CI gate and add a default-off, credential-gated live Propodus proof for health, list, create, claim, complete, and cross-repository authorization behavior.",
+      "entry_gates": [],
+      "exit_gates": [],
+      "entered": true,
+      "completed": false,
+      "entered_at": "1785023973Z",
+      "completed_at": null
     }
   ],
-  "updated_at": "1785019855Z"
+  "updated_at": "1785024839Z"
 }
