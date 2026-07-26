@@ -5,6 +5,10 @@
   "task_id": "cicd_01kydv7dsj7sayv4",
   "original_intent": "Update PR #1036 to align Decapod issues #1032 through #1035 and #1037 with current Propodus PR #31 boundaries.",
   "derived_intent": "Activate explicit Propodus-backed todo commands, fail closed on verified canonical GitHub identity, and prove command-level shared and unauthorized behavior without moving Propodus-owned auth or policy into Decapod.",
+  "current_phase": "validation",
+  "next_transitions": [
+    "publish"
+  ],
   "active_boundaries": [
     "Decapod owns cloud composition, client credential boundary, repository identity resolution, typed errors, and proof orchestration; Propodus owns GitHub exchange, seat policy, persistence, deployment, and service allowlists."
   ],
@@ -19,13 +23,17 @@
     "tests/propodus_live.rs"
   ],
   "modified_files": [
+    ".decapod/governance/trajectory.json",
+    ".decapod/governance/validation.json",
     "src/decapod/core/propodus.rs",
     "src/decapod/core/repo_identity.rs",
     "src/decapod/core/todo.rs",
     "tests/cloud_command_path.rs",
     "tests/propodus_live.rs"
   ],
-  "declared_commands": [],
+  "declared_commands": [
+    "decapod validate"
+  ],
   "tool_calls": [],
   "checks": [
     {
@@ -37,7 +45,19 @@
       "status": "passed"
     },
     {
+      "name": "container_validate",
+      "status": "passed"
+    },
+    {
+      "name": "decapod validate",
+      "status": "passed"
+    },
+    {
       "name": "focused_tests",
+      "status": "passed"
+    },
+    {
+      "name": "pr_published",
       "status": "passed"
     },
     {
@@ -46,11 +66,14 @@
     }
   ],
   "evidence": [
-    "focused_tests=tests/cloud_backend_storage.rs,tests/cloud_command_path.rs,tests/init_config_behavior.rs,tests/propodus_contract.rs"
+    "container_validate=202 passed, 0 failed",
+    "focused_tests=tests/cloud_backend_storage.rs,tests/cloud_command_path.rs,tests/init_config_behavior.rs,tests/propodus_contract.rs",
+    "pr=https://github.com/DecapodLabs/decapod/pull/1036",
+    "validation epoch ve_384d6a144548fcff completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "completion_claim": "PR #1036 implementation updated; final governed validation pending",
+  "completion_claim": "PR #1036 updated and published without merge; remaining Propodus issue #24 login exchange is explicitly deferred",
   "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
@@ -58,7 +81,7 @@
     "shortcut_risk": "supported",
     "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:345c0f6e31e323cb32c5f30885eeeeb621f93116f3e8329fb08935c0f355f0a1",
+  "artifact_hash": "sha256:6243a08168792693bd35f16699adb3f8dad356834c98ab744f603cb6138e583a",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -104,6 +127,20 @@
       {
         "sequence": 5,
         "event_id": "event:5",
+        "intent_id": "intent:wave2-propodus-1036-alignment",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:wave2-propodus-1036-alignment"
+      },
+      {
+        "sequence": 6,
+        "event_id": "event:6",
+        "intent_id": "intent:wave2-propodus-1036-alignment",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:wave2-propodus-1036-alignment"
+      },
+      {
+        "sequence": 7,
+        "event_id": "event:7",
         "intent_id": "intent:wave2-propodus-1036-alignment",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:wave2-propodus-1036-alignment"
@@ -159,12 +196,47 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:5"
+          },
+          {
+            "sequence": 6,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "PR #1036 source, tests, workflow, docs, generated specs, and governance artifacts"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_384d6a144548fcff completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:6"
+          },
+          {
+            "sequence": 7,
+            "action": "trajectory.record",
+            "scope": [
+              "PR #1036 source, tests, workflow, docs, generated specs, and governance artifacts"
+            ],
+            "observations": [
+              "container_validate=202 passed, 0 failed",
+              "pr=https://github.com/DecapodLabs/decapod/pull/1036"
+            ],
+            "proof_refs": [
+              "container_validate",
+              "pr_published"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:7"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 5
+    "next_sequence": 7
   }
 }
