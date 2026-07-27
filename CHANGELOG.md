@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.86.0](https://github.com/DecapodLabs/decapod/compare/v0.85.0...v0.86.0) - 2026-07-27
+
+### Added
+
+- add automatic cloud login bootstrap
+
+### Fixed
+
+- align release entrypoint manifest
+
+### Other
+
+- record final validation proof
+- refresh specs for validation auth harness
+- mock cloud auth in validation harness
+- record cloud auth validation proof
+- refresh specs and governance for cloud auth
+
 ## [0.85.0](https://github.com/DecapodLabs/decapod/compare/v0.84.0...v0.85.0) - 2026-07-26
 
 ### Added
