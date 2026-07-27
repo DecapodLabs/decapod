@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "title": "Decapod cloud cutover: Propodus todo composition and machine session",
-  "intent": "Cut Decapod over to the working Propodus cloud path: activate the cloud todo adapter, automate one-time onboarding and machine-local JWT session refresh, preserve canonical repository and fork identity separation, and prove protected list/add/claim/complete behavior against production without local fallback.",
+  "intent": "Cut Decapod over to the working Propodus cloud path: activate the cloud todo adapter, automate one-time onboarding and machine-local JWT session refresh, preserve canonical repository and fork identity separation, and prove protected list/add/claim/complete behavior against production without local fallback. in alignment with the governance kernel model.",
   "state": "APPROVED",
   "todo_ids": [
     "bugs_01kyh3rmg1c6z9xe"
@@ -26,5 +26,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "1785136682Z"
+  "updated_at": 1785175266
 }
