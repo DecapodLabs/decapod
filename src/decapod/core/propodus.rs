@@ -326,6 +326,10 @@ pub fn ensure_cloud_session<T: PropodusTransport>(
     identity: &RepositoryIdentity,
     transport: T,
 ) -> Result<auth::CloudCredential, PropodusClientError> {
+    if mock_cloud_auth_enabled() {
+        return ensure_mock_cloud_session(identity);
+    }
+
     let mut expired_machine_session = false;
     if let Ok(credential) = auth::load_cloud_credential(None) {
         if credential.source != auth::CredentialSource::MachineFile
@@ -365,6 +369,50 @@ pub fn ensure_cloud_session<T: PropodusTransport>(
     }
 
     complete_cloud_onboarding(config, identity, transport, expired_machine_session)
+}
+
+/// CI and deterministic repository tests need the cloud control-plane path to
+/// exercise onboarding/session custody without asking a human or contacting a
+/// hosted provider. The validation gate is deliberately required alongside
+/// this explicit mode so production commands cannot silently use mock auth.
+fn mock_cloud_auth_enabled() -> bool {
+    std::env::var("DECAPOD_CLOUD_AUTH_MODE")
+        .ok()
+        .is_some_and(|mode| mode.eq_ignore_ascii_case("mock"))
+        && std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").as_deref() == Ok("1")
+}
+
+fn ensure_mock_cloud_session(
+    identity: &RepositoryIdentity,
+) -> Result<auth::CloudCredential, PropodusClientError> {
+    let session = CloudSession {
+        access_token: "decapod-test-mock-access".to_string(),
+        refresh_token: Some("decapod-test-mock-refresh".to_string()),
+        session_id: Some(format!("decapod-test-mock-{}", identity.canonical_name)),
+        expires_at: Some("2099-01-01T00:00:00Z".to_string()),
+    };
+    auth::store_machine_session(&session).map_err(|_| {
+        cloud_auth_error(
+            CloudAuthStatus::AuthRequired,
+            "the mock cloud session could not be stored",
+            "check machine data-directory permissions, then rerun the validation command",
+        )
+    })?;
+    auth::load_machine_session()
+        .map_err(|_| {
+            cloud_auth_error(
+                CloudAuthStatus::AuthRequired,
+                "the mock cloud session could not be reloaded",
+                "check machine data-directory permissions, then rerun the validation command",
+            )
+        })?
+        .ok_or_else(|| {
+            cloud_auth_error(
+                CloudAuthStatus::AuthRequired,
+                "the mock cloud session was not persisted",
+                "check machine data-directory permissions, then rerun the validation command",
+            )
+        })
 }
 
 fn complete_cloud_onboarding<T: PropodusTransport>(
