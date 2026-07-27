@@ -1,18 +1,13 @@
 {
   "schema_version": "1.0.0",
-  "title": "Decapod cloud cutover: Propodus todo composition and machine session",
-  "intent": "Cut Decapod over to the working Propodus cloud path: activate the cloud todo adapter, automate one-time onboarding and machine-local JWT session refresh, preserve canonical repository and fork identity separation, and prove protected list/add/claim/complete behavior against production without local fallback. in alignment with the governance kernel model.",
+  "title": "README uplift: sharpen Decapod's governance-kernel positioning per Issue #1050",
+  "intent": "Update README.md to position Decapod as a repo-native governance kernel, per the acceptance criteria and implementation notes in Issue #1050.",
   "state": "APPROVED",
-  "todo_ids": [
-    "bugs_01kyh3rmg1c6z9xe"
-  ],
+  "todo_ids": [],
   "proof_hooks": [
-    "cargo fmt --check",
-    "cargo clippy --all-targets --all-features -- -D warnings",
-    "cargo test",
     "decapod validate",
-    "cloud auth focused tests",
-    "protected production todo proof"
+    "decapod capabilities --format json | jq ' .capabilities[] | select(.name==\"governance-kernel\")'",
+    "wc -w README.md"
   ],
   "unknowns": [],
   "human_questions": [],
@@ -26,5 +21,5 @@
     "file_touch_budget": 40
   },
   "phases": [],
-  "updated_at": "2026-07-27T18:24:07Z"
+  "updated_at": "2026-07-27T18:30:16.088128Z"
 }
