@@ -10,7 +10,7 @@
     "publish"
   ],
   "blockers": [
-    "pre-existing entrypoint fingerprint drift; live protected production todo proof unavailable; watcher audit and risk-map artifacts are not present; stale workspaces remain preserved for explicit review"
+    "live protected production todo proof unavailable; watcher audit and risk-map artifacts are not present; stale workspaces remain preserved for explicit review"
   ],
   "active_boundaries": [
     "Decapod client orchestration only; no Propodus provider implementation; no secrets; no local-backend config in final PR"
@@ -19,11 +19,13 @@
     "src/decapod/core,src/decapod/cli.rs,src/decapod/lib.rs,tests"
   ],
   "inspected_files": [
+    ".decapod/governance/trajectory.json",
     ".decapod/governance/validation.json",
     ".decapod/managed/specs/.manifest.json",
     "src/decapod/cli.rs",
     "src/decapod/core/auth.rs",
     "src/decapod/core/cloud_backend.rs",
+    "src/decapod/core/entrypoint_integrity.rs",
     "src/decapod/core/propodus.rs",
     "src/decapod/core/todo.rs",
     "src/decapod/lib.rs",
@@ -68,6 +70,10 @@
       "status": "passed"
     },
     {
+      "name": "entrypoint_integrity",
+      "status": "passed"
+    },
+    {
       "name": "fmt",
       "status": "passed"
     },
@@ -77,7 +83,7 @@
     },
     {
       "name": "full_tests",
-      "status": "failed"
+      "status": "passed"
     },
     {
       "name": "orientation",
@@ -90,22 +96,27 @@
     {
       "name": "specs_refresh",
       "status": "passed"
+    },
+    {
+      "name": "trajectory_state",
+      "status": "passed"
     }
   ],
   "evidence": [
-    "focused cloud auth tests passed; full test blocker is pre-existing entrypoint fingerprint drift; container validation passed with governance warnings",
-    "validation epoch ve_3db58a258f96a601 completed with zero failures"
+    "focused cloud auth tests, full test suite, entrypoint integrity, and container validation passed; live protected production proof remains unavailable",
+    "validation epoch ve_3db58a258f96a601 completed with zero failures",
+    "validation epoch ve_4ab62e26402849b8 completed with zero failures"
   ],
   "shortcut_risk_signals": [],
   "unresolved_assumptions": [],
-  "proof_status": "failed",
+  "proof_status": "passed",
   "verdicts": {
     "intent_alignment": "supported",
     "boundary_discipline": "supported",
     "shortcut_risk": "supported",
-    "completion_proof": "unsupported"
+    "completion_proof": "supported"
   },
-  "artifact_hash": "sha256:bf5f25504524df0895fc30d730a7fc24b55afb53bde4e9df77ca2183423b947f",
+  "artifact_hash": "sha256:5da7b956ffab0a6d28ef5dd731c2b84655bab601eb114dd0a55d6e49b276fdd1",
   "custody": {
     "schema_version": "1.0.0",
     "intents": {
@@ -172,6 +183,34 @@
       {
         "sequence": 8,
         "event_id": "event:8",
+        "intent_id": "intent:run-1077-auto-login",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-1077-auto-login"
+      },
+      {
+        "sequence": 9,
+        "event_id": "event:9",
+        "intent_id": "intent:run-1077-auto-login",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-1077-auto-login"
+      },
+      {
+        "sequence": 10,
+        "event_id": "event:10",
+        "intent_id": "intent:run-1077-auto-login",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-1077-auto-login"
+      },
+      {
+        "sequence": 11,
+        "event_id": "event:11",
+        "intent_id": "intent:run-1077-auto-login",
+        "kind": "trajectory_step_recorded",
+        "detail": "trajectory:run-1077-auto-login"
+      },
+      {
+        "sequence": 12,
+        "event_id": "event:12",
         "intent_id": "intent:run-1077-auto-login",
         "kind": "trajectory_step_recorded",
         "detail": "trajectory:run-1077-auto-login"
@@ -287,12 +326,79 @@
             ],
             "validation_findings": [],
             "custody_event_id": "event:8"
+          },
+          {
+            "sequence": 9,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core,src/decapod/cli.rs,src/decapod/lib.rs,tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_4ab62e26402849b8 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:9"
+          },
+          {
+            "sequence": 10,
+            "action": "trajectory.record",
+            "scope": [
+              "src/decapod/core,src/decapod/cli.rs,src/decapod/lib.rs,tests"
+            ],
+            "observations": [
+              "src/decapod/core/entrypoint_integrity.rs"
+            ],
+            "proof_refs": [
+              "full_tests",
+              "entrypoint_integrity"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:10"
+          },
+          {
+            "sequence": 11,
+            "action": "trajectory.record",
+            "scope": [
+              "src/decapod/core,src/decapod/cli.rs,src/decapod/lib.rs,tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json"
+            ],
+            "proof_refs": [
+              "trajectory_state"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:11"
+          },
+          {
+            "sequence": 12,
+            "action": "validation",
+            "command": "decapod validate",
+            "scope": [
+              "src/decapod/core,src/decapod/cli.rs,src/decapod/lib.rs,tests"
+            ],
+            "observations": [
+              ".decapod/governance/trajectory.json",
+              ".decapod/governance/validation.json",
+              "validation epoch ve_4ab62e26402849b8 completed with zero failures"
+            ],
+            "proof_refs": [
+              "decapod validate"
+            ],
+            "validation_findings": [],
+            "custody_event_id": "event:12"
           }
         ]
       }
     },
     "summaries": {},
     "knowledge_candidates": [],
-    "next_sequence": 8
+    "next_sequence": 12
   }
 }
