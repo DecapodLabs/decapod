@@ -11,7 +11,7 @@
     "status": "active",
     "created_at": "2026-07-22",
     "updated_at": "2026-07-26",
-    "change_policy": "Claims are changed only through an issue-scoped review that preserves the baseline, Decapod condition, failure modes, measurements, proof gate, open questions, and evidence status. Governance artifact generation and publication inventory are tracked under issue #1025; the v0.84.0 cloud cutover remains bounded to Decapod-owned backend composition, Propodus session onboarding, repository identity, and CI surfaces. Production protected list/add/claim/complete proof and cross-system acceptance remain explicitly unproven follow-ups."
+    "change_policy": "Claims are changed only through an issue-scoped review that preserves the baseline, Decapod condition, failure modes, measurements, proof gate, open questions, and evidence status. Governance artifact generation and publication inventory are tracked under issue #1025; the v0.85.0 cloud auto-login work for #1077 remains bounded to Decapod-owned backend composition, machine-local session reuse/refresh, repository identity, and CI surfaces while Propodus retains hosted authorization and persistence policy. One-time human GitHub approval, live protected todo behavior, and cross-system acceptance remain explicitly unproven follow-ups."
   },
   "scope": {
     "product": "decapod",
