@@ -221,7 +221,12 @@ fn failure_statuses_remain_distinct_and_do_not_decode_as_success() {
         let error = client.list_todos().unwrap_err();
         let rendered = format!("{error:?}");
         assert!(rendered.contains(kind), "{status} mapped to {rendered}");
-        assert!(rendered.contains("controlled fake failure"));
+        if status != 401 {
+            assert!(rendered.contains("controlled fake failure"));
+        } else {
+            assert!(rendered.contains("machine session"));
+            assert!(!rendered.contains("controlled fake failure"));
+        }
     }
 }
 

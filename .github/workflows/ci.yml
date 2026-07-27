@@ -213,6 +213,7 @@ jobs:
         run: decapod session acquire
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
+          DECAPOD_CLOUD_AUTH_MODE: mock
       - name: Run validation harness
         run: decapod validate --refresh-specs
         env:

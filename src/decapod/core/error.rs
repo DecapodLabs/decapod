@@ -3,9 +3,46 @@
 //! This module defines the canonical error type used throughout Decapod.
 //! All subsystems return `Result<T, DecapodError>` for error handling.
 
+use serde::Serialize;
 use std::env;
 use std::fmt;
 use std::io;
+
+/// Machine-readable outcomes for the provider-neutral cloud login handoff.
+/// These values are part of the CLI contract; credential material is never
+/// represented here.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CloudAuthStatus {
+    AuthRequired,
+    OnboardingPending,
+    Expired,
+    Unauthorized,
+    Offline,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CloudAuthDiagnostic {
+    pub schema_version: &'static str,
+    pub status: CloudAuthStatus,
+    pub message: String,
+    pub next_action: String,
+}
+
+impl CloudAuthDiagnostic {
+    pub fn new(
+        status: CloudAuthStatus,
+        message: impl Into<String>,
+        next_action: impl Into<String>,
+    ) -> Self {
+        Self {
+            schema_version: "decapod.cloud.auth.v1",
+            status,
+            message: message.into(),
+            next_action: next_action.into(),
+        }
+    }
+}
 
 /// Canonical error type for all Decapod operations.
 #[derive(Debug)]
@@ -32,6 +69,8 @@ pub enum DecapodError {
     ContextPackError(String),
     /// Session token error (not found, invalid, expired, etc.)
     SessionError(String),
+    /// A safe, actionable cloud authentication handoff result.
+    CloudAuth(CloudAuthDiagnostic),
 }
 
 impl fmt::Display for DecapodError {
@@ -66,6 +105,11 @@ impl fmt::Display for DecapodError {
             Self::Config(s) => write!(f, "Configuration error: {s}"),
             Self::ContextPackError(s) => write!(f, "Context pack error: {s}"),
             Self::SessionError(s) => write!(f, "Session error: {s}"),
+            Self::CloudAuth(diagnostic) => write!(
+                f,
+                "Cloud authentication {:?}: {}; next action: {}",
+                diagnostic.status, diagnostic.message, diagnostic.next_action
+            ),
         }
     }
 }
