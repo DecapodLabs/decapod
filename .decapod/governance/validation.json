@@ -5,7 +5,7 @@
   "git_revision": "9c308ac9ebc27ab8ebea59ac62f7a538d81166eb",
   "repo_signal_fingerprint": "29f7eb3082c832b4cdfbd0d3f3a7493b1f1d0a9ef92cc6b4a60c3b29b054935d",
   "trajectory_run_id": "validation_01KYJ6FZ2B16B9GH14Q0848YDA",
-  "trajectory_artifact_hash": "sha256:73c7d5e7da26e666996690aa9192b7ed1386c692a0025f3b305e26d64975f382",
+  "trajectory_artifact_hash": "sha256:6eca42d62cda0c8ccae371bab216930a9657a205626c5a8f98b28abe1f167099",
   "validation_epoch": {
     "schema_version": "1.0.0",
     "epoch_id": "ve_436623949a60e125",
@@ -282,5 +282,5 @@
       "Use `decapod validate -v --format json` to inspect the affected gate output."
     ]
   },
-  "receipt_hash": "sha256:1e9eb3e09070c1b42f335318680143caa87406eefffc5c8b1df9f0dbc7dd2051"
+  "receipt_hash": "sha256:724c9fd56c26ea882be188da0760822116a446e45c9476f011187adfa3eb8a3f"
 }

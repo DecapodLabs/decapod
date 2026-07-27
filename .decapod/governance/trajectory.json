@@ -5,7 +5,6 @@
   "task_id": "code_01kyj63vg7abpjva",
   "original_intent": "Produce proof artifacts for a repository validation completion.",
   "derived_intent": "Run the bounded validation gates and bind the successful receipt to a trajectory.",
-  "destination": "validation completion",
   "current_phase": "validation",
   "next_transitions": [
     "publish"
